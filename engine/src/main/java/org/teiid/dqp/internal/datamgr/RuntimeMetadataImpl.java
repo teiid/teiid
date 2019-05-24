@@ -41,30 +41,30 @@ import org.teiid.translator.TranslatorException;
  */
 public class RuntimeMetadataImpl implements RuntimeMetadata {
     private QueryMetadataInterface metadata;
-    
+
     public RuntimeMetadataImpl(QueryMetadataInterface metadata){
     	ArgCheck.isNotNull(metadata);
         this.metadata = metadata.getDesignTimeMetadata();
     }
-    
+
     @Override
     public Column getColumn(String schema, String table, String name)
     		throws TranslatorException {
     	return getColumn(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + table + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
     }
-    
+
     @Override
     public Procedure getProcedure(String schema, String name)
     		throws TranslatorException {
     	return getProcedure(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
     }
-    
+
     @Override
     public Table getTable(String schema, String name)
     		throws TranslatorException {
     	return getTable(schema + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
     }
-    
+
     @Override
     public Column getColumn(String fullName) throws TranslatorException {
 		try {
@@ -76,14 +76,14 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 			 throw new TranslatorException(QueryPlugin.Event.TEIID30465, e);
 		}
     }
-    
+
     public Column getElement(Object elementId) {
     	if (elementId instanceof Column) {
     		return (Column)elementId;
     	}
     	return null;
     }
-    
+
     @Override
     public Table getTable(String fullName) throws TranslatorException {
 		try {
@@ -102,8 +102,8 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 			return (Table)groupId;
 		}
 		return null;
-	}    
-    
+	}
+
     @Override
     public Procedure getProcedure(String fullName) throws TranslatorException {
 		try {
@@ -122,14 +122,14 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
 		}
 		return null;
 	}
-	
+
 	public ProcedureParameter getParameter(SPParameter param) {
 		if (param.getMetadataID() instanceof ProcedureParameter) {
 			return (ProcedureParameter)param.getMetadataID();
 		}
 		return null;
 	}
-    
+
     public byte[] getBinaryVDBResource(String resourcePath) throws TranslatorException {
         try {
             return metadata.getBinaryVDBResource(resourcePath);
@@ -159,9 +159,9 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
              throw new TranslatorException(QueryPlugin.Event.TEIID30475, e);
         }
     }
-    
+
     public QueryMetadataInterface getMetadata() {
     	return metadata;
     }
-    
+
 }

@@ -22,6 +22,6 @@ public class ModelNodeConstants {
 	public static final String  TYPE = "type";//$NON-NLS-1$
 	public static final String ATTRIBUTES = "attributes"; //$NON-NLS-1$
 	public static final String DESCRIPTION = "description"; //$NON-NLS-1$
-	
-	
+
+
 }

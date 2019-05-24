@@ -304,7 +304,7 @@ public class TestMongoDBSelectVisitor {
 				null);
     	assertEquals(Arrays.asList("_m0", "age"), visitor.selectColumnReferences);
     }
-    
+
     @Test
     public void testAggregateWithGroupBy() throws Exception {
         String query = "SELECT user_id, sum(age) FROM users group by user_id";
@@ -317,7 +317,7 @@ public class TestMongoDBSelectVisitor {
                 "{ \"_id\" : { \"_c0\" : \"$user_id\" }, \"_m1\" : { \"$sum\" : \"$age\" } }",
                 null);
         assertEquals(Arrays.asList("_m0", "_m1"), visitor.selectColumnReferences);
-    }    
+    }
 
     @Test
     public void testSum() throws Exception {
@@ -352,38 +352,38 @@ public class TestMongoDBSelectVisitor {
 				"{ \"_m0\" : { \"$concat\" : [\"$user_id\", \"$user_id\"] } }",
 				null);
     }
-    
+
     @Test
     public void testSelectBooleanExpression() throws Exception {
     	String query = "SELECT (user_id = 'USER') as X1 FROM users";
 		helpExecute(query, "users",
 				"{ \"X1\" : { \"$cond\" : [{ \"$eq\" : [\"$user_id\", \"USER\"] }, true, false] } }",
 				null);
-    }    
-    
+    }
+
     @Test
     public void testSelectBooleanExpression2() throws Exception {
     	String query = "SELECT (user_id > 'USER') as X1 FROM users";
 		helpExecute(query, "users",
 				"{ \"X1\" : { \"$cond\" : [{ \"$gt\" : [\"$user_id\", \"USER\"] }, true, false] } }",
 				null);
-    } 
-    
+    }
+
     @Test
     public void testSelectBooleanExpression3() throws Exception {
     	String query = "SELECT (user_id = 'USER' OR user_id = 'user') as X1 FROM users";
 		helpExecute(query, "users",
 				"{ \"X1\" : { \"$cond\" : [{ \"user_id\" : { \"$in\" : [\"user\", \"USER\"] } }, true, false] } }",
 				null);
-    }    
-    
+    }
+
     @Test
     public void testSelectBooleanExpression4() throws Exception {
     	String query = "SELECT (user_id = 'USER' AND age > 30) as X1 FROM users";
 		helpExecute(query, "users",
 				"{ \"X1\" : { \"$cond\" : [{ \"$and\" : [{ \"$eq\" : [\"$user_id\", \"USER\"] }, { \"$gt\" : [\"$age\", 30] }] }, true, false] } }",
 				null);
-    } 
+    }
 
     @Test
     public void testNestedFunction() throws Exception {
@@ -391,8 +391,8 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(query, "users",
 				"{ \"_m0\" : { \"$concat\" : [{ \"$concat\" : [\"$user_id\", \"$user_id\"] }, \"$user_id\"] } }",
 				null);
-    }    
-    
+    }
+
     @Test
     public void testWhereReference() throws Exception {
     	String query = "SELECT age FROM users WHERE user_id = 'bob'";
@@ -416,7 +416,7 @@ public class TestMongoDBSelectVisitor {
 				"{ \"_m0\" : \"$e1\", \"_m1\" : \"$e2\", \"_m2\" : \"$e3\" }",
 				"{ \"e2\" : 50 }");
     }
-    
+
     @Test
     public void testGeoWithinPloygonFunction() throws Exception {
     	String query = "SELECT mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double)))) FROM users";
@@ -424,30 +424,30 @@ public class TestMongoDBSelectVisitor {
 				"{ \"_m0\" : { \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\", \"coordinates\" : [[[1.0, 2.0], [1.0, 2.0]]] } } } } }",
 				null);
     }
-    
+
     @Test
     public void testGeoNearFunction() throws Exception {
     	String query = "SELECT mongo.geonear(user_id, (cast(1.0 as double), cast(2.0 as double)), 22, 10) FROM users";
 		helpExecute(query, "users",
 				"{ \"_m0\" : { \"user_id\" : { \"$near\" : { \"$geometry\" : { \"type\" : \"Point\", \"coordinates\" : [[1.0, 2.0]] }, \"$maxDistance\" : 22, \"$minDistance\" : 10 } } } }",
 				null);
-    }   
-    
+    }
+
     @Test
     public void testGeoWithinPloygonFunctionInWhere() throws Exception {
     	String query = "SELECT user_id FROM users where mongo.geoWithin(user_id, 'LineString', ((cast(1.0 as double), cast(2.0 as double)), (cast(1.0 as double), cast(2.0 as double))))";
 		helpExecute(query, "users",
 				"{ \"_m1\" : \"$user_id\" }",
-				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\", \"coordinates\" : [[[1.0, 2.0], [1.0, 2.0]]] } } } }"				
+				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"LineString\", \"coordinates\" : [[[1.0, 2.0], [1.0, 2.0]]] } } } }"
 				);
-    }    
-    
+    }
+
     @Test
     public void testAliasPloygonFunctionInWhere() throws Exception {
     	String query = "SELECT user_id FROM users where mongo.geoPolygonWithin(user_id, 1.0, 2.0, 3.0, 4.0)";
 		helpExecute(query, "users",
 				"{ \"_m1\" : \"$user_id\" }",
-				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"Polygon\", \"coordinates\" : [[[3.0, 1.0], [2.0, 1.0], [2.0, 4.0], [3.0, 4.0], [3.0, 1.0]]] } } } }"				
+				"{ \"user_id\" : { \"$geoWithin\" : { \"$geometry\" : { \"type\" : \"Polygon\", \"coordinates\" : [[[3.0, 1.0], [2.0, 1.0], [2.0, 4.0], [3.0, 4.0], [3.0, 1.0]]] } } } }"
 				);
-    }     
+    }
 }

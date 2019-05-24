@@ -32,23 +32,23 @@ import org.teiid.translator.google.api.result.SheetRow;
 
 /**
  * This unit test verifies batch behavior and iteration behavior of RowsResult.
- * 
+ *
  * @author fnguyen
  *
  */
 @SuppressWarnings("nls")
 public class RowsResultTest {
 
-	@Test 
+	@Test
 	public void simpleIteration(){
 		final List<SheetRow> rows = new ArrayList<SheetRow>();
 		rows.add(new SheetRow(new String[]{"a","b","c"}));
 		rows.add(new SheetRow(new String[]{"a2","b2","c2"}));
 		rows.add(new SheetRow(new String[]{"a3","b3","c3"}));
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			boolean called = false;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called)
@@ -57,15 +57,15 @@ public class RowsResultTest {
 				return rows;
 			}
 		}, 10);
-		
+
 		int i = 0;
 		for (SheetRow row : result){
 			Assert.assertEquals(row, rows.get(i++));
 		}
 	}
-	
 
-	@Test 
+
+	@Test
 	public void twoBatchCallsNeeded(){
 		final List<SheetRow> firstPart = new ArrayList<SheetRow>();
 		final List<SheetRow> secondPart = new ArrayList<SheetRow>();
@@ -77,59 +77,59 @@ public class RowsResultTest {
 		secondPart.add(new SheetRow(new String[]{"a5","b5","c5"}));
 		all.addAll(firstPart);
 		all.addAll(secondPart);
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			int called = 0;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called++ > 2)
 					Assert.fail("getResultsBatch at most twice");
-				
+
 				if (called == 1){
 					return firstPart;
 				} else if (called == 2){
-					return secondPart;	
+					return secondPart;
 				}
 				//Shouldn't reach here.
 				return null;
 			}
 		}, 3);
-		
+
 		int i = 0;
 		for (SheetRow row : result){
 			Assert.assertEquals(row, all.get(i++));
 		}
 		Assert.assertEquals("Six rows should be in the result",5, i);
 	}
-	
 
-	@Test 
+
+	@Test
 	public void noRows(){
 		final List<SheetRow> all = new ArrayList<SheetRow>();
 
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			int called = 0;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called++ > 1)
 					Assert.fail("getResultsBatch at once");
-				
+
 				return all;
 			}
 		}, 3);
-		
+
 		int i = 0;
 		for (SheetRow row : result){
 			i++;
 		}
 		Assert.assertEquals("No iterations should be made",0, i);
 	}
-	
 
-	@Test 
+
+	@Test
 	public void sixBatchCalls(){
 		final List<SheetRow> all = new ArrayList<SheetRow>();
 		all.add(new SheetRow(new String[]{"a","b","c"}));
@@ -138,28 +138,28 @@ public class RowsResultTest {
 		all.add(new SheetRow(new String[]{"a4","b4","c4"}));
 		all.add(new SheetRow(new String[]{"a5","b5","c5"}));
 		all.add(new SheetRow(new String[]{"a6","b6","c6"}));
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			int called = 0;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called > 6)
 					Assert.fail("getResultsBatch at least 6 times");
-				
+
 				if (called == 6)
 					return new ArrayList<SheetRow>();
 				return Collections.singletonList(all.get(called++));
 			}
 		}, 1);
-		
+
 		int i = 0;
 		for (SheetRow row : result){
 			Assert.assertEquals(all.get(i++), row);
 		}
 		Assert.assertEquals("Six iterations should be made",6, i);
 	}
-	
+
 	@Test
 	public void offsetTest(){
 		final List<SheetRow> all = new ArrayList<SheetRow>();
@@ -169,36 +169,36 @@ public class RowsResultTest {
 		all.add(new SheetRow(new String[]{"a4","b4","c4"}));
 		all.add(new SheetRow(new String[]{"a5","b5","c5"}));
 		all.add(new SheetRow(new String[]{"a6","b6","c6"}));
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			int called = 0;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called++ > 1)
 					Assert.fail("getResultsBatch at most 2 times");
-				
+
 				ArrayList<SheetRow> result = new ArrayList<SheetRow>();
 				if (called == 1) {
 					result.add(all.get(3));
 					result.add(all.get(4));
 				} else if (called == 2)
 					result.add(all.get(5));
-				
+
 				return result;
 			}
 		}, 2);
-		
+
 		result.setOffset(3);
 		result.setLimit(3);
-		
+
 		int i = 3;
 		for (SheetRow row : result){
 			Assert.assertEquals(all.get(i++), row);
 		}
 		Assert.assertEquals("3 iterations should be made",3, i-3);
-	}	
-	
+	}
+
 	@Test
 	public void offsetTestOne(){
 		final List<SheetRow> all = new ArrayList<SheetRow>();
@@ -208,15 +208,15 @@ public class RowsResultTest {
 		all.add(new SheetRow(new String[]{"a4","b4","c4"}));
 		all.add(new SheetRow(new String[]{"a5","b5","c5"}));
 		all.add(new SheetRow(new String[]{"a6","b6","c6"}));
-		
+
 		RowsResult result = new RowsResult(new PartialResultExecutor() {
 			int called = 0;
-			
+
 			@Override
 			public List<SheetRow> getResultsBatch(int startIndex, int endIndex) {
 				if (called++ > 2)
 					Assert.fail("getResultsBatch at most 3 times");
-				
+
 				ArrayList<SheetRow> result = new ArrayList<SheetRow>();
 				if (called == 1) {
 					result.add(all.get(1));
@@ -229,10 +229,10 @@ public class RowsResultTest {
 				return result;
 			}
 		}, 2);
-		
+
 		result.setOffset(1);
 		result.setLimit(6);
-		
+
 		int i = 1;
 		for (SheetRow row : result){
 			Assert.assertEquals(all.get(i++), row);

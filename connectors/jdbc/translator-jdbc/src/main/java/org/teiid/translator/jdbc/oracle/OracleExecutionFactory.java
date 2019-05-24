@@ -70,7 +70,7 @@ import org.teiid.util.Version;
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
-	
+
 	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
 	private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
 	private static final String TO_NCHAR = "TO_NCHAR"; //$NON-NLS-1$
@@ -79,7 +79,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
 	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
 	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
-	
+
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
@@ -100,13 +100,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
 	public static final String ORACLE = "Oracle"; //$NON-NLS-1$
-	
+
 	private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 	static {
 		STRING_BOOLEAN_FUNCTIONS.addAll(
-				Arrays.asList(SourceSystemFunctions.ST_DISJOINT, SourceSystemFunctions.ST_CONTAINS, 
-						SourceSystemFunctions.ST_CROSSES, SourceSystemFunctions.ST_INTERSECTS, 
-						SourceSystemFunctions.ST_OVERLAPS, SourceSystemFunctions.ST_TOUCHES, 
+				Arrays.asList(SourceSystemFunctions.ST_DISJOINT, SourceSystemFunctions.ST_CONTAINS,
+						SourceSystemFunctions.ST_CROSSES, SourceSystemFunctions.ST_INTERSECTS,
+						SourceSystemFunctions.ST_OVERLAPS, SourceSystemFunctions.ST_TOUCHES,
 						SourceSystemFunctions.ST_EQUALS));
 	}
 
@@ -114,8 +114,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		@Override
 		public List<?> translate(Function function) {
 			Expression ex = function.getParameters().get(0);
-			if (ex.getType() == TypeFacility.RUNTIME_TYPES.DATE || ex.getType() == TypeFacility.RUNTIME_TYPES.TIME 
-			        || (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
+			if (ex.getType() == TypeFacility.RUNTIME_TYPES.DATE || ex.getType() == TypeFacility.RUNTIME_TYPES.TIME
+			        || (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$
 					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
 				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
 				function.getParameters().set(0, ex);
@@ -130,27 +130,27 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static final class RefCursorType {}
 	static int CURSOR_TYPE = -10;
 	static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
-	
+
 	/*
 	 * handling for char bindings
 	 */
 	static final class FixedCharType {}
 	static int FIXED_CHAR_TYPE = 999;
-	
+
 	/*
      * handling for varchar bindings
      */
     static final class VarcharType {}
-    
+
     protected Map<Class<?>, Integer> customTypeCodes = new HashMap<>();
-	
+
 	private boolean oracleSuppliedDriver = true;
-	
+
 	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
-	
+
 	private boolean useNBindingType = true;
 	private boolean isExtendedAscii = true;
-	
+
 	public OracleExecutionFactory() {
 		//older oracle instances seem to have issues with large numbers of bindings
 		setUseBindingsForDependentJoin(false);
@@ -162,29 +162,29 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         customTypeCodes.put(VarcharType.class, Types.VARCHAR);
         customTypeCodes.put(FixedCharType.class, FIXED_CHAR_TYPE);
         customTypeCodes.put(RefCursorType.class, CURSOR_TYPE);
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.HOUR, new DateAwareExtract());
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DateAwareExtract()); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new DateAwareExtract()); 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("IW"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DateAwareExtract());
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new DateAwareExtract());
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("IW"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
 			@Override
@@ -193,16 +193,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
 			}
 		});
-        
+
         //spatial functions
         registerFunctionModifier(OracleExecutionFactory.RELATE, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.FILTER, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
-        
+
         registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, parseModifier);
         registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(", false)); //$NON-NLS-1$
-        
+
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.CHAR, new FunctionModifier() {
@@ -230,16 +230,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIME_FORMAT)); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				//if column and type is date, just use date format
 				Expression ex = function.getParameters().get(0);
-				String format = TIMESTAMP_FORMAT; 
+				String format = TIMESTAMP_FORMAT;
 				if (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
-					format = DATETIME_FORMAT; 
+					format = DATETIME_FORMAT;
 				} else if (!(ex instanceof Literal) && !(ex instanceof Function)) {
 					//this isn't needed in every case, but it's simpler than inspecting the expression more
 					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
@@ -247,15 +247,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$ 
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$
     	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
     	convertModifier.addTypeConversion(new FunctionModifier() {
-    	    
+
     	    ConvertModifier.FormatModifier toChar = new ConvertModifier.FormatModifier("to_char"); //$NON-NLS-1$
     	    ConvertModifier.FormatModifier toNChar = new ConvertModifier.FormatModifier(TO_NCHAR);
-    	    
+
             @Override
             public List<?> translate(Function function) {
                 if (isNonAscii(function.getParameters().get(0))) {
@@ -264,7 +264,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                 return toChar.translate(function);
             }
         }, FunctionModifier.STRING);
-    	
+
     	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
     	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
     			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
@@ -276,17 +276,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				}
 				return Arrays.asList("trunc(to_number(", function.getParameters().get(0), "))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}, 
+		},
 		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
     	convertModifier.addNumericBooleanConversions();
     	convertModifier.setWideningNumericImplicit(true);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-    	
-    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING); 
-    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP); 
-    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL); 
-    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL); 
-    	
+
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING);
+    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP);
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL);
+    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL);
+
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, OBJECT, STRING);
@@ -301,7 +301,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
     	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
-        
+
     	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
     	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
     	registerFunctionModifier(SourceSystemFunctions.ST_ASGML, new AliasModifier("SDO_UTIL.TO_GMLGEOMETRY")); //$NON-NLS-1$
@@ -309,7 +309,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         // Used instead of SDO_UTIL functions because it allows SRID to be specified.
     	// we need to use to_blob and to_clob to disambiguate
     	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				Expression ex = function.getParameters().get(0);
@@ -318,9 +318,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				}
 				return super.translate(function);
 			}
-		}); 
+		});
     	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
-			
+
     		@Override
 			public List<?> translate(Function function) {
 				Expression ex = function.getParameters().get(0);
@@ -329,7 +329,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				}
 				return super.translate(function);
 			}
-    	}); 
+    	});
 
         registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.SDO_DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
@@ -344,12 +344,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_EQUALS, new AliasModifier("SDO_EQUALS")); //$NON-NLS-1$
         //registerFunctionModifier(SourceSystemFunctions.ST_WITHIN, new OracleRelateModifier("inside")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ST_SRID, new TemplateFunctionModifier("nvl(", 0, ".sdo_srid, 0)")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("DBMS_RANDOM.VALUE")); //$NON-NLS-1$
-        
+
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new TimestampAddModifier());
     }
-    
+
     @Override
     public void initCapabilities(Connection connection)
             throws TranslatorException {
@@ -357,7 +357,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         if (getVersion().compareTo(ELEVEN_2) >= 0) {
             AggregateAttributes aa = new AggregateAttributes();
             aa.setAllowsOrderBy(true);
-            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING, STRING).setAggregateAttributes(aa); 
+            addPushDownFunction(ORACLE, LISTAGG, STRING, STRING, STRING).setAggregateAttributes(aa);
             addPushDownFunction(ORACLE, LISTAGG, STRING, STRING).setAggregateAttributes(aa);
         }
         if (connection != null && isOracleSuppliedDriver()) {
@@ -375,14 +375,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                     }
                 }
             } catch (SQLException e) {
-            
+
             }
         }
     }
-    
+
     public void handleInsertSequences(Insert insert) throws TranslatorException {
-        /* 
-         * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence 
+        /*
+         * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence
          * then pull the Sequence name out of the name in source of the column.
          */
     	if (!(insert.getValueSource() instanceof ExpressionValueSource)) {
@@ -396,10 +396,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	if (allElements.size() == values.getValues().size()) {
     		return;
     	}
-    	
+
     	int index = 0;
     	List<ColumnReference> elements = insert.getColumns();
-    	
+
     	for (Column element : allElements) {
     		if (!element.isAutoIncremented()) {
     			continue;
@@ -420,23 +420,23 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		if (found) {
     			continue;
     		}
-    		
+
             String sequence = name.substring(seqIndex + SEQUENCE.length());
-            
+
             int delimiterIndex = sequence.indexOf(Tokens.DOT);
             if (delimiterIndex == -1) {
             	 throw new TranslatorException(JDBCPlugin.Event.TEIID11017, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11017, SEQUENCE, name));
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);
-                
+
             NamedTable sequenceGroup = this.getLanguageFactory().createNamedTable(sequenceGroupName, null, null);
             ColumnReference sequenceElement = this.getLanguageFactory().createColumnReference(sequenceElementName, sequenceGroup, null, element.getJavaType());
             insert.getColumns().add(index, this.getLanguageFactory().createColumnReference(element.getName(), insert.getTable(), element, element.getJavaType()));
             values.getValues().add(index, sequenceElement);
 		}
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (command instanceof Insert) {
@@ -448,7 +448,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				throw new RuntimeException(e);
 			}
     	}
-    	
+
     	if (!(command instanceof QueryExpression)) {
     		return null;
     	}
@@ -458,10 +458,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
 		Limit limit = queryCommand.getLimit();
 		queryCommand.setLimit(null);
-		
+
 		if (command instanceof Select) {
 			Select select = (Select)command;
-			
+
 			TableReference tr = select.getFrom().get(0);
 			if (tr instanceof NamedTable && isDual((NamedTable)tr)) {
 				if (limit.getRowOffset() > 0 || limit.getRowLimit() == 0) {
@@ -472,20 +472,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				return null; //dual does not allow a limit
 			}
 		}
-		
+
     	List<Object> parts = new ArrayList<Object>();
-    	
+
     	if (queryCommand.getWith() != null) {
 			With with = queryCommand.getWith();
 			queryCommand.setWith(null);
 			parts.add(with);
 		}
-    	
+
     	parts.add("SELECT "); //$NON-NLS-1$
     	/*
     	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
     	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
-    	 * we just use the projected names 
+    	 * we just use the projected names
     	 */
     	boolean allAliased = true;
     	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
@@ -508,7 +508,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		if (limit.getRowOffset() > 0) {
 			parts.add(" FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
 		} else {
-			parts.add(" FROM ("); //$NON-NLS-1$ 
+			parts.add(" FROM ("); //$NON-NLS-1$
 		}
 		parts.add(queryCommand);
 		if (limit.getRowOffset() > 0) {
@@ -555,7 +555,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                 l.setType(VarcharType.class);
                 Object value = l.getValue();
                 if (value != null && isNonAscii(value.toString())) {
-                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Inserting a string with non-ascii characters into a varchar column, replacement characters will be used."); //$NON-NLS-1$   
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Inserting a string with non-ascii characters into a varchar column, replacement characters will be used."); //$NON-NLS-1$
                 }
             }
             if (ex instanceof Parameter) {
@@ -563,11 +563,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             }
         }
     }
-    
+
 	private boolean isDual(NamedTable table) {
 		String groupName = null;
 		AbstractMetadataRecord groupID = table.getMetadataObject();
-		if(groupID != null) {              
+		if(groupID != null) {
 		    groupName = SQLStringVisitor.getRecordName(groupID);
 		} else {
 		    groupName = table.getName();
@@ -579,7 +579,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean useAsInGroupAlias(){
         return false;
     }
-    
+
     @Override
     public String getSetOperationString(Operation operation) {
     	if (operation == Operation.EXCEPT) {
@@ -587,11 +587,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.getSetOperationString(operation);
     }
-    
+
     @Override
     public String getSourceComment(ExecutionContext context, Command command) {
     	String comment = super.getSourceComment(context, command);
-    	
+
     	boolean usingPayloadComment = false;
     	if (context != null) {
 	    	// Check for db hints
@@ -604,14 +604,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 			            comment += payloadString + " "; //$NON-NLS-1$
 			            usingPayloadComment = true;
 		        	} else {
-		        		String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Execution Payload", payloadString); //$NON-NLS-1$ 
+		        		String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Execution Payload", payloadString); //$NON-NLS-1$
 		        		context.addWarning(new TranslatorException(msg));
 		        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
 		        	}
 		        }
 		    }
     	}
-    	
+
     	if (!usingPayloadComment && context != null) {
     		String hint = context.getSourceHint();
     		if (context.getGeneralHint() != null) {
@@ -632,7 +632,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     		}
     	}
-    	
+
 		if (command instanceof Select) {
 	        //
 	        // This simple algorithm determines the hint which will be added to the
@@ -650,15 +650,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
     	return comment;
     }
-    
+
     /**
      * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
-     *  
+     *
      * @see org.teiid.language.visitor.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
      * @since 5.0
      */
     @Override
-    public String replaceElementName(String group, String element) {        
+    public String replaceElementName(String group, String element) {
 
         // Check if the element was modeled as using a Sequence
         int useIndex = element.indexOf(SEQUENCE);
@@ -675,15 +675,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             // Strip group if group or element are pseudo-columns
             return element;
         }
-        
+
         return null;
     }
-    
+
     @Override
     public boolean hasTimeType() {
     	return false;
     }
-       
+
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
         Integer code = customTypeCodes.get(paramType);
@@ -693,26 +693,26 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	super.bindValue(stmt, param, paramType, i);
     }
-    
+
     @Override
     public boolean useStreamsForLobs() {
     	return true;
     }
-    
+
     @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.HIGH;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
     	return true;
-    }    
-    
+    }
+
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this) {
-    		
+
     		@Override
     		public void visit(Select select) {
     			if (select.getFrom() == null || select.getFrom().isEmpty()) {
@@ -720,7 +720,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(select);
     		}
-    		
+
     		@Override
     		public void visit(Comparison obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
@@ -732,7 +732,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	    				p.setType(FixedCharType.class);
     				}
     			}
-    			if (obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN 
+    			if (obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN
     					&& (obj.getLeftExpression() instanceof Function)
     					&& obj.getRightExpression() instanceof Literal) {
     				Function f = (Function)obj.getLeftExpression();
@@ -743,7 +743,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
-    		
+
     		@Override
     		protected void appendRightComparison(Comparison obj) {
     			if (obj.getRightExpression() instanceof Array) {
@@ -761,12 +761,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 					return false;
 				}
 				ColumnReference cr = (ColumnReference)obj;
-				return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)  
-						&& cr.getMetadataObject() != null 
+				return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)
+						&& cr.getMetadataObject() != null
 						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
 								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
-			
+
     		@Override
             public void visit(In obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
@@ -782,7 +782,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
-    		
+
     		@Override
             public void visit(NamedTable table) {
     			stripDualAlias(table);
@@ -796,7 +796,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                     }
     			}
 			}
-    		
+
     		@Override
     		public void visit(ColumnReference obj) {
     			if (obj.getTable() != null) {
@@ -804,7 +804,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
-    		
+
     		@Override
     		public void visit(Call call) {
         		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
@@ -840,7 +840,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 				}
 				return set;
 			}
-    		
+
     		@Override
     		public void visit(Like obj) {
     			if (obj.getMode() == MatchMode.REGEX) {
@@ -859,7 +859,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     				super.visit(obj);
     			}
     		}
-    		
+
     		@Override
     		public void visit(WithItem obj) {
     			if (obj.getColumns() != null) {
@@ -896,15 +896,15 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                         if (!OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
                             clause.setResult(toNChar(clause.getResult()));
                         }
-                    }   
+                    }
     		    }
     		    super.visit(obj);
     		}
-    		
+
     		private Function toNChar(Expression ex) {
     		    return new Function(TO_NCHAR, Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.STRING);
     		}
-    		
+
     		@Override
     		public void visit(SetQuery obj) {
     		    for (int i = 0; i < obj.getColumnNames().length; i++) {
@@ -922,10 +922,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		    }
     		    super.visit(obj);
     		}
-    		
+
     	};
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -936,7 +936,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN2"); //$NON-NLS-1$
         supportedFunctions.add("COS"); //$NON-NLS-1$
-        supportedFunctions.add(SourceSystemFunctions.COT); 
+        supportedFunctions.add(SourceSystemFunctions.COT);
         supportedFunctions.add("EXP"); //$NON-NLS-1$
         supportedFunctions.add("FLOOR"); //$NON-NLS-1$
         supportedFunctions.add("CEILING"); //$NON-NLS-1$
@@ -991,9 +991,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL");      //$NON-NLS-1$ 
+        supportedFunctions.add("NVL");      //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
-        supportedFunctions.add(SourceSystemFunctions.ROUND); 
+        supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(RELATE);
         supportedFunctions.add(NEAREST_NEIGHBOR);
         supportedFunctions.add(NEAREST_NEIGHBOR_DISTANCE);
@@ -1017,7 +1017,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
         return supportedFunctions;
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
     	if (timestampValue.getNanos() == 0) {
@@ -1027,7 +1027,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translateLiteralTimestamp(timestampValue);
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -1036,7 +1036,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
-    }    
+    }
     @Override
     public boolean supportsRowLimit() {
         return true;
@@ -1045,41 +1045,41 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowOffset() {
         return true;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsElementaryOlapOperations() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
     	return true;
     }
-    
+
     public void setOracleSuppliedDriver(boolean oracleNative) {
 		this.oracleSuppliedDriver = oracleNative;
 	}
-    
+
 	@TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
     public boolean isOracleSuppliedDriver() {
 		return oracleSuppliedDriver;
 	}
-		
+
     @Override
     protected void registerSpecificTypeOfOutParameter(
     		CallableStatement statement, Class<?> runtimeType, int index)
@@ -1089,13 +1089,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			statement.registerOutParameter(index, CURSOR_TYPE);
     			return;
     		} else if (runtimeType == TypeFacility.RUNTIME_TYPES.OBJECT) {
-    			//TODO: this is not currently handled and oracle will throw an exception.  
+    			//TODO: this is not currently handled and oracle will throw an exception.
     			//we need additional logic to handle sub types (possibly using the nativeType)
     		}
     	}
 		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
     }
-    
+
     @Override
     public ResultSet executeStoredProcedure(CallableStatement statement,
     		List<Argument> preparedValues, Class<?> returnType) throws SQLException {
@@ -1114,12 +1114,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return null;
     }
-    
+
     @Override
     public boolean supportsOnlyFormatLiterals() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsFormatLiteral(String literal,
     		org.teiid.translator.ExecutionFactory.Format format) {
@@ -1128,33 +1128,33 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return parseModifier.supportsLiteral(literal);
     }
-    
+
     @Override
     public boolean supportsArrayType() {
     	return true;
     }
-    
+
     @Override
     @Deprecated
     protected JDBCMetadataProcessor createMetadataProcessor() {
         return (JDBCMetadataProcessor)getMetadataProcessor();
-    }    
-    
+    }
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
     	return new OracleMetadataProcessor();
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
     	return getVersion().compareTo(NINE_2) >= 0;
     }
-    
+
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
     	return getVersion().compareTo(ELEVEN_2_0_4) >= 0;
     }
-    
+
     @Override
     protected boolean supportsGeneratedKeys(ExecutionContext context,
     		Command command) {
@@ -1166,17 +1166,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.supportsGeneratedKeys(context, command);
     }
-    
+
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
-	
+
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
-    
+
     @Override
     public String createTempTable(String string, List<ColumnReference> cols,
     		ExecutionContext context, Connection connection) throws SQLException {
@@ -1194,7 +1194,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	throw e1;
     }
-    
+
     /**
      * uses a random table name strategy with a
      * retry in the {@link #createTempTable(String, List, ExecutionContext, Connection)} method
@@ -1203,7 +1203,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public String getTemporaryTableName(String prefix) {
     	return prefix + (int)(Math.random() * 10000000);
     }
-    
+
     @Override
     public String getCreateTemporaryTablePostfix(boolean inTransaction) {
     	if (!inTransaction) {
@@ -1211,7 +1211,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.getCreateTemporaryTablePostfix(inTransaction) + "; END;"; //$NON-NLS-1$
     }
-    
+
     @Override
     public String getCreateTemporaryTableString(boolean inTransaction) {
     	if (!inTransaction) {
@@ -1219,7 +1219,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE '" + super.getCreateTemporaryTableString(inTransaction); //$NON-NLS-1$
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
     	if (getVersion().getMajorVersion() >= 10) {
@@ -1227,7 +1227,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsGroupByRollup() {
     	return true;
@@ -1243,17 +1243,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         final Clob clob = results.getClob(paramIndex);
         if (clob != null) {
         	return new GeometryInputSource() {
-				
+
 				@Override
 				public Reader getGml() throws SQLException {
 					return clob.getCharacterStream();
 				}
-				
+
 			};
         }
         return null;
     }
-    
+
     @Override
     public void intializeConnectionAfterCancel(Connection c) throws SQLException {
     	//Oracle JDBC has a timing bug with cancel during result set iteration
@@ -1261,27 +1261,27 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	//doing an isvalid check seems to allow the connection to be safely reused
     	c.isValid(1);
     }
-    
+
     @Override
     public boolean supportsCorrelatedSubqueryLimit() {
     	return false;
     }
-    
+
     @Override
     public boolean useColumnNamesForGeneratedKeys() {
     	return true;
     }
-    
+
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
     	return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public boolean supportsSubqueryInOn() {
     	return false; //even oracle 12 still has issues if a with clause is also in the source query
     }
-    
+
     public boolean supportsConvert(int fromType, int toType) {
     	//allow conversion from clob to string
 		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
@@ -1289,17 +1289,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
 		return true;
 	}
-    
+
     @Override
     protected boolean supportsBooleanExpressions() {
         return false;
     }
-    
+
     @Override
     public boolean supportsSelectExpressionArrayType() {
         return false;
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
         if (obj instanceof AggregateFunction) {
@@ -1313,33 +1313,33 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         }
         return super.translate(obj, context);
     }
-    
+
     @Override
     public boolean useUnicodePrefix() {
         return true;
     }
-    
+
     @Override
     protected boolean isNonAsciiFunction(Function f) {
         return f.getName().equalsIgnoreCase(TO_NCHAR)
                      || (f.getType() == TypeFacility.RUNTIME_TYPES.CHAR && f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT));
     }
-    
+
     @Override
     public boolean isExtendedAscii() {
         return isExtendedAscii;
     }
-    
+
     @Override
     public boolean useNBindingType() {
         return useNBindingType;
     }
-    
+
     @Override
     public boolean supportsOnlyTimestampAddLiteral() {
         return true;
     }
-    
+
     @Override
     public boolean supportsWindowFunctionNthValue() {
         return getVersion().compareTo(ELEVEN_2) >= 0;

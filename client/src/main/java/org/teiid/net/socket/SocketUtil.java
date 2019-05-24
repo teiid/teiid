@@ -44,14 +44,14 @@ import org.teiid.jdbc.JDBCPlugin;
 
 
 
-/** 
+/**
  * This class provides some utility methods to create ssl sockets using the
- * keystores and trust stores. these are the properties required for the making the 
+ * keystores and trust stores. these are the properties required for the making the
  * ssl connection
  */
 public class SocketUtil {
 	private static Logger logger = Logger.getLogger(SocketUtil.class.getName());
-    
+
     static final String TRUSTSTORE_PASSWORD = "org.teiid.ssl.trustStorePassword"; //$NON-NLS-1$
     public static final String TRUSTSTORE_FILENAME = "org.teiid.ssl.trustStore"; //$NON-NLS-1$
     static final String KEYSTORE_ALGORITHM = "org.teiid.ssl.algorithm"; //$NON-NLS-1$
@@ -64,12 +64,12 @@ public class SocketUtil {
     static final String KEY_PASSWORD = "org.teiid.ssl.keyPassword"; //$NON-NLS-1$
     static final String TRUST_ALL = "org.teiid.ssl.trustAll"; //$NON-NLS-1$
     static final String CHECK_EXPIRED = "org.teiid.ssl.checkExpired"; //$NON-NLS-1$
-    
+
     public static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
-    
+
     public static final String ANON_CIPHER_SUITE = "TLS_DH_anon_WITH_AES_128_CBC_SHA"; //$NON-NLS-1$
     public static final String DEFAULT_PROTOCOL = "TLSv1.2"; //$NON-NLS-1$
-    
+
     private final static X509TrustManager[] TRUST_ALL_MANAGER = new X509TrustManager[] {new X509TrustManager() {
 		@Override
 		public X509Certificate[] getAcceptedIssuers() {
@@ -79,13 +79,13 @@ public class SocketUtil {
 		@Override
 		public void checkServerTrusted(X509Certificate[] arg0, String arg1)
 				throws CertificateException {
-			
+
 		}
 
 		@Override
 		public void checkClientTrusted(X509Certificate[] arg0, String arg1)
 				throws CertificateException {
-			
+
 		}
 	}};
 
@@ -93,7 +93,7 @@ public class SocketUtil {
     	private boolean isAnon;
     	private boolean warned;
     	private javax.net.ssl.SSLSocketFactory factory;
-    	
+
     	public SSLSocketFactory(SSLContext context, boolean isAnon) {
 			this.factory = context.getSocketFactory();
 			this.isAnon = isAnon;
@@ -109,26 +109,26 @@ public class SocketUtil {
     		return result;
     	}
     }
-    
+
     public static SSLSocketFactory getSSLSocketFactory(Properties props) throws IOException, GeneralSecurityException{
-        String keystore = props.getProperty(KEYSTORE_FILENAME); 
-        String keystorePassword = props.getProperty(KEYSTORE_PASSWORD); 
-        String keystoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE); 
-        String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_PROTOCOL); 
-        String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM); 
-        String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
+        String keystore = props.getProperty(KEYSTORE_FILENAME);
+        String keystorePassword = props.getProperty(KEYSTORE_PASSWORD);
+        String keystoreType = props.getProperty(KEYSTORE_TYPE, DEFAULT_KEYSTORE_TYPE);
+        String keystoreProtocol = props.getProperty(PROTOCOL, DEFAULT_PROTOCOL);
+        String keystoreAlgorithm = props.getProperty(KEYSTORE_ALGORITHM);
+        String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore);
         String truststorePassword = props.getProperty(TRUSTSTORE_PASSWORD, keystorePassword);
         String keyAlias = props.getProperty(KEYSTORE_ALIAS);
         String keyPassword = props.getProperty(KEY_PASSWORD);
-        
+
         boolean anon = PropertiesUtils.getBooleanProperty(props, ALLOW_ANON, true);
         boolean trustAll = PropertiesUtils.getBooleanProperty(props, TRUST_ALL, false);
         boolean checkExpired = PropertiesUtils.getBooleanProperty(props, CHECK_EXPIRED, false);
-        
+
         SSLContext result = null;
         // 1) keystore != null = 2 way SSL (can define a separate truststore too)
-        // 2) truststore != null = 1 way SSL (here we can define custom properties for truststore; useful when 
-        //    client like a appserver have to define multiple certs without importing 
+        // 2) truststore != null = 1 way SSL (here we can define custom properties for truststore; useful when
+        //    client like a appserver have to define multiple certs without importing
         //    all the certificates into one single certificate
         // 3) else = javax properties; this is default way to define the SSL anywhere.
         if (keystore != null || truststore != null || trustAll || checkExpired) {
@@ -139,7 +139,7 @@ public class SocketUtil {
         //TODO: could allow a custom SSLSocketFactory to be plugged in like the pg jdbc driver
         return new SSLSocketFactory(result, anon);
     }
-    
+
     public static boolean addCipherSuite(SSLSocket engine, String cipherSuite) {
         if (!Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite)) {
         	return false;
@@ -149,9 +149,9 @@ public class SocketUtil {
 
         String[] newSuites = new String[suites.length + 1];
         System.arraycopy(suites, 0, newSuites, 0, suites.length);
-        
+
         newSuites[suites.length] = cipherSuite;
-        
+
         engine.setEnabledCipherSuites(newSuites);
         return true;
     }
@@ -159,7 +159,7 @@ public class SocketUtil {
     public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
         return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null, null, false, false);
     }
-    
+
     public static SSLContext getSSLContext(String keystore,
                                             String password,
                                             String truststore,
@@ -167,11 +167,11 @@ public class SocketUtil {
                                             String algorithm,
                                             String keystoreType,
                                             String protocol,
-                                            String keyAlias, 
+                                            String keyAlias,
                                             String keyPassword,
                                             boolean trustAll,
                                             boolean checkExpired) throws IOException, GeneralSecurityException {
-        
+
     	if (algorithm == null) {
     		algorithm = KeyManagerFactory.getDefaultAlgorithm();
     	}
@@ -180,7 +180,7 @@ public class SocketUtil {
         if (keystore != null) {
             KeyStore ks = loadKeyStore(keystore, password, keystoreType);
             if (ks != null) {
-            	
+
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
                 if (keyPassword == null) {
                 	keyPassword = password;
@@ -190,7 +190,7 @@ public class SocketUtil {
                 if (keyAlias != null) {
                 	if (!ks.isKeyEntry(keyAlias)) {
                         throw new GeneralSecurityException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
-                    }            	
+                    }
                     if (DEFAULT_KEYSTORE_TYPE.equals(keystoreType)) {
                         keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
                     }
@@ -199,10 +199,10 @@ public class SocketUtil {
                     		keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
                     	}
                     }
-                }                
+                }
             }
         }
-        
+
         // Configure the Trust Store Manager
         TrustManager[] trustManagers = null;
         if (trustAll) {
@@ -216,11 +216,11 @@ public class SocketUtil {
 	                trustManagers = tmf.getTrustManagers();
 	            }
         	}
-        	
+
             if (checkExpired) {
             	trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
             }
-        } 
+        }
 
         // Configure the SSL
         SSLContext sslc = SSLContext.getInstance(protocol);
@@ -241,12 +241,12 @@ public class SocketUtil {
 		if (trustManagers.length > 0 && trustManagers[0] instanceof X509TrustManager) {
 			final X509TrustManager tm = (X509TrustManager)trustManagers[0];
 			trustManagers[0] = new X509TrustManager() {
-				
+
 				@Override
 				public X509Certificate[] getAcceptedIssuers() {
 					return tm.getAcceptedIssuers();
 				}
-				
+
 				@Override
 				public void checkServerTrusted(X509Certificate[] chain, String authType)
 						throws CertificateException {
@@ -258,7 +258,7 @@ public class SocketUtil {
 						}
 					}
 				}
-				
+
 				@Override
 				public void checkClientTrusted(X509Certificate[] chain, String authType)
 						throws CertificateException {
@@ -274,18 +274,18 @@ public class SocketUtil {
 		}
 		return trustManagers;
 	}
-    
+
     /**
      * Load any defined keystore file, by first looking in the classpath
      * then looking in the file system path.
-     *   
+     *
      * @param name - name of the keystore
      * @param password - password to load the keystore
      * @param type - type of the keystore
-     * @return loaded keystore 
+     * @return loaded keystore
      */
     public static KeyStore loadKeyStore(String name, String password, String type) throws IOException, NoSuchAlgorithmException, CertificateException, KeyStoreException {
-        
+
         // Check in the classpath
         InputStream stream = SocketUtil.class.getClassLoader().getResourceAsStream(name);
         if (stream == null) {
@@ -295,10 +295,10 @@ public class SocketUtil {
                 IOException exception = new IOException(JDBCPlugin.Util.getString("SocketHelper.keystore_not_found", name)); //$NON-NLS-1$
                 exception.initCause(e);
                 throw exception;
-            } 
+            }
         }
-                
-        KeyStore ks = KeyStore.getInstance(type);        
+
+        KeyStore ks = KeyStore.getInstance(type);
         try {
         	ks.load(stream, password != null ? password.toCharArray() : null);
         } finally {
@@ -310,7 +310,7 @@ public class SocketUtil {
     static class AliasAwareKeyManager extends X509ExtendedKeyManager {
     	private X509KeyManager delegate;
     	private String keyAlias;
-    	
+
     	public AliasAwareKeyManager(X509KeyManager delegate, String alias) {
     		this.delegate = delegate;
     		this.keyAlias = alias;
@@ -345,13 +345,13 @@ public class SocketUtil {
 		public String[] getServerAliases(String keyType, Principal[] issuers) {
 			return delegate.getServerAliases(keyType, issuers);
 		}
-		
+
 		@Override
 		public String chooseEngineClientAlias(String[] keyType,
 				Principal[] issuers, SSLEngine engine) {
 			return keyAlias;
 		}
-		
+
 		@Override
 		public String chooseEngineServerAlias(String keyType,
 				Principal[] issuers, SSLEngine engine) {

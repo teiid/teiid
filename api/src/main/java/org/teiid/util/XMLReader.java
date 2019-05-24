@@ -40,36 +40,36 @@ public class XMLReader extends Reader {
 	private StringBuilder builder = new StringBuilder(BUFFER_SIZE);
 	private XMLEventReader reader;
 	private XMLEventWriter writer;
-	
+
 	public XMLReader(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
 		reader = source.getXMLEventReader();
 		if (reader == null) {
 			this.reader = XMLType.getXmlInputFactory().createXMLEventReader(source.getXMLStreamReader());
 		}
 		this.writer = outFactory.createXMLEventWriter(new Writer() {
-			
+
 			@Override
 			public void write(char[] cbuf, int off, int len) throws IOException {
 				builder.append(cbuf, off, len);
 			}
-			
+
 			@Override
 			public void flush() throws IOException {
-				
+
 			}
-			
+
 			@Override
 			public void write(String str, int off, int len) throws IOException {
 				builder.append(str, off, len);
 			}
-			
+
 			@Override
 			public void close() throws IOException {
-				
+
 			}
 		});
 	}
-	
+
 	@Override
 	public int read() throws IOException {
 		while (pos >= builder.length()) {
@@ -90,7 +90,7 @@ public class XMLReader extends Reader {
 		}
 		return builder.charAt(pos++);
 	}
-	
+
 
 	@Override
 	public void close() throws IOException {
@@ -100,7 +100,7 @@ public class XMLReader extends Reader {
 			throw new IOException(e);
 		}
 	}
-	
+
 	@Override
 	public int read(char[] cbuf, int off, int len) throws IOException {
 		int i = 0;
@@ -117,6 +117,6 @@ public class XMLReader extends Reader {
 		}
 		return i;
 	}
-	
+
 
 }

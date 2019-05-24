@@ -52,41 +52,41 @@ import com.couchbase.client.java.document.json.JsonValue;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
-    
+
     @ExtensionMetadataProperty(applicable = Table.class, datatype = Boolean.class, display = "Is Array Table", description = "Declare whether the table is array table")
     public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_URI + "ISARRAYTABLE"; //$NON-NLS-1$
-    
+
     @ExtensionMetadataProperty(applicable = Table.class, datatype = String.class, display = "Named Type Pair", description = "Declare the name of typed key/value pair")
     public static final String NAMED_TYPE_PAIR = MetadataFactory.COUCHBASE_URI + "NAMEDTYPEPAIR"; //$NON-NLS-1$
-  
+
     private Integer sampleSize;
-    
-    private String typeNameList; 
-    
+
+    private String typeNameList;
+
     private String sampleKeyspaces = ALL_COLS;
-    
+
     private Map<String, List<String>> typeNameMap;
 
     private boolean useDouble;
-            
+
     @Override
     public void process(MetadataFactory mf, CouchbaseConnection conn) throws TranslatorException {
         if (this.typeNameList == null) {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29009));
         }
-        
+
         List<String> keyspaces = loadKeyspaces(conn);
         for(String keyspace : keyspaces) {
-            addTable(mf, conn, conn.getNamespace(), keyspace);  
+            addTable(mf, conn, conn.getNamespace(), keyspace);
         }
-       
+
         addProcedures(mf, conn);
     }
 
     private List<String> loadKeyspaces(CouchbaseConnection conn) throws TranslatorException {
-        
+
         String namespace = conn.getNamespace();
-        
+
         boolean isValidSchema = false;
         String n1qlNamespaces = buildN1QLNamespaces();
         Iterator<N1qlQueryRow> namespaces = conn.execute(n1qlNamespaces).iterator();
@@ -101,13 +101,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29010, DEFAULT_NAMESPACE));
             namespace = DEFAULT_NAMESPACE;
         }
-        
+
         Set<String> keyspaceSet = null;
         if(sampleKeyspaces.trim().length() > 0 && !sampleKeyspaces.equals(ALL_COLS)) {
             String[] array= sampleKeyspaces.split(COMMA);
             keyspaceSet = new HashSet<>(Arrays.asList(array));
         }
-        
+
         List<String> results = new ArrayList<>();
         String n1qlKeyspaces = buildN1QLKeyspaces(namespace);
         List<N1qlQueryRow> keyspaces = conn.execute(n1qlKeyspaces).allRows();
@@ -119,42 +119,42 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 results.add(keyspace);
             }
         }
-        
+
         Collections.sort(results);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29011, n1qlKeyspaces, results));
-        
+
         return results;
     }
 
     /**
-     * Basically, a keyspace be map to a table, keyspace name is the table name, if TranslatorProperty TypeNameList defined, 
-     * a keyspace may map to several tables, for example, if the TypeNameList=`default`:`type`, 
+     * Basically, a keyspace be map to a table, keyspace name is the table name, if TranslatorProperty TypeNameList defined,
+     * a keyspace may map to several tables, for example, if the TypeNameList=`default`:`type`,
      * then the {@link CouchbaseMetadataProcessor#addTable(MetadataFactory, CouchbaseConnection, namespace, namespace)}
      * will get all distinct `type` attribute referenced values from keyspace, and use all these values as table name.
-     * 
-     * If multiple keyspaces has same typed value, for example, like TypeNameList=`default`:`type`,`default2`:`type`, both default and default2 
+     *
+     * If multiple keyspaces has same typed value, for example, like TypeNameList=`default`:`type`,`default2`:`type`, both default and default2
      * has document defined {"type": "Customer"}, then the default's table name is 'Customer', default2's table name is 'default2_Customer'.
-     * 
+     *
      * Scan row will add columns to table or create sub-table, nested array be map to a separated table.
-     * 
+     *
      * @param mf - MetadataFactory
      * @param conn - CouchbaseConnection
      * @param namespace - couchbase namespace
      * @param keyspace - couchbase  keyspace
-     * @throws TranslatorException 
+     * @throws TranslatorException
      */
     private void addTable(MetadataFactory mf, CouchbaseConnection conn, String namespace, String keyspace) throws TranslatorException {
-        
+
         String nameInSource = nameInSource(keyspace);
-        
+
         Map<String, String> tableNameTypeMap = new HashMap<>();
         List<String> typeNameList = getTypeName(nameInSource);
         List<String> dataSrcTableList = new ArrayList<>();
         if(typeNameList != null && typeNameList.size() > 0) {
             String typeQuery = buildN1QLTypeQuery(typeNameList, namespace, keyspace);
-            LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, typeQuery)); 
+            LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, typeQuery));
             List<N1qlQueryRow> rows = conn.execute(typeQuery).allRows();
-            
+
             for(N1qlQueryRow row : rows) {
                 JsonObject rowJson = row.value();
                 for(String typeName : typeNameList) {
@@ -170,55 +170,55 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         } else {
             dataSrcTableList.add(keyspace);
         }
-        
+
         for(String name : dataSrcTableList) {
-            
+
             String tableName = name;
             if (mf.getSchema().getTable(name) != null && !name.equals(keyspace)) { // handle multiple keyspaces has same typed table name
                 tableName = keyspace + UNDERSCORE + name;
             }
-            
+
             Table table = mf.addTable(tableName);
             table.setNameInSource(nameInSource);
             table.setSupportsUpdate(true);
             table.setProperty(IS_ARRAY_TABLE, FALSE_VALUE);
-            
+
             Column column = mf.addColumn(DOCUMENTID, STRING, table);
             column.setUpdatable(true);
             mf.addPrimaryKey("PK0", Arrays.asList(DOCUMENTID), table); //$NON-NLS-1$
-            
+
             if(!name.equals(keyspace)) {
                 String namedTypePair = buildNamedTypePair(tableNameTypeMap.get(name), name);
                 table.setProperty(NAMED_TYPE_PAIR, namedTypePair);
             }
-            
+
             // scan row
             boolean hasTypeIdentifier = true;
             if(dataSrcTableList.size() == 1 && dataSrcTableList.get(0).equals(keyspace)) {
                 hasTypeIdentifier = false;
             }
-            
-            if(this.sampleSize == null || this.sampleSize == 0) {  
+
+            if(this.sampleSize == null || this.sampleSize == 0) {
                 this.sampleSize = 100; // default sample size is 100
                 LogManager.logInfo(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29008, this.sampleSize));
             }
-            
+
             String query = buildN1QLQuery(tableNameTypeMap.get(name), name, namespace, keyspace, this.sampleSize, hasTypeIdentifier);
-            LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, query)); 
+            LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29003, query));
             Iterator<N1qlQueryRow> result = conn.execute(query).iterator();
             while(result.hasNext()) {
                 JsonObject row = result.next().value(); // result.next() always can not be null
                 JsonObject currentRowJson = row.getObject(keyspace);
                 scanRow(keyspace, nameInSource(keyspace), currentRowJson, mf, table, table.getName(), false, new Dimension());
-            }            
+            }
         }
     }
 
 
     /**
-     * A dispatcher of scan jsonValue(document, of a segment of document), the jsonValue either can be a JsonObject, or JsonArray, 
+     * A dispatcher of scan jsonValue(document, of a segment of document), the jsonValue either can be a JsonObject, or JsonArray,
      * different type dispatch to different scan method.
-     * 
+     *
      * @param key - The attribute name in document, which mapped with value
      * @param value - JsonObject/JsonArray which may contain nested JsonObject/JsonArray
      * @param mf
@@ -230,9 +230,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      *                    deepest array is 3
      */
     protected void scanRow(String key, String keyInSource, JsonValue value, MetadataFactory mf, Table table, String referenceTableName, boolean isNestedType, Dimension dimension) {
-        
+
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29013, table, key, value));
-        
+
         if(isObjectJsonType(value)) {
             scanObjectRow(key, keyInSource, (JsonObject)value, mf, table, referenceTableName, isNestedType, dimension);
         } else if (isArrayJsonType(value)) {
@@ -241,9 +241,9 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     }
 
     private void scanObjectRow(String key, String keyInSource, JsonObject value, MetadataFactory mf, Table table, String referenceTableName, boolean isNestedType, Dimension dimension) {
-        
+
         Set<String> names = new TreeSet<String>(value.getNames());
-        
+
         for(String name : names) {
             String columnName = name;
             Object columnValue = value.get(columnName);
@@ -254,7 +254,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 String newKey = key + UNDERSCORE + columnName;
                 String newKeyInSource = keyInSource + SOURCE_SEPARATOR + nameInSource(columnName);
 
-                if(isObjectJsonType(columnValue)) { 
+                if(isObjectJsonType(columnValue)) {
                     scanRow(newKey, newKeyInSource, jsonValue, mf, table, referenceTableName, true, dimension);
                 } else if(isArrayJsonType(columnValue)) {
                     String tableName = repleaceTypedName(table.getName(), newKey);
@@ -270,17 +270,17 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 String columnNameInSource = keyInSource + SOURCE_SEPARATOR +nameInSource(name);
                 addColumn(columnName, columnType, columnValue, true, columnNameInSource, table, mf);
             }
-        } 
+        }
     }
 
     private void scanArrayRow(String keyspace, String keyInSource, JsonArray array, MetadataFactory mf, Table table, String referenceTableName, boolean isNestedType, Dimension dimension) {
-        
+
         if(array.size() > 0) {
             for(int i = 0 ; i < array.size() ; i ++) {
                 Object element = array.get(i);
                 if(isObjectJsonType(element)) {
                     JsonObject json = (JsonObject) element;
-                    
+
                     for(String name : new TreeSet<String>(json.getNames())) {
                         Object columnValue = json.get(name);
                         String columnType = this.getDataType(columnValue);
@@ -301,7 +301,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                             addColumn(columnName, columnType, columnValue, true, columnNameInSource, table, mf);
                         }
                     }
-                    
+
                 } else if(isArrayJsonType(element)) {
                     String tableName = table.getName() + UNDERSCORE + dimension.get();
                     String tableNameInSrc = table.getNameInSource() + SQUARE_BRACKETS;
@@ -320,11 +320,11 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             addColumn(columnName, null, null, true, null, table, mf);
         }
     }
-    
+
 
     /**
      * Principle used to map document-format nested JsonArray to JDBC-compatible Table:
-     *   1) If nested array contains differently-typed elements and no elements are Json document, all elements be 
+     *   1) If nested array contains differently-typed elements and no elements are Json document, all elements be
      *      map to same column with Object type.
      *   2) If nested array contains Json document, all keys be map to Column name, and reference value data type be
      *      map to Column data type
@@ -345,38 +345,38 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             Column column = mf.addColumn(DOCUMENTID, STRING, table);
             column.setUpdatable(true);
             mf.addForeignKey("FK0", Arrays.asList(DOCUMENTID), referenceTableName, table); //$NON-NLS-1$
-            
+
             for(int i = 1 ; i <= dimension.dimension ; i ++) {
                 String idxName = buildArrayTableIdxName(nameInSource, i);
                 idxName = repleaceTypedName(referenceTableName, idxName);
                 Column idx = mf.addColumn(idxName, INTEGER, table);
                 idx.setUpdatable(true);
             }
-        } 
+        }
         dimension.increment();
         return table;
     }
 
     private void addColumn(String name, String type, Object columnValue, boolean updatable, String nameInSource, Table table, MetadataFactory mf) {
-        
+
         String columnName = name;
         String columnType = type;
-        
+
         if(columnType == null && columnValue == null && table.getColumnByName(columnName) == null) {
             columnType = TypeFacility.RUNTIME_NAMES.STRING;
         } else if (columnType == null && columnValue == null && table.getColumnByName(columnName) != null) {
             columnType = table.getColumnByName(columnName).getDatatype().getName();
         }
-        
+
         if(DataTypeManager.DefaultDataTypes.NULL.equals(columnType)) {
             columnType = DataTypeManager.DefaultDataTypes.STRING; // how to handle null type?
         }
-        
+
         String tableNameInSource = trimWave(table.getNameInSource());
         if(table.getProperty(IS_ARRAY_TABLE, false).equals(FALSE_VALUE) && columnName.startsWith(tableNameInSource)){
             columnName = columnName.substring(tableNameInSource.length() + 1);
         }
-        
+
         if (table.getColumnByName(columnName) == null) {
             Column column = mf.addColumn(columnName, columnType, table);
             column.setUpdatable(updatable);
@@ -400,7 +400,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     private boolean isArrayJsonType(Object jsonValue) {
         return jsonValue instanceof JsonArray;
     }
-    
+
     /**
      * For handle typed table name, replace the root keyspace to typed table name.
      * @param name - typed table name.
@@ -411,7 +411,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         String tableName = path.substring(path.indexOf(UNDERSCORE));
         return name + tableName;
     }
-    
+
     private String buildArrayTableIdxName(String nameInSource, int dimension) {
         StringBuilder sb = new StringBuilder();
         String dim1Name = nameInSource.substring(0, nameInSource.indexOf(SQUARE_BRACKETS));
@@ -437,19 +437,19 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         sb.append(IDX_SUFFIX);
         return sb.toString();
     }
-    
+
     private String buildNamedTypePair(String columnIdentifierName, String typedValue) {
         StringBuilder sb = new StringBuilder();
-        sb.append(columnIdentifierName).append(COLON).append(QUOTE).append(typedValue).append(QUOTE); 
+        sb.append(columnIdentifierName).append(COLON).append(QUOTE).append(typedValue).append(QUOTE);
         return sb.toString();
     }
-    
+
     private List<String> getTypeName(String keyspace) {
-        
+
         if(this.typeNameList == null) {
             return null;
         }
-        
+
         if(this.typeNameMap == null) {
             this.typeNameMap = new HashMap<>();
             try {
@@ -466,43 +466,43 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
             } catch (Exception e) {
                 LogManager.logError(LogConstants.CTX_CONNECTOR, e, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29012, typeNameList));
             }
-        } 
+        }
 
         return this.typeNameMap.get(keyspace);
     }
-    
+
     protected void addProcedures(MetadataFactory metadataFactory, CouchbaseConnection connection) {
-        
+
         Procedure getDocuments = metadataFactory.addProcedure(GETDOCUMENTS);
         getDocuments.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.Annotation")); //$NON-NLS-1$
-        ProcedureParameter param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments); 
+        ProcedureParameter param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments);
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.id.Annotation")); //$NON-NLS-1$
         param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocuments);
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocuments.keyspace.Annotation")); //$NON-NLS-1$
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocuments); 
-        
+        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocuments);
+
         Procedure getDocument = metadataFactory.addProcedure(GETDOCUMENT);
         getDocument.setAnnotation(CouchbasePlugin.Util.getString("getDocument.Annotation")); //$NON-NLS-1$
-        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocument); 
+        param = metadataFactory.addProcedureParameter(ID, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocument);
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocument.id.Annotation")); //$NON-NLS-1$
         param = metadataFactory.addProcedureParameter(KEYSPACE, TypeFacility.RUNTIME_NAMES.STRING, Type.In, getDocument);
         param.setNullType(No_Nulls);
         param.setAnnotation(CouchbasePlugin.Util.getString("getDocument.keyspace.Annotation")); //$NON-NLS-1$
-        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocument); 
+        metadataFactory.addProcedureResultSetColumn(RESULT, TypeFacility.RUNTIME_NAMES.BLOB, getDocument);
     }
 
     /**
      * All supported type in a Couchbase JSON item:
-     *   null, String, Integer, Long, Double, Boolean, 
-     *   BigInteger, BigDecimal, JsonObject, JsonArray  
+     *   null, String, Integer, Long, Double, Boolean,
+     *   BigInteger, BigDecimal, JsonObject, JsonArray
      * @param value
      * @return
      */
     private String getDataType(Object value) {
-        
+
         if(value == null) {
             return TypeFacility.RUNTIME_NAMES.NULL;
         } else if (value instanceof String) {
@@ -528,19 +528,19 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
                 return TypeFacility.RUNTIME_NAMES.DOUBLE;
             }
             return TypeFacility.RUNTIME_NAMES.BIG_DECIMAL;
-        } 
+        }
 
         return TypeFacility.RUNTIME_NAMES.OBJECT;
     }
-    
+
     private String buildN1QLNamespaces() {
         return "SELECT name FROM system:namespaces"; //$NON-NLS-1$
     }
-    
+
     private String buildN1QLKeyspaces(String namespace) {
         return "SELECT name, namespace_id FROM system:keyspaces WHERE namespace_id = '" + namespace + "'"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     private String buildN1QLTypeQuery(List<String> typeNameList, String namespace, String keyspace) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT DISTINCT "); //$NON-NLS-1$
@@ -556,7 +556,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         sb.append(buildN1QLFrom(namespace, keyspace));
         return sb.toString();
     }
-    
+
     private String buildN1QLQuery(String columnIdentifierName, String typedValue, String namespace, String keyspace, int sampleSize, boolean hasTypeIdentifier) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT meta(").append(WAVE); //$NON-NLS-1$
@@ -567,11 +567,11 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         if(hasTypeIdentifier) {
             sb.append(" WHERE ").append(columnIdentifierName).append("='").append(typedValue).append("'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
-        sb.append(" LIMIT ").append(sampleSize); //$NON-NLS-1$ 
+        sb.append(" LIMIT ").append(sampleSize); //$NON-NLS-1$
         return sb.toString();
     }
-    
-    
+
+
     private String buildN1QLFrom(String namespace, String keyspace) {
         StringBuilder sb = new StringBuilder();
         sb.append(" FROM "); //$NON-NLS-1$
@@ -580,7 +580,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         sb.append(WAVE).append(keyspace).append(WAVE);
         return sb.toString();
     }
-    
+
     static String trimWave(String value) {
         String results = value;
         if(results.startsWith(WAVE) && results.endsWith(WAVE)) {
@@ -588,12 +588,12 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         }
         return results;
     }
-    
+
     static String nameInSource(String path) {
         if(path.startsWith(WAVE) && path.endsWith(WAVE)) {
             return path;
         }
-        return WAVE + path + WAVE; 
+        return WAVE + path + WAVE;
     }
 
     @TranslatorProperty(display = "SampleSize", category = PropertyType.IMPORT, description = "Maximum number of documents per keyspace that should be map") //$NON-NLS-1$ //$NON-NLS-2$
@@ -613,7 +613,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     public void setTypeNameList(String typeNameList) {
         this.typeNameList = typeNameList;
     }
-    
+
     @TranslatorProperty(display = "SampleKeyspaces", category = PropertyType.IMPORT, description = "A comma-separated list of the keyspace names to define which keyspaces that should be map, default map all keyspaces") //$NON-NLS-1$ //$NON-NLS-2$
     public String getSampleKeyspaces() {
         return sampleKeyspaces;
@@ -625,18 +625,18 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
 
     /**
      * The dimension of nested array, a dimension is a hint of nested array table name, and index name.
-     * 
+     *
      * For example, the following JsonObject is a 3 dimension nested array,
      * <pre> {@code
      *  {
      *    "default": {"nested": [[["dimension 3"]]]}
      *  }
      * }</pre>
-     * each dimension reference with a table, total 3 tables will be generated: 
+     * each dimension reference with a table, total 3 tables will be generated:
      *   default_nested
      *   default_nested_dim2
      *   default_nested_dim2_dim3
-     *   
+     *
      * The nested array contains it's index of it's parent array, the return of query
      * 'SELECT * FROM default_nested_dim2_dim3' looks
      * <pre> {@code
@@ -648,13 +648,13 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      *}</pre>
      */
     public static class Dimension{
-        
+
         int dimension = 1;
-        
+
         public void increment() {
             dimension++;
         }
-        
+
         public Dimension copy() {
             Dimension result = new Dimension();
             result.dimension = dimension;
@@ -664,11 +664,11 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
         public String get(){
             return DIM_SUFFIX + this.dimension;
         }
-        
+
     }
 
     public void setUseDouble(boolean useDouble) {
         this.useDouble = useDouble;
     }
-   
+
 }

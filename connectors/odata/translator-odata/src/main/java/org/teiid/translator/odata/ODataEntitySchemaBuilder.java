@@ -35,7 +35,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 
 public class ODataEntitySchemaBuilder {
-	
+
 	static EdmDataServices buildMetadata(MetadataStore metadataStore) {
 		try {
 			List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
@@ -49,7 +49,7 @@ public class ODataEntitySchemaBuilder {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-	
+
 	static EdmDataServices buildMetadata(Schema schema) {
 		try {
 			List<EdmSchema.Builder> edmSchemas = new ArrayList<EdmSchema.Builder>();
@@ -61,7 +61,7 @@ public class ODataEntitySchemaBuilder {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-	
+
 	static org.odata4j.edm.EdmEntitySet.Builder findEntitySet(List<Builder> edmSchemas, String schemaName, String enitityName) {
 		for (EdmSchema.Builder modelSchema:edmSchemas) {
 			if (modelSchema.getNamespace().equals(schemaName)) {
@@ -76,7 +76,7 @@ public class ODataEntitySchemaBuilder {
 		}
 		return null;
 	}
-	
+
 	static EdmSchema.Builder findSchema(List<Builder> edmSchemas, String schemaName) {
 		for (EdmSchema.Builder modelSchema:edmSchemas) {
 			if (modelSchema.getNamespace().equals(schemaName)) {
@@ -84,8 +84,8 @@ public class ODataEntitySchemaBuilder {
 			}
 		}
 		return null;
-	}	
-	
+	}
+
 	static org.odata4j.edm.EdmEntityType.Builder findEntityType(List<Builder> edmSchemas, String schemaName, String enitityName) {
 		for (EdmSchema.Builder modelSchema:edmSchemas) {
 			if (modelSchema.getNamespace().equals(schemaName)) {
@@ -97,8 +97,8 @@ public class ODataEntitySchemaBuilder {
 			}
 		}
 		return null;
-	}	
-	
+	}
+
 	static EdmEntityContainer.Builder findEntityContainer(List<Builder> edmSchemas, String schemaName) {
 		for (EdmSchema.Builder modelSchema:edmSchemas) {
 			if (modelSchema.getNamespace().equals(schemaName)) {
@@ -108,13 +108,13 @@ public class ODataEntitySchemaBuilder {
 			}
 		}
 		return null;
-	}	
-	
+	}
+
 	public static void buildEntityTypes(Schema schema, List<EdmSchema.Builder> edmSchemas, boolean preserveEntityTypeName) {
 		List<EdmEntitySet.Builder> entitySets = new ArrayList<EdmEntitySet.Builder>();
 		List<EdmEntityType.Builder> entityTypes = new ArrayList<EdmEntityType.Builder>();
 		LinkedHashMap<String, EdmComplexType.Builder> complexTypes = new LinkedHashMap<String, EdmComplexType.Builder>();
-	    
+
 		if (preserveEntityTypeName) {
 			//first pass, build complex types
 			for (Table table: schema.getTables().values()) {
@@ -125,7 +125,7 @@ public class ODataEntitySchemaBuilder {
 					LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17017, table.getFullName()));
 					continue;
 				}
-				
+
 				for (Column c : table.getColumns()) {
 					String columnGroup = c.getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
 					String name = c.getName();
@@ -140,7 +140,7 @@ public class ODataEntitySchemaBuilder {
 					EdmComplexType.Builder complexTypeBuilder = complexTypes.get(complexType);
 					if (complexTypeBuilder == null) {
 						complexTypeBuilder = EdmComplexType.newBuilder();
-						complexTypes.put(complexType, complexTypeBuilder); 
+						complexTypes.put(complexType, complexTypeBuilder);
 						complexTypeBuilder.setName(complexType);
 						complexTypeBuilder.setNamespace(schema.getName());
 					} else if (complexTypeBuilder.findProperty(name) != null) {
@@ -158,10 +158,10 @@ public class ODataEntitySchemaBuilder {
 				}
 			}
 		}
-		
+
 		//second pass, add all columns
 		for (Table table: schema.getTables().values()) {
-			
+
 			// skip if the table does not have the PK or unique
 			KeyRecord primaryKey = table.getPrimaryKey();
 			List<KeyRecord> uniques = table.getUniqueKeys();
@@ -177,7 +177,7 @@ public class ODataEntitySchemaBuilder {
 	    	EdmEntityType.Builder entityType = EdmEntityType
 					.newBuilder().setName(entityTypeName)
 					.setNamespace(schema.getName());
-			
+
 	    	// adding key
 	    	if (primaryKey != null) {
 				for (Column c : primaryKey.getColumns()) {
@@ -189,7 +189,7 @@ public class ODataEntitySchemaBuilder {
 					entityType.addKeys(c.getName());
 				}
 	    	}
-	    	
+
 	    	HashSet<String> columnGroups = new HashSet<String>();
 			// adding properties
 			for (Column c : table.getColumns()) {
@@ -214,35 +214,35 @@ public class ODataEntitySchemaBuilder {
 				}
 				entityType.addProperties(property);
 			}
-							
+
 			// entity set one for one entity type
 			EdmEntitySet.Builder entitySet = EdmEntitySet.newBuilder()
 					.setName(table.getName())
 					.setEntityType(entityType);
-			
+
 			entityType.setNamespace(schema.getName());
 			entitySets.add(entitySet);
 
 			// add enitity types for entity schema
 			entityTypes.add(entityType);
 	    }
-		
+
 		// entity container is holder entity sets, association sets, function imports
 		EdmEntityContainer.Builder entityContainer = EdmEntityContainer
 				.newBuilder().setName(schema.getName())
 				.setIsDefault(false)
 				.addEntitySets(entitySets);
-		
+
 		// build entity schema
 		EdmSchema.Builder modelSchema = EdmSchema.newBuilder()
 				.setNamespace(schema.getName())
 				.addEntityTypes(entityTypes)
 				.addEntityContainers(entityContainer)
 				.addComplexTypes(complexTypes.values());
-		
+
 		edmSchemas.add(modelSchema);
-	}	
-	
+	}
+
     static boolean isPartOfPrimaryKey(Table table, String columnName) {
         KeyRecord pk = table.getPrimaryKey();
         if (hasColumn(pk, columnName)) {
@@ -251,18 +251,18 @@ public class ODataEntitySchemaBuilder {
         for (KeyRecord key:table.getUniqueKeys()) {
             if (hasColumn(key, columnName)) {
                 return true;
-            }            
+            }
         }
         return false;
     }
-    
+
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
         	return pk.getColumnByName(columnName) != null;
         }
         return false;
     }
-	
+
 	private static String getEntityTypeName(Table t, boolean preserveEntityTypeName) {
 		String entityTypeName = t.getName();
 		if (preserveEntityTypeName && t.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false) != null) {
@@ -270,44 +270,44 @@ public class ODataEntitySchemaBuilder {
 		}
 		return entityTypeName;
 	}
-	
+
 	public static void buildAssosiationSets(Schema schema, List<Builder> edmSchemas, boolean preserveEntityTypeName) {
 		EdmSchema.Builder odataSchema = findSchema(edmSchemas, schema.getName());
 		EdmEntityContainer.Builder entityContainer = findEntityContainer(edmSchemas, schema.getName());
 		List<EdmAssociationSet.Builder> assosiationSets = new ArrayList<EdmAssociationSet.Builder>();
 		List<EdmAssociation.Builder> assosiations = new ArrayList<EdmAssociation.Builder>();
-		
+
 		for (Table table: schema.getTables().values()) {
-			
+
 			// skip if the table does not have the PK or unique
 			KeyRecord primaryKey = table.getPrimaryKey();
-			List<KeyRecord> uniques = table.getUniqueKeys();				
+			List<KeyRecord> uniques = table.getUniqueKeys();
 			if (primaryKey == null && uniques.isEmpty()) {
 				continue;
 			}
-			
+
 			// build Associations
 			for (ForeignKey fk:table.getForeignKeys()) {
-				
+
 				EdmEntitySet.Builder entitySet = findEntitySet(edmSchemas,schema.getName(), table.getName());
 				EdmEntitySet.Builder refEntitySet = findEntitySet(edmSchemas, schema.getName(),fk.getReferenceTableName());
-				EdmEntityType.Builder entityType = findEntityType(edmSchemas, schema.getName(), getEntityTypeName(table, preserveEntityTypeName));				
+				EdmEntityType.Builder entityType = findEntityType(edmSchemas, schema.getName(), getEntityTypeName(table, preserveEntityTypeName));
 				EdmEntityType.Builder refEntityType = findEntityType(edmSchemas, schema.getName(), getEntityTypeName(fk.getPrimaryKey().getParent(), preserveEntityTypeName));
-				
+
 				// check to see if fk is part of this table's pk, then it is 1 to 1 relation
 				boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
-				
-				// Build Association Ends				
+
+				// Build Association Ends
 				EdmAssociationEnd.Builder endSelf = EdmAssociationEnd.newBuilder()
 						.setRole(table.getName())
 						.setType(entityType)
 						.setMultiplicity(onetoone?EdmMultiplicity.ZERO_TO_ONE:EdmMultiplicity.MANY);
-				
+
 				EdmAssociationEnd.Builder endRef = EdmAssociationEnd.newBuilder()
 						.setRole(fk.getReferenceTableName())
 						.setType(refEntityType)
 						.setMultiplicity(EdmMultiplicity.ZERO_TO_ONE);
-				
+
 
 				// Build Association
 				EdmAssociation.Builder association = EdmAssociation.newBuilder();
@@ -315,7 +315,7 @@ public class ODataEntitySchemaBuilder {
 				association.setEnds(endSelf, endRef);
 				association.setNamespace(refEntityType.getFullyQualifiedTypeName().substring(0, refEntityType.getFullyQualifiedTypeName().indexOf('.')));
 				assosiations.add(association);
-				
+
 				// Build ReferentialConstraint
 				if (fk.getReferenceColumns() != null) {
 					EdmReferentialConstraint.Builder erc = EdmReferentialConstraint.newBuilder();
@@ -324,8 +324,8 @@ public class ODataEntitySchemaBuilder {
 					erc.setDependentRole(table.getName());
 					erc.addDependentReferences(getColumnNames(fk.getColumns()));
 					association.setRefConstraint(erc);
-				}					
-				
+				}
+
 				if (!fk.getReferenceTableName().equalsIgnoreCase(table.getName())) {
 				    // Add EdmNavigationProperty to entity type
 				    String navigationName = getNavigationName(entityType, fk.getReferenceTableName());
@@ -336,7 +336,7 @@ public class ODataEntitySchemaBuilder {
     				nav.setFromTo(endSelf, endRef);
     				entityType.addNavigationProperties(nav);
 				}
-				
+
 				// Add EdmNavigationProperty to Reference entity type
 				String navigationName = getNavigationName(refEntityType, table.getName());
 				EdmNavigationProperty.Builder refNav = EdmNavigationProperty.newBuilder(navigationName);
@@ -344,33 +344,33 @@ public class ODataEntitySchemaBuilder {
 				refNav.setFromToName(fk.getReferenceTableName(), table.getName());
 				refNav.setRelationship(association);
 				refNav.setFromTo(endRef, endSelf);
-				refEntityType.addNavigationProperties(refNav);					
-				
+				refEntityType.addNavigationProperties(refNav);
+
 				// build AssosiationSet
 				EdmAssociationSet.Builder assosiationSet = EdmAssociationSet.newBuilder()
 						.setName(table.getName()+"_"+fk.getName()) //$NON-NLS-1$
-						.setAssociationName(fk.getName());	
-				
+						.setAssociationName(fk.getName());
+
 				// Build AssosiationSet Ends
 				EdmAssociationSetEnd.Builder endOne = EdmAssociationSetEnd.newBuilder()
 						.setEntitySet(entitySet)
 						.setRoleName(table.getName())
 						.setRole(EdmAssociationEnd.newBuilder().setType(entityType).setRole(entityType.getName()));
-				
+
 				EdmAssociationSetEnd.Builder endTwo = EdmAssociationSetEnd.newBuilder()
 						.setEntitySet(refEntitySet)
 						.setRoleName(fk.getReferenceTableName())
-						.setRole(EdmAssociationEnd.newBuilder().setType(refEntityType).setRole(refEntityType.getName()));					
+						.setRole(EdmAssociationEnd.newBuilder().setType(refEntityType).setRole(refEntityType.getName()));
 				assosiationSet.setEnds(endOne, endTwo);
-				
+
 				assosiationSet.setAssociation(association);
 				assosiationSets.add(assosiationSet);
 			}
 		}
 		entityContainer.addAssociationSets(assosiationSets);
 		odataSchema.addAssociations(assosiations);
-	}	
-	
+	}
+
 	private static String getNavigationName(
             org.odata4j.edm.EdmEntityType.Builder entityType,
             String tableName) {
@@ -394,20 +394,20 @@ public class ODataEntitySchemaBuilder {
     public static void buildFunctionImports(Schema schema, List<Builder> edmSchemas, boolean preserveEntityTypeName) {
 		EdmSchema.Builder odataSchema = findSchema(edmSchemas, schema.getName());
 		EdmEntityContainer.Builder entityContainer = findEntityContainer(edmSchemas, schema.getName());
-		
+
 		// procedures
 		for(Procedure proc:schema.getProcedures().values()) {
 			EdmFunctionImport.Builder edmProcedure = EdmFunctionImport.newBuilder();
 			edmProcedure.setName(proc.getName());
 			String httpMethod = "POST"; //$NON-NLS-1$
-			
+
 			for (ProcedureParameter pp:proc.getParameters()) {
 				if (pp.getName().equals("return")) { //$NON-NLS-1$
 					httpMethod = "GET"; //$NON-NLS-1$
-					edmProcedure.setReturnType(ODataTypeManager.odataType(pp.getRuntimeType()));						
+					edmProcedure.setReturnType(ODataTypeManager.odataType(pp.getRuntimeType()));
 					continue;
 				}
-				
+
 				EdmFunctionParameter.Builder param = EdmFunctionParameter.newBuilder();
 				param.setName(pp.getName());
 				param.setType(ODataTypeManager.odataType(pp.getRuntimeType()));
@@ -421,11 +421,11 @@ public class ODataEntitySchemaBuilder {
 				else if (pp.getType() == ProcedureParameter.Type.Out) {
 					param.setMode(Mode.Out);
 				}
-				
+
 				param.setNullable(pp.getNullType() == NullType.Nullable);
 				edmProcedure.addParameters(param);
 			}
-			
+
 			// add a complex type for return resultset.
 			ColumnSet<Procedure> returnColumns = proc.getResultSet();
 			if (returnColumns != null) {
@@ -434,8 +434,8 @@ public class ODataEntitySchemaBuilder {
 				String entityTypeName = proc.getName()+"_"+returnColumns.getName(); //$NON-NLS-1$
 				if (preserveEntityTypeName && proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false) != null) {
 					entityTypeName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-				}				
-				complexType.setName(entityTypeName); 
+				}
+				complexType.setName(entityTypeName);
 				complexType.setNamespace(schema.getName());
 				for (Column c:returnColumns.getColumns()) {
 					EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
@@ -455,8 +455,8 @@ public class ODataEntitySchemaBuilder {
 			edmProcedure.setHttpMethod(httpMethod);
 			entityContainer.addFunctionImports(edmProcedure);
 		}
-	}	
-	
+	}
+
 	static List<String> getColumnNames(List<Column> columns){
 		ArrayList<String> names = new ArrayList<String>();
 		for (Column c: columns) {
@@ -464,16 +464,16 @@ public class ODataEntitySchemaBuilder {
 		}
 		return names;
 	}
-	
+
 	static boolean sameColumnSet(KeyRecord recordOne, KeyRecord recordTwo) {
-		
+
 		if (recordOne == null || recordTwo == null) {
 			return false;
 		}
-		
+
 		List<Column> setOne = recordOne.getColumns();
 		List<Column> setTwo = recordTwo.getColumns();
-		
+
 		if (setOne.size() != setTwo.size()) {
 			return false;
 		}
@@ -486,18 +486,18 @@ public class ODataEntitySchemaBuilder {
 		}
 		return true;
 	}
-	
+
 	static EdmEntitySet removeModelName(EdmEntitySet src) {
 	    EdmEntityType srcType = src.getType();
 	    String schemaName = srcType.getName().substring(0, srcType.getName().indexOf('.'));
 	    String name = srcType.getName().substring(srcType.getName().indexOf('.')+1);
-	    
+
         EdmEntityType.Builder targetType = EdmEntityType
                 .newBuilder().setName(name)
                 .setNamespace(schemaName);
-        
+
         targetType.addKeys(srcType.getKeys());
-        
+
         Enumerable<EdmProperty> properties = srcType.getProperties();
         for (EdmProperty srcProperty:properties.toList()) {
 
@@ -509,7 +509,7 @@ public class ODataEntitySchemaBuilder {
                     .setUnicode(true);
             targetType.addProperties(tgtProperty);
         }
-	    
+
         EdmEntitySet.Builder target = EdmEntitySet.newBuilder()
                 .setName(src.getName())
                 .setEntityType(targetType);

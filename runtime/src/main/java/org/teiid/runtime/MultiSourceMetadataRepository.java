@@ -33,13 +33,13 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public class MultiSourceMetadataRepository implements MetadataRepository<Object, Object> {
-	
+
 	private String multiSourceColumnName;
-	
+
 	public MultiSourceMetadataRepository(String multiSourceColumnName) {
 		this.multiSourceColumnName = multiSourceColumnName;
 	}
-	
+
 	@Override
 	public void loadMetadata(MetadataFactory factory,
 			ExecutionFactory<Object, Object> executionFactory, Object connectionFactory)

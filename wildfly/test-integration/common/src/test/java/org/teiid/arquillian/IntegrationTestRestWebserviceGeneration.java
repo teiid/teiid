@@ -63,19 +63,19 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTestCase {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
-		
+
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
-	
+
 	@Test
     public void testGetOperation() throws Exception {
 		Properties p = new Properties();
@@ -85,31 +85,31 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		AdminUtil.createDataSource(admin, "sample-ws", "webservice", p);
 		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
-		
+
 		admin.deploy("sample-ws-vdb.xml",new ReaderInputStream(new StringReader(
 				//simple ws vdb
 				"<vdb name=\"sample-ws\" version=\"1\">"
 				+ "<model name=\"ws\"><source name=\"ws\" translator-name=\"ws\" connection-jndi-name=\"java:/sample-ws\"/></model>"
 				+"</vdb>"), Charset.forName("UTF-8")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample-ws", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
-		
+
 		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
-		
+
 		// get based call
 		String response = httpCall("http://localhost:8080/sample_1/View/g1/123?p2=test", "GET", null);
 		String expected = "<rows p1=\"123\" p2=\"test\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
 		assertEquals("response did not match expected", expected, response);
-		
+
         response = httpCall("http://localhost:8080/sample_1/View/any/1", "GET", null);
 	    assertEquals("response did not match expected", "1", response);
-		
+
 		this.internalConnection.close();
-		
+
 		//try the same thing through a vdb
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample-ws@mm://localhost:31000;user=user;password=user", null);
 		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as x");
@@ -119,20 +119,20 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		//test a large doc
 		response = httpCall("http://localhost:8080/sample_1/View/largedoc", "GET", null);
 		assertEquals(327801, response.length());
-		
+
 		//test streaming xmltable
 		execute("select * from xmltable('/rows/row/e1' passing xmlparse(document (select result from (call invokeHttp(headers=>jsonObject('application/xml' as \"Content-Type\"), action=>'GET',endpoint=>'sample_1/View/g1/123?p2=test')) as d))) as x");
 		this.internalResultSet.next();
 		assertEquals("<e1>ABCDEFGHIJ</e1>", this.internalResultSet.getString(1));
-		
+
 		admin.deploy("sample2-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample2-vdb.xml")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "sample2", 1));
-		
+
 		//test swagger
 		response = httpCall("http://localhost:8080/sample_1/swagger.yaml", "GET", null);
-		
+
 		Thread.sleep(2000); //wait for the war to come up
-		
+
 		int retries = 10;
 		for (int i = 1; i <= retries; i++) {
 		    try {
@@ -146,24 +146,24 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		        Thread.sleep(1000); //wait for the war to come up
 		    }
 		}
-		
+
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }
-	
+
     @Test
     public void testPostOperation() throws Exception {
     	deployVDB();
-        
+
         this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
-        
+
         execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
         this.internalResultSet.next();
-        
+
         assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
-        
+
         String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
-        
+
         // post based call with default
         String response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
         assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
@@ -173,7 +173,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         params += "&" + URLEncoder.encode("p3", "UTF-8") + "=" + URLEncoder.encode("string value", "UTF-8");
         response = httpCall("http://localhost:8080/sample_1/View/g1simplepost", "POST", params);
         assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
-        
+
         // ad-hoc procedure
         params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
         response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
@@ -187,30 +187,30 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		try {
 			admin.undeploy("sample_1.war");
 		} catch (AdminException e) {
-			
+
 		}
         admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
 	}
-    
+
 	@Test
     public void testMultipartPostOperation() throws Exception {
 		deployVDB();
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
-		
+
 		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
-		
+
 		String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
         HttpEntity entity = MultipartEntityBuilder.create()
                 .addTextBody("p1", "456")
                 .build();
-		
-		
+
+
 		// post based call with default
 		String response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
@@ -221,69 +221,69 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
                 .addTextBody("p2", "2")
                 .addTextBody("p3", "string value")
                 .addBinaryBody("p4", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
-                .build();		
+                .build();
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\" p3=\"string value\" p4=\"bar\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
-		
+
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/View/query", "POST", params);
 		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
-		
+
 		// blob multipost
 		entity = MultipartEntityBuilder.create()
                 .addBinaryBody("p1", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
-                .build();		
+                .build();
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/blobpost");
 		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
-		
+
 		// clob multipost
 		entity = MultipartEntityBuilder.create()
                 .addBinaryBody("p1", "<root><p4>bar</p4></root>".getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
-                .build();		
+                .build();
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/clobpost");
 		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
-		
+
 		// varbinary multipost -- doesn't work as multipart is not expected
 		entity = MultipartEntityBuilder.create()
                 .addBinaryBody("p1", Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")).getBytes("UTF-8"), ContentType.create("application/xml", "UTF-8"), "foo.xml")
-                .build();		
+                .build();
 		response = httpMultipartPost(entity, "http://localhost:8080/sample_1/View/binarypost");
 		assertTrue("response did not match expected", response.contains("RESTEASY003065"));
 
 		params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode(Base64.encodeBytes("<root><p4>bar</p4></root>".getBytes("UTF-8")), "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/View/binarypost", "POST", params);
 		assertEquals("response did not match expected", "<root><p4>bar</p4></root>", response);
-		
+
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }
-	
+
 	@Test
     public void testSemanticVersion() throws Exception {
 		String vdb = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sample-vdb.xml"));
 		vdb = StringUtil.replace(vdb, "name=\"sample\" version=\"1\"", "name=\"sample\" version=\"2.1.1\"");
 		admin.deploy("sample-vdb.xml", new ByteArrayInputStream(vdb.getBytes("UTF-8")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", "2.1.1"));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
-		
+
 		assertTrue("sample_2.1.1.war not found", AdminUtil.waitForDeployment(admin, "sample_2.1.1.war", 5));
-		
+
 		HttpEntity entity = MultipartEntityBuilder.create()
                 .addTextBody("p1", "456")
                 .build();
-		
+
 		String response = httpMultipartPost(entity, "http://localhost:8080/sample_2.1.1/View/g1post");
 		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
-		
+
 		admin.undeploy("sample-vdb.xml");
 		Thread.sleep(2000);
     }
-	
+
 	private String httpMultipartPost(HttpEntity entity, String url ) throws ClientProtocolException, IOException {
         HttpPost httpPost = new HttpPost(url);
         //httpPost.addHeader("Authorization", "Basic "+Base64.encodeBytes(("user:user").getBytes()));
@@ -293,23 +293,23 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
         return ObjectConverterUtil.convertToString(new InputStreamReader(response.getEntity().getContent(), Charset
                 .forName("UTF-8")));
 	}
-	
+
 	private String httpCall(String url, String method, String params) throws Exception {
 		HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 		connection.setRequestMethod(method);
 		connection.setDoOutput(true);
-		
+
 		if (method.equalsIgnoreCase("post")) {
 			OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
 		    wr.write(params);
 		    wr.flush();
 		}
-		
+
 		int code = connection.getResponseCode();
 		if (code >= 400) {
 			throw new TeiidRuntimeException(String.valueOf(code));
 		}
-		
+
 		return ObjectConverterUtil.convertToString(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
-	}		
+	}
 }

@@ -65,12 +65,12 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
      * Resolve an INSERT.  Need to resolve elements, constants, types, etc.
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         // Cast to known type
         Insert insert = (Insert) command;
-        
+
         if (insert.getValues() != null) {
         	QueryResolver.resolveSubqueries(command, metadata, null);
 	        //variables and values must be resolved separately to account for implicitly defined temp groups
@@ -80,20 +80,20 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         //resolve subquery if there
         if(usingQuery) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
-            
+
             QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
         }
 
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(insert.getGroup());
-        
+
      // resolve any functions in the values
         List values = insert.getValues();
-        
+
         if (usingQuery) {
             values = insert.getQueryExpression().getProjectedSymbols();
         }
-        
+
         if (insert.getVariables().isEmpty()) {
             if (insert.getGroup().isResolved()) {
                 List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
@@ -104,7 +104,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                 for (int i = 0; i < values.size(); i++) {
                 	if (usingQuery) {
                 		Expression ses = (Expression)values.get(i);
-                    	ElementSymbol es = new ElementSymbol(Symbol.getShortName(ses)); 
+                    	ElementSymbol es = new ElementSymbol(Symbol.getShortName(ses));
                     	es.setType(ses.getType());
                     	insert.addVariable(es);
                     } else {
@@ -117,17 +117,17 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
 
         resolveTypes(insert, metadata, values, usingQuery);
-        
+
         if (usingQuery && insert.getQueryExpression() instanceof SetQuery) {
             //now that the first branch is set, we need to make sure that all branches conform
             QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
             resolveTypes(insert, metadata, values, usingQuery);
         }
-        
+
         if (!insert.getGroup().isResolved()) { //define the implicit temp group
             ResolverUtil.resolveImplicitTempGroup(metadata, insert.getGroup(), insert.getVariables());
             resolveVariables(metadata, insert, groups);
-            
+
             //ensure that the types match
             resolveTypes(insert, metadata, values, usingQuery);
         }
@@ -152,29 +152,29 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             ResolverVisitor.resolveLanguageObject(expr, groups, externalGroups, metadata);
         }
     }
-    
-    /** 
+
+    /**
      * @param insert
-     * @param values 
-     * @param usingQuery 
+     * @param values
+     * @param usingQuery
      * @throws QueryResolverException
      */
     public void resolveTypes(Insert insert, TempMetadataAdapter metadata, List values, boolean usingQuery) throws QueryResolverException {
-        
+
         List newValues = new ArrayList(values.size());
-        
+
         // check that # of variables == # of values
         if(values.size() != insert.getVariables().size()) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30127, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30127, insert.getVariables().size(), values.size()));
         }
-        
+
         Iterator valueIter = values.iterator();
         Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         while(valueIter.hasNext()) {
             // Walk through both elements and expressions, which should match up
 			Expression expression = (Expression) valueIter.next();
 			ElementSymbol element = varIter.next();
-			
+
 			if (expression.getType() == null) {
 				ResolverUtil.setDesiredType(SymbolMap.getExpression(expression), element.getType(), insert);
 			}
@@ -201,8 +201,8 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             insert.setValues(newValues);
         }
     }
-    
-    /** 
+
+    /**
      * @param metadata
      * @param group
      * @return
@@ -214,14 +214,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                                              QueryMetadataException {
         return metadata.getInsertPlan(group.getMetadataID());
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveGroup(org.teiid.query.metadata.TempMetadataAdapter, org.teiid.query.sql.lang.ProcedureContainer)
      */
     protected void resolveGroup(TempMetadataAdapter metadata,
                                 ProcedureContainer procCommand) throws TeiidComponentException,
                                                               QueryResolverException {
-    	try { 
+    	try {
     		super.resolveGroup(metadata, procCommand);
     	} catch (QueryResolverException e) {
             if (!procCommand.getGroup().isImplicitTempGroupSymbol() || metadata.getMetadataStore().getTempGroupID(procCommand.getGroup().getName()) != null) {
@@ -230,19 +230,19 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     	}
     }
 
-    /** 
-     * @throws TeiidComponentException 
-     * @throws QueryResolverException 
-     * @throws QueryMetadataException 
+    /**
+     * @throws TeiidComponentException
+     * @throws QueryResolverException
+     * @throws QueryMetadataException
      * @see org.teiid.query.resolver.CommandResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
     public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-        
+
         Insert insert = (Insert) command;
-        
+
         Map<ElementSymbol, Expression> result = new HashMap<ElementSymbol, Expression>();
-        
+
         // iterate over the variables and values they should be the same number
         Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         Iterator valIter = null;
@@ -263,11 +263,11 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             	result.put(varSymbol, SymbolMap.getExpression((Expression)valIter.next()));
             }
         }
-        
+
         List<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
 
         insertElmnts.removeAll(insert.getVariables());
-        
+
         List<ElementSymbol> pkCols = null;
         if (!changingOnly) {
             //TODO: what about the explicit null case
@@ -295,10 +295,10 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             	result.put(varSymbol, value);
             }
         }
-        
+
         return result;
     }
-    
+
     public static List<ElementSymbol> getAutoIncrementKey(Object metadataId, List<ElementSymbol> columns, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         Object pk = metadata.getPrimaryKey(metadataId);
         if (pk == null) {
@@ -320,5 +320,5 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
         return key;
     }
-    
+
 }

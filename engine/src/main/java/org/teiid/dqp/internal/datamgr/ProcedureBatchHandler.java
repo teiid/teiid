@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.dqp.internal.datamgr;
 
@@ -40,7 +40,7 @@ class ProcedureBatchHandler {
 	private int paramCols = 0;
 	private int resultSetCols = 0;
 	private List<?> filler;
-    
+
 	public ProcedureBatchHandler(Call proc, ProcedureExecution procExec) {
 		this.proc = proc;
 		this.procExec = procExec;
@@ -60,7 +60,7 @@ class ProcedureBatchHandler {
         	filler = Collections.nCopies(paramCols, null);
         }
 	}
-	
+
 	List<?> padRow(List<?> row) throws TranslatorException {
         if (row.size() != resultSetCols) {
              throw new TranslatorException(QueryPlugin.Event.TEIID30479, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30479, proc, new Integer(resultSetCols), new Integer(row.size())));
@@ -73,7 +73,7 @@ class ProcedureBatchHandler {
         result.addAll(filler);
         return result;
 	}
-	
+
 	List<?> getParameterRow() throws TranslatorException {
 		if (paramCols == 0) {
 			return null;
@@ -82,5 +82,5 @@ class ProcedureBatchHandler {
         result.addAll(procExec.getOutputParameterValues());
         return result;
 	}
-	
+
 }

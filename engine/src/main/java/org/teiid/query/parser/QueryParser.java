@@ -58,7 +58,7 @@ import org.teiid.query.util.CommandContext;
  * in unpredictable and most likely incorrect behavior.</p>
  */
 public class QueryParser implements Parser {
-    
+
     private static final class SingleSchemaDatabaseStore extends DatabaseStore {
         private final MetadataFactory factory;
         private TransformationMetadata transformationMetadata;
@@ -76,7 +76,7 @@ public class QueryParser implements Parser {
         protected TransformationMetadata getTransformationMetadata() {
             return transformationMetadata;
         }
-        
+
         public void setTransformationMetadata(
                 TransformationMetadata transformationMetadata) {
             this.transformationMetadata = transformationMetadata;
@@ -84,7 +84,7 @@ public class QueryParser implements Parser {
     }
 
     private static ThreadLocal<QueryParser> QUERY_PARSER = new ThreadLocal<QueryParser>() {
-        /** 
+        /**
          * @see java.lang.ThreadLocal#initialValue()
          */
         @Override
@@ -96,26 +96,26 @@ public class QueryParser implements Parser {
     private static final String XQUERY_DECLARE = "declare"; //$NON-NLS-1$
     private static final String XML_OPEN_BRACKET = "<"; //$NON-NLS-1$
     private static final String NONE = "none"; //$NON-NLS-1$
-    
+
 	private SQLParser parser;
 	private TeiidSQLParserTokenManager tm;
-    
+
 	/**
 	 * Construct a QueryParser - this may be reused.
 	 */
 	public QueryParser() {}
-    
+
     public static QueryParser getQueryParser() {
         return QUERY_PARSER.get();
     }
-	
+
 	/**
 	 * Helper method to get a SQLParser instance for given sql string.
 	 */
 	private SQLParser getSqlParser(String sql) {
 		return getSqlParser(new StringReader(sql));
 	}
-	
+
 	private SQLParser getSqlParser(Reader sql) {
 		if(parser == null) {
 			JavaCharStream jcs = new JavaCharStream(sql);
@@ -123,25 +123,25 @@ public class QueryParser implements Parser {
 			parser = new SQLParser(tm);
 			parser.jj_input_stream = jcs;
 		} else {
-			parser.ReInit(sql);	
+			parser.ReInit(sql);
 			tm.reinit();
 		}
-		return parser;		
+		return parser;
 	}
 
 	/**
 	 * Takes a SQL string representing a Command and returns the object
 	 * representation.
-	 * @param sql SQL string 
+	 * @param sql SQL string
 	 * instead of string litral
 	 * @return SQL object representation
 	 * @throws QueryParserException if parsing fails
 	 * @throws IllegalArgumentException if sql is null
-	 */	
+	 */
 	public Command parseCommand(String sql) throws QueryParserException {
 	    return parseCommand(sql, new ParseInfo());
 	}
-	
+
 	public Command parseProcedure(String sql, boolean update) throws QueryParserException {
 		try{
 			if (update) {
@@ -156,7 +156,7 @@ public class QueryParser implements Parser {
         	tm.reinit();
         }
 	}
-	
+
 	/**
 	 * Takes a SQL string representing a Command and returns the object
 	 * representation.
@@ -169,21 +169,21 @@ public class QueryParser implements Parser {
 	public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
         return parseCommand(sql, parseInfo, false);
     }
-    
+
     public Command parseDesignerCommand(String sql) throws QueryParserException {
         return parseCommand(sql, new ParseInfo(), true);
     }
 
 	public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
 		return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
-	}    
-	
+	}
+
 	public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, String vdbName,
 			String vdbVersion, String schemaName, CommandContext commandContext) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
         }
-        
+
     	Command result = null;
         try{
             if (designerCommands) {
@@ -202,13 +202,13 @@ public class QueryParser implements Parser {
         }
 		return result;
 	}
-	
+
 	public CacheHint parseCacheHint(String sql) {
         if(sql == null || sql.length() == 0) {
              return null;
-        }        
-        return SQLParserUtil.getQueryCacheOption(sql);        
-	}	
+        }
+        return SQLParserUtil.getQueryCacheOption(sql);
+	}
 
     /**
      * Takes a SQL string representing an SQL criteria (i.e. just the WHERE
@@ -250,7 +250,7 @@ public class QueryParser implements Parser {
         qpe.setParseException(pe);
         return qpe;
     }
-        
+
     /**
      * The default JavaCC message is not very good.  This method produces a much more readable result.
      * @param pe
@@ -274,7 +274,7 @@ public class QueryParser implements Parser {
 			return sb.toString();
 		}
 
-		Token currentToken = pe.currentToken; 
+		Token currentToken = pe.currentToken;
 
 		//if the next token is invalid, we wan to use a lexical message, not the sequences
 		if (currentToken.next.kind == INVALID_TOKEN) {
@@ -305,17 +305,17 @@ public class QueryParser implements Parser {
 		if (ex == null) {
 			return pe.getMessage(); //shouldn't happen
 		}
-		
+
 		StringBuilder retval = encountered(pe, ex.length);
-		
+
 		//output the expected tokens condensing the id/non-reserved
-		retval.append("Was expecting: "); //$NON-NLS-1$ 
+		retval.append("Was expecting: "); //$NON-NLS-1$
 		boolean id = last.contains(SQLParserConstants.ID);
 		int count = 0;
 		for (Integer t : last) {
 			String img = tokenImage[t];
-			if (id && img.startsWith("\"") //$NON-NLS-1$ 
-					&& Character.isLetter(img.charAt(1)) 
+			if (id && img.startsWith("\"") //$NON-NLS-1$
+					&& Character.isLetter(img.charAt(1))
 					&& (!SQLConstants.isReservedWord(img.substring(1, img.length()-1)) || img.equals("\"default\""))) { //$NON-NLS-1$
 				continue;
 			}
@@ -404,7 +404,7 @@ public class QueryParser implements Parser {
 		}
 		return last;
 	}
-	
+
 	  /**
 	   * Used to convert raw characters to their escaped version
 	   * when these raw version cannot be used as part of an ASCII
@@ -412,7 +412,7 @@ public class QueryParser implements Parser {
 	   */
 	  protected void add_escapes(String str, StringBuilder retval) {
 	      for (int i = 0; i < str.length(); i++) {
-		      char ch = str.charAt(i); 
+		      char ch = str.charAt(i);
 	        switch (ch)
 	        {
 	           case 0 :
@@ -476,7 +476,7 @@ public class QueryParser implements Parser {
         }
         return result;
     }
-    
+
     public Expression parseSelectExpression(String sql) throws QueryParserException {
         if(sql == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("QueryParser.nullSqlExpr")); //$NON-NLS-1$
@@ -499,19 +499,19 @@ public class QueryParser implements Parser {
     public void parseDDL(MetadataFactory factory, String ddl) {
     	parseDDL(factory, new StringReader(ddl));
     }
-    
+
     public void parseDDL(final MetadataFactory factory, Reader ddl) {
         SingleSchemaDatabaseStore store = new SingleSchemaDatabaseStore(factory);
 
-        store.startEditing(true);        
+        store.startEditing(true);
         Database db = new Database(factory.getVdbName(), factory.getVdbVersion());
         store.databaseCreated(db);
         store.databaseSwitched(factory.getVdbName(), factory.getVdbVersion());
-        
+
         store.dataWrapperCreated(new DataWrapper(NONE));
         Server server = new Server(NONE);
         server.setDataWrapper(NONE);
-        
+
         store.serverCreated(server);
         if (factory.getSchema().isPhysical()) {
             Server s = new Server(factory.getSchema().getName());
@@ -520,13 +520,13 @@ public class QueryParser implements Parser {
         }
         List<String> servers = Collections.emptyList();
         store.schemaCreated(factory.getSchema(), servers);
-        
+
         //with the schema created, create the TransformationMetadata
         CompositeMetadataStore cms = new CompositeMetadataStore(db.getMetadataStore());
         TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(db), cms, null, null, null);
 
         store.setTransformationMetadata(qmi);
-        
+
         store.schemaSwitched(factory.getSchema().getName());
         store.setMode(Mode.SCHEMA);
         store.setStrict(true);
@@ -534,7 +534,7 @@ public class QueryParser implements Parser {
             parseDDL(store, ddl);
             Map<String, String> colNs = store.getNameSpaces();
             for (String key:colNs.keySet()) {
-                factory.addNamespace(key, colNs.get(key));    
+                factory.addNamespace(key, colNs.get(key));
             }
         } finally {
             store.stopEditing();
@@ -550,7 +550,7 @@ public class QueryParser implements Parser {
             throw e;
         } catch (MetadataException e) {
             Token t = sqlParser.token;
-            throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID31259, e, 
+            throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID31259, e,
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31259, t.image, t.beginLine, t.beginColumn, e.getMessage()));
         } catch (ParseException e) {
             throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
@@ -558,5 +558,5 @@ public class QueryParser implements Parser {
             tm.reinit();
         }
     }
-    
+
 }

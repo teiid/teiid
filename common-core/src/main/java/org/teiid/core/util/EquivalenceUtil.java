@@ -25,13 +25,13 @@ import java.util.Arrays;
  * two object/array references.
  */
 public class EquivalenceUtil {
-    
+
     /**
      * Cannot be instantiated
      */
     protected EquivalenceUtil() {
     }
-    
+
     /**
      * Tests whether two object references refer to equal objects. The object
      * references can both be null, in which case they are also considered equal.
@@ -49,7 +49,7 @@ public class EquivalenceUtil {
             return obj1.equals(obj2);
         }
     }
-    
+
     /**
      * Tests whether two arrays are equivalent. This method ignores the array
      * types, but checks the number of references in each array, and the
@@ -60,7 +60,7 @@ public class EquivalenceUtil {
     public static boolean areEquivalent(Object[] array1, Object[] array2) {
         return Arrays.equals(array1, array2);
     }
-    
+
     /**
      * Tests whether two objects references are equivalent but not the same object.
      * If both references are the same, this method will return false;
@@ -75,7 +75,7 @@ public class EquivalenceUtil {
         }
         return areEqual(obj1, obj2);
     }
-    
+
     /**
      * Tests whether the array references are equivalent, but are not the same.
      * This method checks for the strict equivalence of each pair of objects

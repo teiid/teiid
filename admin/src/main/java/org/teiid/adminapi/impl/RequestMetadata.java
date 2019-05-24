@@ -28,7 +28,7 @@ import org.teiid.core.util.HashCodeUtil;
 public class RequestMetadata extends AdminObjectImpl implements Request {
 
 	private static final long serialVersionUID = -2779106368517784259L;
-	
+
 	private long executionId;
 	private String sessionId;
     private String command;
@@ -38,61 +38,61 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     private String transactionId;
     private ProcessingState processingState = ProcessingState.PROCESSING;
     private ThreadState threadState = ThreadState.RUNNING;
-    
+
     @Override
     public long getExecutionId() {
 		return executionId;
 	}
-    
+
     public void setExecutionId(long id) {
 		this.executionId = id;
 	}
-    
+
     @Override
     public ProcessingState getState() {
 		return processingState;
 	}
-    
+
     public void setState(ProcessingState state) {
 		this.processingState = state;
 	}
-    
+
 	@Override
 	public ThreadState getThreadState() {
 		return threadState;
 	}
-	
+
 	public void setThreadState(ThreadState threadState) {
 		this.threadState = threadState;
 	}
-    
+
     @Override
     public String getSessionId() {
         return this.sessionId;
     }
-    
+
     public void setSessionId(String session) {
         this.sessionId = session;
     }
-    
+
     @Override
     public long getStartTime() {
         return this.startTime;
     }
-    
+
     public void setStartTime(long time) {
         this.startTime = time;
-    }    
+    }
 
     @Override
     public String getCommand() {
         return this.command;
     }
-    
+
     public void setCommand(String cmd) {
         this.command = cmd;
-    }    
-    
+    }
+
     @Override
     public boolean sourceRequest() {
 		return sourceRequest;
@@ -100,17 +100,17 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 
 	public void setSourceRequest(boolean sourceRequest) {
 		this.sourceRequest = sourceRequest;
-	}    
-        
+	}
+
 	@Override
     public Integer getNodeId() {
         return this.nodeID;
     }
-    
+
     public void setNodeId(Integer nodeID) {
         this.nodeID = nodeID;
     }
-    
+
 	@Override
 	public String getTransactionId() {
 		return this.transactionId;
@@ -119,7 +119,7 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
 	public void setTransactionId(String id) {
 		this.transactionId = id;
 	}
-	
+
     @Override
 	public boolean equals(Object obj) {
     	if (!(obj instanceof RequestMetadata)) {
@@ -131,11 +131,11 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	}
 		return sessionId == value.sessionId && executionId == value.executionId && nodeID.equals(value.nodeID);
 	}
-    
+
     public int hashCode() {
     	return HashCodeUtil.hashCode((int)executionId, sessionId);
-    }    
-    
+    }
+
     @SuppressWarnings("nls")
 	public String toString() {
     	StringBuilder str = new StringBuilder();
@@ -149,8 +149,8 @@ public class RequestMetadata extends AdminObjectImpl implements Request {
     	}
     	str.append("; sourceRequest=").append(sourceRequest);
     	str.append("; processingTime=").append(new Date(startTime));
-    	str.append("; command=").append(command); 
-    	
+    	str.append("; command=").append(command);
+
     	return str.toString();
     }
 

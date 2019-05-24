@@ -50,10 +50,10 @@ import org.teiid.query.sql.symbol.Expression;
  * <li>price &gt;= ALL (Select ... FROM ... WHERE ... )</LI>
  * <LI>revenue &lt; (Select ... FROM ... WHERE ... )</LI>
  * </UL>
- * 
+ *
  * This can also represent a quantified comparison against array.  In which case the
  * arrayExpression member will be set and command will not.
- * 
+ *
  */
 public class SubqueryCompareCriteria extends AbstractCompareCriteria
 implements SubqueryContainer<QueryCommand>, ContextReference {
@@ -74,7 +74,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     private QueryCommand command;
     private Expression arrayExpression;
     private String id = "$scc/id" + ID.getAndIncrement(); //$NON-NLS-1$
-    
+
     private SubqueryHint subqueryHint = new SubqueryHint();
 
     public SubqueryCompareCriteria(){
@@ -87,12 +87,12 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
         setOperator(operator);
         setPredicateQuantifier(predicateQuantifier);
     }
-    
+
     @Override
     public String getContextSymbol() {
     	return id;
     }
-    
+
     /**
      * Get the predicate quantifier - returns one of the following:
      * <ul><li>{@link #NO_QUANTIFIER}</li>
@@ -223,19 +223,19 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     		this.predicateQuantifier = ALL;
     	}
     }
-    
+
     public SubqueryHint getSubqueryHint() {
 		return subqueryHint;
 	}
-    
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
 		this.subqueryHint = subqueryHint;
 	}
-    
+
     public Expression getArrayExpression() {
 		return arrayExpression;
 	}
-    
+
     public void setArrayExpression(Expression expression) {
 		this.arrayExpression = expression;
 	}

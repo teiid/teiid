@@ -23,48 +23,48 @@ import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p>This is a subclass of Symbol representing a single element.  An ElementSymbol
- * also is an expression and thus has a type.  Element symbols have a variety of 
+ * also is an expression and thus has a type.  Element symbols have a variety of
  * attributes that determine how they are displayed - a flag for displaying fully qualified
  * and an optional vdb name.</p>
- * 
- * <p>The "isExternalReference" property indicates whether the element symbol 
- * refers to an element from a group outside the current command.  Typically this 
- * is set to false.  Common uses when this is set to true are for variables used 
+ *
+ * <p>The "isExternalReference" property indicates whether the element symbol
+ * refers to an element from a group outside the current command.  Typically this
+ * is set to false.  Common uses when this is set to true are for variables used
  * within a command, correlated elements within a command, etc. </p>
  */
 public class ElementSymbol extends Symbol implements DerivedExpression {
 
     public enum DisplayMode {
-        FULLY_QUALIFIED, // symbol name 
+        FULLY_QUALIFIED, // symbol name
         OUTPUT_NAME, // default
         SHORT_OUTPUT_NAME}
-    
+
     private GroupSymbol groupSymbol;
     private Object metadataID;
 	private Class<?> type;
     private boolean isExternalReference;
     private boolean isAggregate;
-        
+
     private DisplayMode displayMode = DisplayMode.OUTPUT_NAME;
-	
+
     /**
      * Simple constructor taking just a name.  By default will display fully qualified name
      * @param name Name of the symbol, may or may not be fully qualified
      */
     public ElementSymbol(String name) {
-        super(name);		
+        super(name);
     }
 
     public ElementSymbol(String shortName, GroupSymbol group) {
     	this(shortName, group, null);
     }
-    
+
     public ElementSymbol(String shortName, GroupSymbol group, Class<?> type) {
     	this.setShortName(shortName);
     	this.groupSymbol = group;
     	this.type = type;
     }
-    
+
     /**
      * Constructor taking a name and a flag whether to display fully qualified.
      * @param name Name of the symbol
@@ -74,7 +74,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
         super(name);
 		setDisplayFullyQualified(displayFullyQualified);
     }
-    
+
     @Override
     public String getName() {
     	if (this.groupSymbol != null) {
@@ -82,7 +82,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     	}
     	return super.getName();
     }
-    
+
     @Override
     public boolean equals(Object obj) {
     	if (this.groupSymbol == null) {
@@ -100,7 +100,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     	}
     	return this.groupSymbol.equals(other.groupSymbol) && this.getShortName().equals(other.getShortName());
     }
-    
+
     @Override
     public int hashCode() {
     	if (this.groupSymbol != null) {
@@ -108,14 +108,14 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     	}
     	return super.hashCode();
     }
-        
-    public void setDisplayMode(DisplayMode displayMode) { 
+
+    public void setDisplayMode(DisplayMode displayMode) {
         if (displayMode == null) {
             this.displayMode = DisplayMode.OUTPUT_NAME;
         }
         this.displayMode = displayMode;
     }
-    
+
     public DisplayMode getDisplayMode() {
         return displayMode;
     }
@@ -124,27 +124,27 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
 	 * Set whether this element will be displayed as fully qualified
 	 * @param displayFullyQualified True if should display fully qualified
 	 */
-	public void setDisplayFullyQualified(boolean displayFullyQualified) { 
-		this.displayMode = displayFullyQualified?DisplayMode.FULLY_QUALIFIED:DisplayMode.SHORT_OUTPUT_NAME;	
+	public void setDisplayFullyQualified(boolean displayFullyQualified) {
+		this.displayMode = displayFullyQualified?DisplayMode.FULLY_QUALIFIED:DisplayMode.SHORT_OUTPUT_NAME;
 	}
-	
+
 	/**
 	 * Get whether this element will be displayed as fully qualified
 	 * @return True if should display fully qualified
 	 */
-	public boolean getDisplayFullyQualified() { 
-		return this.displayMode.equals(DisplayMode.FULLY_QUALIFIED);	
+	public boolean getDisplayFullyQualified() {
+		return this.displayMode.equals(DisplayMode.FULLY_QUALIFIED);
 	}
 
     /**
-     * Set whether this element is an external reference.  An external 
+     * Set whether this element is an external reference.  An external
      * reference is an element that comes from a group outside the current
-     * command context.  Typical uses would be variables and correlated 
+     * command context.  Typical uses would be variables and correlated
      * references in subqueries.
      * @param isExternalReference True if element is an external reference
      */
-    public void setIsExternalReference(boolean isExternalReference) { 
-        this.isExternalReference = isExternalReference; 
+    public void setIsExternalReference(boolean isExternalReference) {
+        this.isExternalReference = isExternalReference;
     }
 
     /**
@@ -152,8 +152,8 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
      * outside the command context.
      * @return True if element is an external reference
      */
-    public boolean isExternalReference() { 
-        return this.isExternalReference;  
+    public boolean isExternalReference() {
+        return this.isExternalReference;
     }
 
     /**
@@ -163,7 +163,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     public void setGroupSymbol(GroupSymbol symbol) {
         this.groupSymbol = symbol;
     }
-    
+
     protected void setName(String name) {
     	int index = name.lastIndexOf('.');
     	if (index > 0) {
@@ -178,7 +178,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     	}
     	super.setShortName(name);
     }
-    
+
     /**
      * Get the group symbol referred to by this element symbol, may be null before resolution
      * @return Group symbol referred to by this element, may be null
@@ -209,15 +209,15 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
 	 */
 	public Class<?> getType() {
 		return this.type;
-	}	
-	
+	}
+
 	/**
 	 * Set the type of the symbol
 	 * @param type New type
 	 */
 	public void setType(Class<?> type) {
 		this.type = type;
-	}	
+	}
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
@@ -229,7 +229,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
 	 */
 	public ElementSymbol clone() {
 		ElementSymbol copy = new ElementSymbol(getShortName(), null);
-		if(getGroupSymbol() != null) { 
+		if(getGroupSymbol() != null) {
 			copy.setGroupSymbol(getGroupSymbol().clone());
 		}
 		copy.setMetadataID(getMetadataID());
@@ -240,13 +240,13 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
 		copy.isAggregate = isAggregate;
 		return copy;
 	}
-	
+
 	public boolean isAggregate() {
 		return isAggregate;
 	}
-	
+
 	public void setAggregate(boolean isAggregate) {
 		this.isAggregate = isAggregate;
 	}
-	
+
 }

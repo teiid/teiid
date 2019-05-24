@@ -35,11 +35,11 @@ public interface SocketServerInstance {
 	<T> T getService(Class<T> iface);
 
 	void shutdown();
-	
+
 	HostInfo getHostInfo();
-	
+
 	boolean isOpen();
-	
+
 	Cryptor getCryptor();
 
 	long getSynchTimeout();

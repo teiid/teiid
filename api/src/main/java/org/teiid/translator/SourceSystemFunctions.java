@@ -24,20 +24,20 @@ import org.teiid.language.SQLConstants;
  * Constants for all the possible standard system push down functions.
  * The names and function forms follow the Open Group CLI functions, with a few exceptions
  * (such as lpad, rpad, bitand, bitor, etc. which are most notably supported by Oracle).
- * 
+ *
  * Note that not all system functions are listed as some functions will use a common name
  * such as CONCAT vs. the || operator, and other functions will be rewritten and
  * not pushed down, such as SPACE.
- * 
+ *
  */
 public class SourceSystemFunctions {
-	
+
 	//arithmetic
 	public static final String MULTIPLY_OP = "*"; //$NON-NLS-1$
 	public static final String ADD_OP = "+"; //$NON-NLS-1$
 	public static final String SUBTRACT_OP = "-"; //$NON-NLS-1$
 	public static final String DIVIDE_OP = "/"; //$NON-NLS-1$
-	
+
 	//String
 	public static final String ASCII = "ascii"; //$NON-NLS-1$
 	public static final String CHAR = "char"; //$NON-NLS-1$
@@ -69,7 +69,7 @@ public class SourceSystemFunctions {
 	public static final String TRIM = "trim"; //$NON-NLS-1$
 	public static final String UCASE = "ucase"; //$NON-NLS-1$
 	public static final String UNESCAPE = "unescape"; //$NON-NLS-1$
-	
+
 	//numeric
 	public static final String ABS = "abs"; //$NON-NLS-1$
 	public static final String ACOS = "acos"; //$NON-NLS-1$
@@ -82,25 +82,25 @@ public class SourceSystemFunctions {
 	public static final String DEGREES = "degrees"; //$NON-NLS-1$
 	public static final String EXP = "exp"; //$NON-NLS-1$
 	public static final String FLOOR = "floor"; //$NON-NLS-1$
-	
+
 	@Deprecated public static final String FORMATINTEGER = "formatinteger"; //$NON-NLS-1$
 	@Deprecated public static final String FORMATLONG = "formatlong"; //$NON-NLS-1$
 	@Deprecated public static final String FORMATDOUBLE = "formatdouble"; //$NON-NLS-1$
 	@Deprecated public static final String FORMATFLOAT = "formatfloat"; //$NON-NLS-1$
 	@Deprecated public static final String FORMATBIGINTEGER = "formatbiginteger"; //$NON-NLS-1$
-	
+
 	public static final String FORMATBIGDECIMAL = "formatbigdecimal"; //$NON-NLS-1$
-	
+
 	public static final String LOG = "log"; //$NON-NLS-1$
 	public static final String LOG10 = "log10"; //$NON-NLS-1$
 	public static final String MOD = "mod"; //$NON-NLS-1$
-	
+
 	@Deprecated public static final String PARSEINTEGER = "parseinteger"; //$NON-NLS-1$
 	@Deprecated public static final String PARSELONG = "parselong"; //$NON-NLS-1$
 	@Deprecated public static final String PARSEDOUBLE = "parsedouble"; //$NON-NLS-1$
 	@Deprecated public static final String PARSEFLOAT = "parsefloat"; //$NON-NLS-1$
 	@Deprecated public static final String PARSEBIGINTEGER = "parsebiginteger"; //$NON-NLS-1$
-	
+
 	public static final String PARSEBIGDECIMAL = "parsebigdecimal"; //$NON-NLS-1$
 	public static final String PI = "pi"; //$NON-NLS-1$
 	public static final String POWER = "power"; //$NON-NLS-1$
@@ -113,13 +113,13 @@ public class SourceSystemFunctions {
 	public static final String TAN = "tan"; //$NON-NLS-1$
 	public static final String TRANSLATE = "translate"; //$NON-NLS-1$
 	public static final String TRUNCATE = "truncate"; //$NON-NLS-1$
-	
+
 	//bit
 	public static final String BITAND = "bitand"; //$NON-NLS-1$
 	public static final String BITOR = "bitor"; //$NON-NLS-1$
 	public static final String BITNOT = "bitnot"; //$NON-NLS-1$
 	public static final String BITXOR = "bitxor"; //$NON-NLS-1$
-	
+
 	//date functions
 	public static final String CURDATE = "curdate"; //$NON-NLS-1$
 	public static final String CURTIME = "curtime"; //$NON-NLS-1$
@@ -144,33 +144,33 @@ public class SourceSystemFunctions {
 	public static final String YEAR = "year"; //$NON-NLS-1$
 	public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
 	public static final String UNIX_TIMESTAMP = "unix_timestamp"; //$NON-NLS-1$
-	
+
 	//system functions
 	public static final String IFNULL = "ifnull"; //$NON-NLS-1$
 	public static final String COALESCE = "coalesce"; //$NON-NLS-1$
 	public static final String NULLIF = "nullif"; //$NON-NLS-1$
 	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
 	public static final String ARRAY_LENGTH = "array_length"; //$NON-NLS-1$
-	
+
 	//conversion functions
 	public static final String CONVERT = "convert"; //$NON-NLS-1$
-	
+
 	//xml
 	public static final String XPATHVALUE = "xpathvalue"; //$NON-NLS-1$
 	public static final String XSLTRANSFORM = "xsltransform"; //$NON-NLS-1$
 	public static final String XMLCONCAT = "xmlconcat"; //$NON-NLS-1$
 	public static final String XMLCOMMENT = "xmlcomment"; //$NON-NLS-1$
 	public static final String XMLPI = "xmlpi"; //$NON-NLS-1$
-	
+
 	public static final String JSONTOXML = "jsontoxml"; //$NON-NLS-1$
-	
+
 	public static final String UUID = "uuid"; //$NON-NLS-1$
-	
+
 	public static final String MD5 = "md5"; //$NON-NLS-1$
 	public static final String SHA1 = "sha1"; //$NON-NLS-1$
 	public static final String SHA2_256 = "sha2_256"; //$NON-NLS-1$
 	public static final String SHA2_512 = "sha2_512"; //$NON-NLS-1$
-	
+
 	public static final String AES_ENCRYPT = "aes_encrypt"; //$NON-NLS-1$
 	public static final String AES_DECRYPT = "aes_decrypt"; //$NON-NLS-1$
 
@@ -246,7 +246,7 @@ public class SourceSystemFunctions {
     public static final String ST_Z = "st_z"; //$NON-NLS-1$
     public static final String ST_MAKEENVELOPE = "st_makeenvelope"; //$NON-NLS-1$
     public static final String ST_SNAPTOGRID = "st_snaptogrid"; //$NON-NLS-1$
-    
+
     //geography
     public static final String ST_GEOGFROMWKB = "st_geogfromwkb"; //$NON-NLS-1$
     public static final String ST_GEOGFROMTEXT = "st_geogfromtext"; //$NON-NLS-1$

@@ -35,7 +35,7 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 import org.teiid.translator.google.api.metadata.Worksheet;
 /**
  * Translates SQL SELECT queries
- * 
+ *
  * @author felias
  *
  */
@@ -78,7 +78,7 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 
 	public void visit(Select obj) {
 		buffer.append(SELECT).append(Tokens.SPACE);
-		
+
 		if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
 			NamedTable table = ((NamedTable)obj.getFrom().get(0));
 			this.worksheetTitle = table.getName();
@@ -114,7 +114,7 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 	public Integer getOffsetValue() {
 		return offsetValue;
 	}
-	
+
 	@Override
 	public void visit(Function function) {
 		if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFMONTH)) {
@@ -128,7 +128,7 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 		}
 		super.visit(function);
 	}
-	
+
 	@Override
 	public void visit(Literal obj) {
 		if (obj.getValue() == null) {
@@ -149,11 +149,11 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 			super.visit(obj);
 		}
 	}
-	
+
 	@Override
 	public void visit(Like obj) {
 	    if (obj.isNegated()) {
-	        buffer.append("("); //$NON-NLS-1$   
+	        buffer.append("("); //$NON-NLS-1$
 	    }
 	    super.visit(obj);
 	    if (obj.isNegated()) {
@@ -162,7 +162,7 @@ public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
             buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
 	    }
 	}
-	
+
 	@Override
     protected boolean isUpdate() {
         return false;

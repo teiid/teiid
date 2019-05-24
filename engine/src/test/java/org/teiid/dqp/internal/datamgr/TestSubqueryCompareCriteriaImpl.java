@@ -47,7 +47,7 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
         SubqueryCompareCriteria scc = new SubqueryCompareCriteria(element, query, AbstractCompareCriteria.GT, SubqueryCompareCriteria.ANY);
         return scc;
     }
-    
+
     public static SubqueryComparison example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
@@ -59,7 +59,7 @@ public class TestSubqueryCompareCriteriaImpl extends TestCase {
     public void testGetQuery() throws Exception {
         assertNotNull(example().getSubquery());
     }
-    
+
     public void testOperator() throws Exception {
         assertEquals("Wrong operator", Comparison.Operator.GT, example().getOperator()); //$NON-NLS-1$
     }

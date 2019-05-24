@@ -27,13 +27,13 @@ import org.teiid.query.QueryPlugin;
 
 /**
  * Wrapper for BufferManager {@link FileStore} to add max length and other constraints.
- * It removes the implementation for several methods that aren't needed above the 
+ * It removes the implementation for several methods that aren't needed above the
  * buffer manager and removes any synchronization.
  */
 class ConstraintedFileStore extends FileStore {
-    
+
     private static final int SESSION_KILLING_RETRIES = 3;
-    
+
     private WeakReference<SessionMetadata> session;
     private final FileStore delegate;
     private long maxLength = Long.MAX_VALUE;
@@ -43,20 +43,20 @@ class ConstraintedFileStore extends FileStore {
         this.delegate = delegate;
         this.killer = killer;
     }
-    
+
     @Override
     protected int readWrite(long fileOffset, byte[] b, int offSet, int length,
             boolean write) throws IOException {
         //not needed to be implemented as we have other overrides
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
     public void setLength(long length) throws IOException {
         //not needed above the buffermanager
         throw new UnsupportedOperationException();
     }
-    
+
     @Override
     public void write(long start, byte[] bytes, int offset, int length)
             throws IOException {
@@ -112,7 +112,7 @@ class ConstraintedFileStore extends FileStore {
     public void setMaxLength(long maxLength) {
         this.maxLength = maxLength;
     }
-    
+
     private final void updateBytesUsed(long length) {
         if (session != null) {
             SessionMetadata s = session.get();
@@ -121,9 +121,9 @@ class ConstraintedFileStore extends FileStore {
             }
         }
     }
-    
+
     public void setSession(SessionMetadata session) {
         this.session = new WeakReference<SessionMetadata>(session);
     }
-    
+
 }

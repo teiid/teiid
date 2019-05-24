@@ -43,31 +43,31 @@ public class TestAggregateImpl extends TestCase {
                                                      distinct,
                                                      new Constant(new Integer(value)));
         return TstLanguageBridgeFactory.factory.translate(symbol);
-        
+
     }
 
     public void testGetName() throws Exception {
-        assertEquals(AggregateFunction.COUNT, example(NonReserved.COUNT, true, 42).getName()); 
+        assertEquals(AggregateFunction.COUNT, example(NonReserved.COUNT, true, 42).getName());
     }
 
     public void testUserDefinedName() throws Exception {
-        assertEquals("FIRST_VALUE", example("FIRST_VALUE", true, 42).getName()); //$NON-NLS-1$ //$NON-NLS-2$ 
+        assertEquals("FIRST_VALUE", example("FIRST_VALUE", true, 42).getName()); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public void testIsDistinct() throws Exception {
-        assertTrue(example(NonReserved.COUNT, true, 42).isDistinct()); 
-        assertFalse(example(NonReserved.COUNT, false, 42).isDistinct()); 
+        assertTrue(example(NonReserved.COUNT, true, 42).isDistinct());
+        assertFalse(example(NonReserved.COUNT, false, 42).isDistinct());
     }
 
     public void testGetExpression() throws Exception {
-        AggregateFunction agg = example(NonReserved.COUNT, true, 42); 
+        AggregateFunction agg = example(NonReserved.COUNT, true, 42);
         assertNotNull(agg.getExpression());
         assertTrue(agg.getExpression() instanceof Literal);
         assertEquals(new Integer(42), ((Literal)agg.getExpression()).getValue());
     }
 
     public void testGetType() throws Exception {
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example(NonReserved.COUNT, true, 42).getType()); 
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, example(NonReserved.COUNT, true, 42).getType());
     }
 
 }

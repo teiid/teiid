@@ -27,9 +27,9 @@ import org.teiid.core.types.GeometryType;
 import org.teiid.core.util.ReflectionHelper;
 
 public class GeometryHelper {
-    
+
     private static GeometryHelper INSTANCE;
-    
+
     public static GeometryHelper getInstance() {
         if (INSTANCE == null) {
             try {
@@ -40,9 +40,9 @@ public class GeometryHelper {
         }
         return INSTANCE;
     }
-    
+
     /**
-     * 
+     *
      * @param ctx
      * @param jtsGeomSrc
      * @param srid
@@ -53,9 +53,9 @@ public class GeometryHelper {
             int srid) throws FunctionExecutionException {
         throw new FunctionExecutionException("Without the optional geospatial library, cannot transform the value to the expected SRID"); //$NON-NLS-1$
     }
-    
+
     /**
-     * 
+     *
      * @param ctx
      * @param srid
      * @return
@@ -66,15 +66,15 @@ public class GeometryHelper {
         //may create invalid values
         return true;
     }
-    
+
     /**
-     * 
+     *
      * @param object
      * @return
-     * @throws FunctionExecutionException 
+     * @throws FunctionExecutionException
      */
     public ClobType geometryToGeoJson(GeometryType object) throws FunctionExecutionException {
         throw new FunctionExecutionException("Without the optional geospatial library, cannot convert to geojson"); //$NON-NLS-1$
     }
-    
+
 }

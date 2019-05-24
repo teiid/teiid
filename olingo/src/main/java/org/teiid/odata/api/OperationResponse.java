@@ -22,6 +22,6 @@ import java.sql.SQLException;
 public interface OperationResponse extends QueryResponse, ComplexResponse {
 
     Object getResult();
-    
+
     void setReturnValue(Object value) throws SQLException;
 }

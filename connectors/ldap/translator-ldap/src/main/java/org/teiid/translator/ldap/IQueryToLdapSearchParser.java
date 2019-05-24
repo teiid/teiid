@@ -21,7 +21,7 @@
  * information. Uses LdapSearchDetails class to store this information and return the search details.
  * This class was intended for use by the execution classes that need to translate SQL. As new capabilities
  * are implemented, this class will be expanded to accommodate the appropriate SQL.
- * 
+ *
  * This class should remove all the MMX-specific stuff, and turn it into something any
  * LDAP implementation can understand.
  *
@@ -66,17 +66,17 @@ public class IQueryToLdapSearchParser {
 	private static final String TIMEOUT = "timeout";//$NON-NLS-1$
 	private static final String SEARCH_SCOPE = "search-scope";//$NON-NLS-1$
 	private static final String CRITERIA = "filter";//$NON-NLS-1$
-	private static final String CONTEXT_NAME = "context-name";//$NON-NLS-1$	
+	private static final String CONTEXT_NAME = "context-name";//$NON-NLS-1$
 	LDAPExecutionFactory executionFactory;
-	
+
 	/**
 	 * Constructor.
 	 */
 	public IQueryToLdapSearchParser(LDAPExecutionFactory factory) {
 		this.executionFactory = factory;
 	}
-	
-	/** 
+
+	/**
 	 * Public entry point to the parser.
 	 *  Parses the IQuery object, and constructs an equivalent LDAP search filter,
 	 *  keeping track of the attributes of interest.
@@ -85,7 +85,7 @@ public class IQueryToLdapSearchParser {
 	 *  Context name: [people_table's NameInSource, e.g. (ou=people,dc=company,dc=com)]
 	 *  LDAP attributes: (cn, String), (managerName, String)
 	 *  LDAP search filter: (&(managerName="John*")(!(cn="Mar\(\)")))
-	 *  
+	 *
 	 *  @param query the query
 	 *  @return the LDAPSearchDetails object
 	 */
@@ -99,26 +99,26 @@ public class IQueryToLdapSearchParser {
 		// Parse SELECT symbols.
 		// The columns will be translated into LDAP attributes of interest.
 		ArrayList<Column> elementList = getElementsFromSelectSymbols(query);
-		
+
 		// Parse FROM table.
 		// Only one table is expected here.
 		List<TableReference> fromList = query.getFrom();
 		Iterator<TableReference> itr = fromList.iterator();
 		if(!itr.hasNext()) {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.noTablesInFromError"); //$NON-NLS-1$
-			throw new TranslatorException(msg); 
+			throw new TranslatorException(msg);
 		}
 		TableReference fItm = itr.next();
 		if(itr.hasNext()) {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.multiItemsInFromError"); //$NON-NLS-1$
-			throw new TranslatorException(msg); 
+			throw new TranslatorException(msg);
 		}
-		
+
 		LDAPSearchDetails sd = null;
-		
+
 		NamedTable tbl = null;
 		NamedTable tblRight = null;
-		
+
 		if (fItm instanceof NamedTable) {
 			tbl = (NamedTable)fItm;
 		} else if (fItm instanceof Join) {
@@ -133,7 +133,7 @@ public class IQueryToLdapSearchParser {
 		} else {
 			throw new AssertionError("Unsupported construct"); //$NON-NLS-1$
 		}
-		
+
 		String contextName = getContextNameFromFromItem(tbl);
 		int searchScope = getSearchScopeFromFromItem(tbl);
 		// GHH 20080326 - added check for RESTRICT parameter in
@@ -143,13 +143,13 @@ public class IQueryToLdapSearchParser {
 			String contextName1 = getContextNameFromFromItem(tblRight);
 			int searchScope1 = getSearchScopeFromFromItem(tblRight);
 			String classRestriction1 = getRestrictToNamedClass(tblRight);
-			if (!EquivalenceUtil.areEqual(contextName, contextName1) || searchScope != searchScope1 
+			if (!EquivalenceUtil.areEqual(contextName, contextName1) || searchScope != searchScope1
 					|| !EquivalenceUtil.areEqual(classRestriction, classRestriction1)) {
 				final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.not_same", tbl.getMetadataObject().getFullName(), tblRight.getMetadataObject().getFullName()); //$NON-NLS-1$
 				throw new TranslatorException(msg);
 			}
 		}
-				
+
 		// Parse the WHERE clause.
 		// Create an equivalent LDAP search filter.
 		List<String> searchStringList = new LinkedList<String>();
@@ -163,30 +163,30 @@ public class IQueryToLdapSearchParser {
 		if (classRestriction != null && classRestriction.trim().length()>0) {
 			filterBuilder.insert(0, "(&").append("(objectClass=").append(classRestriction).append("))");  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$
 		}
-		
+
 		// Parse the ORDER BY clause.
 		// Create an ordered sort list.
 		OrderBy orderBy = query.getOrderBy();
 		// Referenced the JNDI standard...arguably, this should not be done inside this
 		// class, and we should make our own key class. In practice, this makes things simpler.
 		SortKey[] sortKeys = getSortKeysFromOrderByClause(orderBy);
-		
-		// Parse LIMIT clause. 
+
+		// Parse LIMIT clause.
 		// Note that offsets are not supported.
 		Limit limit = query.getLimit();
 		long countLimit = -1;
 		if(limit != null) {
 			countLimit = limit.getRowLimit();
 		}
-		
+
 		// Create Search Details
 		sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList, 0);
-		// Search Details logging	    	
+		// Search Details logging
 		sd.printDetailsToLog();
 		return sd;
-			
+
 	}
-	
+
 	/**
 	 * get SortKeys from the supplied ORDERBY clause.
 	 * @param orderBy the OrderBy clause
@@ -217,14 +217,14 @@ public class IQueryToLdapSearchParser {
 				sortKeys[i] = sortKey;
 				i++;
 			}
-			
+
 		} else {
 			// Insert a default? No, allow the Execution to do this. Just return a null list.
 		}
 		return sortKeys;
 	}
-	
-	/** 
+
+	/**
 	 * Utility method to pull the name in source (or, base DN/context name) from the table.
 	 * @param fromItem
 	 * @return name in source
@@ -235,7 +235,7 @@ public class IQueryToLdapSearchParser {
 		String nameInSource;
 		String contextName;
 
-		// TODO: Re-use the getExpressionString method if possible, rather than 
+		// TODO: Re-use the getExpressionString method if possible, rather than
 		// rewriting the same code twice.
 		Table group = fromItem.getMetadataObject();
 		nameInSource = group.getNameInSource();
@@ -290,7 +290,7 @@ public class IQueryToLdapSearchParser {
 		// see if the connector property is set to true.  If
 		// it is, use the Name of the class for the restriction.
 		if(namedClass == null || namedClass.equals("")) {  //$NON-NLS-1$
-			if (!this.executionFactory.isRestrictToObjectClass()) { 
+			if (!this.executionFactory.isRestrictToObjectClass()) {
 				namedClass = "";  //$NON-NLS-1$
 			} else {
 				namedClass = mdIDGroup.getName();
@@ -302,7 +302,7 @@ public class IQueryToLdapSearchParser {
 	private int getSearchScopeFromFromItem(NamedTable fromItem) {
 		String searchScopeString = "";  //$NON-NLS-1$
 		int searchScope = LDAPConnectorConstants.ldapDefaultSearchScope;
-		// TODO: Re-use the getExpressionString method if possible, rather than 
+		// TODO: Re-use the getExpressionString method if possible, rather than
 		// rewriting the same code twice.
 		Table group = fromItem.getMetadataObject();
 		String nameInSource = group.getNameInSource();
@@ -337,8 +337,8 @@ public class IQueryToLdapSearchParser {
 		}
 		return searchScope;
 	}
-	
-	/** 
+
+	/**
 	 * Utility method to convert operator to the appropriate string value for LDAP.
 	 * @param op operator to evaluate
 	 * @return LDAP-specific string equivalent of the operator
@@ -351,11 +351,11 @@ public class IQueryToLdapSearchParser {
 				return "|"; //$NON-NLS-1$
 			default:
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.criteriaNotParsableError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
+				throw new TranslatorException(msg);
 		}
 	}
 
-	/** 
+	/**
 	 * Utility method to convert expression to the appropriate string value for LDAP.
 	 * @param e expression to evaluate
 	 * @return LDAP-specific string equivalent of the expression
@@ -377,12 +377,12 @@ public class IQueryToLdapSearchParser {
 			expressionName = getLiteralString((Literal)e);
 		} else {
             final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError", e.getClass().getSimpleName()); //$NON-NLS-1$
-			throw new TranslatorException(msg + e.toString()); 
+			throw new TranslatorException(msg + e.toString());
 		}
 		expressionName = escapeReservedChars(expressionName);
 		return expressionName;
 	}
-	
+
 	static String getLiteralQueryString(Expression lhs, Expression rhs) {
 		Column mdIDElement = ((ColumnReference)lhs).getMetadataObject();
 		String expressionName = getLiteralString(mdIDElement, (Literal)rhs);
@@ -402,7 +402,7 @@ public class IQueryToLdapSearchParser {
 		}
 		return expressionName;
 	}
-	
+
 	static String getLiteralString(Literal l) {
 		if(l.getValue() instanceof Timestamp) {
 			Timestamp ts = (Timestamp)l.getValue();
@@ -417,7 +417,7 @@ public class IQueryToLdapSearchParser {
 		}
 		return "null";  //$NON-NLS-1$
 	}
-	
+
 	static String escapeReservedChars(String expr) {
 		StringBuilder sb = new StringBuilder();
         for (int i = 0; i < expr.length(); i++) {
@@ -441,7 +441,7 @@ public class IQueryToLdapSearchParser {
 		    case ')':
 		        sb.append("\\29"); //$NON-NLS-1$
 		        break;
-		    case '\u0000': 
+		    case '\u0000':
 		        sb.append("\\00"); //$NON-NLS-1$
 		        break;
 		    default:
@@ -449,12 +449,12 @@ public class IQueryToLdapSearchParser {
 		}
 	}
 
-	/** 
+	/**
 	 * Recursive method to translate the where clause into an LDAP search filter.
 	 * The goal is to convert infix notation to prefix (Polish) notation.
 	 * TODO: There's probably a clever way to do this with a Visitor.
 	 * @param criteria Criteria to evaluate.
-	 * @param List list to hold each pre-fix character of the search filter. 
+	 * @param List list to hold each pre-fix character of the search filter.
 	 * @return list list that can be traversed in order to construct the search filter.
 	 */
 	private List<String> getSearchFilterFromWhereClause(Condition criteria, List<String> filterList) throws TranslatorException {
@@ -469,7 +469,7 @@ public class IQueryToLdapSearchParser {
 			AndOr.Operator op = crit.getOperator();
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing compound criteria."); //$NON-NLS-1$
 			String stringOp = parseCompoundCriteriaOp(op);
-			
+
 			filterList.add("("); //$NON-NLS-1$
 			filterList.add(stringOp);
 			filterList.addAll(getSearchFilterFromWhereClause(crit.getLeftCondition(), new LinkedList<String>()));
@@ -479,15 +479,15 @@ public class IQueryToLdapSearchParser {
 		} else if(criteria instanceof Comparison) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing compare criteria."); //$NON-NLS-1$
 			Comparison.Operator op = ((Comparison) criteria).getOperator();
-			
+
 			isNegated = op == Operator.NE || op == Operator.GT || op == Operator.LT;
-			
+
 			Expression lhs = ((Comparison) criteria).getLeftExpression();
 			Expression rhs = ((Comparison) criteria).getRightExpression();
-		
+
 			String lhsString = getExpressionQueryString(lhs);
 			String rhsString = getLiteralQueryString(lhs, rhs);
-			
+
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
 		} else if(criteria instanceof Like) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing LIKE criteria."); //$NON-NLS-1$
@@ -497,7 +497,7 @@ public class IQueryToLdapSearchParser {
 			Comparison.Operator op = Operator.EQ;
 			Expression lhs = like.getLeftExpression();
 			Expression rhs = like.getRightExpression();
-		
+
 			String lhsString = getExpressionQueryString(lhs);
 			String rhsString = getLiteralString(((ColumnReference)lhs).getMetadataObject(), (Literal)rhs);
 			if (like.getEscapeCharacter() != null) {
@@ -536,7 +536,7 @@ public class IQueryToLdapSearchParser {
 				}
 			}
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
-			
+
 		// Base case
 		} else if(criteria instanceof In) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
@@ -552,16 +552,16 @@ public class IQueryToLdapSearchParser {
 		} else {
 			throw new AssertionError("unknown predicate type"); //$NON-NLS-1$
 		}
-		
+
 		if (isNegated) {
 			filterList.add(0, "(!"); //$NON-NLS-1$
 			filterList.add(")"); //$NON-NLS-1$
 		}
-		
+
 		return filterList;
 	}
-	
-	/** 
+
+	/**
 	 * Process a list of right-hand side IN expresssions and add the corresponding LDAP filter
 	 * clause string to the given filterList.
 	 */
@@ -573,13 +573,13 @@ public class IQueryToLdapSearchParser {
 		filterList.add(parseCompoundCriteriaOp(org.teiid.language.AndOr.Operator.OR));
 		Iterator<Expression> rhsItr = rhsList.iterator();
 		while(rhsItr.hasNext()) {
-			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionQueryString(lhs), 
+			addCompareCriteriaToList(filterList, Operator.EQ, getExpressionQueryString(lhs),
 					getLiteralQueryString(lhs, rhsItr.next()));
 		}
 		filterList.add(")"); //$NON-NLS-1$
 	}
-	
-	/** 
+
+	/**
 	 * Add Compare Criteria to List
 	 * @param filterList the filter list
 	 * @param op
@@ -608,14 +608,14 @@ public class IQueryToLdapSearchParser {
 				break;
 			default:
 	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.criteriaNotSupportedError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
-				
+				throw new TranslatorException(msg);
+
 		}
 		filterList.add(rhs);
 		filterList.add(")"); //$NON-NLS-1$
 	}
-	
-	/** 
+
+	/**
 	 * Method to get SELECT Element list from the supplied query
 	 * @param query the supplied Query
 	 * @return the list of SELECT elements
@@ -630,8 +630,8 @@ public class IQueryToLdapSearchParser {
 		}
 		return selectElementList;
 	}
-	
-	
+
+
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
      * {@link org.teiid.language.DerivedColumn}.
@@ -642,7 +642,7 @@ public class IQueryToLdapSearchParser {
         ColumnReference expr = (ColumnReference) symbol.getExpression();
         return expr.getMetadataObject();
     }
-	
+
 	public LDAPSearchDetails buildRequest(String query) throws TranslatorException {
 		ArrayList<String> attributes = new ArrayList<String>();
 		ArrayList<Column> columns = new ArrayList<Column>();
@@ -659,7 +659,7 @@ public class IQueryToLdapSearchParser {
 			}
 			String key = var.substring(0, index).trim();
 			String value = var.substring(index+1).trim();
-			
+
 			if (key.equalsIgnoreCase(CONTEXT_NAME)) {
 				contextName = value;
 			}
@@ -680,7 +680,7 @@ public class IQueryToLdapSearchParser {
 				while(attrTokens.hasMoreElements()) {
 					String name = attrTokens.nextToken().trim();
 					attributes.add(name);
-					
+
 					Column column = new Column();
 					column.setName(name);
 					Datatype type = new Datatype();
@@ -693,11 +693,11 @@ public class IQueryToLdapSearchParser {
 				throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12013, var));
 			}
 		}
-		
+
 		int searchScopeInt = buildSearchScope(searchScope);
 		return new LDAPSearchDetails(contextName, searchScopeInt, criteria, null, countLimit, columns, timeLimit);
-	}    
-	
+	}
+
 	private int buildSearchScope(String searchScope) {
 		int searchScopeInt = 0;
 		// this could be one of OBJECT_SCOPE, ONELEVEL_SCOPE, SUBTREE_SCOPE
@@ -711,5 +711,5 @@ public class IQueryToLdapSearchParser {
 			searchScopeInt =  SearchControls.SUBTREE_SCOPE;
 		}
 		return searchScopeInt;
-	}	
+	}
 }

@@ -35,14 +35,14 @@ import java.util.Set;
  */
 
 public final class JDBCSQLTypeInfo {
-	
+
 	public static class TypeInfo {
 		String name;
 		int maxDisplaySize;
 		int defaultPrecision;
 		String javaClassName;
 		int[] jdbcTypes;
-		
+
 		public TypeInfo(int maxDisplaySize, int precision, String name,
 				String javaClassName, int[] jdbcTypes) {
 			super();
@@ -52,9 +52,9 @@ public final class JDBCSQLTypeInfo {
 			this.javaClassName = javaClassName;
 			this.jdbcTypes = jdbcTypes;
 		}
-		
+
 	}
-	
+
     // Prevent instantiation
     private JDBCSQLTypeInfo() {}
 
@@ -93,12 +93,12 @@ public final class JDBCSQLTypeInfo {
     	addType(DataTypeManager.DefaultDataTypes.XML, Integer.MAX_VALUE, Integer.MAX_VALUE, SQLXML.class.getName(), Types.SQLXML);
     	addType(DataTypeManager.DefaultDataTypes.NULL, 4, 1, null, Types.NULL);
     	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_VARBINARY_BYTES, DataTypeManager.MAX_VARBINARY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
-    	
+
     	TypeInfo typeInfo = new TypeInfo(Integer.MAX_VALUE, 0, "ARRAY", Array.class.getName(), new int[Types.ARRAY]); //$NON-NLS-1$
-		CLASSNAME_TO_TYPEINFO.put(Array.class.getName(), typeInfo); 
+		CLASSNAME_TO_TYPEINFO.put(Array.class.getName(), typeInfo);
     	TYPE_TO_TYPEINFO.put(Types.ARRAY, typeInfo);
     }
-    
+
 	private static TypeInfo addType(String typeName, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
 		TypeInfo ti = new TypeInfo(maxDisplaySize, precision, typeName, javaClassName, sqlTypes);
 		NAME_TO_TYPEINFO.put(typeName, ti);
@@ -110,7 +110,7 @@ public final class JDBCSQLTypeInfo {
 		}
 		return ti;
 	}
-	
+
 	private static void addType(String[] typeNames, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
 		TypeInfo ti = addType(typeNames[0], maxDisplaySize, precision, javaClassName, sqlTypes);
 		for (int i = 1; i < typeNames.length; i++) {
@@ -129,18 +129,18 @@ public final class JDBCSQLTypeInfo {
         if (typeName == null) {
             return Types.NULL;
         }
-        
+
         TypeInfo sqlType = NAME_TO_TYPEINFO.get(typeName);
-        
+
         if (sqlType == null) {
         	if (DataTypeManager.isArrayType(typeName)) {
         		return Types.ARRAY;
         	}
             return Types.JAVA_OBJECT;
         }
-        
+
         return sqlType.jdbcTypes[0];
-    }    
+    }
 
     /**
      * Get sql Type from java class type name.  This should not be called with runtime types
@@ -153,18 +153,18 @@ public final class JDBCSQLTypeInfo {
         if (className == null) {
             return Types.NULL;
         }
-        
+
         TypeInfo sqlType = CLASSNAME_TO_TYPEINFO.get(className);
-        
+
         if (sqlType == null) {
             return Types.JAVA_OBJECT;
         }
-        
+
         return sqlType.jdbcTypes[0];
-    } 
-    
+    }
+
     /**
-     * Get the sql type from the given runtime type 
+     * Get the sql type from the given runtime type
      * @param type
      * @return the SQL type code
      */
@@ -172,16 +172,16 @@ public final class JDBCSQLTypeInfo {
     	if (type == null) {
     		return Types.NULL;
     	}
-    	
+
         String name = DataTypeManager.getDataTypeName(type);
-        
+
         if (name == null) {
             return Types.JAVA_OBJECT;
         }
-        
+
         return getSQLType(name);
     }
-    
+
     /**
      * This method is used to obtain a the java class name given an int value
      * indicating JDBC SQL type. The int values that give the type info are from
@@ -191,21 +191,21 @@ public final class JDBCSQLTypeInfo {
      */
     public static final String getJavaClassName(int jdbcSQLType) {
     	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(jdbcSQLType);
-    	
+
     	if (typeInfo == null) {
     		return DataTypeManager.DefaultDataClasses.OBJECT.getName();
     	}
-    	
+
     	return typeInfo.javaClassName;
     }
-    
+
     public static final String getTypeName(int sqlType) {
     	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(sqlType);
-    	
+
     	if (typeInfo == null) {
     		return DataTypeManager.DefaultDataTypes.OBJECT;
     	}
-    	
+
     	return typeInfo.name;
     }
 

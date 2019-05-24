@@ -55,12 +55,12 @@ public class FunctionMetadataValidator {
 	 * Validate a collection of {@link FunctionMethod} objects.
 	 * @param methods Collection of {@link FunctionMethod} objects
 	 * @param report Report to store validation errors
-	 * @param runtimeTypeMap 
+	 * @param runtimeTypeMap
 	 */
 	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
 		validateFunctionMethods(methods, report, null);
 	}
-	
+
 	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report, Map<String, Datatype> runtimeTypeMap) {
 		if (runtimeTypeMap == null) {
 			runtimeTypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();

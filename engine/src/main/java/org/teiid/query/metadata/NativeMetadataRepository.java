@@ -41,11 +41,11 @@ public class NativeMetadataRepository implements MetadataRepository {
 
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
-		
+
 		if (executionFactory == null ) {
 			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30591, factory.getName()));
 		}
-		
+
 		if (connectionFactory == null && executionFactory.isSourceRequiredForMetadata()) {
 			throw new TranslatorException(QueryPlugin.Event.TEIID31097, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31097));
 		}
@@ -67,12 +67,12 @@ public class NativeMetadataRepository implements MetadataRepository {
             // if security pass through is enabled the connection creation may fail at the startup
             if (executionFactory.isSourceRequiredForMetadata()) {
                 throw new TranslatorException(QueryPlugin.Event.TEIID31178, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31178, factory.getName()));
-            } 
+            }
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception getting connection for metadata, but no connection is required"); //$NON-NLS-1$
         }
-        
+
 		Object unwrapped = null;
-		
+
 		if (connection instanceof WrappedConnection) {
 			try {
 				unwrapped = ((WrappedConnection)connection).unwrap();
@@ -84,13 +84,13 @@ public class NativeMetadataRepository implements MetadataRepository {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not unwrap exception to get metadata, but no connection is required"); //$NON-NLS-1$
 			}
 		}
-		
+
 		try {
 			executionFactory.getMetadata(factory, (unwrapped == null) ? connection:unwrapped);
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
-		
+
 		if (factory.isImportPushdownFunctions()) {
 			List<FunctionMethod> functions = executionFactory.getPushDownFunctions();
 			//create a copy and add to the schema
@@ -114,5 +114,5 @@ public class NativeMetadataRepository implements MetadataRepository {
 			}
 		}
     }
-	
+
 }

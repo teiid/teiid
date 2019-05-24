@@ -30,23 +30,23 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class SetClauseList implements LanguageObject {
-	
+
 	private static final long serialVersionUID = 8174681510498719451L;
-	
+
 	private List<SetClause> setClauses;
-	
+
 	public SetClauseList() {
 		this.setClauses = new ArrayList<SetClause>();
 	}
-	
+
 	public SetClauseList(List<SetClause> setClauses) {
 		this.setClauses = setClauses;
 	}
-	
+
 	public void addClause(ElementSymbol symbol, Expression expression) {
 		this.setClauses.add(new SetClause(symbol, expression));
 	}
-	
+
 	public void addClause(SetClause clause) {
 		this.setClauses.add(clause);
 	}
@@ -54,12 +54,12 @@ public class SetClauseList implements LanguageObject {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	@Override
 	public Object clone() {
 		SetClauseList copy = new SetClauseList();
@@ -68,7 +68,7 @@ public class SetClauseList implements LanguageObject {
 		}
 		return copy;
 	}
-	
+
 	/**
 	 * @return a non-updateable map representation
 	 */
@@ -79,15 +79,15 @@ public class SetClauseList implements LanguageObject {
 		}
 		return result;
 	}
-	
+
 	public List<SetClause> getClauses() {
 		return this.setClauses;
 	}
-	
+
 	public boolean isEmpty() {
 		return this.setClauses.isEmpty();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if(this == obj) {
@@ -99,13 +99,13 @@ public class SetClauseList implements LanguageObject {
 		}
 
     	SetClauseList other = (SetClauseList) obj;
-    	
+
     	return this.setClauses.equals(other.setClauses);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return setClauses.hashCode();
 	}
-	
+
 }

@@ -28,12 +28,12 @@ import org.odata4j.internal.EdmDataServicesDecorator;
 public class TeiidEdmMetadata extends EdmDataServicesDecorator {
 	private EdmDataServices delegate;
 	private String schemaName;
-	
+
 	public TeiidEdmMetadata(String schemaName, EdmDataServices delegate) {
 		this.schemaName = schemaName;
 		this.delegate = delegate;
 	}
-	
+
 	@Override
 	protected EdmDataServices getDelegate() {
 		return this.delegate;
@@ -47,12 +47,12 @@ public class TeiidEdmMetadata extends EdmDataServicesDecorator {
 	private String teiidSchemaBasedName(String name) {
 		return this.schemaName+"."+name; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public EdmEntitySet findEdmEntitySet(String name) {
 		return super.findEdmEntitySet(teiidSchemaBasedName(name));
 	}
-	
+
 	@Override
 	public EdmComplexType findEdmComplexType(String complexTypeFQName) {
 		return super.findEdmComplexType(teiidSchemaBasedName(complexTypeFQName));
@@ -62,7 +62,7 @@ public class TeiidEdmMetadata extends EdmDataServicesDecorator {
 	public EdmFunctionImport findEdmFunctionImport(String functionImportName) {
 		return super.findEdmFunctionImport(teiidSchemaBasedName(functionImportName));
 	}
-	
+
 	@Override
 	public EdmSchema findSchema(String namespace) {
 		return super.findSchema(this.schemaName);

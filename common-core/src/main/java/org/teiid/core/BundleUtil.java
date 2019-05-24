@@ -38,18 +38,18 @@ public class BundleUtil {
     private final ResourceBundle bundle;
 
     protected final String pluginId;
-    
+
     public interface Event {
     	//String id();
     }
-    
+
     /**
      * Return the {@link BundleUtil} for the class.  The bundle must be in the same package or a parent package of the class.
      * @param clazz
      */
     public static BundleUtil getBundleUtil(Class<?> clazz) {
     	String packageName = clazz.getPackage().getName();
-    	
+
     	while (true) {
     		//scan up packages until found
     		String bundleName = packageName + ".i18n"; //$NON-NLS-1$
@@ -57,7 +57,7 @@ public class BundleUtil {
     			ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
     			return new BundleUtil(packageName, bundleName, bundle);
     		} catch (MissingResourceException e) {
-    			int index = packageName.lastIndexOf('.'); 
+    			int index = packageName.lastIndexOf('.');
     			if (index < 0) {
     				throw e;
     			}
@@ -194,18 +194,18 @@ public class BundleUtil {
 
         return MessageFormat.format(text, parameters);
     }
-    
+
 	public String gs(final String key, final Object... parameters) {
 		return getString(key, parameters);
 	}
-	
+
 	public String gs(final Event key, final Object... parameters) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(key);
 		sb.append(" "); //$NON-NLS-1$
 		sb.append(getString(key.toString(), parameters));
 		return sb.toString();
-	}	
+	}
 
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);

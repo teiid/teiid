@@ -37,9 +37,9 @@ import org.teiid.core.TeiidComponentException;
  * within the modeler.</p>
  */
 public class BufferManagerFactory {
-	
+
 	private static BufferManagerImpl INSTANCE;
-	
+
     /**
      * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
      * typically used for testing or when memory is not an issue.

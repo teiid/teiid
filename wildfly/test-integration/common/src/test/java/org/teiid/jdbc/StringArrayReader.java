@@ -23,13 +23,13 @@ import java.io.IOException;
 import org.teiid.script.io.StringLineReader;
 
 
-/** 
+/**
  * Converts a String Array object into a Reader object.
  */
 public class StringArrayReader extends StringLineReader {
     String[] source = null;
     int index = 0;
-    
+
     public StringArrayReader(String[] src) {
         this.source = src;
     }

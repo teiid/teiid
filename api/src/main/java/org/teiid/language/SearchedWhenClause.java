@@ -24,7 +24,7 @@ public class SearchedWhenClause extends BaseLanguageObject {
 
 	private Condition condition;
 	private Expression result;
-	
+
 	public SearchedWhenClause(Condition condition, Expression result) {
 		this.condition = condition;
 		this.result = result;

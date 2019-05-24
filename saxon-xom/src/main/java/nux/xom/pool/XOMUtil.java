@@ -2,22 +2,22 @@
  * Copyright (c) 2005, The Regents of the University of California, through
  * Lawrence Berkeley National Laboratory (subject to receipt of any required
  * approvals from the U.S. Dept. of Energy). All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * (1) Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * (2) Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * (3) Neither the name of the University of California, Lawrence Berkeley
  * National Laboratory, U.S. Dept. of Energy nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,7 +29,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * You are under no obligation whatsoever to provide any bug fixes, patches, or
  * upgrades to the features, functionality or performance of the source code
  * ("Enhancements") to anyone; however, if you choose to make your Enhancements
@@ -51,15 +51,15 @@ import nux.xom.io.StreamingSerializer;
 
 /**
  * Various utilities avoiding redundant code in several classes.
- * 
+ *
  * @author whoschek.AT.lbl.DOT.gov
  * @author $Author: hoschek3 $
  * @version $Revision: 1.159 $, $Date: 2006/03/24 01:17:26 $
  */
 public class XOMUtil {
-	
+
 	private XOMUtil() {} // not instantiable
-	
+
 	/**
 	 * Returns a node factory that removes each {@link nu.xom.Text} node that is
 	 * empty or consists of whitespace characters only (boundary whitespace).
@@ -79,21 +79,21 @@ public class XOMUtil {
 	 * <code>&lt;p>&lt;strong>Hello&lt;/strong> &lt;em>World!&lt;/em>&lt;/p></code>
 	 * will be removed, which might not be what you want. This is because this
 	 * method does not look across multiple Text nodes.
-	 * 
+	 *
 	 * @return a node factory
 	 */
 	public static NodeFactory getIgnoreWhitespaceOnlyTextNodeFactory() {
 		return new NodeFactory() {
 			private final Nodes NONE = new Nodes();
-			
+
 			public Nodes makeText(String text) {
 				return Normalizer.isWhitespaceOnly(text) ?
 					NONE :
-					super.makeText(text); 	
-			}			
+					super.makeText(text);
+			}
 		};
 	}
-		
+
 	/**
 	 * Returns a node factory that redirects its input onto the output of a
 	 * streaming serializer. For example can be used to convert standard textual
@@ -101,37 +101,37 @@ public class XOMUtil {
 	 * is, without building a complete temporary XOM main memory tree.
 	 * <p>
 	 * The document returned on <code>finishMakingDocument</code> will be empty.
-	 * 
+	 *
 	 * @param serializer
 	 *            the streaming serializer to write to
 	 * @return a redirecting node factory
 	 */
 	public static NodeFactory getRedirectingNodeFactory(
 			final StreamingSerializer serializer) {
-		
+
 		if (serializer == null) throw new IllegalArgumentException(
 				"Streaming serializer must not be null");
-		
+
 		/*
 		 * Buffers a start tag until attributes and namespaces have been attached
 		 * by the Builder, and only then calls serializer.writeStartTag(Elem).
 		 */
 		return new NodeFactory() {
-			
+
 			private Element buffer = null;
 			private final Nodes NONE = new Nodes();
 			private final NodeBuilder nodeBuilder = new NodeBuilder();
-						
-			public Nodes makeAttribute(String name, String namespace, 
+
+			public Nodes makeAttribute(String name, String namespace,
 					String value, Attribute.Type type) {
-				
+
 				buffer.addAttribute(
 					nodeBuilder.createAttribute(name, namespace, value, type));
 //				buffer.addAttribute(
 //					new Attribute(name, namespace, value, type));
 				return NONE;
 			}
-	
+
 			public Nodes makeComment(String data) {
 				flush();
 				try {
@@ -141,7 +141,7 @@ public class XOMUtil {
 				}
 				return NONE;
 			}
-	
+
 			public Nodes makeDocType(String rootElementName, String publicID, String systemID) {
 				flush();
 				try {
@@ -151,7 +151,7 @@ public class XOMUtil {
 				}
 				return NONE;
 			}
-	
+
 			public Nodes makeProcessingInstruction(String target, String data) {
 				flush();
 				try {
@@ -161,7 +161,7 @@ public class XOMUtil {
 				}
 				return NONE;
 			}
-			
+
 			public Nodes makeText(String text) {
 				flush();
 				try {
@@ -171,14 +171,14 @@ public class XOMUtil {
 				}
 				return NONE;
 			}
-			
+
 			public Element startMakingElement(String name, String namespace) {
 				flush();
 //				buffer = new Element(name, namespace);
 				buffer = nodeBuilder.createElement(name, namespace);
 				return buffer;
 			}
-			
+
 			public Nodes finishMakingElement(Element element) {
 				flush();
 				try {
@@ -186,13 +186,13 @@ public class XOMUtil {
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
-				
+
 				if (element.getParent() instanceof Document) {
 					return new Nodes(element);
 				}
 				return NONE;
 			}
-			
+
 			public Document startMakingDocument() {
 				buffer = null;
 				try {
@@ -202,7 +202,7 @@ public class XOMUtil {
 				}
 				return new Document(new Element("dummy")); // unused dummy
 			}
-			
+
 			public void finishMakingDocument(Document document) {
 				buffer = null;
 				try {
@@ -211,7 +211,7 @@ public class XOMUtil {
 					throw new RuntimeException(e);
 				}
 			}
-			
+
 			private void flush() {
 				if (buffer != null) {
 					try {
@@ -220,9 +220,9 @@ public class XOMUtil {
 						throw new RuntimeException(e);
 					}
 					buffer = null;
-				}		
+				}
 			}
-			
+
 		};
 	}
 
@@ -233,7 +233,7 @@ public class XOMUtil {
 //	 * NodeFactory based behaviour of the XOM {@link nu.xom.Builder}. Intended
 //	 * to filter a document that is already held in a main memory XOM tree,
 //	 * rather than held in a file.
-//	 * 
+//	 *
 //	 * @param doc
 //	 *            the document to push into the node factory
 //	 * @param factory
@@ -243,11 +243,11 @@ public class XOMUtil {
 //	public static Document build(Document doc, NodeFactory factory) {
 //		return new NodeFactoryPusher().build(doc, factory);
 //	}
-	
+
 	///////////////////////////////////////////////////////////////////////////////
 	// Nested classes:
 	///////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Standard XML algorithms for text and whitespace normalization (but not
 	 * for Unicode normalization); type safe enum. XML whitespace is
@@ -257,20 +257,20 @@ public class XOMUtil {
 	 * pretty useful.
 	 */
 	public static class Normalizer {
-		
+
 		/**
 		 * Whitespace normalization returns the string unchanged; hence
 		 * indicates no whitespace normalization should be performed at all;
 		 * This is typically the default for applications.
 		 */
 		public static final Normalizer PRESERVE = new Normalizer();
-		
+
 		/**
 		 * Whitespace normalization replaces <i>each</i> whitespace character in the
 		 * string with a <code>' '</code> space character.
 		 */
 		public static final Normalizer REPLACE = new ReplaceNormalizer();
-				
+
 		/**
 		 * Whitespace normalization replaces each
 		 * sequence of whitespace in the string by a single <code>' '</code>
@@ -278,43 +278,43 @@ public class XOMUtil {
 		 * if present, ala <code>String.trim()</code>.
 		 */
 		public static final Normalizer COLLAPSE = new CollapseNormalizer();
-		
+
 		/**
 		 * Whitespace normalization removes leading and trailing whitespaces,
 		 * if present, ala <code>String.trim()</code>.
 		 */
 		public static final Normalizer TRIM = new TrimNormalizer();
-		
+
 		/**
 		 * Whitespace normalization removes strings that consist of
 		 * whitespace-only (boundary whitespace), retaining other strings
 		 * unchanged.
 		 */
 		public static final Normalizer STRIP = new StripNormalizer();
-		
+
 		private Normalizer() {}
-		
+
 		/**
 		 * Performs XML whitespace normalization according to the chosen
 		 * algorithm implemented by this type.
 		 * Also see http://www.xml.com/pub/a/2000/09/27/schemas1.html?page=2
-		 * 
+		 *
 		 * @param str
 		 *            the string to normalize
 		 * @return a normalized string
 		 */
-		String normalizeWhitespace(String str) { 
+		String normalizeWhitespace(String str) {
 			return str; // PRESERVE by default; override for other algorithms
 		}
-				
+
 		/**
 		 * Recursively walks the given node subtree and merges runs of consecutive
 		 * (adjacent) {@link Text} nodes (if present) into a single Text node
-		 * containing their string concatenation; Empty Text nodes are removed. 
+		 * containing their string concatenation; Empty Text nodes are removed.
 		 * If present, CDATA nodes are treated as Text nodes.
 		 * <p>
-		 * <i>After</i> merging consecutive Text nodes into a single Text node, the given 
-		 * whitespace normalization algorithm is applied to each <i>resulting</i> 
+		 * <i>After</i> merging consecutive Text nodes into a single Text node, the given
+		 * whitespace normalization algorithm is applied to each <i>resulting</i>
 		 * Text node.
 		 * The semantics of the PRESERVE algorithm are the same as with the DOM method
 		 * {@link org.w3c.dom.Node#normalize() org.w3c.dom.Node.normalize()}.
@@ -325,7 +325,7 @@ public class XOMUtil {
 		 * the tree can cause Text nodes to become adjacent, and updates can cause
 		 * Text nodes to become empty.
 		 * <p>
-		 * Text normalization with the whitespace PRESERVE algorithm is necessary to 
+		 * Text normalization with the whitespace PRESERVE algorithm is necessary to
 		 * achieve strictly standards-compliant
 		 * XPath and XQuery semantics if a query compares or extracts the value of
 		 * individual Text nodes that (unfortunately) happen to be adjacent to
@@ -334,13 +334,13 @@ public class XOMUtil {
 		 * before passing a XOM tree into XQuery or XPath.
 		 * <p>
 		 * Example Usage:
-		 * 
+		 *
 		 * <pre>
 		 * Element foo = new Element("foo");
 		 * foo.appendChild("");
 		 * foo.appendChild("bar");
 		 * foo.appendChild("");
-		 * 
+		 *
 		 * Element elem = new Element("elem");
 		 * elem.appendChild("");
 		 * elem.appendChild(foo);
@@ -349,13 +349,13 @@ public class XOMUtil {
 		 * elem.appendChild(" \n");
 		 * elem.appendChild(foo.copy());
 		 * elem.appendChild("");
-		 * 
+		 *
 		 * XOMUtil.Normalizer.PRESERVE.normalize(elem);
 		 * System.out.println(XOMUtil.toDebugString(elem));
 		 * </pre>
-		 * 
+		 *
 		 * PRESERVE yields the following normalized output:
-		 * 
+		 *
 		 * <pre>
 		 * [nu.xom.Element: elem]
 		 *     [nu.xom.Element: foo]
@@ -364,9 +364,9 @@ public class XOMUtil {
 		 *     [nu.xom.Element: foo]
 		 *         [nu.xom.Text: bar]
 		 * </pre>
-		 * 
+		 *
 		 * In contrast, REPLACE yields the following hello world form:
-		 * 
+		 *
 		 * <pre>
 		 * [nu.xom.Element: elem]
 		 *     [nu.xom.Element: foo]
@@ -375,9 +375,9 @@ public class XOMUtil {
 		 *     [nu.xom.Element: foo]
 		 *         [nu.xom.Text: bar]
 		 * </pre>
-		 * 
+		 *
 		 * Whereas, COLLAPSE yields:
-		 * 
+		 *
 		 * <pre>
 		 * [nu.xom.Element: elem]
 		 *     [nu.xom.Element: foo]
@@ -386,9 +386,9 @@ public class XOMUtil {
 		 *     [nu.xom.Element: foo]
 		 *         [nu.xom.Text: bar]
 		 * </pre>
-		 * 
+		 *
 		 * TRIM yields:
-		 * 
+		 *
 		 * <pre>
 		 * [nu.xom.Element: elem]
 		 *     [nu.xom.Element: foo]
@@ -397,10 +397,10 @@ public class XOMUtil {
 		 *     [nu.xom.Element: foo]
 		 *         [nu.xom.Text: bar]
 		 * </pre>
-		 * 
-		 * Finally, STRIP yields the same as PRESERVE because the example has no 
+		 *
+		 * Finally, STRIP yields the same as PRESERVE because the example has no
 		 * whitepace-only results:
-		 * 
+		 *
 		 * <pre>
 		 * [nu.xom.Element: elem]
 		 *     [nu.xom.Element: foo]
@@ -409,7 +409,7 @@ public class XOMUtil {
 		 *     [nu.xom.Element: foo]
 		 *         [nu.xom.Text: bar]
 		 * </pre>
-		 * 
+		 *
 		 * @param node
 		 *            the subtree to normalize
 		 */
@@ -424,14 +424,14 @@ public class XOMUtil {
 					// scan to beginning of adjacent run, if any
 					int j = i;
 					while (--i >= 0 && node.getChild(i) instanceof Text) ;
-					
+
 					i++;
 					if (j != i) { // > 1 adjacent Text nodes (rare case)
 						merge(node, i, j); // merge into a single Text node
 					} else { // found isolated Text node (common case)
 						String value = child.getValue();
 						String norm = normalizeWhitespace(value);
-						if (norm.length() == 0) { 
+						if (norm.length() == 0) {
 							node.removeChild(i);
 						} else if (!norm.equals(value)) {
 							((Text) child).setValue(norm);
@@ -440,25 +440,25 @@ public class XOMUtil {
 				}
 			}
 		}
-		
+
 		/**
 		 * Found more than one adjacent Text node; merge them. Appends forwards
 		 * and removes backwards to minimize memory copies of list elems.
-		 */ 
+		 */
 		private void merge(ParentNode node, int i, int j) {
 			int k = i;
 			StringBuffer buf = new StringBuffer(node.getChild(k++).getValue());
 			while (k <= j) buf.append(node.getChild(k++).getValue());
 			k = j;
 			while (k >= i) node.removeChild(k--);
-			
+
 			// replace run with compact merged Text node unless empty
 			String norm = normalizeWhitespace(buf.toString());
 			if (norm.length() > 0) {
 				node.insertChild(new Text(norm), i);
-			}	
+			}
 		}
-		
+
 		/** see XML spec */
 		private static boolean isWhitespace(char c) {
 //			return c < ' ';
@@ -467,17 +467,17 @@ public class XOMUtil {
 				case '\n': return true;
 				case '\r': return true;
 				case ' ' : return true;
-				default  : return false;			
+				default  : return false;
 			}
 		}
-		
+
 		private static boolean isWhitespaceOnly(String str) {
 			for (int i=str.length(); --i >= 0; ) {
-				if (!isWhitespace(str.charAt(i))) return false; 
+				if (!isWhitespace(str.charAt(i))) return false;
 			}
 			return true;
 		}
-		
+
 		private static String trim(String str) {
 			// return str.trim();
 			int j = str.length();
@@ -488,61 +488,61 @@ public class XOMUtil {
 
 			return i > 0 || j < str.length() ? str.substring(i, j) : str;
 		}
-		
+
 		///////////////////////////////////////////////////////////////////////////////
 		// Doubly Nested classes:
 		///////////////////////////////////////////////////////////////////////////////
-		
+
 		private static final class TrimNormalizer extends Normalizer {
 			String normalizeWhitespace(String str) {
 				return trim(str);
-			}			
+			}
 		}
-		
+
 		private static final class StripNormalizer extends Normalizer {
 			String normalizeWhitespace(String str) {
 				return isWhitespaceOnly(str) ? "" : str;
 			}
 		}
-		
+
 		private static final class ReplaceNormalizer extends Normalizer {
 			String normalizeWhitespace(String str) {
 				int len = str.length();
 				StringBuffer buf = new StringBuffer(len);
 				boolean modified = false; // keep identity and reduce memory if possible
-				
+
 				for (int i=0; i < len; i++) {
 					char c = str.charAt(i);
-					if (c != ' ' && isWhitespace(c)) { 
+					if (c != ' ' && isWhitespace(c)) {
 						c = ' ';
 						modified = true;
 					}
 					buf.append(c);
 				}
 				return modified ? buf.toString() : str;
-			}			
+			}
 		}
-		
+
 		private static final class CollapseNormalizer extends Normalizer {
 			String normalizeWhitespace(String str) {
 				int len = str.length();
 				StringBuffer buf = new StringBuffer(len);
 				boolean modified = false; // keep identity and reduce memory if possible
-				
+
 				for (int i=0; i < len; i++) {
 					char c = str.charAt(i);
-					if (isWhitespace(c)) { 
+					if (isWhitespace(c)) {
 						// skip to next non-whitespace
 						int j = i;
 						while (++i < len && isWhitespace(str.charAt(i)));
-						
+
 						i--;
 						if (!modified && (c != ' ' || j != i)) modified = true;
 						c = ' ';
 					}
 					buf.append(c);
 				}
-					
+
 				/*
 				 * Remove leading and trailing whitespace, if any.
 				 * Consecutive leading and trailing runs have already been merged
@@ -557,10 +557,10 @@ public class XOMUtil {
 					buf.deleteCharAt(0);
 					modified = true;
 				}
-				
+
 				return modified ? buf.toString() : str;
 			}
 		}
 	}
-	
+
 }

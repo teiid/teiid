@@ -2,22 +2,22 @@
  * Copyright (c) 2005, The Regents of the University of California, through
  * Lawrence Berkeley National Laboratory (subject to receipt of any required
  * approvals from the U.S. Dept. of Energy). All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * (1) Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * (2) Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * (3) Neither the name of the University of California, Lawrence Berkeley
  * National Laboratory, U.S. Dept. of Energy nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,7 +29,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * You are under no obligation whatsoever to provide any bug fixes, patches, or
  * upgrades to the features, functionality or performance of the source code
  * ("Enhancements") to anyone; however, if you choose to make your Enhancements
@@ -54,17 +54,17 @@ import nu.xom.Nodes;
 import nux.xom.pool.XOMUtil;
 
 /**
- * Streaming path filter node factory for continuous queries and/or transformations 
+ * Streaming path filter node factory for continuous queries and/or transformations
  * over very large or infinitely long XML input.
  * <p>
  * <h4>Background</h4>
- * 
+ *
  * The W3C XQuery and XPath languages often require the <i>entire</i> input
  * document to be buffered in memory for a query to be executed in its full
  * generality [<a target="_blank"
  * href="http://www.research.ibm.com/xj/pubs/icde.pdf">Background Paper</a>,
  * <a target="_blank"
- * href="http://www-dbs.informatik.uni-heidelberg.de/publications/">More Papers</a>]. 
+ * href="http://www-dbs.informatik.uni-heidelberg.de/publications/">More Papers</a>].
  * In other words, XQuery and XPath are hard to stream over very large or
  * infinitely long XML inputs without violating some aspects of the W3C
  * specifications. However, subsets of these languages (or simplified cousins)
@@ -78,24 +78,24 @@ import nux.xom.pool.XOMUtil;
  * record, one record at a time. For example, consider an XML document with one
  * million records, each describing a published book, music album or web server
  * log entry. A query to find the titles of books that have more than three
- * authors looks at each record individually, hence can easily be streamed. 
- * Another use case is splitting a document into several sub-documents based on 
+ * authors looks at each record individually, hence can easily be streamed.
+ * Another use case is splitting a document into several sub-documents based on
  * the content of each record.
  * <p>
  * More interestingly, consider a P2P XML content messaging router, network
- * transducer, transcoder, proxy or message queue that continuously 
- * filters, transforms, routes and dispatches messages from infinitely long 
- * streams, with the behaviour defined by deeply inspecting rules (i.e. queries) 
+ * transducer, transcoder, proxy or message queue that continuously
+ * filters, transforms, routes and dispatches messages from infinitely long
+ * streams, with the behaviour defined by deeply inspecting rules (i.e. queries)
  * based on content, network parameters or other metadata.
  * This class provides a convenient solution for such common use cases operating
  * on very large or infinitely long XML input. The solution uses a strongly
- * simplified location path language (which is modelled after XPath but <i>not</i> 
+ * simplified location path language (which is modelled after XPath but <i>not</i>
  * XPath compliant), in combination with a {@link nu.xom.NodeFactory} and
  * an optional {@link XQuery}. The solution is not necessarily faster than
  * building the full document tree, but it consumes much less main memory.
  * <p>
  * <h4>Here is how it works</h4>
- * 
+ *
  * You specify a simple "location path" such as <code>/books/book</code> or
  * <code>/weblogs/_2004/_05/entry</code>. The path may contain wildcards and
  * indicates which elements should be retained. All elements not matching the
@@ -111,30 +111,30 @@ import nux.xom.pool.XOMUtil;
  * transform can check conditions such as <i>has book more than three authors?
  * </i> A transform can also replace the element with a different element or a
  * list of arbitrary generated nodes. For example, if a book has more than three
- * authors, just the book title with a <code>authorCount</code> attribute 
+ * authors, just the book title with a <code>authorCount</code> attribute
  * can be added to the document, instead of the entire book element subtree.
  * <p>
  * Typically, simple <code>StreamingTransforms</code> are formulated in custom
  * Java code, whereas complex ones are formulated as an {@link XQuery}.
  * <p>
  * <h4>Streaming Location Path Syntax</h4>
- * 
+ *
  * <pre>
  * locationPath := {'/'step}...
- * step := [prefix':']localName  
- * prefix := '*' | '' | XMLNamespacePrefix 
+ * step := [prefix':']localName
+ * prefix := '*' | '' | XMLNamespacePrefix
  * localName := '*' | XMLLocalName
  * </pre>
- * 
+ *
  * A location path consists of zero or more location steps separated by "/".
  * A step consists of an optional XML namespace prefix followed by a local name.
- * The wildcard symbol '*' means: <i>Match anything</i>. 
- * An empty prefix ('') means: <i>Match if in no namespace (i.e. null namespace)</i>. 
- * 
+ * The wildcard symbol '*' means: <i>Match anything</i>.
+ * An empty prefix ('') means: <i>Match if in no namespace (i.e. null namespace)</i>.
+ *
  * <p>
  * Example legal location steps are:
  * <pre>
- * book       (Match elements named "book" in no namespace) 
+ * book       (Match elements named "book" in no namespace)
  * :book      (Match elements named "book" in no namespace)
  * bib:book   (Match elements named "book" in "bib" namespace)
  * bib:*      (Match elements with any name in "bib" namespace)
@@ -142,17 +142,17 @@ import nux.xom.pool.XOMUtil;
  * *:*        (Match elements with any name in any namespace, including no namespace)
  * :*         (Match elements with any name in no namespace)
  * </pre>
- * 
+ *
  * Obviously, the location path language is quite simplistic, supporting the "child" axis only.
  * For example, axes such as descendant ("//"), ancestors, following, preceding, as well as
- * predicates and other XPath features are not supported. Typically, this does not matter 
- * though, because a full XQuery can still be used on each element (subtree) matching the 
- * location path, as follows: 
- * 
+ * predicates and other XPath features are not supported. Typically, this does not matter
+ * though, because a full XQuery can still be used on each element (subtree) matching the
+ * location path, as follows:
+ *
  * <h4>Example Usage</h4>
- * 
- * The following is complete and efficient code for parsing and iterating through millions of 
- * "person" records in a database-like XML document, printing all residents of "San Francisco", 
+ *
+ * The following is complete and efficient code for parsing and iterating through millions of
+ * "person" records in a database-like XML document, printing all residents of "San Francisco",
  * while never allocating more memory than needed to hold one person element:
  * <pre>
  * StreamingTransform myTransform = new StreamingTransform() {
@@ -164,14 +164,14 @@ import nux.xom.pool.XOMUtil;
  *         return new Nodes(); // mark current element as subject to garbage collection
  *     }
  * };
- * 
+ *
  * // parse document with a filtering Builder
  * Builder builder = new Builder(new StreamingPathFilter("/persons/person", null)
  *     .createNodeFactory(null, myTransform));
  * builder.build(new File("/tmp/persons.xml"));
  * </pre>
- * 
- * To find the title of all books that have more than three authors 
+ *
+ * To find the title of all books that have more than three authors
  * and have 'Monterey' and 'Aquarium' somewhere in the title:
  * <pre>
  * String path = "/books/book";
@@ -180,11 +180,11 @@ import nux.xom.pool.XOMUtil;
  * prefixes.put("xsd", "http://www.w3.org/2001/XMLSchema");
  *
  * StreamingTransform myTransform = new StreamingTransform() {
- *     private Nodes NONE = new Nodes(); 
- * 
+ *     private Nodes NONE = new Nodes();
+ *
  *     // execute XQuery against each element matching location path
  *     public Nodes transform(Element subtree) {
- *         Nodes results = XQueryUtil.xquery(subtree, 
+ *         Nodes results = XQueryUtil.xquery(subtree,
  *            "title[matches(., 'Monterey') and matches(., 'Aquarium') and count(../author) > 3]");
  *
  *         for (int i=0; i < results.size(); i++) {
@@ -196,10 +196,10 @@ import nux.xom.pool.XOMUtil;
  *         // returning new Nodes(subtree) retains the current subtree.
  *         // returning new Nodes(some other nodes) replaces the current subtree with
  *         // some other nodes.
- *         // if you want (SAX) parsing to terminate at this point, simply throw an exception 
+ *         // if you want (SAX) parsing to terminate at this point, simply throw an exception
  *     }
  * };
- * 
+ *
  * // parse document with a filtering Builder
  * StreamingPathFilter filter = new StreamingPathFilter(path, prefixes);
  * Builder builder = new Builder(filter.createNodeFactory(null, myTransform));
@@ -207,9 +207,9 @@ import nux.xom.pool.XOMUtil;
  * System.out.println("doc.size()=" + doc.getRootElement().getChildElements().size());
  * System.out.println(XOMUtil.toPrettyXML(doc));
  * </pre>
- * 
+ *
  * <p>
- * Here is a similar snippet version that takes a filtering <code>Builder</code> from a 
+ * Here is a similar snippet version that takes a filtering <code>Builder</code> from a
  * thread-safe pool with optimized parser configuration:
  * <pre>
  * ...
@@ -227,12 +227,12 @@ import nux.xom.pool.XOMUtil;
  * Document doc = builder.build(new File("/tmp/books.xml"));
  * System.out.println("doc.size()=" + doc.getRootElement().getChildElements().size());
  * </pre>
- * 
+ *
  * <h4>Applicability</h4>
- * 
+ *
  * This class is well suited for a P2P XML content messaging router, network
- * transducer, transcoder, proxy or message queue that continuously 
- * filters, transforms, routes and dispatches messages from infinitely long 
+ * transducer, transcoder, proxy or message queue that continuously
+ * filters, transforms, routes and dispatches messages from infinitely long
  * streams.
  * <p>
  * However, this class is less suited for classic database oriented use cases.
@@ -243,7 +243,7 @@ import nux.xom.pool.XOMUtil;
  * extensions functions </a> to XQuery, or consider building your own mixed
  * relational/XQuery integration layer, or consider using a database technology
  * with native XQuery support.
- * 
+ *
  * @author whoschek.AT.lbl.DOT.gov
  * @author $Author: hoschek3 $
  * @version $Revision: 1.63 $, $Date: 2005/08/12 21:26:30 $
@@ -256,22 +256,22 @@ public class StreamingPathFilter {
 	/**
 	 * Constructs a compiled filter from the given location path and prefix
 	 * --&gt; namespaceURI map.
-	 * 
+	 *
 	 * @param locationPath
 	 *            the path expression to compile
 	 * @param prefixes
 	 *            a map of prefix --&gt; namespaceURI associations, each of type
 	 *            String --&gt; String.
-	 * 
+	 *
 	 * @throws StreamingPathFilterException
 	 *             if the location path has a syntax error
 	 */
 	public StreamingPathFilter(String locationPath, Map prefixes) throws StreamingPathFilterException {
-		if (locationPath == null) 
+		if (locationPath == null)
 			throw new StreamingPathFilterException("locationPath must not be null");
 		if (locationPath.indexOf("//") >= 0)
 			throw new StreamingPathFilterException("DESCENDANT axis is not supported");
-		
+
 		String path = locationPath.trim();
 		if (path.startsWith("/")) path = path.substring(1);
 		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
@@ -300,7 +300,7 @@ public class StreamingPathFilter {
 					namespaceURIs[i] = null;
 				} else {
 					// lookup namespace of uri
-					if (prefixes == null) 
+					if (prefixes == null)
 						throw new StreamingPathFilterException("prefixes must not be null");
 					Object uri = prefixes.get(prefix);
 					if (uri == null)
@@ -311,7 +311,7 @@ public class StreamingPathFilter {
 					namespaceURIs[i] = uri.toString().trim();
 				}
 			} // end if
-			
+
 			localNames[i] = localNames[i].substring(k + 1).trim();
 			if (localNames[i].equals("*")) {
 				// localName is irrelevant (does not matter)
@@ -332,16 +332,16 @@ public class StreamingPathFilter {
 	 * Like a <code>Builder</code>, the node factory can be reused serially,
 	 * but is not thread-safe because it is stateful. If you need thread-safety,
 	 * call this method each time you need a new node factory for a new thread.
-	 * 
+	 *
 	 * @param childFactory
 	 *            an optional factory to delegate calls to. All calls except
 	 *            <code>makeRootElement()</code>,
 	 *            <code>startMakingElement()</code> and
 	 *            <code>finishMakingElement()</code> are delegated to the child
-	 *            factory. If this parameter is <code>null</code> it defaults 
+	 *            factory. If this parameter is <code>null</code> it defaults
 	 *            to the factory returned by
 	 *            {@link XOMUtil#getIgnoreWhitespaceOnlyTextNodeFactory()}.
-	 * 
+	 *
 	 * @param transform
 	 *            an application-specific callback called by the returned node
 	 *            factory whenever an element matches the filter's entire location
@@ -352,7 +352,7 @@ public class StreamingPathFilter {
 	 * @return a node factory for this path filter
 	 */
 	public NodeFactory createNodeFactory(NodeFactory childFactory, StreamingTransform transform) {
-		if (childFactory == null) 
+		if (childFactory == null)
 			childFactory = XOMUtil.getIgnoreWhitespaceOnlyTextNodeFactory();
 		return new StreamingPathFilterNodeFactory(_localNames, _namespaceURIs, childFactory, transform);
 	}
@@ -373,9 +373,9 @@ public class StreamingPathFilter {
 		private final Nodes NONE = new Nodes();
 		private static final boolean DEBUG = false;
 
-		public StreamingPathFilterNodeFactory(String[] localNames, String[] namespaceURIs, 
+		public StreamingPathFilterNodeFactory(String[] localNames, String[] namespaceURIs,
 				NodeFactory child, StreamingTransform transform) {
-			
+
 			this.localNames = localNames;
 			this.namespaceURIs = namespaceURIs;
 			this.child = child;
@@ -388,7 +388,7 @@ public class StreamingPathFilter {
 			mismatch = null;
 			return child.startMakingDocument();
 		}
-		
+
 		public Element startMakingElement(String qname, String namespaceURI) {
 			level++;
 //			if (DEBUG) System.err.println("startlevel=" + level + ", name="+ qname);
@@ -417,14 +417,14 @@ public class StreamingPathFilter {
 			String name = localNames[level];
 			String uri = namespaceURIs[level];
 			return
-				(name == null || 
+				(name == null ||
 				 name.regionMatches(0, qname, i, Math.max(qname.length() - i, name.length()))
 				 // faster than name.equals(qname.substring(i))
 				)
-				&& 
+				&&
 				(uri == null || uri.equals(namespaceURI));
 		}
-		
+
 		public Nodes finishMakingElement(Element elem) {
 //			if (DEBUG) System.err.println("finishlevel=" + level + ", name="+ elem.getLocalName());
 			if (level == 0) {
@@ -467,7 +467,7 @@ public class StreamingPathFilter {
 			}
 			return results;
 		}
-		
+
 		// is at least one child element present?
 		private boolean hasChildElements(Element elem) {
 			for (int i = elem.getChildCount(); --i >= 0;) {
@@ -486,9 +486,9 @@ public class StreamingPathFilter {
 		public Nodes makeText(String data) {
 //			return mismatch == null ? child.makeText(data) : NONE;
 			if (mismatch == null) {
-				if (level == 0 && isWhitespaceOnly(data)) 
+				if (level == 0 && isWhitespaceOnly(data))
 					return NONE; // avoid accumulating whitespace garbage in root element (i.e. avoid hidden memory leak)
-				else 
+				else
 					return child.makeText(data);
 			}
 			return NONE;
@@ -501,7 +501,7 @@ public class StreamingPathFilter {
 		public Nodes makeProcessingInstruction(String target, String data) {
 			return mismatch == null ? child.makeProcessingInstruction(target, data) : NONE;
 		}
-		
+
 		public Nodes makeDocType(String rootElementName, String publicID, String systemID) {
 			return child.makeDocType(rootElementName, publicID, systemID);
 		}
@@ -509,7 +509,7 @@ public class StreamingPathFilter {
 		public void finishMakingDocument(Document document) {
 			child.finishMakingDocument(document);
 		}
-		
+
 		/** see XML spec */
 		private static boolean isWhitespace(char c) {
 			switch (c) {
@@ -519,20 +519,20 @@ public class StreamingPathFilter {
 				case ' ' : return true;
 				default  : return false;
 			}
-//			// this wouldn't be quite right:			
-//			if (c > ' ') // see String.trim() implementation 
+//			// this wouldn't be quite right:
+//			if (c > ' ') // see String.trim() implementation
 //				return false;
-//			if (! Character.isWhitespace(c)) 
+//			if (! Character.isWhitespace(c))
 //				return false;
 		}
-		
+
 		private static boolean isWhitespaceOnly(String str) {
 			for (int i=str.length(); --i >= 0; ) {
-				if (!isWhitespace(str.charAt(i))) return false; 
+				if (!isWhitespace(str.charAt(i))) return false;
 			}
 			return true;
 		}
-	    
+
 	}
 
 }

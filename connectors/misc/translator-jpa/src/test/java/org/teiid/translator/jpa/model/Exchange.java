@@ -33,21 +33,21 @@ public class Exchange implements Serializable {
 
     @ElementCollection(targetClass=Marketdata.class)
     private Collection<Marketdata> quotes;
-    
+
     public Collection<Marketdata> getQuotes() {
         return quotes;
     }
-    
+
     public void setQuotes(Collection<Marketdata> quotes) {
         this.quotes = quotes;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }
-    
+
 }

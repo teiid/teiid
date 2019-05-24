@@ -39,7 +39,7 @@ public class TestVDBMetadataParser {
 		VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
 		TestVDBUtility.validateVDB(vdb);
 	}
-	
+
 	@Test public void testExcludeImported() throws Exception {
 		VDBMetaData metadata = TestVDBUtility.buildVDB();
 		assertNotNull(metadata.getModel("model-one"));
@@ -50,7 +50,7 @@ public class TestVDBMetadataParser {
 		VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
 		assertNull(parsed.getModel("model-one"));
 	}
-	
+
 	@Test(expected=SAXException.class) public void testModelNameUniqueness() throws Exception {
 		FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/model-not-unique-vdb.xml");
 		VDBMetadataParser.validate(in);

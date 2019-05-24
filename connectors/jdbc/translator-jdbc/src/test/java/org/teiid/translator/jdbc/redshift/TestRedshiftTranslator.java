@@ -28,7 +28,7 @@ import org.teiid.translator.jdbc.TranslationHelper;
 @SuppressWarnings("nls")
 public class TestRedshiftTranslator {
 
-    private static RedshiftExecutionFactory TRANSLATOR; 
+    private static RedshiftExecutionFactory TRANSLATOR;
 
     @BeforeClass
     public static void setUp() throws TranslatorException {
@@ -37,32 +37,32 @@ public class TestRedshiftTranslator {
         TRANSLATOR.setDatabaseVersion(RedshiftExecutionFactory.NINE_3);
         TRANSLATOR.start();
     }
-    
+
     @Test public void testLocate() throws Exception {
-        String input = "SELECT INTKEY, STRINGKEY FROM bqt1.SmallA WHERE LOCATE('1', STRINGKEY, 2) IN (1, 2)"; 
-        String output = "SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA WHERE (position('1' in substring(SmallA.StringKey from 2)) + 1) IN (1, 2)"; 
+        String input = "SELECT INTKEY, STRINGKEY FROM bqt1.SmallA WHERE LOCATE('1', STRINGKEY, 2) IN (1, 2)";
+        String output = "SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA WHERE (position('1' in substring(SmallA.StringKey from 2)) + 1) IN (1, 2)";
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
-    
+
     @Test public void testParseDate() throws Exception {
-        String input = "SELECT INTKEY FROM bqt1.SmallA WHERE parsedate(stringkey, 'yyyy-MM dd') = {d '1999-12-01'}"; 
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE cast(TO_DATE(SmallA.StringKey, 'YYYY-MM DD') AS date) = DATE '1999-12-01'"; 
+        String input = "SELECT INTKEY FROM bqt1.SmallA WHERE parsedate(stringkey, 'yyyy-MM dd') = {d '1999-12-01'}";
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE cast(TO_DATE(SmallA.StringKey, 'YYYY-MM DD') AS date) = DATE '1999-12-01'";
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
-    
+
     @Test public void testBigDecimalCast() throws Exception {
-        String input = "SELECT cast(floatnum as bigdecimal) FROM bqt1.SmallA"; 
-        String output = "SELECT cast(SmallA.FloatNum AS decimal(38, 19)) FROM SmallA"; 
+        String input = "SELECT cast(floatnum as bigdecimal) FROM bqt1.SmallA";
+        String output = "SELECT cast(SmallA.FloatNum AS decimal(38, 19)) FROM SmallA";
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }
-    
+
     @Test public void testTimezoneFormat() throws Exception {
     	assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
     }
-    
+
     @Test public void testTempTable() throws Exception {
         assertEquals("create temporary  table foo (COL1 int4, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
         assertEquals("create temporary  table foo (COL1 int4, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, false));

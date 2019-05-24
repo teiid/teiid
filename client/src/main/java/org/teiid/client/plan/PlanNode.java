@@ -46,7 +46,7 @@ import org.teiid.jdbc.JDBCPlugin;
 
 
 /**
- * A PlanNode represents part of processing plan tree.  For relational plans 
+ * A PlanNode represents part of processing plan tree.  For relational plans
  * child PlanNodes may be either subqueries or nodes that feed tuples into the
  * parent. For procedure plans child PlanNodes will be processing instructions,
  * which can in turn contain other relational or procedure plans.
@@ -61,35 +61,35 @@ public class PlanNode implements Externalizable {
 		private String name;
 		private List<String> values;
 		private PlanNode planNode;
-		
+
 		public Property() {
-			
+
 		}
-		
+
 		public Property(String name) {
 			this.name = name;
 		}
-		
+
 		public String getName() {
 			return name;
 		}
-		
+
 		public List<String> getValues() {
 			return values;
 		}
-		
+
 		public void setValues(List<String> values) {
 			this.values = values;
 		}
-		
+
 		public PlanNode getPlanNode() {
 			return planNode;
 		}
-		
+
 		public void setPlanNode(PlanNode planNode) {
 			this.planNode = planNode;
 		}
-		
+
 		@Override
 		public void readExternal(ObjectInput in) throws IOException,
 				ClassNotFoundException {
@@ -97,32 +97,32 @@ public class PlanNode implements Externalizable {
 			this.values = ExternalizeUtil.readList(in, String.class);
 			this.planNode = (PlanNode)in.readObject();
 		}
-		
+
 		@Override
 		public void writeExternal(ObjectOutput out) throws IOException {
 			out.writeObject(name);
 			ExternalizeUtil.writeCollection(out, values);
 			out.writeObject(planNode);
 		}
-		
+
 	}
-	
+
     private LinkedHashMap<String, Property> properties = new LinkedHashMap<String, PlanNode.Property>();
     private PlanNode parent;
     private String name;
-    
+
     public PlanNode() {
-    	
+
     }
-	
+
     public PlanNode(String name) {
     	this.name = name;
     }
-    
+
     public String getName() {
 		return name;
 	}
-    
+
     void setParent(PlanNode parent) {
         this.parent = parent;
     }
@@ -130,18 +130,18 @@ public class PlanNode implements Externalizable {
     public PlanNode getParent() {
         return this.parent;
     }
-    
+
     public List<Property> getProperties() {
 		return new ArrayList<PlanNode.Property>(properties.values());
 	}
-    
+
     public void addProperty(String pname, PlanNode value) {
     	Property p = new Property(pname);
     	p.setPlanNode(value);
     	value.setParent(this);
     	this.properties.put(pname, p);
     }
-    
+
     public void addProperty(String pname, List<String> value) {
     	Property p = new Property(pname);
     	if (value == null) {
@@ -150,7 +150,7 @@ public class PlanNode implements Externalizable {
     	p.setValues(value);
     	this.properties.put(pname, p);
     }
-    
+
     public void addProperty(String pname, String value) {
     	Property p = new Property(pname);
     	if (value == null) {
@@ -160,7 +160,7 @@ public class PlanNode implements Externalizable {
     	}
     	this.properties.put(pname, p);
     }
-    
+
     /**
      * Converts this PlanNode to XML. See the JAXB bindings for the
      * document form.
@@ -181,7 +181,7 @@ public class PlanNode implements Externalizable {
 			 throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20003, e);
 		}
     }
-    
+
     private void writeProperty(Property property, XMLStreamWriter writer) throws XMLStreamException {
     	writer.writeStartElement("property"); //$NON-NLS-1$
     	writer.writeAttribute("name", property.getName()); //$NON-NLS-1$
@@ -198,7 +198,7 @@ public class PlanNode implements Externalizable {
     	}
     	writer.writeEndElement();
     }
-    
+
     private void writePlanNode(PlanNode node, XMLStreamWriter writer) throws XMLStreamException {
 		writer.writeStartElement("node"); //$NON-NLS-1$
 		writer.writeAttribute("name", node.getName()); //$NON-NLS-1$
@@ -207,15 +207,15 @@ public class PlanNode implements Externalizable {
 		}
 		writer.writeEndElement();
     }
-    
+
     private static void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
         writer.writeStartElement(name);
         if (value != null) {
         	writer.writeCharacters(value);
         }
         writer.writeEndElement();
-    }    
-    
+    }
+
 	private static Properties getAttributes(XMLStreamReader reader) {
 		Properties props = new Properties();
     	if (reader.getAttributeCount() > 0) {
@@ -227,7 +227,7 @@ public class PlanNode implements Externalizable {
     	}
     	return props;
 	}
-	
+
 	public static PlanNode fromXml(String planString) throws XMLStreamException {
 		XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
 		XMLStreamReader reader = inputFactory.createXMLStreamReader(new StringReader(planString));
@@ -285,13 +285,13 @@ public class PlanNode implements Externalizable {
     	visitNode(this, 0, false, builder);
     	return builder.toString();
     }
-    
+
     public String toYaml() {
         StringBuilder builder = new StringBuilder();
         visitNode(this, 0, true, builder);
         return builder.toString();
     }
-    
+
     protected void visitNode(PlanNode node, int nodeLevel, boolean yaml, StringBuilder text) {
         for(int i=0; i<nodeLevel; i++) {
             text.append("  "); //$NON-NLS-1$
@@ -302,7 +302,7 @@ public class PlanNode implements Externalizable {
         } else {
             text.append("\n"); //$NON-NLS-1$
         }
-        
+
         // Print properties appropriately
         int propTabs = nodeLevel + 1;
         for (PlanNode.Property property : node.getProperties()) {
@@ -319,18 +319,18 @@ public class PlanNode implements Externalizable {
             text.append("+ "); //$NON-NLS-1$
         }
         text.append(p.getName());
-        
+
         if (p.getPlanNode() != null) {
-	        text.append(":\n"); //$NON-NLS-1$ 
+	        text.append(":\n"); //$NON-NLS-1$
 	        visitNode(p.getPlanNode(), nodeLevel + 2, yaml, text);
         } else if (p.getValues().size() > 1){
-        	text.append(":\n"); //$NON-NLS-1$ 
+        	text.append(":\n"); //$NON-NLS-1$
         	for (int i = 0; i < p.getValues().size(); i++) {
             	for(int t=0; t<nodeLevel+2; t++) {
             		text.append("  "); //$NON-NLS-1$
             	}
             	if (yaml) {
-            	    text.append("- "); //$NON-NLS-1$    
+            	    text.append("- "); //$NON-NLS-1$
             	} else {
             	    text.append(i);
             	    text.append(": "); //$NON-NLS-1$
@@ -340,9 +340,9 @@ public class PlanNode implements Externalizable {
 			}
         } else if (p.getValues().size() == 1) {
             if (yaml) {
-                text.append(": "); //$NON-NLS-1$    
+                text.append(": "); //$NON-NLS-1$
             } else {
-                text.append(":"); //$NON-NLS-1$                
+                text.append(":"); //$NON-NLS-1$
             }
         	text.append(p.getValues().get(0));
         	text.append("\n"); //$NON-NLS-1$
@@ -354,7 +354,7 @@ public class PlanNode implements Externalizable {
             }
         }
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
@@ -365,16 +365,16 @@ public class PlanNode implements Externalizable {
     	this.parent = (PlanNode)in.readObject();
     	this.name = (String)in.readObject();
     }
-    
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
     	ExternalizeUtil.writeCollection(out, this.properties.values());
     	out.writeObject(this.parent);
     	out.writeObject(this.name);
     }
-    
+
     public Property getProperty(String pName) {
     	return this.properties.get(pName);
     }
-    
+
 }

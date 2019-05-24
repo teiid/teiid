@@ -29,23 +29,23 @@ import org.teiid.query.sql.symbol.Expression;
  * Represents the ArrayTable table function.
  */
 public class ArrayTable extends TableFunctionReference {
-	
+
     private Expression arrayValue;
     private List<ProjectedColumn> columns = new ArrayList<ProjectedColumn>();
     private Boolean singleRow;
-    
+
     public List<ProjectedColumn> getColumns() {
 		return columns;
 	}
-    
+
     public void setColumns(List<ProjectedColumn> columns) {
 		this.columns = columns;
 	}
-    
+
     public Expression getArrayValue() {
 		return arrayValue;
 	}
-    
+
     public void setArrayValue(Expression arrayValue) {
 		this.arrayValue = arrayValue;
 	}
@@ -54,15 +54,15 @@ public class ArrayTable extends TableFunctionReference {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	public void setSingleRow(Boolean singleRow) {
         this.singleRow = singleRow;
     }
-    
+
     public Boolean getSingleRow() {
         return singleRow;
     }
-    
+
 	@Override
 	protected ArrayTable cloneDirect() {
 		ArrayTable clone = new ArrayTable();
@@ -84,9 +84,9 @@ public class ArrayTable extends TableFunctionReference {
 			return false;
 		}
 		ArrayTable other = (ArrayTable)obj;
-		return this.columns.equals(other.columns) 
+		return this.columns.equals(other.columns)
 			&& EquivalenceUtil.areEqual(arrayValue, other.arrayValue)
 			&& EquivalenceUtil.areEqual(singleRow, other.singleRow);
 	}
-	
+
 }

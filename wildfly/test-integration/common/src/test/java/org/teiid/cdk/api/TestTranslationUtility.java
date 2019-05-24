@@ -39,11 +39,11 @@ public class TestTranslationUtility extends TestCase {
     public String getTestVDB() {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"; //$NON-NLS-1$
     }
-    
+
     public void helpTestTranslate(String sql, String expectedOutput) {
         TranslationUtility util = new TranslationUtility(getTestVDB());
-        Command query = util.parseCommand(sql);         
-        assertEquals(expectedOutput, query.toString());        
+        Command query = util.parseCommand(sql);
+        assertEquals(expectedOutput, query.toString());
     }
 
     public void testQuery1() {
@@ -51,13 +51,13 @@ public class TestTranslationUtility extends TestCase {
             "select * from partssupplier.parts", //$NON-NLS-1$
             "SELECT PARTS.PART_ID, PARTS.PART_NAME, PARTS.PART_COLOR, PARTS.PART_WEIGHT FROM PARTS"); //$NON-NLS-1$
     }
-        
+
     public void testInsert1() {
         helpTestTranslate(
-            "insert into partssupplier.parts (part_name, part_color) values ('P100', 'Red')", //$NON-NLS-1$ 
+            "insert into partssupplier.parts (part_name, part_color) values ('P100', 'Red')", //$NON-NLS-1$
             "INSERT INTO PARTS (PART_NAME, PART_COLOR) VALUES ('P100', 'Red')"); //$NON-NLS-1$
     }
-    
+
     public void testUpdate1() {
         helpTestTranslate(
             "update partssupplier.parts set part_name = 'P100' where part_color = 'Red'", //$NON-NLS-1$
@@ -72,13 +72,13 @@ public class TestTranslationUtility extends TestCase {
 
     public void testGetRMD() throws Exception {
         TranslationUtility util = new TranslationUtility(getTestVDB());
-        
+
         // Translate command to get some ids
         Select query = (Select) util.parseCommand("select * from partssupplier.parts"); //$NON-NLS-1$
         NamedTable group = (NamedTable) query.getFrom().get(0);
         AbstractMetadataRecord mid = group.getMetadataObject();
         assertEquals("PartsSupplier.PARTSSUPPLIER.PARTS", mid.getFullName()); //$NON-NLS-1$
-        
+
         // Use RMD to get stuff
         assertEquals("PARTS", mid.getNameInSource()); //$NON-NLS-1$
     }

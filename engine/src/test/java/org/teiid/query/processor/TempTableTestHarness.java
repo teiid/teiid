@@ -40,11 +40,11 @@ import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TempTableTestHarness {
-	
+
 	protected TempMetadataAdapter metadata;
 	protected TempTableDataManager dataManager;
 	protected TempTableStore tempStore;
-	
+
 	protected TransactionContext tc;
 
 	public ProcessorPlan execute(String sql, List<?>[] expectedResults, CapabilitiesFinder finder) throws Exception {
@@ -57,7 +57,7 @@ public class TempTableTestHarness {
 		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
 		return plan;
 	}
-	
+
 	public ProcessorPlan execute(String sql, List<?>[] expectedResults) throws Exception {
 		return execute(sql, expectedResults, DefaultCapabilitiesFinder.INSTANCE);
 	}
@@ -70,12 +70,12 @@ public class TempTableTestHarness {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(qmi, tempStore.getMetadataStore());
 		metadata.setSession(true);
-	    
+
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(dm, bm, cache);
 	}
-	
+
 	public TempMetadataAdapter getMetadata() {
 		return metadata;
 	}

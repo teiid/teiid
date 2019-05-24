@@ -42,11 +42,11 @@ public abstract class ODataResponse {
     private ODataType resultsType;
     private List<Map<String, Object>> currentDocumentRows;
     private DocumentNode rootNode;
-    
+
     public ODataResponse(InputStream payload, ODataType type, DocumentNode rootNode) throws TranslatorException {
         this.resultsType = type;
         this.rootNode = rootNode;
-        this.results = parsePayload(payload);        
+        this.results = parsePayload(payload);
     }
 
     private Iterator<ODataDocument> parsePayload(InputStream payload) throws TranslatorException {
@@ -63,7 +63,7 @@ public abstract class ODataResponse {
                 for (Entity entity : entityCollection.getEntities()) {
                     documents.add(ODataDocument.createDocument(entity));
                 }
-                return documents.iterator();            
+                return documents.iterator();
             } else {
                 // complex
                 Property property = parser.toProperty(payload).getPayload();
@@ -76,20 +76,20 @@ public abstract class ODataResponse {
                     return documents.iterator();
                 } else {
                     ODataDocument document = ODataDocument.createDocument(property.asComplex());
-                    return Arrays.asList(document).iterator();                
+                    return Arrays.asList(document).iterator();
                 }
             }
         } catch (ODataDeserializerException e) {
             throw new TranslatorException(e);
         }
     }
-    
+
     public Map<String, Object> getNext() throws TranslatorException {
-        
+
         if (this.currentDocumentRows != null && !this.currentDocumentRows.isEmpty()) {
             return this.currentDocumentRows.remove(0);
         }
-        
+
         if (this.results.hasNext()) {
             this.currentDocumentRows = this.rootNode.tuples(this.results.next());
             return getNext();
@@ -97,7 +97,7 @@ public abstract class ODataResponse {
             if (this.nextUri != null) {
                 this.results = fetchSkipToken(this.nextUri);
                 return getNext();
-            }            
+            }
         }
         return null;
     }
@@ -105,7 +105,7 @@ public abstract class ODataResponse {
     private Iterator<ODataDocument> fetchSkipToken(URI uri) throws TranslatorException {
         return parsePayload(nextBatch(uri));
     }
-    
+
     public abstract InputStream nextBatch(URI uri) throws TranslatorException;
 }
 

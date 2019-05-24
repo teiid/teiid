@@ -40,7 +40,7 @@ import org.teiid.net.ConnectionException;
 
 
 public class TestSQLException {
-  
+
 	/*
 	 * Test method for 'com.metamatrix.jdbc.MMSQLException.MMSQLException()'
 	 */
@@ -75,7 +75,7 @@ public class TestSQLException {
 
 	/*
 	 * Test method for 'com.metamatrix.jdbc.MMSQLException.create(Throwable)'
-	 * 
+	 *
 	 * Tests various simple exceptions to see if the expected SQLState is
 	 * returend.
 	 */
@@ -126,7 +126,7 @@ public class TestSQLException {
 
 	/*
 	 * Test method for 'com.metamatrix.jdbc.MMSQLException.create(Throwable)'
-	 * 
+	 *
 	 * Tests various nested exceptions to see if the expected SQLState is
 	 * returend.
 	 */
@@ -146,7 +146,7 @@ public class TestSQLException {
 						"Test MetaMatrixException with a SocketTimeoutException in it"), //$NON-NLS-1$
 				SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
 	}
-    
+
     @Test public void testCreateThrowable3() {
         TeiidSQLException e = testCreateThrowable(
                             new TeiidException(
@@ -154,7 +154,7 @@ public class TestSQLException {
                                                     "A test MM Invalid Session Exception"), //$NON-NLS-1$
                                             "Test MetaMatrixRuntimeException with a InvalidSessionException in it"), //$NON-NLS-1$
                             SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
-        
+
         //test to ensure that wrapping mmsqlexceptions works
         TeiidSQLException e1 = TeiidSQLException.create(e, "new message"); //$NON-NLS-1$
         assertEquals("new message", e1.getMessage()); //$NON-NLS-1$
@@ -182,31 +182,31 @@ public class TestSQLException {
 		assertNull(nextException);
 		return e;
     }
-    
+
     @Test public void testCreate() {
         TeiidSQLException exception = TeiidSQLException.create(new Exception());
-        
+
         assertEquals(exception.getMessage(), Exception.class.getName());
         assertNotNull(exception.getSQLState());
         assertEquals(exception.getSQLState(), "38000"); //$NON-NLS-1$
-        
+
         assertEquals(exception, TeiidSQLException.create(exception));
     }
-    
+
     @Test public void testCreateFromSQLException() {
         SQLException sqlexception = new SQLException("foo", "21"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         SQLException nested = new SQLException("bar"); //$NON-NLS-1$
-        
+
         sqlexception.setNextException(nested);
-        
+
         String message = "top level message"; //$NON-NLS-1$
-        
+
         TeiidSQLException exception = TeiidSQLException.create(sqlexception, message);
         exception.printStackTrace();
         assertEquals(sqlexception, exception.getCause());
         assertEquals(exception.getMessage(), message);
-        assertEquals(exception.getSQLState(), sqlexception.getSQLState());        
+        assertEquals(exception.getSQLState(), sqlexception.getSQLState());
         assertEquals(exception.getNextException().getMessage(), nested.getMessage());
     }
 	public static enum Event implements BundleUtil.Event {
@@ -214,13 +214,13 @@ public class TestSQLException {
 	}
     @Test public void testCodeAsVendorCode() {
 
-        TeiidException sqlexception = new TeiidException(Event.TEIID21, "foo"); //$NON-NLS-1$ 
-        
+        TeiidException sqlexception = new TeiidException(Event.TEIID21, "foo"); //$NON-NLS-1$
+
         String message = "top level message"; //$NON-NLS-1$
-        
+
         TeiidSQLException exception = TeiidSQLException.create(sqlexception, message);
-        
-        assertEquals(sqlexception.getCode(), exception.getTeiidCode());        
+
+        assertEquals(sqlexception.getCode(), exception.getTeiidCode());
         assertEquals(21, exception.getErrorCode());
     }
 

@@ -22,13 +22,13 @@ import javax.management.MXBean;
 
 @MXBean
 public interface CacheBean {
-    
+
     double getHitRatio();
-    
+
     int getTotalEntries();
-    
+
     long getRequestCount();
-    
+
     public void clear();
 
 }

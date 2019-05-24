@@ -22,20 +22,20 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
- * This interface provides methods in 
- * addition to the standard JDBC methods. 
+ * This interface provides methods in
+ * addition to the standard JDBC methods.
  */
 public interface TeiidPreparedStatement extends PreparedStatement {
-	
+
     /**
      * Execute the given statement using a non-blocking callback.
      * This method is only valid for use with embedded connections.
-     * 
+     *
      * Note that a single Statement may only have 1 asynch query executing at a time.
-     * 
+     *
      * @param callback
      * @param options
-     * @throws SQLException 
+     * @throws SQLException
      */
     void submitExecute(StatementCallback callback, RequestOptions options) throws SQLException;
 

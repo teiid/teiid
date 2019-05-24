@@ -30,24 +30,24 @@ import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 public class PIMetadataProcessor extends JDBCMetadataProcessor {
     static Pattern guidPattern = Pattern.compile(Pattern.quote("guid"), Pattern.CASE_INSENSITIVE);
-    
-    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, 
-            datatype=String.class, display="Is Table Value Function", 
+
+    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class},
+            datatype=String.class, display="Is Table Value Function",
             description="Marks the table as Table Value Function")
     public static final String TVF = MetadataFactory.PI_URI+"TVF"; //$NON-NLS-1$
-    
+
     public PIMetadataProcessor() {
         setStartQuoteString("[");
         setEndQuoteString("]");
     }
-    
+
     protected String getRuntimeType(int type, String typeName, int precision, int scale) {
         if (typeName != null && guidPattern.matcher(typeName).find()) {
             return TypeFacility.RUNTIME_NAMES.STRING;
         }
         return super.getRuntimeType(type, typeName, precision, scale);
-    } 
-    
+    }
+
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
             throws SQLException {
         super.getConnectorMetadata(conn, metadataFactory);
@@ -60,6 +60,6 @@ public class PIMetadataProcessor extends JDBCMetadataProcessor {
         for (String name:metadataFactory.getSchema().getProcedures().keySet()) {
             Procedure proc = metadataFactory.getSchema().getProcedure(name);
             proc.setProperty(TVF, "true");
-        }         
+        }
     }
 }

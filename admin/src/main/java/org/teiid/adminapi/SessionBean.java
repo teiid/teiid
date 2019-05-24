@@ -19,18 +19,18 @@
 package org.teiid.adminapi;
 
 public interface SessionBean {
-    
+
     /**
      * Get the Last time Client has check to see if the server is still available
-     * 
+     *
      * @return Date of the last ping to the server.
      */
     public long getLastPingTime();
-    
+
 
     /**
      * Get the Application Name
-     * 
+     *
      * @return String of the Application Name
      */
     public String getApplicationName();
@@ -38,7 +38,7 @@ public interface SessionBean {
     /**
      * Get the unique Teiid session
      * within a given Teiid System
-     * 
+     *
      * @return String of the Session ID
      */
     public String getSessionId();
@@ -52,45 +52,45 @@ public interface SessionBean {
 
     /**
      * Get the VDB Name for this Session
-     * 
+     *
      * @return String name of the VDB
      */
     public String getVDBName();
 
     /**
      * Get the VDB Version for this Session
-     * 
+     *
      * @return String name/number of the VDB Version
      */
     public String getVDBVersion();
-    
+
     /**
      * Get the IPAddress for this Session.  Note this value is reported from the client.
      * @return
      */
     public String getIPAddress();
-      
- 
+
+
     /**
-     * Get the host name of the machine the client is 
+     * Get the host name of the machine the client is
      * accessing from.  Note this value is reported from the client.
-     * @return 
+     * @return
      */
     public String getClientHostName();
-    
+
     /**
      * Get the client hardware (typically MAC) address. Note this value is reported from the client.
      * @return the hardware address as a hex string or null if not available.
      */
     public String getClientHardwareAddress();
-    
+
     /**
      * Get the time the {@link Session} was created.
      * @return
      */
     public long getCreatedTime();
 
-    
+
     /**
      * Security Domain user logged into currently
      * @return

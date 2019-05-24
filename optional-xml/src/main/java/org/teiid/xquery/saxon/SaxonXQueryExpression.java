@@ -88,7 +88,7 @@ import net.sf.saxon.value.EmptySequence;
 import net.sf.saxon.value.SequenceType;
 
 public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpression {
-	
+
 	private static final String XQUERY_PLANNING = "XQuery Planning"; //$NON-NLS-1$
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
@@ -98,17 +98,17 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 	    //props.setProperty(OutputKeys.INDENT, "yes"); //$NON-NLS-1$
 		DEFAULT_OUTPUT_PROPERTIES.setProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
 	}
-	
+
 	public interface RowProcessor {
-		
+
 		void processRow(NodeInfo row);
 
 	}
-	
+
 	public static class Result {
 		public SequenceIterator iter;
 		public List<Source> sources = new LinkedList<Source>();
-		
+
 		public void close() {
 			for (Source source : sources) {
 				WSUtil.closeSource(source);
@@ -134,14 +134,14 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 			iter = null;
 		}
 	}
-	
+
 	private static final Expression DUMMY_EXPRESSION = new Expression() {
 
 		@Override
 		protected int computeCardinality() {
 			return 0;
 		}
-		
+
 		public PathMapNodeSet addToPathMap(PathMap arg0, PathMapNodeSet arg1) {
 			return arg1;
 		}
@@ -158,7 +158,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 
         @Override
         public void export(ExpressionPresenter out) throws XPathException {
-            
+
         }
 
         @Override
@@ -167,7 +167,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
         }
 	};
 
-	// Create a default error listener to use when compiling - this prevents 
+	// Create a default error listener to use when compiling - this prevents
     // errors from being printed to System.err.
     private static final ErrorListener ERROR_LISTENER = new ErrorListener() {
         public void warning(TransformerException arg0) throws TransformerException {
@@ -175,7 +175,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
         public void error(TransformerException arg0) throws TransformerException {
         }
         public void fatalError(TransformerException arg0) throws TransformerException {
-        }       
+        }
     };
 
 	XQueryExpression xQuery;
@@ -185,10 +185,10 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 	PathMapRoot contextRoot;
 	String streamingPath;
 	Map<String, XPathExpression> columnMap;
-	
+
 	boolean relativePaths = true;
 
-    public static SaxonXQueryExpression compile(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns) 
+    public static SaxonXQueryExpression compile(String xQueryString, XMLNamespaces namespaces, List<DerivedColumn> passing, List<XMLTable.XMLColumn> columns)
     throws QueryResolverException {
         SaxonXQueryExpression saxonXQueryExpression = new SaxonXQueryExpression();
         CommandContext cc = CommandContext.getThreadLocalContext();
@@ -204,7 +204,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
         	for (NamespaceItem item : namespaces.getNamespaceItems()) {
         		if (item.getPrefix() == null) {
         			if (item.getUri() == null) {
-        				context.setDefaultElementNamespace(EMPTY_STRING); 
+        				context.setDefaultElementNamespace(EMPTY_STRING);
         				ic.setDefaultElementNamespace(EMPTY_STRING);
         			} else {
         				context.setDefaultElementNamespace(item.getUri());
@@ -229,22 +229,22 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30153, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30153));
 			}
 		}
-        
-        saxonXQueryExpression.processColumns(columns, ic);	    	
-    
+
+        saxonXQueryExpression.processColumns(columns, ic);
+
         try {
             saxonXQueryExpression.xQuery = context.compileQuery(xQueryString);
 		} catch (XPathException e) {
 			 throw new QueryResolverException(QueryPlugin.Event.TEIID30154, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30154, xQueryString));
 		}
-        
+
         return saxonXQueryExpression;
     }
-    
+
     private SaxonXQueryExpression() {
-    	
+
     }
-    
+
     @Override
     public SaxonXQueryExpression clone() {
     	try {
@@ -253,11 +253,11 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
             throw new TeiidRuntimeException(e);
         }
     }
-    
+
     public boolean usesContextItem() {
     	return this.xQuery.usesContextItem();
     }
-    
+
 	public void useDocumentProjection(List<XMLTable.XMLColumn> columns, AnalysisRecord record) {
 		try {
 			streamingPath = StreamingUtils.getStreamingPath(xQueryString, namespaceMap);
@@ -283,19 +283,19 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 			if (record.recordAnnotations()) {
 				record.addAnnotation(XQUERY_PLANNING, "No context item reference was found in the XQuery " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			return;			
+			return;
 		}
 		HashSet<PathMapNode> finalNodes = new HashSet<PathMapNode>();
 		getReturnableNodes(parentRoot, finalNodes);
-				
-		if (!finalNodes.isEmpty()) {  
+
+		if (!finalNodes.isEmpty()) {
 			if (columns != null && !columns.isEmpty()) {
 				if (finalNodes.size() != 1) {
 					if (record.recordAnnotations()) {
 						record.addAnnotation(XQUERY_PLANNING, "multiple return items exist " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 					}
-					return;	
-				} 
+					return;
+				}
 				parentRoot = projectColumns(parentRoot, columns, finalNodes.iterator().next(), record);
 				if (parentRoot == null) {
 					return;
@@ -306,7 +306,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 	                subNode.createArc(AxisInfo.DESCENDANT_OR_SELF, AnyNodeTest.getInstance());
 	            }
 			}
-		} 
+		}
 		if (parentRoot.hasUnknownDependencies()) {
 			if (record.recordAnnotations()) {
 				record.addAnnotation(XQUERY_PLANNING, "There are unknown dependencies (most likely a user defined function) in " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
@@ -323,7 +323,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 		}
 		this.contextRoot = parentRoot;
 	}
-	
+
     public static final boolean[] isValidAncestorAxis =
     {
         false,          // ANCESTOR
@@ -410,7 +410,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
             if (sfc.getDisplayName().equals("fn:root")) { //$NON-NLS-1$
                 return true;
             }
-        } 
+        }
         for (Operand ex : internalExpression.operands()) {
             if (containsRootFunction(ex.getChildExpression())) {
                 return true;
@@ -443,7 +443,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 					return false;
 				}
 			} else if (!AxisInfo.isSubtreeAxis[axis]) {
-				if (axis == AxisInfo.PARENT 
+				if (axis == AxisInfo.PARENT
 						|| axis == AxisInfo.ANCESTOR
 						|| axis == AxisInfo.ANCESTOR_OR_SELF) {
 					if (current.getTarget().isReturnable()) {
@@ -452,7 +452,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 						}
 						return false;
 					}
-					ancestor = true; 
+					ancestor = true;
 				} else {
 					if (record.recordAnnotations()) {
 						record.addAnnotation(XQUERY_PLANNING, "The column path may not reference an ancestor or subtree " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
@@ -497,7 +497,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
         		path = xmlColumn.getName();
         	}
         	path = path.trim();
-        	if (relativePaths && path.startsWith("/")) { //$NON-NLS-1$ 
+        	if (relativePaths && path.startsWith("/")) { //$NON-NLS-1$
         		if (path.startsWith("//")) { //$NON-NLS-1$
         			path = '.' + path;
         		} else {
@@ -509,11 +509,11 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 				exp = eval.createExpression(path);
 			} catch (XPathException e) {
 				 throw new QueryResolverException(QueryPlugin.Event.TEIID30155, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30155, xmlColumn.getName(), xmlColumn.getPath()));
-			}	
+			}
 			this.columnMap.put(xmlColumn.getName(), exp);
 		}
 	}
-	
+
     public XMLType createXMLType(final SequenceIterator iter, BufferManager bufferManager, boolean emptyOnEmpty, CommandContext context) throws XPathException, TeiidComponentException, TeiidProcessingException {
 		final Item item = iter.next();
 		if (item == null && !emptyOnEmpty) {
@@ -529,7 +529,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 			type = Type.CONTENT;
 		}
 		SQLXMLImpl xml = XMLSystemFunctions.saveToBufferManager(bufferManager, new XMLTranslator() {
-			
+
 			@Override
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
@@ -556,7 +556,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 		}
 		return Type.CONTENT;
 	}
-    
+
     public Configuration getConfig() {
 		return config;
 	}
@@ -574,7 +574,7 @@ public class SaxonXQueryExpression implements org.teiid.query.xquery.XQueryExpre
 			showArcs(sb, node, level + 1);
 		}
 	}
-	
+
 	/**
 	 * Streaming eligible if using document projection and
 	 * the context path is streamable.

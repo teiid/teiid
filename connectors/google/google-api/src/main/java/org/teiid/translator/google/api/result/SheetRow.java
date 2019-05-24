@@ -24,21 +24,21 @@ import java.util.List;
 
 /**
  * Object represeting row in Google Spreadsheets.
- * 
+ *
  *  TODO metadata should be somehow loaded from google spreadsheets so that the cell values are typed (integer, string etc)
  * @author fnguyen
  *
  */
 public class SheetRow {
 	private List<Object> row = new ArrayList<Object>();
-	
+
 	public SheetRow() {
 	}
 
 	public SheetRow(String [] row) {
 		this.row = new ArrayList<Object>(Arrays.asList(row));
 	}
-	
+
 
 	public void addColumn(Object s)	{
 		row.add(s);
@@ -73,11 +73,11 @@ public class SheetRow {
 			return false;
 		return true;
 	}
-//	
+//
 	@Override
 	public String toString(){
 		return row.toString();
 	}
 
-	
+
 }

@@ -39,7 +39,7 @@ public class TestDeleteImpl extends TestCase {
         return new org.teiid.query.sql.lang.Delete(TestGroupImpl.helpExample("vm1.g1"), //$NON-NLS-1$
                           TestCompoundCriteriaImpl.helpExample(CompoundCriteria.AND));
     }
-    
+
     public static Delete example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }

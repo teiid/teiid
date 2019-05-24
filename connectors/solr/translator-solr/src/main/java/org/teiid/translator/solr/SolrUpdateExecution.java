@@ -46,7 +46,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 	private int updateCount = 0;
 	private RuntimeMetadata metadata;
 	private ExecutionContext executionContext;
-	
+
 	public SolrUpdateExecution(SolrExecutionFactory ef,
 			Command command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, SolrConnection connection) {
@@ -61,14 +61,14 @@ public class SolrUpdateExecution implements UpdateExecution {
 	public void execute() throws TranslatorException {
 		process(this.command);
 	}
-	
+
 	private void process(Command cmd) throws TranslatorException {
 		if (cmd instanceof Insert) {
 			performInsert((Insert)cmd);
-		} 
+		}
 		else if (cmd instanceof Update) {
 			performUpdate((Update)cmd);
-		} 
+		}
 		else if (cmd instanceof Delete) {
 			performUpdate((Delete)cmd);
 		}
@@ -82,10 +82,10 @@ public class SolrUpdateExecution implements UpdateExecution {
 		if (obj.getParameterValues() != null) {
 			throw new TranslatorException(SolrPlugin.Event.TEIID20008, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20008));
 		}
-		
+
 		SolrQueryExecution query = new SolrQueryExecution(ef, obj, this.executionContext, this.metadata, this.connection);
 		query.execute();
-		
+
 		final UpdateRequest request = new UpdateRequest();
 		query.walkDocuments(new SolrDocumentCallback() {
 			@Override
@@ -94,11 +94,11 @@ public class SolrUpdateExecution implements UpdateExecution {
 				request.deleteById(doc.getFieldValue(id).toString());
 			}
 		});
-		
+
 		UpdateResponse response = this.connection.update(request);
 		if (response.getStatus() != 0) {
 			throw new TranslatorException(SolrPlugin.Event.TEIID20005, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20005, response.getStatus()));
-		}		
+		}
 	}
 
 	/**
@@ -109,16 +109,16 @@ public class SolrUpdateExecution implements UpdateExecution {
 	 * @throws TranslatorException
 	 */
 	private void performUpdate(final Update obj) throws TranslatorException {
-		
+
 		if (obj.getParameterValues() != null) {
 			throw new TranslatorException(SolrPlugin.Event.TEIID20009, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20009));
 		}
-		
+
 		SolrQueryExecution query = new SolrQueryExecution(ef, obj, this.executionContext, this.metadata, this.connection);
 		query.execute();
-		
+
 		final UpdateRequest request = new UpdateRequest();
-		
+
 		query.walkDocuments(new SolrDocumentCallback() {
 			@Override
 			public void walk(SolrDocument doc) {
@@ -141,7 +141,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 				request.add(updateDoc);
 			}
 		});
-				
+
 		if (request.getDocuments() != null && !request.getDocuments().isEmpty()){
 			UpdateResponse response = this.connection.update(request);
 			if (response.getStatus() != 0) {
@@ -151,8 +151,8 @@ public class SolrUpdateExecution implements UpdateExecution {
 	}
 
 	private void performInsert(Insert insert) throws TranslatorException {
-		// build insert			
-		List<ColumnReference> columns = insert.getColumns();		
+		// build insert
+		List<ColumnReference> columns = insert.getColumns();
 		if (insert.getParameterValues() == null) {
 			final UpdateRequest request = new UpdateRequest();
 			SolrInputDocument doc = new SolrInputDocument();
@@ -165,13 +165,13 @@ public class SolrUpdateExecution implements UpdateExecution {
 				}
 				else {
 					throw new TranslatorException(SolrPlugin.Event.TEIID20002, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20002));
-				}				
+				}
 			}
 			this.updateCount++;
 			request.add(doc);
-			
+
 			// check if the row already exists
-	        Select q = buildSelectQuery(insert);		
+	        Select q = buildSelectQuery(insert);
 			SolrQueryExecution query = new SolrQueryExecution(ef, q, this.executionContext, this.metadata, this.connection);
 			query.execute();
 			query.walkDocuments(new SolrDocumentCallback() {
@@ -179,22 +179,22 @@ public class SolrUpdateExecution implements UpdateExecution {
 				public void walk(SolrDocument doc) {
 					request.clear();
 				}
-			});			
-			
+			});
+
 			if (request.getDocuments().isEmpty()){
-				throw new TranslatorException(SolrPlugin.Event.TEIID20007, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20007));			
+				throw new TranslatorException(SolrPlugin.Event.TEIID20007, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20007));
 			}
-			
+
 			// write the mutation
 			UpdateResponse response = this.connection.update(request);
 			if (response.getStatus() != 0) {
 				throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
-			}			
+			}
 		}
 		else {
 			UpdateRequest request = new UpdateRequest();
 			int batchSize = 1024;
-			// bulk insert; should help 
+			// bulk insert; should help
 			Iterator<? extends List<?>> args = insert.getParameterValues();
 			while (args.hasNext()) {
 				List<?> arg = args.next();
@@ -205,7 +205,7 @@ public class SolrUpdateExecution implements UpdateExecution {
 				}
 				this.updateCount++;
 				request.add(doc);
-				
+
 				if ((this.updateCount%batchSize) == 0) {
 					UpdateResponse response = this.connection.update(request);
 					if (response.getStatus() != 0) {
@@ -221,31 +221,31 @@ public class SolrUpdateExecution implements UpdateExecution {
 					throw new TranslatorException(SolrPlugin.Event.TEIID20003, SolrPlugin.Util.gs(SolrPlugin.Event.TEIID20003, response.getStatus()));
 				}
 			}
-		}		
+		}
 	}
 
 	private Select buildSelectQuery(Insert insert) throws TranslatorException {
 		Table table = insert.getTable().getMetadataObject();
 		KeyRecord pk = table.getPrimaryKey();
 		final String id = getRecordName(pk.getColumns().get(0));
-		
-		NamedTable g = insert.getTable(); 
+
+		NamedTable g = insert.getTable();
         List<DerivedColumn> symbols = new ArrayList<DerivedColumn>();
         for (Column column:table.getColumns()){
         	String columnName = getRecordName(column);
-        	symbols.add(new DerivedColumn(columnName, new ColumnReference(g, columnName, column, column.getJavaType()))); 	
+        	symbols.add(new DerivedColumn(columnName, new ColumnReference(g, columnName, column, column.getJavaType())));
         }
-        
+
         List groups = new ArrayList();
         groups.add(g);
-        
+
         ColumnReference idCol = new ColumnReference(g, id, table.getColumnByName(id), table.getColumnByName(id).getJavaType());
         Comparison cc = new Comparison(idCol, getPKValue(id, insert), Operator.EQ);
-        
+
         Select q = new Select(symbols, false, groups, cc, null, null, null);
 		return q;
 	}
-	
+
 	private Literal getPKValue(String pk, Insert insert) throws TranslatorException {
 		List<ColumnReference> columns = insert.getColumns();
 		List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();

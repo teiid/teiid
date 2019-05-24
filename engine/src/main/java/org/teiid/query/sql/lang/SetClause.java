@@ -28,12 +28,12 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class SetClause implements LanguageObject {
-	
+
 	private static final long serialVersionUID = 8174681510498719451L;
-	
+
 	private ElementSymbol symbol;
 	private Expression value;
-	
+
 	public SetClause(ElementSymbol symbol, Expression value) {
 		ArgCheck.isNotNull(symbol);
 		ArgCheck.isNotNull(value);
@@ -60,17 +60,17 @@ public class SetClause implements LanguageObject {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	@Override
 	public Object clone() {
 		return new SetClause((ElementSymbol)symbol.clone(), (Expression)value.clone());
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
     	if(this == obj) {
@@ -82,10 +82,10 @@ public class SetClause implements LanguageObject {
 		}
 
     	SetClause other = (SetClause) obj;
-    	
+
     	return this.symbol.equals(other.symbol) && this.value.equals(other.value);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(symbol.hashCode(), value.hashCode());

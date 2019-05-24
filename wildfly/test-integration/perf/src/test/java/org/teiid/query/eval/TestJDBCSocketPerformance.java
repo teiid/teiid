@@ -47,18 +47,18 @@ import org.teiid.transport.SocketListener;
 
 @SuppressWarnings("nls")
 public class TestJDBCSocketPerformance {
-	
+
 	static InetSocketAddress addr;
 	static SocketListener jdbcTransport;
 	static FakeServer server;
-	
+
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		SocketConfiguration config = new SocketConfiguration();
 		config.setSSLConfiguration(new SSLConfiguration());
 		addr = new InetSocketAddress(0);
 		config.setBindAddress(addr.getHostName());
 		config.setPortNumber(0);
-		
+
 		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
 		dqpConfig.setMaxActivePlans(2);
 		server = new FakeServer(false);
@@ -90,17 +90,17 @@ public class TestJDBCSocketPerformance {
 			}
 		});
 		server.deployVDB("x", mmd);
-		
+
 		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager());
 	}
-	
+
 	@AfterClass public static void oneTimeTearDown() throws Exception {
 		if (jdbcTransport != null) {
 			jdbcTransport.stop();
 		}
 		server.stop();
 	}
-	
+
 	@Test public void testLargeSelects() throws Exception {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
@@ -119,7 +119,7 @@ public class TestJDBCSocketPerformance {
 		}
 		System.out.println((System.currentTimeMillis() - start));
 	}
-	
+
 	@Test public void testSmallSelects() throws Exception {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
@@ -138,7 +138,7 @@ public class TestJDBCSocketPerformance {
 		}
 		System.out.println((System.currentTimeMillis() - start));
 	}
-	
+
 	//TODO: this isn't a socket test per se, but does show a performance bump with multi-threaded texttable execution
 	@Test public void testTextTable() throws Exception {
 		Properties p = new Properties();
@@ -150,7 +150,7 @@ public class TestJDBCSocketPerformance {
 
 			ps.setClob(1, TestTextTable.clobFromFile("test.xml").getReference());
 			ps.setClob(2, TestTextTable.clobFromFile("test.xml").getReference());
-			
+
 			ResultSet rs = ps.executeQuery();
 			int i = 0;
 			while (rs.next()) {

@@ -26,18 +26,18 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class JGroupsInputStream extends InputStream {
-	
+
 	private long timeout = 15000;
     private volatile byte[] buf;
     private volatile int index=0;
     private ReentrantLock lock = new ReentrantLock();
     private Condition write = lock.newCondition();
     private Condition doneReading = lock.newCondition();
-    
+
     public JGroupsInputStream(long timeout) {
     	this.timeout = timeout;
 	}
-    
+
     @Override
     public int read() throws IOException {
         if (index < 0) {
@@ -75,7 +75,7 @@ public class JGroupsInputStream extends InputStream {
         }
         return buf[index++] & 0xff;
     }
-    
+
     @Override
     public void close() {
     	lock.lock();
@@ -87,10 +87,10 @@ public class JGroupsInputStream extends InputStream {
     		lock.unlock();
     	}
     }
-    
+
     public void receive(byte[] bytes) throws InterruptedException {
     	lock.lock();
-    	try {	
+    	try {
     		if (index == -1) {
     			return;
     		}

@@ -60,7 +60,7 @@ public abstract class AdminException extends TeiidException {
     AdminException(String msg) {
         super(msg);
     }
-    
+
     AdminException(Throwable cause) {
     	super(cause);
     }
@@ -74,7 +74,7 @@ public abstract class AdminException extends TeiidException {
     AdminException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
-    
+
     AdminException(String msg, Throwable cause) {
         super(cause, msg);
     }
@@ -82,10 +82,10 @@ public abstract class AdminException extends TeiidException {
     AdminException(BundleUtil.Event code, Throwable cause, String msg) {
         super(code, cause, msg);
     }
-    
+
     AdminException(BundleUtil.Event code, Throwable cause) {
         super(code, cause);
-    }    
+    }
 
     /**
      * Determine whether this exception is representing

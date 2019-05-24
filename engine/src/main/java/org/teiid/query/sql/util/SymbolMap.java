@@ -45,7 +45,7 @@ public class SymbolMap {
 
     public SymbolMap() {
 	}
-    
+
     public SymbolMap clone() {
     	SymbolMap clonedMap = new SymbolMap();
     	for (Map.Entry<ElementSymbol, Expression> entry : map.entrySet()) {
@@ -53,7 +53,7 @@ public class SymbolMap {
 		}
     	return clonedMap;
     }
-    
+
     public Map<Expression, ElementSymbol> inserseMapping() {
     	HashMap<Expression, ElementSymbol> inverseMap = new HashMap<Expression, ElementSymbol>();
 		for (Map.Entry<ElementSymbol, Expression> entry : this.map.entrySet()) {
@@ -61,7 +61,7 @@ public class SymbolMap {
 		}
 		return inverseMap;
     }
-    
+
     /**
      * @return true if the map did not already contained the given symbol
      */
@@ -86,7 +86,7 @@ public class SymbolMap {
     public Expression getMappedExpression(ElementSymbol symbol) {
         return map.get(symbol);
     }
-    
+
     public Map<ElementSymbol, Expression> asUpdatableMap() {
     	return this.map;
     }
@@ -98,7 +98,7 @@ public class SymbolMap {
     public List<ElementSymbol> getKeys() {
         return new ArrayList<ElementSymbol>(map.keySet());
     }
-    
+
     public List<Expression> getValues() {
         return new ArrayList<Expression>(map.values());
     }
@@ -119,8 +119,8 @@ public class SymbolMap {
 
         return symbolMap;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     @Override

@@ -51,11 +51,11 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * Attempts to minimize the cost of sorting operations across the plan.
- * 
+ *
  * Must be run after output elements are assigned
  */
 public class RulePlanSorts implements OptimizerRule {
-	
+
 	@Override
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, RuleStack rules,
@@ -66,11 +66,11 @@ public class RulePlanSorts implements OptimizerRule {
 	}
 
 	private PlanNode optimizeSorts(boolean parentBlocking, PlanNode node, PlanNode root, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
-		node = NodeEditor.findNodePreOrder(node, 
-				NodeConstants.Types.SORT 
-				| NodeConstants.Types.DUP_REMOVE 
-				| NodeConstants.Types.GROUP 
-				| NodeConstants.Types.JOIN 
+		node = NodeEditor.findNodePreOrder(node,
+				NodeConstants.Types.SORT
+				| NodeConstants.Types.DUP_REMOVE
+				| NodeConstants.Types.GROUP
+				| NodeConstants.Types.JOIN
 				| NodeConstants.Types.SET_OP, NodeConstants.Types.ACCESS);
 		if (node == null) {
 			return root;
@@ -99,7 +99,7 @@ public class RulePlanSorts implements OptimizerRule {
 				for (Expression singleElementSymbol : orderColumns) {
 					Expression ex = SymbolMap.getExpression(singleElementSymbol);
 					if (ex instanceof ElementSymbol) {
-						sortExpressions.add(groupMap.getMappedExpression((ElementSymbol) ex));						
+						sortExpressions.add(groupMap.getMappedExpression((ElementSymbol) ex));
 					} else {
 						otherExpression = true;
 						break;
@@ -126,13 +126,13 @@ public class RulePlanSorts implements OptimizerRule {
 					}
 					possibleSort.setProperty(Info.SORT_ORDER, orderBy);
 				}
-			} 
+			}
 			break;
 		case NodeConstants.Types.DUP_REMOVE:
 			if (parentBlocking) {
 				node.setType(NodeConstants.Types.SORT);
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
-			} 
+			}
 			break;
 		case NodeConstants.Types.GROUP:
 			if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
@@ -170,7 +170,7 @@ public class RulePlanSorts implements OptimizerRule {
 			parentBlocking = true;
 			break;
 		case NodeConstants.Types.JOIN:
-			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_LOOP 
+			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_LOOP
 					|| node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_TABLE) {
 				break;
 			}
@@ -213,7 +213,7 @@ public class RulePlanSorts implements OptimizerRule {
 		return root;
 	}
 
-	static PlanNode checkForProjectOptimization(PlanNode node, PlanNode root, 
+	static PlanNode checkForProjectOptimization(PlanNode node, PlanNode root,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record, CommandContext context) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 		PlanNode projectNode = node.getFirstChild();
 		PlanNode parent = node.getParent();
@@ -226,9 +226,9 @@ public class RulePlanSorts implements OptimizerRule {
 			}
 			raiseAccess = true;
 		} else if (projectNode.getType() == NodeConstants.Types.PROJECT && projectNode.getFirstChild() != null) {
-			raiseAccess = projectNode.getFirstChild().getType() == NodeConstants.Types.ACCESS 
+			raiseAccess = projectNode.getFirstChild().getType() == NodeConstants.Types.ACCESS
 				&& RuleRaiseAccess.canRaiseOverSort(projectNode.getFirstChild(), metadata, capFinder, node, record, false, context);
-			
+
 			//if we can't raise the access node and this doesn't have a limit, there's no point in optimizing
 			if (!raiseAccess && (parent == null || parent.getType() != NodeConstants.Types.TUPLE_LIMIT)) {
 				return root;
@@ -276,7 +276,7 @@ public class RulePlanSorts implements OptimizerRule {
 			}
 			if (parent != null && parent.getType() == NodeConstants.Types.TUPLE_LIMIT) {
 				if (root == parent) {
-					root = projectNode; 
+					root = projectNode;
 				}
 				projectNode.addFirstChild(parent);
 			} else {
@@ -314,7 +314,7 @@ public class RulePlanSorts implements OptimizerRule {
 		}
 		if (raiseAccess) {
 			PlanNode accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS);
-			
+
 			//instead of just calling ruleraiseaccess, we're more selective
 			//we do not want to raise the access node over a project that is handling an unrelated sort
 			PlanNode newRoot = RuleRaiseAccess.raiseAccessNode(root, accessNode, metadata, capFinder, true, record, context);
@@ -387,7 +387,7 @@ public class RulePlanSorts implements OptimizerRule {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "PlanSorts"; //$NON-NLS-1$

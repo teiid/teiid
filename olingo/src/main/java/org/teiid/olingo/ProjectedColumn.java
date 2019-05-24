@@ -27,22 +27,22 @@ public class ProjectedColumn {
     private boolean collection;
     private int ordinal;
     private EdmProperty property;
-    
+
     public ProjectedColumn(Expression expr, EdmType edmType, EdmProperty property, boolean collection) {
-        this.expr = expr; 
+        this.expr = expr;
         this.edmType = edmType;
         this.collection = collection;
         this.property = property;
     }
-    
+
     public Expression getExpression() {
         return this.expr;
     }
-    
+
     public EdmType getEdmType() {
         return this.edmType;
     }
-    
+
     public boolean isCollection() {
         return collection;
     }
@@ -54,23 +54,23 @@ public class ProjectedColumn {
     public void setOrdinal(int ordinal) {
         this.ordinal = ordinal;
     }
-    
+
     public EdmProperty getProperty() {
 		return property;
 	}
-    
+
     public Integer getPrecision() {
     	if (property == null) {
     		return null;
     	}
     	return property.getPrecision();
     }
-    
+
     public Integer getScale() {
     	if (property == null) {
     		return null;
     	}
     	return property.getScale();
     }
-    
+
 }

@@ -30,16 +30,16 @@ import javax.servlet.http.HttpServletResponse;
 public class BootstrapServlet extends HttpServlet {
 
     private static final long serialVersionUID = 5704762873796188429L;
-    
+
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        
+
         BeanConfig beanConfig = new BeanConfig();
         init(beanConfig);
     }
 
-    protected void init(BeanConfig beanConfig) {        
+    protected void init(BeanConfig beanConfig) {
     }
 
     @Override

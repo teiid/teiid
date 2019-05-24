@@ -55,7 +55,7 @@ public class StringToByteTransform extends Transform {
 	public Class<?> getTargetType() {
 		return Byte.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

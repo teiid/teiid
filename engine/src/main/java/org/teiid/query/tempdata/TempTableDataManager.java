@@ -85,22 +85,22 @@ import org.teiid.translator.CacheDirective.Scope;
 
 /**
  * This proxy ProcessorDataManager is used to handle temporary tables.
- * 
- * This isn't handled as a connector because of the temporary metadata and 
+ *
+ * This isn't handled as a connector because of the temporary metadata and
  * the create/drop handling (which doesn't have push down support)
  */
 public class TempTableDataManager implements ProcessorDataManager {
-	
+
 	private static final int MIN_ASYNCH_SIZE = 1<<15;
 
     public interface RequestExecutor {
 		void execute(String command, List<?> parameters);
 		boolean isShutdown();
 	}
-	
+
 	public abstract class ProxyTupleSource implements TupleSource {
 		TupleSource actual;
-		
+
 		@Override
 		public List<?> nextTuple() throws TeiidComponentException,
 				TeiidProcessingException {
@@ -109,7 +109,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			return actual.nextTuple();
 		}
-		
+
 		protected abstract TupleSource createTupleSource() throws TeiidComponentException,
 		TeiidProcessingException;
 
@@ -119,9 +119,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 				actual.closeSource();
 			}
 		}
-		
+
 	}
-	
+
 	private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
 	private static final String REFRESHMATVIEWROWS = ".refreshmatviewrows"; //$NON-NLS-1$
 	private static final String REFRESHMATVIEW = ".refreshmatview"; //$NON-NLS-1$
@@ -132,30 +132,30 @@ public class TempTableDataManager implements ProcessorDataManager {
     private BufferManager bufferManager;
 	private SessionAwareCache<CachedResults> cache;
     private RequestExecutor executor;
-    
+
     private EventDistributor eventDistributor;
-	
-    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
+
+    public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager,
     		SessionAwareCache<CachedResults> cache){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
         this.cache = cache;
     }
-    
+
     public void setExecutor(RequestExecutor executor) {
 		this.executor = executor;
 	}
-    
+
     public void setEventDistributor(EventDistributor eventDistributor) {
 		this.eventDistributor = eventDistributor;
 	}
-    
+
 	public TupleSource registerRequest(
 		CommandContext context,
 		Command command,
 		String modelName,
 		RegisterRequestParameter parameterObject)
-		throws TeiidComponentException, TeiidProcessingException {          
+		throws TeiidComponentException, TeiidProcessingException {
 
  		if (parameterObject.info != null) {
  			TupleSourceCache tsc = context.getTupleSourceCache();
@@ -177,7 +177,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         }
         return this.processorDataManager.registerRequest(context, command, modelName, parameterObject);
 	}
-	        
+
     TupleSource registerRequest(final CommandContext context, String modelName, final Command command) throws TeiidComponentException, TeiidProcessingException {
     	final TempTableStore contextStore = context.getTempTableStore();
         if (command instanceof Query) {
@@ -200,13 +200,13 @@ public class TempTableDataManager implements ProcessorDataManager {
         		}
         		return null; //it's not a stored procedure we want to handle
         	}
-        	
+
         	final GroupSymbol group = ((ProcedureContainer)command).getGroup();
         	if (!modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID()) || !group.isTempGroupSymbol()) {
         		return null;
         	}
         	return new ProxyTupleSource() {
-				
+
 				@Override
 				protected TupleSource createTupleSource() throws TeiidComponentException,
 						TeiidProcessingException {
@@ -255,7 +255,7 @@ public class TempTableDataManager implements ProcessorDataManager {
     		} else {
         		contextStore.addTempTable(tempTableName, create, bufferManager, true, context);
     		}
-            return CollectionTupleSource.createUpdateCountTupleSource(0);	
+            return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}
     	if (command instanceof Drop) {
     		String tempTableName = ((Drop)command).getTable().getName();
@@ -279,7 +279,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		hash |= (hash >>> 16);
 		hash |= (hash >>> 8);
 		hash &= 0x000000ff;
-		final CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
+		final CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(),
 				context.getVdbVersion(), context.getConnectionId(), context.getUserName());
 		cid.setParameters(vals);
 		CachedResults results = cache.get(cid);
@@ -301,10 +301,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 		}
 		final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(cloneProc.toString(), fullName.toUpperCase(), context, vals.toArray());
 		final BatchCollector bc = qp.createBatchCollector();
-		
+
 		return new ProxyTupleSource() {
 			boolean success = false;
-			
+
 			@Override
 			protected TupleSource createTupleSource() throws TeiidComponentException,
 					TeiidProcessingException {
@@ -321,7 +321,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				success = true;
 				return tb.createIndexedTupleSource();
 			}
-			
+
 			@Override
 			public void closeSource() {
 				super.closeSource();
@@ -347,7 +347,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
 			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(3).getExpression()).getValue());
-			boolean needsLoading = globalStore.getMatTableInfo(matTableName).getAndClearAsynch(); 
+			boolean needsLoading = globalStore.getMatTableInfo(matTableName).getAndClearAsynch();
 			if (!needsLoading) {
 			    needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), true, true, invalidate);
 			    if (needsLoading) {
@@ -399,9 +399,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (param == null) {
 				param = new Object[] {initialValue};
 			}
-			
+
 			Object[][] params = new Object[][] {param};
-			
+
 			return updateMatviewRows(context, metadata, groupID, globalStore,
 					matViewName, ids, params);
 		}
@@ -423,7 +423,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (!tempTable.isUpdatable()) {
 			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
 		}
-		
+
 		List<Object[]> converted = new ArrayList<Object[]>();
 		for (Object[] param : params) {
 			if (param == null || ids.size() != param.length) {
@@ -439,7 +439,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			converted.add(vals);
 		}
 		final Iterator<Object[]> paramIter = converted.iterator();
-		
+
 		Iterator<?> iter = ids.iterator();
 		StringBuilder criteria = new StringBuilder();
 		for (int i = 0; i < ids.size(); i++) {
@@ -449,7 +449,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			criteria.append(metadata.getFullName(id)).append(" = ?"); //$NON-NLS-1$
 		}
-		
+
 		final String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
 			criteria.toString() + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE;
 
@@ -470,34 +470,34 @@ public class TempTableDataManager implements ProcessorDataManager {
 						qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, params);
 						ts = new BatchCollector.BatchProducerTupleSource(qp);
 					}
-					
+
 					List<?> tuple = ts.nextTuple();
 					boolean delete = false;
 					if (tuple == null) {
 						delete = true;
 						tuple = Arrays.asList(params);
 					} else {
-						tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
+						tuple = new ArrayList<Object>(tuple); //ensure the list is serializable
 					}
 					List<?> result = globalStore.updateMatViewRow(matTableName, tuple, delete);
-					
+
 					if (result != null) {
 						count++;
 					}
-					
+
 					if (eventDistributor != null) {
 						eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
 					}
-					
+
 					qp.closeProcessing();
 					qp = null;
 					ts = null;
-					
+
 					if (!paramIter.hasNext()) {
 						break;
 					}
 				}
-				
+
 				return CollectionTupleSource.createUpdateCountTupleSource(count);
 			}
 
@@ -584,7 +584,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 								} else {
 									loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info);
 								}
-							} 
+							}
 						}
 					}
 					TempTable table = globalStore.getTempTable(tableName);
@@ -610,7 +610,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 						TeiidProcessingException {
 				    try {
     					if (newWorkContext != null) {
-    						
+
     							newWorkContext.runInContext(new Callable<Void>() {
     								@Override
     								public Void call() throws Exception {
@@ -650,7 +650,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			protected TupleSource createTupleSource()
 					throws TeiidComponentException, TeiidProcessingException {
 				TempTableStore tts = contextStore;
-				
+
 				TempTable tt = tts.getOrCreateTempTable(tableName, query, bufferManager, true, false, context, group);
 				if (context.getDataObjects() != null) {
 					Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
@@ -713,7 +713,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			throws TeiidComponentException, TeiidProcessingException {
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30013, tableName));
 		final QueryMetadataInterface metadata = context.getMetadata();
-		final List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
+		final List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
 		final TempTable table = globalStore.createMatTable(tableName, group);
 		table.setUpdatable(false);
 		return new ProxyTupleSource() {
@@ -722,7 +722,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			QueryProcessor qp;
 			boolean closed;
 			boolean errored;
-		
+
 			@Override
 			protected TupleSource createTupleSource() throws TeiidComponentException,
 					TeiidProcessingException {
@@ -772,7 +772,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					throw new AssertionError();
 				}
 			}
-			
+
 			@Override
 			public void closeSource() {
 				if (closed) {
@@ -803,22 +803,22 @@ public class TempTableDataManager implements ProcessorDataManager {
 		keyElementName = keyElementName.toUpperCase();
 		returnElementName = returnElementName.toUpperCase();
     	String matTableName = CODE_PREFIX + codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName;
-    	
+
     	TupleSource ts = context.getCodeLookup(matTableName, keyValue);
     	if (ts == null) {
 	    	QueryMetadataInterface metadata = context.getMetadata();
-	
+
 	    	TempMetadataID id = context.getGlobalTableStore().getCodeTableMetadataId(codeTableName,
 					returnElementName, keyElementName, matTableName);
-	    	
+
 	    	ElementSymbol keyElement = new ElementSymbol(keyElementName, new GroupSymbol(matTableName));
 	    	ElementSymbol returnElement = new ElementSymbol(returnElementName, new GroupSymbol(matTableName));
 	    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
 	    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementRuntimeTypeName(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
-	    	
+
 	    	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
 	    	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
-	    	
+
 	    	ts = registerQuery(context, context.getTempTableStore(), query);
     	}
     	try {
@@ -854,14 +854,14 @@ public class TempTableDataManager implements ProcessorDataManager {
 	    newSession.setSessionId(newSession.getSessionToken().getSessionID());
 	    newSession.setUserName(userName);
 	    newSession.setCreatedTime(creationTime);
-	    newSession.setApplicationName(app); 
+	    newSession.setApplicationName(app);
 	    newSession.setVDBName(vdb.getName());
 	    newSession.setVDBVersion(vdb.getVersion());
 	    newSession.setVdb(vdb);
 	    newSession.setEmbedded(true);
 		return newSession;
 	}
-	
+
 	private static void rethrow(Throwable e)
 			throws TeiidComponentException,
 			TeiidProcessingException {
@@ -879,7 +879,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		}
 		throw new TeiidRuntimeException(e);
 	}
-	
+
 	public static boolean shouldInvalidate(VDBMetaData vdb) {
 		boolean invalidate = true;
 		if (vdb != null) {

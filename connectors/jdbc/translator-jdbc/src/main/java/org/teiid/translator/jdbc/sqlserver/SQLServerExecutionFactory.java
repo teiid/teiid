@@ -61,7 +61,7 @@ import org.teiid.util.Version;
  */
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
-	
+
 	final class SQLServerMetadataProcessor
             extends JDBCMetadataProcessor {
         Pattern PROCEDURE_PATTERN = Pattern.compile("(.*);\\d*"); //$NON-NLS-1$
@@ -114,12 +114,12 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
             if (function.getParameters().get(0) instanceof ColumnReference) {
                 ColumnReference cr = (ColumnReference)function.getParameters().get(0);
                 String nativeType = cr.getMetadataObject().getNativeType();
-                if (nativeType != null 
-                        && StringUtil.indexOfIgnoreCase(nativeType, "char") == -1) { //$NON-NLS-1$ 
-                    Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), cr, 
+                if (nativeType != null
+                        && StringUtil.indexOfIgnoreCase(nativeType, "char") == -1) { //$NON-NLS-1$
+                    Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), cr,
                                     (StringUtil.startsWithIgnoreCase(nativeType.trim(), "n")?"n":"")+"varchar(max)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                     cast.setName("cast"); //$NON-NLS-1$
-                    function.getParameters().set(0, cast); 
+                    function.getParameters().set(0, cast);
                 }
             }
             return super.translate(function);
@@ -130,25 +130,25 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	public static final String V_2005 = "2005"; //$NON-NLS-1$
 	public static final String V_2008 = "2008"; //$NON-NLS-1$
 	public static final String V_2012 = "2012"; //$NON-NLS-1$
-	
+
 	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
 	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
 	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
 	public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
-	
-	
+
+
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
 	    setSupportsFullOuterJoins(true);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
 		registerFunctionModifier(SourceSystemFunctions.WEEK, new FunctionModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -159,11 +159,11 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.SHA1, new TemplateFunctionModifier("HASHBYTES('SHA1', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		registerFunctionModifier(SourceSystemFunctions.SHA2_256, new TemplateFunctionModifier("HASHBYTES('SHA2_256', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
 		registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$ 
+		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperLowerFunctionModifier("lower")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
@@ -214,7 +214,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS", 126); //$NON-NLS-1$
 		//formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", 127); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	protected List<Object> convertDateToString(Function function) {
 		if (getVersion().compareTo(TEN_0) >= 0) {
@@ -222,17 +222,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		}
 		return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-    
+
 	@Override
 	protected List<?> convertTimestampToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 21)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof ColumnReference) {
     		ColumnReference elem = (ColumnReference)obj;
-			if (getVersion().compareTo(SEVEN_0) <= 0 
+			if (getVersion().compareTo(SEVEN_0) <= 0
 			        && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
 				return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
@@ -303,7 +303,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 			dc.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), TypeFacility.getDataTypeName(dc.getExpression().getType())));
 		}
 	}
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -378,23 +378,23 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL");      //$NON-NLS-1$ 
+        supportedFunctions.add("NVL");      //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
-        
+
         if (getVersion().compareTo(TEN_0) >= 0) {
             supportedFunctions.add(SourceSystemFunctions.SHA2_256);
             supportedFunctions.add(SourceSystemFunctions.SHA2_512);
         }
-        
+
         if (getVersion().compareTo(NINE_0) >= 0) {
             supportedFunctions.add(SourceSystemFunctions.MD5);
             supportedFunctions.add(SourceSystemFunctions.SHA1);
         }
-        
+
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -403,17 +403,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;
-    }    
+    }
     @Override
     public boolean supportsRowLimit() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowOffset() {
     	return getVersion().compareTo(TEN_0) >= 0;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
     	return true;
@@ -422,22 +422,22 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     public boolean supportsExcept() {
     	return true;
     };
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-     
+
     @Override
     public boolean nullPlusNonNullIsNull() {
     	return true;
     }
-    
+
     @Override
     public boolean booleanNullable() {
     	return true;
     }
-    
+
     /**
      * Overridden to allow for year based versions
      */
@@ -460,7 +460,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	super.setDatabaseVersion(version);
     }
-    
+
     @Override
     public String translateLiteralDate(Date dateValue) {
     	if (getVersion().compareTo(TEN_0) >= 0) {
@@ -468,12 +468,12 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
     }
-    
+
     @Override
     public boolean hasTimeType() {
     	return getVersion().compareTo(TEN_0) >= 0;
     }
-    
+
     /**
      * The SQL Server driver maps the time escape to a timestamp/datetime, so
      * use a cast of the string literal instead.
@@ -482,42 +482,42 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
     	return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsSubqueryCommonTableExpressions() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
     	return getVersion().compareTo(TEN_0) >= 0;
     }
-    
+
     @Override
     protected boolean supportsCrossJoin() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsElementaryOlapOperations() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsWindowDistinctAggregates() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsFormatLiteral(String literal,
     		org.teiid.translator.ExecutionFactory.Format format) {
@@ -526,44 +526,44 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	return formatMap.containsKey(literal);
     }
-    
+
     @Override
     public boolean supportsOnlyFormatLiterals() {
     	return true;
     }
-    
+
     @Override
     protected boolean setFetchSize() {
     	return true;
     }
-    
+
     @Override
     @Deprecated
     protected JDBCMetadataProcessor createMetadataProcessor() {
         return (JDBCMetadataProcessor)getMetadataProcessor();
     }
-    
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new SQLServerMetadataProcessor();
     }
-    
-    
+
+
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean useStreamsForLobs() {
 		return true;
 	}
-	
+
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
     	if (getVersion().compareTo(NINE_0) >= 0) {
@@ -574,17 +574,17 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsGroupByRollup() {
     	return getVersion().compareTo(NINE_0) >= 0;
     }
-    
+
     @Override
     public boolean useWithRollup() {
     	return getVersion().compareTo(TEN_0) < 0;
     }
-    
+
     @Override
     public boolean supportsConvert(int fromType, int toType) {
     	if (fromType == TypeFacility.RUNTIME_CODES.OBJECT && this.convertModifier.hasTypeMapping(toType)) {
@@ -592,12 +592,12 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	return super.supportsConvert(fromType, toType);
     }
-    
+
     @Override
     public boolean supportsLiteralOnlyWithGrouping() {
     	return true;
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (command instanceof Insert) {
@@ -611,7 +611,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     			}
     		}
     	}
-    	
+
     	//handle offset support
     	boolean useRowNumber = false;
     	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
@@ -621,7 +621,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     			    if (queryCommand.getOrderBy() == null) {
         				//an order by is required
         				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct()) 
+        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct())
                                 || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
         			        //can't use the @@version with distinct
         			        useRowNumber = true;
@@ -655,23 +655,23 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
 		Limit limit = queryCommand.getLimit();
 		queryCommand.setLimit(null);
-		
+
     	List<Object> parts = new ArrayList<Object>();
-    	
+
     	if (queryCommand.getWith() != null) {
 			With with = queryCommand.getWith();
 			queryCommand.setWith(null);
 			parts.add(with);
 		}
-    	
+
     	OrderBy orderBy = queryCommand.getOrderBy();
     	queryCommand.setOrderBy(null);
-    	
+
     	parts.add("SELECT "); //$NON-NLS-1$
     	/*
     	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
     	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
-    	 * we just use the projected names 
+    	 * we just use the projected names
     	 */
     	boolean allAliased = true;
     	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
@@ -734,7 +734,7 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 		}
 		return parts;
     }
-    
+
     @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (getVersion().compareTo(ELEVEN_0) >= 0) {
@@ -742,12 +742,12 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	}
     	return super.translateLimit(limit, context);
     }
-    
+
     @Override
     public boolean useSelectLimit() {
     	return getVersion().compareTo(ELEVEN_0) < 0;
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
         if (getVersion().compareTo(TEN_0) < 0) {
@@ -755,30 +755,30 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
         }
         return "{ts '" + formatDateValue(timestampValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public boolean supportsWindowFunctionNtile() {
         return getVersion().compareTo(TEN_0) >= 0;
     }
-    
+
     @Override
     public boolean supportsWindowFunctionPercentRank() {
         return getVersion().compareTo(ELEVEN_0) >= 0;
     }
-    
+
     @Override
     public boolean supportsWindowFunctionCumeDist() {
         return getVersion().compareTo(ELEVEN_0) >= 0;
     }
-    
+
     @Override
     public boolean supportsWindowFunctionNthValue() {
         return false;
     }
-    
+
     @Override
     public boolean supportsWindowFrameClause() {
         return getVersion().compareTo(TEN_0) >= 0;
     }
-    
+
 }

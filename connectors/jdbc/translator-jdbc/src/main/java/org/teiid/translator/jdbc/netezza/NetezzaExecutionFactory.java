@@ -50,9 +50,9 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	private static final String DATE_FORMAT = "YYYY-MM-DD";  //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT;  //$NON-NLS-1$
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".MS";   //$NON-NLS-1$
-	
+
 	private static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
-	
+
 	private boolean sqlExtensionsInstalled;
 
 	public NetezzaExecutionFactory() {
@@ -101,7 +101,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
        //SYSTEM FUNCTIONS
        ////////////////////////////////////
 		registerFunctionModifier(SourceSystemFunctions.IFNULL,new AliasModifier("NVL"));   //$NON-NLS-1$
-        
+
 
 		// DATA TYPE CONVERSION
 		///////////////////////////////////////////
@@ -117,8 +117,8 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 
  		///NO BOOLEAN, INTEGER, FLOAT, DATE, TIME, TIMESTAMP, as they are directly available in netezza
 		///NO NULL, CLOB, BLOB, OBJECT, XML
-		
-		
+
+
 		///BOOLEAN--BYTE, SHORT, INTEGER, LONG, FLOAT, DOUBLE, BIGINTEGER, BIGDECIMAL--AS IT DOESN'T WORK IMPLICITLY IN NETEZZA
 
 		convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.INTEGER, new BooleanToNumericConversionModifier());
@@ -144,9 +144,9 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN '0' WHEN ", stringValue, " IS NOT NULL THEN '1' END");  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		}, FunctionModifier.BOOLEAN);
-		
-		
-		
+
+
+
 
 		////////STRING TO DATATYPE CONVERSION OTHER THAN DATE/TIME
 		convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.INTEGER, new CastModifier("integer"));  //$NON-NLS-1$
@@ -164,21 +164,21 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE"));   //$NON-NLS-1$
 		convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new CastModifier("TIMESTAMP"));  //$NON-NLS-1$
 		//convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new CastModifier("TIMESTAMP")); //TIME --> TIMESTAMP --DOESN't WORK IN NETEZZA-NO FUNCTION SUPPORT
-				
+
 		////DATE/TIME to STRING CONVERION////
 		/////////////////////////////////////
     	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIMESTAMP_FORMAT)); //$NON-NLS-1$
     	///NO NETEZAA FUNCTION for DATE, TIME to STRING
-		
+
 
 		convertModifier.setWideningNumericImplicit(true);
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-		
+
 		if (sqlExtensionsInstalled) {
 			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
 			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
 			addPushDownFunction("netezza", "regexp_extract", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			addPushDownFunction("netezza", "regexp_extract_all", RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -205,7 +205,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
 			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
 			addPushDownFunction("netezza", "regexp_replace", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			addPushDownFunction("netezza", "regexp_replace_sp", RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING, RUNTIME_NAMES.STRING+"[]", RUNTIME_NAMES.INTEGER, RUNTIME_NAMES.STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -234,14 +234,14 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.RTRIM);
 		supportedFunctions.add(SourceSystemFunctions.SUBSTRING); //No Need of ALIAS as both substring and substr work in netezza
 		supportedFunctions.add(SourceSystemFunctions.UCASE); //ALIAS UPPER
-		// FUNCTION DIFFERENCE = "difference";  ///NO FUNCTION FOUND--DIFFERENCE 
-		//	FUNCTION INSERT = "insert"; 
+		// FUNCTION DIFFERENCE = "difference";  ///NO FUNCTION FOUND--DIFFERENCE
+		//	FUNCTION INSERT = "insert";
 		// supportedFunctions.add(SourceSystemFunctions.LEFT); //is this available or is it simply for LEFT OUTER JOIN?
 		// FUNCTION REPLACE = "replace"; // NO REPLACE Function
 		// supportedFunctions.add(SourceSystemFunctions.RIGHT);--is this available or is it simply for RIGHT OUTER JOIN?
 		// FUNCTION SOUNDEX = "soundex";
-		//	FUNCTION TO_BYTES = "to_bytes"; 
-		//	FUNCTION TO_CHARS = "to_chars"; 
+		//	FUNCTION TO_BYTES = "to_bytes";
+		//	FUNCTION TO_CHARS = "to_chars";
 		//////////	////////////////////////////////////////////////////////////////////
 		//NUMERIC FUNCTIONS////////////////////////////////////////////////////////////
 		//////////////////////////////////////////////////////////////////////////////
@@ -259,28 +259,28 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.LOG);
 		supportedFunctions.add(SourceSystemFunctions.MOD);
 		supportedFunctions.add(SourceSystemFunctions.PI);
-		supportedFunctions.add(SourceSystemFunctions.POWER);//	ALIAS-POW 
+		supportedFunctions.add(SourceSystemFunctions.POWER);//	ALIAS-POW
 		supportedFunctions.add(SourceSystemFunctions.RADIANS);
 		supportedFunctions.add(SourceSystemFunctions.ROUND);
-		supportedFunctions.add(SourceSystemFunctions.SIGN);	
+		supportedFunctions.add(SourceSystemFunctions.SIGN);
 		supportedFunctions.add(SourceSystemFunctions.SIN);
 		supportedFunctions.add(SourceSystemFunctions.SQRT);
 		supportedFunctions.add(SourceSystemFunctions.TAN);
-		//		FUNCTION TRANSLATE = "translate"; 
-		//		FUNCTION TRUNCATE = "truncate"; 
-		//		FUNCTION FORMATINTEGER = "formatinteger"; 
-		//		FUNCTION FORMATLONG = "formatlong"; 
-		//		FUNCTION FORMATDOUBLE = "formatdouble"; 
-		//		FUNCTION FORMATFLOAT = "formatfloat"; 
-		//		FUNCTION FORMATBIGINTEGER = "formatbiginteger"; 
-		//		FUNCTION FORMATBIGDECIMAL = "formatbigdecimal"; 
-		//		FUNCTION LOG10 = "log10"; 
-		//		FUNCTION PARSEINTEGER = "parseinteger"; 
-		//		FUNCTION PARSELONG = "parselong"; 
-		//		FUNCTION PARSEDOUBLE = "parsedouble"; 
-		//		FUNCTION PARSEFLOAT = "parsefloat"; 
-		//		FUNCTION PARSEBIGINTEGER = "parsebiginteger"; 
-		//		FUNCTION PARSEBIGDECIMAL = "parsebigdecimal"; 
+		//		FUNCTION TRANSLATE = "translate";
+		//		FUNCTION TRUNCATE = "truncate";
+		//		FUNCTION FORMATINTEGER = "formatinteger";
+		//		FUNCTION FORMATLONG = "formatlong";
+		//		FUNCTION FORMATDOUBLE = "formatdouble";
+		//		FUNCTION FORMATFLOAT = "formatfloat";
+		//		FUNCTION FORMATBIGINTEGER = "formatbiginteger";
+		//		FUNCTION FORMATBIGDECIMAL = "formatbigdecimal";
+		//		FUNCTION LOG10 = "log10";
+		//		FUNCTION PARSEINTEGER = "parseinteger";
+		//		FUNCTION PARSELONG = "parselong";
+		//		FUNCTION PARSEDOUBLE = "parsedouble";
+		//		FUNCTION PARSEFLOAT = "parsefloat";
+		//		FUNCTION PARSEBIGINTEGER = "parsebiginteger";
+		//		FUNCTION PARSEBIGDECIMAL = "parsebigdecimal";
 		// supportedFunctions.add(SourceSystemFunctions.RAND); --Needs Alias--But, is it required to even have an alias???
 		/////////////////////////////////////////////////////////////////////
 		//BIT FUNCTIONS//////////////////////////////////////////////////////
@@ -290,42 +290,42 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.BITNOT);
 		supportedFunctions.add(SourceSystemFunctions.BITXOR);
 		// DATE FUNCTIONS
-		supportedFunctions.add(SourceSystemFunctions.CURDATE); 
-		supportedFunctions.add(SourceSystemFunctions.CURTIME); 
-		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);
+		supportedFunctions.add(SourceSystemFunctions.CURTIME);
+		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
-		supportedFunctions.add(SourceSystemFunctions.HOUR); 
-		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
+		supportedFunctions.add(SourceSystemFunctions.HOUR);
+		supportedFunctions.add(SourceSystemFunctions.MINUTE);
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
 		supportedFunctions.add(SourceSystemFunctions.QUARTER);
 		supportedFunctions.add(SourceSystemFunctions.SECOND);
 		supportedFunctions.add(SourceSystemFunctions.WEEK);
 		supportedFunctions.add(SourceSystemFunctions.YEAR);
-		//		FUNCTION DAYNAME = "dayname"; 
-		//		FUNCTION FORMATTIMESTAMP = "formattimestamp"; 
-		//		FUNCTION MODIFYTIMEZONE = "modifytimezone"; 
-		//		FUNCTION MONTHNAME = "monthname"; 
-		//		FUNCTION NOW = "now"; 
-		//		FUNCTION PARSETIMESTAMP = "parsetimestamp"; 
-		//		FUNCTION TIMESTAMPADD = "timestampadd"; 
-		//		FUNCTION TIMESTAMPCREATE = "timestampcreate"; 
-		//		FUNCTION TIMESTAMPDIFF = "timestampdiff"; 
+		//		FUNCTION DAYNAME = "dayname";
+		//		FUNCTION FORMATTIMESTAMP = "formattimestamp";
+		//		FUNCTION MODIFYTIMEZONE = "modifytimezone";
+		//		FUNCTION MONTHNAME = "monthname";
+		//		FUNCTION NOW = "now";
+		//		FUNCTION PARSETIMESTAMP = "parsetimestamp";
+		//		FUNCTION TIMESTAMPADD = "timestampadd";
+		//		FUNCTION TIMESTAMPCREATE = "timestampcreate";
+		//		FUNCTION TIMESTAMPDIFF = "timestampdiff";
 
-		
+
 		//SYSTEM FUNCTIONS
 		supportedFunctions.add(SourceSystemFunctions.IFNULL); //ALIAS-NVL
 		supportedFunctions.add(SourceSystemFunctions.COALESCE);
 		supportedFunctions.add(SourceSystemFunctions.NULLIF);
-		
-		
+
+
 		//CONVERSION functions
 		supportedFunctions.add(SourceSystemFunctions.CONVERT);
-		
-		
+
+
 		return supportedFunctions;
 	}
-	
+
 	public static class ExtractModifier extends FunctionModifier {
     	private String type;
     	public ExtractModifier(String type) {
@@ -365,8 +365,8 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 		}
 
 	}
-	
-	
+
+
     public static class CastModifier extends FunctionModifier {
     	private String target;
     	public CastModifier(String target) {
@@ -377,8 +377,8 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 			return Arrays.asList("cast(", function.getParameters().get(0), " AS "+this.target+")");    //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
-    
-    
+
+
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (limit.getRowOffset() > 0) {
@@ -386,7 +386,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
     	}
         return null;
     }
-	
+
 	@Override
 	public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		if (obj instanceof Like) {
@@ -395,7 +395,7 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 				if (like.isNegated()) {
 					return Arrays.asList("NOT(REGEXP_LIKE(", like.getLeftExpression(), ", ", like.getRightExpression(), "))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
-				return Arrays.asList("REGEXP_LIKE(", like.getLeftExpression(), ", ", like.getRightExpression(), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+				return Arrays.asList("REGEXP_LIKE(", like.getLeftExpression(), ", ", like.getRightExpression(), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		}
 		return super.translate(obj, context);
@@ -435,40 +435,40 @@ public class NetezzaExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsAggregatesEnhancedNumeric() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsLikeRegex() {
 		return sqlExtensionsInstalled;
 	}
-	
+
 	@TranslatorProperty(display="SQL Extensions Installed", description="True if SQL Extensions including support fo REGEXP_LIKE are installed",advanced=true)
 	public boolean isSqlExtensionsInstalled() {
 		return sqlExtensionsInstalled;
 	}
-	
+
 	public void setSqlExtensionsInstalled(boolean sqlExtensionsInstalled) {
 		this.sqlExtensionsInstalled = sqlExtensionsInstalled;
 	}
-	
+
 	@Override
 	public boolean supportsCommonTableExpressions() {
 		return getVersion().compareTo(SEVEN_0) >= 0;
 	}
-	
+
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsSelectWithoutFrom() {
 	    return true;
 	}
-	
+
 	@Override
 	public boolean supportsMultipleOpenExecutions() {
 	    //See TEIID-5462
 	    return false;
 	}
-	
+
 }

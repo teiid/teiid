@@ -37,7 +37,7 @@ import org.teiid.translator.*;
 
 /**
  * Demonstrates the delegating translator pattern to add low level logging.
- * 
+ *
  * @param <F>
  * @param <C>
  */
@@ -80,7 +80,7 @@ public class RecordLoggingExecutionFactory<F, C> extends BaseDelegatingExecution
 				metadata, connection);
 		return (ProcedureExecution)Proxy.newProxyInstance(RecordLoggingExecutionFactory.class.getClassLoader(), new Class[] {ProcedureExecution.class}, new LoggingHandler(execution, executionContext));
 	}
-	
+
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -89,7 +89,7 @@ public class RecordLoggingExecutionFactory<F, C> extends BaseDelegatingExecution
 				metadata, connection);
 		return (ProcedureExecution)Proxy.newProxyInstance(RecordLoggingExecutionFactory.class.getClassLoader(), new Class[] {ProcedureExecution.class}, new LoggingHandler(execution, executionContext));
 	}
-	
+
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -98,7 +98,7 @@ public class RecordLoggingExecutionFactory<F, C> extends BaseDelegatingExecution
 				connection);
 		return (ResultSetExecution)Proxy.newProxyInstance(RecordLoggingExecutionFactory.class.getClassLoader(), new Class[] {ResultSetExecution.class}, new LoggingHandler(execution, executionContext));
 	}
-	
+
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -107,5 +107,5 @@ public class RecordLoggingExecutionFactory<F, C> extends BaseDelegatingExecution
 				connection);
 		return (UpdateExecution)Proxy.newProxyInstance(RecordLoggingExecutionFactory.class.getClassLoader(), new Class[] {UpdateExecution.class}, new LoggingHandler(execution, executionContext));
 	}
-	
+
 }

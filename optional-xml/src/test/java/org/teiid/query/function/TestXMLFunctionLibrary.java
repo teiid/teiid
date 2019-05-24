@@ -32,13 +32,13 @@ import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestXMLFunctionLibrary {
-    
+
     private TestFunctionLibrary tester = new TestFunctionLibrary();
-    
+
     @Before public void before() {
         tester.setUp();
     }
-    
+
     @After public void after() {
         tester.tearDown();
     }
@@ -47,57 +47,57 @@ public class TestXMLFunctionLibrary {
         tester.helpInvokeMethod("xpathValue",  //$NON-NLS-1$
                          new Object[] {
                                        "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>", //$NON-NLS-1$
-                                       "a/b/c"}, //$NON-NLS-1$ 
-                         "test"); //$NON-NLS-1$ 
+                                       "a/b/c"}, //$NON-NLS-1$
+                         "test"); //$NON-NLS-1$
     }
-    
+
     @Test public void testInvokeXpathWithNill() {
         tester.helpInvokeMethod("xpathValue",  //$NON-NLS-1$
                          new Object[] {
                                        "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:nil=\"true\"/></a>", //$NON-NLS-1$
-                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$ 
+                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$
                          null);
     }
-    
+
     @Test public void testInvokeXpathWithNill1() {
         tester.helpInvokeMethod("xpathValue",  //$NON-NLS-1$
                          new Object[] {
                                        "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b>value</b></a>", //$NON-NLS-1$
-                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$ 
+                                       "//*[local-name()='b' and not(@*[local-name()='nil' and string()='true'])]"}, //$NON-NLS-1$
                          "value"); //$NON-NLS-1$
     }
-    
+
     @Test public void testInvokeXslTransform() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        ClobType result = (ClobType)tester.helpInvokeMethod("xsltransform", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
-                new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML), 
+        ClobType result = (ClobType)tester.helpInvokeMethod("xsltransform", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML},
+                new Object[] {DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML),
                 DataTypeManager.transformValue("<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"><xsl:template match=\"@*|node()\"><xsl:copy><xsl:apply-templates select=\"@*|node()\"/></xsl:copy></xsl:template><xsl:template match=\"Quantity\"/></xsl:stylesheet>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
+
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name></Item></Items></Catalog></Catalogs>", xml);
     }
-    
+
     @Test public void testInvokeXmlConcat() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)tester.helpInvokeMethod("xmlconcat", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML}, 
+        XMLType result = (XMLType)tester.helpInvokeMethod("xmlconcat", new Class<?>[] {DataTypeManager.DefaultDataClasses.XML, DataTypeManager.DefaultDataClasses.XML},
                 new Object[] {DataTypeManager.transformValue("<bar/>", DataTypeManager.DefaultDataClasses.XML), DataTypeManager.transformValue("<Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", DataTypeManager.DefaultDataClasses.XML)}, c);
-        
+
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<bar/><Catalogs xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Catalog><Items><Item ItemID=\"001\"><Name>Lamp</Name><Quantity>5</Quantity></Item></Items></Catalog></Catalogs>", xml);
     }
-    
+
     @Test public void testInvokeXmlComment() throws Exception {
         CommandContext c = new CommandContext();
         c.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        XMLType result = (XMLType)tester.helpInvokeMethod("xmlcomment", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, 
+        XMLType result = (XMLType)tester.helpInvokeMethod("xmlcomment", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING},
                 new Object[] {"comment"}, c);
-        
+
         String xml = ObjectConverterUtil.convertToString(result.getCharacterStream());
         assertEquals("<!--comment-->", xml);
     }
 
 
-    
+
 }

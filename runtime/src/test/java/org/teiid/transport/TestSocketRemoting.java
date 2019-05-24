@@ -63,21 +63,21 @@ import org.teiid.net.socket.UrlServerDiscovery;
 
 @SuppressWarnings("nls")
 public class TestSocketRemoting {
-	
+
 	public interface FakeService {
-		
+
 		ResultsFuture<Integer> asynchResult();
-		
+
 		ResultsFuture<Integer> delayedAsynchResult();
 
         String exceptionMethod() throws TeiidProcessingException;
-		
+
 		int lobMethod(InputStream is, Reader r) throws IOException;
-		
+
 		Reader getReader() throws IOException;
-		
+
 	}
-	
+
 	static class FakeServiceImpl implements FakeService {
 
 		public ResultsFuture<Integer> asynchResult() {
@@ -89,7 +89,7 @@ public class TestSocketRemoting {
 		public String exceptionMethod() throws TeiidProcessingException {
 			throw new TeiidProcessingException();
 		}
-		
+
 		@Override
 		public int lobMethod(InputStream is, Reader r) throws IOException {
 			return ObjectConverterUtil.convertToByteArray(is).length + ObjectConverterUtil.convertToString(r).length();
@@ -99,7 +99,7 @@ public class TestSocketRemoting {
 		public Reader getReader() throws IOException {
 			return new StringReader("hello world"); //$NON-NLS-1$
 		}
-		
+
 		@Override
         public ResultsFuture<Integer> delayedAsynchResult() {
             ResultsFuture<Integer> result = new ResultsFuture<Integer>();
@@ -110,11 +110,11 @@ public class TestSocketRemoting {
             result.getResultsReceiver().receiveResults(new Integer(5));
             return result;
         }
-		
+
 	}
-	
+
 	private static class FakeClientServerInstance extends SocketServerInstanceImpl implements ClientInstance {
-		
+
 		ClientServiceRegistryImpl server;
 		private ResultsReceiver<Object> listener;
 
@@ -122,12 +122,12 @@ public class TestSocketRemoting {
 			super(new HostInfo("foo", new InetSocketAddress(InetAddress.getLocalHost(), 1)), 1000, 1000);
 			this.server = server;
 		}
-		
+
 		@Override
 		public boolean isOpen() {
 			return true;
 		}
-		
+
 		@Override
 		public void send(Message message, ResultsReceiver<Object> l,
 				Serializable messageKey) throws CommunicationException,
@@ -139,7 +139,7 @@ public class TestSocketRemoting {
 
 		@Override
 		public void shutdown() {
-			
+
 		}
 
 		@Override
@@ -154,14 +154,14 @@ public class TestSocketRemoting {
 		public void send(Message message, Serializable messageKey) {
 			this.listener.receiveResults(message.getContents());
 		}
-		
+
 		@Override
 		public String getServerVersion() {
 			return ApplicationInfo.getInstance().getReleaseNumber();
 		}
-		
+
 	}
-	
+
 	/**
 	 * No server was supplied, will throw an NPE under the covers
 	 */
@@ -176,7 +176,7 @@ public class TestSocketRemoting {
 		} catch(NullPointerException npe) {
 		}
 	}
-	
+
 	@Test
 	public void testMethodInvocation() throws Exception {
 		ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl() {
@@ -204,13 +204,13 @@ public class TestSocketRemoting {
 						TeiidComponentException {
 					return null;
 				}
-				
+
 				@Override
 				public ResultsFuture<?> ping(Collection<String> sessions)
 					throws TeiidComponentException, CommunicationException {
 					return null;
 				}
-				
+
 				@Override
 				public void assertIdentity(SessionToken sessionId)
 					throws InvalidSessionException,
@@ -244,7 +244,7 @@ public class TestSocketRemoting {
 			service.exceptionMethod();
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
-			
+
 		}
 		DQP dqp = connection.getService(DQP.class);
 		try {
@@ -260,20 +260,20 @@ public class TestSocketRemoting {
 			final FakeClientServerInstance serverInstance)
 			throws CommunicationException, ConnectionException {
 		SocketServerConnection connection = new SocketServerConnection(new SocketServerInstanceFactory() {
-		
+
 			@Override
 			public SocketServerInstance getServerInstance(HostInfo info)
 					throws CommunicationException, IOException {
 				return serverInstance;
 			}
-			
+
 			@Override
 			public String resolveHostname(InetAddress addr) {
 			    return null;
 			}
-			
+
 		}, false, new UrlServerDiscovery(new TeiidURL("0.0.0.0", 1, false)), new Properties()); //$NON-NLS-1$
 		return connection;
 	}
-	
+
 }

@@ -35,7 +35,7 @@ public class QueryPlannerException extends QueryProcessingException {
     public QueryPlannerException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -44,11 +44,11 @@ public class QueryPlannerException extends QueryProcessingException {
     public QueryPlannerException( String message ) {
         super( message );
     }
-    
+
     public QueryPlannerException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -58,16 +58,16 @@ public class QueryPlannerException extends QueryProcessingException {
     public QueryPlannerException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public QueryPlannerException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public QueryPlannerException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public QueryPlannerException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }    
+    }
 }

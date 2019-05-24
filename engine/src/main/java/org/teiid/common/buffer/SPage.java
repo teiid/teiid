@@ -36,16 +36,16 @@ import org.teiid.query.QueryPlugin;
 
 /**
  * A linked list Page entry in the tree
- * 
+ *
  * State cloning allows a single storage reference to be shared in many trees.
  * A phantom reference is used for proper cleanup once cloned.
- * 
+ *
  * TODO: a better purging strategy for managedbatchs.
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 class SPage implements Cloneable {
-	
+
 	static class SearchResult {
 		int index;
 		SPage page;
@@ -56,20 +56,20 @@ class SPage implements Cloneable {
 			this.values = values;
 		}
 	}
-	
+
 	static final Map<Long, PhantomReference<Object>> REFERENCES = new ConcurrentHashMap<Long, PhantomReference<Object>>();
 	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
 	static class CleanupReference extends PhantomReference<Object> {
-		
+
 		private Long batch;
 		private Reference<? extends BatchManager> ref;
-		
+
 		public CleanupReference(Object referent, Long batch, Reference<? extends BatchManager> ref) {
 			super(referent, QUEUE);
 			this.batch = batch;
 			this.ref = ref;
 		}
-		
+
 		public void cleanup() {
 			try {
 				BatchManager batchManager = ref.get();
@@ -85,7 +85,7 @@ class SPage implements Cloneable {
 	private static AtomicLong counter = new AtomicLong();
 
 	STree stree;
-	
+
 	private long id;
 	protected SPage next;
 	protected SPage prev;
@@ -93,7 +93,7 @@ class SPage implements Cloneable {
 	protected Object trackingObject;
 	protected List<List<?>> values;
 	protected List<SPage> children;
-	
+
 	SPage(STree stree, boolean leaf) {
 		this.stree = stree;
 		this.id = counter.getAndIncrement();
@@ -103,7 +103,7 @@ class SPage implements Cloneable {
 			children = new ResizingArrayList<SPage>();
 		}
 	}
-	
+
 	public SPage clone(STree tree) {
 		try {
 			if (this.managedBatch != null && trackingObject == null) {
@@ -124,11 +124,11 @@ class SPage implements Cloneable {
 			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30038, e);
 		}
 	}
-	
+
 	public long getId() {
 		return id;
 	}
-	
+
 	static SearchResult search(SPage page, List k, List<SearchResult> parent) throws TeiidComponentException {
 		List<List<?>> previousValues = null;
 		for (;;) {
@@ -153,7 +153,7 @@ class SPage implements Cloneable {
 								SearchResult sr = desc.previous();
 								int parentIndex = Math.max(0, -sr.index - 2);
 								if (oldKey == null) {
-									oldKey = sr.values.set(parentIndex, newKey); 
+									oldKey = sr.values.set(parentIndex, newKey);
 								} else if (page.stree.comparator.compare(oldKey, sr.values.get(parentIndex)) == 0 ) {
 									sr.values.set(parentIndex, newKey);
 								} else {
@@ -172,11 +172,11 @@ class SPage implements Cloneable {
 			if (flippedIndex != values.size() || page.next == null) {
 				return new SearchResult(index, page, values);
 			}
-			previousValues = values; 
+			previousValues = values;
 			page = page.next;
 		}
 	}
-	
+
 	protected void setValues(List<List<?>> values) throws TeiidComponentException {
 		if (values instanceof LightWeightCopyOnWriteList<?>) {
 			values = ((LightWeightCopyOnWriteList<List<?>>)values).getList();
@@ -202,7 +202,7 @@ class SPage implements Cloneable {
 		}
 		this.values = values;
 	}
-	
+
 	protected void remove(boolean force) {
 		if (managedBatch != null) {
 			if (force || trackingObject == null) {
@@ -239,7 +239,7 @@ class SPage implements Cloneable {
 		}
 		return result;
 	}
-	
+
 	static void merge(LinkedList<SearchResult> places, List<List<?>> nextValues, SPage current, List<List<?>> currentValues)
 	throws TeiidComponentException {
 		SearchResult parent = places.peekLast();
@@ -287,7 +287,7 @@ class SPage implements Cloneable {
 			parent = parent.next;
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
@@ -299,7 +299,7 @@ class SPage implements Cloneable {
 					result.append(tb);
 				} else {
 					result.append("[").append(tb.get(0)).append(" . ").append(tb.size()). //$NON-NLS-1$ //$NON-NLS-2$
-					append(" . ").append(tb.get(tb.size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+					append(" . ").append(tb.get(tb.size() - 1)).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			} else {
 				result.append("["); //$NON-NLS-1$

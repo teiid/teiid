@@ -37,6 +37,6 @@ public interface InfinispanConnection extends Connection {
     void unRegisterMarshaller(BaseMarshaller<InfinispanDocument> marshller) throws TranslatorException;
 
     void registerScript(String scriptName, String script);
-    
+
     <T> T execute(String scriptName, Map<String, ?> params);
 }

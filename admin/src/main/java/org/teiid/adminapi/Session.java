@@ -21,9 +21,9 @@ package org.teiid.adminapi;
 
 /**
  * A Session represents a single connection between a client and the server.
- * 
+ *
  * A user is allowed to have multiple sessions active simultaneously.
  */
 public interface Session extends SessionBean, AdminObject, DomainAware {
-    
+
 }

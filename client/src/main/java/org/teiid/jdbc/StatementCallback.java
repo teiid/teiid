@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.jdbc;
 
 import java.sql.ResultSet;
@@ -25,12 +25,12 @@ import java.sql.Statement;
  * A callback for non-blocking statement result processing.
  * {@link Statement#close()} must still be called to release
  * statement resources.
- * 
+ *
  * Statement methods, such as cancel, are perfectly valid
  * even when using a callback.
  */
 public interface StatementCallback {
-	
+
 	/**
 	 * Process the current row of the {@link ResultSet}.
 	 * Any call that retrieves non-lob values from the current row

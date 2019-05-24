@@ -56,13 +56,13 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
 
     private static final long serialVersionUID = -687763504336137294L;
-    
+
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FtpManagedConnectionFactory.class);
-    
+
     private String parentDirectory;
-    
+
     private String fileMapping;
-    
+
     protected FTPClientConfig config;
 
     protected String username;
@@ -86,9 +86,9 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private Integer defaultTimeout;
 
     private Integer dataTimeout;
-    
+
     private Boolean isFtps = false;
-    
+
     private Boolean useClientMode;
 
     private Boolean sessionCreation;
@@ -96,7 +96,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private String authValue;
 
     private String certificate;
-    
+
     private TrustManager trustManager;
 
     private String[] cipherSuites;
@@ -104,9 +104,9 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     private String[] protocols;
 
     private String keyPath;
-    
+
     private String keyPassword;
-    
+
     private KeyManager keyManager;
 
     private Boolean needClientAuth;
@@ -249,7 +249,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     public void setDataTimeout(Integer dataTimeout) {
         this.dataTimeout = dataTimeout;
     }
-    
+
     public Boolean getIsFtps() {
         return isFtps;
     }
@@ -355,7 +355,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     public void setKeyPassword(String keyPassword) {
         this.keyPassword = keyPassword;
     }
-    
+
     public Boolean getNeedClientAuth() {
         return needClientAuth;
     }
@@ -401,9 +401,9 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     @SuppressWarnings("serial")
     @Override
     public BasicConnectionFactory<FtpFileConnectionImpl> createConnectionFactory()throws ResourceException {
-        
+
         final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
-                
+
         return new BasicConnectionFactory<FtpFileConnectionImpl>() {
 
             @Override
@@ -415,29 +415,29 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
                 }
             }};
     }
-    
+
     protected FTPClient createClient() throws IOException, ResourceException {
-        
+
         FTPClient client = createClientInstance();
-           
+
         beforeConnectProcessing(client);
-        
+
         client.connect(this.host, this.port);
-        
+
         if (!FTPReply.isPositiveCompletion(client.getReplyCode())) {
             throw new ResourceException(UTIL.getString("ftp_connect_failed", this.host, this.port)); //$NON-NLS-1$
         }
-        
+
         if (!client.login(this.username, this.password)) {
             throw new IllegalStateException(UTIL.getString("ftp_login_failed", client.getReplyString())); //$NON-NLS-1$
         }
-        
+
         afterConnectProcessing(client);
-        
+
         return client;
-        
+
     }
-    
+
     private FTPClient createClientInstance() {
         if(this.isFtps) {
             if(this.getProtocol() != null) {
@@ -449,7 +449,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
     }
 
     private void beforeConnectProcessing(FTPClient client) throws IOException {
-        
+
         client.configure(this.config);
         if (this.connectTimeout != null) {
             client.setConnectTimeout(this.connectTimeout);
@@ -461,30 +461,30 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
             client.setDataTimeout(this.dataTimeout);
         }
         client.setControlEncoding(this.controlEncoding);
-        
+
         if(this.isFtps){
             FTPSClient ftpsClient  = (FTPSClient) client;
             ftpsClient.execPBSZ(0);
             ftpsClient.execPROT(this.execProt);
-        }    
+        }
     }
-    
+
 
     private void afterConnectProcessing(FTPClient client) throws IOException {
-        
+
         if (this.parentDirectory == null) {
             throw new IOException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
         }
-        
+
         if(!client.changeWorkingDirectory(this.getParentDirectory())){
             throw new IOException(UTIL.getString("ftp_dir_not_exist", this.getParentDirectory())); //$NON-NLS-1$
         }
-        
+
         updateClientMode(client);
-        
+
         client.setFileType(this.fileType);
         client.setBufferSize(this.bufferSize);
-        
+
         if(this.isFtps) {
             FTPSClient ftpsClient  = (FTPSClient) client;
             if(this.getAuthValue() != null) {
@@ -519,7 +519,7 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
             }
         }
     }
-    
+
     private void updateClientMode(FTPClient client) {
         switch (this.clientMode) {
             case ACTIVE_LOCAL_DATA_CONNECTION_MODE:
@@ -658,5 +658,5 @@ public class FtpManagedConnectionFactory extends BasicManagedConnectionFactory {
         }
         return true;
     }
-    
+
 }

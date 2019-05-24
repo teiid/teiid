@@ -93,7 +93,7 @@ final class CachingTupleSource extends
 		        }
 		        tb.setPrefersMemory(Boolean.TRUE.equals(cd.getPrefersMemory()));
 		    	Determinism determinismLevel = getDeterminismLevel(this.dtts.scope);
-		        this.dataTierManagerImpl.requestMgr.getRsCache().put(cid, determinismLevel, cr, cd.getTtl()); 
+		        this.dataTierManagerImpl.requestMgr.getRsCache().put(cid, determinismLevel, cr, cd.getTtl());
 		        tb = null;
 			}
 		}
@@ -131,7 +131,7 @@ final class CachingTupleSource extends
 			if (tb != null && !dtts.errored) {
 				boolean readAll = true;
 				synchronized (cd) {
-					readAll = !Boolean.FALSE.equals(cd.getReadAll()); 
+					readAll = !Boolean.FALSE.equals(cd.getReadAll());
 				}
 				if (readAll) {
 					//TODO that this is blocking, so it could be made faster in non-transactional scenarios
@@ -154,7 +154,7 @@ final class CachingTupleSource extends
 								Thread.sleep(50); //TODO: we could synch/notify in the DataTierTupleSource
 							} catch (InterruptedException e1) {
 								break;
-							} 
+							}
 						} catch (TeiidException e) {
 							LogManager.logDetail(LogConstants.CTX_DQP, e, dtts.getAtomicRequestMessage().getAtomicRequestID(), "Not using full results due to error."); //$NON-NLS-1$
 							break;

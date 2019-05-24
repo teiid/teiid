@@ -50,32 +50,32 @@ import org.teiid.translator.SourceSystemFunctions;
 @SuppressWarnings("nls")
 public class TestSortOptimization {
 
-    @Test public void testSortDupCombination() { 
+    @Test public void testSortDupCombination() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select distinct e1, e2 from pm1.g1 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT e1, e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
-        
-        checkNodeTypes(plan, FULL_PUSHDOWN); 
+
+        checkNodeTypes(plan, FULL_PUSHDOWN);
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
-    
-    @Test public void testSortDupCombination1() { 
+
+    @Test public void testSortDupCombination1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT e1, e2 FROM pm1.g1", "SELECT e1, e2 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
@@ -94,18 +94,18 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
-	
-    @Test public void testSortDupCombination2() { 
+
+    @Test public void testSortDupCombination2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select x.*, y.* from (select distinct e1, e2 from pm1.g1) x, (select distinct e1, e2 from pm1.g2) y where x.e1 = y.e1"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT e1, e2 FROM pm1.g1", "SELECT e1, e2 FROM pm1.g2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
@@ -124,18 +124,18 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {0}, new Class[] {DupRemoveSortNode.class});
     }
-    
-    @Test public void testGroupDupCombination() { 
+
+    @Test public void testGroupDupCombination() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select max(e1), e2 from (select distinct e1, e2 from pm1.g1) x group by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
-        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+
         checkNodeTypes(plan, new int[] {
                 1,      // Access
                 0,      // DependentAccess
@@ -158,17 +158,17 @@ public class TestSortOptimization {
     /**
      * The grouping expression inhibits combining the dup removal.
      */
-    @Test public void testGroupDupCombination1() { 
+    @Test public void testGroupDupCombination1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select max(e1), e2 || e1 from (select distinct e1, e2 from pm1.g1) x group by e2 || e1"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
-        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+
         checkNodeTypes(plan, new int[] {
                 1,      // Access
                 0,      // DependentAccess
@@ -188,17 +188,17 @@ public class TestSortOptimization {
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
 
-    @Test public void testSortGroupCombination() { 
+    @Test public void testSortGroupCombination() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select max(e1), e2 from pm1.g1 x group by e2 order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
-        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+
         checkNodeTypes(plan, new int[] {
                 1,      // Access
                 0,      // DependentAccess
@@ -217,127 +217,127 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {0}, new Class[] {DupRemoveSortNode.class});
     }
-    
-    @Test public void testProjectionRaisingWithLimit() { 
-        // Create query 
+
+    @Test public void testProjectionRaisingWithLimit() {
+        // Create query
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) from pm1.g1 as x order by e1 limit 2"; //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(),
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
-        
+
         assertTrue(plan.getRootNode() instanceof ProjectNode);
     }
-    
-    @Test public void testProjectionRaisingWithLimit1() { 
-        // Create query 
+
+    @Test public void testProjectionRaisingWithLimit1() {
+        // Create query
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by z limit 2"; //$NON-NLS-1$
 
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(),
                                       new String[] {"SELECT pm1.g1.e2 FROM pm1.g1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
-        
+
         assertTrue(plan.getRootNode() instanceof LimitNode);
     }
-    
-    @Test public void testProjectionRaisingWithAccess() throws Exception { 
-        // Create query 
+
+    @Test public void testProjectionRaisingWithAccess() throws Exception {
+        // Create query
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1"; //$NON-NLS-1$
 
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(),
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
-    @Test public void testProjectionRaisingWithAccess1() throws Exception { 
-        // Create query 
+
+    @Test public void testProjectionRaisingWithAccess1() throws Exception {
+        // Create query
         String sql = "select e1, 1 as z from pm1.g1 as x group by e1 order by e1"; //$NON-NLS-1$
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
         assertTrue(plan.getRootNode() instanceof ProjectNode);
-        
+
     }
-    
-    @Test public void testProjectionRaisingWithAccessAndLimit() throws Exception { 
-        // Create query 
+
+    @Test public void testProjectionRaisingWithAccessAndLimit() throws Exception {
+        // Create query
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(),
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
-    @Test public void testProjectionRaisingForUnrelatedWithLimit() throws Exception { 
+
+    @Test public void testProjectionRaisingForUnrelatedWithLimit() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        
+
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
-    @Test public void testProjectionRaisingForUnrelated() throws Exception { 
+
+    @Test public void testProjectionRaisingForUnrelated() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        
+
         String sql = "select e2 from pm1.g1 as x order by e1"; //$NON-NLS-1$
 
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
-    @Test public void testProjectionRaisingWithAlias() throws Exception { 
+
+    @Test public void testProjectionRaisingWithAlias() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        
+
         String sql = "select (select e1 from pm2.g1 where e2 = x.e2) as z, x.e1 as foo from pm1.g1 as x order by foo limit 1"; //$NON-NLS-1$
 
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
-    @Test public void testProjectionRaisingWithComplexOrdering() { 
+
+    @Test public void testProjectionRaisingWithComplexOrdering() {
         String sql = "select e1 || 1, e2 / 2 from pm1.g1 as x order by e1 || 1 limit 2"; //$NON-NLS-1$
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder,
                                       new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
-        
+
         assertTrue(plan.getRootNode() instanceof ProjectNode);
     }
-    
-    @Test public void testProjectionRaisingWithComplexOrdering1() { 
+
+    @Test public void testProjectionRaisingWithComplexOrdering1() {
         String sql = "select e1 || 1 as a, e2 / 2 from pm1.g1 as x order by a, e2 limit 2"; //$NON-NLS-1$
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         CapabilitiesFinder finder = new DefaultCapabilitiesFinder(bsc);
-        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder, 
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, finder,
                                       new String[] {"SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0, c_1 LIMIT 2"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
-        
+
         assertTrue(plan.getRootNode() instanceof ProjectNode);
         HardcodedDataManager hdm = new HardcodedDataManager();
         hdm.addData("SELECT concat(g_0.e1, '1') AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0, c_1 LIMIT 2", Arrays.asList("c1", 2), Arrays.asList("d1", 3));
         TestProcessor.helpProcess(plan, hdm, new List<?>[] {Arrays.asList("c1", 1), Arrays.asList("d1", 1)});
     }
-    
+
     //TODO this should trigger another view removal and thus the combination of the grouping/dup operation
-    @Test public void testGroupDupCombination1Pushdown() throws TeiidComponentException, TeiidProcessingException { 
+    @Test public void testGroupDupCombination1Pushdown() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
@@ -346,12 +346,12 @@ public class TestSortOptimization {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from (select distinct e1, e2 from pm1.g1) as x group by e1, e2 order by e1"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
-        
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
+                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
         checkNodeTypes(plan, new int[] {
                 1,      // Access
                 0,      // DependentAccess
@@ -370,16 +370,16 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {0}, new Class[] {DupRemoveSortNode.class});
     }
-    
-    @Test public void testSortDupCombinationUnrelated() throws TeiidComponentException, TeiidProcessingException { 
+
+    @Test public void testSortDupCombinationUnrelated() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select e1 from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) as x order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, new int[] {
@@ -400,20 +400,20 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
-    
+
     /**
      * TODO: we currently don't optimize this case as it requires pushing the sort onto the dup removal
      * which the logic isn't well suited to handle
      */
-    @Test public void testSortDupCombinationUnrelated1() throws TeiidComponentException, TeiidProcessingException { 
+    @Test public void testSortDupCombinationUnrelated1() throws TeiidComponentException, TeiidProcessingException {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select e1 || 'a' from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) as x order by e2"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -433,21 +433,21 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
-    
+
     /**
      * Previously failing with a planning exception - needed to ensure that all non-constants are symbols in OrderByItem.
      */
-    @Test public void testUnrelatedSortFunctionOverUnion() throws Exception { 
+    @Test public void testUnrelatedSortFunctionOverUnion() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-        // Create query 
+        // Create query
         String sql = "select e1 || 'a' from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) as x order by e2 || 'b'"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder,
                                       new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
         checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
@@ -466,7 +466,7 @@ public class TestSortOptimization {
             });
         checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
     }
-    
+
     @Test public void testUnionWithAggregation() throws Exception{
     	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table items (item_id varchar)", "x", "y");
 
@@ -474,116 +474,116 @@ public class TestSortOptimization {
                 + "(select 'X' SOURCE, ITEMS.ITEM_ID FOO_ID from ITEMS ITEMS group by ITEMS.ITEM_ID) "
                 + "union all (select 'Y' SOURCE, ITEMS.ITEM_ID FOO_ID from ITEMS ITEMS) union all"
                 + " (select 'Z' SOURCE, '123' FOO_ID) ) FOO order by FOO_ID desc limit 50";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_LIMIT_OFFSET, true);
-        
-        helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(caps), 
+
+        helpPlan(sql, metadata, null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT 'X' AS c_0, g_1.item_id AS c_1 FROM y.items AS g_1 GROUP BY g_1.item_id UNION ALL SELECT 'Y' AS c_0, g_0.item_id AS c_1 FROM y.items AS g_0 ORDER BY c_1 DESC LIMIT 50"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
     @Test public void testDistinctPushdownUnionWithConstant() throws Exception{
         String sql = "select distinct e1, 1 from (select 'a' as e1 from pm1.g1 union all select 'b' from pm1.g2) as x";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 LIMIT 1", "SELECT g_0.e1 FROM pm1.g2 AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
     }
-    
+
     @Test public void testDistinctPushdown() throws Exception{
         String sql = "select distinct e1, 1 from pm1.g1";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
     //same as above but with a different plan root
     @Test public void testDistinctPushdown1() throws Exception{
         String sql = "select distinct e1, 1 from pm1.g1 limit 1";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        
-        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT DISTINCT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
-    
+
     /**
      * Ensure that the distinct operation is not inappropriately removed
      * @throws Exception
      */
     @Test public void testDistinctPushdownOverJoin() throws Exception{
         String sql = "select distinct pm2.g2.e1 from pm1.g1 left outer join pm2.g2 on pm1.g1.e2 = pm2.g2.e2";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
-        
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0", "SELECT g_0.e2, g_0.e1 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveNode.class});        
+        checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveNode.class});
     }
-    
+
     @Test public void testDistinctPushdownWithGrouping() throws Exception{
         String sql = "select distinct e1, e2, 1, 2 from (select e1, e2 from pm1.g1 group by e1, e2) v";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList("a", 1), Arrays.asList("b", 2));
-        
+
         List<?>[] expectedResults = new List[] {Arrays.asList("a", 1, 1, 2), Arrays.asList("b", 2, 1, 2)};
-        
+
         TestProcessor.helpProcess(plan, dataManager, expectedResults);
     }
-    
+
     @Test public void testOffsetWithOrderBy() throws Exception{
         String sql = "select e1 from pm1.g1 order by e1 offset 2 rows";
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
-        
-        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        
+
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
-        
+
         List<?>[] expectedResults = new List[] {Arrays.asList("c")};
-        
+
         TestProcessor.helpProcess(plan, dataManager, expectedResults);
     }
-    
+
     @Test public void testOrderedLimitOvewPreservedView() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table x (a string, b string, c integer, primary key (a, b)) options (updatable true); "
                 + "create view SvcView (RowId integer PRIMARY KEY, code string, name string) as select c as x, a, b from x limit 2;", "x", "y");
         String sql = "select rowid, code, name from svcview order by rowid limit 1 ";
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                 tm, null, new DefaultCapabilitiesFinder(bsc),
                 new String[] {
                     "SELECT g_0.c, g_0.a, g_0.b FROM y.x AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -592,20 +592,20 @@ public class TestSortOptimization {
         dataManager.addData("SELECT g_0.c, g_0.a, g_0.b FROM y.x AS g_0", Arrays.asList(1, "x", "a"), Arrays.asList(2, "z", "b"));
         List<?>[] expected = new List<?>[] {
                 Arrays.asList(1, "x", "a"),
-        }; 
+        };
         helpProcess(plan, dataManager, expected);
     }
-    
+
     @Test public void testSortOptimizationWithIntervieningSelect() throws Exception {
         String sql = "select count(*) from pm2.g1, (select e1, e2, row_number() over (order by e1) as x from pm1.g1 union select e1, e2, 1 from pm1.g2) as v where pm2.g1.e1 = v.e1 and x = 1";
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, 
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                 RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
                 new String[] {
-                    "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", 
-                    "SELECT g_0.e1 FROM pm2.g1 AS g_0", 
+                    "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0",
+                    "SELECT g_0.e1 FROM pm2.g1 AS g_0",
                     "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -614,7 +614,7 @@ public class TestSortOptimization {
         dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", Arrays.asList("a", 2));
         List<?>[] expected = new List<?>[] {
                 Arrays.asList(2),
-        }; 
+        };
         helpProcess(plan, dataManager, expected);
     }
 

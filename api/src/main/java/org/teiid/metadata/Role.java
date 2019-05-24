@@ -24,11 +24,11 @@ public class Role extends AbstractMetadataRecord {
     private static final long serialVersionUID = 1379125260214964302L;
     private List<String> jaasRoles;
     private boolean anyAuthenticated;
-    
+
     public Role(String name) {
         super.setName(name);
     }
-    
+
     public List<String> getJassRoles() {
         if (this.jaasRoles != null) {
             return new ArrayList<>(this.jaasRoles);
@@ -43,8 +43,8 @@ public class Role extends AbstractMetadataRecord {
     public boolean isAnyAuthenticated() {
         return this.anyAuthenticated;
     }
-    
+
     public void setAnyAuthenticated(boolean b) {
         this.anyAuthenticated = b;
-    }    
+    }
 }

@@ -42,7 +42,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
 
     /** optional criteria defining which row get updated. */
     private Criteria criteria;
-    
+
     private Criteria constraint;
 
     // =========================================================================
@@ -54,7 +54,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      */
     public Update() {
     }
-    
+
 	/**
 	 * Return type of command.
 	 * @return TYPE_UPDATE
@@ -103,14 +103,14 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     public void setGroup(GroupSymbol group) {
         this.group = group;
     }
-    
+
     /**
      * Set the list of CompareCriteria representing updates being made
      * @param changeList List of CompareCriteria
      */
     public void setChangeList(SetClauseList changeList) {
         this.changeList = changeList;
-    }    
+    }
 
     /**
      * Return the list of CompareCriteria representing updates being made
@@ -154,7 +154,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     //                  P A R S E R     M E T H O D S
     // =========================================================================
 
-	
+
     /**
      * Get hashcode for command.  WARNING: This hash code relies on the hash codes of the
      * Group, changeList and Criteria clause.  If the command changes, it's hash code will change and
@@ -199,8 +199,8 @@ public class Update extends ProcedureContainer implements FilteredCommand {
 		}
 
 		Update other = (Update) obj;
-        
-        return 
+
+        return
             EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
             getChangeList().equals(other.getChangeList()) &&
             sameOptionAndHint(other) &&
@@ -213,14 +213,14 @@ public class Update extends ProcedureContainer implements FilteredCommand {
 	 */
 	public Object clone() {
 		Update copy = new Update();
-		
-	    if(group != null) { 
+
+	    if(group != null) {
 	        copy.setGroup(group.clone());
 	    }
-	    
+
 	    copy.setChangeList((SetClauseList)this.changeList.clone());
 
-		if(criteria != null) { 
+		if(criteria != null) {
 			copy.setCriteria((Criteria) criteria.clone());
 		}
 
@@ -230,32 +230,32 @@ public class Update extends ProcedureContainer implements FilteredCommand {
         }
 		return copy;
 	}
-	
+
 	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
 	}
-	
+
 	/**
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable(){
 		return false;
 	}
-	
+
 	public Criteria getConstraint() {
 		return constraint;
 	}
-	
+
 	public void setConstraint(Criteria constraint) {
 		this.constraint = constraint;
 	}
-    
+
 }
 
 

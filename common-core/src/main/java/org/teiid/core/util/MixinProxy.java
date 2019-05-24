@@ -25,19 +25,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MixinProxy implements InvocationHandler {
-	        
+
 	private static class Target {
 		Object obj;
 		Method m;
 	}
-	
+
     private Object[] delegates;
     private Map<Method, Target> methodMap = new HashMap<Method, Target>();
-    
+
     public MixinProxy(Object... delegates) {
         this.delegates = delegates;
     }
-    
+
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
     	Target t = methodMap.get(method);
@@ -64,9 +64,9 @@ public class MixinProxy implements InvocationHandler {
 		}
         return noSuchMethodFound(proxy, method, args);
     }
-    
+
     protected Object noSuchMethodFound(Object proxy, Method method, Object[] args) throws Throwable {
-        throw new RuntimeException("Could not determine target delegate for method " + method); //$NON-NLS-1$ 
+        throw new RuntimeException("Could not determine target delegate for method " + method); //$NON-NLS-1$
     }
 
 }

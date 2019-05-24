@@ -22,7 +22,7 @@ import org.teiid.core.BundleUtil;
 
 public class InvalidSessionException extends TeiidSecurityException {
 	private static final long serialVersionUID = 594047711693346844L;
-	
+
 	/**
      * No-Arg Constructor
      */
@@ -59,7 +59,7 @@ public class InvalidSessionException extends TeiidSecurityException {
      * Construct an instance with an error code and message specified.
      *
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public InvalidSessionException( BundleUtil.Event event, String message ) {
         super(event, message);
@@ -70,15 +70,15 @@ public class InvalidSessionException extends TeiidSecurityException {
      *
      * @param e       An exception to chain to this exception
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public InvalidSessionException( BundleUtil.Event event, Throwable t, String message ) {
         super(event, t, message);
     }
-    
+
     public InvalidSessionException(BundleUtil.Event event) {
         super();
         setCode(event.toString());
-    }    
+    }
 }
 

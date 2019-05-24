@@ -35,18 +35,18 @@ import org.teiid.runtime.HardCodedExecutionFactory;
 
 @SuppressWarnings({"nls"})
 public class TestMaterializationPerformance extends AbstractQueryTest {
-	
+
 	EmbeddedServer es;
-	
+
 	@Before public void setup() {
 		es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
 	}
-	
+
 	@After public void teardown() {
 		es.stop();
 	}
-	
+
 	@Test public void testIndexPerformance() throws Exception {
 		ModelMetaData mmm = new ModelMetaData();
 		mmm.setName("test");
@@ -64,7 +64,7 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
 			assertEquals(String.valueOf(i), getRowCount(), 1);
 		}
 	}
-	
+
 	@Test public void testFunctionBasedIndexPerformance() throws Exception {
 		ModelMetaData mmm = new ModelMetaData();
 		mmm.setName("test");
@@ -82,7 +82,7 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
 			assertEquals(String.valueOf(i), getRowCount(), 1);
 		}
 	}
-	
+
 	@Test public void testLargeWithoutKeys() throws Exception {
         ModelMetaData mmm = new ModelMetaData();
         mmm.setName("test");
@@ -100,5 +100,5 @@ public class TestMaterializationPerformance extends AbstractQueryTest {
             assertEquals(28416, getRowCount());
         }
     }
-	
+
 }

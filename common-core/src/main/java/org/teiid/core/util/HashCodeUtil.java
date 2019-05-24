@@ -44,19 +44,19 @@ public final class HashCodeUtil {
 
 	// Prime number used in improving distribution: 1,000,003
 	private static final int PRIME = 1000003;
-	
+
 	public static final int hashCode(int previous, boolean x) {
-		return (PRIME*previous) + (x ? 1 : 0);		
+		return (PRIME*previous) + (x ? 1 : 0);
 	}
 
 	public static final int hashCode(int previous, int x) {
-		return (PRIME*previous) + x;		
+		return (PRIME*previous) + x;
 	}
 
 	public static final int hashCode(int previous, long x) {
 		// convert to two ints
 		return (PRIME*previous) +
-			   (int) (PRIME*(x >>> 32) + (x & 0xFFFFFFFF));		
+			   (int) (PRIME*(x >>> 32) + (x & 0xFFFFFFFF));
 	}
 
 	public static final int hashCode(int previous, float x) {
@@ -83,7 +83,7 @@ public final class HashCodeUtil {
 	 * Compute a hash code on a large array by walking the list
 	 * and combining the hash code at every exponential index:
 	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
-	 * for good time complexity.  
+	 * for good time complexity.
 	 */
 	public static final int expHashCode(int previous, Object[] x) {
 		if(x == null) {
@@ -103,7 +103,7 @@ public final class HashCodeUtil {
 	 * Compute a hash code on a large collection by walking the list
 	 * and combining the hash code at every exponential index:
 	 * 1, 2, 4, 8, ...  This has been shown to give a good hash
-	 * for good time complexity. 	 
+	 * for good time complexity.
 	 */
 	public static final int expHashCode(int previous, Collection<?> x) {
 		if(x == null || x.size() == 0) {
@@ -139,7 +139,7 @@ public final class HashCodeUtil {
 	public static final int expHashCode(CharSequence x) {
 		return expHashCode(x, true);
 	}
-	
+
 	public static final int expHashCode(CharSequence x, boolean caseSensitive) {
 		if(x == null) {
 			return 0;

@@ -35,7 +35,7 @@ import org.teiid.core.util.PropertiesUtils.InvalidPropertyException;
 public class TestPropertiesUtils {
 
     private final static String TEMP_FILE = UnitTestUtil.getTestScratchPath() + "/temp.properties";  //$NON-NLS-1$
-    
+
 	@After public void tearDown() throws Exception{
         try {
             File temp = new File(TEMP_FILE);
@@ -44,13 +44,13 @@ public class TestPropertiesUtils {
             //ignore
         }
 	}
-	
+
 
     //===================================================================
     //ACTUAL TESTS
     //===================================================================
 
-    
+
 	// ################ putAll(Properties, Properties) ###########################
 
     @Test public void testPutAllWithDefaults(){
@@ -119,83 +119,83 @@ public class TestPropertiesUtils {
 	}
 
 	// ######## clone(Properties, Properties, boolean, boolean) ##################
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testCloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testDeepcloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testCloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testDeepcloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testCloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testDeepcloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testCloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
-	
+
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
 	@Test public void testDeepcloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
-		Properties b = make(MAP_B, null, UNMODIFIABLE); 
+		Properties b = make(MAP_B, null, UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
 	    assertTrue(verifyProps(a, LIST_AB));
 	}
@@ -207,27 +207,27 @@ public class TestPropertiesUtils {
     //===================================================================
 
 	/**
-	 * Checks the Properties against the static test data defined in this Class. 
+	 * Checks the Properties against the static test data defined in this Class.
 	 * @param props Properties to check
 	 * @param chainOfMappings a List of Map objects in order of defaults.  That is,
 	 * the first Map should represent the properties itself, the second Map the internal
-	 * defaults of the properties, the third Map the defaults of the second Map, and so on... 
+	 * defaults of the properties, the third Map the defaults of the second Map, and so on...
 	 * @return true or false for pass or fail
 	 */
 	private static final boolean verifyProps(Properties props, List chainOfMappings){
 	    boolean result = verifyAllPropsPresent(props, chainOfMappings);
 	    if (result){
-	    	result = verifyCorrectMappings(props, chainOfMappings);   
+	    	result = verifyCorrectMappings(props, chainOfMappings);
 	    }
-	    return result; 
+	    return result;
 	}
-	
+
 	/**
 	 * Check that the Set of all keys in the List<Map> chainOfMappings is present in props.
 	 * @param props Properties to check
 	 * @param chainOfMappings a List of Map objects in order of defaults.  That is,
 	 * the first Map should represent the properties itself, the second Map the internal
-	 * defaults of the properties, the third Map the defaults of the second Map, and so on... 
+	 * defaults of the properties, the third Map the defaults of the second Map, and so on...
 	 * @return true all keys are present, false otherwise
 	 */
     private static final boolean verifyAllPropsPresent(Properties props, List chainOfMappings){
@@ -236,13 +236,13 @@ public class TestPropertiesUtils {
 	    while (e.hasMoreElements()) {
             propNames.add( e.nextElement());
 	    }
-	    
+
 	    HashSet testNames = new HashSet();
         Iterator i = chainOfMappings.iterator();
         while (i.hasNext()) {
             Map aMapping = (Map) i.next();
 			testNames.addAll(aMapping.keySet());
-        }	    
+        }
 		return propNames.containsAll(testNames);
 	}
 
@@ -258,7 +258,7 @@ public class TestPropertiesUtils {
 	 * @param props Properties to check
 	 * @param chainOfMappings a List of Map objects in order of defaults.  That is,
 	 * the first Map should represent the properties itself, the second Map the internal
-	 * defaults of the properties, the third Map the defaults of the second Map, and so on... 
+	 * defaults of the properties, the third Map the defaults of the second Map, and so on...
 	 * @return true if props correctly reflects the chainOfMappings, false otherwise
 	 */
 	private static final boolean verifyCorrectMappings(Properties props, List chainOfMappings){
@@ -293,7 +293,7 @@ public class TestPropertiesUtils {
 	private static final Properties make(Map mappings, Properties defaults, boolean makeUnmodifiable){
 	    Properties props = null;
 	    if (defaults != null){
-	    	props = new Properties(defaults);    
+	    	props = new Properties(defaults);
 	    } else {
 	        props = new Properties();
 	    }
@@ -307,7 +307,7 @@ public class TestPropertiesUtils {
 
 	private static final boolean UNMODIFIABLE = true;
 	private static final boolean DEEP_CLONE = true;
-	
+
 	private static final String PROP_NAME_1 = "prop1"; //$NON-NLS-1$
 	private static final String PROP_NAME_2 = "prop2"; //$NON-NLS-1$
 	private static final String PROP_NAME_3 = "prop3"; //$NON-NLS-1$
@@ -316,7 +316,7 @@ public class TestPropertiesUtils {
 	private static final String PROP_NAME_6 = "prop6"; //$NON-NLS-1$
 
 	//"a", "b", or "c" designates which of the test Properties
-	//the values will go in	
+	//the values will go in
 	private static final String PROP_VALUE_1A = "value1a"; //$NON-NLS-1$
 	private static final String PROP_VALUE_1B = "value1b"; //$NON-NLS-1$
 	private static final String PROP_VALUE_2A = "value2a"; //$NON-NLS-1$
@@ -326,7 +326,7 @@ public class TestPropertiesUtils {
 	private static final String PROP_VALUE_4C = "value4c"; //$NON-NLS-1$
 	private static final String PROP_VALUE_5B = "value5b"; //$NON-NLS-1$
 	private static final String PROP_VALUE_6C = "value6c"; //$NON-NLS-1$
-	
+
 	private static final Map<String, String> MAP_A;
 	private static final Map<String, String> MAP_B;
 	private static final Map<String, String> MAP_C;
@@ -353,7 +353,7 @@ public class TestPropertiesUtils {
 	    temp.put(PROP_NAME_4, PROP_VALUE_4C);
 	    temp.put(PROP_NAME_6, PROP_VALUE_6C);
 		MAP_C = Collections.unmodifiableMap(temp);
-		//LISTS OF BINDINGS		
+		//LISTS OF BINDINGS
 		List<Map<String, String>> tempList = new ArrayList<Map<String, String>>(1);
 		tempList.add(MAP_A);
 		LIST_A = Collections.unmodifiableList(tempList);
@@ -370,10 +370,10 @@ public class TestPropertiesUtils {
 		tempList.add(MAP_C);
 		LIST_ABC = Collections.unmodifiableList(tempList);
 	}
-    
+
     @Test public void testNestedProperties() throws Exception {
-        System.setProperty("testdirectory", "c:/metamatrix/testdirectory"); //$NON-NLS-1$ //$NON-NLS-2$ 
-        
+        System.setProperty("testdirectory", "c:/metamatrix/testdirectory"); //$NON-NLS-1$ //$NON-NLS-2$
+
         Properties p = new Properties(System.getProperties());
         p.setProperty("key1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key2", "${key1}/value2"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -382,36 +382,36 @@ public class TestPropertiesUtils {
         p.setProperty("key5", "${testdirectory}/testdata"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key7", "anotherdir/${testdirectory}/${key1}"); //$NON-NLS-1$ //$NON-NLS-2$
         int currentSize = p.size();
-        
+
         Properties m = PropertiesUtils.resolveNestedProperties(p);
         assertEquals("value1/value2", m.getProperty("key2")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(new Integer(-234), m.get("key3")); //$NON-NLS-1$ 
+        assertEquals(new Integer(-234), m.get("key3")); //$NON-NLS-1$
         assertEquals("value1/value2/value4", m.getProperty("key4")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("c:/metamatrix/testdirectory/testdata", m.getProperty("key5")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("anotherdir/c:/metamatrix/testdirectory/value1", m.getProperty("key7")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(p == m); // no cloning.
         assertTrue(currentSize == m.size());
-        
+
         p.setProperty("key6", "${foo}"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         try {
         	m = PropertiesUtils.resolveNestedProperties(p);
         	fail("must have failed to resovle as {foo} does not exist"); //$NON-NLS-1$
         } catch(RuntimeException e) {
         	// pass
         }
-        
-        
-        // JIRA:  TEIID-909 - The resolveNestedProperties logic goes in a loop when the key is also in the  value as ${key}.  
+
+
+        // JIRA:  TEIID-909 - The resolveNestedProperties logic goes in a loop when the key is also in the  value as ${key}.
         Properties dups = new Properties();
         dups.setProperty("usethis", "${usethis}");
-        
+
         dups = PropertiesUtils.resolveNestedProperties(dups);
-        
-        
+
+
 
     }
-    
+
     @Test public void testGetInvalidInt() {
     	Properties p = new Properties();
     	p.setProperty("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -422,13 +422,13 @@ public class TestPropertiesUtils {
     		assertEquals("TEIID10037 Property 'x' with value 'y' is not a valid Integer.", e.getMessage()); //$NON-NLS-1$
     	}
     }
-    
+
     static class Bean {
     	private int prop;
     	private String prop1;
     	private double prop2;
     	private List<String> prop3;
-    	
+
 		public int getProp() {
 			return prop;
 		}
@@ -454,7 +454,7 @@ public class TestPropertiesUtils {
 			this.prop3 = prop3;
 		}
     }
-    
+
     @Test public void testSetBeanProperties() {
     	Bean bean = new Bean();
     	Properties p = new Properties();
@@ -462,45 +462,45 @@ public class TestPropertiesUtils {
     	p.setProperty("prop1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
     	p.setProperty("prop2", "2"); //$NON-NLS-1$ //$NON-NLS-2$
     	p.setProperty("prop3", "3"); //$NON-NLS-1$ //$NON-NLS-2$
-    	
+
     	p = new Properties(p);
     	p.put("object", new Object()); //$NON-NLS-1$
-    	
+
     	PropertiesUtils.setBeanProperties(bean, p, null);
-    	
+
     	assertEquals(0, bean.getProp());
     	assertEquals("1", bean.getProp1()); //$NON-NLS-1$
     	assertEquals(2d, bean.getProp2(), 0);
     	assertEquals(Arrays.asList("3"), bean.getProp3()); //$NON-NLS-1$
-    	
+
     	p.setProperty("prop", "?"); //$NON-NLS-1$ //$NON-NLS-2$
-    	
+
     	try {
     		PropertiesUtils.setBeanProperties(bean, p, null);
     		fail("expected exception"); //$NON-NLS-1$
     	} catch (InvalidPropertyException e) {
-    		
+
     	}
     }
-    
+
     @Test public void testGetInt() {
     	Properties p = new Properties();
     	p.setProperty("prop", "0  "); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(PropertiesUtils.getIntProperty(p, "prop", -1), 0); //$NON-NLS-1$
     }
-    
+
     public static class MyBean {
     	int val;
-    	
+
     	public int getVal() {
 			return val;
 		}
-    	
+
     	public void setVal(int val) {
 			this.val = val;
 		}
     }
-    
+
     @Test public void testCaseSensitive() {
     	Properties p = new Properties();
     	p.setProperty("org.teiid.val", "100"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -508,7 +508,7 @@ public class TestPropertiesUtils {
     	PropertiesUtils.setBeanProperties(test, p, "org.teiid", true);
     	assertEquals(100, test.getVal());
     }
-    
+
     @Test public void testCombinedProperties() {
         String old = System.setProperty("org.teiid.val", "200");
         try {
@@ -519,7 +519,7 @@ public class TestPropertiesUtils {
             if (old != null) {
                 System.setProperty("org.teiid.val", old);
             } else {
-                System.clearProperty("org.teiid.val");                
+                System.clearProperty("org.teiid.val");
             }
         }
     }

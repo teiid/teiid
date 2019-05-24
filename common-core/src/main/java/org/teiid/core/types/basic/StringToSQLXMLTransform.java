@@ -57,12 +57,12 @@ public class StringToSQLXMLTransform extends Transform {
 	public static Type isXml(Reader reader) throws TransformationException {
 		Type type = Type.ELEMENT;
 		XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
-        try{        
+        try{
              XMLStreamReader xmlReader = inputFactory.createXMLStreamReader(reader);
              int event = xmlReader.getEventType();
         	 if  (event == XMLEvent.START_DOCUMENT && xmlReader.getLocation().getColumnNumber() != 1) {
         		 type = Type.DOCUMENT;
-        	 } 
+        	 }
              while (xmlReader.hasNext()) {
             	 xmlReader.next();
              }
@@ -92,10 +92,10 @@ public class StringToSQLXMLTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.XML;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;
 	}
-	
+
 }

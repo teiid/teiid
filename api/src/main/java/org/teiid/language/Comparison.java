@@ -34,7 +34,7 @@ public class Comparison extends Condition implements Predicate {
 		LE(Tokens.LE),
 		GT(Tokens.GT),
 		GE(Tokens.GE);
-		
+
 		private String toString;
 		Operator(String toString) {
 			this.toString = toString;
@@ -44,17 +44,17 @@ public class Comparison extends Condition implements Predicate {
 			return toString;
 		}
 	}
-	
+
     private Expression leftExpression;
     private Expression rightExpression;
     private Operator operator;
-    
+
     public Comparison(Expression left, Expression right, Operator operator) {
         leftExpression = left;
         rightExpression = right;
         this.operator = operator;
     }
-    
+
     /**
      * Get left expression.
      * @return Left expression
@@ -86,14 +86,14 @@ public class Comparison extends Condition implements Predicate {
     public void setLeftExpression(Expression expression) {
         this.leftExpression = expression;
     }
-    
+
     /**
      * Set right expression of criteria
      */
     public void setRightExpression(Expression expression) {
         this.rightExpression = expression;
     }
-    
+
     /**
      * Set the operator
      * @see Operator
@@ -101,9 +101,9 @@ public class Comparison extends Condition implements Predicate {
     public void setOperator(Operator operator) {
         this.operator = operator;
     }
-    
+
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
 }

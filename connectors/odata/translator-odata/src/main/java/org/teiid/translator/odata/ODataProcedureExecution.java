@@ -54,11 +54,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 
 		this.visitor = new ODataProcedureVisitor(translator, metadata);
 		this.visitor.visitNode(command);
-		
+
 		if (!this.visitor.exceptions.isEmpty()) {
 			throw this.visitor.exceptions.get(0);
 		}
-		
+
 		this.expectedColumnTypes = command.getResultSetColumnTypes();
 	}
 

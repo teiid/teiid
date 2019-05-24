@@ -38,7 +38,7 @@ public abstract class PropertyVisitor {
     }
     void visit(String name, Property property) {
     }
-    
+
     void accept(String name, Property property) {
         if (property instanceof ArrayProperty) {
             visit(name, (ArrayProperty)property);
@@ -52,6 +52,6 @@ public abstract class PropertyVisitor {
             visit(name, (FileProperty)property);
         } else {
             visit(name, property);
-        }        
+        }
     }
 }

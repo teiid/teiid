@@ -26,24 +26,24 @@ import junit.framework.TestCase;
 
 public class TestExpressionSymbol extends TestCase {
 
-    
+
     public void testExpressionHashCode() {
         Expression expr1 = new Constant(new Integer(1));
         Expression expr2 = new Constant(new Integer(2));
         ExpressionSymbol symbol1 = new ExpressionSymbol("foo", expr1); //$NON-NLS-1$
         ExpressionSymbol symbol2 = new ExpressionSymbol("bar", expr2); //$NON-NLS-1$
-        
+
         assertFalse(symbol1.hashCode() == symbol2.hashCode());
     }
-    
+
     public void testExpressionHashCode1() {
         Expression expr1 = new Constant(new Integer(1));
         Expression expr2 = new Constant(new Integer(1));
         ExpressionSymbol symbol1 = new ExpressionSymbol("foo", expr1); //$NON-NLS-1$
         ExpressionSymbol symbol2 = new ExpressionSymbol("bar", expr2); //$NON-NLS-1$
-        
+
         assertTrue(symbol1.hashCode() == symbol2.hashCode());
     }
 
-    
+
 }

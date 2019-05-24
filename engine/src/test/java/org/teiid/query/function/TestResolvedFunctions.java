@@ -37,62 +37,62 @@ import junit.framework.TestCase;
 public class TestResolvedFunctions extends TestCase {
 
     public void testPowerIntegers() throws Exception {
-        
+
         String sql = "power(10, 10)"; //$NON-NLS-1$
-        
+
         //BigInteger is a closer match here since the second argument matches
         assertEquals(DataTypeManager.DefaultDataClasses.BIG_INTEGER, getFunctionResult(sql).getClass());
     }
-    
+
     public void testPowerDoubles() throws Exception {
-        
+
         String sql = "power(10.01, 10.01)"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
 
     public void testPowerFloats() throws Exception {
-        
+
         String sql = "power(convert(10.01, float), convert(10.01, float))"; //$NON-NLS-1$
-        
+
         //since the second argument cannot be converted to an integer, the result is a double
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
-    
+
     public void testPowerBigInteger() throws Exception {
-        
+
         String sql = "power(convert(10.01, BigInteger), 10)"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.BIG_INTEGER, getFunctionResult(sql).getClass());
     }
-    
+
     //there should only be one signature for ceiling. The float argument will be converted to a double
     public void testCeilingFloat() throws Exception {
-        
+
         String sql = "ceiling(convert(10.01, float))"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
-    
+
     //same as above
     public void testFloorFloat() throws Exception {
-        
+
         String sql = "floor(convert(10.01, float))"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.DOUBLE, getFunctionResult(sql).getClass());
     }
-    
+
     public void testCurrentDate() throws Exception {
-        
+
         String sql = "current_date()"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.DATE, getFunctionResult(sql).getClass());
     }
-    
+
     public void testCharLength() throws Exception {
-        
+
         String sql = "char_length('a')"; //$NON-NLS-1$
-        
+
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, getFunctionResult(sql).getClass());
     }
 
@@ -105,5 +105,5 @@ public class TestResolvedFunctions extends TestCase {
         Evaluator eval = new Evaluator(null, null, new CommandContext());
         return eval.evaluate(expr, null);
     }
-    
+
 }

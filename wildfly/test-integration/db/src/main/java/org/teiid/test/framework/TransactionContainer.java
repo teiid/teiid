@@ -14,7 +14,7 @@ public abstract class TransactionContainer {
 
 
     protected TransactionContainer() {
-	
+
     }
 
 
@@ -36,7 +36,7 @@ public abstract class TransactionContainer {
 
 		test.setup();
 
-	    } catch (TransactionRuntimeException tre) {  
+	    } catch (TransactionRuntimeException tre) {
 			if (!test.exceptionExpected()) {
 			    tre.printStackTrace();
 			}
@@ -73,13 +73,13 @@ public abstract class TransactionContainer {
 	    test.before();
 
 	    debug("	test.testcase");
-	    
+
 	try {
 
 
 	    // run the test
 	    test.testCase();
-	    
+
 	} catch (Throwable e) {
 	    // this catches the non-SQLExceptions that the AbstractQueryTest catches.
 	    // And therefore, the exception needs to be set as an application exception,
@@ -87,7 +87,7 @@ public abstract class TransactionContainer {
 	    test.setApplicationException(e);
 
 	}
-	
+
 	    debug("	test.after");
 
 	    test.after();

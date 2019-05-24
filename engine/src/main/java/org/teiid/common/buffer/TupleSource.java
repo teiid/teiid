@@ -41,10 +41,10 @@ public interface TupleSource {
      */
 	List<?> nextTuple()
 		throws TeiidComponentException, TeiidProcessingException;
-	
+
     /**
-     * Closes the Tuple Source.  
-     */    
+     * Closes the Tuple Source.
+     */
 	void closeSource();
-	
+
 }

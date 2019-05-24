@@ -51,7 +51,7 @@ public class TestJoinImpl extends TestCase {
                                  type,
                                  criteria);
     }
-    
+
     public static Join example(JoinType type) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(type));
     }

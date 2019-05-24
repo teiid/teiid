@@ -43,7 +43,7 @@ public class TestCollectorVisitor {
 
     public Set<String> getStringSet(Collection<? extends Object> objs) {
         Set<String> strings = new HashSet<String>();
-        
+
         for (Object obj : objs) {
             if(obj == null) {
                 strings.add(null);
@@ -51,30 +51,30 @@ public class TestCollectorVisitor {
                 strings.add(obj.toString());
             }
         }
-        
+
         return strings;
     }
-    
+
     public void helpTestCollection(LanguageObject obj, Class type, String[] objects) {
         Set actualObjects = getStringSet(CollectorVisitor.collectObjects(type, obj));
         Set expectedObjects = new HashSet(Arrays.asList(objects));
-        
+
         assertEquals("Did not get expected objects", expectedObjects, actualObjects); //$NON-NLS-1$
     }
- 
+
     public LanguageObject example1() {
         NamedTable g = new NamedTable("g1", null, null); //$NON-NLS-1$
-        List symbols = new ArrayList();        
+        List symbols = new ArrayList();
         symbols.add(new ColumnReference(g, "e1", null, String.class)); //$NON-NLS-1$
         Function function = new Function("length", Arrays.asList(new ColumnReference(g, "e2", null, String.class)), Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
         symbols.add(function);
         List groups = new ArrayList();
         groups.add(g);
         Select q = new Select(symbols, false, groups, null, null, null, null);
-             
-        return q;   
+
+        return q;
     }
- 
+
     @Test public void testCollection1() {
         helpTestCollection(example1(), ColumnReference.class, new String[] {"g1.e1", "g1.e2" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -91,27 +91,27 @@ public class TestCollectorVisitor {
     public void helpTestElementsUsedByGroups(LanguageObject obj, String[] elements, String[] groups) {
         Set<String> actualElements = getStringSet(CollectorVisitor.collectElements(obj));
         Set<String> actualGroups = getStringSet(CollectorVisitor.collectGroupsUsedByElements(obj));
-        
+
         Set<String> expectedElements = new HashSet<String>(Arrays.asList(elements));
         Set<String> expectedGroups = new HashSet<String>(Arrays.asList(groups));
-        
+
         assertEquals("Did not get expected elements", expectedElements, actualElements); //$NON-NLS-1$
         assertEquals("Did not get expected groups", expectedGroups, actualGroups);         //$NON-NLS-1$
     }
-    
+
     @Test public void test1() {
         NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
         ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
-        
+
         helpTestElementsUsedByGroups(e1, new String[] {"g1.e1"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void test2() {
         NamedTable g1 = new NamedTable("g1", null, null); //$NON-NLS-1$
         ColumnReference e1 = new ColumnReference(g1, "e1", null, String.class); //$NON-NLS-1$
         ColumnReference e2 = new ColumnReference(g1, "e2", null, String.class); //$NON-NLS-1$
         Comparison cc = new Comparison(e1, e2, Operator.EQ);
-        
+
         helpTestElementsUsedByGroups(cc, new String[] {"g1.e1", "g1.e2"}, new String[] {"g1"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 

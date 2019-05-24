@@ -59,7 +59,7 @@ public class StoredProcedure extends ProcedureContainer {
 
     //stored procedure is treated as a group
     private GroupSymbol group;
-    
+
     //whether parameters should be displayed in traditional indexed
     //manor, or as named parameters
     private boolean displayNamedParameters;
@@ -68,7 +68,7 @@ public class StoredProcedure extends ProcedureContainer {
     private boolean isProcedureRelational;
 
 	private boolean pushedInQuery;
-    
+
     /**
      * Constructs a default instance of this class.
      */
@@ -151,7 +151,7 @@ public class StoredProcedure extends ProcedureContainer {
 
         mapOfParameters.put(key, parameter);
     }
-    
+
     /**
     * Returns a List of SPParameter objects for this stored procedure
     *
@@ -159,7 +159,7 @@ public class StoredProcedure extends ProcedureContainer {
     public Collection<SPParameter> getParameters(){
         return mapOfParameters.values();
     }
-    
+
     public Map<Integer, SPParameter> getMapOfParameters() {
 		return mapOfParameters;
 	}
@@ -237,7 +237,7 @@ public class StoredProcedure extends ProcedureContainer {
     	}
     	return false;
     }
-    
+
     public boolean returnParameters() {
     	return isCallableStatement || !returnsResultSet();
     }
@@ -278,8 +278,8 @@ public class StoredProcedure extends ProcedureContainer {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -297,10 +297,10 @@ public class StoredProcedure extends ProcedureContainer {
     	if(!(obj instanceof StoredProcedure)) {
     		return false;
 		}
-    	
+
     	StoredProcedure other = (StoredProcedure)obj;
-    	
-		return sameOptionAndHint(other) && 
+
+		return sameOptionAndHint(other) &&
 		this.getGroup().equals(other.getGroup()) &&
 		this.mapOfParameters.equals(other.mapOfParameters) &&
 		this.pushedInQuery == other.pushedInQuery;
@@ -320,7 +320,7 @@ public class StoredProcedure extends ProcedureContainer {
         }
         return group;
     }
-	
+
 	/**
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
@@ -330,9 +330,9 @@ public class StoredProcedure extends ProcedureContainer {
 		}
 		return Query.areColumnsCachable(getProjectedSymbols());
 	}
-    
-    /** 
-     * Indicates whether parameters should be displayed in traditional 
+
+    /**
+     * Indicates whether parameters should be displayed in traditional
      * indexed manor, or as named parameters
      * @return Returns whether to display parameters as named or not
      * @since 4.3
@@ -341,9 +341,9 @@ public class StoredProcedure extends ProcedureContainer {
         return this.displayNamedParameters;
     }
 
-    
-    /** 
-     * Indicate whether parameters should be displayed in traditional 
+
+    /**
+     * Indicate whether parameters should be displayed in traditional
      * indexed manor, or as named parameters
      * @param namedParameters whether to display parameters as named or not
      * @since 4.3
@@ -363,11 +363,11 @@ public class StoredProcedure extends ProcedureContainer {
     	}
     	return parameters;
     }
-    
+
     public boolean isProcedureRelational() {
 		return isProcedureRelational;
 	}
-    
+
     public void setProcedureRelational(boolean isProcedureRelational) {
 		this.isProcedureRelational = isProcedureRelational;
 	}
@@ -379,13 +379,13 @@ public class StoredProcedure extends ProcedureContainer {
 	public void setCallableStatement(boolean isCallableStatement) {
 		this.isCallableStatement = isCallableStatement;
 	}
-	    
+
 	public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
 		LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
 	    for (SPParameter element : this.getInputParameters()) {
-	        map.put(element.getParameterSymbol(), element.getExpression());            
+	        map.put(element.getParameterSymbol(), element.getExpression());
 	    } // for
-	    
+
 	    return map;
 	}
 
@@ -400,7 +400,7 @@ public class StoredProcedure extends ProcedureContainer {
 	public boolean isPushedInQuery() {
 		return pushedInQuery;
 	}
-	
+
 	public void setPushedInQuery(boolean pushedInQuery) {
 		this.pushedInQuery = pushedInQuery;
 	}

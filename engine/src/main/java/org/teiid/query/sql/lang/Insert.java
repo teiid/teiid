@@ -44,12 +44,12 @@ public class Insert extends ProcedureContainer {
 
     private List<ElementSymbol> variables = new LinkedList<ElementSymbol>();
     private List<Expression> values = new LinkedList<Expression>();
-    
+
     private QueryCommand queryExpression;
-    
+
     private TupleSource tupleSource;
     private Criteria constraint;
-    
+
     private boolean upsert;
 
     /**
@@ -93,7 +93,7 @@ public class Insert extends ProcedureContainer {
     public void setGroup(GroupSymbol group) {
         this.group = group;
     }
-    
+
     /**
      * Return an ordered List of variables, may be null if no columns were specified
      * @return List of {@link org.teiid.query.sql.symbol.ElementSymbol}
@@ -135,13 +135,13 @@ public class Insert extends ProcedureContainer {
         this.values.clear();
         this.values.addAll(values);
     }
-    
+
     /**
      * Set a collection of variables that replace the existing variables
      * @param vars Variables to be set on this object (ElementSymbols)
      */
     public void setVariables(Collection<ElementSymbol> vars) {
-        this.variables.clear();        
+        this.variables.clear();
         this.variables.addAll(vars);
     }
 
@@ -156,7 +156,7 @@ public class Insert extends ProcedureContainer {
     public void setQueryExpression( QueryCommand query ) {
     	if (query instanceof Query) {
     		Query expr = (Query)query;
-    		//a single row constructor query is the same as values 
+    		//a single row constructor query is the same as values
     		if (expr.isRowConstructor()) {
     			this.values.clear();
     			this.queryExpression = null;
@@ -170,17 +170,17 @@ public class Insert extends ProcedureContainer {
     			return;
     		}
     	}
-        this.queryExpression = query;        
+        this.queryExpression = query;
     }
-    
+
     public QueryCommand getQueryExpression() {
-        return this.queryExpression;        
+        return this.queryExpression;
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
     /**
      * Get hashcode for command.  WARNING: This hash code relies on the hash codes of the
      * Group, variables.  If the command changes, it's hash code will change and
@@ -206,41 +206,41 @@ public class Insert extends ProcedureContainer {
     	if(this == obj) {
     		return true;
 		}
-        
+
 		// Quick fail tests
     	if(!(obj instanceof Insert)) {
     		return false;
 		}
 
 		Insert other = (Insert) obj;
-        
+
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
                EquivalenceUtil.areEqual(getValues(), other.getValues()) &&
                EquivalenceUtil.areEqual(getVariables(), other.getVariables()) &&
                sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getQueryExpression(), other.getQueryExpression()) &&
                this.upsert == other.upsert;
-               
+
     }
-    
+
 	/**
 	 * Return a deep copy of this Insert.
 	 * @return Deep copy of Insert
 	 */
 	public Object clone() {
 	    GroupSymbol copyGroup = null;
-	    if(group != null) { 
-	    	copyGroup = group.clone();    
+	    if(group != null) {
+	    	copyGroup = group.clone();
 	    }
-	    
+
 	    List<ElementSymbol> copyVars = LanguageObject.Util.deepClone(getVariables(), ElementSymbol.class);
 
         List<Expression> copyVals = null;
 
         if ( getValues() != null) {
-        	copyVals = LanguageObject.Util.deepClone(getValues(), Expression.class);    
+        	copyVals = LanguageObject.Util.deepClone(getValues(), Expression.class);
         }
-        
+
 	    Insert copy = new Insert(copyGroup, copyVars, copyVals);
 	    if (this.queryExpression != null) {
 	    	copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
@@ -252,46 +252,46 @@ public class Insert extends ProcedureContainer {
         copy.upsert = this.upsert;
 		return copy;
 	}
-	
+
 	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List<Expression> getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
 	}
-	
+
 	/**
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
 		return false;
 	}
-	
+
 	public void setTupleSource(TupleSource tupleSource) {
 		this.tupleSource = tupleSource;
 	}
-	
+
 	public TupleSource getTupleSource() {
 		return tupleSource;
 	}
-	
+
 	public Criteria getConstraint() {
 		return constraint;
 	}
-	
+
 	public void setConstraint(Criteria constraint) {
 		this.constraint = constraint;
 	}
-	
+
 	public boolean isUpsert() {
 		return upsert;
 	}
-	
+
 	public void setUpsert(boolean merge) {
 		this.upsert = merge;
 	}
-    
+
 }

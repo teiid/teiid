@@ -37,19 +37,19 @@ public class UnresolvedSymbolDescription implements Serializable {
      * Construct a description given the symbol and it's description.
      * @param symbol Unresolved symbol
      * @param description Description of error
-     */	
+     */
 	public UnresolvedSymbolDescription(String symbol, String description) {
 		this.symbol = symbol;
 		this.description = description;
 	}
-	
+
     public UnresolvedSymbolDescription(ElementSymbol symbol,
             String description) {
         this.symbol = symbol.toString();
         this.object = symbol;
         this.description = description;
     }
-    
+
     public LanguageObject getObject() {
         return object;
     }
@@ -61,27 +61,27 @@ public class UnresolvedSymbolDescription implements Serializable {
 	public String getSymbol() {
 		return this.symbol;
 	}
-	
+
     /**
      * Get the description of the problem
      * @return Problem description
      */
 	public String getDescription() {
 		return this.description;
-	}	
-	
+	}
+
     /**
      * Get string representation of the unresolved symbol description
      * @return String representation
      */
 	public String toString() {
 		StringBuffer str = new StringBuffer();
-		if(symbol != null) { 
+		if(symbol != null) {
 			str.append("Unable to resolve '"); //$NON-NLS-1$
 			str.append(symbol);
 			str.append("': "); //$NON-NLS-1$
 		}
-		if(description != null) { 
+		if(description != null) {
 			str.append(description);
 		} else {
 			str.append("Unknown reason"); //$NON-NLS-1$

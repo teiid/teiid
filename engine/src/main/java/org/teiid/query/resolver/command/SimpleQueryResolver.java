@@ -51,16 +51,16 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 public class SimpleQueryResolver implements CommandResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
      */
     public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
     	Query query = (Query) command;
-    	
+
     	resolveWith(metadata, query);
-        
+
         try {
             QueryResolverVisitor qrv = new QueryResolverVisitor(query, metadata);
             qrv.visit(query);
@@ -93,17 +93,17 @@ public class SimpleQueryResolver implements CommandResolver {
             }
             throw e;
         }
-                                       
+
         if (query.getLimit() != null) {
             ResolverUtil.resolveLimit(query.getLimit());
         }
-        
+
         if (query.getOrderBy() != null) {
         	ResolverUtil.resolveOrderBy(query.getOrderBy(), query, metadata);
         }
-        
+
         List<Expression> symbols = query.getSelect().getProjectedSymbols();
-        
+
         if (query.getInto() != null) {
             GroupSymbol symbol = query.getInto().getGroup();
             ResolverUtil.resolveImplicitTempGroup(metadata, symbol, symbols);
@@ -120,11 +120,11 @@ public class SimpleQueryResolver implements CommandResolver {
 		LinkedHashSet<GroupSymbol> discoveredGroups = new LinkedHashSet<GroupSymbol>();
 		for (WithQueryCommand obj : query.getWith()) {
             QueryCommand queryExpression = obj.getCommand();
-            
+
             QueryResolver.setChildMetadata(queryExpression, query);
-            
+
             QueryCommand recursive = null;
-            
+
             try {
             	QueryResolver.resolveCommand(queryExpression, metadata.getMetadata(), false);
             } catch (QueryResolverException e) {
@@ -134,8 +134,8 @@ public class SimpleQueryResolver implements CommandResolver {
             	SetQuery setQuery = (SetQuery)queryExpression;
             	//valid form must be a union with nothing above
             	if (setQuery.getOperation() != Operation.UNION
-            			|| setQuery.getLimit() != null 
-            			|| setQuery.getOrderBy() != null 
+            			|| setQuery.getLimit() != null
+            			|| setQuery.getOrderBy() != null
             			|| setQuery.getOption() != null) {
             		throw e;
             	}
@@ -157,7 +157,7 @@ public class SimpleQueryResolver implements CommandResolver {
             		es.setType(singleElementSymbol.getType());
 				}
             	projectedSymbols = obj.getColumns();
-            } 
+            }
             TempMetadataID id = (TempMetadataID) obj.getGroupSymbol().getMetadataID();
             TempMetadataID newId = ResolverUtil.addTempGroup(metadata, obj.getGroupSymbol(), projectedSymbols, true);
             if (id == null) {
@@ -186,7 +186,7 @@ public class SimpleQueryResolver implements CommandResolver {
             		es.setGroupSymbol(obj.getGroupSymbol());
 				}
             }
-            
+
             if (recursive != null) {
             	QueryResolver.setChildMetadata(recursive, query);
             	QueryResolver.resolveCommand(recursive, metadata.getMetadata(), false);
@@ -196,7 +196,7 @@ public class SimpleQueryResolver implements CommandResolver {
         }
 	}
 
-    private static GroupSymbol resolveAllInGroup(MultipleElementSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {       
+    private static GroupSymbol resolveAllInGroup(MultipleElementSymbol allInGroupSymbol, Set<GroupSymbol> groups, QueryMetadataInterface metadata) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         String groupAlias = allInGroupSymbol.getGroup().getName();
         List<GroupSymbol> groupSymbols = ResolverUtil.findMatchingGroups(groupAlias, groups, metadata);
         if(groupSymbols.isEmpty() || groupSymbols.size() > 1) {
@@ -208,7 +208,7 @@ public class SimpleQueryResolver implements CommandResolver {
         allInGroupSymbol.setGroup(groupSymbols.get(0).clone());
         return groupSymbols.get(0);
     }
-    
+
     public static class QueryResolverVisitor extends PostOrderNavigator {
 
         private LinkedHashSet<GroupSymbol> currentGroups = new LinkedHashSet<GroupSymbol>();
@@ -216,7 +216,7 @@ public class SimpleQueryResolver implements CommandResolver {
         private List<GroupSymbol> implicitGroups = new LinkedList<GroupSymbol>();
         private TempMetadataAdapter metadata;
         private Query query;
-        
+
         public QueryResolverVisitor(Query query, TempMetadataAdapter metadata) {
             super(new ResolverVisitor(metadata, null, query.getExternalGroupContexts()));
             ResolverVisitor visitor = (ResolverVisitor)getVisitor();
@@ -224,7 +224,7 @@ public class SimpleQueryResolver implements CommandResolver {
             this.query = query;
             this.metadata = metadata;
         }
-        
+
         protected void postVisitVisitor(LanguageObject obj) {
             super.postVisitVisitor(obj);
             ResolverVisitor visitor = (ResolverVisitor)getVisitor();
@@ -234,7 +234,7 @@ public class SimpleQueryResolver implements CommandResolver {
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30103, e);
 			}
         }
-                
+
         /**
          * Resolving a Query requires a special ordering
          */
@@ -266,7 +266,7 @@ public class SimpleQueryResolver implements CommandResolver {
             }
             visitNode(obj.getLimit());
         }
-        
+
         public void visit(GroupSymbol obj) {
             try {
                 ResolverUtil.resolveGroup(obj, metadata);
@@ -274,10 +274,10 @@ public class SimpleQueryResolver implements CommandResolver {
                  throw new TeiidRuntimeException(err);
             }
         }
-                        
+
         private void resolveSubQuery(SubqueryContainer<?> obj, Collection<GroupSymbol> externalGroups) {
             Command command = obj.getCommand();
-            
+
             QueryResolver.setChildMetadata(command, query);
             command.pushNewResolvingContext(externalGroups);
             for (GroupSymbol gs : externalGroups) {
@@ -288,14 +288,14 @@ public class SimpleQueryResolver implements CommandResolver {
                     command.getTemporaryMetadata().removeTempGroup(gs.getName());
                 }
             }
-            
+
             try {
                 QueryResolver.resolveCommand(command, metadata.getMetadata(), false);
             } catch (TeiidException err) {
                  throw new TeiidRuntimeException(err);
             }
         }
-        
+
         public void visit(MultipleElementSymbol obj) {
         	// Determine group that this symbol is for
             try {
@@ -310,15 +310,15 @@ public class SimpleQueryResolver implements CommandResolver {
                 obj.setElementSymbols(elementSymbols);
             } catch (TeiidException err) {
                  throw new TeiidRuntimeException(err);
-            } 
+            }
         }
 
         private List<ElementSymbol> resolveSelectableElements(GroupSymbol group) throws QueryMetadataException,
                                                                  TeiidComponentException {
             List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
-            
+
             List<ElementSymbol> result = new ArrayList<ElementSymbol>(elements.size());
-   
+
             // Look for elements that are not selectable and remove them
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT) && !metadata.isPseudo(element.getMetadataID())) {
@@ -329,15 +329,15 @@ public class SimpleQueryResolver implements CommandResolver {
             }
             return result;
         }
-        
+
         public void visit(ScalarSubquery obj) {
             resolveSubQuery(obj, this.currentGroups);
         }
-        
+
         public void visit(ExistsCriteria obj) {
             resolveSubQuery(obj, this.currentGroups);
         }
-        
+
         public void visit(SubqueryCompareCriteria obj) {
             visitNode(obj.getLeftExpression());
             if (obj.getCommand() != null) {
@@ -346,13 +346,13 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getArrayExpression());
             postVisitVisitor(obj);
         }
-        
+
         public void visit(SubquerySetCriteria obj) {
             visitNode(obj.getExpression());
             resolveSubQuery(obj, this.currentGroups);
             postVisitVisitor(obj);
         }
-        
+
         @Override
         public void visit(TextTable obj) {
         	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
@@ -371,14 +371,14 @@ public class SimpleQueryResolver implements CommandResolver {
 				}
 			}
         }
-        
+
         @Override
         public void visit(ArrayTable obj) {
         	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
         	visitNode(obj.getArrayValue());
 			postTableFunctionReference(obj, saved);
         }
-        
+
         @Override
         public void visit(XMLTable obj) {
         	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
@@ -399,7 +399,7 @@ public class SimpleQueryResolver implements CommandResolver {
 				throw new TeiidRuntimeException(e);
 			}
         }
-        
+
         @Override
         public void visit(ObjectTable obj) {
         	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
@@ -419,16 +419,16 @@ public class SimpleQueryResolver implements CommandResolver {
 				throw new TeiidRuntimeException(e);
 			}
         }
-        
+
         /**
-		 * @param tfr  
+		 * @param tfr
 		 */
         public LinkedHashSet<GroupSymbol> preTableFunctionReference(TableFunctionReference tfr) {
         	LinkedHashSet<GroupSymbol> saved = new LinkedHashSet<GroupSymbol>(this.currentGroups);
     		currentGroups.addAll(this.implicitGroups);
         	return saved;
         }
-        
+
         public void postTableFunctionReference(TableFunctionReference obj, LinkedHashSet<GroupSymbol> saved) {
 			//we didn't create a true external context, so we manually mark external
 			for (ElementSymbol symbol : ElementCollectorVisitor.getElements(obj, false)) {
@@ -456,10 +456,10 @@ public class SimpleQueryResolver implements CommandResolver {
 					ResolverVisitor.resolveLanguageObject(symbol, groups, null, metadata);
 				} catch (TeiidException e) {
 					throw new TeiidRuntimeException(e);
-				}				
+				}
 			}
         }
-        
+
         public void visit(SubqueryFromClause obj) {
         	Collection<GroupSymbol> externalGroups = this.currentGroups;
         	if (obj.isLateral()) {
@@ -473,7 +473,7 @@ public class SimpleQueryResolver implements CommandResolver {
             } catch (QueryResolverException err) {
                  throw new TeiidRuntimeException(err);
             }
-            obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName())); 
+            obj.getGroupSymbol().setMetadataID(metadata.getMetadataStore().getTempGroupID(obj.getGroupSymbol().getName()));
         }
 
         public void visit(UnaryFromClause obj) {
@@ -488,7 +488,7 @@ public class SimpleQueryResolver implements CommandResolver {
                  throw new TeiidRuntimeException(e);
 			}
         }
-        
+
         private void discoveredGroup(GroupSymbol group) {
         	discoveredGroups.add(group);
     		implicitGroups.add(group);
@@ -500,15 +500,15 @@ public class SimpleQueryResolver implements CommandResolver {
 			GroupSymbol group = obj.getGroup();
 			String fullName = metadata.getFullName(group.getMetadataID());
 			String queryName = group.getName();
-			
+
 			StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(fullName);
 
 			StoredProcedure storedProcedureCommand = new StoredProcedure();
 			storedProcedureCommand.setProcedureRelational(true);
 			storedProcedureCommand.setProcedureName(fullName);
-			
+
 			List<SPParameter> metadataParams = storedProcedureInfo.getParameters();
-			
+
 			Query procQuery = new Query();
 			From from = new From();
 			from.addClause(new SubqueryFromClause("X", storedProcedureCommand)); //$NON-NLS-1$
@@ -516,11 +516,11 @@ public class SimpleQueryResolver implements CommandResolver {
 			Select select = new Select();
 			select.addSymbol(new MultipleElementSymbol("X")); //$NON-NLS-1$
 			procQuery.setSelect(select);
-			
+
 			List<String> accessPatternElementNames = new LinkedList<String>();
-			
+
 			int paramIndex = 1;
-			
+
 			for (SPParameter metadataParameter : metadataParams) {
 			    SPParameter clonedParam = (SPParameter)metadataParameter.clone();
 			    if (clonedParam.getParameterType()==ParameterInfo.IN || metadataParameter.getParameterType()==ParameterInfo.INOUT) {
@@ -529,56 +529,56 @@ public class SimpleQueryResolver implements CommandResolver {
 			        clonedParam.setExpression(ref);
 			        clonedParam.setIndex(paramIndex++);
 			        storedProcedureCommand.setParameter(clonedParam);
-			        
+
 			        String aliasName = paramSymbol.getShortName();
-			        
+
 			        if (metadataParameter.getParameterType()==ParameterInfo.INOUT) {
 			            aliasName += "_IN"; //$NON-NLS-1$
 			        }
-			        
+
 			        Expression newSymbol = new AliasSymbol(aliasName, new ExpressionSymbol(paramSymbol.getShortName(), ref));
-			        
+
 			        select.addSymbol(newSymbol);
 			        accessPatternElementNames.add(queryName + Symbol.SEPARATOR + aliasName);
 			    }
 			}
-			
+
 			QueryResolver.resolveCommand(procQuery, metadata.getMetadata());
-			
+
 			List<Expression> projectedSymbols = procQuery.getProjectedSymbols();
-			
+
 			Set<String> foundNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-			
+
 			for (Expression ses : projectedSymbols) {
 			    if (!foundNames.add(Symbol.getShortName(ses))) {
 			         throw new QueryResolverException(QueryPlugin.Event.TEIID30114, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30114, fullName));
 			    }
 			}
-			
+
 			TempMetadataID id = metadata.getMetadataStore().getTempGroupID(queryName);
 
 			if (id == null) {
 			    metadata.getMetadataStore().addTempGroup(queryName, projectedSymbols, true);
-			    
+
 			    id = metadata.getMetadataStore().getTempGroupID(queryName);
 			    id.setOriginalMetadataID(storedProcedureCommand.getProcedureID());
 			    if (!accessPatternElementNames.isEmpty()) {
 				    List<TempMetadataID> accessPatternIds = new LinkedList<TempMetadataID>();
-				    
+
 				    for (String name : accessPatternElementNames) {
 				        accessPatternIds.add(metadata.getMetadataStore().getTempElementID(name));
 				    }
-				    
+
 				    id.setAccessPatterns(Arrays.asList(new TempMetadataID("procedure access pattern", accessPatternIds))); //$NON-NLS-1$
 			    }
 			}
-			
+
 			group.setMetadataID(id);
-			
+
 		    obj.setExpandedCommand(procQuery);
 		}
-        
-        /** 
+
+        /**
          * @see org.teiid.query.sql.navigator.PreOrPostOrderNavigator#visit(org.teiid.query.sql.lang.Into)
          */
         public void visit(Into obj) {
@@ -586,7 +586,7 @@ public class SimpleQueryResolver implements CommandResolver {
                 super.visit(obj);
             }
         }
-        
+
         public void visit(JoinPredicate obj) {
             assert currentGroups.isEmpty();
         	List<GroupSymbol> tempImplicitGroups = new ArrayList<GroupSymbol>(discoveredGroups);
@@ -614,7 +614,7 @@ public class SimpleQueryResolver implements CommandResolver {
                                         new QueryResolverException(QueryPlugin.Event.TEIID31268, qre, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31268, usd.getObject())));
                             } catch (QueryResolverException e1) {
                             } catch (TeiidComponentException e1) {
-                            }                           
+                            }
                         }
                     }
                 }
@@ -647,7 +647,7 @@ public class SimpleQueryResolver implements CommandResolver {
 			}
             discoveredGroups.clear();
 		}
-                
+
         public void visit(From obj) {
             assert currentGroups.isEmpty();
             super.visit(obj);

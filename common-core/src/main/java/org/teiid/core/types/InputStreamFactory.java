@@ -39,45 +39,45 @@ import javax.xml.transform.Source;
 import org.teiid.core.util.ReaderInputStream;
 
 public abstract class InputStreamFactory implements Source {
-	
+
 	public enum StorageMode {
 		MEMORY, //TODO: sources may return Serial values that are much too large and we should convert them to persistent.
 		PERSISTENT,
 		FREE,
 		OTHER
 	}
-	
+
 	public interface StreamFactoryReference {
-		
+
 		void setStreamFactory(InputStreamFactory inputStreamFactory);
-		
+
 	}
-	
+
 	private String systemId;
 	protected long length = -1;
-	
+
     /**
      * Get a new InputStream
      */
     public abstract InputStream getInputStream() throws IOException;
-    
+
     @Override
     public String getSystemId() {
     	return this.systemId;
     }
-    
+
     @Override
     public void setSystemId(String systemId) {
     	this.systemId = systemId;
     }
-    
+
     /**
-	 * @throws IOException  
+	 * @throws IOException
 	 */
     public void free() throws IOException {
-    	
+
     }
-    
+
     /**
      * Length in bytes of the {@link InputStream}
      * @return the length or -1 if the length is not known
@@ -85,65 +85,65 @@ public abstract class InputStreamFactory implements Source {
     public long getLength() {
 		return length;
 	}
-    
+
     public void setLength(long length) {
 		this.length = length;
 	}
-    
+
     /**
-	 * @throws IOException  
+	 * @throws IOException
 	 */
     public Reader getCharacterStream() throws IOException {
     	return null;
     }
-    
+
     public StorageMode getStorageMode() {
     	return StorageMode.OTHER;
     }
-    
+
     public static class FileInputStreamFactory extends InputStreamFactory {
-    	
+
     	private File f;
-    	
+
     	public FileInputStreamFactory(File f) {
     		this.f = f;
     		this.setSystemId(f.toURI().toASCIIString());
 		}
-    	
+
     	@Override
     	public long getLength() {
     		return f.length();
     	}
-    	
+
     	@Override
     	public InputStream getInputStream() throws IOException {
     		return new BufferedInputStream(new FileInputStream(f));
     	}
-    	
+
     	@Override
     	public StorageMode getStorageMode() {
     		return StorageMode.PERSISTENT;
     	}
-    	
+
     }
-    
+
     public static class ClobInputStreamFactory extends InputStreamFactory implements DataSource {
-    	
+
     	private Clob clob;
     	private Charset charset = Charset.forName(Streamable.ENCODING);
-    	
+
     	public ClobInputStreamFactory(Clob clob) {
     		this.clob = clob;
     	}
-    	
+
     	public Charset getCharset() {
 			return charset;
 		}
-    	
+
     	public void setCharset(Charset charset) {
 			this.charset = charset;
 		}
-    	
+
     	@Override
     	public InputStream getInputStream() throws IOException {
     		try {
@@ -152,7 +152,7 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
-    	
+
     	@Override
     	public Reader getCharacterStream() throws IOException {
     		try {
@@ -176,31 +176,31 @@ public abstract class InputStreamFactory implements Source {
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
 		}
-		
+
 		@Override
 		public StorageMode getStorageMode() {
 			return getStorageMode(clob);
 		}
-		
+
 		public Reader getReader(Reader reader) {
 		    return reader;
 		}
-		
+
 		@Override
         public void setTemporary(boolean temp) {
             setTemporary(clob, temp);
         }
-    	
+
     }
-    
+
     public static class BlobInputStreamFactory extends InputStreamFactory implements DataSource {
-    	
+
     	private Blob blob;
-    	
+
     	public BlobInputStreamFactory(Blob blob) {
     		this.blob = blob;
     	}
-    	
+
     	@Override
     	public InputStream getInputStream() throws IOException {
     		try {
@@ -209,7 +209,7 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
-    	
+
     	@Override
     	public long getLength() {
     		if (length == -1) {
@@ -220,7 +220,7 @@ public abstract class InputStreamFactory implements Source {
     		}
     		return length;
     	}
-    	
+
     	@Override
 		public String getContentType() {
 			return "application/octet-stream"; //$NON-NLS-1$
@@ -235,19 +235,19 @@ public abstract class InputStreamFactory implements Source {
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
 		}
-		
+
 		@Override
 		public StorageMode getStorageMode() {
 			return getStorageMode(blob);
 		}
-		
+
 		@Override
 		public void setTemporary(boolean temp) {
             setTemporary(blob, temp);
         }
-    	
+
     }
-    
+
     public static StorageMode getStorageMode(Object lob) {
     	if (lob instanceof Streamable<?>) {
     		return getStorageMode(((Streamable<?>)lob).getReference());
@@ -268,7 +268,7 @@ public abstract class InputStreamFactory implements Source {
 		}
 		return StorageMode.OTHER;
     }
-    
+
     public static void setTemporary(Object lob, boolean temp) {
         if (lob instanceof Streamable<?>) {
             setTemporary(((Streamable<?>)lob).getReference(), temp);
@@ -281,19 +281,19 @@ public abstract class InputStreamFactory implements Source {
             }
         }
     }
-    
+
     public void setTemporary(boolean temp) {
-        
+
     }
 
     public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
-    	
+
     	protected SQLXML sqlxml;
-    	
+
     	public SQLXMLInputStreamFactory(SQLXML sqlxml) {
     		this.sqlxml = sqlxml;
     	}
-    	
+
     	@Override
     	public InputStream getInputStream() throws IOException {
     		try {
@@ -302,7 +302,7 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
-    	
+
     	@Override
     	public Reader getCharacterStream() throws IOException {
     		try {
@@ -311,7 +311,7 @@ public abstract class InputStreamFactory implements Source {
 				throw new IOException(e);
 			}
     	}
-    	
+
     	@Override
 		public String getContentType() {
 			return "application/xml"; //$NON-NLS-1$
@@ -326,12 +326,12 @@ public abstract class InputStreamFactory implements Source {
 		public OutputStream getOutputStream() throws IOException {
 			throw new UnsupportedOperationException();
 		}
-		
+
 		@Override
 		public StorageMode getStorageMode() {
 			return getStorageMode(sqlxml);
 		}
-    	
+
     }
 
 }

@@ -37,7 +37,7 @@ import org.teiid.translator.ExecutionContext;
 
 @SuppressWarnings("nls")
 public class TestExcelUpdateExecution {
-    
+
     @Test
     public void testDeleteAll() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -45,13 +45,13 @@ public class TestExcelUpdateExecution {
 
         int[] results = helpExecute(TestExcelExecution.commonDDL, connection, "delete from Sheet1", true, "scratch_file.xls");
         assertArrayEquals(new int[] {6}, results);
-        
+
         Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("scratch_file.xls", new File(UnitTestUtil.getTestScratchPath(), "scratch_file.xls")));
 
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals(Collections.emptyList(), result);
     }
-    
+
     @Test
     public void testDeleteSome() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -65,7 +65,7 @@ public class TestExcelUpdateExecution {
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals("[[16, Matt, Liek, 13.0, null], [17, Sarah, Byne, 10.0, null], [18, Rocky, Dog, 3.0, null], [19, Total, null, 26.0, null]]", result.toString());
     }
-    
+
     @Test
     public void testInsert() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -80,7 +80,7 @@ public class TestExcelUpdateExecution {
         assertEquals(7, result.size());
         assertEquals("[20, Prince, null, 55.0, null]", result.get(6).toString());
     }
-    
+
     @Test
     public void testUpdate() throws Exception {
         VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
@@ -94,19 +94,19 @@ public class TestExcelUpdateExecution {
         List<?> result = TestExcelExecution.helpExecute(TestExcelExecution.commonDDL, connection, "select * from sheet1");
         assertEquals("[[14, John, Doe, 44.0, null], [15, Jane, Smith, 40.0, null], [16, Matt, Liek, 13.0, null], [17, Sarah, Byne, 12.0, null], [18, Rocky, Dog, 3.0, null], [19, Total, null, 112.0, null]]", result.toString());
     }
-    
+
     private int[] helpExecute(String ddl, VirtualFileConnection connection, String query, boolean format, String resultFile) throws Exception {
         ExcelExecutionFactory translator = new ExcelExecutionFactory();
         translator.setFormatStrings(format);
         translator.start();
-        
+
         TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "vdb", "excel");
         TranslationUtility utility = new TranslationUtility(metadata);
-        
+
         Command cmd = utility.parseCommand(query);
         ExecutionContext context = Mockito.mock(ExecutionContext.class);
         Mockito.stub(context.getCommandContext()).toReturn(new org.teiid.query.util.CommandContext());
-        
+
         ExcelUpdateExecution execution = translator.createUpdateExecution(cmd, context, utility.createRuntimeMetadata(), connection);
         execution.setWriteTo(new JavaVirtualFile(UnitTestUtil.getTestScratchFile(resultFile)));
         try {

@@ -31,7 +31,7 @@ import org.teiid.adminapi.WorkerPoolStatisticsBean;
 
 @MXBean
 public interface TeiidBean {
-    
+
     /**
      * Get the Query Plan for the given session with provided execution id.
      * @param sessionId
@@ -39,19 +39,19 @@ public interface TeiidBean {
      * @return
      */
     String getQueryPlan(String sessionId, long executionId);
-    
+
     /**
      * Get the all Requests that are currently in process
      * @return Collection of {@link RequestBean}
      */
     List<RequestBean> getRequests() throws AdminException;
-    
+
     /**
      * Get all the current Sessions.
      * @return Collection of {@link Session}
      */
     List<SessionBean> getSessions() throws AdminException;
-    
+
     /**
      * Terminate the Session
      *
@@ -77,46 +77,46 @@ public interface TeiidBean {
      * @throws AdminException
      */
     void terminateTransaction(String transactionId) throws AdminException;
-    
+
     /**
      * Get the number of requests processed.  This includes all queries
      * regardless of whether they completed successfully.
      * @return
      */
     long getTotalRequestsProcessed();
-    
+
     /**
      * Get the current number of requests waiting on execution at the engine level.
      * These are plans restricted by their output buffer and max active plans.
      * @return
      */
     int getWaitingRequestsCount();
-    
+
     /**
      * Get the current number of threads processing engine work, which is
      * typically plan, source, and transaction work.
      * @return
      */
     int getActiveEngineThreadCount();
-    
+
     /**
-     * Get the current number of queued engine work items. 
+     * Get the current number of queued engine work items.
      * @return
      */
     int getQueuedEngineWorkItems();
-    
+
     /**
      * Get the number of currently long running requests.
      * @return
      */
     int getLongRunningRequestCount();
-    
+
     /**
      * Get the current percentage of disk space in usage by the buffer manager
      * @return
      */
     double getPercentBufferDiskSpaceInUse();
-    
+
     /**
      * Get the out of disk error count
      * @return
@@ -128,7 +128,7 @@ public interface TeiidBean {
      * @return
      */
     WorkerPoolStatisticsBean getWorkerPoolStatisticsBean();
-    
+
     /**
      * Get the engine statistics related to memory and plans.
      * @return

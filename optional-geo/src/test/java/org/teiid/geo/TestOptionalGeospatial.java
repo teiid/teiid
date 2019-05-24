@@ -31,7 +31,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 @SuppressWarnings("nls")
 public class TestOptionalGeospatial {
-    
+
     @Test public void testTransform() throws Exception {
         Geometry g0 = new WKTReader().read("POINT(426418.89 4957737.37)");
         Geometry g1 = GeometryTransformUtils.transform(g0,
@@ -40,13 +40,13 @@ public class TestOptionalGeospatial {
         );
         assertEquals("POINT (8.07013599546795 44.76924401481436)", g1.toText());
     }
-    
+
     @Test public void testGeoJsonCollection() throws Exception {
         Expression ex = TestFunctionResolving.getExpression("ST_AsGeoJson(ST_GeomFromText('GEOMETRYCOLLECTION(POINT(4 6),LINESTRING(4 6,7 10))'))");
         ClobType c = (ClobType) Evaluator.evaluate(ex);
         assertEquals("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"Point\",\"coordinates\":[4.0,6.0]},{\"type\":\"LineString\",\"coordinates\":[[4.0,6.0],[7.0,10.0]]}]}", ClobType.getString(c));
     }
-    
+
     @Test public void testFromGeoJson() throws Exception {
         assertEval(
                 "ST_AsText(ST_GeomFromGeoJSON('{\"coordinates\":[-48.23456,20.12345],\"type\":\"Point\"}'))",
@@ -61,15 +61,15 @@ public class TestOptionalGeospatial {
     @Test public void testGeoJson() throws Exception {
         Expression ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'))))");
         assertEquals("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
-        
+
         ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('MULTILINESTRING ((10 10, 20 20, 10 40),(40 40, 30 30, 40 20, 30 10))'))))");
         assertEquals("MULTILINESTRING ((10 10, 20 20, 10 40), (40 40, 30 30, 40 20, 30 10))", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
 
         ex = TestFunctionResolving.getExpression("ST_AsText(ST_GeomFromGeoJson(ST_AsGeoJSON(ST_GeomFromText('LINESTRING (30 10, 10 30, 40 40)'))))");
         assertEquals("LINESTRING (30 10, 10 30, 40 40)", ClobType.getString((ClobType)Evaluator.evaluate(ex)));
     }
-    
-    @Test public void testAsGeoJson() throws Exception {        
+
+    @Test public void testAsGeoJson() throws Exception {
         assertEval(
                 "ST_AsGeoJson(ST_GeomFromText('POINT (-48.23456 20.12345)'))",
                 "{\"type\":\"Point\",\"coordinates\":[-48.23456,20.12345]}"

@@ -88,7 +88,7 @@ public class JdomHelper {
     public static Document buildDocument(File file ) throws IOException, JDOMException {
         return buildDocument( SAXBuilderHelper.getParserClassName(), file, DEFAULT_VALIDATION );
     }
-    
+
     /**
      * <p>
      * Creates an instance of the JDOM Document for the specified file.
@@ -120,16 +120,16 @@ public class JdomHelper {
         if(filename == null){
             ArgCheck.isNotNull(filename,CorePlugin.Util.getString("JdomHelper.The_file_name_may_not_be_null_3")); //$NON-NLS-1$
         }
-        
+
         if(filename.length() == 0){
             ArgCheck.isNotZeroLength(filename,CorePlugin.Util.getString("JdomHelper.The_file_name_may_not_be_zero-length_4")); //$NON-NLS-1$
         }
-        
+
         SAXBuilder builder = SAXBuilderHelper.createSAXBuilder( saxDriverClass, validateXML );
         return builder.build( new File( filename ) );
     }
-    
-    
+
+
 
     /**
      * <p>
@@ -192,7 +192,7 @@ public class JdomHelper {
         if(stream == null){
             ArgCheck.isNotNull(stream,CorePlugin.Util.getString("JdomHelper.The_InputStream_may_not_be_null_7")); //$NON-NLS-1$
         }
-        
+
         SAXBuilder builder = SAXBuilderHelper.createSAXBuilder( saxDriverClass, validateXML );
         return builder.build( stream );
     }
@@ -241,7 +241,7 @@ public class JdomHelper {
         if(stream == null){
             ArgCheck.isNotNull(stream,CorePlugin.Util.getString("JdomHelper.The_InputStream_may_not_be_null_10")); //$NON-NLS-1$
         }
-        
+
         SAXBuilder builder = SAXBuilderHelper.createSAXBuilder( saxDriverClass, validateXML );
         return builder.build( stream );
     }
@@ -257,11 +257,11 @@ public class JdomHelper {
         if(rootTag == null){
             ArgCheck.isNotNull(rootTag,CorePlugin.Util.getString("JdomHelper.The_root_tag_name_may_not_be_null_11")); //$NON-NLS-1$
         }
-        
+
         if(rootTag.length() == 0){
             ArgCheck.isNotZeroLength(rootTag,CorePlugin.Util.getString("JdomHelper.The_root_tag_name_may_not_be_zero-length_12")); //$NON-NLS-1$
         }
-        
+
         Element root = new Element( rootTag );
         return new Document( root );
     }
@@ -372,11 +372,11 @@ public class JdomHelper {
         if(parent == null){
             ArgCheck.isNotNull(parent,CorePlugin.Util.getString("JdomHelper.The_JDOM_Element_reference_may_not_be_null_16")); //$NON-NLS-1$
         }
-        
+
         if(name == null){
             ArgCheck.isNotNull(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_null_17")); //$NON-NLS-1$
         }
-        
+
         if(name.length() == 0){
             ArgCheck.isNotZeroLength(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_zero-length_18")); //$NON-NLS-1$
         }
@@ -445,11 +445,11 @@ public class JdomHelper {
         if(parent == null){
             ArgCheck.isNotNull(parent,CorePlugin.Util.getString("JdomHelper.The_JDOM_Element_reference_may_not_be_null_21")); //$NON-NLS-1$
         }
-        
+
         if(name == null){
             ArgCheck.isNotNull(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_null_22")); //$NON-NLS-1$
         }
-        
+
         if(name.length() == 0){
             ArgCheck.isNotZeroLength(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_zero-length_23")); //$NON-NLS-1$
         }
@@ -510,7 +510,7 @@ public class JdomHelper {
                     count++;
                 }
             }
-        }; 
+        };
         levelOrderTraversal( parent, visitor);
         return visitor.count;
     }
@@ -528,11 +528,11 @@ public class JdomHelper {
         if(parent == null){
             ArgCheck.isNotNull(parent,CorePlugin.Util.getString("JdomHelper.The_JDOM_Element_reference_may_not_be_null_26")); //$NON-NLS-1$
         }
-        
+
         if(name == null){
             ArgCheck.isNotNull(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_null_27")); //$NON-NLS-1$
         }
-        
+
         if(name.length() == 0){
             ArgCheck.isNotZeroLength(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_zero-length_28")); //$NON-NLS-1$
         }
@@ -563,11 +563,11 @@ public class JdomHelper {
         if(parent == null){
             ArgCheck.isNotNull(parent,CorePlugin.Util.getString("JdomHelper.The_JDOM_Element_reference_may_not_be_null_29")); //$NON-NLS-1$
         }
-        
+
         if(name == null){
             ArgCheck.isNotNull(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_null_30")); //$NON-NLS-1$
         }
-        
+
         if(name.length() == 0){
             ArgCheck.isNotZeroLength(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_zero-length_31")); //$NON-NLS-1$
         }
@@ -600,15 +600,15 @@ public class JdomHelper {
         if(parent == null){
             ArgCheck.isNotNull(parent,CorePlugin.Util.getString("JdomHelper.The_JDOM_Element_reference_may_not_be_null_32")); //$NON-NLS-1$
         }
-        
+
         if(name == null){
             ArgCheck.isNotNull(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_null_33")); //$NON-NLS-1$
         }
-        
+
         if(name.length() == 0){
             ArgCheck.isNotZeroLength(name,CorePlugin.Util.getString("JdomHelper.The_name_may_not_be_zero-length_34")); //$NON-NLS-1$
         }
-        
+
         if(ns == null){
             ArgCheck.isNotNull(ns,CorePlugin.Util.getString("JdomHelper.The_Namespace_reference_may_not_be_null_35")); //$NON-NLS-1$
         }
@@ -621,7 +621,7 @@ public class JdomHelper {
                     result = (Element)obj;
                 }
             }
-        }; 
+        };
         levelOrderTraversal( parent, visitor);
         return visitor.result;
     }
@@ -736,11 +736,11 @@ public class JdomHelper {
     public static void write( Document doc , String filename, String indent, boolean newlines ) throws IOException {
         ArgCheck.isNotNull(doc,CorePlugin.Util.getString("JdomHelper.The_Document_reference_may_not_be_null_42")); //$NON-NLS-1$
         ArgCheck.isNotNull(filename,CorePlugin.Util.getString("JdomHelper.The_filename_may_not_be_null_43")); //$NON-NLS-1$
-        
+
         if(filename.length() == 0){
             ArgCheck.isNotZeroLength(filename,CorePlugin.Util.getString("JdomHelper.The_filename_may_not_be_zero-length_44")); //$NON-NLS-1$
         }
-        
+
         FileOutputStream out = new FileOutputStream( filename );
         try {
 	        write(doc,out,indent,newlines);
@@ -773,11 +773,11 @@ public class JdomHelper {
 //     * @param indent the indent String, usually some number of spaces
 //     * @param newlines true indicates new lines should be printed, else new
 //     * lines are ignored (compacted).
-//     * @param schemaURI the uniform resource identifier of the XML Schema 
+//     * @param schemaURI the uniform resource identifier of the XML Schema
 //     * to use for validation
 //     * @throws IOException if there are problems writing to the file.
 //     */
-//    public static void write( Document doc, OutputStream stream, String indent, 
+//    public static void write( Document doc, OutputStream stream, String indent,
 //                              boolean newlines, String schemaURI) throws IOException {
 //        ArgCheck.isNotNull(doc,"The Document reference may not be null");
 //        ArgCheck.isNotNull(stream,"The OutputStream reference may not be null");
@@ -809,7 +809,7 @@ public class JdomHelper {
         XMLOutputter outputter = new XMLOutputter(getFormat(indent, newlines));
         outputter.output( doc, stream );
     }
-    
+
     /**
      * <p>
      * Ouput the current JDOM <code>Document</code> to the output stream.
@@ -821,8 +821,8 @@ public class JdomHelper {
     public static void write( Document doc , Writer writer ) throws IOException {
         write(doc,writer,DEFAULT_INDENT, true);
     }
-    
-    
+
+
     /**
      * <p>
      * Ouput the current JDOM <code>Document</code> to the writter.
@@ -844,7 +844,7 @@ public class JdomHelper {
         XMLOutputter outputter = new XMLOutputter(getFormat(indent, newlines));
         outputter.output( doc, writer );
     }
-    
+
     /**
      * <p>
      * Return the current JDOM <code>Document</code> as a String.
@@ -856,7 +856,7 @@ public class JdomHelper {
     public static String write( Document doc) throws IOException {
         return write(doc, DEFAULT_INDENT, true);
     }
-    
+
     /**
      * <p>
      * Ouput the current JDOM <code>Document</code> as a String.
@@ -875,7 +875,7 @@ public class JdomHelper {
         XMLOutputter outputter = new XMLOutputter(getFormat(indent, newlines));
         StringWriter writer = new StringWriter();
         outputter.output( doc, writer );
-        
+
         return writer.getBuffer().toString();
     }
 
@@ -895,17 +895,17 @@ public class JdomHelper {
             print((Element)itr.next(),stream,leadingString + CorePlugin.Util.getString("JdomHelper.___53")); //$NON-NLS-1$
         }
     }
-    
+
     /**
-     * Get the best content value for a JDOM object.  For elements, the content text is returned.  
-     * For attributes, the attribute value is returned.  For namespaces, the URI is returned.  Etc...    
+     * Get the best content value for a JDOM object.  For elements, the content text is returned.
+     * For attributes, the attribute value is returned.  For namespaces, the URI is returned.  Etc...
      * @param jdomObject JDOM object such as Element, Attribute, Text, Namespace, Comment, ProcessingInstruction, String
      * @return Content value for the specified JDOM object
      * @since 4.2
      */
     public static String getContentValue( Object jdomObject ) {
         if(jdomObject == null) {
-            return null; 
+            return null;
         } else if(jdomObject instanceof String) {
             return (String)jdomObject;
         } else if(jdomObject instanceof Element) {
@@ -921,11 +921,11 @@ public class JdomHelper {
         } else if(jdomObject instanceof ProcessingInstruction) {
             return ((ProcessingInstruction)jdomObject).getData();
         }
-        
+
         // Default
-        return jdomObject.toString();        
+        return jdomObject.toString();
     }
-    
+
     public static Format getFormat(String indent, boolean newlines) {
         Format format = Format.getPrettyFormat();
         format.setIndent(indent);
@@ -947,7 +947,7 @@ abstract class XMLVisitor {
     int count = 0;
 
     abstract void visit( Object obj);
-    
+
 }
 
 

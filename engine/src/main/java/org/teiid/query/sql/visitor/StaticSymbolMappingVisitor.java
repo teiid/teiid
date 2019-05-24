@@ -40,11 +40,11 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
      * passing in the command object that is being visited.</p>
      * @param symbolMap A map of virtual elements/groups to their physical counterparts
      */
-    public StaticSymbolMappingVisitor(Map symbolMap) {                
+    public StaticSymbolMappingVisitor(Map symbolMap) {
         super();
-        
+
         Assertion.isNotNull(symbolMap);
-        this.symbolMap = symbolMap;		
+        this.symbolMap = symbolMap;
     }
 
     /*
@@ -53,7 +53,7 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
     protected Symbol getMappedSymbol(Symbol symbol) {
         return (Symbol) this.symbolMap.get(symbol);
     }
-    
+
     public static void mapSymbols(LanguageObject obj, Map symbolMap) {
         if (obj == null || symbolMap.isEmpty()) {
             return;
@@ -61,5 +61,5 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
         StaticSymbolMappingVisitor ssmv = new StaticSymbolMappingVisitor(symbolMap);
         DeepPreOrderNavigator.doVisit(obj, ssmv);
     }
-    
+
 }

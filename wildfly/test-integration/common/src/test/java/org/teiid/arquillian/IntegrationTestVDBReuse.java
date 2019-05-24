@@ -40,68 +40,68 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9990,	"admin", "admin".toCharArray());
 		assertEquals(0, admin.getSessions().size());
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		assertEquals(0, admin.getSessions().size());
 		admin.close();
 	}
-	
+
 	@Test
     public void testReuse() throws Exception {
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
-		
+
 		Properties props = new Properties();
 		props.setProperty("ParentDirectory", UnitTestUtil.getTestDataFile("/arquillian/txt/").getAbsolutePath());
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
-		
+
 		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		execute("SELECT * FROM Stock"); //$NON-NLS-1$
-		
+
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		int cols = this.internalResultSet.getInt(1);
-		
+
 		admin.deploy("reuse-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse-vdb.xml")));
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		assertTrue(this.internalResultSet.getInt(1) > cols);
-		
-		
+
+
 		admin.deploy("reuse1-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse1-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse1", 1));
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse1@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * FROM Stock2"); //$NON-NLS-1$
-		
+
 		//redeploy
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
-		
+
 		//ensure we are up
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		execute("SELECT * FROM Stock"); //$NON-NLS-1$
-		
+
 		//ensure the importing vdb came back up
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
     }
 

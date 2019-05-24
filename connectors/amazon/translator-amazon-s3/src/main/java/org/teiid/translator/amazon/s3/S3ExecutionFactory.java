@@ -43,15 +43,15 @@ import org.teiid.translator.ws.WSConnection;
 
 @Translator(name="amazon-s3", description="Amazon S3 Translator, reads contents of files or writes to them")
 public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
-	
+
 	public static BundleUtil UTIL = BundleUtil.getBundleUtil(S3ExecutionFactory.class);
-	
+
 	public static final String GETTEXTFILE = "getTextFile"; //$NON-NLS-1$
 	public static final String GETFILE = "getFile"; //$NON-NLS-1$
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	public static final String DELETEFILE = "deleteFile"; //$NON-NLS-1$
 	public static final String LISTBUCKET = "list"; //$NON-NLS-1$
-	
+
 	private Charset encoding = Charset.defaultCharset();
 	private String awsAccessKey;
 	private String awsSecretKey;
@@ -59,75 +59,75 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	private String region;
 	private String encryption;
 	private String encryptionKey;
-	
+
 	public S3ExecutionFactory() {
 		setTransactionSupport(TransactionSupport.NONE);
 		setSourceRequiredForMetadata(false);
 	}
-	
+
 	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
 		return encoding.name();
 	}
-	
+
 	public void setEncoding(String encoding) {
 		this.encoding = Charset.forName(encoding);
 	}
-	
+
 	@TranslatorProperty(display="Amazon Access Key",advanced=true)
 	public String getAccesskey() {
 		return awsAccessKey;
 	}
-	
+
 	public void setAccesskey(String value) {
 		this.awsAccessKey = value;
 	}
-	
+
 	@TranslatorProperty(display="Amazon Secret Key",advanced=true)
 	public String getSecretkey() {
 		return awsSecretKey;
 	}
-	
+
 	public void setSecretkey(String value) {
 		this.awsSecretKey = value;
-	}	
-	
+	}
+
 	@TranslatorProperty(display="Amazon Region",advanced=true)
 	public String getRegion() {
 		return region;
 	}
-	
+
 	public void setRegion(String value) {
 		this.region = value;
 	}
-	
+
 	@TranslatorProperty(display="Amazon Bucket",advanced=true)
 	public String getBucket() {
 		return bucket;
 	}
-	
+
 	public void setBucket(String value) {
 		this.bucket = value;
 	}
-	
+
 	@TranslatorProperty(display="Server Side Customer Encryption Algorithm Used",advanced=true)
 	public String getEncryption() {
 		return encryption;
 	}
-	
+
 	public void setEncryption(String value) {
 		this.encryption = value;
-	}	
-	
+	}
+
 	@TranslatorProperty(display="Server Side Customer Encryption Key to be used to decrypt the object",advanced=true)
 	public String getEncryptionkey() {
 		return encryptionKey;
 	}
-	
+
 	public void setEncryptionkey(String value) {
 		this.encryptionKey = value;
 	}
-	
+
 	@Override
 	public ProcedureExecution createProcedureExecution(final Call command,
 			final ExecutionContext executionContext, final RuntimeMetadata metadata,
@@ -139,11 +139,11 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection connection) throws TranslatorException {
 		addGetTextFileMethod(metadataFactory);
 		addGetFileMethod(metadataFactory);
-		
+
 		saveFile(metadataFactory);
 		deleteFile(metadataFactory);
 		listBucket(metadataFactory);
-		
+
 		Table t = metadataFactory.addTable("Bucket");
 		t.setVirtual(true);
 		t.setSupportsUpdate(false);
@@ -154,9 +154,9 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		metadataFactory.addColumn("StorageClass", DataTypeManager.DefaultDataTypes.STRING, t);
 		metadataFactory.addColumn("NextContinuationToken", DataTypeManager.DefaultDataTypes.STRING, t);
 		t.setSelectTransformation("select b.* from (exec list()) as a, " +
-				" XMLTABLE(XMLNAMESPACES(DEFAULT 'http://s3.amazonaws.com/doc/2006-03-01/'), '/ListBucketResult/Contents' \n" + 
+				" XMLTABLE(XMLNAMESPACES(DEFAULT 'http://s3.amazonaws.com/doc/2006-03-01/'), '/ListBucketResult/Contents' \n" +
 				" PASSING XMLPARSE(CONTENT a.result WELLFORMED) COLUMNS Key string, LastModified string," +
-				" ETag string, Size string, StorageClass string, \n" + 
+				" ETag string, Size string, StorageClass string, \n" +
 				" NextContinuationToken string PATH '../NextContinuationToken') as b;");
 	}
 
@@ -166,9 +166,9 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 
 		ProcedureParameter param = metadataFactory.addProcedureParameter("name", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The name of the object to save"); //$NON-NLS-1$
-		
+
 		addCommonParameters(metadataFactory, p);
-		
+
 		param = metadataFactory.addProcedureParameter("contents", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The contents to save.  Can be one of CLOB, BLOB, or XML"); //$NON-NLS-1$
 	}
@@ -181,18 +181,18 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("bucket", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The name of the bucket in Amazon S3"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("region", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("region in which the bucket exists on Amazon S3"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("accesskey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Security Access Key, if not provided will use translator configured keys."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("secretkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Security Secret Key, if not provided will use translator configured keys."); //$NON-NLS-1$
-		param.setNullType(NullType.Nullable);		
+		param.setNullType(NullType.Nullable);
 
 		param = metadataFactory.addProcedureParameter("nexttoken", TypeFacility.RUNTIME_NAMES.STRING, //$NON-NLS-1$
 				Type.In, p);
@@ -200,30 +200,30 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 				+ "continuation token that you can specify as the continuation-token in your next request "
 				+ "to retrieve the next set of keys"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		metadataFactory.addProcedureResultSetColumn("result", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 	}
-	
+
 	private void deleteFile(MetadataFactory metadataFactory) {
 		Procedure p = metadataFactory.addProcedure(DELETEFILE);
 		p.setAnnotation("Delete the given file from bucket."); //$NON-NLS-1$
-				
+
 		ProcedureParameter param = metadataFactory.addProcedureParameter("name", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Name of the file"); //$NON-NLS-1$
-		
+
 		addCommonParameters(metadataFactory, p);
-	}	
+	}
 
 	private void addCommonParameters(MetadataFactory metadataFactory, Procedure p) {
 		ProcedureParameter param;
 		param = metadataFactory.addProcedureParameter("bucket", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The name of the bucket in Amazon S3"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("region", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("region in which the bucket exists on Amazon S3"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("endpoint", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Endpoint point of the Object, if provided this overwirtes the name and bucket properties"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
@@ -231,21 +231,21 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("accesskey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Security Access Key, if not provided will use translator configured keys."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("secretkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Security Secret Key, if not provided will use translator configured keys."); //$NON-NLS-1$
-		param.setNullType(NullType.Nullable);		
+		param.setNullType(NullType.Nullable);
 	}
 
 	private void addGetTextFileMethod(MetadataFactory metadataFactory) {
 		Procedure p = metadataFactory.addProcedure(GETTEXTFILE);
 		p.setAnnotation("Returns text files that match the given path as CLOBs"); //$NON-NLS-1$
-		
+
 		ProcedureParameter param = metadataFactory.addProcedureParameter("name", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The name of the file to return.  Currently the patterns like *.<ext> are not supported"); //$NON-NLS-1$
 
 		addCommonParameters(metadataFactory, p);
-		
+
 		param = metadataFactory.addProcedureParameter("encryption", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Server side encryption algorithm used"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
@@ -253,7 +253,7 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("encryptionkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Server side encryption key to decrypt the object"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
         param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
         param.setNullType(NullType.Nullable);
@@ -264,17 +264,17 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("etag", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p); //$NON-NLS-1$
-	} 
-	
+	}
+
 	private void addGetFileMethod(MetadataFactory metadataFactory) {
 		Procedure p = metadataFactory.addProcedure(GETFILE);
 		p.setAnnotation("Returns file that match the given path as BLOB"); //$NON-NLS-1$
-		
+
 		ProcedureParameter param = metadataFactory.addProcedureParameter("name", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The name of the file to return.  Currently the patterns like *.<ext> are not supported"); //$NON-NLS-1$
 
 		addCommonParameters(metadataFactory, p);
-		
+
 		param = metadataFactory.addProcedureParameter("encryption", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Server side encryption algorithm used"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
@@ -282,22 +282,22 @@ public class S3ExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param = metadataFactory.addProcedureParameter("encryptionkey", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Server side encryption key to decrypt the object"); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
-		
+
 		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
         param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
         param.setNullType(NullType.Nullable);
         param.setDefaultValue("false"); //$NON-NLS-1$
-		
+
 		metadataFactory.addProcedureResultSetColumn("file", TypeFacility.RUNTIME_NAMES.BLOB, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("endpoint", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
 		metadataFactory.addProcedureResultSetColumn("lastModified", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("etag", TypeFacility.RUNTIME_NAMES.STRING, p); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("size", TypeFacility.RUNTIME_NAMES.LONG, p); //$NON-NLS-1$
-	}	
-	
+	}
+
 	@Override
 	public boolean areLobsUsableAfterClose() {
 	    return false;
 	}
-	
+
 }

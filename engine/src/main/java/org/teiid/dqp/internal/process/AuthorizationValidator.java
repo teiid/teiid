@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.dqp.internal.process;
 
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -26,23 +26,23 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 
 /**
- * Defines a validator that checks for proper authorization.  
+ * Defines a validator that checks for proper authorization.
  */
 public interface AuthorizationValidator {
-	
+
 	enum CommandType {
 		USER,
 		PREPARED,
 		CACHED
 	}
-	
+
 	/**
 	 * Validates the given command.  If the command is not a {@link CommandType#USER} command, the command object should not be modified.
-	 * Any modification must be fully resolved using the associated {@link QueryMetadataInterface}.  Returning true for a 
+	 * Any modification must be fully resolved using the associated {@link QueryMetadataInterface}.  Returning true for a
 	 *  {@link CommandType#PREPARED} or  {@link CommandType#CACHED} commands means that the matching prepared plan or cache entry
 	 *  will not be used.
 	 * @param originalSql array of commands will typically contain only a single string, but may have multiple for batched updates.
-	 * @param command the parsed and resolved command. 
+	 * @param command the parsed and resolved command.
 	 * @param metadata
 	 * @param commandContext
 	 * @param commandType
@@ -51,7 +51,7 @@ public interface AuthorizationValidator {
 	 * @throws TeiidComponentException
 	 */
 	boolean validate(String[] originalSql, Command command, QueryMetadataInterface metadata, CommandContext commandContext, CommandType commandType) throws QueryValidatorException, TeiidComponentException;
-	
+
 	/**
 	 * Uses the context or other information to determine if the current user has the given role name.
 	 * @param roleName
@@ -59,7 +59,7 @@ public interface AuthorizationValidator {
 	 * @return true if the current user has the given role
 	 */
 	boolean hasRole(String roleName, CommandContext commandContext);
-	
+
 	/**
 	 * Determines if the metadata record is accessible in system queries
 	 * @param record

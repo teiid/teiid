@@ -75,14 +75,14 @@ import org.teiid.query.util.CommandContext;
 
 
 public final class RuleCollapseSource implements OptimizerRule {
-	
+
 	static final String PARTIAL_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "partial_filter"; //$NON-NLS-1$
 
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
-            
+
             // Get nested non-relational plan if there is one
             ProcessorPlan nonRelationalPlan = FrameUtil.getNestedPlan(accessNode);
     		Command command = FrameUtil.getNonQueryCommand(accessNode);
@@ -105,19 +105,19 @@ public final class RuleCollapseSource implements OptimizerRule {
                     modifyToCheckMatViewStatus(metadata, queryCommand, toCheck);
                 }
                 Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
-                
-                if (queryCommand instanceof Query 
+
+                if (queryCommand instanceof Query
                 		&& CapabilitiesUtil.supports(Capability.PARTIAL_FILTERS, modelId, metadata, capFinder)) {
                 	//this logic relies on the capability restrictions made in capabilities converter
                 	Query query = (Query)queryCommand;
                 	if (query.getCriteria() != null) {
                 		List<Criteria> toFilter = new ArrayList<Criteria>();
-                		
+
                 		HashSet<ElementSymbol> select = new LinkedHashSet(query.getSelect().getProjectedSymbols());
-                		
+
                 		outer: for (Criteria crit : Criteria.separateCriteriaByAnd(query.getCriteria())) {
 	                    	for (ElementSymbol es :ElementCollectorVisitor.getElements(crit, true)) {
-	                			if (Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), PARTIAL_PROPERTY, false)) 
+	                			if (Boolean.valueOf(metadata.getExtensionProperty(es.getMetadataID(), PARTIAL_PROPERTY, false))
 	                					&& select.contains(es)) {
 	                				 toFilter.add((Criteria) crit.clone());
 	                				 continue outer;
@@ -142,7 +142,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 		}
                 	}
                 }
-                
+
                 //find all pushdown functions in evaluatable locations and mark them to be evaluated by the source
                 LanguageVisitor lv = new LanguageVisitor() {
                     @Override
@@ -150,8 +150,8 @@ public final class RuleCollapseSource implements OptimizerRule {
                         FunctionDescriptor fd = f.getFunctionDescriptor();
                         if (f.isEval()) {
                             try {
-                                if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
-                                            && fd.getMethod() != null 
+                                if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN
+                                            && fd.getMethod() != null
                                             && CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
                                     f.setEval(false);
                                 } else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
@@ -167,7 +167,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                     }
                     @Override
                     public void visit(SubqueryFromClause obj) {
-                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);                        
+                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
                     }
                     @Override
                     public void visit(WithQueryCommand obj) {
@@ -194,7 +194,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
     		accessNode.removeAllChildren();
         }
-       				
+
 		return plan;
 	}
 
@@ -205,11 +205,11 @@ public final class RuleCollapseSource implements OptimizerRule {
             String viewName = metadata.getName(viewMatadataId);
 
             Expression expr1 = new Constant(schemaName);
-            Expression expr2 = new Constant(viewName); 
+            Expression expr2 = new Constant(viewName);
 
             Function status = new Function("mvstatus", new Expression[] {expr1, expr2}); //$NON-NLS-1$
             status.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-            FunctionDescriptor descriptor = 
+            FunctionDescriptor descriptor =
                     metadata.getFunctionLibrary().findFunction("mvstatus", new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING }); //$NON-NLS-1$
             status.setFunctionDescriptor(descriptor);
             Query query = queryCommand.getProjectedQuery();
@@ -223,12 +223,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 	 * checking to see if a parent dup removal can actually be removed
 	 * - which can only happen if there are sources/selects/simple projects/limits/order by
 	 * between the access node and the parent dup removal.
-	 * 
+	 *
 	 * @param metadata
 	 * @param capFinder
 	 * @param accessNode
 	 * @param queryCommand
-	 * @param capabilitiesFinder 
+	 * @param capabilitiesFinder
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
 	 */
@@ -277,15 +277,15 @@ public final class RuleCollapseSource implements OptimizerRule {
 		}
 		boolean canRemoveParentDup = false;
 		if (queryCommand.getOrderBy() == null) {
-			/* 
-			 * we're assuming that a pushed order by implies that the cost of the distinct operation 
+			/*
+			 * we're assuming that a pushed order by implies that the cost of the distinct operation
 			 * will be marginal - which is not always true.
-			 * 
+			 *
 			 * TODO: we should add costing for the benefit of pushing distinct by itself
 			 * cardinality without = c
 			 * assume cost ~ c lg c for c' cardinality and a modification for associated bandwidth savings
 			 * recompute cost of processing plan with c' and see if new cost + c lg c < original cost
-			 * 
+			 *
 			 * We stop at join nodes they can alter the cardinality
 			 * - further checking could determine if the cardinality is preserved without the parent distinct
 			 */
@@ -322,8 +322,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 				return root;
 			}
 		}
-		/* 
-		 * TODO: if we are under a grouping/union not-all, then we should also fully order the results 
+		/*
+		 * TODO: if we are under a grouping/union not-all, then we should also fully order the results
 		 * and update the processing logic (this requires that we can guarantee null ordering) to assume sorted
 		 */
 		if (queryCommand instanceof SetQuery) {
@@ -350,17 +350,17 @@ public final class RuleCollapseSource implements OptimizerRule {
 
     private PlanNode removeUnnecessaryInlineView(PlanNode root, PlanNode accessNode) {
     	PlanNode child = accessNode.getFirstChild();
-    	
-    	//check for simple projection - may happen with non-deterministic functions 
+
+    	//check for simple projection - may happen with non-deterministic functions
     	//TODO: in most cases more logic in ruleremovevirtual (to make sure there is only a single use of the non-deterministic function)
     	//will allow us to remove these views
-    	if (child.getType() == NodeConstants.Types.PROJECT && child.getFirstChild() != null 
+    	if (child.getType() == NodeConstants.Types.PROJECT && child.getFirstChild() != null
     	        && child.getFirstChild().hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
     	    Set<Expression> requiredElements = new HashSet<Expression>((List<Expression>) child.getFirstChild().getProperty(Info.OUTPUT_COLS));
             List<Expression> selectSymbols = (List<Expression>)child.getProperty(NodeConstants.Info.PROJECT_COLS);
 
             // check that it only performs simple projection and that all required symbols are projected
-            LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries  
+            LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries
             for (Expression symbol : selectSymbols) {
                 Expression expr = SymbolMap.getExpression(symbol);
                 if (!(expr instanceof ElementSymbol)) {
@@ -377,7 +377,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             root = RuleRaiseAccess.performRaise(root, child, accessNode);
             child = accessNode.getFirstChild();
     	}
-        
+
         if (child.hasBooleanProperty(NodeConstants.Info.INLINE_VIEW)) {
             //check for the projection from the access node
             //partial pushdown of select expressions creates expressions that reference the
@@ -399,13 +399,13 @@ public final class RuleCollapseSource implements OptimizerRule {
             accessNode.getGroups().clear();
             PlanNode sourceNode = FrameUtil.findJoinSourceNode(accessNode.getFirstChild());
             if (sourceNode != null) {
-                accessNode.addGroups(sourceNode.getGroups());                
+                accessNode.addGroups(sourceNode.getGroups());
             }
             //update the output columns for both the source node and access node
             child.setProperty(Info.OUTPUT_COLS, accessNode.getProperty(Info.OUTPUT_COLS));
             accessNode.setProperty(Info.OUTPUT_COLS, accessNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
         }
-        
+
         return root;
     }
 
@@ -468,7 +468,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         	if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)) {
         		select.addSymbol(new ExpressionSymbol("dummy", new Constant(1))); //$NON-NLS-1$
         	} else {
-        		//TODO: need to ensure the type is consistent  
+        		//TODO: need to ensure the type is consistent
         		//- should be rare as the source would typically support select expression if it supports union
         		select.addSymbol(selectOutputElement(query.getFrom().getGroups(), metadata));
         	}
@@ -483,12 +483,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 			}
 			query.setSelect(query.getSelect().clone());
 	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-	      
+
 	        //map back to expression form
 	        ExpressionMappingVisitor.mapExpressions(query.getOrderBy(), symbolMap.asMap(), true);
-	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap(), true); 
+	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap(), true);
 	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap(), true);
-	
+
 	        if (query.getHaving() != null && !CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelID, metadata, capFinder)) {
 	        	Select sel = query.getSelect();
 	    		GroupBy groupBy = query.getGroupBy();
@@ -540,7 +540,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    	    query = outerQuery;
 
 	        }
-	        
+
 	        if (query.getGroupBy() != null) {
 		        // we check for group by expressions here to create an ANSI SQL plan
 			    boolean hasExpression = false;
@@ -549,12 +549,12 @@ public final class RuleCollapseSource implements OptimizerRule {
 			    	Expression ex = iterator.next();
 			        hasExpression |= !(ex instanceof ElementSymbol);
 			        hasLiteral |= EvaluatableVisitor.willBecomeConstant(ex, true);
-			    } 
+			    }
 			    if ((hasExpression && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) || hasLiteral) {
 			    	//if group by expressions are not support, add an inline view to compensate
 					query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);
 					if (query.getHaving() != null) {
-					    //dependent sets will have been added a having 
+					    //dependent sets will have been added a having
 					    List<Criteria> crits = Criteria.separateCriteriaByAnd(query.getHaving());
 					    for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
 					        Criteria crit = iter.next();
@@ -566,8 +566,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 					    query.setHaving(Criteria.combineCriteria(crits));
 					}
 			    }
-				if (query.getOrderBy() != null 
-						&& groupNode.hasBooleanProperty(Info.ROLLUP) 
+				if (query.getOrderBy() != null
+						&& groupNode.hasBooleanProperty(Info.ROLLUP)
 						&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, modelID, metadata, capFinder)) {
 					//if ordering is not directly supported over extended grouping, add an inline view to compensate
 					query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, true);
@@ -575,8 +575,8 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        }
 		}
 		return query;
-	}		
-	
+	}
+
     /**
      * Find a selectable element in the specified groups.  This is a helper for fixing
      * the "no elements" case.
@@ -591,7 +591,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         // Find a group with selectable elements and pick the first one
         for (GroupSymbol group : groups) {
             List<ElementSymbol> elements = (List<ElementSymbol>)ResolverUtil.resolveElementsInGroup(group, metadata);
-            
+
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
                     element = element.clone();
@@ -600,7 +600,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -614,7 +614,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 prepareSubqueries(node.getSubqueryContainers());
                 JoinType joinType = (JoinType) node.getProperty(NodeConstants.Info.JOIN_TYPE);
                 List<Criteria> crits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-                
+
                 if (crits == null || crits.isEmpty()) {
                     crits = new ArrayList<Criteria>();
                 } else {
@@ -623,12 +623,12 @@ public final class RuleCollapseSource implements OptimizerRule {
                 		joinType = JoinType.JOIN_CROSS;
                 	}
                 }
-                
+
                 PlanNode left = node.getFirstChild();
                 PlanNode right = node.getLastChild();
 
                 /* special handling is needed to determine criteria placement.
-                 * 
+                 *
                  * if the join is a left outer join, criteria from the right side will be added to the on clause
                  */
                 Criteria savedCriteria = null;
@@ -636,13 +636,13 @@ public final class RuleCollapseSource implements OptimizerRule {
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     savedCriteria = query.getCriteria();
                     query.setCriteria(null);
-                } 
+                }
                 buildQuery(accessRoot, right, query, context, capFinder);
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     moveWhereClauseIntoOnClause(query, crits);
                     query.setCriteria(savedCriteria);
-                } 
-                
+                }
+
                 if (joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_FULL_OUTER) {
 	                boolean subqueryOn = CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, modelID, metadata, capFinder);
 	        		if (!subqueryOn) {
@@ -655,7 +655,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        			}
 	        		}
                 }
-                
+
                 // Get last two clauses added to the FROM and combine them into a JoinPredicate
                 From from = query.getFrom();
                 List<FromClause> clauses = from.getClauses();
@@ -675,20 +675,20 @@ public final class RuleCollapseSource implements OptimizerRule {
 	                		}
 	                		FromClause temp = clause1;
                         	clause1 = clause2;
-                        	clause2 = temp;	                		
+                        	clause2 = temp;
 	                	}
                 	}
                 }
-                
+
                 //correct the criteria or the join type if necessary
                 if (joinType != JoinType.JOIN_CROSS && crits.isEmpty()) {
                     crits.add(QueryRewriter.TRUE_CRITERIA);
                 } else if (joinType == JoinType.JOIN_CROSS && !crits.isEmpty()) {
                     joinType = JoinType.JOIN_INNER;
                 }
-                
+
                 JoinPredicate jp = new JoinPredicate(clause1, clause2, joinType, crits);
-                
+
                 // Replace last two clauses with new predicate
                 clauses.remove(lastClause);
                 clauses.set(lastClause-1, jp);
@@ -701,17 +701,17 @@ public final class RuleCollapseSource implements OptimizerRule {
             	if (node.hasBooleanProperty(Info.INLINE_VIEW)) {
                     PlanNode child = node.getFirstChild();
                     QueryCommand newQuery = createQuery(context, capFinder, accessRoot, child);
-                    
+
                     //ensure that the group is consistent
                     SubqueryFromClause sfc = new SubqueryFromClause(symbol, newQuery);
-                    
+
                     SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
                     if (map != null) {
             			ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(map);
             			DeepPostOrderNavigator.doVisit(newQuery, visitor);
                     	sfc.setLateral(true);
                     }
-                    
+
                     query.getFrom().addClause(sfc);
                     //ensure that the column names are consistent
                     Query q = newQuery.getProjectedQuery();
@@ -736,7 +736,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                     		}
                     	}
                     }
-                    
+
                     //there is effectively an unnecessary inline view that can be removed in the procedure case
                     //so we'll unwrap that here
                     if (newQuery instanceof Query) {
@@ -748,21 +748,21 @@ public final class RuleCollapseSource implements OptimizerRule {
                     		}
                     	}
                     }
-                    
+
                     return;
-                } 
+                }
             	//handle lateral join of a procedure
             	Command command = (Command) node.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
             	if (command instanceof StoredProcedure) {
             		StoredProcedure storedProcedure = (StoredProcedure)command;
             		storedProcedure.setPushedInQuery(true);
             		SubqueryFromClause subqueryFromClause = new SubqueryFromClause(symbol, storedProcedure);
-            		
+
             		//TODO: it would be better to directly add
 					query.getFrom().addClause(subqueryFromClause);
 					pushedTableProcedure=true;
                 }
-            	
+
             	PlanNode subPlan = (PlanNode) node.getProperty(Info.SUB_PLAN);
             	if (subPlan != null) {
             		Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) accessRoot.getProperty(Info.SUB_PLANS);
@@ -778,30 +778,30 @@ public final class RuleCollapseSource implements OptimizerRule {
                 break;
             }
     	}
-            
+
         for (PlanNode childNode : node.getChildren()) {
-            buildQuery(accessRoot, childNode, query, context, capFinder);              
+            buildQuery(accessRoot, childNode, query, context, capFinder);
         }
-            
+
         switch(node.getType()) {
             case NodeConstants.Types.SELECT:
             {
-                Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);       
+                Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
                 prepareSubqueries(node.getSubqueryContainers());
                 if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                     query.setCriteria( CompoundCriteria.combineCriteria(query.getCriteria(), crit) );
                 } else {
-                    query.setHaving( CompoundCriteria.combineCriteria(query.getHaving(), crit) );                    
+                    query.setHaving( CompoundCriteria.combineCriteria(query.getHaving(), crit) );
                 }
                 break;
             }
-            case NodeConstants.Types.SORT: 
+            case NodeConstants.Types.SORT:
             {
             	prepareSubqueries(node.getSubqueryContainers());
                 processOrderBy(node, query, context);
                 break;
             }
-            case NodeConstants.Types.DUP_REMOVE: 
+            case NodeConstants.Types.DUP_REMOVE:
             {
             	boolean distinct = true;
             	PlanNode grouping = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
@@ -812,9 +812,9 @@ public final class RuleCollapseSource implements OptimizerRule {
                    }
             	}
                 query.getSelect().setDistinct(distinct);
-                break;    
+                break;
             }
-            case NodeConstants.Types.GROUP: 
+            case NodeConstants.Types.GROUP:
             {
                 List groups = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
                 if(groups != null && !groups.isEmpty()) {
@@ -830,7 +830,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 processLimit(node, query, metadata);
                 break;
             }
-        }        
+        }
     }
 
 	private boolean useLeftOuterJoin(Query query, QueryMetadataInterface metadata,
@@ -901,10 +901,10 @@ public final class RuleCollapseSource implements OptimizerRule {
 
     private void processLimit(PlanNode node,
                               QueryCommand query, QueryMetadataInterface metadata) {
-    	
+
         Expression limit = (Expression)node.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
         Expression offset = (Expression)node.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
-        
+
         PlanNode limitNode = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
         Expression childLimit = null;
         Expression childOffset = null;
@@ -918,11 +918,11 @@ public final class RuleCollapseSource implements OptimizerRule {
         query.setLimit(lim);
     }
 
-    /** 
+    /**
      * Will combine the where criteria with the on criteria.
-     * 
+     *
      * A full rewrite call is not necessary here, but it will attempt to flatten the criteria.
-     * 
+     *
      * @param query
      * @param joinCrits
      */
@@ -938,7 +938,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         joinCrits.addAll(combinedCrits);
         query.setCriteria(null);
     }
-    
+
 	private void processOrderBy(PlanNode node, QueryCommand query, CommandContext context) throws QueryMetadataException, TeiidComponentException {
 		OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
 		query.setOrderBy(orderBy);
@@ -963,20 +963,20 @@ public final class RuleCollapseSource implements OptimizerRule {
     * Take the query, built straight from the subtree, and rebuild as a simple query
     * if possible.
     * @param query Query built from collapsing the source nodes
-    * @return Same query with simplified from clause if possible 
+    * @return Same query with simplified from clause if possible
     */
     private void simplifyFromClause(Query query) {
         From from = query.getFrom();
         List<FromClause> clauses = from.getClauses();
         FromClause rootClause = clauses.get(0);
-       
-        // If all joins are inner joins, move criteria to WHERE and make 
+
+        // If all joins are inner joins, move criteria to WHERE and make
         // FROM a list of groups instead of a tree of JoinPredicates
         if(! hasOuterJoins(rootClause)) {
             from.setClauses(new ArrayList<FromClause>());
             shredJoinTree(rootClause, query);
         } // else leave as is
-    }    
+    }
 
     /**
     * @param rootClause
@@ -987,7 +987,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             query.getFrom().addClause(clause);
         } else {
             JoinPredicate jp = (JoinPredicate) clause;
-            
+
             List<Criteria> crits = jp.getJoinCriteria();
             if(crits != null && crits.size() > 0) {
             	Criteria joinCrit = null;
@@ -998,10 +998,10 @@ public final class RuleCollapseSource implements OptimizerRule {
             	}
                 query.setCriteria(CompoundCriteria.combineCriteria(joinCrit, query.getCriteria()));
             }
-            
+
             // Recurse through tree
             shredJoinTree(jp.getLeftClause(), query);
-            shredJoinTree(jp.getRightClause(), query);            
+            shredJoinTree(jp.getRightClause(), query);
         }
     }
 
@@ -1011,7 +1011,7 @@ public final class RuleCollapseSource implements OptimizerRule {
      */
     static boolean hasOuterJoins(FromClause clause) {
     	if (clause instanceof SubqueryFromClause) {
-    		if (((SubqueryFromClause)clause).isLateral()) { 
+    		if (((SubqueryFromClause)clause).isLateral()) {
     			return true;
     		}
     		return false;
@@ -1030,7 +1030,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
         return hasOuterJoins(jp.getRightClause());
     }
-    
+
     public String toString() {
    		return "CollapseSource"; //$NON-NLS-1$
    	}

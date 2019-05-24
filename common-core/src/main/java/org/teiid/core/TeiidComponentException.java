@@ -51,15 +51,15 @@ public class TeiidComponentException extends TeiidException {
 
     public TeiidComponentException(BundleUtil.Event code, final String message) {
         super(code, message);
-    }    
-    
+    }
+
     public TeiidComponentException(BundleUtil.Event code, Throwable e, final String message) {
         super(code, e, message);
-    }    
-    
+    }
+
     public TeiidComponentException(BundleUtil.Event code, Throwable e) {
         super(code, e);
-    }     
+    }
 
     public TeiidComponentException( Throwable e, String message ) {
         super( e, message );

@@ -28,31 +28,31 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * Represents a function in a sql statement.  A function is a type of expression.  
- * Functions have a name and some arguments (0..n).  Each argument is also 
+ * Represents a function in a sql statement.  A function is a type of expression.
+ * Functions have a name and some arguments (0..n).  Each argument is also
  * an expression.  After resolution, a function should have a type and a function
  * descriptor.
  */
 public class Function implements Expression {
-	
+
 	private String name;
 	private Expression[] args;
 	protected Class<?> type;
 	private FunctionDescriptor descriptor;
 	private boolean implicit = false;
 	private boolean eval = true;
-	
+
 	/**
-	 * Construct a function with function name and array of arguments.  For 
+	 * Construct a function with function name and array of arguments.  For
 	 * functions that have no args, pass empty array, not null.
 	 * @param name Name of function
 	 * @param args Function arguments
-	 */	
+	 */
 	public Function(String name, Expression[] args) {
 		this.name = name;
 		this.args = args;
 	}
-	
+
 	/**
 	 * Get name of function
 	 * @return Name of function
@@ -60,11 +60,11 @@ public class Function implements Expression {
 	public String getName() {
 		return this.name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	/**
 	 * Get function arguments
 	 * @return Get function arguments
@@ -72,7 +72,7 @@ public class Function implements Expression {
 	public Expression[] getArgs() {
 		return this.args;
 	}
-	
+
 	/**
 	 * Get argument at specified index
 	 * @param index Index of argument
@@ -82,51 +82,51 @@ public class Function implements Expression {
 	}
 
 	/**
-	 * Set the function arguments - it is assumed that the args 
+	 * Set the function arguments - it is assumed that the args
 	 * are not null.  For no arg functions, use an empty Expression array.
 	 * @param args Function arguments
 	 */
-	public void setArgs(Expression[] args) { 
+	public void setArgs(Expression[] args) {
 		this.args = args;
 	}
 
 	/**
 	 * Make this function implicit / hidden.
 	 */
-	public void makeImplicit() { 
+	public void makeImplicit() {
 		this.implicit = true;
 	}
-	
+
 	/**
 	 * Return true if this function is implicit and should not be shown in SQL representations
 	 * @return True if implicit
 	 */
-	public boolean isImplicit() { 
+	public boolean isImplicit() {
 		return this.implicit;
 	}
-	
+
 	public void setImplicit(boolean implicit) {
 		this.implicit = implicit;
 	}
-	
-	/** 
-	 * Insert a conversion function at specified index.  This is a convenience 
+
+	/**
+	 * Insert a conversion function at specified index.  This is a convenience
 	 * method to insert a conversion into the function tree.
 	 * @param index Argument index to insert conversion function at
 	 * @param functionDescriptor Conversion function descriptor
 	 */
-	public void insertConversion(int index, FunctionDescriptor functionDescriptor) { 
+	public void insertConversion(int index, FunctionDescriptor functionDescriptor) {
 		// Get target type for conversion
 		Class<?> t = functionDescriptor.getReturnType();
 		String typeName = DataTypeManager.getDataTypeName(t);
-		
+
 		// Pull old expression at index
 		Expression newArg[] = new Expression[] { args[index], new Constant(typeName) };
-		
+
 		// Replace old expression with new expression, using old as arg
 		Function func = new Function(functionDescriptor.getName(), newArg);
 		args[index] = func;
-		
+
 		// Set function descriptor and type of new function
 		func.setFunctionDescriptor(functionDescriptor);
 		func.setType(t);
@@ -145,10 +145,10 @@ public class Function implements Expression {
 	 * Set type of function
 	 * @param type New type
 	 */
-	public void setType(Class<?> type) { 
+	public void setType(Class<?> type) {
 		this.type = type;
 	}
-	
+
 	/**
 	 * Get the function descriptor that this function resolves to.
 	 * @return Descriptor or null if resolution has not yet occurred
@@ -156,7 +156,7 @@ public class Function implements Expression {
 	public FunctionDescriptor getFunctionDescriptor() {
 		return this.descriptor;
 	}
-	
+
 	/**
 	 * Set the descriptor for this function.
 	 * @param fd Function descriptor
@@ -164,7 +164,7 @@ public class Function implements Expression {
 	public void setFunctionDescriptor(FunctionDescriptor fd) {
 		this.descriptor = fd;
 	}
-			
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -174,82 +174,82 @@ public class Function implements Expression {
 	 * @param obj Other object to compare
 	 * @return Return true if objects are equivalent
 	 */
-	public boolean equals(Object obj) { 
-		if(this == obj) { 
+	public boolean equals(Object obj) {
+		if(this == obj) {
 			return true;
-		} 
-		
-		if(! (obj instanceof Function)) { 
-			return false;			
 		}
-		
+
+		if(! (obj instanceof Function)) {
+			return false;
+		}
+
 		Function other = (Function) obj;
 		if (this.descriptor != null && other.descriptor != null) {
 			if (!this.descriptor.getMethod().equals(other.descriptor.getMethod())) {
 				return false;
 			}
-		} else if(! other.getName().equalsIgnoreCase(getName())) { 
+		} else if(! other.getName().equalsIgnoreCase(getName())) {
 			return false;
-		}	
-		
+		}
+
 		if (this.isImplicit() != other.isImplicit()) {
 		    return false;
 		}
-		
+
         Expression[] otherArgs = other.getArgs();
         Expression[] thisArgs = getArgs();
-	
+
 		return EquivalenceUtil.areEquivalent(thisArgs, otherArgs);
 	}
-	
+
     /**
      * Compute hash code for the object - based on name and hashcode of first arg (if there is one)
      * @return Hash code
      */
-    public int hashCode() { 
+    public int hashCode() {
         int hashCode = HashCodeUtil.hashCode(0, this.getName().toUpperCase());
-        
+
         Expression[] thisArgs = getArgs();
-        if(thisArgs != null && thisArgs.length > 0 && thisArgs[0] != null) { 
+        if(thisArgs != null && thisArgs.length > 0 && thisArgs[0] != null) {
             hashCode = HashCodeUtil.hashCode(hashCode, thisArgs[0].hashCode());
         }
-        
+
         return hashCode;
     }
-    
+
 	/**
 	 * Return a deep copy of this object.
 	 * @return Deep copy of the object
 	 */
-	public Object clone() {	
+	public Object clone() {
 		Expression[] copyArgs = LanguageObject.Util.deepClone(this.args);
 		Function copy = new Function(getName(), copyArgs);
 		copy.setType(getType());
 		copy.setFunctionDescriptor(getFunctionDescriptor());
-		
-		if(this.isImplicit()) { 
+
+		if(this.isImplicit()) {
 			copy.makeImplicit();
-		}	
+		}
 		copy.eval = this.eval;
-		return copy;	
+		return copy;
 	}
-	
+
 	public boolean isAggregate() {
 		return getFunctionDescriptor().getMethod().getAggregateAttributes() != null;
 	}
-	
+
 	/**
 	 * Return string representation of the function.
 	 * @return String representation
 	 */
-	public String toString() { 
-		return SQLStringVisitor.getSQLString(this);    
-	}	
-	
+	public String toString() {
+		return SQLStringVisitor.getSQLString(this);
+	}
+
 	public boolean isEval() {
 		return eval;
 	}
-	
+
 	public void setEval(boolean eval) {
 		this.eval = eval;
 	}

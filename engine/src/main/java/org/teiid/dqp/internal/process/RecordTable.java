@@ -46,35 +46,35 @@ import org.teiid.query.tempdata.SearchableTable;
 import org.teiid.query.util.CommandContext;
 
 abstract class RecordTable<T extends AbstractMetadataRecord> implements SearchableTable {
-	
+
 	public interface SimpleIterator<T> {
 		public T next() throws TeiidProcessingException, TeiidComponentException;
 	}
-	
+
 	private static final SimpleIterator<?> empty = new SimpleIterator<Object>() {
-		
+
 		@Override
 		public Object next() throws TeiidProcessingException, TeiidComponentException {
 			return null;
 		}
 	};
-	
+
 	@SuppressWarnings("unchecked")
 	public static <T> SimpleIterator<T> emptyIterator() {
 		return (SimpleIterator<T>) empty;
 	}
-	
+
 	public static class SimpleIteratorWrapper<T> implements SimpleIterator<T> {
 		private Iterator<? extends T> iter;
-		
+
 		public SimpleIteratorWrapper(Iterator<? extends T> iter) {
 			this.iter = iter;
 		}
-		
+
 		public void setIterator(Iterator<? extends T> iter) {
 			this.iter = iter;
 		}
-		
+
 		@Override
 		public T next() throws TeiidProcessingException,
 				TeiidComponentException {
@@ -90,14 +90,14 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		protected boolean isValid(T result) {
 			return true;
 		}
-		
+
 	}
-	
+
 	public static abstract class ExpandingSimpleIterator<P, T> implements SimpleIterator<T> {
 		private SimpleIterator<T> childIter;
 		private SimpleIterator<P> parentIter;
 		private P currentParent;
-		
+
 		public ExpandingSimpleIterator(SimpleIterator<P> parentIter) {
 			this.parentIter = parentIter;
 		}
@@ -120,18 +120,18 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 				childIter = null;
 			}
 		}
-		
+
 		public P getCurrentParent() {
 			return currentParent;
 		}
-		
+
 		protected abstract SimpleIterator<T> getChildIterator(P parent);
 	}
-	
+
 	private Map<Expression, Integer> columnMap;
 	private Expression[] pkColumns;
 	protected Evaluator eval;
-	
+
 	public RecordTable(int[] pkColumnIndexs, List<ElementSymbol> columns) {
 		this.columnMap = RelationalNode.createLookupMap(columns);
 		this.pkColumns = new ElementSymbol[pkColumnIndexs.length];
@@ -140,7 +140,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		}
 		eval = new Evaluator(columnMap, null, null);
 	}
-	
+
 	@Override
 	public int getPkLength() {
 		return pkColumns.length;
@@ -150,7 +150,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 	public Map<Expression, Integer> getColumnMap() {
 		return columnMap;
 	}
-	
+
 	@Override
 	public Boolean matchesPkColumn(int pkIndex, Expression ex) {
 		if (ex instanceof Function) {
@@ -159,14 +159,14 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		}
 		return (pkColumns[pkIndex].equals(ex));
 	}
-	
+
 	@Override
 	public boolean supportsOrdering(int pkIndex, Expression ex) {
 		return !(ex instanceof ElementSymbol);
 	}
-	
+
 	public abstract SimpleIterator<T> processQuery(final VDBMetaData vdb, CompositeMetadataStore metadataStore, BaseIndexInfo<?> ii, TransformationMetadata metadata, CommandContext commandContext);
-	
+
 	public SimpleIterator<T> processQuery(final VDBMetaData vdb, NavigableMap<String, ?> map, BaseIndexInfo<?> ii, final CommandContext commandContext) {
 		final Criteria crit = ii.getCoveredCriteria();
 		final ArrayList<Object> rowBuffer = new ArrayList<Object>(1);
@@ -181,7 +181,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 					while (i < vals.size()) {
 						String key = (String)vals.get(i++).get(0);
 						if (!seen.add(key)) {
-							//filter to only a single match 
+							//filter to only a single match
 							continue;
 						}
 						T s = extractRecord(fMap.get(key));
@@ -221,7 +221,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 			return emptyIterator();
 		}
 	}
-	
+
 	protected T extractRecord(Object val) {
 		return (T) val;
 	}
@@ -233,9 +233,9 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 		}
 		return info;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param s
 	 * @param vdb
 	 * @param rowBuffer
@@ -263,5 +263,5 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 	protected void fillRow(T s, List<Object> rowBuffer) {
 		rowBuffer.add(s.getName());
 	}
-	
+
 }

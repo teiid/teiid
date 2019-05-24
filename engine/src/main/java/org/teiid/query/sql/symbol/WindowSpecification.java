@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
  package org.teiid.query.sql.symbol;
 
 import java.util.List;
@@ -28,35 +28,35 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class WindowSpecification implements LanguageObject {
-	
+
 	private List<Expression> partition;
 	private OrderBy orderBy;
 	private WindowFrame windowFrame;
-	
+
 	public WindowSpecification() {
-		
+
 	}
-	
+
 	public List<Expression> getPartition() {
 		return partition;
 	}
-	
+
 	public void setPartition(List<Expression> grouping) {
 		this.partition = grouping;
 	}
-	
+
 	public OrderBy getOrderBy() {
 		return orderBy;
 	}
-	
+
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
-	
+
 	public WindowFrame getWindowFrame() {
         return windowFrame;
     }
-	
+
 	public void setWindowFrame(WindowFrame frame) {
         this.windowFrame = frame;
     }
@@ -65,12 +65,12 @@ public class WindowSpecification implements LanguageObject {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(0, partition, orderBy, windowFrame);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -84,7 +84,7 @@ public class WindowSpecification implements LanguageObject {
 		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
 		EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
 	}
-	
+
 	@Override
 	public WindowSpecification clone() {
 		WindowSpecification clone = new WindowSpecification();
@@ -99,10 +99,10 @@ public class WindowSpecification implements LanguageObject {
 		}
 		return clone;
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

@@ -22,24 +22,24 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLCast implements Expression {
-	
+
 	private Expression expression;
 	private String typeName;
 	private Class<?> type;
-	
+
 	public XMLCast(Expression expression, String typeName) {
 		this.expression = expression;
 		this.typeName = typeName;
 	}
-	
+
 	public Expression getExpression() {
 		return expression;
 	}
-	
+
 	public void setExpression(Expression expression) {
 		this.expression = expression;
 	}
-	
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
@@ -49,25 +49,25 @@ public class XMLCast implements Expression {
 	public Object clone() {
 		return new XMLCast((Expression) expression.clone(), typeName);
 	}
-	
+
 	public String getTypeName() {
 	    return typeName;
 	}
-	
+
 	@Override
 	public Class<?> getType() {
 		return type;
 	}
-	
+
 	public void setType(Class<?> type) {
         this.type = type;
     }
-	
+
 	@Override
 	public int hashCode() {
 		return expression.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -82,10 +82,10 @@ public class XMLCast implements Expression {
 		XMLCast other = (XMLCast)obj;
 		return this.expression.equals(other.expression) && getType().equals(other.getType());
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

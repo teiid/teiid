@@ -63,9 +63,9 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
-    
+
     public static final boolean ALLOW_INFORMATION_SCHEMA = Boolean.valueOf(PropertiesUtils.getHierarchicalProperty("org.teiid.allow_information_schema", Boolean.FALSE.toString())); //$NON-NLS-1$
-	
+
 	/**
 	 * A wrapper to add a stateful text config
 	 */
@@ -73,36 +73,36 @@ public abstract class AbstractVDBDeployer {
 
 		private MetadataRepository<F, C> repo;
 		private String text;
-		
+
 		public MetadataRepositoryWrapper(MetadataRepository<F, C> repo, String text) {
 			this.repo = repo;
 			this.text = text;
 		}
-		
+
 		@Override
 		public void loadMetadata(MetadataFactory factory,
 				ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
 			repo.loadMetadata(factory, executionFactory, connectionFactory, this.text);
 		}
-		
+
 	};
-	
+
 	protected ConcurrentSkipListMap<String, MetadataRepository<?, ?>> repositories = new ConcurrentSkipListMap<String, MetadataRepository<?, ?>>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	public AbstractVDBDeployer() {
 		repositories.put("ddl", new DDLMetadataRepository()); //$NON-NLS-1$
 		repositories.put("native", new NativeMetadataRepository()); //$NON-NLS-1$
 		repositories.put("ddl-file", new DDLFileMetadataRepository()); //$NON-NLS-1$
 		repositories.put("udf", new UDFMetadataRepository()); //$NON-NLS-1$
 	}
-	
+
 	public void addMetadataRepository(String name, MetadataRepository<?, ?> metadataRepository) {
 		this.repositories.put(name, metadataRepository);
 	}
-	
+
 	protected void assignMetadataRepositories(VDBMetaData deployment, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0) 
+			if (model.getModelType() != Type.OTHER && (model.getName() == null || model.getName().indexOf('.') >= 0)
 					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)
 					|| model.getName().equalsIgnoreCase(CoreConstants.SYSTEM_ADMIN_MODEL)
 					|| model.getName().equalsIgnoreCase(CoreConstants.ODBC_MODEL)
@@ -127,7 +127,7 @@ public abstract class AbstractVDBDeployer {
 			model.addAttchment(MetadataRepository.class, repo);
 		}
 	}
-	
+
 	private MetadataRepository<?, ?> getMetadataRepository(VDBMetaData vdb, ModelMetaData model, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		if (model.getSourceMetadataType().isEmpty()) {
 			if (defaultRepo != null) {
@@ -140,10 +140,10 @@ public abstract class AbstractVDBDeployer {
 		}
 
 		List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?,?>>(2);
-		
+
 		for (int i = 0; i < model.getSourceMetadataType().size(); i++) {
 			String schemaTypes = model.getSourceMetadataType().get(i);
-			
+
 			StringTokenizer st = new StringTokenizer(schemaTypes, ","); //$NON-NLS-1$
 			while (st.hasMoreTokens()) {
 				String repoType = st.nextToken().trim();
@@ -157,7 +157,7 @@ public abstract class AbstractVDBDeployer {
 				repos.add(current);
 			}
 		}
-		
+
 		if (model.getModelType() == ModelMetaData.Type.PHYSICAL) {
 			repos.add(new DirectQueryMetadataRepository());
 		}
@@ -169,7 +169,7 @@ public abstract class AbstractVDBDeployer {
 		}
 		return new ChainingMetadataRepository(repos);
 	}
-	
+
     protected List<ConnectorManager> getConnectorManagers(final ModelMetaData model, final ConnectorManagerRepository cmr) {
     	if (model.isSource()) {
         	Collection<SourceMappingMetadata> mappings = model.getSources().values();
@@ -182,7 +182,7 @@ public abstract class AbstractVDBDeployer {
     	//return a single null to give us something to loop over
 		return Collections.singletonList(null);
     }
-    
+
 	protected void loadMetadata(VDBMetaData vdb, ConnectorManagerRepository cmr,
 			MetadataStore store, VDBResources vdbResources) throws TranslatorException {
 	    //add the system types
@@ -196,7 +196,7 @@ public abstract class AbstractVDBDeployer {
 	            public Map<String, Datatype> getRuntimeTypes() {
 	                return getVDBRepository().getRuntimeTypeMap();
 	            }
-	        }; 
+	        };
 	        dbStore.startEditing(true);
 	        dbStore.databaseCreated(new Database("x", "1")); //$NON-NLS-1$ //$NON-NLS-2$
 	        dbStore.databaseSwitched("x", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -205,7 +205,7 @@ public abstract class AbstractVDBDeployer {
 	        dbStore.stopEditing();
 	        store.addDataTypes(dbStore.getDatabase("x", "1").getMetadataStore().getDatatypes()); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
-	    
+
         // load metadata from the models
 		AtomicInteger loadCount = new AtomicInteger();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -218,7 +218,7 @@ public abstract class AbstractVDBDeployer {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 			return;
 		}
-		
+
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			MetadataRepository metadataRepository = model.getAttachment(MetadataRepository.class);
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
@@ -230,14 +230,14 @@ public abstract class AbstractVDBDeployer {
 			}
 		}
 	}
-	
+
 	protected abstract VDBRepository getVDBRepository();
 
 	protected abstract void loadMetadata(VDBMetaData vdb, ModelMetaData model,
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException;
-	
+
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,
 			final MetadataStore vdbMetadataStore,
@@ -245,7 +245,7 @@ public abstract class AbstractVDBDeployer {
 		if (success) {
 			// merge into VDB metadata
 			factory.mergeInto(vdbMetadataStore);
-		
+
 			//TODO: this is not quite correct, the source may be missing
 			model.clearRuntimeMessages();
 			model.setMetadataStatus(Model.MetadataStatus.LOADED);
@@ -254,7 +254,7 @@ public abstract class AbstractVDBDeployer {
 			vdb.setStatus(Status.FAILED);
 			//TODO: abort the other loads
 		}
-		
+
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
 		    if (vdb.getStatus() != Status.FAILED) {
 		        processVDBDDL(vdb, vdbMetadataStore, cmr, vdbResources);
@@ -274,14 +274,14 @@ public abstract class AbstractVDBDeployer {
             CompositeMetadataStore compositeStore = new CompositeMetadataStore(vdbMetadataStore);
             final TransformationMetadata metadata = new TransformationMetadata(vdb, compositeStore, null,
                     getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null);
-            
+
             DeploymentBasedDatabaseStore deploymentStore = new DeploymentBasedDatabaseStore(getVDBRepository()) {
-                
+
                 @Override
                 protected TransformationMetadata getTransformationMetadata() {
                     return metadata;
                 }
-                
+
                 @Override
                 public void importSchema(String schemaName, String serverType,
                         String serverName, String foreignSchemaName,
@@ -305,7 +305,7 @@ public abstract class AbstractVDBDeployer {
                     }
                     factory.setVDBClassLoader(vdb.getAttachment(ClassLoader.class));
                     MetadataRepository baseRepo = model.getAttachment(MetadataRepository.class);
-                    
+
                     MetadataRepository metadataRepository;
                     try {
                         metadataRepository = getMetadataRepository(serverType);
@@ -315,12 +315,12 @@ public abstract class AbstractVDBDeployer {
                     } catch (VirtualDatabaseException e1) {
                         throw new MetadataException(e1);
                     }
-                    
+
                     metadataRepository = new ChainingMetadataRepository(Arrays.asList(new MetadataRepositoryWrapper(metadataRepository, null), baseRepo));
-                    
+
                     ExecutionFactory ef = null;
                     Object cf = null;
-                    
+
                     Exception te = null;
                     for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
                         if (te != null) {
@@ -335,11 +335,11 @@ public abstract class AbstractVDBDeployer {
                         } catch (TranslatorException e) {
                             LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
                         }
-                    
+
                         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
                             LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
                         }
-                        
+
                         try {
                             metadataRepository.loadMetadata(factory, ef, cf);
                             break;
@@ -372,7 +372,7 @@ public abstract class AbstractVDBDeployer {
             DatabaseUtil.copyDatabaseGrantsAndRoles(database, vdb);
         }
     }
-	
+
 	protected MetadataFactory createMetadataFactory(VDBMetaData vdb, MetadataStore store,
 			ModelMetaData model, Map<String, ? extends VDBResource> vdbResources) {
 		Map<String, Datatype> datatypes = store.getDatatypes();
@@ -385,7 +385,7 @@ public abstract class AbstractVDBDeployer {
 	}
 
 	/**
-	 * @throws VirtualDatabaseException  
+	 * @throws VirtualDatabaseException
 	 */
 	protected MetadataRepository<?, ?> getMetadataRepository(String repoType) throws VirtualDatabaseException {
 		return repositories.get(repoType);

@@ -59,9 +59,9 @@ import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 public final class PureZipFileSystem implements FileSystem {
 
 	private static AtomicInteger counter = new AtomicInteger();
-	
+
     public static VirtualFile mount(URL url) throws IOException, URISyntaxException {
-		//we treat each zip as unique if it's possible that it 
+		//we treat each zip as unique if it's possible that it
 		String fileName = "teiid-vdb-" + url.toExternalForm(); //$NON-NLS-1$
 		VirtualFile root = VFS.getChild(fileName);
 		File f = new File(url.toURI());
@@ -78,7 +78,7 @@ public final class PureZipFileSystem implements FileSystem {
 				final Closeable c = VFS.mount(root, new PureZipFileSystem(f));
 				//in theory we don't need to track the closable as we're not using any resources
 				AutoCleanupUtil.setCleanupReference(root, new Removable() {
-					
+
 					@Override
 					public void remove() {
 						try {
@@ -91,7 +91,7 @@ public final class PureZipFileSystem implements FileSystem {
 		}
     	return root;
 	}
-	
+
     private final JarFile zipFile;
     private final File archiveFile;
     private final long zipTime;
@@ -231,7 +231,7 @@ public final class PureZipFileSystem implements FileSystem {
         }
         return names;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -279,7 +279,7 @@ public final class PureZipFileSystem implements FileSystem {
             }
         });
     }
-    
+
     private File buildFile(File contentsDir, String name) {
        List<String> tokens = PathTokenizer.getTokens(name);
        File currentFile = contentsDir;
@@ -302,7 +302,7 @@ public final class PureZipFileSystem implements FileSystem {
             this.name = name;
             this.entry = entry;
         }
-        
+
         private ZipNode find(VirtualFile mountPoint, VirtualFile target) {
             if (mountPoint.equals(target)) {
                 return this;

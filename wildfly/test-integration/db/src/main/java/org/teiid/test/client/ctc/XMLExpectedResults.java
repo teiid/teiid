@@ -55,23 +55,23 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 
 @SuppressWarnings("nls")
 public class XMLExpectedResults implements ExpectedResults {
-     
+
     protected Properties props;
     protected String resultMode = TestProperties.RESULT_MODES.NONE;
     protected String generateDir = null;
     protected String querySetIdentifier = null;
     protected String results_dir_loc = null;
-     
+
     protected Map<String, ResultsHolder> loadedResults = new HashMap<String, ResultsHolder>();
-    
-    
+
+
     public XMLExpectedResults(String querySetIdentifier, Properties properties) {
     	this.props = properties;
     	this.querySetIdentifier = querySetIdentifier;
-     	
+
     	this.results_dir_loc = props.getProperty(
-				PROP_EXPECTED_RESULTS_DIR_LOC, ""); 
-    	
+				PROP_EXPECTED_RESULTS_DIR_LOC, "");
+
 	String expected_root_loc = this.props
 		.getProperty(PROP_EXPECTED_RESULTS_ROOT_DIR);
 
@@ -79,13 +79,13 @@ public class XMLExpectedResults implements ExpectedResults {
 	    File dir = new File(expected_root_loc, results_dir_loc);
 	    this.results_dir_loc = dir.getAbsolutePath();
 	}
-	
+
 	validateResultsMode(this.props);
 
-    	
+
     	TestLogger.logDebug("Expected results loc: " + this.results_dir_loc);
     }
-    
+
     protected void validateResultsMode(Properties props) {
 	// Determine from property what to do with query results
 	String resultModeStr = props.getProperty(
@@ -105,7 +105,7 @@ public class XMLExpectedResults implements ExpectedResults {
 	TestLogger.logDebug("\nResults mode: " + resultMode); //$NON-NLS-1$
 
     }
-    
+
     public boolean isExpectedResultsNeeded() {
     	return (resultMode.equalsIgnoreCase(TestProperties.RESULT_MODES.COMPARE));
     }
@@ -119,7 +119,7 @@ public class XMLExpectedResults implements ExpectedResults {
        			ResultsHolder expectedResults = (ResultsHolder) getResults(queryidentifier);
 
        			return (expectedResults.getExceptionMsg() == null ? false : true);
-		} 
+		}
 		return false;
 	}
 
@@ -135,24 +135,24 @@ public class XMLExpectedResults implements ExpectedResults {
 	@Override
 	public synchronized File getResultsFile(String queryidentifier) throws QueryTestFailedException {
 		return findExpectedResultsFile(queryidentifier, this.querySetIdentifier);
-		
+
 	}
-	
+
 	private ResultsHolder getResults(String queryidentifier) throws QueryTestFailedException {
 		ResultsHolder rh = null;
-		
+
 		if (!loadedResults.containsKey(queryidentifier)) {
 			rh = loadExpectedResults( findExpectedResultsFile(queryidentifier, this.querySetIdentifier));
 		} else {
 			rh = loadedResults.get(queryidentifier);
 		}
-				
+
 		return rh;
 	}
-	
+
 	   /**
      * Compare the results of a query with those that were expected.
-     * 
+     *
      * @param expectedResults
      *            The expected results.
      * @param results
@@ -177,7 +177,7 @@ public class XMLExpectedResults implements ExpectedResults {
                                       final boolean resultFromQuery) throws QueryTestFailedException {
 
         final String eMsg = "CompareResults Error: "; //$NON-NLS-1$
-   	
+
 	ResultsHolder expectedResults = (ResultsHolder) getResults(queryIdentifier);
 
 	ResultsHolder actualResults;
@@ -188,7 +188,7 @@ public class XMLExpectedResults implements ExpectedResults {
 				eMsg
 					+ "Test resulted in unexpected exception " + actualException.getMessage()); //$NON-NLS-1$
 
-			
+
 		case TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION:
 
 		            if (!expectedResults.isException()) {
@@ -201,12 +201,12 @@ public class XMLExpectedResults implements ExpectedResults {
 		            actualResults.setQueryID(expectedResults.getQueryID());
 
 		            actualResults = convertException(actualException, actualResults);
-		            
+
 		            compareExceptions(actualResults, expectedResults, eMsg);
 
 		            break;
-		            
-		  default: 
+
+		  default:
 			    // DEBUG:
 			    // debugOut.println("*** Expected Results (holder): " +
 			    // expectedResults);
@@ -222,7 +222,7 @@ public class XMLExpectedResults implements ExpectedResults {
 		      		if (expectedResults.getRows().size() > 0) {
         			    compareResults(actualResults, expectedResults, eMsg, isOrdered);
 		      		} else if (actualResults.getRows() != null &&  actualResults.getRows().size() > 0) {
-			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$	      		    		      		    
+			                throw new QueryTestFailedException(eMsg + "Expected results indicated no results, but actual shows " + actualResults.getRows().size() + " rows."); //$NON-NLS-1$
 		      		}
 
 			    // DEBUG:
@@ -230,17 +230,17 @@ public class XMLExpectedResults implements ExpectedResults {
 			    // actualResults);
 
 			// Compare expected results with actual results, record by record
-			
+
 
 			break;
-		    
+
 	       }
-	
+
 	return null;
 
-    	
+
     }
-    
+
     private ResultsHolder convertException(final Throwable actualException,
 			final ResultsHolder actualResults) {
 		actualResults.setExceptionClassName(actualException.getClass()
@@ -248,10 +248,10 @@ public class XMLExpectedResults implements ExpectedResults {
 		actualResults.setExceptionMsg(actualException.getMessage());
 		return actualResults;
 	}
-    
+
     /**
      * Helper to convert results into records and record first batch response time.
-     * 
+     *
      * @param results
      * @param batchSize
      * @param resultsHolder
@@ -311,10 +311,10 @@ public class XMLExpectedResults implements ExpectedResults {
 
         return firstBatchResponseTime;
     }
-    
+
     /**
      * Added primarily for public access to the compare code for testing.
-     * 
+     *
      * @param actualResults
      * @param expectedResults
      * @param eMsg
@@ -328,8 +328,8 @@ public class XMLExpectedResults implements ExpectedResults {
 //        if (actualResults.isException() && expectedResults.isException()) {
 //            // Compare exceptions
 //            compareExceptions(actualResults, expectedResults, eMsg);
-//        } else 
-            
+//        } else
+
  //           if (actualResults.isResult() && expectedResults.isResult()) {
             // Compare results
             if (isOrdered == false && actualResults.hasRows() && expectedResults.hasRows()) {
@@ -348,7 +348,7 @@ public class XMLExpectedResults implements ExpectedResults {
                 sortRecords(expectedRows, true);
                 expectedResults.setRows(expectedRows);
             }
-            
+
             compareResultSets(actualResults.getRows(),
                               actualResults.getTypes(),
                               actualResults.getIdentifiers(),
@@ -362,7 +362,7 @@ public class XMLExpectedResults implements ExpectedResults {
 //            // Error - expected result but got exception
 //        }
     }
-     
+
      /**
       * sort one result that is composed of records of all columns
       */
@@ -384,7 +384,7 @@ public class XMLExpectedResults implements ExpectedResults {
              }
          }
      }
-    
+
     private void compareExceptions(final ResultsHolder actualResults,
 			final ResultsHolder expectedResults, String eMsg)
 			throws QueryTestFailedException {
@@ -432,11 +432,11 @@ public class XMLExpectedResults implements ExpectedResults {
 		}
 		return true;
 	}
-    
+
     /**
      * Compare actual results, identifiers and types with expected. <br>
      * <strong>Note </strong>: result list are expected to match element for element.</br>
-     * 
+     *
      * @param actualResults
      * @param actualDatatypes
      * @param actualIdentifiers
@@ -474,7 +474,7 @@ public class XMLExpectedResults implements ExpectedResults {
 
         //      DEBUG:
         //       debugOut.println("================== Compariing Rows ===================");
- 
+
         // Loop through rows
         for (int row = 0; row < actualRowCount; row++) {
 
@@ -495,7 +495,7 @@ public class XMLExpectedResults implements ExpectedResults {
                 Object actualValue = actualRecord.get(col);
                 // Get expected value
                 Object expectedValue = expectedRecord.get(col);
- 
+
                 //              DEBUG:
                 //                debugOut.println(" Col: " +(col +1) + ": expectedValue:[" + expectedValue + "] actualValue:[" + actualValue +
                 // "]");
@@ -510,19 +510,19 @@ public class XMLExpectedResults implements ExpectedResults {
                                                            + (expectedValue!=null?expectedValue:"null") + "], actual = [" //$NON-NLS-1$
                                                            + (actualValue!=null?actualValue:"null")  + "]"); //$NON-NLS-1$
 
-                } 
-                
+                }
+
                 if (expectedValue == null && actualValue == null) {
                 	continue;
                 }
-                	
+
                 if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
-                    	 
+
                 	if (actualValue instanceof Clob){
                 		Clob c = (Clob)actualValue;
                 		try {
 							actualValue = ObjectConverterUtil.convertToString(c.getAsciiStream());
-							
+
 						} catch (Throwable e) {
 							// TODO Auto-generated catch block
 							throw new QueryTestFailedException(e);
@@ -531,7 +531,7 @@ public class XMLExpectedResults implements ExpectedResults {
                     		Blob b = (Blob)actualValue;
                     		try {
     							actualValue = ObjectConverterUtil.convertToString(b.getBinaryStream());
-    							
+
     						} catch (Throwable e) {
     							// TODO Auto-generated catch block
     							throw new QueryTestFailedException(e);
@@ -540,29 +540,29 @@ public class XMLExpectedResults implements ExpectedResults {
                     	SQLXML s = (SQLXML)actualValue;
                 		try {
 							actualValue = ObjectConverterUtil.convertToString(s.getBinaryStream());
-							
+
 						} catch (Throwable e) {
 							// TODO Auto-generated catch block
 							throw new QueryTestFailedException(e);
 						}
-                    } 
+                    }
 
-                	
+
                 	if (!(expectedValue instanceof String)) {
                 		expectedValue = expectedValue.toString();
                 	}
-                } 
-                	
+                }
+
                     // Compare values with equals
                     if (!expectedValue.equals(actualValue)) {
                         // DEBUG:
                         //                        debugOut.println(" ExpectedType: " + expectedValue.getClass() + " ActualType: " +
                         // actualValue.getClass());
-                	
+
                          if (expectedValue instanceof String) {
                             final String expectedString = (String)expectedValue;
 //                            if (actualValue instanceof Blob || actualValue instanceof Clob || actualValue instanceof SQLXML) {
-//                            	
+//
 //                            	Clob c = (Clob)actualValue;
 //                                // LOB types are special case - metadata says they're Object types so
 //                                // expected results are of type String. Actual object type is MMBlob, MMClob.
@@ -574,7 +574,7 @@ public class XMLExpectedResults implements ExpectedResults {
 //                                                                       + expectedValue + "], actual = [" //$NON-NLS-1$
 //                                                                       + actualValue + "]"); //$NON-NLS-1$
 //                                }
-//                            } else 
+//                            } else
                             if (!(actualValue instanceof String)) {
                                 throw new QueryTestFailedException(eMsg + "Value mismatch at row " + (row + 1) //$NON-NLS-1$
                                                                    + " and column " + (col + 1) //$NON-NLS-1$
@@ -586,22 +586,22 @@ public class XMLExpectedResults implements ExpectedResults {
                                 assertStringsMatch(expectedString, (String)actualValue, (row + 1), (col + 1), eMsg);
                             }
                         } else {
-                            
+
                             throw new QueryTestFailedException(eMsg + "Value mismatch at row " + (row + 1) //$NON-NLS-1$
                                     + " and column " + (col + 1) //$NON-NLS-1$
                                     + ": expected = [" //$NON-NLS-1$
                                     + expectedValue + "], actual = [" //$NON-NLS-1$
                                     + actualValue + "]"); //$NON-NLS-1$
-              
+
                         }
                     }
 
             } // end loop through columns
         } // end loop through rows
     }
-    
- 
-    
+
+
+
     protected void compareIdentifiers(List actualIdentifiers,
 			List expectedIdentifiers, List actualDataTypes,
 			List expectedDatatypes) throws QueryTestFailedException {
@@ -651,12 +651,12 @@ public class XMLExpectedResults implements ExpectedResults {
         }
         return ident;
     }
-    
+
     private static final int MISMATCH_OFFSET = 20;
     private static final int MAX_MESSAGE_SIZE = 50;
 
- 
-    
+
+
    protected void assertStringsMatch(final String expectedStr, final String actualStr,
 			final int row, final int col, final String eMsg)
 			throws QueryTestFailedException {
@@ -668,17 +668,17 @@ public class XMLExpectedResults implements ExpectedResults {
 
 		String locationText = ""; //$NON-NLS-1$
 		int mismatchIndex = -1;
-		
-		
+
+
 		boolean isequal = Arrays.equals(expected.toCharArray(), actual.toCharArray());
-		
+
 		//if (!expected.equals(actual)) {
 		if (!isequal) {
 			if (expected != null && actual != null) {
 				int shortestStringLength = expected.length();
 				if (actual.length() < expected.length()) {
 					shortestStringLength = actual.length();
-				} 
+				}
 				for (int i = 0; i < shortestStringLength; i++) {
 					if (expected.charAt(i) != actual.charAt(i)) {
 						locationText = "  Strings do not match at character: " + (i + 1) + //$NON-NLS-1$
@@ -707,7 +707,7 @@ public class XMLExpectedResults implements ExpectedResults {
 			throw new QueryTestFailedException(message);
 		}
 	}
-    
+
     private String safeSubString(String text, int startIndex,
 			int endIndex) {
 		String prefix = "...'"; //$NON-NLS-1$
@@ -734,7 +734,7 @@ public class XMLExpectedResults implements ExpectedResults {
 	}
 
 
-    
+
     private String stripCR(final String text) {
         if (text.indexOf('\r') >= 0) {
             StringBuffer stripped = new StringBuffer(text.length());
@@ -770,7 +770,7 @@ public class XMLExpectedResults implements ExpectedResults {
         }
         return expectedResult;
     }
-	
+
     private File findExpectedResultsFile(String queryIdentifier,
 			String querySetIdentifier) throws QueryTestFailedException {
 		String resultFileName = queryIdentifier + ".xml"; //$NON-NLS-1$
@@ -778,11 +778,11 @@ public class XMLExpectedResults implements ExpectedResults {
 		if (!file.exists() && this.isExpectedResultsNeeded()) {
 			throw new QueryTestFailedException("Query results file " + file.getAbsolutePath() + " cannot be found");
 		}
-		
+
 		return file;
 
 	}
-    
+
 	public static void main(String[] args) {
 		System.setProperty(ConfigPropertyNames.CONFIG_FILE, "ctc-bqt-test.properties");
 
@@ -792,14 +792,14 @@ public class XMLExpectedResults implements ExpectedResults {
 			throw new RuntimeException("Failed to load config properties file");
 
 		}
-		
+
 		QueryScenario set = ClassFactory.createQueryScenario("testscenario");
 
-		
-		_instance.setProperty(XMLQueryReader.PROP_QUERY_FILES_ROOT_DIR, new File("src/main/resources/").getAbsolutePath() );
-		
 
-		
+		_instance.setProperty(XMLQueryReader.PROP_QUERY_FILES_ROOT_DIR, new File("src/main/resources/").getAbsolutePath() );
+
+
+
 
 		try {
 
@@ -808,14 +808,14 @@ public class XMLExpectedResults implements ExpectedResults {
 			String querySetID = it.next();
 
 			List<QueryTest> queries = set.getQueries(querySetID);
-			if (queries.size() == 0l) {
+			if (queries.size() == 0L) {
 				System.out.println("Failed, didn't load any queries " );
 			}
-			
-				
+
+
 				ExpectedResults er = set.getExpectedResults(querySetID);
 				    //new XMLExpectedResults(_instance.getProperties(), querySetID);
-								
+
 				ResultsGenerator gr = set.getResultsGenerator();
 				    //new XMLGenerateResults(_instance.getProperties(), "testname", set.getOutputDirectory());
 
@@ -824,21 +824,21 @@ public class XMLExpectedResults implements ExpectedResults {
 				    QueryTest q = qIt.next();
 				//	String qId = (String) qIt.next();
 				//	String sql = (String) queries.get(qId);
-					
+
 //					System.out.println("SetID #: " + cnt + "  Qid: " + qId + "   sql: " + sql);
-					
+
 					File resultsFile = er.getResultsFile(q.getQueryID());
 					if (resultsFile == null) {
 						System.out.println("Failed to get results file for queryID " + q.getQueryID());
 					}
-					
-	
-					
-					
+
+
+
+
 				}
 
 		    }
-			
+
 			System.out.println("Completed Test");
 
 		} catch (QueryTestFailedException e) {
@@ -847,7 +847,7 @@ public class XMLExpectedResults implements ExpectedResults {
 		}
 
 	}
-    
+
 	private  long compareResults(final ResultsHolder expectedResults,
 	    final ResultSet results, final int testStatus, final Throwable actualException,
 	    final boolean isOrdered, final int batchSize)
@@ -856,14 +856,14 @@ public class XMLExpectedResults implements ExpectedResults {
 	ResultsHolder actualResults;
 	long firstBatchResponseTime = 0;
 	final String eMsg = "CompareResults Error: "; //$NON-NLS-1$
-	
+
 	       switch (testStatus) {
 		case TestResult.RESULT_STATE.TEST_EXCEPTION:
 	                throw new QueryTestFailedException(eMsg + "TestResult indicates test exception occured, the process should not have passed it in for comparison."); //$NON-NLS-1$
-			
-			
+
+
 //			break;
-			
+
 		case TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION:
 		//    String actualExceptionClass = actualException.getClass().getName();
 
@@ -877,15 +877,15 @@ public class XMLExpectedResults implements ExpectedResults {
 		            actualResults.setQueryID(expectedResults.getQueryID());
 
 		            actualResults = convertException(actualException, actualResults);
-		            
+
 		            compareExceptions(actualResults, expectedResults, eMsg);
 
 		            return firstBatchResponseTime;
-		    
+
 //		    	break;
-		    
+
 	       }
-	       
+
 
 
 //	if (results == null) {

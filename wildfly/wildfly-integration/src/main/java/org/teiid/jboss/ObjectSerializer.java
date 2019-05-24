@@ -33,17 +33,17 @@ import org.teiid.logging.LogManager;
 
 
 public class ObjectSerializer {
-	
+
 	private static final Logger log = Logger.getLogger(ObjectSerializer.class);
 
 	private static final String ATTACHMENT_SUFFIX = ".ser"; //$NON-NLS-1$
 
 	private String storagePath;
-	
+
 	public ObjectSerializer(String path) {
 		this.storagePath = path;
 	}
-	
+
 	public <T> T loadAttachment(File attachmentsStore, Class<T> expected) throws IOException, ClassNotFoundException {
 		if (log.isTraceEnabled()) {
 			log.trace("loadAttachment, attachmentsStore=" + attachmentsStore); //$NON-NLS-1$
@@ -64,7 +64,7 @@ public class ObjectSerializer {
 		if (log.isTraceEnabled()) {
 			log.trace("saveAttachment, attachmentsStore=" + attachmentsStore + ", attachment=" + attachment); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		
+
 		if (!attachmentsStore.exists() || force) {
 			ObjectOutputStream oos = null;
 			try {
@@ -80,11 +80,11 @@ public class ObjectSerializer {
 		}
 		return false;
 	}
-	
+
 	public File buildVDBFile(VDBMetaData vdb) {
 		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	public File buildVdbXml(VDBMetaData vdb) {
 		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), "vdb.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -92,17 +92,17 @@ public class ObjectSerializer {
 	public File buildModelFile(VDBMetaData vdb, String modelName) {
 		return new File(baseDirectory(vdb.getName()+"_"+vdb.getVersion()), vdb.getName()+"_"+vdb.getVersion()+"_"+modelName+ATTACHMENT_SUFFIX); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
-	
+
 	public boolean isStale(VDBMetaData vdb, long timeAfter) {
 		File cacheFile = buildVDBFile(vdb);
 		return (cacheFile.exists() && timeAfter > cacheFile.lastModified());
 	}
-	
+
 	public void removeAttachments(VDBMetaData vdb) {
 		String dirName = baseDirectory(vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
 	}
-	
+
 	public void removeAttachment(File file) {
 		FileUtils.remove(file);
 	}
@@ -111,7 +111,7 @@ public class ObjectSerializer {
 		String dirName = this.storagePath + File.separator + fileName + File.separator;
 		return dirName;
 	}
-	
+
 	public <T> T loadSafe(File cacheFile, Class<T> clazz) {
 		try {
 			if (cacheFile.exists()) {
@@ -131,5 +131,5 @@ public class ObjectSerializer {
 			f.getParentFile().mkdirs();
 		}
 		return new FileOutputStream(f);
-	}	
+	}
 }

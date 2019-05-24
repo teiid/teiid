@@ -33,7 +33,7 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
 
 	private JsonType result;
 	private JSONBuilder concat;
-    
+
     public JSONArrayAgg() {
 	}
 
@@ -43,8 +43,8 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
      * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
@@ -56,8 +56,8 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {

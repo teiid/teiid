@@ -34,20 +34,20 @@ import org.teiid.jdbc.JDBCPlugin;
  * completion listeners.
  */
 public class ResultsFuture<T> implements Future<T> {
-	
+
 	public static final ResultsFuture<Void> NULL_FUTURE = new ResultsFuture<Void>();
-	
+
 	static {
 		NULL_FUTURE.getResultsReceiver().receiveResults(null);
 	}
 	private static final Logger logger = Logger.getLogger("org.teiid"); //$NON-NLS-1$
-	
+
 	public interface CompletionListener<T> {
 		void onCompletion(ResultsFuture<T> future);
 	}
-	
+
 	private LinkedList<CompletionListener<T>> listeners = new LinkedList<CompletionListener<T>>();
-	
+
 	private T result;
 	private Throwable exception;
 	private boolean done;
@@ -74,16 +74,16 @@ public class ResultsFuture<T> implements Future<T> {
 			}
 			done();
 		}
-	}; 
-	
+	};
+
 	public ResultsFuture() {
-		
+
 	}
-	
+
 	public ResultsReceiver<T> getResultsReceiver() {
-		return resultsReceiver; 
+		return resultsReceiver;
 	}
-	
+
 	public boolean cancel(boolean mayInterruptIfRunning) {
 		return false;
 	}
@@ -94,7 +94,7 @@ public class ResultsFuture<T> implements Future<T> {
 		}
 		return convertResult();
 	}
-	
+
 	protected T convertResult() throws ExecutionException {
 		if (exception != null) {
 			throw new ExecutionException(exception);
@@ -123,7 +123,7 @@ public class ResultsFuture<T> implements Future<T> {
 	public synchronized boolean isDone() {
 		return done;
 	}
-	
+
 	private void done() {
 		synchronized (this.listeners) {
 			for (CompletionListener<T> completionListener : this.listeners) {
@@ -136,7 +136,7 @@ public class ResultsFuture<T> implements Future<T> {
 			this.listeners.clear();
 		}
 	}
-	
+
 	public void addCompletionListener(CompletionListener<T> listener) {
 		synchronized (this) {
 			if (done) {
@@ -152,5 +152,5 @@ public class ResultsFuture<T> implements Future<T> {
 			}
 		}
 	}
-	
+
 }

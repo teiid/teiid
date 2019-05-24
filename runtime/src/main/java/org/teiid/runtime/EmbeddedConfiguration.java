@@ -33,7 +33,7 @@ import org.teiid.security.SecurityHelper;
 import org.teiid.transport.SocketConfiguration;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
-	
+
 	static final int DEFAULT_MAX_ASYNC_WORKERS = 10;
 	private SecurityHelper securityHelper;
 	private String securityDomain;
@@ -47,9 +47,9 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private List<SocketConfiguration> transports;
 	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	private int maxAsyncThreads = DEFAULT_MAX_ASYNC_WORKERS;
-	
+
 	private boolean allowEnvFunction;
-	
+
 	//buffer manager properties
 	private int processorBatchSize = -1 ;
 	private int maxReserveKb = -1;
@@ -62,17 +62,17 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxStorageObjectSize = -1;
 	private boolean memoryBufferOffHeap = false;
 	private int memoryBufferSpace = -1;
-	
+
 	private String nodeName;
-	
+
 	private AuthenticationType authenticationType;
-	
+
 	public EmbeddedConfiguration() {
 		DefaultAuthorizationValidator authorizationValidator = new DefaultAuthorizationValidator();
 		authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
 		this.setAuthorizationValidator(authorizationValidator);
 	}
-	
+
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
 	}
@@ -80,7 +80,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	 * Set the {@link SecurityHelper} that can associate the appropriate SecurityContext
 	 * with threads executing Teiid tasks.  Will also set the appropriate user/subject information
 	 * on the Teiid contexts.
-	 * 
+	 *
 	 * @param securityHelper
 	 */
 	public void setSecurityHelper(SecurityHelper securityHelper) {
@@ -98,36 +98,36 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setTransactionManager(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
 	}
-	
+
 	public ObjectReplicator getObjectReplicator() {
 		return objectReplicator;
 	}
-	
+
 	public void setObjectReplicator(ObjectReplicator objectReplicator) {
 		this.objectReplicator = objectReplicator;
 	}
-	
+
 	public boolean isUseDisk() {
 		return useDisk;
 	}
-	
+
 	public void setUseDisk(boolean useDisk) {
 		this.useDisk = useDisk;
 	}
-	
+
 	public void setBufferDirectory(String dir) {
 		this.bufferDirectory = dir;
 	}
-	
+
 	public String getBufferDirectory() {
 		return this.bufferDirectory;
 	}
-	
+
 	@Deprecated
 	public String getInfinispanConfigFile() {
 		return infinispanConfigFile;
 	}
-	
+
 	/**
      * @see #setCacheFactory(CacheFactory) to set the {@link CacheFactory} directly
      * @return
@@ -136,7 +136,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setInfinispanConfigFile(String infinispanConfigFile) {
 		this.infinispanConfigFile = infinispanConfigFile;
 	}
-	
+
 	public CacheFactory getCacheFactory() {
 		return this.cacheFactory;
 	}
@@ -150,32 +150,32 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setMaxResultSetCacheStaleness(int maxResultSetCacheStaleness) {
 		this.maxResultSetCacheStaleness = maxResultSetCacheStaleness;
 	}
-	
+
 	protected void stop() {
 		if (cacheFactory != null) {
 			cacheFactory.destroy();
 		}
 	}
-	
+
 	public void addTransport(SocketConfiguration configuration) {
 		if (this.transports == null) {
 			this.transports = new ArrayList<SocketConfiguration>();
 		}
 		this.transports.add(configuration);
 	}
-	
+
 	public List<SocketConfiguration> getTransports(){
 		return this.transports;
 	}
-	
+
 	public int getMaxODBCLobSizeAllowed() {
 		return this.maxODBCLobSizeAllowed;
 	}
-	
+
 	public void setMaxODBCLobSizeAllowed(int lobSize) {
 		this.maxODBCLobSizeAllowed = lobSize;
-	}	
-	
+	}
+
     public int getMaxAsyncThreads() {
         return maxAsyncThreads;
     }
@@ -291,11 +291,11 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setMemoryBufferSpace(int memoryBufferSpace) {
 		this.memoryBufferSpace = memoryBufferSpace;
 	}
-	
+
 	public AuthenticationType getAuthenticationType() {
 		return this.authenticationType;
 	}
-	
+
 	public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
@@ -311,7 +311,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
     public boolean isAllowEnvFunction() {
         return allowEnvFunction;
     }
-    
+
     public void setAllowEnvFunction(boolean allowEnvFunction) {
         this.allowEnvFunction = allowEnvFunction;
     }

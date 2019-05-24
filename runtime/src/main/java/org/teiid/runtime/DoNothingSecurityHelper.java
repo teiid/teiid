@@ -30,7 +30,7 @@ import org.teiid.security.SecurityHelper;
  * has the proper security context.
  */
 public class DoNothingSecurityHelper implements SecurityHelper {
-	
+
 	@Override
 	public Object getSecurityContext(String securityDomain) {
 	    return new Object();
@@ -45,7 +45,7 @@ public class DoNothingSecurityHelper implements SecurityHelper {
 	public Object associateSecurityContext(Object context) {
 		return null;
 	}
-	
+
 	@Override
 	public Object authenticate(String securityDomain, String baseUserName,
 			Credentials credentials, String applicationName)
@@ -62,5 +62,5 @@ public class DoNothingSecurityHelper implements SecurityHelper {
 	public Subject getSubjectInContext(Object context) {
 		return new Subject();
 	}
-    
+
 }

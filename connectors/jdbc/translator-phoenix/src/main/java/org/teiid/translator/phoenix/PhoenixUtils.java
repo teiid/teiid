@@ -21,12 +21,12 @@ import org.teiid.metadata.Column;
 import org.teiid.translator.TypeFacility;
 
 public class PhoenixUtils {
-    
+
     public static final String QUOTE = "\""; //$NON-NLS-1$
-    
+
     /*
      * Convert teiid type to phoenix type, the following types not support by phoenix
-     *    object -> Any 
+     *    object -> Any
      *    blob   -> java.sql.Blob
      *    clob   -> java.sql.Clob
      *    xml    -> java.sql.SQLXML
@@ -36,9 +36,9 @@ public class PhoenixUtils {
         String typeName = TypeFacility.getDataTypeName(clas);
         return convertType(typeName);
     }
-    
+
     public static String convertType(String type) {
-        
+
         if(type.equals(TypeFacility.RUNTIME_NAMES.STRING)){
             return "VARCHAR"; //$NON-NLS-1$
         } else if(type.equals(TypeFacility.RUNTIME_NAMES.BOOLEAN)){
@@ -71,9 +71,9 @@ public class PhoenixUtils {
             return "VARBINARY"; //$NON-NLS-1$
         } else if(type.equals(TypeFacility.RUNTIME_NAMES.CLOB)){
             return "VARCHAR"; //$NON-NLS-1$
-        } 
-        
+        }
+
         return "BINARY"; //$NON-NLS-1$
     }
-    
+
 }

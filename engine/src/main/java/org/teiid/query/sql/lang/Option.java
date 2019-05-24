@@ -30,20 +30,20 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * Represents MetaMatrix extension options to normal SQL.  Options 
+ * Represents MetaMatrix extension options to normal SQL.  Options
  * are declared in a list after the OPTION keyword, such as:
  * "OPTION SHOWPLAN DEBUG".
  */
 public class Option implements LanguageObject {
-    
-    public final static String MAKEDEP = Reserved.MAKEDEP; 
-    public final static String MAKENOTDEP = Reserved.MAKENOTDEP; 
+
+    public final static String MAKEDEP = Reserved.MAKEDEP;
+    public final static String MAKENOTDEP = Reserved.MAKENOTDEP;
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
     public static class MakeDep {
     	private Integer max;
     	private Boolean join;
-    	
+
     	@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -62,13 +62,13 @@ public class Option implements LanguageObject {
 			}
 			MakeDep other = (MakeDep) obj;
 			return EquivalenceUtil.areEqual(max, other.max)
-					&& join == other.join; 
+					&& join == other.join;
 		}
 
 		public MakeDep() {
-			
+
 		}
-		
+
 		@Override
 		public String toString() {
 			return new SQLStringVisitor().appendMakeDepOptions(this).getSQLString();
@@ -81,20 +81,20 @@ public class Option implements LanguageObject {
 		public void setMax(Integer max) {
 			this.max = max;
 		}
-		
+
 		public Boolean getJoin() {
 			return join;
 		}
-		
+
 		public void setJoin(Boolean join) {
 			this.join = join;
 		}
-		
+
 		public boolean isSimple() {
 			return max == null && join == null;
 		}
     }
-    
+
     private List<String> makeDependentGroups;
     private List<String> makeIndependentGroups;
     private List<MakeDep> makeDependentOptions;
@@ -116,7 +116,7 @@ public class Option implements LanguageObject {
     public void addDependentGroup(String group) {
     	addDependentGroup(group, new MakeDep());
     }
-	
+
     public void addDependentGroup(String group, MakeDep makedep) {
     	if (makedep == null) {
     		return;
@@ -125,10 +125,10 @@ public class Option implements LanguageObject {
             this.makeDependentGroups = new ArrayList<String>();
             this.makeDependentOptions = new ArrayList<MakeDep>();
         }
-        this.makeDependentGroups.add(group);    
+        this.makeDependentGroups.add(group);
         this.makeDependentOptions.add(makedep);
     }
-    
+
     public void addIndependentGroup(String group, MakeDep makedep) {
     	if (makedep == null) {
     		return;
@@ -137,30 +137,30 @@ public class Option implements LanguageObject {
             this.makeIndependentGroups = new ArrayList<String>();
             this.makeIndependentOptions = new ArrayList<MakeDep>();
         }
-        this.makeIndependentGroups.add(group);    
+        this.makeIndependentGroups.add(group);
         this.makeIndependentOptions.add(makedep);
     }
-    
-    /** 
+
+    /**
      * Get all groups to make dependent
      * @return List of String defining groups to be made dependent, may be null if no groups
      */
     public List<String> getDependentGroups() {
         return this.makeDependentGroups;
     }
-    
+
     public List<MakeDep> getMakeDepOptions() {
     	return this.makeDependentOptions;
     }
-    
+
     public List<MakeDep> getMakeIndependentOptions() {
 		return makeIndependentOptions;
 	}
-    
+
     public List<String> getMakeIndependentGroups() {
 		return makeIndependentGroups;
 	}
-    
+
     /**
      * Add group to make dependent
      * @param group Group to make dependent
@@ -169,20 +169,20 @@ public class Option implements LanguageObject {
         if(this.makeNotDependentGroups == null) {
             this.makeNotDependentGroups = new ArrayList<String>();
         }
-        this.makeNotDependentGroups.add(group);    
+        this.makeNotDependentGroups.add(group);
     }
-    
-    /** 
+
+    /**
      * Get all groups to make dependent
      * @return List of String defining groups to be made dependent, may be null if no groups
      */
     public List<String> getNotDependentGroups() {
         return this.makeNotDependentGroups;
     }
-    
+
     /**
      * Add group that overrides the default behavior of Materialized View feautre
-     * to route the query to the primary virtual group transformation instead of 
+     * to route the query to the primary virtual group transformation instead of
      * the Materialized View transformation.
      * @param group Group that overrides the default behavior of Materialized View
      */
@@ -190,20 +190,20 @@ public class Option implements LanguageObject {
         if(this.noCacheGroups == null) {
             this.noCacheGroups = new ArrayList<String>();
         }
-        this.noCacheGroups.add(group);    
+        this.noCacheGroups.add(group);
     }
-    
-    /** 
+
+    /**
      * Get all groups that override the default behavior of Materialized View feautre
-     * to route the query to the primary virtual group transformation instead of 
+     * to route the query to the primary virtual group transformation instead of
      * the Materialized View transformation.
-     * @return List of String defining groups that overrides the default behavior of 
+     * @return List of String defining groups that overrides the default behavior of
      * Materialized View, may be null if there are no groups
      */
     public List<String> getNoCacheGroups() {
         return this.noCacheGroups;
     }
-	
+
 	public boolean isNoCache() {
 		return noCache;
 	}
@@ -211,7 +211,7 @@ public class Option implements LanguageObject {
 	public void setNoCache(boolean noCache) {
 		this.noCache = noCache;
 	}
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -223,7 +223,7 @@ public class Option implements LanguageObject {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
-    
+
     /**
      * Compare two Option clauses for equality.
      * @param obj Other object
@@ -239,7 +239,7 @@ public class Option implements LanguageObject {
 		}
 
 		Option other = (Option) obj;
-        
+
         return noCache == other.noCache &&
                EquivalenceUtil.areEqual(makeDependentGroups, other.makeDependentGroups) &&
                EquivalenceUtil.areEqual(makeIndependentGroups, other.makeIndependentGroups) &&
@@ -274,25 +274,25 @@ public class Option implements LanguageObject {
     public Object clone() {
         Option newOption = new Option();
         newOption.setNoCache(noCache);
-        
+
         if(this.makeDependentGroups != null) {
         	newOption.makeDependentGroups = new ArrayList<String>(this.makeDependentGroups);
         	newOption.makeDependentOptions = new ArrayList<MakeDep>(this.makeDependentOptions);
         }
-        
+
         if(this.makeIndependentGroups != null) {
         	newOption.makeIndependentGroups = new ArrayList<String>(this.makeIndependentGroups);
         	newOption.makeIndependentOptions = new ArrayList<MakeDep>(this.makeIndependentOptions);
         }
-            
+
         if(getNotDependentGroups() != null) {
         	newOption.makeNotDependentGroups = new ArrayList<String>(getNotDependentGroups());
         }
-            
+
         if(getNoCacheGroups() != null) {
         	newOption.noCacheGroups = new ArrayList<String>(getNoCacheGroups());
         }
-        
+
 		return newOption;
     }
-}	
+}

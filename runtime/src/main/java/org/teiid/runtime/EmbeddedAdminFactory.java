@@ -23,13 +23,13 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.services.BufferServiceImpl;
 
 public class EmbeddedAdminFactory {
-	
+
 	private static EmbeddedAdminFactory INSTANCE = new EmbeddedAdminFactory();
-	
+
 	public static EmbeddedAdminFactory getInstance() {
 		return INSTANCE;
 	}
-	
+
 	public static EngineStatisticsMetadata createEngineStats(
 			int activeSessionsCount, BufferServiceImpl bufferService,
 			DQPCore dqp) {

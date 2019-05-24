@@ -31,14 +31,14 @@ import org.teiid.logging.LogManager;
 
 class TranslatorService implements Service<VDBTranslatorMetaData> {
 	private VDBTranslatorMetaData translator;
-	
+
 	final InjectedValue<TranslatorRepository> repositoryInjector = new InjectedValue<TranslatorRepository>();
 	final InjectedValue<VDBStatusChecker> statusCheckerInjector = new InjectedValue<VDBStatusChecker>();
-		
+
 	public TranslatorService(VDBTranslatorMetaData translator) {
 		this.translator = translator;
 	}
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		this.repositoryInjector.getValue().addTranslatorMetadata(this.translator.getName(), this.translator);

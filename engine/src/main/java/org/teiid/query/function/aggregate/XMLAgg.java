@@ -33,7 +33,7 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
 
 	private XMLType result;
 	private XmlConcat concat;
-    
+
     public XMLAgg() {
 	}
 
@@ -43,8 +43,8 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
      * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
@@ -55,8 +55,8 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {

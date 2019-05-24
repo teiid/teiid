@@ -29,29 +29,29 @@ import com.couchbase.client.java.query.N1qlQueryResult;
  *       └── Keyspaces
  *              └──Documents
  * </pre>
- * A Keyspace is a set of JSON documents that may vary in structure, use a 
- * self-describing format, flexible Data Model, dynamic schemas. 
- * 
+ * A Keyspace is a set of JSON documents that may vary in structure, use a
+ * self-describing format, flexible Data Model, dynamic schemas.
+ *
  * A {@code CouchbaseConnection} is a connection to a specific Couchbase Namespace,
  * build upon Couchbase N1QL, used to handle application-level operations
- * (SELECT/UPDATE/INSERT/DELETE) against the documents under a specific 
+ * (SELECT/UPDATE/INSERT/DELETE) against the documents under a specific
  * Couchbase Namespace.
- * 
+ *
  * @author kylin
  *
  */
 public interface CouchbaseConnection extends Connection {
-    
+
     /**
      * Returns the name of the  Namespace
      * @return
      */
     String getNamespace();
-    
+
     /**
-     * Executes the given N1QL statement, which returns a single <code>N1qlQueryResult</code> 
+     * Executes the given N1QL statement, which returns a single <code>N1qlQueryResult</code>
      * object.
-     * 
+     *
      * @param statement Any N1QL statement, like Insert, Select, Update, Delete, etc.
      * @return
      */

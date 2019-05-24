@@ -43,56 +43,56 @@ import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
 public class EmbeddedAdminImpl implements Admin {
-	
+
 	private EmbeddedServer embeddedServer;
 
 	public EmbeddedAdminImpl(EmbeddedServer embeddedServer) {
 		this.embeddedServer = embeddedServer;
 	}
-	
+
 	@Override
 	public void setProfileName(String name) {
 	    //no op
 	}
-	
+
 	@Override
 	public void clearCache(String cacheType, String vdbName, int vdbVersion)
 			throws AdminException {
 		clearCache(cacheType, vdbName, String.valueOf(vdbVersion));
 	}
-	
+
 	@Override
 	public void addDataRoleMapping(String vdbName, int vdbVersion,
 			String dataRole, String mappedRoleName) throws AdminException {
 		addDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
 	}
-	
+
 	@Override
 	public void removeDataRoleMapping(String vdbName, int vdbVersion,
 			String dataRole, String mappedRoleName) throws AdminException {
 		removeDataRoleMapping(vdbName, String.valueOf(vdbVersion), dataRole, mappedRoleName);
 	}
-	
+
 	@Override
 	public void setAnyAuthenticatedForDataRole(String vdbName,
 			int vdbVersion, String dataRole, boolean anyAuthenticated)
 			throws AdminException {
 		setAnyAuthenticatedForDataRole(vdbName, String.valueOf(vdbVersion), dataRole, anyAuthenticated);
 	}
-	
+
 	@Override
 	public void changeVDBConnectionType(String vdbName, int vdbVersion,
 			ConnectionType type) throws AdminException {
 		changeVDBConnectionType(vdbName, String.valueOf(vdbVersion), type);
 	}
-	
+
 	@Override
 	public void updateSource(String vdbName, int vdbVersion,
 			String sourceName, String translatorName, String dsName)
 			throws AdminException {
 		updateSource(vdbName, String.valueOf(vdbVersion), sourceName, translatorName, dsName);
 	}
-	
+
 	@Override
 	public void addSource(String vdbName, int vdbVersion, String modelName,
 			String sourceName, String translatorName, String dsName)
@@ -104,7 +104,7 @@ public class EmbeddedAdminImpl implements Admin {
 	public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
 		return getVDB(vdbName, String.valueOf(vdbVersion));
 	}
-	
+
 	@Override
 	public void removeSource(String vdbName, int vdbVersion,
 			String modelName, String sourceName) throws AdminException {
@@ -116,43 +116,43 @@ public class EmbeddedAdminImpl implements Admin {
 			throws AdminException {
 		restartVDB(vdbName, String.valueOf(vdbVersion), models);
 	}
-	
+
 	@Override
 	public String getSchema(String vdbName, int vdbVersion,
 			String modelName, EnumSet<SchemaObjectType> allowedTypes,
 			String typeNamePattern) throws AdminException {
 		return getSchema(vdbName, String.valueOf(vdbVersion), modelName, allowedTypes, typeNamePattern);
 	}
-	
+
 	@Override
 	public void removeSource(String vdbName, String vdbVersion, String modelName, String sourceName) throws AdminException {
 
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		synchronized(vdb) {
 			ModelMetaData model = vdb.getModel(modelName);
-			
+
 			if (model == null) {
 				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40090, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40090, modelName, vdb.getName(), vdb.getVersion()));
 			}
-			
+
 			SourceMappingMetadata source = model.getSourceMapping(sourceName);
 			if(source == null) {
 				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40107, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40107, sourceName, modelName, vdb.getName(), vdb.getVersion()));
 			}
-			
+
 			source = model.getSources().remove(sourceName);
 			if(source == null) {
 				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40091, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40091, sourceName, modelName, vdb.getName(), vdb.getVersion()));
 			}
 		}
-		
+
 	}
-	
+
 	private VDBMetaData checkVDB(String vdbName) throws AdminProcessingException {
 		VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName);
 		return vdb;
 	}
-	
+
 	private VDBMetaData checkVDB(String vdbName, String vdbVersion) throws AdminProcessingException {
 		VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null){
@@ -170,15 +170,15 @@ public class EmbeddedAdminImpl implements Admin {
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		synchronized(vdb) {
 			ModelMetaData model = vdb.getModel(modelName);
-			
+
 			if (model == null) {
 				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40090, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40090, modelName, vdb.getName(), vdb.getVersion()));
 			}
-			
+
 			if (!model.isSupportsMultiSourceBindings()) {
 				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40108, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40108, modelName, vdb.getName(), vdb.getVersion()));
 			}
-			
+
 			SourceMappingMetadata source = model.getSourceMapping(sourceName);
 			if(source != null) {
 				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40107, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40107, sourceName, modelName, vdb.getName(), vdb.getVersion()));
@@ -193,7 +193,7 @@ public class EmbeddedAdminImpl implements Admin {
 	public void updateSource(String vdbName, String vdbVersion, String sourceName, String translatorName, String dsName) throws AdminException {
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		synchronized(vdb) {
-			
+
 			for (ModelMetaData m : vdb.getModelMetaDatas().values()) {
 				SourceMappingMetadata mapping = m.getSourceMapping(sourceName);
 				if (mapping != null) {
@@ -203,7 +203,7 @@ public class EmbeddedAdminImpl implements Admin {
 			}
 		}
 	}
-	
+
 	@Override
 	public void changeVDBConnectionType(String vdbName, String vdbVersion, ConnectionType type) throws AdminException {
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
@@ -215,7 +215,7 @@ public class EmbeddedAdminImpl implements Admin {
 	@Override
 	public void deploy(String deployName, InputStream content) throws AdminException {
 		if (!deployName.endsWith("-vdb.xml")) { //$NON-NLS-1$
-			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40142, deployName)); 
+			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40142, deployName));
 		}
 		try {
 			this.embeddedServer.deployVDB(content);
@@ -231,22 +231,22 @@ public class EmbeddedAdminImpl implements Admin {
 			this.embeddedServer.deployVDBZip(f.toURI().toURL());
 		} catch (Exception e) {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40133, deployName, e), e);
-		}*/ 
+		}*/
 	}
 
     @Override
     public void deploy(String deployName, InputStream content, boolean peristent) throws AdminException {
         throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "deploy")); //$NON-NLS-1$
     }
-    
+
 	@Override
 	public void undeploy(String deployedName) throws AdminException {
-		
+
 		VDBMetaData vdb = checkVDB(deployedName);
 		if(null == vdb) {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40134, deployedName));
 		}
-		
+
 		this.embeddedServer.undeployVDB(deployedName);
 	}
 
@@ -256,7 +256,7 @@ public class EmbeddedAdminImpl implements Admin {
 		list.addAll(this.embeddedServer.repo.getVDBs());
 		return list;
 	}
-	
+
 	@Override
 	public Collection<? extends VDB> getVDBs(boolean singleInstance)
 	        throws AdminException {
@@ -286,7 +286,7 @@ public class EmbeddedAdminImpl implements Admin {
 				throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40135, vdbName, vdbVersion, models), e);
 			}
 		}
-		
+
 	}
 
 	@Override
@@ -350,7 +350,7 @@ public class EmbeddedAdminImpl implements Admin {
 		VDBTranslatorMetaData translator = this.embeddedServer.getTranslatorRepository().getTranslatorMetaData(translatorName);
 		TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(type.toString().toUpperCase());
 		if (translator != null) {
-			ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);					
+			ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
             if (translatorPropertyType.equals(TranlatorPropertyType.ALL)) {
                 for (ExtendedPropertyMetadata epm:properties) {
                     list.add(buildNode(epm));
@@ -361,7 +361,7 @@ public class EmbeddedAdminImpl implements Admin {
                     if (PropertyType.valueOf(epm.category()).equals(propType)) {
                         list.add(buildNode(epm));
                     }
-                }    
+                }
             }
 		}
 		return list;
@@ -395,7 +395,7 @@ public class EmbeddedAdminImpl implements Admin {
 
 	@Override
 	public void clearCache(String cacheType) throws AdminException {
-		
+
 		if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
 			this.embeddedServer.getRsCache().clearAll();
 		} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
@@ -407,7 +407,7 @@ public class EmbeddedAdminImpl implements Admin {
 
 	@Override
 	public void clearCache(String cacheType, String vdbName, String vdbVersion) throws AdminException {
-		
+
 		checkVDB(vdbName, vdbVersion);
 
 		if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
@@ -421,28 +421,28 @@ public class EmbeddedAdminImpl implements Admin {
 
 	@Override
 	public Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException {
-		
+
 		if(cacheType.equals(Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())){
 			return Arrays.asList(this.embeddedServer.getRsCache().buildCacheStats(cacheType));
 		} else if(cacheType.equals(Admin.Cache.PREPARED_PLAN_CACHE.name())) {
 			return Arrays.asList(this.embeddedServer.getPpcCache().buildCacheStats(cacheType));
 		} else {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40139, cacheType, Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE, Admin.Cache.PREPARED_PLAN_CACHE));
-		}				
+		}
 	}
-	
+
 	@Override
 	public Collection<? extends EngineStatistics> getEngineStats() throws AdminException {
-		
+
 		try {
-			//embedded no logon, odata, odbc 
+			//embedded no logon, odata, odbc
 			EngineStatisticsMetadata stats = EmbeddedAdminFactory.createEngineStats(
 					this.embeddedServer.sessionService.getActiveSessionsCount(), this.embeddedServer.bufferService, this.embeddedServer.dqp);
 			return Arrays.asList(stats);
 		} catch (SessionServiceException e) {
 			throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40140, "getEngineStats", e)); //$NON-NLS-1$
 		}
-		
+
 	}
 
 	@Override
@@ -474,17 +474,17 @@ public class EmbeddedAdminImpl implements Admin {
 		VDBMetaData vdb = checkVDB(vdbName, vdbVersion);
 		synchronized(vdb) {
 			DataPolicyMetadata policy = getPolicy(vdb, dataRole);
-			policy.addMappedRoleName(mappedRoleName);			
+			policy.addMappedRoleName(mappedRoleName);
 		}
 	}
-	
+
 	private DataPolicyMetadata getPolicy(VDBMetaData vdb, String policyName)throws AdminProcessingException {
-		DataPolicyMetadata policy = vdb.getDataPolicyMap().get(policyName);	
+		DataPolicyMetadata policy = vdb.getDataPolicyMap().get(policyName);
 		if (policy == null) {
 			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40092, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40092, policyName, vdb.getName(), vdb.getVersion()));
 		}
 		return policy;
-	}	
+	}
 
 	@Override
 	public void removeDataRoleMapping(String vdbName, String vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
@@ -556,13 +556,13 @@ public class EmbeddedAdminImpl implements Admin {
         StringWriter stringWriter = new StringWriter();
         StreamResult xmlOutput = new StreamResult(stringWriter);
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer(); 
+        Transformer transformer = transformerFactory.newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         transformer.transform(xmlInput, xmlOutput);
         return xmlOutput.getWriter().toString();
     }
-    
+
 	@Override
 	public String getQueryPlan(String sessionId, long executionId)throws AdminException {
 		PlanNode plan = this.embeddedServer.dqp.getPlan(sessionId, executionId);
@@ -581,5 +581,5 @@ public class EmbeddedAdminImpl implements Admin {
 	@Override
 	public List<String> getDeployments() throws AdminException {
 		return Collections.emptyList();
-	}	
+	}
 }

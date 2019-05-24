@@ -29,12 +29,12 @@ import org.teiid.jdbc.JDBCPlugin;
 
 
 public class StreamingLobChunckProducer implements LobChunkProducer {
-	
+
 	public static class Factory {
 		private final Streamable<?> streamable;
 		private final DQP dqp;
 		private final long requestId;
-		
+
 		public Factory(DQP dqp,
 				long requestId, Streamable<?> streamable) {
 			super();
@@ -47,7 +47,7 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 			return new StreamingLobChunckProducer(dqp, requestId, streamable);
 		}
 	}
-	
+
 	private static AtomicInteger REQUEST_SEQUENCE = new AtomicInteger(0);
 
 	private final Streamable<?> streamable;
@@ -69,8 +69,8 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 	    } catch (Exception e) {
 	        IOException ex = new IOException(JDBCPlugin.Util.getString("StreamImpl.Unable_to_read_data_from_stream", e.getMessage())); //$NON-NLS-1$
 	        ex.initCause(e);
-	        throw ex;                        
-	    }                
+	        throw ex;
+	    }
 	}
 
 	public void close() throws IOException {
@@ -80,6 +80,6 @@ public class StreamingLobChunckProducer implements LobChunkProducer {
 	        IOException ex = new IOException(e.getMessage());
 	        ex.initCause(e);
 	        throw  ex;
-		}                    
+		}
 	}
 }

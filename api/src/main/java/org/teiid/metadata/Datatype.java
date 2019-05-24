@@ -23,16 +23,16 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 
 public class Datatype extends AbstractMetadataRecord implements Cloneable {
-	
+
 	private static final long serialVersionUID = -7839335802224393230L;
-	
+
 	public enum Type {
 		Basic,
 		UserDefined,
 		ResultSet,
 		Domain
 	}
-	
+
 	public enum Variety {
 		Atomic,
 		List,
@@ -59,7 +59,7 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
 
     /**
      * Get the length of the type.
-     * 
+     *
      * For string (binary or character) types, it is the number of characters.
      * For all other types it is the byte storage size.
      * @return
@@ -67,7 +67,7 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
     public int getLength() {
         return this.length;
     }
-    
+
     /**
      * @deprecated
      * @see #getPrecision()
@@ -131,9 +131,9 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
     public String getBasetypeName() {
         return this.basetypeName;
     }
-    
+
     public void setBasetypeName(String name) {
-    	this.basetypeName = name;	
+    	this.basetypeName = name;
     }
 
     public Variety getVarietyType() {
@@ -188,7 +188,7 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
     public void setPrecision(int i) {
         precisionLength = i;
     }
-    
+
     /**
      * @deprecated
      * @see #setPrecision(int)
@@ -254,7 +254,7 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
         sb.append(getUUID());
         return sb.toString();
     }
-    
+
     @Override
     public Datatype clone() {
         try {
@@ -263,5 +263,5 @@ public class Datatype extends AbstractMetadataRecord implements Cloneable {
             throw new TeiidRuntimeException(e);
         }
     }
-    
+
 }

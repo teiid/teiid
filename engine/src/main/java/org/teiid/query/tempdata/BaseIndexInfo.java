@@ -48,7 +48,7 @@ import org.teiid.translator.ExecutionFactory.NullOrder;
  * Accumulates information about index usage.
  */
 public class BaseIndexInfo<T extends SearchableTable> {
-	
+
 	List<Object> lower = null;
 	List<Object> upper = null;
 	ArrayList<List<Object>> valueSet = new ArrayList<List<Object>>();
@@ -57,7 +57,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 	boolean covering;
 	CompoundCriteria nonCoveredCriteria = null;
 	CompoundCriteria coveredCriteria = null;
-	
+
 	public BaseIndexInfo(T table, final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
 		this.table = table;
 		if (primary || this.table.getColumnMap().keySet().containsAll(projectedCols)) {
@@ -129,7 +129,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 						escapeChar = '\\';
 					}
 					StringBuilder prefix = new StringBuilder();
-					
+
 		            if (pattern.length() > 0 && matchCriteria.getMode() == MatchMode.REGEX && pattern.charAt(0) != '^') {
 		            	//make the assumption that we require an anchor
 		            	continue;
@@ -137,7 +137,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 
 					for (int j = matchCriteria.getMode() == MatchMode.REGEX?1:0; j < pattern.length(); j++) {
 			            char character = pattern.charAt(j);
-			            
+
 			            if (character == escapeChar && character != MatchCriteria.NULL_ESCAPE_CHAR) {
 			                if (escaped) {
 			                    prefix.append(character);
@@ -214,10 +214,10 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		}
 
 		if (character == '{' || character == '?' || character == '*') {
-			prefix.setLength(prefix.length() - 1); 
+			prefix.setLength(prefix.length() - 1);
 		}
 	}
-	
+
 	void addCondition(int i, Object match, Constant value, int comparisionMode) {
 		Object value2 = value.getValue();
 		switch (comparisionMode) {
@@ -225,7 +225,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			if (i == 0) {
 				valueSet.clear();
 				valueSet.add(new ArrayList<Object>(table.getPkLength()));
-			} 
+			}
 			if (valueSet.size() == 1) {
 				List<Object> toSearch = valueSet.get(0);
 				buildSearchRow(i, match, value2, toSearch);
@@ -242,14 +242,14 @@ public class BaseIndexInfo<T extends SearchableTable> {
 				if (lower != null) {
 					buildSearchRow(i, match, value2, lower);
 				}
-			} 
+			}
 			break;
 		case CompareCriteria.LE:
 		case CompareCriteria.LT:
 			if (valueSet.isEmpty()) {
 				if (i == 0) {
 					upper = new ArrayList<Object>(table.getPkLength());
-				} 
+				}
 				if (upper != null) {
 					buildSearchRow(i, match, value2, upper);
 				}
@@ -278,7 +278,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			toSearch.add(value2);
 		}
 	}
-	
+
 	void addSet(int i, Object match, Collection<Constant> values) {
 		if (!valueSet.isEmpty()) {
 			return;
@@ -294,7 +294,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			upper = null;
 		}
 	}
-	
+
 	/**
 	 * Return a non-null direction if the index can be used, otherwise null.
 	 * @param orderBy
@@ -312,7 +312,7 @@ public class BaseIndexInfo<T extends SearchableTable> {
 			if (!Boolean.TRUE.equals(table.matchesPkColumn(i, item.getSymbol())) || !table.supportsOrdering(i, item.getSymbol())) {
 				return null;
 			}
-			
+
 			if (item.getNullOrdering() != null && ((item.isAscending() && item.getNullOrdering() == NullOrdering.LAST)
 					|| (!item.isAscending() && item.getNullOrdering() == NullOrdering.FIRST))) {
 				//assumes nulls low
@@ -332,19 +332,19 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		}
 		return direction;
 	}
-	
+
 	public List<Object> getLower() {
 		return lower;
 	}
-	
+
 	public List<Object> getUpper() {
 		return upper;
 	}
-	
+
 	public ArrayList<List<Object>> getValueSet() {
 		return valueSet;
 	}
-	
+
 	public void sortValueSet(boolean direction, NullOrder nullOrder) {
 		int size = getValueSet().get(0).size();
 		int[] sortOn = new int[size];
@@ -353,15 +353,15 @@ public class BaseIndexInfo<T extends SearchableTable> {
 		}
 		Collections.sort(getValueSet(), new ListNestedSortComparator(sortOn, direction).defaultNullOrder(nullOrder));
 	}
-	
+
 	public Criteria getCoveredCriteria() {
 		return coveredCriteria;
 	}
-	
+
 	public Criteria getNonCoveredCriteria() {
 		return nonCoveredCriteria;
 	}
-	
+
 	public BaseIndexInfo<?> next;
-	
+
 }

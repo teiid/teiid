@@ -154,16 +154,16 @@ public class DataRolePolicyDecider implements PolicyDecider {
     	}
     	return allowCreateTemporaryTablesByDefault;
 	}
-	
+
     public void setAllowCreateTemporaryTablesByDefault(
 			boolean allowCreateTemporaryTablesByDefault) {
 		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
 	}
-    
+
     public void setAllowFunctionCallsByDefault(boolean allowFunctionCallsDefault) {
 		this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
 	}
-    
+
     @Override
     public boolean validateCommand(CommandContext commandContext) {
     	return !commandContext.getVdb().getDataPolicies().isEmpty();

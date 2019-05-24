@@ -60,19 +60,19 @@ import org.teiid.query.util.CommandContext;
 /**
  * For each join node this rule will find the set of criteria allowed to influence the join (the join criteria, and inner
  * side criteria on non full outer joins) and builds new criteria based upon the equality relationships found.
- * 
+ *
  * Equality relationships look like element symbol = expression regardless of whether they are from select or join criteria
- * 
+ *
  * Upon successfully changing a multi group join criteria into another expression with fewer groups, the original criteria
  * will be replace with the new criteria in the on clause.
- *  
+ *
  * RulePushNonJoinCriteia and CopyCriteria will be run again after this rule if any new join criteria is created.
- * 
+ *
  * This rule is not allowed to run exhaustively by the setting of the copied property on criteria nodes.  It also will not
  * discover all possible relationships, only those that can be discovered quickly.
  */
 public final class RuleCopyCriteria implements OptimizerRule {
-    
+
     static boolean COPY_ALL = false; //flag mainly for testing pre-TEIID-4943
 
 	/**
@@ -82,7 +82,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
 	 * @param rules Rules from optimizer rule stack, may be manipulated during method
 	 * @return Updated query plan if rule fired, else original query plan
 	 */
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context) 
+	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws QueryPlannerException, TeiidComponentException {
 
 	    List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT | NodeConstants.Types.JOIN);
@@ -93,32 +93,32 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 break;
             }
         }
-     
+
         if (!shouldRun) {
             return plan;
         }
-        
+
         if (tryToCopy(plan, new Set[2], metadata, false)) {
             //Push any newly created criteria nodes and try to copy them afterwards
             rules.push(RuleConstants.COPY_CRITERIA);
             rules.push(RuleConstants.RAISE_ACCESS);
             rules.push(new RulePushNonJoinCriteria(false));
         }
-        
+
         //mark the old criteria nodes as copied.  this will prevent RulePushSelectCriteria from considering them again
         for (PlanNode critNode : critNodes) {
         	critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.TRUE);
         }
-        		
-		return plan;	
+
+		return plan;
 	}
 
     /**
      * Given a criteria and a map of elements to values try to create a new single group criteria
-     * 
+     *
      * If the new criteria does not have exactly one group or already exists in the combined criteria,
      * it will not be added.
-     *  
+     *
      * @param crit
      * @param tgtMap
      * @param joinCriteria
@@ -133,22 +133,22 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                  QueryMetadataInterface metadata,
                                  boolean underAccess) {
         int startGroups = GroupsUsedByElementsVisitor.getGroups(crit).size();
-        
+
         Criteria tgtCrit = (Criteria) crit.clone();
-        
+
         try {
             tgtCrit = FrameUtil.convertCriteria(tgtCrit, tgtMap, metadata, true);
         } catch (QueryPlannerException err) {
             LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, err, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
             return null;
         }
-        
+
         if (tgtCrit instanceof IsNullCriteria && ((IsNullCriteria)tgtCrit).isNegated()) {
         	return null;
         }
-        
+
         int endGroups = GroupsUsedByElementsVisitor.getGroups(tgtCrit).size();
-        
+
         if (checkForGroupReduction) {
             if (endGroups >= startGroups) {
                 return null;
@@ -156,9 +156,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
         } else if (endGroups > startGroups) {
             return null;
         }
-        
+
         boolean isNew = combinedCriteria.add(tgtCrit);
-        
+
         if (underAccess) {
             if (!isNew || checkForGroupReduction || endGroups > 1) {
                 return null;
@@ -185,7 +185,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 }
             }
         }
-        
+
         //if this is unique or it a duplicate but reduced a current join conjunct, return true
         if (isNew) {
             joinCriteria.add(tgtCrit);
@@ -200,43 +200,43 @@ public final class RuleCopyCriteria implements OptimizerRule {
         } else if (checkForGroupReduction && endGroups < 2) {
             return endGroups;
         }
-        
+
         return null;
     }
-            
-    /** 
+
+    /**
      * Recursively tries to copy criteria across join nodes.  toCopy will contain only the single group criteria
      * that has not yet been copied.  allCriteria will contain all criteria present at the join that can effect
      * copying.
-     * 
+     *
      * @param node
      * @return true if criteria has been created
      */
     private boolean tryToCopy(PlanNode node, Set<Criteria>[] criteriaInfo, QueryMetadataInterface metadata, boolean underAccess) {
         boolean changedTree = false;
-        
+
         if (node == null) {
             return false;
         }
-        
+
         //visit join nodes in order
         if (node.getType() == NodeConstants.Types.JOIN) {
             JoinType jt = (JoinType)node.getProperty(NodeConstants.Info.JOIN_TYPE);
-            
+
             if (jt == JoinType.JOIN_FULL_OUTER) {
                 return visitChildern(node, criteriaInfo, changedTree, metadata, underAccess);
             }
-            
+
             Set<Criteria>[] leftChildCriteria = new Set[2];
             Set<Criteria>[] rightChildCriteria = new Set[2];
-            
+
             changedTree |= tryToCopy(node.getFirstChild(), leftChildCriteria, metadata, underAccess);
             changedTree |= tryToCopy(node.getLastChild(), rightChildCriteria, metadata, underAccess);
 
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             Set<Criteria> combinedCriteria = null;
             if (joinCrits != null) {
-                combinedCriteria = new LinkedHashSet<Criteria>(joinCrits); 
+                combinedCriteria = new LinkedHashSet<Criteria>(joinCrits);
                 combinedCriteria.addAll(leftChildCriteria[1]);
                 combinedCriteria.addAll(rightChildCriteria[1]);
             }
@@ -253,7 +253,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
             if (jt == JoinType.JOIN_CROSS) {
                 return changedTree;
             }
-            
+
             Set<Criteria> toCopy = criteriaInfo[0];
             Set<Criteria> allCriteria = criteriaInfo[1];
 
@@ -262,21 +262,21 @@ public final class RuleCopyCriteria implements OptimizerRule {
 
                 //we don't want to continue discovery since that could be recursive
                 Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits, node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)?null:newJoinCrits, combinedCriteria, metadata, underAccess);
-                
+
                 changedTree |= !newJoinCrits.isEmpty();
 
                 if (!toCopy.isEmpty()) {
-                    
+
                     changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess, node);
-                    
+
                     srcToTgt = buildElementMap(allCriteria, null, null, metadata, underAccess);
-                                
+
                     changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess, node);
                 }
-                
+
                 joinCrits.addAll(newJoinCrits);
             }
-            
+
             //before returning, filter out criteria that cannot go above the join node
             if (jt == JoinType.JOIN_RIGHT_OUTER || jt == JoinType.JOIN_ANTI_SEMI || jt == JoinType.JOIN_SEMI || jt == JoinType.JOIN_UNION) {
                 throw new AssertionError("Unexpected join type"); //$NON-NLS-1$
@@ -289,15 +289,15 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 }
                 allCriteria.addAll(joinCrits);
             }
-            
+
             return changedTree;
         }
-        
+
         changedTree = visitChildern(node, criteriaInfo, changedTree, metadata, underAccess);
 
         //visit select nodes on the way back up
         switch (node.getType()) {
-        
+
             case NodeConstants.Types.SELECT:
             {
                 if (criteriaInfo[0] != null) {
@@ -307,10 +307,10 @@ public final class RuleCopyCriteria implements OptimizerRule {
             }
             //clear the criteria when hitting the following
             case NodeConstants.Types.NULL:
-            case NodeConstants.Types.SOURCE: 
+            case NodeConstants.Types.SOURCE:
             case NodeConstants.Types.GROUP:
             case NodeConstants.Types.SET_OP:
-            case NodeConstants.Types.PROJECT: 
+            case NodeConstants.Types.PROJECT:
             {
                 if (criteriaInfo[0] == null) {
                     criteriaInfo[0] = new LinkedHashSet<Criteria>();
@@ -321,9 +321,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 }
                 break;
             }
-                
+
         }
-        
+
         return changedTree;
     }
 
@@ -339,9 +339,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
         Iterator<Criteria> i = toCopy.iterator();
         while (i.hasNext()) {
             Criteria crit = i.next();
-            
+
             Integer endGroups = copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata, underAccess);
-            
+
             if (endGroups != null) {
             	changedTree = true;
             	if (endGroups < 2) {
@@ -413,13 +413,13 @@ public final class RuleCopyCriteria implements OptimizerRule {
         }
         return changedTree;
     }
-        
+
     /**
      * Construct a mapping of element symbol to value map based upon equality CompareCriteria in crits
-     *  
+     *
      * @param crits
-     * @param newJoinCrits 
-     * @param metadata 
+     * @param newJoinCrits
+     * @param metadata
      * @return
      */
     Map<Expression, Expression> buildElementMap(Collection<Criteria> crits, List<Criteria> newJoinCrits, Set<Criteria> allCriteria, QueryMetadataInterface metadata, boolean underAccess) {
@@ -495,10 +495,10 @@ public final class RuleCopyCriteria implements OptimizerRule {
 		}
 		return false;
 	}
-    
+
 
 	public String toString() {
 		return "CopyCriteria"; //$NON-NLS-1$
 	}
-		
+
 }

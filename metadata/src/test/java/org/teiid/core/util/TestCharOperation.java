@@ -16,7 +16,7 @@ import org.teiid.internal.core.index.CharOperation;
 import junit.framework.TestCase;
 
 
-/** 
+/**
  * @since 4.3
  */
 public class TestCharOperation extends TestCase {
@@ -28,55 +28,55 @@ public class TestCharOperation extends TestCase {
     public TestCharOperation(String name) {
         super(name);
     }
-        
+
     public void testCaseSentivieMatchWithoutWildCards1() {
         String pattern = "MyStringWithOutWildCards"; //$NON-NLS-1$
         String name = "MyStringWithOutWildCards"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithoutWildCards2() {
         String pattern = "MyStringWithOutWildCards".toUpperCase(); //$NON-NLS-1$
         String name = "MyStringWithOutWildCards"; //$NON-NLS-1$
         assertTrue(!CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards1() {
         String pattern = "MyString*Wild*"; //$NON-NLS-1$
         String name = "MyStringWithWildCards"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards2() {
         String pattern = "MyString????Wil?Cards"; //$NON-NLS-1$
         String name = "MyStringWithWildCards"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards3() {
         String pattern = "MyString*WildCards".toUpperCase(); //$NON-NLS-1$
         String name = "MyStringWithWildCards"; //$NON-NLS-1$
         assertTrue(!CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards4() {
         String pattern = "MyString????WildCards".toUpperCase(); //$NON-NLS-1$
         String name = "MyStringWithWildCards"; //$NON-NLS-1$
         assertTrue(!CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards5() {
         String pattern = "*Supplie?"; //$NON-NLS-1$
         String name = "PartsSupplier"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseSentivieMatchWithWildCards6() {
         String pattern = "*Supplie*"; //$NON-NLS-1$
         String name = "PartsSupplier"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), true));
     }
-    
+
     public void testCaseInSentivieMatchWithoutWildCards() {
         String pattern = "MyStringWithOutWildCards".toUpperCase(); //$NON-NLS-1$
         String name = "MyStringWithOutWildCards"; //$NON-NLS-1$
@@ -88,7 +88,7 @@ public class TestCharOperation extends TestCase {
         String name = "MyStringWithWildCards"; //$NON-NLS-1$
         assertTrue(CharOperation.match(pattern.toCharArray(), name.toCharArray(), false));
     }
-    
+
     public void testCaseInSentivieMatchWithWildCards2() {
         String pattern = "MyString????WildCards".toUpperCase(); //$NON-NLS-1$
         String name = "MyStringWithWildCards"; //$NON-NLS-1$

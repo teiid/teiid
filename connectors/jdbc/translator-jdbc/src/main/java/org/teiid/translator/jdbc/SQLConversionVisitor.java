@@ -58,29 +58,29 @@ import org.teiid.translator.TypeFacility;
 public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringVisitor.Substitutor {
 	public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
 
-    private static DecimalFormat DECIMAL_FORMAT = 
-        new DecimalFormat("#############################0.0#############################", DecimalFormatSymbols.getInstance(Locale.US)); //$NON-NLS-1$    
+    private static DecimalFormat DECIMAL_FORMAT =
+        new DecimalFormat("#############################0.0#############################", DecimalFormatSymbols.getInstance(Locale.US)); //$NON-NLS-1$
     private static double SCIENTIFIC_LOW = Math.pow(10, -3);
     private static double SCIENTIFIC_HIGH = Math.pow(10, 7);
-    
+
     private ExecutionContext context;
     private JDBCExecutionFactory executionFactory;
 
     private boolean prepared;
     private boolean usingBinding;
-    
+
     private List preparedValues = new ArrayList();
-    
+
     private Set<LanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<LanguageObject, Boolean>());
-    private Map<LanguageObject, Object> translations = new IdentityHashMap<LanguageObject, Object>(); 
-    
+    private Map<LanguageObject, Object> translations = new IdentityHashMap<LanguageObject, Object>();
+
     private boolean replaceWithBinding = false;
-    
+
     public SQLConversionVisitor(JDBCExecutionFactory ef) {
         this.executionFactory = ef;
         this.prepared = executionFactory.usePreparedStatements();
     }
-    
+
     @Override
     public void append(LanguageObject obj) {
     	if (shortNameOnly && obj instanceof ColumnReference) {
@@ -91,9 +91,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         if (obj instanceof Command || obj instanceof Function) {
     	    /*
     	     * In general it is not appropriate to use bind values within a function
-    	     * unless the particulars of the function parameters are know.  
+    	     * unless the particulars of the function parameters are know.
     	     * As needed, other visitors or modifiers can set the literals used within
-    	     * a particular function as bind variables.  
+    	     * a particular function as bind variables.
     	     */
         	this.replaceWithBinding = false;
         }
@@ -128,7 +128,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		}
         this.replaceWithBinding = replacementMode;
     }
-    
+
     /**
      * @param type
      * @param object
@@ -143,7 +143,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             	if (!executionFactory.useScientificNotation()) {
 	                if (Double.class.isAssignableFrom(type)){
 	                    double value = Math.abs(((Double)obj).doubleValue());
-	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH); 
+	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
 	                }
 	                else if (Float.class.isAssignableFrom(type)){
 	                    float value = Math.abs(((Float)obj).floatValue());
@@ -179,7 +179,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
             	valuesbuffer.append(executionFactory.translateLiteralBinaryType((BinaryType)obj));
             } else {
-                // If obj is string, toSting() will not create a new String 
+                // If obj is string, toSting() will not create a new String
                 // object, it returns it self, so new object creation.
             	String val = obj.toString();
             	if (useUnicodePrefix() && isNonAscii(val)) {
@@ -189,13 +189,13 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
                       .append(escapeString(removeCharacters(val), Tokens.QUOTE))
                       .append(Tokens.QUOTE);
             }
-        }        
+        }
     }
 
     protected boolean isNonAscii(String val) {
         return this.executionFactory.isNonAscii(val);
     }
-    
+
     protected String removeCharacters(String value) {
         Pattern p = this.executionFactory.getRemovePushdownCharactersPattern();
         if (p == null) {
@@ -203,7 +203,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         }
         return p.matcher(value).replaceAll(""); //$NON-NLS-1$
     }
-    
+
     protected boolean useUnicodePrefix() {
     	return this.executionFactory.useUnicodePrefix();
     }
@@ -237,7 +237,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         this.preparedValues = obj.getArguments();
         buffer.append(generateSqlForStoredProcedure(obj));
     }
-    
+
     public void visit(Function obj) {
     	FunctionMethod f = obj.getMetadataObject();
     	if (f != null) {
@@ -269,7 +269,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         preparedValues.add(value);
         usingBinding = true;
     }
-    
+
     /**
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Literal)
      */
@@ -280,7 +280,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
     }
-    
+
     @Override
     public void visit(In obj) {
         replaceWithBinding = true;
@@ -304,19 +304,19 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         replaceWithBinding = true;
         super.visit(obj);
     }
-    
+
     @Override
     public void visit(SetClause obj) {
         replaceWithBinding = true;
         super.visit(obj);
     }
-    
+
     @Override
     public void visit(DerivedColumn obj) {
     	replaceWithBinding = false;
     	super.visit(obj);
     }
-    
+
     @Override
     public void visit(SearchedCase obj) {
     	replaceWithBinding = false;
@@ -324,16 +324,16 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     }
 
     /**
-     * Set the per-command execution context on this visitor. 
+     * Set the per-command execution context on this visitor.
      * @param context ExecutionContext
      * @since 4.3
      */
     public void setExecutionContext(ExecutionContext context) {
         this.context = context;
     }
-    
+
     /**
-     * Retrieve the per-command execution context for this visitor 
+     * Retrieve the per-command execution context for this visitor
      * (intended for subclasses to use).
      * @return
      * @since 4.3
@@ -345,7 +345,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     protected String getSourceComment(Command command) {
     	return this.executionFactory.getSourceComment(this.context, command);
     }
-    
+
     /**
      * This is a generic implementation. Subclass should override this method
      * if necessary.
@@ -361,7 +361,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
         //check whether a "?" is needed if there are returns
         boolean needQuestionMark = exec.getReturnType() != null;
-        
+
         if(needQuestionMark){
             prepareCallBuffer.append("?= "); //$NON-NLS-1$
         }
@@ -384,60 +384,60 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         prepareCallBuffer.append("}"); //$NON-NLS-1$
         return prepareCallBuffer.toString();
     }
-    
-    /** 
+
+    /**
      * @return the preparedValues
      */
     List getPreparedValues() {
         return this.preparedValues;
     }
-    
+
     public boolean isPrepared() {
 		return prepared;
 	}
-    
+
     public void setPrepared(boolean prepared) {
 		this.prepared = prepared;
 	}
-    
+
     public boolean isUsingBinding() {
 		return usingBinding;
 	}
-    
+
     @Override
     protected boolean useAsInGroupAlias() {
     	return this.executionFactory.useAsInGroupAlias();
     }
-        
+
     @Override
     protected boolean useParensForSetQueries() {
     	return executionFactory.useParensForSetQueries();
     }
-    	
+
 	@Override
 	protected String replaceElementName(String group, String element) {
 		return executionFactory.replaceElementName(group, element);
 	}
-	
+
 	@Override
 	protected void appendSetOperation(Operation operation) {
 		buffer.append(executionFactory.getSetOperationString(operation));
 	}
-    
+
 	@Override
     protected boolean useParensForJoins() {
     	return executionFactory.useParensForJoins();
     }
-	
+
 	protected boolean useSelectLimit() {
 		return executionFactory.useSelectLimit();
 	}
-	
+
 	@Override
 	protected String getLikeRegexString() {
 		return executionFactory.getLikeRegexString();
 	}
-	
+
 	@Override
 	protected void appendBaseName(NamedTable obj) {
 		if (obj.getMetadataObject() != null) {
@@ -468,7 +468,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 			visit(arg);
 		}
 	}
-	
+
 	@Override
 	public void visit(GroupBy obj) {
 		if (obj.isRollup() && executionFactory.useWithRollup()) {
@@ -480,10 +480,10 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		}
 		super.visit(obj);
 	}
-	
+
 	@Override
 	protected void appendLateralKeyword() {
 		buffer.append(this.executionFactory.getLateralKeyword());
 	}
-	
+
 }

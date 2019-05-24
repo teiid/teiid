@@ -13,7 +13,7 @@ import org.teiid.core.TeiidRuntimeException;
 
 	/**
 	 * The QueryTestFailedException is thrown during a test.
-	 * 
+	 *
 	 * This exception which contains a reference to another exception.  This
 	 * class can be used to maintain a linked list of exceptions. <p>
 	 *
@@ -24,7 +24,7 @@ public class QueryTestFailedException extends Exception {
 	    //############################################################################################################################
 		//# Static Methods                                                                                                           #
 		//############################################################################################################################
-	    
+
 	    /**
 		 * @since
 		 */
@@ -41,17 +41,17 @@ public class QueryTestFailedException extends Exception {
 	        String className = cls.getName();
 	        return className.substring( className.lastIndexOf('.')+1 );
 	    }
-	    
+
 	    //############################################################################################################################
 		//# Variables                                                                                                                #
 		//############################################################################################################################
-	    
+
 	    /** An error code. */
 	    private String code;
 
 	    /** Exception chained to this one. */
 	    private Throwable child;
-	    
+
 	    private String msg;
 
 	    //############################################################################################################################
@@ -78,12 +78,12 @@ public class QueryTestFailedException extends Exception {
 	     * Construct an instance with the specified error code and message.  If the message is actually a key, the actual message will
 	     * be retrieved from a resource bundle using the key, and the specified parameters will be substituted for placeholders within
 	     * the message.
-	     * @param code    The error code 
+	     * @param code    The error code
 	     * @param message The error message or a resource bundle key
 	     */
 	    public QueryTestFailedException(final String code, final String message) {
 	        setMessage(message, null);
-	        // The following setCode call should be executed after setting the message 
+	        // The following setCode call should be executed after setting the message
 	        setCode(code);
 	    }
 
@@ -110,9 +110,9 @@ public class QueryTestFailedException extends Exception {
 	     */
 	    public QueryTestFailedException(final Throwable e, final String message) {
 	      setChild( e );
-	      // The following setMessage call should be executed after attempting to set the code from the passed-in exception 
+	      // The following setMessage call should be executed after attempting to set the code from the passed-in exception
 	      setMessage(message, null);
-	        
+
 	    }
 
 
@@ -120,13 +120,13 @@ public class QueryTestFailedException extends Exception {
 	     * Construct an instance with the linked exception, error code, and error message specified.  If the message is actually a
 	     * key, the error message will be retrieved from a resource bundle using the key.
 	     * @param e       The exception to chain to this exception
-	     * @param code    The error code 
+	     * @param code    The error code
 	     * @param message The error message or a resource bundle key
 	     */
 	    public QueryTestFailedException(final Throwable e, final String code, final String message) {
 	        setChild(e);
 	        setMessage(message, null);
-	        // The following setCode call should be executed after setting the message 
+	        // The following setCode call should be executed after setting the message
 	        setCode(code);
 	    }
 
@@ -146,7 +146,7 @@ public class QueryTestFailedException extends Exception {
 	    /**
 	     * Get the error code.
 	     *
-	     * @return The error code 
+	     * @return The error code
 	     */
 	    public String getCode() {
 	        return this.code;
@@ -162,7 +162,7 @@ public class QueryTestFailedException extends Exception {
 	     * This method provides a hook for subclasses to override the default
 	     * formatting of any one exception.
 	     *
-	     * @param except The exception to print 
+	     * @param except The exception to print
 	     * @param level The depth of the exception in the chain of exceptions
 	     * @return A formatted string for the exception
 	     */
@@ -203,7 +203,7 @@ public class QueryTestFailedException extends Exception {
 	    /**
 	     * Set the error code.
 	     *
-	     * @param code The error code 
+	     * @param code The error code
 	     */
 	    public void setCode( String code ) {
 	        this.code = code;
@@ -232,7 +232,7 @@ public class QueryTestFailedException extends Exception {
 	            }
 	        }
 	    }
-	    
+
 	    /**
 	     * Returns a string representation of this class.
 	     *
@@ -252,8 +252,8 @@ public class QueryTestFailedException extends Exception {
 	     * @args The command line arguments
 	     */
 
-	/*     
-	    public static void main( String[] args ) {       
+	/*
+	    public static void main( String[] args ) {
 	        class TestAppException extends MetaMatrixException {
 	            public TestAppException( Throwable e ) {
 	                super( e );
@@ -262,7 +262,7 @@ public class QueryTestFailedException extends Exception {
 	                super( e, message );
 	            }
 	        } // END INNER CLASS
-	        
+
 	        System.out.println( "\n2 MetaMatrixExceptions and 1 Exception..." );
 	        try {
 	            throw new MetaMatrixException(
@@ -297,7 +297,7 @@ public class QueryTestFailedException extends Exception {
 
 	        System.out.println( "\n2 exceptions (1 MetaMatrixException, 1 null)..." );
 	        try {
-	            throw new TestAppException( 
+	            throw new TestAppException(
 	                new MetaMatrixException( null, "Nested Error" ),
 	                "My App Error" );
 	        } catch ( MetaMatrixException e ) {
@@ -339,5 +339,5 @@ public class QueryTestFailedException extends Exception {
 	            System.out.println( "Full message is \n" + e.getFullMessage() );
 	        }
 	    }
-	*/    
+	*/
 	} // END CLASS

@@ -65,7 +65,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         this.command = command;
         this.expectedColumnTypes = command.getResultSetColumnTypes();
     }
-    
+
     private ProcedureParameter getReturnParameter() {
         for (ProcedureParameter pp : this.command.getMetadataObject().getParameters()) {
             if (pp.getType() == ProcedureParameter.Type.ReturnValue) {
@@ -74,12 +74,12 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         }
         return null;
     }
-    
+
     private BinaryWSProcedureExecution buildWSExecution(Call obj) throws TranslatorException {
         Procedure procedure = obj.getMetadataObject();
         String uri = procedure.getProperty(RestMetadataExtension.URI, false);
         String method = procedure.getProperty(RestMetadataExtension.METHOD, false);
-        
+
         StringBuilder queryParameters = new StringBuilder();
         StringBuilder formParameters = new StringBuilder();
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
@@ -100,19 +100,19 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                         }
                         Object value = param.getExpression();
                         if (value instanceof Array) {
-                            addArgumentValue(argName, (Array)value, 
-                                    metadata.getProperty(SwaggerMetadataProcessor.COLLECION_FORMAT, false), 
-                                    queryParameters);    
+                            addArgumentValue(argName, (Array)value,
+                                    metadata.getProperty(SwaggerMetadataProcessor.COLLECION_FORMAT, false),
+                                    queryParameters);
                         } else {
                             String argValue = getURLValue((Literal)value);
                             queryParameters.append(argName);
                             queryParameters.append(Tokens.EQ);
-                            queryParameters.append(argValue);                            
+                            queryParameters.append(argValue);
                         }
                     } else if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.PATH.name())) {
                         String argValue = getURLValue(param.getArgumentValue());
                         String regex = "\\{" + argName + "\\}"; //$NON-NLS-1$ //$NON-NLS-2$
-                        uri = uri.replaceAll(regex, argValue);                        
+                        uri = uri.replaceAll(regex, argValue);
                     } else if (in.equalsIgnoreCase(RestMetadataExtension.ParameterType.FORM.name()) ||
                             in.equalsIgnoreCase(RestMetadataExtension.ParameterType.FORMDATA.name())) {
                         if (formParameters.length() != 0) {
@@ -120,10 +120,10 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                         }
                         Object value = param.getExpression();
                         if (value instanceof Array) {
-                            addArgumentValue(argName, (Array)value, 
-                                    metadata.getProperty(SwaggerMetadataProcessor.COLLECION_FORMAT, false), 
-                                    formParameters);    
-                        } else {                        
+                            addArgumentValue(argName, (Array)value,
+                                    metadata.getProperty(SwaggerMetadataProcessor.COLLECION_FORMAT, false),
+                                    formParameters);
+                        } else {
                             formParameters.append(argName);
                             formParameters.append(Tokens.EQ);
                             formParameters.append(getURLValue((Literal)value));
@@ -146,7 +146,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                 }
             }
         }
-        
+
         String consumes = procedure.getProperty(RestMetadataExtension.CONSUMES, false);
         if (consumes == null) {
             consumes = "application/json";
@@ -160,11 +160,11 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                 throw new TranslatorException(e);
             }
         }
-        
+
         if (payload == null && formParameters.length() > 0) {
             payload = formParameters.toString();
         }
-        
+
         headers.put("Content-Type", Arrays.asList(consumes));
 
         String produces = procedure.getProperty(RestMetadataExtension.PRODUCES, false);
@@ -172,11 +172,11 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
             produces = "application/json";
         }
         headers.put("Accept", Arrays.asList(produces));
-        
+
         if (queryParameters.length() > 0) {
             uri = uri+"?"+queryParameters;
         }
-        
+
         return buildInvokeHTTP(method, uri, payload, headers);
     }
 
@@ -186,11 +186,11 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         }
         return WSUtil.httpURLEncode(value.getValue().toString());
     }
-    
+
     private void addArgumentValue(String argName, Array value, String collectionFormat,
             StringBuilder queryStr) {
         List<Expression> exprs = value.getExpressions();
-        
+
         if (collectionFormat.equalsIgnoreCase("multi")) {
             for (int i = 0; i< exprs.size(); i++) {
                 if (i > 0) {
@@ -200,7 +200,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                 queryStr.append(Tokens.EQ);
                 Literal l = (Literal)exprs.get(i);
                 queryStr.append(getURLValue(l));
-            }            
+            }
         } else {
             String delimiter = ",";
             if (collectionFormat.equalsIgnoreCase("csv")) {
@@ -227,13 +227,13 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
     @Override
     public void execute() throws TranslatorException {
         Procedure procedure = this.command.getMetadataObject();
-        
+
         BinaryWSProcedureExecution execution = buildWSExecution(this.command);
         execution.execute();
-        
+
         if (execution.getResponseCode() >= 200 && execution.getResponseCode() < 300) {
             this.responseHeaders = execution.getResponseHeaders();
-                // Success            
+                // Success
                 if (procedure.getResultSet() != null) {
                     if (procedure.getResultSet().getColumns().get(0).getName().equals("return")) {
                         // this procedure with return, but headers made this into a resultset.
@@ -241,16 +241,16 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
                     } else {
                         try {
                             Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-                            InputStream wsResponse = blob.getBinaryStream();                    
+                            InputStream wsResponse = blob.getBinaryStream();
                             Object obj = execution.getResponseHeader("Content-Type");
                             if (obj == null) {
-                                throw new TranslatorException(SwaggerPlugin.Event.TEIID28017, 
-                                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28017, "Not Defined"));                
+                                throw new TranslatorException(SwaggerPlugin.Event.TEIID28017,
+                                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28017, "Not Defined"));
                             } else {
                                 List<?> contentType = (List<?>)obj;
                                 SwaggerSerializer serializer = getSerializer(contentType.get(0).toString());
                                 if (serializer == null) {
-                                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28017, 
+                                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28017,
                                             SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28017, obj.toString()));
                                 }
                                 handleResponse(procedure, wsResponse, execution.getResponseHeaders(), serializer);
@@ -266,7 +266,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         } else if (execution.getResponseCode() == 404) {
             // treat as empty response. Typically that when someone uses it.
         } else {
-            throw new TranslatorException(SwaggerPlugin.Event.TEIID28018, 
+            throw new TranslatorException(SwaggerPlugin.Event.TEIID28018,
                     SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28018, execution.getResponseCode()));
         }
     }
@@ -298,7 +298,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
             throws TranslatorException {
         this.response = new SwaggerResponse(payload, headers, serializer, isMapResponse(procedure));
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         Procedure procedure = this.command.getMetadataObject();
@@ -316,7 +316,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
             row.putAll(this.responseHeaders);
             this.returnValue = null;
             return buildRow(procedure.getResultSet().getColumns(), false,
-                    this.expectedColumnTypes, row);            
+                    this.expectedColumnTypes, row);
         }
         return null;
     }
@@ -327,14 +327,14 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
             return false;
         }
         List<Column> columns = columnSet .getColumns();
-        if (columns.size() >=2 && 
-                columns.get(0).getName().equals(SwaggerMetadataProcessor.KEY_NAME) && 
+        if (columns.size() >=2 &&
+                columns.get(0).getName().equals(SwaggerMetadataProcessor.KEY_NAME) &&
                 columns.get(1).getName().equals(SwaggerMetadataProcessor.KEY_VALUE)) {
             return true;
         }
         return false;
     }
-    
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return Arrays.asList(this.returnValue);
@@ -347,29 +347,29 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
     @Override
     public void cancel() throws TranslatorException {
     }
-    
+
     private static class ContentType {
-        
+
         private static String APPLICATION = "application"; //$NON-NLS-1$
         private static String TYPE_JSON = "json"; //$NON-NLS-1$
         private static String TYPE_XML = "xml"; //$NON-NLS-1$
-        
+
         private String major;
         private String subtype;
-        
+
         ContentType(String major, String subtype) {
             this.major = major;
             this.subtype = subtype;
         }
-        
+
         public boolean isJSON() {
             return major != null && subtype != null && major.equals(APPLICATION) && subtype.equals(TYPE_JSON);
         }
-        
+
         public boolean isXML() {
             return major != null && subtype != null && major.equals(APPLICATION) && subtype.equals(TYPE_XML);
         }
-        
+
         public static ContentType parse(String type) {
             int typeIndex = type.indexOf('/'); //$NON-NLS-1$
             int paramIndex = type.indexOf(';'); //$NON-NLS-1$

@@ -47,7 +47,7 @@ public class TransformationException extends TeiidProcessingException {
     public TransformationException(Exception e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -62,7 +62,7 @@ public class TransformationException extends TeiidProcessingException {
     }
     public TransformationException(BundleUtil.Event event, Throwable t, String message) {
         super(event, t, message);
-    }    
-    
+    }
+
 }
 

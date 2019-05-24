@@ -29,7 +29,7 @@ import java.util.List;
  * Represents a VDB File
  */
 public interface VirtualFile {
-    
+
     InputStream openStream() throws IOException;
     long getSize();
     String getName();

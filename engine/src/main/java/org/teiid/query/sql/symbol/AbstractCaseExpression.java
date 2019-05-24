@@ -28,15 +28,15 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public abstract class AbstractCaseExpression implements Expression {
-    
+
     /** The type that this case expression will resolve to. */
     private Class type = null;
     /** Ordered List containing Expression objects. */
     private List then = null;
     /** The (optional) expression in the ELSE part of the expression */
     private Expression elseExpression = null;
-    
-    
+
+
     protected AbstractCaseExpression() {
     }
 
@@ -46,7 +46,7 @@ public abstract class AbstractCaseExpression implements Expression {
      * @return
      */
     public abstract int getWhenCount();
-    
+
     /**
      * Gets the expression of the THEN part at the given index.
      * @param index
@@ -55,7 +55,7 @@ public abstract class AbstractCaseExpression implements Expression {
     public Expression getThenExpression(int index) {
         return (Expression)then.get(index);
     }
-    
+
     /**
      * Gets the List of THEN expressions in this CASE expression. Never null.
      * @return
@@ -63,7 +63,7 @@ public abstract class AbstractCaseExpression implements Expression {
     public List getThen() {
         return then;
     }
-    
+
     /**
      * Sets the List of THEN expressions in this CASE expression
      * @param then
@@ -73,7 +73,7 @@ public abstract class AbstractCaseExpression implements Expression {
             this.then = Collections.unmodifiableList(then);
         }
     }
-    
+
     /**
      * Gets the expression in the ELSE part of this expression. May be null as
      * the ELSE is optional.
@@ -82,7 +82,7 @@ public abstract class AbstractCaseExpression implements Expression {
     public Expression getElseExpression() {
         return elseExpression;
     }
-    
+
     /**
      * Sets the expression in the ELSE part of this expression. Can be null.
      * @param elseExpression
@@ -90,14 +90,14 @@ public abstract class AbstractCaseExpression implements Expression {
     public void setElseExpression(Expression elseExpression) {
         this.elseExpression = elseExpression;
     }
-    
+
     /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
     public Class getType() {
         return type;
     }
-    
+
     /**
      * Sets the type to which this expression has resolved.
      * @param type
@@ -105,16 +105,16 @@ public abstract class AbstractCaseExpression implements Expression {
     public void setType(Class type) {
         this.type = type;
     }
-    
+
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof AbstractCaseExpression)) return false;
         AbstractCaseExpression other = (AbstractCaseExpression)obj;
         return (getThen().equals(other.getThen()) &&
                 EquivalenceUtil.areEqual(getElseExpression(), other.getElseExpression()) &&
-                EquivalenceUtil.areEqual(getType(), other.getType())); 
+                EquivalenceUtil.areEqual(getType(), other.getType()));
     }
-    
+
     public int hashCode() {
         int hash = 0;
         if(then != null) {
@@ -127,7 +127,7 @@ public abstract class AbstractCaseExpression implements Expression {
         }
         return hash;
     }
-    
+
     public abstract Object clone();
 
     /**
@@ -137,7 +137,7 @@ public abstract class AbstractCaseExpression implements Expression {
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public abstract void setWhen( List whens, List thens);
 
 }

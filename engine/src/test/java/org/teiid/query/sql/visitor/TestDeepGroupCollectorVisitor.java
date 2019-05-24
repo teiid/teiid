@@ -41,23 +41,23 @@ public class TestDeepGroupCollectorVisitor extends TestCase {
         } catch(TeiidException e) {
         	throw new RuntimeException(e);
         }
-        
+
         Collection actualGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj, false);
         assertEquals("Did not get expected number of groups", expectedGroups.length, actualGroups.size()); //$NON-NLS-1$
-        
+
         Iterator iter = actualGroups.iterator();
         for(int i=0; iter.hasNext(); i++) {
             GroupSymbol group = (GroupSymbol) iter.next();
             assertTrue("Expected group did not match, expected=" + expectedGroups[i] + ", actual=" + group,  //$NON-NLS-1$ //$NON-NLS-2$
-                group.getName().equalsIgnoreCase(expectedGroups[i]));    
-        }        
+                group.getName().equalsIgnoreCase(expectedGroups[i]));
+        }
     }
 
     public void testQuery1() {
         helpTestVisitor("SELECT * FROM pm1.g1",  //$NON-NLS-1$
             new String[] { "pm1.g1" });     //$NON-NLS-1$
     }
-    
+
     public void testSubquery1() {
         helpTestVisitor("SELECT * FROM (SELECT * FROM pm1.g1) AS x",  //$NON-NLS-1$
             new String[] { "pm1.g1" });             //$NON-NLS-1$

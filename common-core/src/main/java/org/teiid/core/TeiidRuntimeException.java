@@ -30,9 +30,9 @@ package org.teiid.core;
  */
 public class TeiidRuntimeException extends RuntimeException {
     public static final long serialVersionUID = -4035276728007979320L;
-    
+
     public static final String CAUSED_BY_STRING = CorePlugin.Util.getString("RuntimeException.Caused_by"); //$NON-NLS-1$
-    
+
     //############################################################################################################################
     //# Variables                                                                                                                #
     //############################################################################################################################
@@ -62,22 +62,22 @@ public class TeiidRuntimeException extends RuntimeException {
 
     TeiidRuntimeException(final String code, final String message) {
         super(message);
-        // The following setCode call should be executed after setting the message 
+        // The following setCode call should be executed after setting the message
         setCode(code);
     }
-    
+
     public TeiidRuntimeException(BundleUtil.Event code, final String message) {
         super(message);
-        // The following setCode call should be executed after setting the message 
+        // The following setCode call should be executed after setting the message
         setCode(code.toString());
-    }    
-    
+    }
+
     public TeiidRuntimeException(BundleUtil.Event code, final Throwable t) {
         super(t);
-        // The following setCode call should be executed after setting the message 
+        // The following setCode call should be executed after setting the message
         setCode(code.toString());
-    }    
-    
+    }
+
     /**
      * Construct an instance with a linked exception specified.  If the exception is a {@link TeiidException} or a
      * TeoodRuntimeException, then the code will be set to the exception's code.
@@ -112,12 +112,12 @@ public class TeiidRuntimeException extends RuntimeException {
     /**
      * Get the error code.
      *
-     * @return The error code 
+     * @return The error code
      */
     public String getCode() {
         return this.code;
     }
-    
+
     private void setCode( String code ) {
         this.code = code;
     }
@@ -128,6 +128,6 @@ public class TeiidRuntimeException extends RuntimeException {
 			return message;
 		}
 		return code+" "+message; //$NON-NLS-1$
-	} 
+	}
 
 }

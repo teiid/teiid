@@ -24,34 +24,34 @@ import org.teiid.core.BundleUtil;
 public class PhoenixPlugin {
 
     public static final String PLUGIN_ID = "org.teiid.translator.phoenix" ;  //$NON-NLS-1$
-    
+
     private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
-    
+
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, BUNDLE_NAME, ResourceBundle.getBundle(BUNDLE_NAME));
-    
+
     public static enum Event implements BundleUtil.Event {
-        
+
         // Phoenix HBase Table Mapping
         TEIID27001,
-        
+
         // PhoenixQueryExecution
         TEIID27002,
-        
+
         // PhoenixUpdateExecution
         TEIID27003,
-        
+
         // HBaseProcedureExecution
         TEIID27004,
-        
+
         // HBaseMetadataProcessor
         TEIID27005,
-        
+
         TEIID27006,
         TEIID27007,
         TEIID27008,
         TEIID27009,
         TEIID27010,
-        
+
         TEIID27011,
         TEIID27012,
         TEIID27013,

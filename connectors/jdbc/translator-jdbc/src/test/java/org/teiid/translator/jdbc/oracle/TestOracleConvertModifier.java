@@ -44,32 +44,32 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 public class TestOracleConvertModifier {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
-    
-    private static OracleExecutionFactory TRANSLATOR = new OracleExecutionFactory(); 
-    
+
+    private static OracleExecutionFactory TRANSLATOR = new OracleExecutionFactory();
+
     @BeforeClass public static void oneTimeSetup() throws Exception {
         TRANSLATOR.start();
     }
-    
+
     public String helpGetString(Expression expr) throws Exception {
         OracleExecutionFactory trans = new OracleExecutionFactory();
         trans.start();
-        
-        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
-        
-        return sqlVisitor.toString();        
+
+        SQLConversionVisitor sqlVisitor = TRANSLATOR.getSQLConversionVisitor();
+        sqlVisitor.append(expr);
+
+        return sqlVisitor.toString();
     }
 
     public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
         Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            Arrays.asList( 
+            Arrays.asList(
                 srcExpression,
                 LANG_FACTORY.createLiteral(tgtType, String.class)),
             TypeFacility.getDataTypeClass(tgtType));
-        
-        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
-            expectedExpression, helpGetString(func)); 
+
+        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$
+            expectedExpression, helpGetString(func));
     }
 
     // Source = STRING
@@ -77,11 +77,11 @@ public class TestOracleConvertModifier {
     @Test public void testStringToChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("5", String.class), "char", "cast('5' AS char(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testStringToNChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("日", String.class), "char", "cast(N'日' AS nchar(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testLatinStringToChar() throws Exception {
         helpTest(LANG_FACTORY.createLiteral("é", String.class), "char", "cast('é' AS char(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -135,21 +135,21 @@ public class TestOracleConvertModifier {
     }
 
     // Source = CHAR
-    
+
     @Test public void testCharToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Character('5'), Character.class), "string", "'5'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testNCharToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Character('日'), Character.class), "string", "N'日'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testNCharToStringConversion() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Character('日'), String.class), "string", "TO_NCHAR(N'日')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BOOLEAN
-    
+
     @Test public void testBooleanToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "CASE WHEN 1 = 0 THEN 'false' WHEN 1 IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -185,9 +185,9 @@ public class TestOracleConvertModifier {
     @Test public void testBooleanToBigDecimal() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     // Source = BYTE
-    
+
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "to_char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -225,7 +225,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = SHORT
-    
+
     @Test public void testShortToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "string", "to_char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -263,7 +263,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = INTEGER
-    
+
     @Test public void testIntegerToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "string", "to_char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -301,7 +301,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = LONG
-    
+
     @Test public void testLongToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "string", "to_char(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -339,7 +339,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = BIGINTEGER
-    
+
     @Test public void testBigIntegerToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "string", "to_char(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -377,7 +377,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = FLOAT
-    
+
     @Test public void testFloatToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "string", "to_char(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -415,7 +415,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = DOUBLE
-    
+
     @Test public void testDoubleToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "string", "to_char(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -453,7 +453,7 @@ public class TestOracleConvertModifier {
     }
 
     // Source = BIGDECIMAL
-    
+
     @Test public void testBigDecimalToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "string", "to_char(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -511,12 +511,12 @@ public class TestOracleConvertModifier {
     }
 
     // Source = TIMESTAMP
-    
+
     @Test public void testTimestampToString() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "to_char({ts '2003-11-01 12:05:02.01'}, 'YYYY-MM-DD HH24:MI:SS.FF')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testTimestampToString1() throws Exception {
     	Column column = new Column();
     	column.setNativeType("DATE");
@@ -525,15 +525,15 @@ public class TestOracleConvertModifier {
     }
 
     @Test public void testTimestampToDate() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "date", "trunc(cast({ts '2003-11-01 12:05:02.01'} AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testTimestampToTime() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);        
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 10000000);
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "case when {ts '2003-11-01 12:05:02.01'} is null then null else to_date('1970-01-01 ' || to_char({ts '2003-11-01 12:05:02.01'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testClobToString() throws Exception {
     	assertTrue(TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.CLOB, TypeFacility.RUNTIME_CODES.STRING));
         helpTest(new ColumnReference(null, "x", null, DataTypeManager.DefaultDataClasses.CLOB), "string", "DBMS_LOB.substr(x, 4000)"); //$NON-NLS-1$ //$NON-NLS-2$

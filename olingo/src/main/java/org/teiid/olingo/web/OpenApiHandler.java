@@ -49,20 +49,20 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.vdb.runtime.VDBKey;
 
 public class OpenApiHandler {
-    
+
     enum OpenApiVersion {
         V2("2.0", "/swagger.json"), //$NON-NLS-1$ //$NON-NLS-2$
         V3("3.0", "/openapi.json"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         private OpenApiVersion(String key, String uri) {
             this.key = key;
             this.uri = uri;
         }
-        
+
         String key;
         String uri;
     }
-    
+
     public static final String SCHEME = "scheme"; //$NON-NLS-1$
     public static final String HOST = "host"; //$NON-NLS-1$
     public static final String BASEPATH = "basePath"; //$NON-NLS-1$
@@ -70,11 +70,11 @@ public class OpenApiHandler {
     public static final String DESCRIPTION = "info-description"; //$NON-NLS-1$
     public static final String VERSION = "info-version"; //$NON-NLS-1$
     public static final String OPENAPI_VERSION = "openapi-version"; //$NON-NLS-1$
-    
+
     private ServletContext servletContext;
     private Map<List<?>, File> cachedMetadata = new ConcurrentHashMap<>();
     private Templates templates;
-    
+
     public OpenApiHandler(ServletContext servletContext) throws ServletException {
         this.servletContext = servletContext;
         //initialize the template only once - it's quite expensive. can be moved to something static
@@ -87,7 +87,7 @@ public class OpenApiHandler {
             throw new ServletException(e);
         }
     }
-    
+
     public OpenApiVersion getOpenApiMetadataRequestVersion(String method, String uri) {
         if (method.equalsIgnoreCase("GET")) { //$NON-NLS-1$
             if (uri.endsWith(OpenApiVersion.V2.uri)) {
@@ -99,9 +99,9 @@ public class OpenApiHandler {
         }
         return null;
     }
-    
+
     /**
-     * 
+     *
      * @param httpRequest
      * @param key
      * @param uri
@@ -109,7 +109,7 @@ public class OpenApiHandler {
      * @param response
      * @param serviceMetadata
      * @param parameters optional overrides for template parameters
-     * @return true if this is an open api metadata request 
+     * @return true if this is an open api metadata request
      * @throws TeiidProcessingException
      */
     public boolean processOpenApiMetadata(HttpServletRequest httpRequest, VDBKey key, String uri,
@@ -126,15 +126,15 @@ public class OpenApiHandler {
             File f = cachedMetadata.get(cacheKey);
             if (f == null || !f.exists()) {
                 Transformer transformer = templates.newTransformer();
-                transformer.setParameter(SCHEME, httpRequest.getScheme()); 
-                transformer.setParameter(HOST, httpRequest.getServerName()+":"+httpRequest.getServerPort()); //$NON-NLS-1$ 
-                transformer.setParameter(BASEPATH, uri.substring(0, uri.length() - version.uri.length())); 
-                transformer.setParameter(TITLE, key.getName() + " - " + modelName); //$NON-NLS-1$ 
-                transformer.setParameter(OPENAPI_VERSION, version.key); 
+                transformer.setParameter(SCHEME, httpRequest.getScheme());
+                transformer.setParameter(HOST, httpRequest.getServerName()+":"+httpRequest.getServerPort()); //$NON-NLS-1$
+                transformer.setParameter(BASEPATH, uri.substring(0, uri.length() - version.uri.length()));
+                transformer.setParameter(TITLE, key.getName() + " - " + modelName); //$NON-NLS-1$
+                transformer.setParameter(OPENAPI_VERSION, version.key);
                 //could also pull from the vdb description
-                transformer.setParameter(DESCRIPTION, modelName); 
-                transformer.setParameter(VERSION, key.getVersion()); 
-                if (parameters != null) { 
+                transformer.setParameter(DESCRIPTION, modelName);
+                transformer.setParameter(VERSION, key.getVersion());
+                if (parameters != null) {
                     parameters.forEach((k,v)->transformer.setParameter(k, v));
                 }
                 File appTempDir = (File)servletContext.getAttribute(ServletContext.TEMPDIR);

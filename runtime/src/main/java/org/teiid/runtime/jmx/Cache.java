@@ -21,9 +21,9 @@ package org.teiid.runtime.jmx;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 
 class Cache implements CacheBean {
-    
+
     private SessionAwareCache<?> cache;
-    
+
     public Cache(SessionAwareCache<?> cache) {
         this.cache = cache;
     }
@@ -47,5 +47,5 @@ class Cache implements CacheBean {
     public void clear() {
         cache.clearAll();
     }
-    
+
 }

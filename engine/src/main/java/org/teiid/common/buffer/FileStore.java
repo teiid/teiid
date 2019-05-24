@@ -29,24 +29,24 @@ import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 import org.teiid.core.types.DataTypeManager;
 
 public abstract class FileStore implements Removable {
-		
+
 	/**
 	 * A customized buffered stream with an exposed buffer
 	 */
 	public final class FileStoreOutputStream extends OutputStream {
-		
+
 		private byte[] buffer;
 		private int count;
 		private boolean bytesWritten;
 		private boolean closed;
 		private byte[] singleByte = new byte[1];
 		private int maxSize;
-		
+
 		public FileStoreOutputStream(int size) {
 			this.maxSize = size;
 			this.buffer = new byte[Math.min(size, 1<<8)];
 		}
-		
+
 		@Override
 		public void write(int b) throws IOException {
 			singleByte[0] = (byte)b;
@@ -91,7 +91,7 @@ public abstract class FileStore implements Removable {
 				count = 0;
 			}
 		}
-		
+
 		/**
 		 * Return the buffer.  Can be null if closed and the underlying filestore
 		 * has been written to.
@@ -100,22 +100,22 @@ public abstract class FileStore implements Removable {
 		public byte[] getBuffer() {
 			return buffer;
 		}
-		
+
 		public int getCount() {
 			return count;
 		}
-		
+
 		public boolean bytesWritten() {
 			return bytesWritten;
 		}
-		
+
 		@Override
 		public void flush() throws IOException {
 			if (bytesWritten) {
 				flushBuffer();
 			}
 		}
-		
+
 		@Override
 		public void close() throws IOException {
 			if (closed) {
@@ -130,21 +130,21 @@ public abstract class FileStore implements Removable {
 				this.buffer = Arrays.copyOf(this.buffer, this.count);
 			}
 		}
-		
+
 		private void checkOpen() {
 			if (closed) {
 				throw new IllegalStateException("Alread closed"); //$NON-NLS-1$
 			}
 		}
-		
+
 	}
 
 	private AtomicBoolean removed = new AtomicBoolean();
-	
+
 	public abstract long getLength();
-	
+
 	public abstract void setLength(long length) throws IOException;
-	
+
 	public int read(long fileOffset, byte[] b, int offSet, int length)
 			throws IOException {
 		checkRemoved();
@@ -156,7 +156,7 @@ public abstract class FileStore implements Removable {
 			throw new IOException("already removed"); //$NON-NLS-1$
 		}
 	}
-	
+
 	protected abstract int readWrite(long fileOffset, byte[] b, int offSet, int length, boolean write)
 			throws IOException;
 
@@ -173,11 +173,11 @@ public abstract class FileStore implements Removable {
     	    n += count;
     	} while (n < length);
 	}
-	
+
 	public synchronized void write(byte[] bytes, int offset, int length) throws IOException {
 		write(getLength(), bytes, offset, length);
 	}
-	
+
 	public void write(long start, byte[] bytes, int offset, int length) throws IOException {
         int n = 0;
     	do {
@@ -195,15 +195,15 @@ public abstract class FileStore implements Removable {
 			this.removeDirect();
 		}
 	}
-	
+
 	protected abstract void removeDirect();
-	
+
 	public ExtensibleBufferedInputStream createInputStream(final long start, final long length) {
 		return new ExtensibleBufferedInputStream() {
 			private long offset = start;
 			private long streamLength = length;
 			private ByteBuffer bb = ByteBuffer.allocate(1<<13);
-			
+
 			@Override
 			protected ByteBuffer nextBuffer() throws IOException {
 				int len = bb.capacity();
@@ -227,28 +227,28 @@ public abstract class FileStore implements Removable {
 			}
 		};
 	}
-	
+
 	public InputStream createInputStream(final long start) {
 		return createInputStream(start, -1);
 	}
-	
+
 	public OutputStream createOutputStream() {
 		return new OutputStream() {
-			
+
 			@Override
 			public void write(int b) throws IOException {
 				throw new UnsupportedOperationException("buffered reading must be used"); //$NON-NLS-1$
 			}
-			
+
 			@Override
 			public void write(byte[] b, int off, int len) throws IOException {
 				FileStore.this.write(b, off, len);
 			}
 		};
 	}
-	
+
 	public FileStoreOutputStream createOutputStream(int maxMemorySize) {
 		return new FileStoreOutputStream(maxMemorySize);
 	}
-	
+
 }

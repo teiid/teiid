@@ -31,15 +31,15 @@ import com.datastax.driver.core.VersionNumber;
  * Connection to Cassandra NoSql database.
  * */
 public interface CassandraConnection extends Connection {
-	
+
 	/**
 	 * Executes a CQL query.
 	 * */
 	public ResultSetFuture executeQuery(String query);
-	
+
 	/**
 	 * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
-	 * @throws KeyspaceNotDefinedException 
+	 * @throws KeyspaceNotDefinedException
 	 * */
 	public KeyspaceMetadata keyspaceInfo() throws TranslatorException;
 
@@ -63,5 +63,5 @@ public interface CassandraConnection extends Connection {
 	 * @return
 	 */
 	VersionNumber getVersion();
-	
+
 }

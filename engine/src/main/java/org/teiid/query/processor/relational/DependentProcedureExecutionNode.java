@@ -59,12 +59,12 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
         copyTo(copy);
         return copy;
     }
-    
+
     public void reset() {
         super.reset();
         criteriaProcessor = null;
     }
-    
+
     public void closeDirect() {
         super.closeDirect();
 
@@ -84,7 +84,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
             crit = QueryRewriter.evaluateAndRewrite(crit, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
             this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, crit, inputReferences, inputDefaults);
         }
-        
+
         return criteriaProcessor.prepareNextCommand(this.getProcessorPlan().getContext().getVariableContext());
     }
 
@@ -95,13 +95,13 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
         return criteriaProcessor.hasNextCommand();
     }
 
-    /** 
+    /**
      * @return Returns the inputCriteria.
      */
     public Criteria getInputCriteria() {
         return this.inputCriteria;
     }
-    
+
     @Override
     public void open() throws TeiidComponentException,
     		TeiidProcessingException {
@@ -121,7 +121,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
     		parent = parent.getParent();
     	}
 	}
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 	    Boolean requires = super.requiresTransaction(transactionalReads);

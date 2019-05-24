@@ -37,15 +37,15 @@ import org.teiid.translator.google.api.result.UpdateResult;
 
 
 
-/** 
- * Represents a connection to an Google spreadsheet data source. 
+/**
+ * Represents a connection to an Google spreadsheet data source.
  */
-public class SpreadsheetConnectionImpl extends BasicConnection implements GoogleSpreadsheetConnection  {  
+public class SpreadsheetConnectionImpl extends BasicConnection implements GoogleSpreadsheetConnection  {
 	private SpreadsheetManagedConnectionFactory config;
 	private GDataClientLoginAPI gdata = null;
 	private GoogleDataProtocolAPI dataProtocol = null;
     private AtomicReference<SpreadsheetInfo> spreadsheetInfo;
-	
+
 	public SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory config, AtomicReference<SpreadsheetInfo> spreadsheetInfo) {
 		this.config = config;
 		this.spreadsheetInfo = spreadsheetInfo;
@@ -59,21 +59,21 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 		authHeaderFactory.refreshToken();
 		dataProtocol.setHeaderFactory(authHeaderFactory);
 		gdata.setHeaderFactory(authHeaderFactory);
-		
+
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR,SpreadsheetManagedConnectionFactory.UTIL.getString("init") ); //$NON-NLS-1$
 	}
-	
-	/** 
+
+	/**
 	 * Closes Google spreadsheet context, effectively closing the connection to Google spreadsheet.
 	 * (non-Javadoc)
 	 */
 	@Override
     public void close() {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, 
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR,
 				SpreadsheetManagedConnectionFactory.UTIL.
 				getString("closing")); //$NON-NLS-1$
 	}
-	
+
 	public boolean isAlive() {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, SpreadsheetManagedConnectionFactory.UTIL.
 				getString("alive")); //$NON-NLS-1$
@@ -82,13 +82,13 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 
 	@Override
 	public RowsResult executeQuery(
-			String worksheetTitle, String query, 
+			String worksheetTitle, String query,
 			 Integer offset, Integer limit, int batchSize) {
-		
-		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetTitle, query, Math.min(batchSize, config.getBatchSize()), 
+
+		return dataProtocol.executeQuery(getSpreadsheetInfo(), worksheetTitle, query, Math.min(batchSize, config.getBatchSize()),
 				offset, limit);
-	}	
-	
+	}
+
 	@Override
 	public SpreadsheetInfo getSpreadsheetInfo() {
 	    SpreadsheetInfo info = spreadsheetInfo.get();
@@ -105,7 +105,7 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
     	                info = metadataExtractor.extractMetadata(config.getSpreadsheetId(), true);
     	            }
     	            spreadsheetInfo.set(info);
-	            }                
+	            }
             }
 		}
 		return info;

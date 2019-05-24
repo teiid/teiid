@@ -52,41 +52,41 @@ public class TeiidServiceNames {
 	public static ServiceName THREAD_POOL_SERVICE = ServiceName.JBOSS.append("teiid","teiid-async-threads"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName REST_WAR_SERVICE = ServiceName.JBOSS.append("teiid","teiid-rest-war-service"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName NODE_TRACKER_SERVICE = ServiceName.JBOSS.append("teiid","teiid-node-tracker"); //$NON-NLS-1$ //$NON-NLS-2$
-	
+
 	public static class InvalidServiceNameException extends TeiidException {
 
 		private static final long serialVersionUID = 7555741825606486101L;
-		
+
 		public InvalidServiceNameException(BundleUtil.Event code, Throwable t, final String message) {
 			super(code, t, message);
 		}
-		
+
 	}
-	
+
 	public static ServiceName translatorServiceName(String name) {
 		return ServiceName.of(TRANSLATOR_BASE, name);
 	}
-	
+
 	public static ServiceName vdbServiceName(String vdbName, String version) {
-		return VDB_SVC_BASE.append(vdbName.toUpperCase(), version); 
+		return VDB_SVC_BASE.append(vdbName.toUpperCase(), version);
 	}
-	
+
 	public static ServiceName vdbFinishedServiceName(String vdbName, String version) {
-		return VDB_FINISHED_SVC_BASE.append(vdbName.toUpperCase(), version); 
+		return VDB_FINISHED_SVC_BASE.append(vdbName.toUpperCase(), version);
 	}
-	
+
 	public static ServiceName vdbSwitchServiceName(String vdbName, String version) {
-		return VDB_SWITCH_SVC_BASE.append(vdbName.toUpperCase(), version); 
-	}	
-	
+		return VDB_SWITCH_SVC_BASE.append(vdbName.toUpperCase(), version);
+	}
+
 	public static ServiceName transportServiceName(String name) {
 		return ServiceName.of(TRANSPORT_BASE, name);
 	}
-	
+
 	public static ServiceName localTransportServiceName(String name) {
 		return LOCAL_TRANSPORT_BASE.append(name);
-	}	
-	
+	}
+
 	public static ServiceName dsListenerServiceName(String vdbName, String version, String name) throws InvalidServiceNameException {
 		try {
 			return ServiceName.of(DS_LISTENER_BASE, vdbName, version, VDBStatusChecker.stripContext(name));

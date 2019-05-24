@@ -19,13 +19,13 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 public class TestCouchbaseConnection {
 
     private CouchbaseConnectionImpl sample() throws ResourceException {
-        
+
         CouchbaseManagedConnectionFactory mcf = new CouchbaseManagedConnectionFactory();
         mcf.setConnectionString("10.66.192.120"); //$NON-NLS-1$
         mcf.setKeyspace("default"); //$NON-NLS-1$
         return mcf.createConnectionFactory().getConnection();
     }
-    
+
     @Test
     public void testKeyspaces () throws Exception {
         CouchbaseConnectionImpl conn = sample();

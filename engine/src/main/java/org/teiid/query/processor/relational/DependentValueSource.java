@@ -39,7 +39,7 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 
 
 
-/** 
+/**
  */
 public class DependentValueSource implements
                                  ValueIteratorSource {
@@ -53,18 +53,18 @@ public class DependentValueSource implements
     public DependentValueSource(TupleBuffer tb) {
     	this(tb, tb.getSchema());
     }
-    
+
     public DependentValueSource(TupleBuffer tb, List<? extends Expression> schema) {
         this.buffer = tb;
         this.schema = schema;
     }
-    
+
     public TupleBuffer getTupleBuffer() {
 		return buffer;
 	}
-    
-    /** 
-     * @throws TeiidComponentException 
+
+    /**
+     * @throws TeiidComponentException
      * @see org.teiid.query.sql.util.ValueIteratorSource#getValueIterator(org.teiid.query.sql.symbol.Expression)
      */
     public TupleSourceValueIterator getValueIterator(Expression valueExpression) throws  TeiidComponentException {
@@ -92,7 +92,7 @@ public class DependentValueSource implements
     	        		return new ArrayImpl(a);
     	        	}
     	        };
-    		} 
+    		}
     		index = getIndex(valueExpression);
     	}
         return new TupleSourceValueIterator(its, index);
@@ -103,7 +103,7 @@ public class DependentValueSource implements
 		Assertion.assertTrue(index != -1);
 		return index;
 	}
-    
+
     public Set<Object> getCachedSet(Expression valueExpression) throws TeiidComponentException, TeiidProcessingException {
     	Set<Object> result = null;
     	if (cachedSets != null) {
@@ -118,7 +118,7 @@ public class DependentValueSource implements
         	Class<?> type = null;
         	if (valueExpression instanceof Array) {
         		type = ((Array)valueExpression).getComponentType();
-        	} else { 	
+        	} else {
         		if (valueExpression != null) {
 	        		index = schema.indexOf(valueExpression);
 	            	Assertion.assertTrue(index != -1);
@@ -145,27 +145,27 @@ public class DependentValueSource implements
     	}
     	return result;
     }
-    
+
     @Override
     public boolean isUnused() {
 		return unused;
 	}
-    
+
     @Override
     public void setUnused(boolean unused) {
 		this.unused = unused;
 	}
-    
+
     public boolean isDistinct() {
 		return distinct;
 	}
-    
+
     public void setDistinct(boolean distinct) {
 		this.distinct = distinct;
 	}
-    
+
     public List<? extends Expression> getSchema() {
 		return schema;
 	}
-           
+
 }

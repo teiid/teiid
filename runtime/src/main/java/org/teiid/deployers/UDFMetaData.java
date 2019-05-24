@@ -27,9 +27,9 @@ import org.teiid.query.function.UDFSource;
 
 
 public class UDFMetaData {
-	protected TreeMap<String, UDFSource> methods = new TreeMap<String, UDFSource>(String.CASE_INSENSITIVE_ORDER);	
+	protected TreeMap<String, UDFSource> methods = new TreeMap<String, UDFSource>(String.CASE_INSENSITIVE_ORDER);
 	private ClassLoader classLoader;
-	
+
 	public Map<String, UDFSource> getFunctions(){
 		return this.methods;
 	}
@@ -40,7 +40,7 @@ public class UDFMetaData {
 		}
 		UDFSource udfSource = this.methods.get(name);
 		if (udfSource != null) {
-			//this is ambiguous about as to what classloader to use, but we assume the first is good and that the user will have set 
+			//this is ambiguous about as to what classloader to use, but we assume the first is good and that the user will have set
 			//the Java method if that's not the case
 			ArrayList<FunctionMethod> allMethods = new ArrayList<FunctionMethod>(udfSource.getFunctionMethods());
 			allMethods.addAll(funcs);
@@ -53,7 +53,7 @@ public class UDFMetaData {
 		}
 		this.methods.put(name, udfSource);
 	}
-	
+
 	public void addFunctions(UDFMetaData funcs){
 		this.methods.putAll(funcs.methods);
 		this.classLoader = funcs.classLoader;
@@ -65,7 +65,7 @@ public class UDFMetaData {
 		}
 		this.classLoader = functionClassLoader;
 	}
-	
+
 	public ClassLoader getClassLoader() {
 		return classLoader;
 	}

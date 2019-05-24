@@ -48,9 +48,9 @@ public class TestProcedure extends TestCase {
     private static String getTestVDBName() {
         return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
     }
-    
+
     public static TranslationUtility createTranslationUtility(String vdbName) {
-        return new TranslationUtility(vdbName);        
+        return new TranslationUtility(vdbName);
     }
 
     public Procedure getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
@@ -62,34 +62,34 @@ public class TestProcedure extends TestCase {
             }
         }
         sql.append(")"); //$NON-NLS-1$
-        Call proc = (Call) transUtil.parseCommand(sql.toString()); 
+        Call proc = (Call) transUtil.parseCommand(sql.toString());
         return proc.getMetadataObject();
     }
 
     public void testProcedure1() throws Exception {
         Procedure proc = getProcedure("ConnectorMetadata.TestProc1", 2, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
         assertEquals("Procedure name in source", proc.getNameInSource()); //$NON-NLS-1$
-        
+
         String[] nameInSource = new String[] { "Param name in source", null, null, null }; //$NON-NLS-1$
         ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In, ProcedureParameter.Type.Out, ProcedureParameter.Type.InOut, ProcedureParameter.Type.ReturnValue };
         int[] index = new int[] { 1, 2, 3, 4 };
-        Class<?>[] type = new Class[] { Integer.class, Long.class, Short.class, java.sql.Date.class };        
-        
+        Class<?>[] type = new Class[] { Integer.class, Long.class, Short.class, java.sql.Date.class };
+
         checkParams(proc, nameInSource, direction, index, type);
-                
-    }   
-    
+
+    }
+
     public void testProcedureWithResultSet() throws Exception {
         Procedure proc = getProcedure("ConnectorMetadata.TestProc2", 1, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
         assertEquals(null, proc.getNameInSource());
-        
+
         String[] nameInSource = new String[] { null };
         ProcedureParameter.Type[] direction = new ProcedureParameter.Type[] { ProcedureParameter.Type.In };
         int[] index = new int[] { 1 };
-        Class<?>[] type = new Class[] { String.class };        
-        
+        Class<?>[] type = new Class[] { String.class };
+
         checkParams(proc, nameInSource, direction, index, type);
-        
+
         List<Column> rsCols = proc.getResultSet().getColumns();
         // Check first column of result set
         assertEquals(2, rsCols.size());
@@ -99,16 +99,16 @@ public class TestProcedure extends TestCase {
         assertEquals("Result set column name in source", elemID.getNameInSource());         //$NON-NLS-1$
         assertEquals(java.sql.Timestamp.class, elemID.getJavaType());
         assertEquals(1, elemID.getPosition());
-        
-        Column elemID2 = rsCols.get(1);        
+
+        Column elemID2 = rsCols.get(1);
         assertEquals("RSCol2", elemID2.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol2", elemID2.getFullName());         //$NON-NLS-1$
-        assertEquals(null, elemID2.getNameInSource());         
+        assertEquals(null, elemID2.getNameInSource());
         assertEquals(String.class, elemID2.getJavaType());
         assertEquals(2, elemID2.getPosition());
         Properties props = new Properties();
         props.put("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         // failing because default extension properties aren't in the VDB file
         //assertEquals(props, e2.getProperties());
 
@@ -127,6 +127,6 @@ public class TestProcedure extends TestCase {
             assertEquals(type[i], param.getJavaType());
         }
 		return params;
-	}   
-    
+	}
+
 }

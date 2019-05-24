@@ -49,14 +49,14 @@ public class SqlUtil {
      * 0 length, etc.
      * @param sql Sql string
      * @return True if INSERT, UPDATE, or DELETE, and false otherwise
-     * @throws IllegalArgumentException If sql string is invalid and neither a 
+     * @throws IllegalArgumentException If sql string is invalid and neither a
      * query or an update
      */
     public static boolean isUpdateSql(String sql) throws IllegalArgumentException {
         String keyWord = getKeyword(sql);
         return updateKeywords.contains(keyWord);
     }
-    
+
     public static String getKeyword(String sql) {
     	Matcher matcher = PATTERN.matcher(sql);
         if (!matcher.find()) {
@@ -75,10 +75,10 @@ public class SqlUtil {
         }
         return keyword;
     }
-    
+
     public static SQLException createFeatureNotSupportedException() {
     	StackTraceElement ste = new Exception().getStackTrace()[1];
     	String methodName = ste.getMethodName();
     	return new SQLFeatureNotSupportedException(methodName + " is not supported"); //$NON-NLS-1$
-    }    
+    }
 }

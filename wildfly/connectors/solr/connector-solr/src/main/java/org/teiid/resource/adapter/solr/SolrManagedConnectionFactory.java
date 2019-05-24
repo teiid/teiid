@@ -87,27 +87,27 @@ public class SolrManagedConnectionFactory extends BasicManagedConnectionFactory 
 	public void setMaxRetries(Integer maxRetries) {
 		this.maxRetries = maxRetries;
 	}
-	
+
 	public String getCoreName() {
 		return coreName;
 	}
 
 	public void setCoreName(String coreName) {
 		this.coreName = coreName;
-	}	
-	
+	}
+
 	public String getAuthPassword() {
         return authPassword;
     }
-	
+
 	public String getAuthUserName() {
         return authUserName;
     }
-	
+
 	public void setAuthPassword(String authPassword) {
         this.authPassword = authPassword;
     }
-	
+
 	public void setAuthUserName(String authUserName) {
         this.authUserName = authUserName;
     }

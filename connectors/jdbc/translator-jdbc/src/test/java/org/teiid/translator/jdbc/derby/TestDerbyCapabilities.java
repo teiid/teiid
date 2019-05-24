@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.teiid.util.Version;
 
 public class TestDerbyCapabilities {
-	
+
 	@Test public void testLimitSupport() {
 		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
 		derbyCapabilities.setDatabaseVersion(Version.DEFAULT_VERSION);
@@ -32,7 +32,7 @@ public class TestDerbyCapabilities {
 		derbyCapabilities.setDatabaseVersion(DerbyExecutionFactory.TEN_5.toString());
 		assertTrue(derbyCapabilities.supportsRowLimit());
 	}
-	
+
 	@Test public void testFunctionSupport() {
 		DerbyExecutionFactory derbyCapabilities = new DerbyExecutionFactory();
 		derbyCapabilities.setDatabaseVersion(Version.DEFAULT_VERSION);

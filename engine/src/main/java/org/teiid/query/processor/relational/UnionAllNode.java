@@ -36,31 +36,31 @@ public class UnionAllNode extends RelationalNode {
     private static final int SMALL_LIMIT = 10;
 	private boolean[] sourceDone;
     private boolean[] sourceOpen;
-    
+
     private int outputRow = 1;
     private int reserved;
     private int schemaSize;
-	
+
 	public UnionAllNode(int nodeID) {
 		super(nodeID);
 	}
-	    
+
     public void reset() {
         super.reset();
-        
+
         sourceDone = null;
         sourceOpen = null;
-        outputRow = 1;   
-    }    
-    
+        outputRow = 1;
+    }
+
     @Override
     public void initialize(CommandContext context, BufferManager bufferManager,
     		ProcessorDataManager dataMgr) {
     	super.initialize(context, bufferManager, dataMgr);
     	this.schemaSize = getBufferManager().getSchemaSize(getOutputElements());
     }
-    
-    public void open() 
+
+    public void open()
             throws TeiidComponentException, TeiidProcessingException {
         CommandContext context = getContext();
         boolean old = context.setParallel(true);
@@ -70,13 +70,13 @@ public class UnionAllNode extends RelationalNode {
             context.setParallel(old);
         }
     }
-    
-	public void openInternal() 
+
+	public void openInternal()
 		throws TeiidComponentException, TeiidProcessingException {
 
         // Initialize done flags
         sourceDone = new boolean[getChildren().length];
-        
+
         // Detect if we should be more conservative than the default strategy of opening all children
         RelationalNode parent = this.getParent();
         int rowLimit = -1;
@@ -104,7 +104,7 @@ public class UnionAllNode extends RelationalNode {
 	    			Math.max(2, this.getChildCount()/2 + this.getChildCount()%2);
 	    		}
     		}
-    		
+
     		//we use the 2x multiple here because the default strategy can proactively execute unneeded results
     		if (toOpen < this.getContext().getUserRequestSourceConcurrency()*2) {
     			if (reserved == 0) {
@@ -112,7 +112,7 @@ public class UnionAllNode extends RelationalNode {
     	        }
     			sourceOpen = new boolean[this.getChildCount()];
         		//we want to be selective about the number of children we open
-    			//ideally we would 
+    			//ideally we would
         		RelationalNode[] children = this.getChildren();
         		for(int i=0; i<toOpen; i++) {
                     children[i].open();
@@ -121,16 +121,16 @@ public class UnionAllNode extends RelationalNode {
         		return;
     		}
     	}
-    	
+
 		if (reserved == 0) {
         	reserved = getBufferManager().reserveBuffers((getChildCount()) * schemaSize, BufferReserveMode.FORCE);
         }
-    	
+
         // Open the children
         super.open();
 	}
-	
-	public TupleBatch nextBatchDirect() 
+
+	public TupleBatch nextBatchDirect()
 	        throws BlockedException, TeiidComponentException, TeiidProcessingException {
 	    CommandContext context = getContext();
         boolean old = context.setParallel(true);
@@ -141,12 +141,12 @@ public class UnionAllNode extends RelationalNode {
         }
 	}
 
-    public TupleBatch nextBatchDirectInternal() 
+    public TupleBatch nextBatchDirectInternal()
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
         // Walk through all children and for each one that isn't done, try to retrieve a batch
         // When all sources are done, set the termination flag on that batch
-        
+
         RelationalNode[] children = getChildren();
         int childCount = getChildCount();
         int activeSources = 0;
@@ -159,11 +159,11 @@ public class UnionAllNode extends RelationalNode {
             		continue;
             	}
                 activeSources++;
-                
+
                 if(batch == null) {
                     try {
                         batch = children[i].nextBatch();
-                        
+
                         // Got a batch
                         if(batch.getTerminationFlag() == true) {
                             // Mark source as being done and decrement the activeSources counter
@@ -178,30 +178,30 @@ public class UnionAllNode extends RelationalNode {
                         // no problem - try the next one
                     }
                 } else {
-                    // We already have a batch, so we know that 
-                    // 1) we have a batch to return and 
+                    // We already have a batch, so we know that
+                    // 1) we have a batch to return and
                     // 2) this isn't the last active source, so we're not returning the last batch
-                    
-                    // This is sufficient to break the loop - we won't learn anything new after this                    
+
+                    // This is sufficient to break the loop - we won't learn anything new after this
                     break;
-                }                
+                }
             }
         }
-        
+
         // Determine what to return
         TupleBatch outputBatch = null;
         if(batch != null) {
             // Rebuild the batch to reset the output row
             outputBatch = new TupleBatch(outputRow, batch.getTuples());
-                        
+
             // This is the last unioned batch if:
             // 1) This batch is a termination batch from the child
             // 2) No other active sources exist
             outputBatch.setTerminationFlag(batch.getTerminationFlag() && activeSources == 0 && !additionalSources);
-            
+
             // Update output row for next batch
             outputRow += outputBatch.getRowCount();
-            
+
         } else if(activeSources > 0) {
             // Didn't get a batch but there are active sources so we are blocked
         	throw BlockedException.block(getContext().getRequestId(), "Blocking on union source.", getID()); //$NON-NLS-1$
@@ -232,10 +232,10 @@ public class UnionAllNode extends RelationalNode {
             outputBatch = new TupleBatch(outputRow, Collections.EMPTY_LIST);
             outputBatch.setTerminationFlag(true);
         }
-        
+
         return outputBatch;
-    }    
-    
+    }
+
     @Override
     public void closeDirect() {
     	if (reserved > 0) {
@@ -249,5 +249,5 @@ public class UnionAllNode extends RelationalNode {
 		super.copyTo(clonedNode);
 		return clonedNode;
 	}
-    
+
 }

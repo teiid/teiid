@@ -36,10 +36,10 @@ import javax.transaction.xa.Xid;
 import org.teiid.resource.api.XAImporter;
 
 /**
- * Simple {@link XAImporter} implementations based upon an {@link XATerminator} and {@link WorkManager} 
+ * Simple {@link XAImporter} implementations based upon an {@link XATerminator} and {@link WorkManager}
  */
 public class XAImporterImpl implements XAImporter {
-    
+
     private static class FutureWork<T> extends FutureTask<T> implements Work {
         public FutureWork(Callable<T> callable) {
             super(callable);
@@ -47,18 +47,18 @@ public class XAImporterImpl implements XAImporter {
 
         @Override
         public void release() {
-            
+
         }
     }
-    
+
     private XATerminator xaTerminator;
     private WorkManager workManager;
-    
+
     public XAImporterImpl(XATerminator xaTerminator, WorkManager workManager) {
         this.xaTerminator = xaTerminator;
         this.workManager = workManager;
     }
-    
+
     @Override
     public Transaction importTransaction(TransactionManager transactionManager,
             Xid xid, int transactionTimeout) throws XAException {
@@ -66,7 +66,7 @@ public class XAImporterImpl implements XAImporter {
         ec.setXid(xid);
         try {
             ec.setTransactionTimeout(transactionTimeout);
-            
+
             FutureWork<Transaction> work = new FutureWork<>(new Callable<Transaction>() {
                 @Override
                 public Transaction call() throws Exception {

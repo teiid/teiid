@@ -37,13 +37,13 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseQueryExecution extends CouchbaseExecution implements ResultSetExecution {
-    
+
 	private QueryExpression command;
 	private Class<?>[] expectedTypes;
-	
+
 	private N1QLVisitor visitor;
 	private Iterator<N1qlQueryRow> results;
-	
+
 	public CouchbaseQueryExecution(
 			CouchbaseExecutionFactory executionFactory,
 			QueryExpression command, ExecutionContext executionContext,
@@ -60,7 +60,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
 		String n1ql = this.visitor.toString();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
 		executionContext.logCommand(n1ql);
-				
+
 		N1qlQueryResult queryResult = connection.execute(n1ql);
 		this.results = queryResult.iterator();
 	}
@@ -76,7 +76,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
         }
         List<Object> row = new ArrayList<>(expectedTypes.length);
         JsonObject json = queryRow.value();
-        
+
         for(int i = 0 ; i < expectedTypes.length ; i ++){
             String columnName = this.visitor.getSelectColumns().get(i);
             Object value = null;
@@ -100,7 +100,7 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
             } else {
                 value = json.get(columnName);
             }
-            
+
             row.add(this.executionFactory.retrieveValue(type, value));
         }
         return row;

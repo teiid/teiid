@@ -37,7 +37,7 @@ import org.teiid.translator.loopback.LoopbackExecutionFactory;
 @SuppressWarnings("nls")
 public class SampleExecutionFactory extends LoopbackExecutionFactory {
 	static int metadataloaded = 0; // use of static is bad, but we instantiate a separate translator for each vdb load
-	
+
 	public SampleExecutionFactory() {
 		setSupportsSelectDistinct(true);
 		setWaitTime(10);
@@ -45,21 +45,21 @@ public class SampleExecutionFactory extends LoopbackExecutionFactory {
 		setSourceRequiredForMetadata(false);
 		setSourceRequired(false);
 	}
-	
+
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Object conn) throws TranslatorException {
 		super.getMetadata(metadataFactory, conn);
 		metadataloaded++;
-		
+
 		Table t = metadataFactory.addTable("Matadata");
 		metadataFactory.addColumn("execCount", "integer", t);
 	}
-	
+
 	@Override
 	public boolean isSourceRequired() {
 		return false;
-	}	
-	
+	}
+
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
@@ -68,18 +68,18 @@ public class SampleExecutionFactory extends LoopbackExecutionFactory {
 				boolean served = false;
 				@Override
 				public void execute() throws TranslatorException {
-					
+
 				}
-				
+
 				@Override
 				public void close() {
-					
+
 				}
-				
+
 				@Override
 				public void cancel() throws TranslatorException {
 				}
-				
+
 				@Override
 				public List<?> next() throws TranslatorException, DataNotAvailableException {
 					if (!served) {
@@ -91,6 +91,6 @@ public class SampleExecutionFactory extends LoopbackExecutionFactory {
 			};
     	}
         return new LoopbackExecution(command, this, executionContext);
-    }   
-	
+    }
+
 }

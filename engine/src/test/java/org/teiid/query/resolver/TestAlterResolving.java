@@ -37,23 +37,23 @@ public class TestAlterResolving {
 		AlterView alterView = (AlterView) helpResolve("alter view SmallA_2589 as select 2", RealMetadataFactory.exampleBQTCached());
 		assertNotNull(alterView.getTarget().getMetadataID());
 	}
-	
+
 	@Test public void testAlterProcedure() {
 		AlterProcedure alterProc = (AlterProcedure) helpResolve("alter procedure MMSP5 as begin select param1; end", RealMetadataFactory.exampleBQTCached());
 		assertNotNull(alterProc.getTarget().getMetadataID());
 		Query q = (Query)((CommandStatement)alterProc.getDefinition().getBlock().getStatements().get(0)).getCommand();
 		assertTrue(((ElementSymbol)q.getSelect().getSymbol(0)).isExternalReference());
 	}
-	
+
 	@Test public void testAlterTriggerInsert() {
 		AlterTrigger alterTrigger = (AlterTrigger) helpResolve("alter trigger on SmallA_2589 instead of insert as for each row begin atomic select new.intkey; end", RealMetadataFactory.exampleBQTCached());
 		assertNotNull(alterTrigger.getTarget().getMetadataID());
 	}
-	
+
 	@Test public void testAlterTriggerInsert_Invalid() {
 		helpResolveException("alter trigger on SmallA_2589 instead of insert as for each row begin atomic select old.intkey; end", RealMetadataFactory.exampleBQTCached());
 	}
-	
+
 	@Test public void testAlterView_Invalid() {
 		helpResolveException("alter view bqt1.SmallA as select 2", RealMetadataFactory.exampleBQTCached());
 	}

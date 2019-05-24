@@ -22,12 +22,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public interface TeiidResultSet extends ResultSet {
-	
+
     /**
-     * Returns an estimate of the minimum number of rows that can be read (after the current) 
-     * without blocking or the end of the ResultSet is reached.  
+     * Returns an estimate of the minimum number of rows that can be read (after the current)
+     * without blocking or the end of the ResultSet is reached.
      *
-     * @return     an estimate of the minimum number of rows that can be read (after the current) 
+     * @return     an estimate of the minimum number of rows that can be read (after the current)
      *             without blocking or the end of the ResultSet is reached.
      * @exception  SQLException if the statement is closed or another error condition occurs.
      */

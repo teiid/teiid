@@ -42,5 +42,5 @@ public class TestCassandraQueryExecution {
         List<?> val = cqe.getRow(row);
         assertNull(val.get(0));
 	}
-	
+
 }

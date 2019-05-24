@@ -20,11 +20,11 @@ package org.teiid.translator;
 
 
 /**
- * An execution represents the state and lifecycle for a particular 
+ * An execution represents the state and lifecycle for a particular
  * command execution.  The methods provided on this interface define
- * standard lifecycle methods.  
- * When execution completes, the {@link #close()} will be called.  If 
- * execution must be aborted, due to user or administrator action, the 
+ * standard lifecycle methods.
+ * When execution completes, the {@link #close()} will be called.  If
+ * execution must be aborted, due to user or administrator action, the
  * {@link #cancel()} will be called.
  */
 public interface Execution {
@@ -33,14 +33,14 @@ public interface Execution {
      * Terminates the execution normally.
      */
     void close();
-    
+
     /**
      * Cancels the execution abnormally.  This will happen via
      * a different thread from the one performing the execution, so
      * should be expected to happen in a multi-threaded scenario.
      */
     void cancel() throws TranslatorException;
-    
+
     /**
      * Execute the associated command.  Results will be retrieved through a specific sub-interface call.
      * @throws TranslatorException

@@ -40,7 +40,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobType> {
 
 	private static final long serialVersionUID = 1294191629070433450L;
-    
+
     public BlobType() {
     }
 
@@ -51,48 +51,48 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
     public BlobType(Blob blob) {
     	super(blob);
     }
-    
-    /** 
+
+    /**
      * @see java.sql.Blob#getBinaryStream()
      */
     public InputStream getBinaryStream() throws SQLException {
         return this.reference.getBinaryStream();
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#getBytes(long, int)
      */
     public byte[] getBytes(long pos, int len) throws SQLException {
         return this.reference.getBytes(pos, len);
     }
-    
+
     @Override
     long computeLength() throws SQLException {
         return this.reference.length();
     }
-    
-    /** 
+
+    /**
      * @see java.sql.Blob#position(java.sql.Blob, long)
      */
     public long position(Blob pattern, long start) throws SQLException {
         return this.reference.position(pattern, start);
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#position(byte[], long)
      */
     public long position(byte[] pattern, long start) throws SQLException {
         return this.reference.position(pattern, start);
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#setBinaryStream(long)
      */
     public OutputStream setBinaryStream(long pos) throws SQLException {
         return this.reference.setBinaryStream(pos);
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#setBytes(long, byte[], int, int)
      * @since 4.3
      */
@@ -103,20 +103,20 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
         return this.reference.setBytes(pos, bytes, offset, len);
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#setBytes(long, byte[])
      */
     public int setBytes(long pos, byte[] bytes) throws SQLException {
         return this.reference.setBytes(pos, bytes);
     }
 
-    /** 
+    /**
      * @see java.sql.Blob#truncate(long)
      */
     public void truncate(long len) throws SQLException {
         this.reference.truncate(len);
     }
-    
+
 	public void free() throws SQLException {
 		this.reference.free();
 	}
@@ -125,7 +125,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			throws SQLException {
 		return this.reference.getBinaryStream(pos, len);
 	}
-	
+
 	public static SerialBlob createBlob(byte[] bytes) {
 		if (bytes == null) {
 			return null;
@@ -136,7 +136,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10047, e);
 		}
 	}
-	
+
 	@Override
 	protected void readReference(ObjectInput in) throws IOException {
 		byte[] bytes = new byte[(int)getLength()];
@@ -147,7 +147,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			throw new IOException(e);
 		}
 	}
-	
+
 	@Override
 	protected void writeReference(final DataOutput out) throws IOException {
 		try {
@@ -159,7 +159,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 
 	static void writeBinary(final DataOutput out, InputStream is, int length) throws IOException {
 		OutputStream os = new OutputStream() {
-			
+
 			@Override
 			public void write(int b) throws IOException {
 				out.write(b);
@@ -174,7 +174,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			is.close();
 		}
 	}
-	
+
 	@Override
 	public int compareTo(BlobType o) {
 		try {
@@ -197,7 +197,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10049, e);
 		}
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -216,7 +216,7 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
 			return false;
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 	    try {
@@ -227,5 +227,5 @@ public class BlobType extends Streamable<Blob> implements Blob, Comparable<BlobT
             return 0;
         }
 	}
-	
+
 }

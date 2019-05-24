@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -16,15 +16,15 @@ public class Util {
 
 	private Util() {
 	}
-    
+
 	/**
-	 * Compares two strings lexicographically. 
+	 * Compares two strings lexicographically.
 	 * The comparison is based on the Unicode value of each character in
-	 * the strings. 
+	 * the strings.
 	 *
 	 * @return  the value <code>0</code> if the str1 is equal to str2;
 	 *          a value less than <code>0</code> if str1
-	 *          is lexicographically less than str2; 
+	 *          is lexicographically less than str2;
 	 *          and a value greater than <code>0</code> if str1 is
 	 *          lexicographically greater than str2.
 	 */
@@ -52,5 +52,5 @@ public class Util {
 		for (int i= 0; i < max && s1.charAt(i) == s2.charAt(i); ++i)
 			++len;
 		return len;
-	} 
+	}
 }

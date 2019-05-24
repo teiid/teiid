@@ -20,7 +20,7 @@ package org.teiid.adminapi;
 import java.util.List;
 
 public interface DataPolicy {
-	
+
 	public enum Context {
 		CREATE,
 		DROP,
@@ -31,87 +31,87 @@ public interface DataPolicy {
 		DELETE,
 		FUNCTION,
 		ALTER,
-		STORED_PROCEDURE, 
+		STORED_PROCEDURE,
 		METADATA;
     }
-	
+
 	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};
-	
+
 	public enum ResourceType {DATABASE, SCHEMA, PROCEDURE, TABLE, FUNCTION, COLUMN, LANGUAGE};
-	
+
 	/**
 	 * Get the Name of the Data Policy
 	 * @return
 	 */
 	String getName();
-	
+
 	/**
 	 * Get the description of the Data Policy
 	 * @return
 	 */
 	String getDescription();
-	
+
 	/**
 	 * Get the List of Permissions for this Data Policy.
 	 * @return
 	 */
 	List<DataPermission> getPermissions();
-	
+
 	/**
 	 * Mapped Container Role names for this Data Policy
 	 * @return
 	 */
 	List<String> getMappedRoleNames();
-	
+
 	/**
 	 * If the policy applies to any authenticated user
 	 * @return
 	 */
 	boolean isAnyAuthenticated();
-	
+
 	/**
 	 * If the policy grants all permissions
 	 * @return
 	 */
 	boolean isGrantAll();
-	
+
 	/**
 	 * If the policy allows for temporary table usage
 	 * @return
 	 */
 	Boolean isAllowCreateTemporaryTables();
-	
+
 	interface DataPermission {
 		/**
 		 * Get the Resource Name that the Data Permission represents
 		 * @return
 		 */
 		String getResourceName();
-		
+
 		/**
 		 * Get the type of resource the Data Permission is represents
 		 * @return
 		 */
 		ResourceType getResourceType();
-		
+
 		/**
 		 * Is "CREATE" allowed?
 		 * @return
 		 */
 		Boolean getAllowCreate();
-		
+
 		/**
 		 * Is "SELECT" allowed?
 		 * @return
 		 */
 		Boolean getAllowRead();
-		
+
 		/**
 		 * Is "INSERT/UPDATE" allowed?
 		 * @return
 		 */
 		Boolean getAllowUpdate();
-		
+
 		/**
 		 * Is "DELETE" allowed?
 		 * @return
@@ -129,7 +129,7 @@ public interface DataPolicy {
 		 * @return
 		 */
 		Boolean getAllowExecute();
-		
+
 		/**
 		 * Is "LANGUAGE" allowed?
 		 * @return
@@ -140,7 +140,7 @@ public interface DataPolicy {
 		 * The condition string
 		 */
 		String getCondition();
-		
+
 		/**
 		 * The column mask string
 		 */
@@ -150,11 +150,11 @@ public interface DataPolicy {
 		 * The column mask order
 		 */
 		Integer getOrder();
-		
+
 		/**
 		 * If the condition acts as a constraint.
 		 */
 		Boolean getConstraint();
-		
+
 	}
 }

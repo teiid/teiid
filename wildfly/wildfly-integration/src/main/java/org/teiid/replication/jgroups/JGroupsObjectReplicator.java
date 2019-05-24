@@ -131,13 +131,13 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        			is.receive(null);
 		        		}
 		        		this.inputStreams.remove(key);
-		        	}  
+		        	}
 		        	return null;
 		        } else if (method_call.getMethodId() == methodList.size() - 5) {
 		        	//hasState
 		        	ReplicatedObject ro = (ReplicatedObject)object;
 		        	Serializable stateId = (Serializable)method_call.getArgs()[0];
-		        	
+
 		        	if (stateId == null) {
 		        		synchronized (this) {
 							if (initialized) {
@@ -146,7 +146,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 							return null;
 						}
 		        	}
-		        	
+
 		        	if (ro.hasState(stateId)) {
 		        		return Boolean.TRUE;
 		        	}
@@ -156,7 +156,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        	ReplicatedObject ro = (ReplicatedObject)object;
 		        	String stateId = (String)method_call.getArgs()[0];
 		        	Address dest = (Address)method_call.getArgs()[1];
-		        	
+
 		        	JGroupsOutputStream oStream = new JGroupsOutputStream(this, Arrays.asList(dest), stateId, (short)(methodMap.size() - 3), false);
 					try {
 						if (stateId == null) {
@@ -170,12 +170,12 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, object, "sent state", stateId); //$NON-NLS-1$
 			        return null;
 		        }
-		        
+
 		        Method m=method_lookup.findMethod(method_call.getMethodId());
 		        if(m == null)
 		            throw new Exception("no method found for " + method_call.getMethodId()); //$NON-NLS-1$
 		        method_call.setMethod(m);
-		        
+
 		    	return method_call.invoke(server_obj);
 		    }
 		    catch(Throwable x) {
@@ -212,7 +212,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				} else {
 					((ReplicatedObject)object).setState(stateId, is);
 				}
-				if (promise != null) { 
+				if (promise != null) {
 					promise.setResult(Boolean.TRUE);
 				}
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, "state set", stateId); //$NON-NLS-1$
@@ -229,7 +229,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 
 	private final class ReplicatedInvocationHandler<S> extends ReceiverAdapter implements
 			InvocationHandler, Serializable {
-		
+
 		private static final int PULL_RETRIES = 3;
 		private static final long serialVersionUID = -2943462899945966103L;
 		private final S object;
@@ -237,22 +237,22 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		private final HashMap<Method, Short> methodMap;
 	    protected List<Address> remoteMembers = Collections.synchronizedList(new ArrayList<Address>());
 		private Map<Serializable, Promise<Boolean>> loadingStates = new HashMap<Serializable, Promise<Boolean>>();
-	    
+
 		private ReplicatedInvocationHandler(S object,HashMap<Method, Short> methodMap) {
 			this.object = object;
 			this.methodMap = methodMap;
 		}
-		
+
 		List<Address> getRemoteMembersCopy() {
 			synchronized (remoteMembers) {
 				return new ArrayList<Address>(remoteMembers);
 			}
 		}
-		
+
 		public void setDisp(ReplicatorRpcDispatcher<S> disp) {
 			this.disp = disp;
 		}
-		
+
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
@@ -307,7 +307,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		        throw new RuntimeException(method + " " + args + " failed", e); //$NON-NLS-1$ //$NON-NLS-2$
 		    }
 		}
-		
+
 		protected Address whereIsState(Serializable stateId, long timeout) throws Exception {
 			if (remoteMembers.isEmpty()) {
 				return null;
@@ -390,7 +390,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "pulling state", stateId); //$NON-NLS-1$
 					Address addr = whereIsState(stateId, stateDetectTimeout);
 					if (addr == null) {
-						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "timeout exceeded or first member"); //$NON-NLS-1$	
+						LogManager.logDetail(LogConstants.CTX_RUNTIME, object, "timeout exceeded or first member"); //$NON-NLS-1$
 						break;
 					}
 					JGroupsInputStream is = new JGroupsInputStream(IO_TIMEOUT);
@@ -398,9 +398,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 					List<?> key = Arrays.asList(stateId, addr);
 					disp.inputStreams.put(key, is);
 					executor.execute(runner);
-					
+
 					this.disp.callRemoteMethod(addr, new MethodCall((short)(methodMap.size() - 4), stateId, this.disp.getChannel().getAddress()), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(true));
-					
+
 					Boolean fetched = p.getResult(timeout);
 
 					if (fetched != null) {
@@ -417,7 +417,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 								}
 							}
 							break;
-						} 
+						}
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40102, object, stateId));
 					} else {
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40103, object, stateId));
@@ -430,7 +430,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			}
 			return null; //could not fetch the remote state
 		}
-		
+
 		@Override
 		public void viewAccepted(View newView) {
 			if (newView.getMembers() != null) {
@@ -450,7 +450,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			}
 		}
 	}
-	
+
 	private interface Streaming {
 		void sendState(Serializable id, Address dest);
 		void createState(Serializable id);
@@ -466,7 +466,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		this.channelFactory = channelFactory;
 		this.executor = executor;
 	}
-	
+
 	public void stop(Object object) {
 		if (object == null || !Proxy.isProxyClass(object.getClass())) {
 			return;
@@ -477,12 +477,12 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		c.disconnect();
 		c.close();
 	}
-	
+
 	@Override
 	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
 		JChannel channel = channelFactory.createChannel(mux_id);
-		
+
 		// To keep the order of methods same at all the nodes.
 		TreeMap<String, Method> methods = new TreeMap<String, Method>();
 		for (Method method : iface.getMethods()) {
@@ -491,23 +491,23 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			}
 			methods.put(method.toGenericString(), method);
 		}
-		
+
 		final HashMap<Method, Short> methodMap = new HashMap<Method, Short>();
 		final ArrayList<Method> methodList = new ArrayList<Method>();
-		
+
 		for (String method : methods.keySet()) {
 			methodList.add(methods.get(method));
 			methodMap.put(methods.get(method), (short)(methodList.size() - 1));
 		}
-		
+
 		Method hasState = ReplicatedObject.class.getMethod(HAS_STATE, new Class<?>[] {Serializable.class});
 		methodList.add(hasState);
 		methodMap.put(hasState, (short)(methodList.size() - 1));
-		
+
 		Method sendState = JGroupsObjectReplicator.Streaming.class.getMethod(SEND_STATE, new Class<?>[] {Serializable.class, Address.class});
 		methodList.add(sendState);
 		methodMap.put(sendState, (short)(methodList.size() - 1));
-		
+
 		//add in streaming methods
 		Method createState = JGroupsObjectReplicator.Streaming.class.getMethod(CREATE_STATE, new Class<?>[] {Serializable.class});
 		methodList.add(createState);
@@ -518,21 +518,21 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 		Method finishState = JGroupsObjectReplicator.Streaming.class.getMethod(FINISH_STATE, new Class<?>[] {Serializable.class});
 		methodList.add(finishState);
 		methodMap.put(finishState, (short)(methodList.size() - 1));
-		
+
         ReplicatedInvocationHandler<S> proxy = new ReplicatedInvocationHandler<S>(object, methodMap);
         /*
          * TODO: could have an object implement streaming
          * Override the normal handle method to support streaming
          */
         ReplicatorRpcDispatcher disp = new ReplicatorRpcDispatcher<S>(channel, proxy, proxy, object, object, methodMap, methodList);
-		
+
 		proxy.setDisp(disp);
         disp.setMethodLookup(new MethodLookup() {
             public Method findMethod(short id) {
                 return methodList.get(id);
             }
         });
-        
+
 		T replicatedProxy = (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, proxy);
 		boolean success = false;
 		try {
@@ -558,5 +558,5 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				}
 			}
 		}
-	}	
+	}
 }

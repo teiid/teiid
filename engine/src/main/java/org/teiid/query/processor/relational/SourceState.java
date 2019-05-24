@@ -40,7 +40,7 @@ class SourceState {
 	enum ImplicitBuffer {
 		NONE, FULL, ON_MARK
 	}
-	
+
     private RelationalNode source;
     private List expressions;
     private BatchCollector collector;
@@ -54,10 +54,10 @@ class SourceState {
     private boolean distinct;
     private ImplicitBuffer implicitBuffer = ImplicitBuffer.FULL;
     boolean open;
-    
+
     private SortUtility sortUtility;
 	private boolean limited;
-    
+
     public SourceState(RelationalNode source, List expressions) {
         this.source = source;
         this.expressions = expressions;
@@ -65,19 +65,19 @@ class SourceState {
         this.outerVals = Collections.nCopies(elements.size(), null);
         this.expressionIndexes = getExpressionIndecies(expressions, elements);
     }
-    
+
     public RelationalNode getSource() {
 		return source;
 	}
-    
+
     public void setImplicitBuffer(ImplicitBuffer implicitBuffer) {
 		this.implicitBuffer = implicitBuffer;
 	}
-    
+
     public ImplicitBuffer getImplicitBuffer() {
 		return implicitBuffer;
 	}
-    
+
     static int[] getExpressionIndecies(List expressions,
                                         List elements) {
         if (expressions == null) {
@@ -90,22 +90,22 @@ class SourceState {
         }
         return indecies;
     }
-    
+
     TupleBuffer createSourceTupleBuffer() throws TeiidComponentException {
     	return this.source.getBufferManager().createTupleBuffer(source.getElements(), source.getConnectionID(), TupleSourceType.PROCESSOR);
     }
-    
+
     public List saveNext() throws TeiidComponentException, TeiidProcessingException {
         this.currentTuple = this.getIterator().nextTuple();
         return currentTuple;
     }
-    
+
     public void reset() throws TeiidComponentException, TeiidProcessingException {
         this.getIterator().reset();
         this.getIterator().mark();
         this.currentTuple = null;
     }
-    
+
     public void close() {
     	closeBuffer();
     	if (buffers != null) {
@@ -136,7 +136,7 @@ class SourceState {
     public long getRowCount() throws TeiidComponentException, TeiidProcessingException {
     	return this.getTupleBuffer().getRowCount();
     }
-    
+
     /**
      * Uses the prefetch logic to determine an incremental row count
      */
@@ -177,7 +177,7 @@ class SourceState {
         }
         return this.iterator;
     }
-    
+
     /**
      * Pro-actively pull batches for later use.
      * There are unfortunately quite a few cases to cover here.
@@ -219,7 +219,7 @@ class SourceState {
     public int[] getExpressionIndexes() {
         return this.expressionIndexes;
     }
-    
+
     void setMaxProbeMatch(long maxProbeMatch) {
         this.maxProbeMatch = maxProbeMatch;
     }
@@ -242,7 +242,7 @@ class SourceState {
                 collector = new BatchCollector(source, source.getBufferManager(), source.getContext(), false);
             }
             this.buffer = collector.collectTuples();
-        } 
+        }
         return this.buffer;
     }
 
@@ -256,7 +256,7 @@ class SourceState {
     public void markExpressionsDistinct(boolean distinct) {
         this.distinct |= distinct;
     }
-    
+
     public void sort(SortOption sortOption) throws TeiidComponentException, TeiidProcessingException {
     	if (sortOption == SortOption.ALREADY_SORTED) {
     		return;
@@ -280,7 +280,7 @@ class SourceState {
     		} else {
     			ts = new BatchIterator(this.source);
     		}
-		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
+		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC),
 		    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
 		    this.markExpressionsDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
 		    if (this.buffer != null) {
@@ -299,7 +299,7 @@ class SourceState {
     		}
     		sorted = this.buffers.get(0);
     		this.buffers = null;
-    	} else { 
+    	} else {
     		sorted = sortUtility.sort();
     	}
     	//only remove the buffer if this is the first time through
@@ -309,11 +309,11 @@ class SourceState {
 		this.buffer = sorted;
         this.markExpressionsDistinct(sortUtility.isDistinct());
     }
-    
+
     public boolean hasBuffer() {
     	return this.buffer != null || this.source.hasBuffer();
     }
-    
+
     public boolean nextBuffer() throws TeiidComponentException, TeiidProcessingException {
     	this.closeBuffer();
     	if (this.buffers == null || this.buffers.isEmpty()) {
@@ -340,7 +340,7 @@ class SourceState {
 		this.currentTuple = null;
 		this.maxProbeMatch = 1;
 	}
-	
+
 	public void setMaxProbePosition() throws TeiidComponentException, TeiidProcessingException {
 		this.getIterator().setPosition(this.getMaxProbeMatch());
 		this.currentTuple = null;
@@ -365,7 +365,7 @@ class SourceState {
 		}
 		return low?0:Long.MAX_VALUE;
 	}
-	
+
 	public SortUtility getSortUtility() {
 		return sortUtility;
 	}
@@ -373,5 +373,5 @@ class SourceState {
 	public void isLimited(boolean hasLimit) {
 		this.limited = hasLimit;
 	}
-    
+
 }

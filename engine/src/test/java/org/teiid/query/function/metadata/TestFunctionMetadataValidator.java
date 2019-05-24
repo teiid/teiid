@@ -27,47 +27,47 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 public class TestFunctionMetadataValidator extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestFunctionMetadataValidator(String name) { 
+
+	public TestFunctionMetadataValidator(String name) {
 		super(name);
-	}	
-	
+	}
+
 	// ################################## TEST HELPERS ################################
-	
+
 	public void helpTestValidateName(String name) {
 	    try {
 	        FunctionMetadataValidator.validateName(name);
 	    } catch(FunctionMetadataException e) {
 	     	fail("Got exception but did not expect it: " + e.getMessage());    //$NON-NLS-1$
-	    }	    
+	    }
 	}
-	
-	public void helpTestValidateNameFail(String name) { 
+
+	public void helpTestValidateNameFail(String name) {
 	    try {
 	        FunctionMetadataValidator.validateName(name);
 	     	fail("Expected exception but did not get one"); //$NON-NLS-1$
 	    } catch(FunctionMetadataException e) {
-	    }	    
-	}	
+	    }
+	}
 
 	public void helpTestValidateFunction(String className, String methodName, PushDown pushdown) {
 	    try {
 	        FunctionMetadataValidator.validateInvocationMethod(className, methodName, pushdown);
 	    } catch(FunctionMetadataException e) {
 	     	fail("Got exception but did not expect it: " + e.getMessage());    //$NON-NLS-1$
-	    }	    
+	    }
 	}
-	
-	public void helpTestValidateFunctionFail(String className, String methodName, PushDown pushdown) { 
+
+	public void helpTestValidateFunctionFail(String className, String methodName, PushDown pushdown) {
 	    try {
 	        FunctionMetadataValidator.validateInvocationMethod(className, methodName, pushdown);
 	     	fail("Expected exception but did not get one"); //$NON-NLS-1$
 	    } catch(FunctionMetadataException e) {
-	    }	    
-	}	
-	
+	    }
+	}
+
 	// ################################## ACTUAL TESTS ################################
-	
+
 	public void testValidateName1() {
 		helpTestValidateName("abc");     //$NON-NLS-1$
 	}
@@ -83,15 +83,15 @@ public class TestFunctionMetadataValidator extends TestCase {
 	public void testValidateName4() {
 		helpTestValidateName("a");     //$NON-NLS-1$
 	}
-	
+
 	public void testValidateNameFail1() {
 	    helpTestValidateNameFail(null);
 	}
-	
+
 	public void testValidateNameFail3() {
 	    helpTestValidateName("a.b"); //$NON-NLS-1$
 	}
-	
+
 	public void testValidateFunction1() {
 	 	helpTestValidateFunction("a", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -107,13 +107,13 @@ public class TestFunctionMetadataValidator extends TestCase {
 	public void testValidateFunction4() {
 	 	helpTestValidateFunction("a$1", "b", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
     public void testValidateFunction5() {
-        helpTestValidateFunction(null, null, PushDown.MUST_PUSHDOWN);    
+        helpTestValidateFunction(null, null, PushDown.MUST_PUSHDOWN);
     }
 
 	public void testValidateFunctionFail1() {
-	 	helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);   
+	 	helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);
 	}
 
 	public void testValidateFunctionFail2() {
@@ -143,13 +143,13 @@ public class TestFunctionMetadataValidator extends TestCase {
 	public void testValidateFunctionFail8() {
 	 	helpTestValidateFunctionFail("a", "b.c", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
     public void testValidateFunctionFail9() {
         helpTestValidateFunctionFail("a", "b@", PushDown.CAN_PUSHDOWN);    //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testValidateFunctionFail10() {
-        helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);    
-        helpTestValidateFunctionFail(null, null, PushDown.CANNOT_PUSHDOWN);    
+        helpTestValidateFunctionFail(null, null, PushDown.CAN_PUSHDOWN);
+        helpTestValidateFunctionFail(null, null, PushDown.CANNOT_PUSHDOWN);
     }
 }

@@ -30,12 +30,12 @@ import org.teiid.metadata.TableStats;
  * Distributes events across the Teiid cluster
  */
 public interface EventDistributor {
-	
+
 	/**
 	 * Update the given materialized view row.
 	 * The tuple is expected to be in table order, which has the primary key first.
 	 * Deletes need to only send the key, not the entire row contents.
-	 * 
+	 *
 	 * @param vdbName
 	 * @param vdbVersion
 	 * @param schema
@@ -46,12 +46,12 @@ public interface EventDistributor {
 	@Deprecated
 	@Replicated(remoteOnly=true)
 	void updateMatViewRow(String vdbName, int vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
-	
+
 	/**
 	 * Update the given materialized view row.
 	 * The tuple is expected to be in table order, which has the primary key first.
 	 * Deletes need to only send the key, not the entire row contents.
-	 * 
+	 *
 	 * @param vdbName
 	 * @param vdbVersion
 	 * @param schema
@@ -61,7 +61,7 @@ public interface EventDistributor {
 	 */
 	@Replicated(remoteOnly=true)
 	void updateMatViewRow(String vdbName, String vdbVersion, String schema, String viewName, List<?> tuple, boolean delete);
-	
+
 	/**
 	 * Notify that the table data has changed.
 	 * @param vdbName
@@ -72,7 +72,7 @@ public interface EventDistributor {
 	@Deprecated
 	@Replicated(remoteOnly=true)
 	void dataModification(String vdbName, int vdbVersion, String schema, String... tableNames);
-	
+
 	/**
 	 * Notify that the table data has changed.
 	 * @param vdbName
@@ -109,7 +109,7 @@ public interface EventDistributor {
 	@Replicated(remoteOnly=true)
 	void setColumnStats(String vdbName, String vdbVersion, String schemaName,
 			String tableName, String columnName, ColumnStats stats);
-	
+
 	/**
 	 * Set the table stats
 	 * @param vdbName
@@ -122,7 +122,7 @@ public interface EventDistributor {
 	@Replicated(remoteOnly=true)
 	void setTableStats(String vdbName, int vdbVersion, String schemaName,
 			String tableName, TableStats stats);
-	
+
 	/**
 	 * Set the table stats
 	 * @param vdbName
@@ -134,7 +134,7 @@ public interface EventDistributor {
 	@Replicated(remoteOnly=true)
 	void setTableStats(String vdbName, String vdbVersion, String schemaName,
 			String tableName, TableStats stats);
-	
+
 	/**
 	 * Set the given property value
 	 * @param vdbName
@@ -146,7 +146,7 @@ public interface EventDistributor {
 	@Deprecated
 	@Replicated(remoteOnly=true)
 	void setProperty(String vdbName, int vdbVersion, String uuid, String name, String value);
-	
+
 	/**
 	 * Set the given property value
 	 * @param vdbName
@@ -157,7 +157,7 @@ public interface EventDistributor {
 	 */
 	@Replicated(remoteOnly=true)
 	void setProperty(String vdbName, String vdbVersion, String uuid, String name, String value);
-	
+
 	/**
 	 * Set the instead of trigger definition.  Only one of either the triggerDefinition or enabled should be specified.
 	 * @param vdbName
@@ -207,7 +207,7 @@ public interface EventDistributor {
 	 */
 	@Replicated(remoteOnly=true)
 	void setProcedureDefinition(String vdbName, String vdbVersion, String schema, String procName, String definition);
-	
+
 	/**
 	 * Set the view definition
 	 * @param vdbName
@@ -219,7 +219,7 @@ public interface EventDistributor {
 	@Deprecated
 	@Replicated(remoteOnly=true)
 	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
-	
+
 	/**
 	 * Set the view definition
 	 * @param vdbName
@@ -230,19 +230,19 @@ public interface EventDistributor {
 	 */
 	@Replicated(remoteOnly=true)
 	void setViewDefinition(String vdbName, String vdbVersion, String schema, String viewName, String definition);
-	
+
 	/**
 	 * Add EventListener for callback on events
 	 * @param listener
 	 */
 	void register(EventListener listener);
-	
+
 	/**
 	 * Remove EventListener
 	 * @param listener
 	 */
 	void unregister(EventListener listener);
-	
+
 	/**
      * Notify that the table data has changed.
      * <br>For an insert only the newValues are provided.

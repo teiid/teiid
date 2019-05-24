@@ -41,51 +41,51 @@ import org.teiid.script.io.ResultSetReader;
 
 
 
-/** 
- * This class can be used as the base class to write Query tests for 
+/**
+ * This class can be used as the base class to write Query tests for
  * integration testing. Just like the scripted one this one should provide all
  * those required flexibility in testing.
  */
 public abstract class AbstractQueryTest {
-	
+
 	//NOTE not all tests will pass with this set to true, only those with scrollable resultsets
-	static boolean WRITE_ACTUAL = false;  
-	
+	static boolean WRITE_ACTUAL = false;
+
     protected Connection internalConnection = null;
     protected ResultSet internalResultSet = null;
     protected Statement internalStatement = null;
     protected SQLException internalException = null;
     protected int updateCount = -1;
-    protected String DELIMITER = "    "; //$NON-NLS-1$ 
-    
+    protected String DELIMITER = "    "; //$NON-NLS-1$
+
     public AbstractQueryTest() {
     	super();
     }
-    
-    
+
+
     public AbstractQueryTest(Connection conn) {
     	super();
         this.internalConnection = conn;
-        
+
     }
-    
-     
+
+
     @After public void tearDown() throws Exception {
     	closeConnection();
     }
-           
+
     public void setConnection(Connection c) {
     	this.internalConnection = c;
     }
-    
+
     public Connection getConnection() {
     	return this.internalConnection;
     }
-          
+
     public boolean execute(String sql) throws SQLException {
         return execute(sql, new Object[] {});
     }
-    
+
     public boolean execute(String sql, Object... params) throws SQLException {
     	closeResultSet();
     	closeStatement();
@@ -119,33 +119,33 @@ public abstract class AbstractQueryTest {
             this.internalException = e;
             if (!exceptionExpected()) {
             	throw e;
-            }            
-        } 
+            }
+        }
         return false;
     }
-    
+
     protected Statement createPrepareCallStatement(String sql) throws SQLException{
     	return this.internalConnection.prepareCall("{?=call "+sql+"}");  //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     protected Statement createPrepareStatement(String sql) throws SQLException{
     	return this.internalConnection.prepareStatement(sql);
     }
-    
+
     protected Statement createStatement() throws SQLException{
     	return this.internalConnection.createStatement();
     }
-    
+
     private void setParameters(PreparedStatement stmt, Object[] params) throws SQLException{
         for (int i = 0; i < params.length; i++) {
             stmt.setObject(i+1, params[i]);
         }
     }
-    
+
     public int[] executeBatch(String[] sql) {
         return executeBatch(sql, -1);
     }
-    
+
     public int[] executeBatch(String[] sql, int timeout)  {
     	closeResultSet();
     	closeStatement();
@@ -153,7 +153,7 @@ public abstract class AbstractQueryTest {
         try {
             assertNotNull(this.internalConnection);
             assertTrue(!this.internalConnection.isClosed());
-            
+
             for (int i = 0; i < sql.length; i++) {
                 if (sql[i].indexOf("?") != -1) { //$NON-NLS-1$
                     throw new RuntimeException("no prepared statements allowed in the batch command"); //$NON-NLS-1$
@@ -162,65 +162,65 @@ public abstract class AbstractQueryTest {
 
             this.internalStatement = createStatement();
             assignExecutionProperties(this.internalStatement);
-            
+
             if (timeout != -1) {
                 this.internalStatement.setQueryTimeout(timeout);
-            } 
+            }
             for (int i = 0; i < sql.length; i++) {
                 this.internalStatement.addBatch(sql[i]);
             }
-       
+
             return this.internalStatement.executeBatch();
-             
+
         } catch (SQLException e) {
             this.internalException = e;
             if (!exceptionExpected()) {
             	throw new RuntimeException(e);
             }
        }
-        
+
         return null;
 
     }
-    
+
     /**
      * Override when you need to set an execution property on the statement before execution.
-     * 
+     *
      * <p>Example:
      *<code>if (this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE) != null) {
      *               statement.setExecutionProperty(ExecutionProperties.PROP_FETCH_SIZE, this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE));
      *      }
      *</code>
-     *</p>           
+     *</p>
      * @param stmt
      *
      * @since
      */
-    
-    
+
+
     protected void assignExecutionProperties(Statement stmt) {
     }
-    
-    
+
+
     public boolean exceptionOccurred() {
         return this.internalException != null;
     }
-    
+
     public boolean exceptionExpected() {
         return false;
     }
-    
-    
+
+
     public SQLException getLastException() {
         return this.internalException;
     }
-    
+
     public void assertResultsSetEquals(File expected) {
     	assertResultsSetEquals(this.internalResultSet, expected);
     }
-    
+
     public void assertResultsSetEquals(ResultSet resultSet, File expected) {
-        assertNotNull(resultSet);        
+        assertNotNull(resultSet);
         try {
             writeResultSet(expected, new BufferedReader(new ResultSetReader(resultSet, DELIMITER)));
             if (resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY) {
@@ -250,7 +250,7 @@ public abstract class AbstractQueryTest {
     public void assertResultsSetEquals(String expected) {
     	assertResultsSetEquals(this.internalResultSet, expected);
     }
-    
+
     public void assertResultsSetEquals(ResultSet resultSet,String expected) {
         assertNotNull(resultSet);
         assertReaderEquals(new ResultSetReader(resultSet, DELIMITER), new StringReader(expected));
@@ -263,15 +263,15 @@ public abstract class AbstractQueryTest {
     public void assertResultsSetEquals(String[] expected) {
     	assertResultsSetEquals(this.internalResultSet, expected);
     }
-    
+
     public void assertResultsSetEquals(ResultSet resultSet, String[] expected) {
         assertNotNull(resultSet);
         assertReaderEquals(new ResultSetReader(resultSet, DELIMITER), new StringArrayReader(expected));
     }
-    
+
     public void assertReaderEquals(Reader expected, Reader reader) {
         BufferedReader  resultReader = new BufferedReader(expected);
-        BufferedReader  expectedReader = new BufferedReader(reader);        
+        BufferedReader  expectedReader = new BufferedReader(reader);
         try {
             compareResults(resultReader, expectedReader);
         } catch (Exception e) {
@@ -282,10 +282,10 @@ public abstract class AbstractQueryTest {
                 expectedReader.close();
             } catch (IOException e) {
             	throw new RuntimeException(e);
-            }             
+            }
         }
     }
-    
+
     public void assertResultsSetMetadataEquals(ResultSetMetaData metadata, File expected) {
         assertNotNull(metadata);
         try {
@@ -318,11 +318,11 @@ public abstract class AbstractQueryTest {
     protected void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
     	assertEquals(read(expectedReader, compareCaseSensitive()) , read(resultReader, compareCaseSensitive()));
     }
-    
+
     protected boolean compareCaseSensitive() {
 	return true;
     }
-    
+
     public void printResults() {
         printResults(this.internalResultSet);
     }
@@ -338,14 +338,14 @@ public abstract class AbstractQueryTest {
 
     public void walkResults() {
         assertNotNull(this.internalResultSet);
-        
+
         try {
             int columnCount = this.internalResultSet.getMetaData().getColumnCount();
             while(this.internalResultSet.next()) {
                 for (int col = 1; col <= columnCount; col++) {
                     this.internalResultSet.getObject(col);
                 }
-            }    
+            }
             closeResultSet();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -356,7 +356,7 @@ public abstract class AbstractQueryTest {
         if(results == null) {
             System.out.println("ResultSet is null"); //$NON-NLS-1$
             return;
-        }        
+        }
         int row;
         try {
             row = -1;
@@ -376,9 +376,9 @@ public abstract class AbstractQueryTest {
             System.out.println("Fetched "+row+" rows\n"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }        
+        }
     }
-    
+
     public void assertUpdateCount(int expected) {
     	assertEquals(expected, updateCount);
     }
@@ -400,8 +400,8 @@ public abstract class AbstractQueryTest {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }    
-    
+    }
+
     public void closeStatement() {
         closeResultSet();
 
@@ -419,16 +419,16 @@ public abstract class AbstractQueryTest {
     public void closeResultSet() {
         this.internalException = null;
 
-        if (this.internalResultSet != null) {        
+        if (this.internalResultSet != null) {
             try {
-                this.internalResultSet.close();                
+                this.internalResultSet.close();
             } catch(SQLException e) {
                 // ignore
             } finally {
-            	this.internalResultSet = null;            	
+            	this.internalResultSet = null;
             }
         }
-    }    
+    }
 
     public void closeConnection() {
         closeStatement();
@@ -444,23 +444,23 @@ public abstract class AbstractQueryTest {
             this.internalConnection = null;
         }
     }
-    
+
     public void cancelQuery() throws SQLException {
         assertNotNull(this.internalConnection);
         assertTrue(!this.internalConnection.isClosed());
         assertNotNull(this.internalStatement);
-        this.internalStatement.cancel();    
-    }  
-    
+        this.internalStatement.cancel();
+    }
+
     public void print(String msg) {
         System.out.println(msg);
     }
-    
+
     public void print(Throwable e) {
         e.printStackTrace();
     }
 
-    
+
     protected void executeAndAssertResults(String query, String[] expected) throws SQLException {
         execute(query);
         if (expected != null) {
@@ -468,6 +468,6 @@ public abstract class AbstractQueryTest {
         }
         else {
             printResults(true);
-        }    	
+        }
     }
 }

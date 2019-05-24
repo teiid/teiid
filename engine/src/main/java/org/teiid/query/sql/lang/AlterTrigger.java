@@ -24,26 +24,26 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.proc.TriggerAction;
 
 public class AlterTrigger extends Alter<TriggerAction> {
-	
+
 	private Table.TriggerEvent event;
 	private Boolean enabled;
 	private boolean create;
 	private boolean after;
     private String name;
-	
+
 	public Table.TriggerEvent getEvent() {
 		return event;
 	}
-	
+
 	public void setEvent(Table.TriggerEvent operation) {
 		this.event = operation;
 	}
-	
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public AlterTrigger clone() {
 		AlterTrigger clone = new AlterTrigger();
@@ -55,12 +55,12 @@ public class AlterTrigger extends Alter<TriggerAction> {
 		clone.name = this.name;
 		return clone;
 	}
-	
+
 	@Override
 	public int getType() {
 		return TYPE_ALTER_TRIGGER;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!super.equals(obj)) {
@@ -70,41 +70,41 @@ public class AlterTrigger extends Alter<TriggerAction> {
 			return true;
 		}
 		AlterTrigger other = (AlterTrigger)obj;
-		return EquivalenceUtil.areEqual(this.enabled, other.enabled) 
+		return EquivalenceUtil.areEqual(this.enabled, other.enabled)
         && EquivalenceUtil.areEqual(this.name, other.name)
 		&& this.create == other.create
 		&& other.event == this.event
 		&& other.after == this.after;
 	}
-	
+
 	public void setEnabled(Boolean enabled) {
 		this.enabled = enabled;
 	}
-	
+
 	public Boolean getEnabled() {
 		return enabled;
 	}
-	
+
 	public boolean isCreate() {
 		return create;
 	}
-	
+
 	public void setCreate(boolean create) {
 		this.create = create;
 	}
-	
+
 	public boolean isAfter() {
         return after;
     }
-	
+
 	public void setAfter(boolean after) {
         this.after = after;
     }
-	
+
 	public String getName() {
 	    return name;
 	}
-	
+
 	public void setName(String name) {
 	    this.name = name;
 	}

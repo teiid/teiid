@@ -35,7 +35,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 @Translator(name="jpa2", description="A translator for JPA2 based entities")
 public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory, EntityManager> {
 	private Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -44,13 +44,13 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 		setSupportsSelectDistinct(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 		setSupportsOuterJoins(true);
-		
+
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public EntityManager getConnection(EntityManagerFactory factory, ExecutionContext executionContext) throws TranslatorException {
 		if (factory == null) {
@@ -82,11 +82,11 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
 		return new JPQLUpdateExecution(command, executionContext, metadata, connection);
 	}
-	
+
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
 		 return new JPQLDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
-	}	
+	}
 
 	@Override
     public MetadataProcessor<EntityManager> getMetadataProcessor(){
@@ -202,7 +202,7 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	public boolean supportsScalarSubqueries() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean useAnsiJoin() {
 		return true;
@@ -234,24 +234,24 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
         supportedFunctions.addAll(getDefaultSupportedFunctions());
 
         // String functions
-        supportedFunctions.add(SourceSystemFunctions.CONCAT); 
-        supportedFunctions.add(SourceSystemFunctions.SUBSTRING); 
+        supportedFunctions.add(SourceSystemFunctions.CONCAT);
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TRIM);
-        supportedFunctions.add(SourceSystemFunctions.LCASE); 
-        supportedFunctions.add(SourceSystemFunctions.UCASE); 
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
         supportedFunctions.add(SourceSystemFunctions.LOCATE);
 
         // airthamatic functions
-        supportedFunctions.add(SourceSystemFunctions.ABS); 
-        supportedFunctions.add(SourceSystemFunctions.SQRT); 
+        supportedFunctions.add(SourceSystemFunctions.ABS);
+        supportedFunctions.add(SourceSystemFunctions.SQRT);
         supportedFunctions.add(SourceSystemFunctions.MOD);
         supportedFunctions.add(SourceSystemFunctions.CURDATE);
         supportedFunctions.add(SourceSystemFunctions.CURTIME);
-        
+
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.NULLIF);
-        
+
         return supportedFunctions;
 	}
 
@@ -262,7 +262,7 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
     public Map<String, FunctionModifier> getFunctionModifiers() {
     	return functionModifiers;
     }
-    
+
     /**
      * Add the {@link FunctionModifier} to the set of known modifiers.
      * @param name
@@ -270,9 +270,9 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
      */
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
     	this.functionModifiers.put(name, modifier);
-    }	
-	
-	
+    }
+
+
 	public List<String> getDefaultSupportedFunctions(){
 		return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}

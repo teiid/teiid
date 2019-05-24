@@ -37,15 +37,15 @@ import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 
 public class FtpFileConnectionImpl extends BasicConnection implements VirtualFileConnection {
-    
+
     static class JBossVirtualFile implements org.teiid.file.VirtualFile {
 
         private VirtualFile file;
-        
+
         public JBossVirtualFile(VirtualFile file) {
             this.file = file;
         }
-        
+
         @Override
         public String getName() {
             return file.getName();
@@ -54,7 +54,7 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
         @Override
         public InputStreamFactory createInputStreamFactory() {
             return new InputStreamFactory() {
-                
+
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return file.openStream();
@@ -88,16 +88,16 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
         public long getSize() {
             return file.getSize();
         }
-        
+
     }
-    
+
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FtpFileConnectionImpl.class);
-    
+
     private VirtualFile mountPoint;
     private Map<String, String> fileMapping;
     private Closeable closeable;
     private final FTPClient client;
-    
+
     public FtpFileConnectionImpl(FTPClient client, String pathname, Map<String, String> fileMapping) throws ResourceException {
         this.client = client;
         if(fileMapping == null) {
@@ -105,7 +105,7 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
         } else {
             this.fileMapping = fileMapping;
         }
-        
+
         try {
             if(this.client.cwd(pathname) != 250) {
                 throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
@@ -134,10 +134,10 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
         if(file.exists()) {
             return new org.teiid.file.VirtualFile[]{new JBossVirtualFile(file)};
         }
-        
-        return null; 
+
+        return null;
     }
-    
+
     public VirtualFile getFile(String path) {
         if(path == null) {
             return this.mountPoint;
@@ -162,5 +162,5 @@ public class FtpFileConnectionImpl extends BasicConnection implements VirtualFil
     public boolean remove(String path) {
         return this.mountPoint.getChild(path).delete();
     }
-    
+
 }

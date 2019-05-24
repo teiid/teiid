@@ -41,17 +41,17 @@ public class GoogleJSONParserTest {
 		Date date = (Date)parser.parseObject(new StringReader("new Date(2001,1,2)"), false);
 		assertEquals(TimestampUtil.createDate(101, 1, 2), date);
 	}
-	
+
 	@Test public void testTimestampParsing() throws Exception {
 		Timestamp ts = (Timestamp)parser.parseObject(new StringReader("new Date(2001,11,2,5,6,12,100)"), false);
 		assertEquals(TimestampUtil.createTimestamp(101, 11, 2, 5, 6, 12, 100000000), ts);
 	}
-	
+
 	@Test public void testArray() throws Exception {
 		List<?> val = (List<?>)parser.parseObject(new StringReader("['a','b','c']"), false);
 		assertEquals(Arrays.asList("a", "b", "c"), val);
 	}
-	
+
 	/**
 	 * the last trailing comma is not a null
 	 */
@@ -59,7 +59,7 @@ public class GoogleJSONParserTest {
 		List<?> val = (List<?>)parser.parseObject(new StringReader("[,\"a\",]"), false);
 		assertEquals(Arrays.asList(null, "a"), val);
 	}
-	
+
 	@Test public void testWrapped() throws Exception {
 		Map<?, ?> val = (Map<?, ?>)parser.parseObject(new StringReader("x({\"y\":100, \"z\" : null})"), true);
 		Map<Object, Object> expected = new LinkedHashMap<Object, Object>();
@@ -67,10 +67,10 @@ public class GoogleJSONParserTest {
 		expected.put("z", null);
 		assertEquals(expected, val);
 	}
-	
+
 	@Test public void testStringEncoding() throws Exception {
 		String val = (String)parser.parseObject(new StringReader("'\\u1234\\n\\t'"), false);
 		assertEquals("\u1234\n\t", val);
 	}
-	
+
 }

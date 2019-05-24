@@ -29,11 +29,11 @@ public class GroupBy extends BaseLanguageObject {
 
     private List<Expression> elements;
     private boolean rollup;
-    
+
     public GroupBy(List<Expression> elements) {
         this.elements = elements;
     }
-    
+
     /**
      * Get list of IExpression that the GROUP BY should be grouped on.
      * @return List of IExpression
@@ -49,11 +49,11 @@ public class GroupBy extends BaseLanguageObject {
     public void setElements(List<Expression> elements) {
         this.elements = elements;
     }
-    
+
     public boolean isRollup() {
 		return rollup;
 	}
-    
+
     public void setRollup(boolean rollup) {
 		this.rollup = rollup;
 	}

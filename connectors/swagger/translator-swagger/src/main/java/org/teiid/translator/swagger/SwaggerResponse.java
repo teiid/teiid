@@ -28,12 +28,12 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.document.Document;
 
 public class SwaggerResponse {
-    
+
     private Iterator<Document> results;
     private List<Map<String, Object>> currentDocumentRows;
     private Map<String, Object> headers;
     private boolean mapResponse;
-    
+
     public SwaggerResponse(InputStream payload, Map<String, Object> headers,
             SwaggerSerializer serializer, boolean mapResponse) throws TranslatorException {
         this.headers = headers;
@@ -42,11 +42,11 @@ public class SwaggerResponse {
     }
 
     public Map<String, Object> getNext() throws TranslatorException {
-        
+
         if (this.currentDocumentRows != null && !this.currentDocumentRows.isEmpty()) {
             return this.currentDocumentRows.remove(0);
         }
-        
+
         if (this.results.hasNext()) {
             Document d = this.results.next();
             List<Map<String, Object>> rows  = d.flatten();
@@ -61,14 +61,14 @@ public class SwaggerResponse {
             }
             this.currentDocumentRows = rows;
             return getNext();
-        } 
+        }
         return null;
     }
-    
+
     public boolean isMapResponse() {
         return this.mapResponse;
     }
-    
+
     public Map<String, Object> getHeaders(){
         return this.headers;
     }

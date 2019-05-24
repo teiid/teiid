@@ -51,7 +51,7 @@ public class TestBulkInsertExecution {
 	@Test
 	public void testFlowAndInvocationStack() throws Exception {
 		NamedTable table = new NamedTable("temp", null, Mockito.mock(Table.class));
-		
+
 		ArrayList<ColumnReference> elements = new ArrayList<ColumnReference>();
 		elements.add(new ColumnReference(table, "one", Mockito.mock(Column.class), Integer.class));
 		elements.add(new ColumnReference(table, "two", Mockito.mock(Column.class), String.class));
@@ -61,17 +61,17 @@ public class TestBulkInsertExecution {
 		param.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		param.setValueIndex(0);
 		values.add(param);
-		
+
 		param = new Parameter();
 		param.setType(DataTypeManager.DefaultDataClasses.STRING);
 		param.setValueIndex(1);
 		values.add(param);
-		
+
 		ExpressionValueSource valueSource = new ExpressionValueSource(values);
-		
+
 		Insert insert = new Insert(table, elements, valueSource);
 		insert.setParameterValues(Arrays.asList(Arrays.asList(2, '2'), Arrays.asList(2, '2'), Arrays.asList(3, '3')).iterator());
-		
+
 		Result r1 = Mockito.mock(Result.class);
 		Result r2 = Mockito.mock(Result.class);
 		Result r3 = Mockito.mock(Result.class);
@@ -81,18 +81,18 @@ public class TestBulkInsertExecution {
 		Mockito.when(r2.isCreated()).thenReturn(true);
 		Mockito.when(r3.isSuccess()).thenReturn(true);
 		Mockito.when(r3.isCreated()).thenReturn(true);
-		
+
 		BatchResult batchResult = Mockito.mock(BatchResult.class);
 		Mockito.when(batchResult.getResult()).thenReturn(new Result[] {r1}).thenReturn((new Result[] {r2})).thenReturn(new Result[] {r3});
-				
+
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		JobInfo jobInfo = Mockito.mock(JobInfo.class);
 		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.insert), Mockito.eq(false))).thenReturn(jobInfo);
 		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList())).thenReturn(new BatchResult[] {batchResult, batchResult, batchResult});
-		
+
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 		config.setMaxBulkInsertBatchSize(1);
-		
+
 		InsertExecutionImpl updateExecution = new InsertExecutionImpl(config, insert, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 		while(true) {
 			try {
@@ -107,11 +107,11 @@ public class TestBulkInsertExecution {
 		Mockito.verify(connection, Mockito.times(1)).getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList());
 	}
 
-	
+
 	@Test
 	public void testFlowAndErrorReturn() throws Exception {
 		NamedTable table = new NamedTable("temp", null, Mockito.mock(Table.class));
-		
+
 		ArrayList<ColumnReference> elements = new ArrayList<ColumnReference>();
 		elements.add(new ColumnReference(table, "one", Mockito.mock(Column.class), Integer.class));
 		elements.add(new ColumnReference(table, "two", Mockito.mock(Column.class), String.class));
@@ -121,17 +121,17 @@ public class TestBulkInsertExecution {
 		param.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		param.setValueIndex(0);
 		values.add(param);
-		
+
 		param = new Parameter();
 		param.setType(DataTypeManager.DefaultDataClasses.STRING);
 		param.setValueIndex(1);
 		values.add(param);
-		
+
 		ExpressionValueSource valueSource = new ExpressionValueSource(values);
-		
+
 		Insert insert = new Insert(table, elements, valueSource);
 		insert.setParameterValues(Arrays.asList(Arrays.asList(2, '2'), Arrays.asList(2, '2'), Arrays.asList(3, '3')).iterator());
-		
+
 		Result r1 = Mockito.mock(Result.class);
 		Result r2 = Mockito.mock(Result.class);
 		Result r3 = Mockito.mock(Result.class);
@@ -145,18 +145,18 @@ public class TestBulkInsertExecution {
 		error.setMessage("failed, check your data");
 		error.setStatusCode(StatusCode.CANNOT_DISABLE_LAST_ADMIN);
 		Mockito.when(r3.getErrors()).thenReturn(new Error[] {error});
-		
+
 		BatchResult batchResult = Mockito.mock(BatchResult.class);
 		Mockito.when(batchResult.getResult()).thenReturn(new Result[] {r1}).thenReturn((new Result[] {r2})).thenReturn(new Result[] {r3});
-				
+
 		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 		JobInfo jobInfo = Mockito.mock(JobInfo.class);
 		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.insert), Mockito.eq(false))).thenReturn(jobInfo);
 		Mockito.when(connection.getBulkResults(Mockito.any(JobInfo.class), Mockito.anyList())).thenReturn(new BatchResult[] {batchResult, batchResult, batchResult});
-		
+
 		SalesForceExecutionFactory config = new SalesForceExecutionFactory();
 		config.setMaxBulkInsertBatchSize(1);
-		
+
 		InsertExecutionImpl updateExecution = new InsertExecutionImpl(config, insert, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
 		while(true) {
 			try {

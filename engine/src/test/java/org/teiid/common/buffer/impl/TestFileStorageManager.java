@@ -35,7 +35,7 @@ import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestFileStorageManager {
-		
+
 	public static FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
         FileStorageManager sm = new FileStorageManager();
         sm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + (dir != null ? File.separator + dir : "")); //$NON-NLS-1$
@@ -47,14 +47,14 @@ public class TestFileStorageManager {
 	}
 
     @Test public void testInitialRead() throws Exception {
-        FileStorageManager sm = getStorageManager(null, null);        
+        FileStorageManager sm = getStorageManager(null, null);
         String tsID = "0";     //$NON-NLS-1$
         FileStore store = sm.createFileStore(tsID);
         assertEquals(-1, store.read(0, new byte[1], 0, 1));
     }
-	
+
     @Test public void testWrite() throws Exception {
-        FileStorageManager sm = getStorageManager(null, null);        
+        FileStorageManager sm = getStorageManager(null, null);
         String tsID = "0";     //$NON-NLS-1$
         FileStore store = sm.createFileStore(tsID);
         writeBytes(store);
@@ -62,28 +62,28 @@ public class TestFileStorageManager {
         store.remove();
         assertEquals(0, sm.getUsedBufferSpace());
     }
-    
+
     @Test public void testPositionalWrite() throws Exception {
-        FileStorageManager sm = getStorageManager(null, null);        
+        FileStorageManager sm = getStorageManager(null, null);
         String tsID = "0";     //$NON-NLS-1$
         FileStore store = sm.createFileStore(tsID);
         byte[] expectedBytes = writeBytes(store, 2048);
         assertEquals(4096, sm.getUsedBufferSpace());
-        
+
         writeBytes(store, 4096);
         assertEquals(6144, sm.getUsedBufferSpace());
-        
-        byte[] bytesRead = new byte[2048];        
+
+        byte[] bytesRead = new byte[2048];
         store.readFully(2048, bytesRead, 0, bytesRead.length);
-        
+
         assertArrayEquals(expectedBytes, bytesRead);
-        
+
         store.remove();
         assertEquals(0, sm.getUsedBufferSpace());
     }
-            
+
     @Test(expected=IOException.class) public void testMaxSpace() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null); 
+    	FileStorageManager sm = getStorageManager(null, null);
     	sm.setMaxBufferSpace(1);
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
@@ -94,12 +94,12 @@ public class TestFileStorageManager {
             assertEquals(1, sm.getOutOfDiskErrorCount());
         }
     }
-    
+
     @Test(expected=IOException.class) public void testMaxSpaceSplit() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null); 
+    	FileStorageManager sm = getStorageManager(null, null);
     	sm.setMaxBufferSpace(1);
         String tsID = "0";     //$NON-NLS-1$
-        
+
         SplittableStorageManager ssm = new SplittableStorageManager(sm);
         FileStore store = ssm.createFileStore(tsID);
         try {
@@ -109,22 +109,22 @@ public class TestFileStorageManager {
         	assertEquals(0, sm.getUsedBufferSpace());
         }
     }
-    
+
     @Test public void testSetLength() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null); 
-        
+    	FileStorageManager sm = getStorageManager(null, null);
+
     	String tsID = "0";     //$NON-NLS-1$
         FileStore store = sm.createFileStore(tsID);
         store.setLength(1000);
         assertEquals(1000, sm.getUsedBufferSpace());
-        
+
         store.setLength(200);
         assertEquals(200, sm.getUsedBufferSpace());
-        
+
         store.setLength(1000);
         assertEquals(1000, sm.getUsedBufferSpace());
     }
-    
+
     @Test public void testFlush() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");
@@ -134,7 +134,7 @@ public class TestFileStorageManager {
     	fsos.flush();
     	assertEquals(0, fsos.getCount());
     }
-    
+
     @Test public void testGrowth() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");
@@ -146,7 +146,7 @@ public class TestFileStorageManager {
     	assertEquals(1 + (1<<14), fsos.getCount());
     	assertEquals(1<<15, fsos.getBuffer().length);
     }
-    
+
     @Test public void testClose() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");
@@ -157,7 +157,7 @@ public class TestFileStorageManager {
     }
 
     static Random r = new Random();
-    
+
 	static void writeBytes(FileStore store) throws IOException {
 		writeBytes(store, store.getLength());
 	}
@@ -167,14 +167,14 @@ public class TestFileStorageManager {
 		byte[] bytes = new byte[2048];
         r.nextBytes(bytes);
         store.write(start, bytes, 0, bytes.length);
-        byte[] bytesRead = new byte[2048];        
+        byte[] bytesRead = new byte[2048];
         store.readFully(start, bytesRead, 0, bytesRead.length);
         assertTrue(Arrays.equals(bytes, bytesRead));
         return bytes;
 	}
-    
+
     @Test public void testWritingMultipleFiles() throws Exception {
-    	FileStorageManager sm = getStorageManager(null, null); 
+    	FileStorageManager sm = getStorageManager(null, null);
         String tsID = "0";     //$NON-NLS-1$
         // Add one batch
         FileStore store = sm.createFileStore(tsID);
@@ -188,21 +188,21 @@ public class TestFileStorageManager {
         byte[] bytesOrig = new byte[2048];
         r.nextBytes(bytesOrig);
         out.write(bytesOrig, 0, 2048);
-        
+
         byte[] readContent = new byte[2048];
-        InputStream in = store.createInputStream(0, contentOrig.getBytes().length);        
+        InputStream in = store.createInputStream(0, contentOrig.getBytes().length);
     	int c = in.read(readContent, 0, 3000);
-       	assertEquals(contentOrig, new String(readContent, 0, c));       	
+       	assertEquals(contentOrig, new String(readContent, 0, c));
        	c = in.read(readContent, 0, 3000);
        	assertEquals(-1, c);
        	in.close();
-        
+
         in = store.createInputStream(start, 2048);
         c = in.read(readContent, 0, 3000);
         assertTrue(Arrays.equals(bytesOrig, readContent));
        	c = in.read(readContent, 0, 3000);
        	assertEquals(-1, c);
-       	in.close();        
-    }	
-	
+       	in.close();
+    }
+
 }

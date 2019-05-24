@@ -64,7 +64,7 @@ import io.opentracing.tag.Tags;
  * and its associated workers' state.
  */
 public class ConnectorManager  {
-	
+
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 
 	private final String translatorName;
@@ -72,21 +72,21 @@ public class ConnectorManager  {
 	private final String connectionName;
 	private final String jndiName;
 	private final List<String> id;
-	
+
     // known requests
     private final ConcurrentHashMap<AtomicRequestID, ConnectorWork> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWork>();
-	
+
 	private volatile SourceCapabilities cachedCapabilities;
-	
+
 	private volatile boolean stopped;
 	private final ExecutionFactory<Object, Object> executionFactory;
 
 	private List<FunctionMethod> functions;
-	
+
     public ConnectorManager(String translatorName, String connectionName) {
     	this(translatorName, connectionName, new ExecutionFactory<Object, Object>());
     }
-    
+
     public ConnectorManager(String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) {
     	this.translatorName = translatorName;
     	this.connectionName = connectionName;
@@ -94,7 +94,7 @@ public class ConnectorManager  {
 			if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
 				jndiName = JAVA_CONTEXT + this.connectionName;
 			} else {
-				jndiName = this.connectionName;	
+				jndiName = this.connectionName;
 			}
     	} else {
     		jndiName = null;
@@ -131,17 +131,17 @@ public class ConnectorManager  {
 	public String getStausMessage() {
     	String msg = ""; //$NON-NLS-1$
     	ExecutionFactory<Object, Object> ef = getExecutionFactory();
-		
+
     	if(ef != null) {
     		if (ef.isSourceRequired()) {
-    			
+
     			Object conn = null;
 				try {
 					conn = getConnectionFactory();
 				} catch (TranslatorException e) {
-					// treat this as connection not found. 
+					// treat this as connection not found.
 				}
-				
+
     			if (conn == null) {
     				msg = QueryPlugin.Util.getString("datasource_not_found", this.connectionName); //$NON-NLS-1$
     			}
@@ -152,11 +152,11 @@ public class ConnectorManager  {
     	}
     	return msg;
     }
-    
+
 	public List<FunctionMethod> getPushDownFunctions(){
     	return functions;
     }
-    
+
     public SourceCapabilities getCapabilities() throws TranslatorException, TeiidComponentException {
     	if (cachedCapabilities != null) {
     		return cachedCapabilities;
@@ -184,7 +184,7 @@ public class ConnectorManager  {
         	Object connectionFactory = null;
         	try {
         		connectionFactory = getConnectionFactory();
-        	
+
         		if (connectionFactory != null) {
         			connection = translator.getConnection(connectionFactory, null);
         		}
@@ -196,7 +196,7 @@ public class ConnectorManager  {
                         connection = ((WrappedConnection)connection).unwrap();
                     } catch (Exception e) {
                         throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, getConnectionName()));
-                    }   
+                    }
                 }
         		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
         		synchronized (executionFactory) {
@@ -211,7 +211,7 @@ public class ConnectorManager  {
         BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
         return resultCaps;
     }
-    
+
     public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
     	checkStatus();
     	AtomicRequestID atomicRequestId = message.getAtomicRequestID();
@@ -233,15 +233,15 @@ public class ConnectorManager  {
                         }
                     }
                 });
-    	
+
         Assertion.isNull(requestStates.put(atomicRequestId, proxy), "State already existed"); //$NON-NLS-1$
         return proxy;
     }
-    
+
     ConnectorWork getState(AtomicRequestID requestId) {
         return requestStates.get(requestId);
     }
-    
+
     /**
      * Remove the state associated with
      * the given <code>RequestID</code>.
@@ -254,26 +254,26 @@ public class ConnectorManager  {
     int size() {
         return requestStates.size();
     }
-    
+
     /**
      * initialize this <code>ConnectorManager</code>.
-     * @throws TranslatorException 
+     * @throws TranslatorException
      */
     public void start() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$
     }
-    
+
     /**
      * Stop this connector.
      */
-    public void stop() {    
+    public void stop() {
     	stopped = true;
         //ensure that all requests receive a response
         for (ConnectorWork workItem : this.requestStates.values()) {
     		workItem.cancel(true);
 		}
     }
-    
+
     void logSRCCommand(ConnectorWorkItem cwi, AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime) {
     	logSRCCommand(cwi, qr, context, cmdStatus, finalRowCnt, cpuTime, null);
     }
@@ -283,7 +283,7 @@ public class ConnectorManager  {
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
     void logSRCCommand(ConnectorWorkItem cwi, AtomicRequestMessage qr, ExecutionContext context, Event cmdStatus, Long finalRowCnt, Long cpuTime, Object[] command) {
-    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL) 
+    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING_SOURCE, MessageLevel.DETAIL)
     	        && !TeiidTracingUtil.getInstance().isTracingEnabled(null, null)) {
     		return;
     	}
@@ -297,18 +297,18 @@ public class ConnectorManager  {
         if ( qr.isTransactional() ) {
             transactionID = qr.getTransactionContext().getTransactionId();
         }
-        
+
         String modelName = qr.getModelName();
         AtomicRequestID sid = qr.getAtomicRequestID();
-        
+
         String principal = userName == null ? "unknown" : userName; //$NON-NLS-1$
-        
+
         CommandLogMessage message = null;
         if (cmdStatus == Event.NEW) {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
             Span span = TeiidTracingUtil.getInstance().buildSourceSpan(message, translatorType);
             cwi.setTracingSpan(span);
-        } 
+        }
         else {
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context, cpuTime);
             if (cmdStatus == Event.SOURCE) {
@@ -340,10 +340,10 @@ public class ConnectorManager  {
                     break;
                 }
             }
-        }      
+        }
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING_SOURCE, message);
     }
-    
+
     /**
      * Get the <code>Translator</code> object managed by this  manager.
      * @return the <code>ExecutionFactory</code>.
@@ -351,7 +351,7 @@ public class ConnectorManager  {
 	public ExecutionFactory<Object, Object> getExecutionFactory() {
 		return this.executionFactory;
     }
-    
+
     /**
      * Get the ConnectionFactory object required by this manager
      * @return
@@ -359,7 +359,7 @@ public class ConnectorManager  {
     public Object getConnectionFactory() throws TranslatorException {
     	if (this.connectionName != null) {
 			try {
-				InitialContext ic = new InitialContext();    		
+				InitialContext ic = new InitialContext();
 				try {
 					return ic.lookup(jndiName);
 				} catch (Exception e) {
@@ -370,25 +370,25 @@ public class ConnectorManager  {
 				}
 			} catch (Exception e) {
 				 throw new TranslatorException(QueryPlugin.Event.TEIID30481, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30481, this.connectionName));
-			}   			
+			}
     	}
     	return null;
     }
-    
+
     private void checkStatus() throws TeiidComponentException {
     	if (stopped) {
     		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30482, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30482, this.translatorName));
     	}
     }
-    
+
     public String getTranslatorName() {
     	return this.translatorName;
     }
-    
+
     public String getConnectionName() {
     	return this.connectionName;
     }
-    
+
     public List<String> getId() {
 		return id;
 	}

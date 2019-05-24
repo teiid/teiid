@@ -34,40 +34,40 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
 
-/** 
+/**
  * This object wraps/extends a SQL ResultSet object as Reader object. Once the
- * ResultSet can read as reader then it can be persisted, printed or compared 
+ * ResultSet can read as reader then it can be persisted, printed or compared
  * easily without lot of code hassle of walking it every time.
- * 
+ *
  * <p>PS: remember this is a Reader not InputStream, so all the fields read
  * going to be converted to strings before they returned.
- * 
+ *
  * @since 4.3
  */
 public class ResultSetReader extends StringLineReader {
     ResultSet source = null;
-    
+
     // Number of columns in the result set
     int columnCount = 0;
 
-    // delimiter between the fields while reading each row 
+    // delimiter between the fields while reading each row
     String delimiter = "    "; //$NON-NLS-1$
- 
+
     boolean firstTime = true;
     int[] columnTypes = null;
-    
+
     private int rowCount;
-    
+
     public ResultSetReader(ResultSet in) {
-        this.source = in;        
+        this.source = in;
     }
-    
+
     public ResultSetReader(ResultSet in, String delimiter) {
-        this.source = in;        
+        this.source = in;
         this.delimiter = delimiter;
     }
-    
-    /** 
+
+    /**
      * @see java.io.Reader#close()
      * @since 4.3
      */
@@ -81,12 +81,12 @@ public class ResultSetReader extends StringLineReader {
     }
 
     /**
-     * Get the next line of results from the ResultSet. The first line will be the 
-     * metadata of the resultset and then followed by the result rows. Each row will be 
-     * returned as one line.  
+     * Get the next line of results from the ResultSet. The first line will be the
+     * metadata of the resultset and then followed by the result rows. Each row will be
+     * returned as one line.
      * @return next result line from result set.
      */
-    protected String nextLine() throws IOException{        
+    protected String nextLine() throws IOException{
         try {
             if (firstTime) {
                 firstTime = false;
@@ -98,7 +98,7 @@ public class ResultSetReader extends StringLineReader {
                 }
                 return resultSetMetaDataToString(metadata, delimiter);
             }
-            
+
             // if you get here then we are ready to read the results.
             if (source.next()) {
             	rowCount++;
@@ -120,26 +120,26 @@ public class ResultSetReader extends StringLineReader {
                         sb.append(anObj != null ? anObj : "null"); //$NON-NLS-1$
                     }
                     if (col != columnCount) {
-                        sb.append(delimiter); 
-                    }                    
+                        sb.append(delimiter);
+                    }
                 }
                 sb.append("\n"); //$NON-NLS-1$
                 return sb.toString();
             }
         } catch (SQLException e) {
             throw new IOException(e.getMessage());
-        }        
+        }
         return null;
     }
-    
+
     public int getRowCount() {
 		return rowCount;
 	}
-    
+
     /**
      * Get the first line from the result set. This is the resultset metadata line where
-     * we gather the column names and their types. 
-     * @return 
+     * we gather the column names and their types.
+     * @return
      * @throws SQLException
      */
     public static String resultSetMetaDataToString(ResultSetMetaData metadata, String delimiter) throws SQLException{
@@ -155,14 +155,14 @@ public class ResultSetReader extends StringLineReader {
             }
         }
         sb.append("\n"); //$NON-NLS-1$
-        return sb.toString();        
+        return sb.toString();
     }
-    
+
 	public static String prettyPrint(SQLXML xml) throws SQLException {
 		try {
 			TransformerFactory transFactory = TransformerFactory.newInstance();
 			transFactory.setAttribute("indent-number", new Integer(2)); //$NON-NLS-1$
-			
+
 			Transformer tf = transFactory.newTransformer();
 			tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
 			tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");//$NON-NLS-1$
@@ -170,14 +170,14 @@ public class ResultSetReader extends StringLineReader {
 			tf.setOutputProperty(OutputKeys.METHOD, "xml");//$NON-NLS-1$
 			tf.setOutputProperty(OutputKeys.STANDALONE, "yes");//$NON-NLS-1$
 			tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			StreamResult xmlOut = new StreamResult(new BufferedOutputStream(out));
 			tf.transform(xml.getSource(StreamSource.class), xmlOut);
-			
+
 			return out.toString();
 		} catch (Exception e) {
 			return xml.getString();
 		}
-	}   
+	}
 }

@@ -12,14 +12,14 @@ import org.teiid.translator.TranslatorException;
 
 /**
  * Salesforce supports joins only on primary key/foreign key relationships.  The connector
- * is supporting these joins through the OUTER JOIN syntax.  All RIGHT OUTER JOINS are 
+ * is supporting these joins through the OUTER JOIN syntax.  All RIGHT OUTER JOINS are
  * rewritten by the query processor as LEFT OUTER JOINS, so that is all this visitor has
  * to expect.
- * 
+ *
  * Salesforce also requires a different syntax depending upon if you are joining from parent
  * to child, or from child to parent.
  * http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content/sforce_api_calls_soql_relationships.htm
- * 
+ *
  */
 
 public class JoinQueryVisitor extends SelectVisitor {
@@ -29,7 +29,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 	private Table childTable;
 	private String parentName;
 	private ForeignKey foreignKey;
-	
+
 	public JoinQueryVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
@@ -89,7 +89,7 @@ public class JoinQueryVisitor extends SelectVisitor {
 							Table t = leftTableInJoin;
 							this.leftTableInJoin = rightTableInJoin;
 							this.rightTableInJoin = t;
-						} 
+						}
    						//add is null criteria
 						addCriteria(new Comparison(fKey, new Literal(null, fKey.getType()), Comparison.Operator.NE));
 					}
@@ -108,10 +108,10 @@ public class JoinQueryVisitor extends SelectVisitor {
 
     @Override
 	public String getQuery() throws TranslatorException {
-		
+
 		if (isChildToParentJoin()) {
 			return super.getQuery();
-		} 
+		}
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}
@@ -119,14 +119,14 @@ public class JoinQueryVisitor extends SelectVisitor {
 		select.append(SELECT).append(SPACE);
 		addSelect(leftTableInJoin.getSourceName(), select, true);
 		select.append(OPEN);
-		
+
 		StringBuilder subselect = new StringBuilder();
 		subselect.append(SELECT).append(SPACE);
 		addSelect(rightTableInJoin.getSourceName(), subselect, false);
 		subselect.append(SPACE);
 
 		subselect.append(FROM).append(SPACE);
-		
+
 		String pluralName = null;
 		if (this.foreignKey != null && this.foreignKey.getNameInSource() != null) {
 			pluralName = this.foreignKey.getNameInSource();
@@ -135,20 +135,20 @@ public class JoinQueryVisitor extends SelectVisitor {
 		}
 		subselect.append(pluralName);
     	subselect.append(CLOSE).append(SPACE);
-    	
+
     	select.append(subselect);
-		
+
     	select.append(FROM).append(SPACE);
 		select.append(leftTableInJoin.getSourceName()).append(SPACE);
 		addCriteriaString(select);
 		appendGroupByHaving(select);
 		select.append(limitClause);
-		return select.toString();			
+		return select.toString();
 	}
-	
+
 	@Override
 	void appendColumnReference(StringBuilder queryString, ColumnReference ref) {
-		if (isChildToParentJoin() && this.rightTableInJoin.equals(ref.getMetadataObject().getParent()) 
+		if (isChildToParentJoin() && this.rightTableInJoin.equals(ref.getMetadataObject().getParent())
 				&& this.parentName != null) {
 			//TODO: a self join won't work with this logic
 			queryString.append(parentName);
@@ -196,7 +196,7 @@ public class JoinQueryVisitor extends SelectVisitor {
             result.append(", "); //$NON-NLS-1$
         }
 	}
-	
+
 	@Override
 	public boolean canRetrieve() {
 		return false;

@@ -24,7 +24,7 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 
 public interface XQueryExpression extends Cloneable {
-    
+
     XQueryExpression clone();
 
     boolean usesContextItem();

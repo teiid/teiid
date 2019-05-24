@@ -29,7 +29,7 @@ public class NamedProcedureCall extends BaseLanguageObject implements TableRefer
     private Call call;
     private boolean lateral;
 
-    public NamedProcedureCall(Call call, String name) {        
+    public NamedProcedureCall(Call call, String name) {
         this.call = call;
         this.correlationName = name;
     }
@@ -53,11 +53,11 @@ public class NamedProcedureCall extends BaseLanguageObject implements TableRefer
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public boolean isLateral() {
 		return lateral;
 	}
-    
+
     public void setLateral(boolean lateral) {
 		this.lateral = lateral;
 	}

@@ -23,17 +23,17 @@ import org.teiid.translator.TranslatorException;
 
 
 public class MockConnector extends ExecutionFactory<Object, Object> {
-	
-	
+
+
 	@Override
 	public ProcedureExecution createProcedureExecution(
 			Call procedure, ExecutionContext executionContext,
 			RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		Properties props = new Properties();
 		props.setProperty("customBehaviour", "SkipExecute");//$NON-NLS-1$ //$NON-NLS-2$
-	
+
         AbstractMetadataRecord metaObject = procedure.getMetadataObject();
-        
+
         TestCase.assertEquals("AnyModel.ProcedureB",procedure.getProcedureName()); //$NON-NLS-1$
         TestCase.assertEquals("PROC", metaObject.getNameInSource()); //$NON-NLS-1$
         TestCase.assertEquals(props, metaObject.getProperties());
@@ -41,29 +41,29 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
         Mockito.stub(exec.next()).toReturn(null);
         return exec;
 	}
-	
+
 	@Override
 	public ResultSetExecution createResultSetExecution(
 			QueryExpression query, ExecutionContext executionContext,
 			RuntimeMetadata metadata, Object connection) throws TranslatorException {
 		Properties groupProps = new Properties();
 		groupProps.setProperty("customName", "CustomTableA");//$NON-NLS-1$ //$NON-NLS-2$
-		NamedTable group = (NamedTable)query.getProjectedQuery().getFrom().get(0);			
+		NamedTable group = (NamedTable)query.getProjectedQuery().getFrom().get(0);
 		AbstractMetadataRecord groupMD = group.getMetadataObject();
 		TestCase.assertEquals(groupProps, groupMD.getProperties());
-		
-		
+
+
 		DerivedColumn symbl = query.getProjectedQuery().getDerivedColumns().get(0);
 		ColumnReference element = (ColumnReference)symbl.getExpression();
 		Column elementMD = element.getMetadataObject();
 
 		Properties elementProps = new Properties();
 		elementProps.setProperty("customPosition", "11");//$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		TestCase.assertEquals(0, elementMD.getLength());
 		TestCase.assertEquals("Foo", elementMD.getDefaultValue()); //$NON-NLS-1$
 		TestCase.assertEquals("TrimNulls", elementMD.getFormat()); //$NON-NLS-1$
-		TestCase.assertEquals(String.class, elementMD.getJavaType()); 
+		TestCase.assertEquals(String.class, elementMD.getJavaType());
 		TestCase.assertEquals(null, elementMD.getMaximumValue());
 		TestCase.assertEquals(null, elementMD.getMinimumValue());
 		TestCase.assertEquals("COLUMN1", elementMD.getNameInSource()); //$NON-NLS-1$
@@ -76,15 +76,15 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
 		TestCase.assertEquals(false, elementMD.isAutoIncremented());
 		TestCase.assertEquals(true, elementMD.isCaseSensitive());
 		TestCase.assertEquals(elementProps, elementMD.getProperties());
-		
-		
+
+
 		DerivedColumn symbl2 = query.getProjectedQuery().getDerivedColumns().get(1);
 		ColumnReference element2 = (ColumnReference)symbl2.getExpression();
 		Column elementMD2 = element2.getMetadataObject();
 
 		Properties elementProps2 = new Properties();
 		elementProps2.setProperty("customPosition", "12");//$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		TestCase.assertEquals(10, elementMD2.getLength());
 		TestCase.assertEquals("23", elementMD2.getDefaultValue()); //$NON-NLS-1$
 		TestCase.assertEquals("YesFormat", elementMD2.getFormat()); //$NON-NLS-1$
@@ -100,10 +100,10 @@ public class MockConnector extends ExecutionFactory<Object, Object> {
 		TestCase.assertEquals(SearchType.Searchable, elementMD2.getSearchType());
 		TestCase.assertEquals(true, elementMD2.isAutoIncremented());
 		TestCase.assertEquals(false, elementMD2.isCaseSensitive());
-		
+
 		TestCase.assertEquals(elementProps2, elementMD2.getProperties());
 		ResultSetExecution exec = Mockito.mock(ResultSetExecution.class);
         Mockito.stub(exec.next()).toReturn(null);
         return exec;
-	}	
+	}
 }

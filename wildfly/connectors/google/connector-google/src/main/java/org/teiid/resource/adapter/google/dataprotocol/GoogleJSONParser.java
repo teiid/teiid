@@ -16,7 +16,7 @@ import org.teiid.translator.google.api.SpreadsheetOperationException;
 /**
  * Parsing google json is a little non-standard.  They assume a js binding, so array syntax, strings, and date are used.
  * This parser supports most of the customizations except for unquoted dictionary keys.
- * 
+ *
  * Assumes all numbers are properly represented by Double.
  */
 public class GoogleJSONParser {
@@ -57,7 +57,7 @@ public class GoogleJSONParser {
 	private int[] parts = new int[7];
 	private StringBuilder sb = new StringBuilder();
 	private ReaderCharSequence charSequence = new ReaderCharSequence();
-	
+
 	public Object parseObject(Reader r, boolean wrapped) throws IOException {
 		if (wrapped) {
 			while (true) {
@@ -80,7 +80,7 @@ public class GoogleJSONParser {
 			while (true) {
 				c = skipWhitespace(r);
 				switch (c) {
-				case '}': 
+				case '}':
 					return map;
 				case ',':
 					//this is lenient
@@ -103,7 +103,7 @@ public class GoogleJSONParser {
 				switch (c) {
 				case ',': //special handling for google arrays
 					if (seenComma) {
-						array.add(null);						
+						array.add(null);
 					}
 					seenComma = true;
 					break;
@@ -135,7 +135,7 @@ public class GoogleJSONParser {
 			}
 			c = (char)i;
 		} while (!Character.isWhitespace(c) && c != ',' && c != ']' && c != '}');
-		
+
 		//date handling
 		if (areEquals(sb, "new")) { //$NON-NLS-1$
 			sb.setLength(0);
@@ -173,10 +173,10 @@ public class GoogleJSONParser {
 			calendar.set(parts[0], parts[1], parts[2]);
 			return new java.sql.Date(cal.getTimeInMillis());
 		}
-		if (!Character.isWhitespace(c)) { 
+		if (!Character.isWhitespace(c)) {
 			r.unread(c); //the terminating character is still needed by the caller
 			//TODO could hold this state so that a pushback reader is not needed
-		}		
+		}
 		if (areEquals(sb, "false")) { //$NON-NLS-1$
 			return Boolean.FALSE;
 		} else if (areEquals(sb, "true")) { //$NON-NLS-1$
@@ -186,7 +186,7 @@ public class GoogleJSONParser {
 		}
 		return Double.valueOf(sb.toString());
 	}
-	
+
 	private boolean areEquals(CharSequence cs, CharSequence cs1) {
 		if (cs.length() != cs1.length()) {
 			return false;
@@ -198,7 +198,7 @@ public class GoogleJSONParser {
 		}
 		return true;
 	}
-	
+
 	Calendar getCalendar() {
 		if (cal == null) {
 			cal = Calendar.getInstance();
@@ -206,17 +206,17 @@ public class GoogleJSONParser {
 		cal.clear();
 		return cal;
 	}
-	
+
 	public void setCalendar(Calendar cal) {
 		this.cal = cal;
 	}
-	
+
 	private String parseString(final Reader r, int quoteChar) {
 		if (quoteChar != '"' && quoteChar != '\'') {
     		throw new IllegalStateException();
 		}
 		charSequence.i = -1;
-		charSequence.r = r;	
+		charSequence.r = r;
 		sb.setLength(0);
 		return StringUtil.unescape(charSequence, quoteChar, false, sb);
 	}
@@ -232,5 +232,5 @@ public class GoogleJSONParser {
 			}
 		}
 	}
-	
+
 }

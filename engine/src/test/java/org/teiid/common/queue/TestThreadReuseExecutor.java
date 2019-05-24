@@ -35,27 +35,27 @@ import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 /**
  */
 public class TestThreadReuseExecutor {
-	
+
 	ThreadReuseExecutor pool = null;
-	
+
 	@After public void tearDown() {
 		if (pool != null) {
 			pool.shutdownNow();
 		}
 	}
-	
+
     @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
         pool = new ThreadReuseExecutor("test", MAX_THREADS); //$NON-NLS-1$
-        
+
         for(int i=0; i<WORK_ITEMS; i++) {
             pool.execute(new FakeWorkItem(SINGLE_WAIT));
         }
-        
-        pool.shutdown();        
+
+        pool.shutdown();
         pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
         assertTrue(pool.isTerminated());
         WorkerPoolStatisticsMetadata stats = pool.getStats();
@@ -68,30 +68,30 @@ public class TestThreadReuseExecutor {
         final long NUM_THREADS = 5;
 
         pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-        
-        for(int i=0; i<NUM_THREADS; i++) {            
+
+        for(int i=0; i<NUM_THREADS; i++) {
         	pool.execute(new FakeWorkItem(SINGLE_WAIT));
-            
+
             try {
                 Thread.sleep(SINGLE_WAIT*3);
-            } catch(InterruptedException e) {                
+            } catch(InterruptedException e) {
             }
         }
-        
-        pool.shutdown();                
-        
+
+        pool.shutdown();
+
         WorkerPoolStatisticsMetadata stats = pool.getStats();
         assertTrue("Expected approximately 1 thread for serial execution", stats.getHighestActiveThreads() <= 2); //$NON-NLS-1$
-        
+
         pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     }
-    
+
     @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
     	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         pool.shutdown();
     	pool.execute(new FakeWorkItem(1));
     }
-    
+
     @Test public void testFailingWork() throws Exception {
     	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	final Semaphore signal = new Semaphore(1);
@@ -101,11 +101,11 @@ public class TestThreadReuseExecutor {
     			signal.release();
     			throw new RuntimeException();
     		}
-    		
+
     	});
     	assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
     }
-    
+
     @Test public void testPriorities() throws Exception {
     	pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
     	FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
@@ -153,5 +153,5 @@ public class TestThreadReuseExecutor {
     	assertEquals(Integer.valueOf(2), order.remove());
     	assertEquals(Integer.valueOf(4), order.remove());
     }
-        
+
 }

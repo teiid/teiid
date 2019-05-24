@@ -30,10 +30,10 @@ import org.teiid.language.LanguageObject;
 /**
  * Implementations of this interface are used to modify Teiid functions
  * coming in to the connector into alternate datasource-specific language, if
- * necessary. 
+ * necessary.
  */
 public abstract class FunctionModifier {
-	
+
     /*
      * Public sharing part for the mapping between class and type in format of Map<class->Integer>.
      */
@@ -64,15 +64,15 @@ public abstract class FunctionModifier {
     public static int getCode(Class<?> source) {
         return DataTypeManager.getTypeCode(source);
     }
-    
+
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if this FunctionModifier wishes to rely on the default translation of the
-     * conversion visitor. 
+     * conversion visitor.
      * @param function IFunction to be translated
      * @return List of translated parts, or null
      * @since 4.2
      */
     public abstract List<?> translate(Function function);
-    
+
 }

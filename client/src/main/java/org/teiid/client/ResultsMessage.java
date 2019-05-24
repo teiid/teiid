@@ -75,19 +75,19 @@ public class ResultsMessage implements Externalizable {
 
     /** OPTION DEBUG log if OPTION DEBUG was used */
     private String debugLog;
-    
+
     private byte clientSerializationVersion;
-        
-    /** 
+
+    /**
      * Query plan annotations, if OPTION SHOWPLAN or OPTION PLANONLY was used:
      * Collection of Object[] where each Object[] holds annotation information
-     * that can be used to create an Annotation implementation in JDBC.  
+     * that can be used to create an Annotation implementation in JDBC.
      */
     private Collection<Annotation> annotations;
-    
+
     private boolean isUpdateResult;
     private int updateCount = -1;
-    
+
     private boolean delayDeserialization;
     byte[] resultBytes;
 
@@ -104,11 +104,11 @@ public class ResultsMessage implements Externalizable {
         this.columnNames = columnNames;
         this.dataTypes = dataTypes;
     }
-    
+
 	public List<? extends List<?>> getResultsList() {
 		return results;
 	}
-	
+
 	public void processResults() throws TeiidSQLException {
 		if (results == null && resultBytes != null) {
 			try {
@@ -127,7 +127,7 @@ public class ResultsMessage implements Externalizable {
     public void setResults(List<?>[] results) {
 		this.results = Arrays.asList(results);
 	}
-    
+
     public void setResults(List<? extends List<?>> results) {
     	this.results = results;
     }
@@ -271,14 +271,14 @@ public class ResultsMessage implements Externalizable {
         if (holder != null) {
         	this.exception = (TeiidException)holder.getException();
         }
-        
+
         //delayed deserialization
         if (results == null && this.exception == null) {
         	int length = in.readInt();
             resultBytes = new byte[length];
             in.readFully(resultBytes);
         }
-        
+
         List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
         if (holderList != null) {
         	this.warnings = ExceptionHolder.toThrowables(holderList);
@@ -314,7 +314,7 @@ public class ResultsMessage implements Externalizable {
     	} else {
         	BatchSerializer.writeBatch(out, dataTypes, results, clientSerializationVersion);
     	}
-        
+
         // Plan descriptions
         out.writeObject(this.planDescription);
 
@@ -323,14 +323,14 @@ public class ResultsMessage implements Externalizable {
         } else {
         	out.writeObject(exception);
         }
-        
+
         if (delayDeserialization && results != null) {
             serialize(true);
             out.writeInt(serializationBuffer.getCount());
             serializationBuffer.writeTo(out);
             serializationBuffer = null;
         }
-        
+
         if (this.warnings != null) {
         	out.writeObject(ExceptionHolder.toExceptionHolders(this.warnings));
         } else {
@@ -398,9 +398,9 @@ public class ResultsMessage implements Externalizable {
     public void setDebugLog(String string) {
         debugLog = string;
     }
-    
-          
-    /* 
+
+
+    /*
      * @see java.lang.Object#toString()
      */
     public String toString() {
@@ -418,23 +418,23 @@ public class ResultsMessage implements Externalizable {
 	public boolean isUpdateResult() {
 		return isUpdateResult;
 	}
-	
+
 	public byte getClientSerializationVersion() {
 		return clientSerializationVersion;
 	}
-	
+
 	public void setClientSerializationVersion(byte clientSerializationVersion) {
 		this.clientSerializationVersion = clientSerializationVersion;
 	}
-	
+
 	public void setUpdateCount(int updateCount) {
 		this.updateCount = updateCount;
 	}
-	
+
 	public int getUpdateCount() {
 		return updateCount;
 	}
-	
+
 	public void setDelayDeserialization(boolean delayDeserialization) {
 		this.delayDeserialization = delayDeserialization;
 	}

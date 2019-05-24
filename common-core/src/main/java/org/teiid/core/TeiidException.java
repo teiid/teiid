@@ -28,23 +28,23 @@ import java.sql.SQLException;
  * or communication fails.
  */
 public class TeiidException extends Exception {
-	
+
 	private static final long serialVersionUID = -3033427629587497938L;
 	protected String code;
 	private transient String originalType;
-	
+
     public TeiidException() {
     }
 
     public TeiidException(String message) {
         super(message);
     }
-    
+
     public TeiidException(BundleUtil.Event code, final String message) {
         super(message);
         setCode(code.toString());
-    }  
-    
+    }
+
     public TeiidException(BundleUtil.Event code, Throwable t, final String message) {
         super(message, t);
         if (message != null && t != null && message.equals(t.getMessage())) {
@@ -52,8 +52,8 @@ public class TeiidException extends Exception {
         } else {
         	setCode(code.toString());
         }
-    }  
-    
+    }
+
     public TeiidException(BundleUtil.Event code, Throwable t) {
         super(t);
         setCode(code, t);
@@ -68,33 +68,33 @@ public class TeiidException extends Exception {
         	}
         }
         setCode(codeStr);
-	}    
+	}
 
     public TeiidException(Throwable e) {
-        this(e, e != null? e.getMessage() : null);        
+        this(e, e != null? e.getMessage() : null);
     }
 
     public TeiidException(Throwable e, String message) {
         super(message, e);
         setCode(getCode(e));
     }
-    
+
     public String getCode() {
         return this.code;
-    }    
-    
+    }
+
     public void setCode(String code) {
     	this.code = code;
     }
-    
+
     public String getOriginalType() {
 		return originalType;
 	}
-    
+
     public void setOriginalType(String originalType) {
 		this.originalType = originalType;
 	}
-    
+
     static String getCode(Throwable e) {
         if (e instanceof TeiidException) {
             return (((TeiidException) e).getCode());
@@ -105,7 +105,7 @@ public class TeiidException extends Exception {
         }
         return null;
     }
-    
+
 	public String getMessage() {
 		String message = super.getMessage();
 		if (message == null) {
@@ -115,6 +115,6 @@ public class TeiidException extends Exception {
 			return message;
 		}
 		return code+" "+message; //$NON-NLS-1$
-	} 
-	
+	}
+
 }

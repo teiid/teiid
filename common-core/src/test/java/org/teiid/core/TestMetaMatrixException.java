@@ -48,32 +48,32 @@ public class TestMetaMatrixException {
         final TeiidException err = new TeiidException((Throwable)null);
         assertNull(err.getCode());
         assertNull(err.getMessage());
-        
+
     }
 
     @Test public void testMetaMatrixExceptionWithMessage() {
         final TeiidException err = new TeiidException("Test"); //$NON-NLS-1$
         assertNull(err.getCode());
         assertEquals("Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
     public static enum Event implements BundleUtil.Event {
     	Code,
     	propertyValuePhrase,
     }
     @Test public void testMetaMatrixExceptionWithCodeAndMessage() {
-        final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$ 
+        final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
     }
 
-    
+
     @Test public void testMetaMatrixExceptionWithExceptionAndMessage() {
-        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
+        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$
         final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
         assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
         assertEquals("propertyValuePhrase Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 
     @Test public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
@@ -81,6 +81,6 @@ public class TestMetaMatrixException {
         final TeiidException err = new TeiidException(Event.Code,child, "Test"); //$NON-NLS-1$
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
         assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
-        
+
     }
 }

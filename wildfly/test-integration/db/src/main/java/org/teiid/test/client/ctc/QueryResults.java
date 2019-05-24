@@ -45,20 +45,20 @@ import org.teiid.query.sql.symbol.Symbol;
  * the query select statement, and the rows are individual records returned from the data set. The data values are arbitrary Java
  * objects in each field/record cell.
  * <p>
- * 
+ *
  * <pre>
- * 
- *  
+ *
+ *
  *            Record # |  Field1    Field2    Field3   ...    FieldN
  *           ----------|---------------------------------------------
  *              1      |  Value11   Value12   Value13         Value1N
  *              2      |  Value21   Value22   Value23         Value2N
  *              :      |     :         :         :               :
  *              M      |  ValueM1   ValueM2   ValueM3         ValueMN
- *   
- *  
+ *
+ *
  * </pre>
- * 
+ *
  * <p>
  * Methods are provided to access data by:
  * <p>
@@ -119,7 +119,7 @@ public class QueryResults implements
      * after this constructor has completed. The number of records returned by the {@link #getRecordCount}method will be 0 after
      * this constructor has completed.
      * <p>
-     * 
+     *
      * @param fields
      *            The set of field identifiers that will be in the result set
      */
@@ -136,7 +136,7 @@ public class QueryResults implements
      * constructor has completed. The number of fields returned by the {@link #getFieldCount}will be the same as the size of the
      * list of fields passed in after this constructor has completed.
      * <p>
-     * 
+     *
      * @param fields
      *            The ordered list of variables in select statement
      * @param numberOfRecords
@@ -159,7 +159,7 @@ public class QueryResults implements
 
     /**
      * Construct a QueryResults from a TupleBatch. Take all rows from the QueryBatch and put them into the QueryResults.
-     * 
+     *
      * @param elements
      *            List of SingleElementSymbols
      * @param tupleBatch
@@ -188,7 +188,7 @@ public class QueryResults implements
      * <p>
      * This method will never return <code>null</code>. The list of identifiers returned is not mutable -- changes made to this
      * list will not affect the QueryResults object.
-     * 
+     *
      * @return The field identifiers
      */
     public List getFieldIdents() {
@@ -197,7 +197,7 @@ public class QueryResults implements
 
     /**
      * Get the column information given the column name.
-     * 
+     *
      * @param columnName
      *            The name of the column.
      * @return Column information
@@ -211,7 +211,7 @@ public class QueryResults implements
 
     /**
      * Returns the number of fields in the result set.
-     * 
+     *
      * @return The number of fields
      */
     public int getFieldCount() {
@@ -221,7 +221,7 @@ public class QueryResults implements
     /**
      * Returns the number of records in the result set.
      * <p>
-     * 
+     *
      * @return The number of records
      */
     public int getRecordCount() {
@@ -236,7 +236,7 @@ public class QueryResults implements
      * <b>Note that results must be retrieved with the same type of data node identifier that was specified in the select
      * statement. </b>
      * <p>
-     * 
+     *
      * @param columnName
      *            The unique data element identifier for the field
      * @param recordNumber
@@ -263,7 +263,7 @@ public class QueryResults implements
      * <p>
      * The list of values returned is not mutable -- changes made to this list will not affect the QueryResults object.
      * <p>
-     * 
+     *
      * @param recordNumber
      *            The record number
      * @return A list containing the field values for the specified record, ordered according to the original select parameters,
@@ -279,7 +279,7 @@ public class QueryResults implements
 
     /**
      * Get the records contained in this result. The records are returned as a list of field values (a list of lists).
-     * 
+     *
      * @return A list of lists contains the field values for each row.
      */
     public List getRecords() {
@@ -288,7 +288,7 @@ public class QueryResults implements
 
     /**
      * Returns true if the specified field is in the result set.
-     * 
+     *
      * @param field
      *            Unique identifier for a data element specified in result set
      */
@@ -325,7 +325,7 @@ public class QueryResults implements
      * those parameters were specified upon construction of the result set; otherwise, the field will be appended to the result
      * set.
      * <p>
-     * 
+     *
      * @param info
      *            The column information.
      */
@@ -356,7 +356,7 @@ public class QueryResults implements
      * statement if those parameters were specified upon construction of the result set; otherwise, the field will be appended to
      * the result set.
      * <p>
-     * 
+     *
      * @param fields
      *            The field identifiers.
      */
@@ -375,7 +375,7 @@ public class QueryResults implements
      * <p>
      * Before this method is called, the fields must already be defined.
      * <p>
-     * 
+     *
      * @return The updated number of records
      */
     public int addRecord() {
@@ -397,7 +397,7 @@ public class QueryResults implements
      * <p>
      * Before this method is called, the fields must already be defined.
      * <p>
-     * 
+     *
      * @return The updated number of records
      */
     public int addRecord(List record) {
@@ -419,7 +419,7 @@ public class QueryResults implements
      * <p>
      * The specified field and record must already exist in the data set, or an exception will be thrown. The
      * {@link #addField(ColumnInfo)}method can be used to append values or new records for fields.
-     * 
+     *
      * @param field
      *            The unique data element identifier for the field
      * @param recordNumber
@@ -443,7 +443,7 @@ public class QueryResults implements
 
     /**
      * Returns the index of the specified field is in the result set. An exception is thrown if the field is not in the set.
-     * 
+     *
      * @param field
      *            Unique identifier for a data element specified in result set
      * @return The index of the field in the set of fields
@@ -471,7 +471,7 @@ public class QueryResults implements
 
     /**
      * Convert a list of SingleElementSymbols to a List of ColumnInfo objects.
-     * 
+     *
      * @param symbols
      *            List of SingleElementSymbols
      * @return List of ColumnInfos
@@ -589,7 +589,7 @@ public class QueryResults implements
 
     /**
      * Implements Externalizable interface to read serialized form
-     * 
+     *
      * @param s
      *            Input stream to serialize from
      */
@@ -623,7 +623,7 @@ public class QueryResults implements
 
     /**
      * Implements Externalizable interface to write serialized form
-     * 
+     *
      * @param s
      *            Output stream to serialize to
      */

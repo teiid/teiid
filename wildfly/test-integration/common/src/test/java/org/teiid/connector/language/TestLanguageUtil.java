@@ -54,20 +54,20 @@ public class TestLanguageUtil extends TestCase {
         Condition criteria = query.getWhere();
         return criteria;
     }
-    
+
     public void helpTestSeparateByAnd(String criteriaStr, String[] expected) throws Exception {
         Condition criteria = convertCriteria(criteriaStr);
 
-        // Execute        
+        // Execute
         List<Condition> crits = LanguageUtil.separateCriteriaByAnd(criteria);
-        
+
         // Build expected and actual sets
         Set<String> expectedSet = new HashSet<String>(Arrays.asList(expected));
         Set<String> actualSet = new HashSet<String>();
         for(int i=0; i<crits.size(); i++) {
             actualSet.add(crits.get(i).toString());
         }
-        
+
         // Compare
         assertEquals("Did not get expected criteria pieces", expectedSet, actualSet); //$NON-NLS-1$
     }
@@ -85,28 +85,28 @@ public class TestLanguageUtil extends TestCase {
             new String[] { "SmallA.IntKey = 1", //$NON-NLS-1$
                 "SmallA.IntNum = 2",  //$NON-NLS-1$
                 "SmallA.StringNum = '3'", //$NON-NLS-1$
-                "SmallA.StringKey = '4'" }); //$NON-NLS-1$ 
+                "SmallA.StringKey = '4'" }); //$NON-NLS-1$
     }
 
     public void testSeparateCrit_NOT() throws Exception {
         helpTestSeparateByAnd("(NOT (intkey = 1 AND intnum = 2) AND (stringnum = '3') AND (stringkey = '4'))",  //$NON-NLS-1$
             new String[] { "SmallA.IntKey <> 1 OR SmallA.IntNum <> 2", //$NON-NLS-1$
                 "SmallA.StringNum = '3'", //$NON-NLS-1$
-                "SmallA.StringKey = '4'" }); //$NON-NLS-1$        
+                "SmallA.StringKey = '4'" }); //$NON-NLS-1$
     }
 
     public void helpTestCombineCriteria(String primaryStr, String additionalStr, String expected) throws Exception {
         Condition primaryCrit = (primaryStr == null ? null : convertCriteria(primaryStr));
         Condition additionalCrit = (additionalStr == null ? null : convertCriteria(additionalStr));
 
-        // Execute        
+        // Execute
         Condition crit = LanguageUtil.combineCriteria(primaryCrit, additionalCrit, LanguageFactory.INSTANCE);
-        
+
         // Compare
         String critStr = (crit == null ? null : crit.toString());
         assertEquals("Did not get expected criteria", expected, critStr); //$NON-NLS-1$
     }
-    
+
     public void testCombineCrit_bothNull() throws Exception {
         helpTestCombineCriteria(null, null, null);
     }
@@ -130,5 +130,5 @@ public class TestLanguageUtil extends TestCase {
     public void testCombineCrit_additionalPredicate() throws Exception {
         helpTestCombineCriteria("intkey = 1 AND intnum = 2", "stringkey = '3'", "SmallA.IntKey = 1 AND SmallA.IntNum = 2 AND SmallA.StringKey = '3'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
 }

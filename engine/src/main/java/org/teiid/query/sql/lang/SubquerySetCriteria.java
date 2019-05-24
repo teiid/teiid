@@ -52,20 +52,20 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         setExpression(expression);
         setCommand(subCommand);
     }
-    
+
     public SubqueryHint getSubqueryHint() {
 		return subqueryHint;
 	}
-    
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
 		this.subqueryHint = subqueryHint;
 	}
-    
+
     @Override
     public String getContextSymbol() {
     	return id;
     }
-    
+
     /**
      * Set the subquery command (either a SELECT or a procedure execution).
      * @param command Command to execute to get the values for the criteria

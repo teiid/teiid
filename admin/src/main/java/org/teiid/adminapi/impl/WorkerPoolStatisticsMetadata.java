@@ -27,7 +27,7 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
 
 	private static final long serialVersionUID = -4917902925523802295L;
 
-    // Current state    
+    // Current state
     private int queued;
     private int highestQueued;
     private int maxThreads;
@@ -35,42 +35,42 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
     private int highestActiveThreads;
     private long totalSubmitted;
     private long totalCompleted;
-            
+
     @Override
     public int getActiveThreads() {
 		return activeThreads;
 	}
-    
+
     @Override
     public int getHighestActiveThreads() {
 		return highestActiveThreads;
 	}
-    
+
     @Override
     public long getTotalCompleted() {
 		return totalCompleted;
 	}
-    
+
     @Override
     public long getTotalSubmitted() {
 		return totalSubmitted;
 	}
-    
+
     @Override
     public String getQueueName() {
 		return getName();
 	}
-    
+
     @Override
     public int getQueued() {
 		return queued;
 	}
-    
+
     @Override
     public int getHighestQueued() {
 		return highestQueued;
 	}
-    
+
     @Override
     public int getMaxThreads() {
 		return maxThreads;
@@ -103,14 +103,14 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
 	public void setTotalCompleted(long totalCompleted) {
 		this.totalCompleted = totalCompleted;
 	}
-	
+
     public void setQueueName(String name) {
 		setName(name);
-	}	
-    
+	}
+
     public String toString() {
     	StringBuilder str = new StringBuilder();
-        
+
         str.append("WorkerPoolStats:"); //$NON-NLS-1$
         str.append("  queue-name = " + getName()); //$NON-NLS-1$
         str.append("; queued = " + queued); //$NON-NLS-1$
@@ -121,7 +121,7 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
         str.append("; totalSubmitted = " + totalSubmitted);     //$NON-NLS-1$
         str.append("; totalCompleted = " + totalCompleted);     //$NON-NLS-1$
         return str.toString();
-    }    
+    }
 
 }
 

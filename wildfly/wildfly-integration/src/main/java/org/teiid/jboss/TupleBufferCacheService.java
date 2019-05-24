@@ -29,9 +29,9 @@ import org.teiid.query.ObjectReplicator;
 class TupleBufferCacheService implements Service<TupleBufferCache>{
 	public final InjectedValue<ObjectReplicator> replicatorInjector = new InjectedValue<ObjectReplicator>();
 	protected InjectedValue<BufferManager> bufferMgrInjector = new InjectedValue<BufferManager>();
-	
+
 	private TupleBufferCache tupleBufferCache;
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		if (this.replicatorInjector.getValue() != null) {

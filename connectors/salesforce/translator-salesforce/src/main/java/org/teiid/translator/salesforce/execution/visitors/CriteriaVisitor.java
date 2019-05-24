@@ -42,7 +42,7 @@ import org.teiid.translator.salesforce.Util;
  * Parses Criteria in support of all of the ExecutionImpl classes.
  */
 public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisitor {
-	
+
 	private static final double SCIENTIFIC_LOW = Math.pow(10, -3);
     private static final double SCIENTIFIC_HIGH = Math.pow(10, 7);
 
@@ -63,7 +63,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected static final String CLOSE = ")"; //$NON-NLS-1$
 
     protected RuntimeMetadata metadata;
-    
+
     //buffer of criteria parts
     protected List<String> criteriaBuffer = new ArrayList<String>();
     protected boolean hasCriteria;
@@ -71,10 +71,10 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     protected Table table;
     boolean onlyIDCriteria;
     protected boolean queryAll = Boolean.FALSE;
-    
+
     // support for invoking a retrieve when possible.
     protected In idInCriteria = null;
-	
+
 
     public CriteriaVisitor( RuntimeMetadata metadata ) {
         this.metadata = metadata;
@@ -89,11 +89,11 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         	this.idInCriteria = new In(criteria.getLeftExpression(), Arrays.asList(criteria.getRightExpression()), false);
         }
     }
-    
+
     public void visit(IsNull obj) {
     	visit(new Comparison(obj.getExpression(), new Literal(null, obj.getExpression().getType()), obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ));
     }
-    
+
     @Override
     public void visit( Like criteria ) {
         if (isIdColumn(criteria.getLeftExpression())) {
@@ -117,7 +117,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         // don't check if it's ID, Id LIKE '123%' still requires a query
         setHasCriteria(true, false);
     }
-        
+
     @Override
     public void visit(AndOr obj) {
     	this.criteriaBuffer.add(OPEN);
@@ -130,7 +130,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 		super.visitNode(obj.getRightCondition());
 		this.criteriaBuffer.add(CLOSE);
     }
-    
+
     @Override
     public void visit(Not obj) {
     	criteriaBuffer.add("NOT ("); //$NON-NLS-1$
@@ -274,7 +274,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         }
         criteriaBuffer.add(CLOSE);
     }
-    
+
     protected String getValue( Expression expr, boolean raw) {
         StringBuilder result = new StringBuilder();
         if (expr instanceof ColumnReference) {
@@ -330,7 +330,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 		} else if (literal.getValue() instanceof Double) {
 			Double doubleVal = (Double)literal.getValue();
 			double value = Math.abs(doubleVal.doubleValue());
-            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
             	result.append(BigDecimal.valueOf(doubleVal).toPlainString());
             } else {
             	result.append(literal.toString());
@@ -338,7 +338,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 		} else if (literal.getValue() instanceof Float) {
 			Float floatVal = (Float)literal.getValue();
 			float value = Math.abs(floatVal);
-            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) { 
+            if (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH) {
             	result.append(BigDecimal.valueOf(floatVal).toPlainString());
             } else {
             	result.append(literal.toString());
@@ -349,10 +349,10 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 			result.append(literal.toString());
 		}
 	}
-    
+
 	protected void appendAggregateFunction(StringBuilder result,
 			AggregateFunction af) {
-		if (af.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) 
+		if (af.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT)
 				&& (af.getExpression() == null || af.getExpression() instanceof Literal)) {
 			result.append("COUNT(Id)"); //$NON-NLS-1$
 		} else {
@@ -427,11 +427,11 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
     public String getTableName() {
         return table.getSourceName();
     }
-    
+
     protected void addCriteriaString(StringBuilder result) {
     	addCriteriaString(WHERE, result);
 	}
-    
+
     protected void addCriteriaString(String clause, StringBuilder result) {
     	if(!criteriaBuffer.isEmpty()) {
 			result.append(clause).append(SPACE);

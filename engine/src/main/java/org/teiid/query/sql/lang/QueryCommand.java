@@ -24,8 +24,8 @@ import java.util.List;
 
 /**
  * This is a common super class for the two types of query commands: Query and SetQuery.
- * This class provides some useful commonalities when the type of query command 
- * is not known.   
+ * This class provides some useful commonalities when the type of query command
+ * is not known.
  */
 public abstract class QueryCommand extends Command {
 
@@ -34,9 +34,9 @@ public abstract class QueryCommand extends Command {
 
     /** Limit on returned rows */
     private Limit limit;
-    
+
     private List<WithQueryCommand> with;
-        
+
     /**
      * Get the order by clause for the query.
      * @return order by clause
@@ -44,7 +44,7 @@ public abstract class QueryCommand extends Command {
     public OrderBy getOrderBy() {
         return orderBy;
     }
-    
+
     /**
      * Set the order by clause for the query.
      * @param orderBy New order by clause
@@ -60,17 +60,17 @@ public abstract class QueryCommand extends Command {
     public void setLimit(Limit limit) {
         this.limit = limit;
     }
-    
+
     public List<WithQueryCommand> getWith() {
 		return with;
 	}
-    
+
     public void setWith(List<WithQueryCommand> with) {
 		this.with = with;
 	}
-    
+
 	public abstract Query getProjectedQuery();
-	
+
 	@Override
 	public boolean returnsResultSet() {
 		return true;

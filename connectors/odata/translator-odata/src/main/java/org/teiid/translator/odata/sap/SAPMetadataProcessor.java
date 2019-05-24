@@ -36,7 +36,7 @@ import org.teiid.translator.odata.ODataTypeManager;
 public class SAPMetadataProcessor extends ODataMetadataProcessor {
 	private static final String SAPURI = "http://www.sap.com/Protocols/SAPData"; //$NON-NLS-1$
 	private HashMap<Table, KeyRecord> accessPatterns = new HashMap();
-	
+
 	@Override
 	protected Table buildTable(MetadataFactory mf, EdmEntitySet entitySet) {
 		boolean creatable = true;
@@ -44,19 +44,19 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 		boolean deletable = true;
 		boolean pageable = true;
 		boolean topable = true;
-		
+
 		Table t = mf.addTable(entitySet.getName());
-		
+
 		Iterable<? extends NamespacedAnnotation> annotations = entitySet.getAnnotations();
 		for (NamespacedAnnotation annotation:annotations) {
 			PrefixedNamespace namespace = annotation.getNamespace();
 			if (namespace.getUri().equals(SAPURI)) {
 				String name = annotation.getName();
 				if (name.equalsIgnoreCase("label")) { //$NON-NLS-1$
-					t.setAnnotation((String)annotation.getValue());	
+					t.setAnnotation((String)annotation.getValue());
 				}
 				else if (name.equalsIgnoreCase("creatable")) { //$NON-NLS-1$
-					creatable = Boolean.parseBoolean((String)annotation.getValue());	
+					creatable = Boolean.parseBoolean((String)annotation.getValue());
 				}
 				else if (name.equalsIgnoreCase("updatable")) { //$NON-NLS-1$
 					updatable = Boolean.parseBoolean((String)annotation.getValue());
@@ -72,16 +72,16 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 				}
 			}
 		}
-		
+
 		t.setSupportsUpdate(creatable && updatable && deletable);
 		if (!topable || !pageable) {
-			// TODO: currently Teiid can not do this in fine grained manner; 
-			// will be turned on by default; but user needs to turn off using the 
+			// TODO: currently Teiid can not do this in fine grained manner;
+			// will be turned on by default; but user needs to turn off using the
 			// capabilities if any table does not support this feature
 		}
 		return t;
 	}
-	
+
 	String getProperty(EdmEntitySet entitySet, String key) {
 		Iterable<? extends NamespacedAnnotation> annotations = entitySet.getAnnotations();
 		for (NamespacedAnnotation annotation:annotations) {
@@ -101,24 +101,24 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 		boolean updatable = true;
 		boolean filterable = true;
 		boolean required_in_filter = false;
-		
+
 		String columnName = ep.getName();
 		if (prefix != null) {
 			columnName = prefix+"_"+columnName; //$NON-NLS-1$
 		}
 		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
 		c.setNameInSource(ep.getName());
-		
+
 		Iterable<? extends NamespacedAnnotation> annotations = ep.getAnnotations();
 		for (NamespacedAnnotation annotation:annotations) {
 			PrefixedNamespace namespace = annotation.getNamespace();
 			if (namespace.getUri().equals(SAPURI)) {
 				String name = annotation.getName();
 				if (name.equalsIgnoreCase("label")) { //$NON-NLS-1$
-					c.setAnnotation((String)annotation.getValue());	
+					c.setAnnotation((String)annotation.getValue());
 				}
 				else if (name.equalsIgnoreCase("creatable")) { //$NON-NLS-1$
-					creatable = Boolean.parseBoolean((String)annotation.getValue());	
+					creatable = Boolean.parseBoolean((String)annotation.getValue());
 				}
 				if (name.equalsIgnoreCase("visible")) { //$NON-NLS-1$
 					c.setSelectable(Boolean.parseBoolean((String)annotation.getValue()));
@@ -128,7 +128,7 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 				}
 				if (name.equalsIgnoreCase("sortable")) { //$NON-NLS-1$
 					if (!Boolean.parseBoolean((String)annotation.getValue())){
-						c.setSearchType(SearchType.Unsearchable); 
+						c.setSearchType(SearchType.Unsearchable);
 					}
 				}
 				if (name.equalsIgnoreCase("filterable")) { //$NON-NLS-1$
@@ -142,7 +142,7 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 				}
 			}
 		}
-		
+
 		c.setUpdatable(creatable && updatable);
 		if (!filterable) {
 			c.setSearchType(SearchType.Unsearchable);
@@ -158,7 +158,7 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 				this.accessPatterns.get(table).addColumn(c);
 			}
 		}
-		
+
 		// entity set defined to as must have filter
 		boolean requiresFilter = Boolean.parseBoolean(getProperty(entitySet, "requires-filter")); //$NON-NLS-1$
 		if (requiresFilter && filterable && !required_in_filter) {
@@ -177,5 +177,5 @@ public class SAPMetadataProcessor extends ODataMetadataProcessor {
 			table.getAccessPatterns().add(accessPattern);
 		}
 		return table;
-	}	
+	}
 }

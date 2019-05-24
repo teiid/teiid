@@ -33,12 +33,12 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestSetProcessing {
-    
+
     @Test public void testExcept() throws Exception {
         String sql = "select e1, e2 from pm1.g2 except select e1, 1 from pm1.g2"; //$NON-NLS-1$
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  //$NON-NLS-2$
-        
+
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {"a", 0}), //$NON-NLS-1$
             Arrays.asList(new Object[] {"a", 3}), //$NON-NLS-1$
@@ -49,12 +49,12 @@ public class TestSetProcessing {
         TestProcessor.sampleData1(manager);
         TestProcessor.helpProcess(plan, manager, expected);
     }
-    
+
     @Test public void testIntersect() throws Exception {
         String sql = "select e1, e2 from pm1.g2 intersect select e1, 1 from pm1.g2"; //$NON-NLS-1$
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  //$NON-NLS-2$
-        
+
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {null, 1}),
             Arrays.asList(new Object[] {"c", 1}), //$NON-NLS-1$
@@ -64,12 +64,12 @@ public class TestSetProcessing {
         TestProcessor.sampleData1(manager);
         TestProcessor.helpProcess(plan, manager, expected);
     }
-    
+
     @Test public void testIntersectExcept() {
         String sql = "select e1, e2 from pm1.g2 except select e1, 1 from pm1.g2 intersect select 'a', e2 from pm1.g2"; //$NON-NLS-1$
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g2 AS g_0"}); //$NON-NLS-1$  //$NON-NLS-2$ //$NON-NLS-3$
-        
+
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {null, 1}),
             Arrays.asList(new Object[] {"a", 0}), //$NON-NLS-1$
@@ -82,12 +82,12 @@ public class TestSetProcessing {
         TestProcessor.sampleData1(manager);
         TestProcessor.helpProcess(plan, manager, expected);
     }
-    
+
     @Test public void testUnionExcept() {
         String sql = "(select 'a' union select 'b' union select 'c') except select 'c'"; //$NON-NLS-1$
-        
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {}); 
-        
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {});
+
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 0,      // Access
                 0,      // DependentAccess
@@ -104,7 +104,7 @@ public class TestSetProcessing {
                 0,      // Sort
                 2       // UnionAll
             });
-        
+
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {"a"}), //$NON-NLS-1$
             Arrays.asList(new Object[] {"b"}), //$NON-NLS-1$
@@ -114,12 +114,12 @@ public class TestSetProcessing {
         TestProcessor.sampleData1(manager);
         TestProcessor.helpProcess(plan, manager, expected);
     }
-    
+
     @Test public void testUnionArrayNull() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("create view v (col string[]) as select null union all select null", "x", "y");
-        
-        ProcessorPlan plan = TestOptimizer.helpPlan("select * from v", metadata, new String[] {}); 
-        
+
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * from v", metadata, new String[] {});
+
         List<?>[] expected = new List[] {
             Collections.singletonList(null), Collections.singletonList(null),
             };
@@ -127,44 +127,44 @@ public class TestSetProcessing {
         FakeDataManager manager = new FakeDataManager();
         TestProcessor.helpProcess(plan, manager, expected);
     }
-    
+
     @Test public void testNestedUnionPlan() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table t1 (col string); "
                 + "create foreign table t2 (col string);"
                 + "create foreign table t3 (col string);"
                 + "create foreign table t4 (col string);", "x", "y");
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.QUERY_INTERSECT, true);
         bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(
-                "(select * from t1 union all select * from t2 union all select * from t3) intersect select * from t4", metadata, 
-                new String[] {"(SELECT g_3.col AS c_0 FROM y.t1 AS g_3 UNION ALL SELECT g_2.col AS c_0 FROM y.t2 AS g_2 UNION ALL SELECT g_1.col AS c_0 FROM y.t3 AS g_1) INTERSECT SELECT g_0.col AS c_0 FROM y.t4 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); 
-        
+                "(select * from t1 union all select * from t2 union all select * from t3) intersect select * from t4", metadata,
+                new String[] {"(SELECT g_3.col AS c_0 FROM y.t1 AS g_3 UNION ALL SELECT g_2.col AS c_0 FROM y.t2 AS g_2 UNION ALL SELECT g_1.col AS c_0 FROM y.t3 AS g_1) INTERSECT SELECT g_0.col AS c_0 FROM y.t4 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-    
+
     @Test public void testExceptInlineView() throws Exception {
         String sql = "SELECT case when a_id is null then 'Y' else 'N' end a_id  from "
                 + "(SELECT a_id from a_dim where a_id>100 except( SELECT a_id from a_dim where a_id=100)) a";
 
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table a_dim(a_id integer);", "x", "y");
-        
+
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan(
-                sql, metadata, 
-                new String[] {"SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id > 100", 
-                        "SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100"}, 
-                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); 
-        
+                sql, metadata,
+                new String[] {"SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id > 100",
+                        "SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100"},
+                new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+
         HardcodedDataManager manager = new HardcodedDataManager();
         manager.addData("SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id > 100", Arrays.asList(101), Arrays.asList(102), Arrays.asList(103));
         manager.addData("SELECT g_0.a_id FROM y.a_dim AS g_0 WHERE g_0.a_id = 100", Arrays.asList(100));
-        
+
         List<?>[] expected = new List[] {Arrays.asList("N"), Arrays.asList("N"), Arrays.asList("N")};
-        
+
         TestProcessor.helpProcess(plan, manager, expected);
     }
 

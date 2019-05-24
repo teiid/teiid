@@ -33,19 +33,19 @@ import org.teiid.query.util.CommandContext;
  * An {@link InputStream} wrapper that saves the input on read and provides a {@link InputStreamFactory}.
  */
 public final class SaveOnReadInputStream extends FilterInputStream {
-	
+
 	class SwitchingInputStream extends FilterInputStream {
 
 		protected SwitchingInputStream() {
 			super(SaveOnReadInputStream.this);
 		}
-		
+
 		public void setIn(InputStream is) {
 			this.in = is;
 		}
-		
+
 	}
-	
+
 	private SwitchingInputStream sis = new SwitchingInputStream();
 	private final FileStoreInputStreamFactory fsisf;
 	private FileStoreOutputStream fsos;
@@ -54,7 +54,7 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 	private boolean returned;
 
 	InputStreamFactory inputStreamFactory = new InputStreamFactory() {
-		
+
 		@Override
 		public InputStream getInputStream() throws IOException {
 			if (!saved) {
@@ -71,7 +71,7 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 			}
 			return fsisf.getInputStream();
 		}
-		
+
 		@Override
 		public StorageMode getStorageMode() {
 			if (!saved) {
@@ -88,7 +88,7 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 			}
 			return fsisf.getStorageMode();
 		}
-		
+
 		@Override
 		public void setTemporary(boolean temp) {
 		    fsisf.setTemporary(temp);
@@ -147,7 +147,7 @@ public final class SaveOnReadInputStream extends FilterInputStream {
 			super.close();
 		}
 	}
-	
+
 	public InputStreamFactory getInputStreamFactory() {
 		return inputStreamFactory;
 	}

@@ -36,7 +36,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestCorrelatedReferenceCollectorVisitor {
-	
+
 	@Test public void testDeepNesting() throws Exception {
 		String sql = "select * from bqt1.smalla where exists (select intnum from bqt1.smalla x where smalla.intnum = x.intnum and exists (select intnum from bqt1.smalla where exists (select intnum from bqt1.smalla x where smalla.intnum = x.intnum)))";
 		Command command = TestResolver.helpResolve(sql, RealMetadataFactory.exampleBQTCached());
@@ -48,7 +48,7 @@ public class TestCorrelatedReferenceCollectorVisitor {
 		CorrelatedReferenceCollectorVisitor.collectReferences(command, Arrays.asList(gs), correlatedReferences, RealMetadataFactory.exampleBQTCached());
 		assertEquals(1, correlatedReferences.size());
 	}
-	
+
 	@Test public void testSubqueryWithoutFromCorrelation() throws Exception {
         String sql = "select (select case when booleanvalue then 'a' else 'b' end) from bqt1.smalla";
         Command command = TestResolver.helpResolve(sql, RealMetadataFactory.exampleBQTCached());

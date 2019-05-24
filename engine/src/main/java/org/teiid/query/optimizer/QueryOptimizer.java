@@ -49,17 +49,17 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * <p>This Class produces a ProcessorPlan object (a plan for query execution) from a 
+ * <p>This Class produces a ProcessorPlan object (a plan for query execution) from a
  * user's command and a source of metadata.</p>
  */
 public class QueryOptimizer {
-	
+
 	private static final CommandPlanner PROCEDURE_PLANNER = new ProcedurePlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
     private static final CommandPlanner DDL_PLANNER = new DdlPlanner();
     private static final CommandPlanner SOURCE_EVENT_PLANNER = new SourceTriggerActionPlanner();
 
-	// Can't construct	
+	// Can't construct
 	private QueryOptimizer() {}
 
 	public static ProcessorPlan optimizePlan(Command command, QueryMetadataInterface metadata, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
@@ -68,35 +68,35 @@ public class QueryOptimizer {
 		if (analysisRecord == null) {
 			analysisRecord = new AnalysisRecord(false, false);
 		}
-		
+
 		if (context == null) {
 			context = new CommandContext();
 		}
-		
+
 		if (!(capFinder instanceof TempCapabilitiesFinder)) {
 			capFinder = new TempCapabilitiesFinder(capFinder);
 		}
-		
+
         boolean debug = analysisRecord.recordDebug();
-        
+
         if (!(metadata instanceof TempMetadataAdapter)) {
         	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
         }
-        
+
         if (context.getMetadata() == null) {
         	context.setMetadata(metadata);
         }
-        
+
         // Create an ID generator that can be used for all plans to generate unique data node IDs
         if(idGenerator == null) {
             idGenerator = new IDGenerator();
         }
-        
+
 		if(debug) {
 			analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
             analysisRecord.println("OPTIMIZE: \n" + command); //$NON-NLS-1$
 		}
-		
+
 		if (command instanceof Insert) {
 		    Insert insert = (Insert)command;
 		    if (insert.isUpsert()) {
@@ -115,11 +115,11 @@ public class QueryOptimizer {
 		            if(debug) {
 		                analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
 		                analysisRecord.println("OPTIMIZE UPSERT PROCEDURE: \n" + command); //$NON-NLS-1$
-		            }           
+		            }
 		        }
 		    }
 		}
-                                   
+
 		ProcessorPlan result = null;
 
 		switch (command.getType()) {
@@ -181,13 +181,13 @@ public class QueryOptimizer {
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30245, e);
 			}
         }
-		
+
 		if(debug) {
             analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
             analysisRecord.println("OPTIMIZATION COMPLETE:"); //$NON-NLS-1$
             analysisRecord.println("PROCESSOR PLAN:\n" + result); //$NON-NLS-1$
 			analysisRecord.println("============================================================================");		 //$NON-NLS-1$
-		}			
+		}
 
 		return result;
 	}
@@ -206,5 +206,5 @@ public class QueryOptimizer {
 		result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		return result;
 	}
-	
+
 }

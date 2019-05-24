@@ -29,11 +29,11 @@ import org.teiid.core.types.TransformationException;
 public class AnyToStringTransform extends Transform {
 
 	private Class<?> sourceType;
-	
+
 	public AnyToStringTransform(Class<?> sourceType) {
 		this.sourceType = sourceType;
 	}
-	
+
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
@@ -41,7 +41,7 @@ public class AnyToStringTransform extends Transform {
 	public Class<?> getSourceType() {
 		return sourceType;
 	}
-	
+
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
@@ -65,5 +65,5 @@ public class AnyToStringTransform extends Transform {
 		}
 		return result;
 	}
-	
+
 }

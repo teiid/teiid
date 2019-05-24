@@ -31,7 +31,7 @@ public class TestSystemSource {
 	    ValidatorReport report = new ValidatorReport("Test Report");	    	     //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
 
-		if(report.hasItems()) { 		    
+		if(report.hasItems()) {
 			fail("Got validation errors while validating system functions: " + report); //$NON-NLS-1$
 		}
 	}

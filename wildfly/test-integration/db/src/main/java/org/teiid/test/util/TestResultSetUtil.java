@@ -39,40 +39,40 @@ import org.teiid.jdbc.TeiidSQLException;
 
 
 
-/** 
+/**
  * TestResultSetUtil was built in order to override the {@link #printThrowable(Throwable, PrintStream)} method
  * in order to call  out.print  instead of out.println
- * This is because the println adds a line terminator, and when the result file is in turn used for 
+ * This is because the println adds a line terminator, and when the result file is in turn used for
  * comparison it fails because of the line terminator.
- * 
+ *
  * @since
  */
 @SuppressWarnings("nls")
 public class TestResultSetUtil {
 
-    
+
     public static final int DEFAULT_MAX_COL_WIDTH = 29;
     private static final String SPACER = "  "; //$NON-NLS-1$
     private static final String NULL = "<null>"; //$NON-NLS-1$
     private static final String MORE = "$ ";
-    
-    
+
+
     public static List compareThrowable(Throwable t, String query, File expectedResultsFile, boolean printToConsole) throws IOException  {
         BufferedReader expectedResultsReader = null;
         if (expectedResultsFile != null && expectedResultsFile.exists() && expectedResultsFile.canRead()) {
             expectedResultsReader = new BufferedReader(new FileReader(expectedResultsFile));
         }
-        
+
         PrintStream out =  TestResultSetUtil.getPrintStream(null,expectedResultsReader, printToConsole ? System.out : null);
-         
+
          printThrowable(t, query, out);
         return TestResultSetUtil.getUnequalLines(out);
      }
-    
-    
+
+
     public static void printThrowable(Throwable t, String sql, PrintStream out) {
       out.println(sql);
-      
+
       Throwable answer = t;
       if (t instanceof TeiidSQLException) {
     	  TeiidSQLException sqle = (TeiidSQLException) t;
@@ -82,19 +82,19 @@ public class TestResultSetUtil {
 	    	  while( (s = se.getNextException()) != null) {
 	    		  se = s;
 	    	  }
-	    	  
+
 	    	  answer = se;
-    	  } 
+    	  }
       }
-        
+
       out.print(t.getClass().getName() + " : " + answer.getMessage()); //$NON-NLS-1$
-        	
+
     }
-    
+
 
 
     /**
-     * Gets a PrintStream implementation that uses the input parameters as underlying streams 
+     * Gets a PrintStream implementation that uses the input parameters as underlying streams
      * @param resultsOutput an output file for result data. If null, results will only be written to the defaul stream.
      * @param expectedResultsInput the reader for expected data. If null, actual data is never compared against expected results.
      * @param defaultPrintStream if not null, this utility will always write to this stream. Typically this is System.out
@@ -121,7 +121,7 @@ public class TestResultSetUtil {
         }
         return out;
     }
-    
+
     /**
      *  Compares the actual results with the expected results.
      * @param updateCount the result of the execution
@@ -158,7 +158,7 @@ public class TestResultSetUtil {
 //        printUpdateCount(updateCount, out);
 //        return getUnequalLines(out);
 //    }
-    
+
     /**
      *  Compares the actual results with the expected results.
      * @param counts the result of the execution
@@ -195,7 +195,7 @@ public class TestResultSetUtil {
 //        printBatchedUpdateCounts(counts, out);
 //        return getUnequalLines(out);
 //    }
-//    
+//
     /**
      *  Compares the actual results with the expected results.
      * @param rs the result of the execution
@@ -220,7 +220,7 @@ public class TestResultSetUtil {
         }
         return writeAndCompareResultSet(rs, query, maxColWidth, printMetadata, resultsOutputStream, expectedResultsReader, printToConsole ? System.out : null);
     }
-    
+
     /**
      *  Compares the actual results with the expected results.
      * @param rs the result of the execution
@@ -238,14 +238,14 @@ public class TestResultSetUtil {
         printResultSet(rs, query, maxColWidth, printMetadata, out);
         return getUnequalLines(out);
     }
-    
+
     public static List getUnequalLines(PrintStream out) {
         if (out instanceof ComparingPrintStream) {
             return ((ComparingPrintStream)out).getUnequalLines();
         }
         return Collections.EMPTY_LIST;
     }
-    
+
 //    public static List writeAndCompareThrowable(Throwable t, File resultsFile, File expectedResultsFile, boolean printToConsole) throws IOException, SQLException  {
 //        FileOutputStream resultsOutputStream = null;
 //        if (resultsFile != null) {
@@ -257,21 +257,21 @@ public class TestResultSetUtil {
 //        }
 //        return writeAndCompareThrowable(t, resultsOutputStream, expectedResultsReader, printToConsole ? System.out : null);
 //    }
-    
+
 //    public static List writeAndCompareThrowable(Throwable t, OutputStream resultsOutput, BufferedReader expectedResultsInput, PrintStream defaultPrintStream) throws SQLException {
 //        PrintStream out = getPrintStream(resultsOutput, expectedResultsInput, defaultPrintStream);
 //        printThrowable(t, out);
 //        return getUnequalLines(out);
 //    }
-//    
+//
 //    public static void printThrowable(Throwable t, PrintStream out) {
 //        out.println(t.getClass().getName() + " : " + t.getMessage()); //$NON-NLS-1$
 //    }
-    
+
     public static void printUpdateCount(int updateCount, PrintStream out) {
         out.println("Update Count : " + updateCount); //$NON-NLS-1$
     }
-    
+
     public static void printBatchedUpdateCounts(int[] counts, PrintStream out) {
         out.println("Batched Update Counts :"); //$NON-NLS-1$
         for (int i = 0; i < counts.length; i++) {
@@ -279,7 +279,7 @@ public class TestResultSetUtil {
         }
         out.println("Total Batched Commands : " + counts.length); //$NON-NLS-1$
     }
-    
+
     /**
      * Prints the ResultSet (and optionally the ResultSetMetaData) to a stream. If you're using the stream from getPrintStream(),
      * then you can also compare data with expected results.
@@ -294,9 +294,9 @@ public class TestResultSetUtil {
         if (maxColWidth < 0) {
             maxColWidth = DEFAULT_MAX_COL_WIDTH;
         }
-        
+
         out.println(query);
-        
+
         ResultSetMetaData rsmd = rs.getMetaData();
         int count = rsmd.getColumnCount();
         int[] sizes = new int[count];
@@ -343,7 +343,7 @@ public class TestResultSetUtil {
         out.println("Row Count : " + totalRows); //$NON-NLS-1$
         if (printMetadata) printResultSetMetadata(rsmd, out);
     }
-    
+
     private static String[] METADATA_METHODS = {
         "getColumnName", //$NON-NLS-1$
         "getColumnType", //$NON-NLS-1$
@@ -366,7 +366,7 @@ public class TestResultSetUtil {
         "isSigned", //$NON-NLS-1$
         "isWritable", //$NON-NLS-1$
     };
-    
+
     /**
      * Prints the ResultSetMetaData values for each column
      * @param rsmd
@@ -394,11 +394,11 @@ public class TestResultSetUtil {
                     Object obj = m.invoke(rsmd, columnParam);
                     String stringVal = (obj == null) ? NULL : obj.toString(); //$NON-NLS-1$
                     metadataStrings[col - 1][i] = stringVal;
-                    if (maxColWidths[i] < stringVal.length()) { 
+                    if (maxColWidths[i] < stringVal.length()) {
                         maxColWidths[i] = stringVal.length();
                     }
                 } catch (Throwable t) {
-                    
+
                 }
             }
         }
@@ -435,7 +435,7 @@ public class TestResultSetUtil {
             return str.substring(0, size) + MORE;
         }
     }
-    
+
     private static String pad(String str, int padding) {
         StringBuffer buf = new StringBuffer(str);
         for (int i = 0; i < padding; i++) {
@@ -443,9 +443,9 @@ public class TestResultSetUtil {
         }
         return buf.toString();
     }
-    
+
     /**
-     * Used to write the same data to more than one output stream. 
+     * Used to write the same data to more than one output stream.
      * @since 4.2
      */
     private static final class MuxingPrintStream extends PrintStream {
@@ -576,7 +576,7 @@ public class TestResultSetUtil {
             }
         }
     }
-    
+
     /**
      * Used to compare (per line) the data being written to the output stream with
      * some expected data read from an input stream
@@ -587,14 +587,14 @@ public class TestResultSetUtil {
         private PrintStream buf = new PrintStream(byteStream);
         private BufferedReader in;
         private int line = 0;
-        
+
         private ArrayList unequalLines = new ArrayList();
-        
+
         private ComparingPrintStream(OutputStream out, BufferedReader in) {
             super(out);
             this.in = in;
         }
-        
+
         public void print(boolean b) {
             super.print(b);
             buf.print(b);
@@ -671,7 +671,7 @@ public class TestResultSetUtil {
             super.println(x);
             compareLines();
         }
-        
+
         private void compareLines() {
             line++;
             buf.flush();
@@ -683,13 +683,13 @@ public class TestResultSetUtil {
                     unequalLines.add("\n" + new Integer(line) + ":" + bufferedLine );
                 }
             } catch (IOException e) {
-                
+
             }
         }
-        
+
         public List getUnequalLines() {
             return unequalLines;
         }
     }
-    
+
 }

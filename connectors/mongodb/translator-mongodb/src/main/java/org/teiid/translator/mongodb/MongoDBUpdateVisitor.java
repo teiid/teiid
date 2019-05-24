@@ -63,7 +63,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 				String colName = getColumnName(columns.get(i));
 				Expression expr = values.get(i);
 				Object value = resolveExpressionValue(colName, expr);
-				
+
                 if (this.mongoDoc.isPartOfPrimaryKey(colName)) {
                     if (pk == null) {
                         pk = new IDRef();
@@ -71,7 +71,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
                     pk.addColumn(colName, value);
                 }
                 else {
-                    this.columnValues.put(colName, value);    
+                    this.columnValues.put(colName, value);
                 }
 
 		        // Update he mongo document to keep track the reference values.
@@ -81,11 +81,11 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		        if (this.mongoDoc.isPartOfForeignKey(colName)) {
 		            MergeDetails ref = this.mongoDoc.getFKReference(colName);
 		            this.columnValues.put(colName, ref.clone());
-		        }				
+		        }
 			}
             if (pk != null) {
                 this.columnValues.put("_id", pk.getValue()); //$NON-NLS-1$
-            }			
+            }
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
@@ -147,7 +147,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	                pk.addColumn(colName, value);
 	            }
 	            else {
-	                this.columnValues.put(colName, value);    
+	                this.columnValues.put(colName, value);
 	            }
 
                 // Update the mongo document to keep track the reference values.
@@ -157,7 +157,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
                 if (this.mongoDoc.isPartOfForeignKey(colName)) {
                     MergeDetails ref = this.mongoDoc.getFKReference(colName);
                     this.columnValues.put(colName, ref.clone());
-                }				
+                }
 			}
             if (pk != null) {
                 this.columnValues.put("_id", pk.getValue()); //$NON-NLS-1$
@@ -221,7 +221,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		}
 		return insert;
 	}
-	
+
 	public BasicDBObject getUpdate(LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
 		BasicDBObject update = new BasicDBObject();
 
@@ -234,7 +234,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 				if (this.mongoDoc.isMerged()) {
 					// do not allow updating the main document reference where this embedded document is embedded.
 					if (ref.getParentTable().equals(this.mongoDoc.getMergeTable().getName())) {
-						throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007, 
+						throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007,
 						        ref.getParentTable(), this.mongoDoc.getDocumentName()));
 					}
 				}
@@ -331,7 +331,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		}
 		return update;
 	}
-	
+
     public boolean updateDelete(BasicDBList previousRows, RowInfo parentKey, BasicDBList updated) throws TranslatorException {
         for (int i = 0; i < previousRows.size(); i++) {
             BasicDBObject row = (BasicDBObject)previousRows.get(i);
@@ -340,20 +340,20 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
                 //do not add
             }
             else {
-                updated.add(row);    
+                updated.add(row);
             }
         }
         return updated.size() != previousRows.size();
-    }	
-	
+    }
+
 	public boolean updateMerge(BasicDBObject previousRow, RowInfo parentKey) throws TranslatorException {
 	    boolean update = false;
 		if (this.match == null || ExpressionEvaluator.matches(this.executionFactory, this.mongoDB, this.condition, previousRow, parentKey)) {
 			for (String key:this.columnValues.keySet()) {
 				Object obj = this.columnValues.get(key);
-				
+
 				update = true;
-				
+
 				if (obj instanceof MergeDetails) {
 					MergeDetails ref = ((MergeDetails)obj);
 					previousRow.put(key, ref.getValue());
@@ -365,7 +365,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		}
 		return update;
 	}
-	
+
     @Override
     public void visit(Comparison obj) {
         if (!this.mongoDoc.isMerged() || this.mongoDoc.isMerged() && this.mongoDoc.getMergeAssociation() != Association.MANY) {

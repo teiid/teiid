@@ -43,7 +43,7 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
     private String issuer;
     private String audience;
     private String subject;
-    
+
     private String keystoreType;
     private String keystorePassword;
     private String keystoreURL;
@@ -51,34 +51,34 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
     private String certificatePassword;
     private String algorithamName;
     private static JBossJSSESecurityDomain securityDomain;
-    
+
     @Override
     public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
        super.initialize(subject, handler, sharedState, options);
-       
+
        this.scope = (String) options.get("scope"); //$NON-NLS-1$
        this.issuer = (String) options.get("jwt-issuer"); //$NON-NLS-1$
        this.audience = (String) options.get("jwt-audience"); //$NON-NLS-1$
        this.subject= (String) options.get("jwt-subject"); //$NON-NLS-1$
-       
+
        this.keystoreType = (String) options.get("keystore-type"); //$NON-NLS-1$
        this.keystorePassword = (String) options.get("keystore-password"); //$NON-NLS-1$
        this.keystoreURL = (String) options.get("keystore-url"); //$NON-NLS-1$
        this.certificateAlias = (String) options.get("certificate-alias"); //$NON-NLS-1$
        this.certificatePassword = (String) options.get("certificate-password"); //$NON-NLS-1$
-       this.algorithamName = (String) options.get("signature-algorithm-name"); //$NON-NLS-1$      
+       this.algorithamName = (String) options.get("signature-algorithm-name"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean login() throws LoginException {
         this.callerSubject = getSubject();
         this.callerPrincipal = getPrincipal();
-        
+
         final String assertion = getJWTAssertion();
         if (assertion == null) {
             return false;
         }
-        
+
         OAuth20CredentialImpl cred = new OAuth20CredentialImpl() {
             protected ClientAccessToken getAccessToken() {
                 Consumer consumer = new Consumer(getClientId(), getClientSecret());
@@ -91,7 +91,7 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
                     grant = new JwtBearerGrant(assertion, true);
                 }
                 return OAuthClientUtils.getAccessToken(client, consumer, grant, null, false);
-            }            
+            }
         };
         cred.setClientId(getClientId());
         cred.setClientSecret(getClientSecret());
@@ -132,7 +132,7 @@ public class JWTBearerTokenLoginModule extends OAuth20LoginModule {
             String password = this.certificatePassword == null ? this.keystorePassword
                     : this.certificatePassword;
             loadKeystore(this.keystoreURL, this.keystorePassword, this.keystoreType, password);
-            
+
             // Sign the JWT Header + "." + JWT Claims Object
             Key key = securityDomain.getKey(this.certificateAlias, password);
             Signature signature = Signature.getInstance(this.algorithamName == null?"SHA256withRSA":this.algorithamName);

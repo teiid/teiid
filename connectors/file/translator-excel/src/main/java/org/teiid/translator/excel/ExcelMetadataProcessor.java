@@ -75,7 +75,7 @@ public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConn
 			}
 
 			VirtualFile xlsFile = xlsFiles[0];
-			
+
 			String extension = getFileExtension(xlsFile);
 			InputStream xlsFileStream = xlsFile.createInputStreamFactory().getInputStream();
 			try {
@@ -180,13 +180,13 @@ public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConn
 		if (firstCellNumber != -1) {
 			for (int j = firstCellNumber; j < lastCellNumber; j++) {
 				Cell headerCell = headerRow.getCell(j);
-				
+
 				// if the config is set to ignore empty header cells then validate the header
-				// cell has a value, if not move on to the next column in the sheet. 
+				// cell has a value, if not move on to the next column in the sheet.
 				if (this.hasHeader && getIgnoreEmptyHeaderCells() && isCellEmpty(headerCell)) {
 					continue;
 				}
-				
+
 				Cell dataCell = dataRow.getCell(j);
 				// if the cell value is null; then advance the data row cursor to to find it
 				if (dataCell == null) {
@@ -204,11 +204,11 @@ public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConn
 			}
 		}
 	}
-	
+
 	private boolean isCellEmpty(Cell headerCell) {
 		if (headerCell == null)
 			return true;
-		
+
 		String name = headerCell.getStringCellValue();
         return (name == null || name.isEmpty());
 	}

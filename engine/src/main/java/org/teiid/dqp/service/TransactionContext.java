@@ -39,7 +39,7 @@ public class TransactionContext implements Serializable, Cloneable{
 		REQUEST,
 		INHERITED
 	}
-	
+
     private String threadId;
     private Scope transactionType = Scope.NONE;
     private long creationTime;
@@ -51,19 +51,19 @@ public class TransactionContext implements Serializable, Cloneable{
     public int getIsolationLevel() {
 		return isolationLevel;
 	}
-    
+
     public void setIsolationLevel(int isolationLevel) {
 		this.isolationLevel = isolationLevel;
 	}
-    
+
     public long getCreationTime() {
 		return creationTime;
 	}
-    
+
     public void setCreationTime(long time) {
 		this.creationTime = time;
-	}    
-    
+	}
+
     public void setTransactionType(Scope transactionType) {
         this.transactionType = transactionType;
     }
@@ -79,19 +79,19 @@ public class TransactionContext implements Serializable, Cloneable{
     public String getThreadId() {
         return threadId;
     }
-    
+
     public Transaction getTransaction() {
 		return transaction;
 	}
-    
+
     public void setTransaction(Transaction transaction) {
 		this.transaction = transaction;
 	}
 
     public String toString() {
-    	return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public String getTransactionId() {
     	if (this.transaction != null) {
     		return this.transaction.toString();
@@ -104,7 +104,7 @@ public class TransactionContext implements Serializable, Cloneable{
     public Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }
-    
+
     @Override
     public TransactionContext clone() {
         try {
@@ -113,7 +113,7 @@ public class TransactionContext implements Serializable, Cloneable{
             throw new TeiidRuntimeException(e);
         }
     }
-    
+
     /**
      * set a transaction context.
      *
@@ -125,12 +125,12 @@ public class TransactionContext implements Serializable, Cloneable{
     }
 
     /**
-     * @return an Xid object carrying a transaction context, 
+     * @return an Xid object carrying a transaction context,
      * if any.
      */
-    public Xid getXid() 
+    public Xid getXid()
     {
        return this.xid;
     }
-    
+
 }

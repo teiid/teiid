@@ -24,20 +24,20 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class SimpleMock extends MixinProxy {
-	
+
 	SimpleMock(Object[] baseInstances) {
 		super(baseInstances);
 	}
-	
+
 	@Override
 	protected Object noSuchMethodFound(Object proxy, Method method,
 			Object[] args) throws Throwable {
 		Class clazz = method.getReturnType();
-        
+
         if (clazz == Void.TYPE) {
             return null;
         }
-        
+
         if (clazz.isPrimitive()) {
         	if (clazz == boolean.class) {
         		return false;
@@ -57,23 +57,23 @@ public class SimpleMock extends MixinProxy {
                 }
             } catch (NoSuchMethodException e) {
             }
-            
+
             return null;
         }
-        
+
         Class[] interfaces = clazz.getInterfaces();
-        
+
         if (clazz.isInterface()) {
-            interfaces = new Class[] {clazz}; 
+            interfaces = new Class[] {clazz};
         }
 
         if (interfaces != null && interfaces.length > 0) {
             return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, this);
         }
-        
+
         return null;
     }
-	
+
 	public static <T> T createSimpleMock(Class<T> clazz) {
 		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {clazz}, new SimpleMock(new Object[] {}));
 	}
@@ -84,9 +84,9 @@ public class SimpleMock extends MixinProxy {
 		}
 		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {clazz}, new SimpleMock(new Object[] {baseInstance}));
 	}
-	
+
 	public static Object createSimpleMock(Object[] baseInstances, Class[] interfaces) {
 		return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new SimpleMock(baseInstances));
 	}
-	
+
 }

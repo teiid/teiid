@@ -43,12 +43,12 @@ public class SimpleDBDeleteExecute implements UpdateExecution {
             this.updatedCount = this.connection.performDelete(domainName, buildSelect());
         }
         else {
-            // this is domain delete. otherwise this could be lot of items. deleted count can 
+            // this is domain delete. otherwise this could be lot of items. deleted count can
             // not be measured.
             this.connection.deleteDomain(domainName);
         }
-    }    
-    
+    }
+
     private String buildSelect() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ").append(SimpleDBMetadataProcessor.ITEM_NAME); //$NON-NLS-1$
@@ -61,12 +61,12 @@ public class SimpleDBDeleteExecute implements UpdateExecution {
     public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
         return new int[] { updatedCount };
     }
-    
+
     @Override
     public void close() {
     }
 
     @Override
     public void cancel() throws TranslatorException {
-    }    
+    }
 }

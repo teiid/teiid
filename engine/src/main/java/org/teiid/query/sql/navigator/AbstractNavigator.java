@@ -27,17 +27,17 @@ import org.teiid.query.sql.LanguageVisitor;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class AbstractNavigator extends LanguageVisitor {
 
     private LanguageVisitor visitor;
-    
+
     public AbstractNavigator(LanguageVisitor visitor) {
         this.visitor = visitor;
     }
-    
+
     public LanguageVisitor getVisitor() {
         return this.visitor;
     }
@@ -46,20 +46,20 @@ public class AbstractNavigator extends LanguageVisitor {
     	if(this.visitor.shouldAbort()) {
             return;
         }
-    	
+
         obj.acceptVisitor(this.visitor);
     }
-    
+
     protected void visitNode(LanguageObject obj) {
         if(this.visitor.shouldAbort()) {
             return;
         }
-        
+
         if(obj != null) {
             obj.acceptVisitor(this);
         }
     }
-    
+
     protected void visitNodes(Collection<? extends LanguageObject> nodes) {
         if(this.visitor.shouldAbort() || nodes == null) {
             return;

@@ -23,7 +23,7 @@ public interface Entry extends AdminObject {
 	 * @return
 	 */
 	String getPath();
-	
+
 	/**
 	 * Description
 	 * @return

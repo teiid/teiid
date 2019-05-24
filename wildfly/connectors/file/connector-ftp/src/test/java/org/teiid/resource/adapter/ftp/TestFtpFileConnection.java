@@ -34,20 +34,20 @@ import org.junit.Test;
 
 @Ignore("Ignore due to this test depend on remote ftp server and reference configuration")
 public class TestFtpFileConnection {
-    
+
     private static FtpFileConnectionImpl sample() throws ResourceException {
         FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
         mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
         mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21); 
+        mcf.setPort(21);
         mcf.setUsername("kylin"); //$NON-NLS-1$
         mcf.setPassword("redhat"); //$NON-NLS-1$
         return mcf.createConnectionFactory().getConnection();
     }
-    
+
     @Test
     public void testGetFile() throws ResourceException, IOException {
-        
+
         FtpFileConnectionImpl conn = sample();
         VirtualFile file = conn.getFile("marketdata-price.txt"); //$NON-NLS-1$
         assertNotNull(file.openStream());
@@ -55,25 +55,25 @@ public class TestFtpFileConnection {
         assertNotNull(file.openStream());
         conn.close();
     }
-    
+
     @Test
     public void testPatternFilter() {
         String fileName = "*.txt"; //$NON-NLS-1$
-        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + fileName); //$NON-NLS-1$ 
+        PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*" + fileName); //$NON-NLS-1$
         String[] array = new String[]{"/path/to/marketdata-price.txt", "marketdata-price1.txt"}; //$NON-NLS-1$ //$NON-NLS-2$
         for(String name : array) {
             assertTrue(matcher.matches(Paths.get(name)));
         }
     }
-    
+
     @Test(expected = ResourceException.class)
     public void testGetFiles() throws Exception {
         FtpFileConnectionImpl conn = sample();
         org.teiid.file.VirtualFile[] files = conn.getFiles("*.txt");
-        assertEquals(2, files.length);  
+        assertEquals(2, files.length);
         conn.close();
     }
-    
+
     @Test
     public void testAdd() throws Exception {
         FtpFileConnectionImpl conn = sample();
@@ -88,7 +88,7 @@ public class TestFtpFileConnection {
         assertNotNull(file.openStream());
         conn.close();
     }
-    
+
     @Test
     public void testRemove() throws Exception {
         FtpFileConnectionImpl conn = sample();

@@ -8,7 +8,7 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public class SampleMetadataRepository implements MetadataRepository {
-    
+
     @Override
     public void loadMetadata(MetadataFactory factory,
             ExecutionFactory executionFactory, Object connectionFactory)

@@ -39,10 +39,10 @@ import com.datastax.driver.core.IndexMetadata;
 import com.datastax.driver.core.TableMetadata;
 
 public class CassandraMetadataProcessor implements MetadataProcessor<CassandraConnection>{
-	
+
 	@ExtensionMetadataProperty(applicable=Table.class, datatype=Boolean.class, display="Allow Filtering", description="This is to avoid the warning from Cassandra when it might not be able to execute the query in an efficient way", required=false)
-	public static final String ALLOWFILTERING = "ALLOWFILTERING"; 
-	
+	public static final String ALLOWFILTERING = "ALLOWFILTERING";
+
 	/**
 	 * Creates metadata from all column families in current keyspace.
 	 */
@@ -68,7 +68,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 		    Column c = table.getColumnByName(index.getTarget());
 		    if (c != null) {
 		        c.setSearchType(SearchType.Searchable);
-	            factory.addIndex(index.getName(), false, Arrays.asList(index.getTarget()), table); 
+	            factory.addIndex(index.getName(), false, Arrays.asList(index.getTarget()), table);
 		    }
 		}
 		table.setSupportsUpdate(true);
@@ -82,7 +82,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 	private void addPrimaryKey(MetadataFactory factory, Table table, TableMetadata columnFamily) {
 		List<ColumnMetadata> primaryKeys = columnFamily.getPrimaryKey();
 		List<String> names = new ArrayList<String>();
-		
+
 		for (ColumnMetadata columnName : primaryKeys){
 		    names.add(columnName.getName());
 			table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
@@ -105,7 +105,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
 	}
 
     private String asTeiidRuntimeType(Name name) {
-        
+
         switch(name) {
             case ASCII:
                 return TypeFacility.RUNTIME_NAMES.STRING;

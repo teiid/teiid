@@ -27,7 +27,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.logging.MessageLevel;
 
 public class JBossLogger implements org.teiid.logging.Logger {
-	
+
 	private static ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 
 	@Override
@@ -57,13 +57,13 @@ public class JBossLogger implements org.teiid.logging.Logger {
     		if (msgStr.indexOf('%') > -1) {
     			msgStr = StringUtil.replaceAll(msgStr, "%", "%%"); //$NON-NLS-1$ //$NON-NLS-2$
     		}
-    		logger.logf(jbossLevel, t, msgStr, msg); 
+    		logger.logf(jbossLevel, t, msgStr, msg);
 		}
     	else {
 			logger.log(jbossLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
-    	}		
+    	}
 	}
-	
+
 	/**
 	 * Convert {@link MessageLevel} to {@link Level}
 	 * @param level
@@ -85,8 +85,8 @@ public class JBossLogger implements org.teiid.logging.Logger {
     		return Level.TRACE;
     	}
     	return Level.DEBUG;
-    }		
-    
+    }
+
 	/**
 	 * Convert  {@link Level} to {@link MessageLevel}
 	 * @param level
@@ -103,13 +103,13 @@ public class JBossLogger implements org.teiid.logging.Logger {
     	case INFO:
     		return MessageLevel.INFO;
     	case DEBUG:
-    		return MessageLevel.DETAIL; 
+    		return MessageLevel.DETAIL;
     	case TRACE:
     		return MessageLevel.NONE;
     	}
     	return MessageLevel.DETAIL;
-    }	    
-    
+    }
+
     /**
      * Get the logger for the given context.
      * @param context
@@ -122,8 +122,8 @@ public class JBossLogger implements org.teiid.logging.Logger {
 			loggers.put(context, logger);
 		}
 		return logger;
-	}  
-					
+	}
+
 	@Override
 	public void shutdown() {
 	}

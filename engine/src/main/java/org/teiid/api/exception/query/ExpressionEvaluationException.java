@@ -34,7 +34,7 @@ public class ExpressionEvaluationException extends TeiidProcessingException {
     public ExpressionEvaluationException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -43,11 +43,11 @@ public class ExpressionEvaluationException extends TeiidProcessingException {
     public ExpressionEvaluationException( String message ) {
         super( message );
     }
-  
+
     public ExpressionEvaluationException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -60,13 +60,13 @@ public class ExpressionEvaluationException extends TeiidProcessingException {
 
     public ExpressionEvaluationException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public ExpressionEvaluationException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public ExpressionEvaluationException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }      
+    }
 }

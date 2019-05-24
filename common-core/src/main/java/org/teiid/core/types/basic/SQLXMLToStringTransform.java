@@ -34,7 +34,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
 	public SQLXMLToStringTransform() {
 		super(DefaultDataClasses.XML);
 	}
-	
+
     /**
      * This method transforms a value of the source type into a value
      * of the target type.
@@ -46,7 +46,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
     public Object transformDirect(Object value) throws TransformationException {
         XMLType source = (XMLType)value;
         Reader reader = null;
-        try {       
+        try {
             char[] result = new char[DataTypeManager.MAX_STRING_LENGTH];
             reader = source.getCharacterStream();
             int read = reader.read(result);
@@ -65,7 +65,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
         }
     }
 
-    /** 
+    /**
      * @see org.teiid.core.types.Transform#isExplicit()
      */
     public boolean isExplicit() {

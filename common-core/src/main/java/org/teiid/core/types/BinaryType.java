@@ -24,43 +24,43 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 
 public final class BinaryType implements Comparable<BinaryType> {
-	
+
 	private byte[] bytes;
-	
+
 	public BinaryType(byte[] bytes) {
 		Assertion.isNotNull(bytes);
 		//to be truly immutable we should clone here
 		this.bytes = bytes;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return the actual bytes - no modifications should be performed
 	 */
 	public byte[] getBytesDirect() {
 		return this.bytes;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return a copy of the bytes
 	 */
 	public byte[] getBytes() {
 		return Arrays.copyOf(bytes, bytes.length);
 	}
-	
+
 	/**
 	 * Get the byte value at a given index
 	 * @param index
 	 */
 	public byte getByte(int index) {
-		return bytes[index]; 
+		return bytes[index];
 	}
-	
+
 	public int getLength() {
 		return bytes.length;
 	}
-	
+
 	@Override
 	public int compareTo(BinaryType o) {
 		int len1 = getLength();
@@ -76,12 +76,12 @@ public final class BinaryType implements Comparable<BinaryType> {
 	    }
 		return len1 - len2;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(bytes);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -93,7 +93,7 @@ public final class BinaryType implements Comparable<BinaryType> {
 		BinaryType other = (BinaryType)obj;
 		return Arrays.equals(this.bytes, other.bytes);
 	}
-	
+
 	/**
 	 * Returns the hex string representing the binary value.
 	 */
@@ -101,7 +101,7 @@ public final class BinaryType implements Comparable<BinaryType> {
 	public String toString() {
 		return PropertiesUtils.toHex(bytes);
 	}
-	
+
 	public BlobType toBlob() {
 		return new BlobType(BlobType.createBlob(bytes));
 	}

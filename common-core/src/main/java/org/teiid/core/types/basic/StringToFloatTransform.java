@@ -55,7 +55,7 @@ public class StringToFloatTransform extends Transform {
 	public Class getTargetType() {
 		return Float.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

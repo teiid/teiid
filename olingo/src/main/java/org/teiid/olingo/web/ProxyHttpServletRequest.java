@@ -47,7 +47,7 @@ public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
         } catch (Exception e) {
             throw new RuntimeException("Unable to create URI: " + buf, e); //$NON-NLS-1$
         }
-        
+
         try {
             encodedURL = new URL(encodedURI.toString());
         } catch (MalformedURLException e) {

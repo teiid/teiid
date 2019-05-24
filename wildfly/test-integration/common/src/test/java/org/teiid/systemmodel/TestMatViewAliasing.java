@@ -37,14 +37,14 @@ import org.teiid.metadata.Table;
 
 @SuppressWarnings("nls")
 public class TestMatViewAliasing {
-	
+
     private static final String MATVIEWS = "matviews";
 	private Connection conn;
 	private FakeServer server;
-	
+
 	@Before public void setUp() throws Exception {
     	server = new FakeServer(true);
-    	
+
     	VDBRepository vdbRepository = new VDBRepository();
     	MetadataFactory mf = new MetadataFactory(null, 1, "foo", vdbRepository.getRuntimeTypeMap(), new Properties(), null);
     	mf.getSchema().setPhysical(false);
@@ -52,21 +52,21 @@ public class TestMatViewAliasing {
     	mat.setVirtual(true);
     	mat.setMaterialized(true);
     	mat.setSelectTransformation("/*+ cache(ttl:0) */ select 1 as x, 'y' as Name");
-    	
+
     	mf.addColumn("x", DataTypeManager.DefaultDataTypes.INTEGER, mat);
     	mf.addColumn("Name", DataTypeManager.DefaultDataTypes.STRING, mat);
-    	
+
     	MetadataStore ms = mf.asMetadataStore();
-    	
+
     	server.deployVDB(MATVIEWS, ms);
     	conn = server.createConnection("jdbc:teiid:"+MATVIEWS);
     }
-	
+
 	@After public void tearDown() throws Exception {
 		server.stop();
 		conn.close();
 	}
-	
+
 	@Test public void testSystemMatViewsWithImplicitLoad() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select * from MatViews order by name");
@@ -79,9 +79,9 @@ public class TestMatViewAliasing {
 		rs = s.executeQuery("select * from MatViews where name = 'mat'");
 		assertTrue(rs.next());
 		assertEquals("LOADED", rs.getString("loadstate"));
-		
+
 		rs = s.executeQuery("select * from mat as a, mat as b where cast(a.x as string) = b.name order by a.x");
 		assertFalse(rs.next());
 	}
-	
+
 }

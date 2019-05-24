@@ -39,22 +39,22 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * A Command is an interface for all the language objects that are at the root
- * of a language object tree representing a SQL statement.  For instance, a 
- * Query command represents a SQL select query, an Update command represents a 
+ * of a language object tree representing a SQL statement.  For instance, a
+ * Query command represents a SQL select query, an Update command represents a
  * SQL update statement, etc.
  */
 public abstract class Command implements LanguageObject {
-	
-	/** 
-	 * Represents an unknown type of command 
+
+	/**
+	 * Represents an unknown type of command
 	 */
 	public static final int TYPE_UNKNOWN = 0;
-	
+
 	/**
 	 * Represents a SQL SELECT statement
 	 */
 	public static final int TYPE_QUERY = 1;
-	
+
 	/**
 	 * Represents a SQL INSERT statement
 	 */
@@ -74,7 +74,7 @@ public abstract class Command implements LanguageObject {
 	 * Represents a stored procedure command
 	 */
     public static final int TYPE_STORED_PROCEDURE = 6;
-    
+
 	/**
 	 * Represents a update stored procedure command
 	 */
@@ -84,52 +84,52 @@ public abstract class Command implements LanguageObject {
      * Represents a batched sequence of UPDATE statements
      */
     public static final int TYPE_BATCHED_UPDATE = 9;
-    
+
     public static final int TYPE_DYNAMIC = 10;
-    
+
     public static final int TYPE_CREATE = 11;
-    
+
     public static final int TYPE_DROP = 12;
-    
+
     public static final int TYPE_TRIGGER_ACTION = 13;
-    
+
     public static final int TYPE_ALTER_VIEW = 14;
-    
+
     public static final int TYPE_ALTER_PROC = 15;
-    
+
     public static final int TYPE_ALTER_TRIGGER = 16;
-    
+
     public static final int TYPE_SOURCE_EVENT = -1;
 
     private static List<Expression> updateCommandSymbol;
-    
+
     /**
-     * All temporary group IDs discovered while resolving this 
-     * command.  The key is a TempMetadataID and the value is an 
+     * All temporary group IDs discovered while resolving this
+     * command.  The key is a TempMetadataID and the value is an
      * ordered List of TempMetadataID representing the elements.
      */
     protected TempMetadataStore tempGroupIDs;
-    
+
     private transient GroupContext externalGroups;
 
     private boolean isResolved;
-    
+
 	/** The option clause */
 	private Option option;
-	
+
 	private ProcessorPlan plan;
-	
+
 	private SymbolMap correlatedReferences;
-	
+
 	private CacheHint cacheHint;
 	private SourceHint sourceHint;
-    
+
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
 	 * @return Type from TYPE constants
-	 */	
+	 */
 	public abstract int getType();
-	
+
 	/**
 	 * Get the correlated references to the containing scope only
 	 * @return
@@ -137,7 +137,7 @@ public abstract class Command implements LanguageObject {
 	public SymbolMap getCorrelatedReferences() {
 		return correlatedReferences;
 	}
-	
+
 	public void setCorrelatedReferences(SymbolMap correlatedReferences) {
 		this.correlatedReferences = correlatedReferences;
 	}
@@ -145,15 +145,15 @@ public abstract class Command implements LanguageObject {
     public void setTemporaryMetadata(TempMetadataStore metadata) {
         this.tempGroupIDs = metadata;
     }
-    
+
     public TempMetadataStore getTemporaryMetadata() {
         return this.tempGroupIDs;
     }
-    
+
     public void addExternalGroupToContext(GroupSymbol group) {
         getExternalGroupContexts().addGroup(group);
     }
-    
+
     public void setExternalGroupContexts(GroupContext root) {
         if (root == null) {
             this.externalGroups = null;
@@ -161,7 +161,7 @@ public abstract class Command implements LanguageObject {
             this.externalGroups = (GroupContext)root.clone();
         }
     }
-    
+
     public void pushNewResolvingContext(Collection<GroupSymbol> groups) {
         externalGroups = new GroupContext(externalGroups, new LinkedList<GroupSymbol>(groups));
     }
@@ -172,17 +172,17 @@ public abstract class Command implements LanguageObject {
         }
         return this.externalGroups;
     }
-    
+
     public List<GroupSymbol> getAllExternalGroups() {
         if (externalGroups == null) {
             return Collections.emptyList();
         }
-        
+
         return externalGroups.getAllGroups();
     }
 
     public abstract Object clone();
-    
+
     protected void copyMetadataState(Command copy) {
         if(this.getExternalGroupContexts() != null) {
             copy.externalGroups = this.externalGroups.clone();
@@ -190,18 +190,18 @@ public abstract class Command implements LanguageObject {
         if(this.tempGroupIDs != null) {
             copy.setTemporaryMetadata(this.tempGroupIDs.clone());
         }
-        
+
         copy.plan = this.plan;
         if (this.correlatedReferences != null) {
         	copy.correlatedReferences = this.correlatedReferences.clone();
         }
-        if(this.getOption() != null) { 
+        if(this.getOption() != null) {
             copy.setOption( (Option) this.getOption().clone() );
         }
         copy.cacheHint = this.cacheHint;
         copy.sourceHint = this.sourceHint;
     }
-    
+
     /**
      * Print the full tree of commands with indentation - useful for debugging
      * @return String String representation of command tree
@@ -211,7 +211,7 @@ public abstract class Command implements LanguageObject {
         printCommandTree(str, 0);
         return str.toString();
     }
-    
+
     /**
      * Helper method to print command tree at given tab level
      * @param str String buffer to add command sub tree to
@@ -222,22 +222,22 @@ public abstract class Command implements LanguageObject {
         for(int i=0; i<tabLevel; i++) {
             str.append("\t"); //$NON-NLS-1$
         }
-        
+
         // Add this command
         str.append(toString());
         str.append("\n"); //$NON-NLS-1$
-        
+
         // Add children recursively
         tabLevel++;
         for (Command subCommand : CommandCollectorVisitor.getCommands(this)) {
             subCommand.printCommandTree(str, tabLevel);
         }
     }
-    
+
     // =========================================================================
     //                     O P T I O N      M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the option clause for the query.
      * @return option clause
@@ -245,7 +245,7 @@ public abstract class Command implements LanguageObject {
     public Option getOption() {
         return option;
     }
-    
+
     /**
      * Set the option clause for the query.
      * @param option New option clause
@@ -256,7 +256,7 @@ public abstract class Command implements LanguageObject {
 
 	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
@@ -267,7 +267,7 @@ public abstract class Command implements LanguageObject {
 	 * @return True if the results are cachable; false otherwise.
 	 */
 	public abstract boolean areResultsCachable();
-    
+
     public static List<Expression> getUpdateCommandSymbol() {
         if (updateCommandSymbol == null ) {
             ElementSymbol symbol = new ElementSymbol("Count"); //$NON-NLS-1$
@@ -276,31 +276,31 @@ public abstract class Command implements LanguageObject {
         }
         return updateCommandSymbol;
     }
-    
+
     public ProcessorPlan getProcessorPlan() {
     	return this.plan;
     }
-    
+
     public void setProcessorPlan(ProcessorPlan plan) {
     	this.plan = plan;
     }
-    
+
     public CacheHint getCacheHint() {
 		return cacheHint;
 	}
-    
+
     public void setCacheHint(CacheHint cacheHint) {
 		this.cacheHint = cacheHint;
 	}
-    
+
     public SourceHint getSourceHint() {
 		return sourceHint;
 	}
-    
+
     public void setSourceHint(SourceHint sourceHint) {
 		this.sourceHint = sourceHint;
 	}
-    
+
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
@@ -308,16 +308,16 @@ public abstract class Command implements LanguageObject {
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     protected boolean sameOptionAndHint(Command cmd) {
     	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
     	EquivalenceUtil.areEqual(this.option, cmd.option);
     }
-    
+
     public boolean returnsResultSet() {
         return false;
     }
-    
+
     /**
      * @return null if unknown, empty if results are not returned, or the resultset columns
      */
@@ -327,7 +327,7 @@ public abstract class Command implements LanguageObject {
 		}
 		return Collections.emptyList();
 	}
-	
+
 	//TODO: replace with enum
 	public static String getCommandToken(int commandType) {
 		switch (commandType) {

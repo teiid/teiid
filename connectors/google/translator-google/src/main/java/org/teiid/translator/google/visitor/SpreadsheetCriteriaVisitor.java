@@ -36,9 +36,9 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Base visitor for criteria
- * 
+ *
  * @author felias
- * 
+ *
  */
 public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 
@@ -64,9 +64,9 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 		if (Number.class.isAssignableFrom(type)) {
 			buffer.append(obj.toString());
 			return;
-		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE) 
+		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)
 		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-			buffer.append(obj.getValue().toString()); 
+			buffer.append(obj.getValue().toString());
 			return;
 		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.TIME)
 		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
@@ -85,7 +85,7 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	    }
 	    super.visit(obj);
 	}
-	
+
 	@Override
 	public void visit(Function obj) {
 	    if (isUpdate()) {
@@ -110,7 +110,7 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	public String getWorksheetTitle() {
 		return worksheetTitle;
 	}
-	
+
 	public void translateWhere(Condition condition) {
 	    if (condition != null) {
 	        StringBuilder temp = this.buffer;
@@ -120,12 +120,12 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 	        this.buffer = temp;
 	    }
 	}
-	
+
 	public void visit(Comparison obj) {
 	    boolean addNot = false;
 	    if ((!isUpdate() || obj.getLeftExpression().getType() != TypeFacility.RUNTIME_TYPES.STRING)
-	            && (obj.getOperator() == Operator.NE 
-	            || obj.getOperator() == Operator.LT 
+	            && (obj.getOperator() == Operator.NE
+	            || obj.getOperator() == Operator.LT
 	            || obj.getOperator() == Operator.LE
 	            || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal)))) {
 	        addNot = true;
@@ -142,7 +142,7 @@ public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
             }
 	    }
 	}
-	
+
 	protected boolean isUpdate() {
 	    return true;
 	}

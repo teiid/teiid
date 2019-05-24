@@ -28,5 +28,5 @@ public class NodeFactory {
 		node.setType(nodeType);
 		return node;
 	}
-	
+
 }

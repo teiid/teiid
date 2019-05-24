@@ -53,14 +53,14 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
 		}
 		this.database = database;
 	}
-	
+
     public MongoDBConnectionImpl(String database, MongoClientURI uri) {
         this.database = database;
         if (uri.getDatabase() != null) {
             this.database = database;
         }
         this.client = new MongoClient(uri);
-    }	
+    }
 
 	@Override
 	public DB getDatabase() {
@@ -73,14 +73,14 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
 			this.client.close();
 		}
 	}
-	
+
 	@Override
 	public LocalTransaction getLocalTransaction() throws ResourceException {
 	    try {
 	        ClientSession session = this.client.startSession();
-	        
+
 	        return new LocalTransaction() {
-	            
+
 	            @Override
 	            public void rollback() throws ResourceException {
 	                try {
@@ -89,7 +89,7 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
 	                    throw new ResourceException(e.getMessage(), e);
 	                }
 	            }
-	            
+
 	            @Override
 	            public void commit() throws ResourceException {
 	                try {
@@ -98,7 +98,7 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
                         throw new ResourceException(e.getMessage(), e);
                     }
 	            }
-	            
+
 	            @Override
 	            public void begin() throws ResourceException {
 	                try {

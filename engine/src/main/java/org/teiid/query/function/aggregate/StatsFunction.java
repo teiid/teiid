@@ -28,12 +28,12 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.util.CommandContext;
 
 public class StatsFunction extends SingleArgumentAggregateFunction {
-	
+
 	private double sum = 0;
 	private double sumSq = 0;
 	private long count = 0;
 	private Type type;
-	
+
 	public StatsFunction(Type function) {
 		this.type = function;
 	}
@@ -44,7 +44,7 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 		sumSq = 0;
 		count = 0;
 	}
-	
+
 	@Override
 	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
 			throws FunctionExecutionException, ExpressionEvaluationException,
@@ -53,7 +53,7 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 		sumSq += Math.pow(((Number)input).doubleValue(), 2);
 		count++;
 	}
-	
+
 	@Override
 	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException {
@@ -82,19 +82,19 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 		}
 		return result;
 	}
-	
+
 	@Override
 	public void getState(List<Object> state) {
 		state.add(count);
 		state.add(sum);
 		state.add(sumSq);
 	}
-	
+
 	@Override
 	public List<? extends Class<?>> getStateTypes() {
 		return Arrays.asList(Long.class, Double.class, Double.class);
 	}
-	
+
 	@Override
 	public int setState(List<?> state, int index) {
 		count = (Long) state.get(index++);

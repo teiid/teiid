@@ -32,7 +32,7 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
  * See also {@link FunctionMethod}
  */
 public class Procedure extends AbstractMetadataRecord implements Modifiable {
-    
+
 	private static final long serialVersionUID = 7714869437683360834L;
 
 	public enum Type {
@@ -41,23 +41,23 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
 		StoredProc,
 		StoredQuery
 	}
-	
+
 	public static final int AUTO_UPDATECOUNT = -1;
-	
+
     private boolean isFunction;
     private boolean isVirtual;
     private int updateCount = AUTO_UPDATECOUNT;
     private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
     private volatile String queryPlan;
-    
+
     private Schema parent;
     private volatile transient long lastModified;
-    
+
     public void setParent(Schema parent) {
 		this.parent = parent;
 	}
-    
+
     public boolean isFunction() {
         return isFunction;
     }
@@ -78,15 +78,15 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
         }
         return Type.StoredProc;
     }
-    
+
     public int getUpdateCount() {
         return this.updateCount;
     }
-    
+
 	public List<ProcedureParameter> getParameters() {
 		return parameters;
 	}
-	
+
     public ProcedureParameter getParameterByName(String param) {
         for(ProcedureParameter p: this.parameters) {
             if (p.getName().equals(param)) {
@@ -94,7 +94,7 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
             }
         }
         return null;
-    }	
+    }
 
 	public void setParameters(List<ProcedureParameter> parameters) {
 		this.parameters = parameters;
@@ -121,7 +121,7 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     public void setVirtual(boolean b) {
         isVirtual = b;
     }
-    
+
     public void setUpdateCount(int count) {
     	this.updateCount = count;
     }
@@ -136,16 +136,16 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
 	public ColumnSet<Procedure> getResultSet() {
 		return resultSet;
 	}
-	
+
 	@Override
 	public Schema getParent() {
 		return parent;
 	}
-	
+
 	public long getLastModified() {
 		return lastModified;
 	}
-	
+
 	public void setLastModified(long lastModified) {
 		this.lastModified = lastModified;
 	}

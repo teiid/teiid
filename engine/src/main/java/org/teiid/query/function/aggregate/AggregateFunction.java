@@ -38,11 +38,11 @@ public abstract class AggregateFunction {
 
 	protected int[] argIndexes;
 	private int conditionIndex = -1;
-	
+
 	public void setArgIndexes(int[] argIndexes) {
 		this.argIndexes = argIndexes;
 	}
-	
+
 	public void setConditionIndex(int conditionIndex) {
 		this.conditionIndex = conditionIndex;
 	}
@@ -54,7 +54,7 @@ public abstract class AggregateFunction {
      * @param inputTypes
      */
     public void initialize(Class<?> dataType, Class<?>[] inputTypes) {}
-    
+
     public int[] getArgIndexes() {
 		return argIndexes;
 	}
@@ -84,16 +84,16 @@ public abstract class AggregateFunction {
     	}
 		return false;
 	}
-    
+
     public boolean respectsNull() {
     	return false;
     }
-    
+
     /**
      * Called for the element value in every row of a group.
-     * @param tuple 
+     * @param tuple
      * @param commandContext
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      */
     public abstract void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException;
 
@@ -101,19 +101,19 @@ public abstract class AggregateFunction {
      * Called after all values have been processed to get the result.
      * @param commandContext
      * @return Result value
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      */
     public abstract Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException;
-    
+
     public List<? extends Class<?>> getStateTypes() {
     	return null;
     }
-    
+
     public void getState(List<Object> state) {
-    	
+
     }
-    
+
     public int setState(List<?> state, int index) {
     	return 0;
     }

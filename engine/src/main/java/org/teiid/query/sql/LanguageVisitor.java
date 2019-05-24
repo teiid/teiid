@@ -25,19 +25,19 @@ import org.teiid.query.sql.symbol.*;
 /**
  * <p>The LanguageVisitor can be used to visit a LanguageObject as if it were a tree
  * and perform some action on some or all of the language objects that are visited.
- * The LanguageVisitor is extended to create a concrete visitor and some or all of 
- * the public visit methods should be overridden to provide the visitor functionality. 
+ * The LanguageVisitor is extended to create a concrete visitor and some or all of
+ * the public visit methods should be overridden to provide the visitor functionality.
  * These public visit methods SHOULD NOT be called directly.</p>
  */
 @SuppressWarnings("unused")
 public abstract class LanguageVisitor {
-    
+
     private boolean abort = false;
 
     public void setAbort(boolean abort) {
         this.abort = abort;
     }
-    
+
     public final boolean shouldAbort() {
         return abort;
     }
@@ -96,15 +96,15 @@ public abstract class LanguageVisitor {
     public void visit(GroupSymbol obj) {}
     public void visit(Reference obj) {}
     public void visit(ScalarSubquery obj) {}
-    
-    // Visitor methods for procedure language objects    
+
+    // Visitor methods for procedure language objects
     public void visit(AssignmentStatement obj) {}
     public void visit(Block obj) {}
     public void visit(CommandStatement obj) {}
     public void visit(CreateProcedureCommand obj) {}
     public void visit(DeclareStatement obj) {
         visit((AssignmentStatement)obj);
-    }    
+    }
     public void visit(IfStatement obj) {}
     public void visit(RaiseStatement obj) {}
     public void visit(BranchingStatement obj) {}
@@ -146,7 +146,7 @@ public abstract class LanguageVisitor {
 	public void visit(ExceptionExpression obj) {}
 
 	public void visit(ReturnStatement obj) {}
-	
+
 	public void visit(JSONObject obj) {}
 
 	public void visit(XMLExists xmlExists) {}

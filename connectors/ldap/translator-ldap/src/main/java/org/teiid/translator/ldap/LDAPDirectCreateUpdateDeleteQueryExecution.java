@@ -44,7 +44,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 	private int updateCount = -1;
 	private boolean returnsArray = true;
 	private String query;
-	
+
 	public LDAPDirectCreateUpdateDeleteQueryExecution(List<Argument> arguments, LDAPExecutionFactory factory, ExecutionContext executionContext, LdapContext connection, String query, boolean returnsArray) {
 		this.arguments = arguments;
 		this.executionFactory = factory;
@@ -53,24 +53,24 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 		this.query = query;
 		this.returnsArray = returnsArray;
 	}
-	
+
 	@Override
 	public void execute() throws TranslatorException {
 		String firstToken = null;
-		
+
 		StringTokenizer st = new StringTokenizer(query, ";"); //$NON-NLS-1$
 		if (st.hasMoreTokens()) {
 			firstToken = st.nextToken();
 		}
 		if (firstToken == null || (!firstToken.equalsIgnoreCase("create") && !firstToken.equalsIgnoreCase("update") && !firstToken.equalsIgnoreCase("delete"))) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12009));
-		}		
+		}
 		LdapContext ldapCtx = null;
 		try {
 			ldapCtx = (LdapContext)this.ldapConnection.lookup("");  //$NON-NLS-1$
 		} catch (NamingException ne) {
 			throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.createContextError",ne.getExplanation()));//$NON-NLS-1$
-		}		
+		}
 
 		if (firstToken.equalsIgnoreCase("delete")) { // //$NON-NLS-1$
 			String theDN = getDN(st); // the token after the marker is always DN
@@ -84,7 +84,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailed",theDN,ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e, LDAPPlugin.Util.getString("LDAPUpdateExecution.deleteFailedUnexpected",theDN));//$NON-NLS-1$
-			}			
+			}
 		}
 		else if (firstToken.equalsIgnoreCase("create")) { //$NON-NLS-1$
 			String theDN = getDN(st); // the token after the marker is always DN
@@ -103,7 +103,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e,LDAPPlugin.Util.getString("LDAPUpdateExecution.insertFailedUnexpected", theDN));//$NON-NLS-1$
-			}			
+			}
 		}
 		else if (firstToken.equalsIgnoreCase("update")) { //$NON-NLS-1$
 			String theDN = getDN(st); // the token after the marker is always DN
@@ -115,7 +115,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 			int i=0;
 			for (BasicAttribute ba:attributes) {
 				updateMods[i++] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba);
-			}		
+			}
 			try {
 				ldapCtx.modifyAttributes(theDN, updateMods);
 				this.updateCount = 1;
@@ -123,10 +123,10 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 				throw new TranslatorException(ne, LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailed", theDN, ne.getExplanation()));//$NON-NLS-1$
 			} catch (Exception e) {
 				throw new TranslatorException(e, LDAPPlugin.Util.getString("LDAPUpdateExecution.updateFailedUnexpected",theDN));//$NON-NLS-1$
-			}			
+			}
 		}
 	}
-	
+
 	private String getDN(StringTokenizer st) throws TranslatorException {
 		if (!st.hasMoreTokens()) {
 			throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12010));
@@ -138,19 +138,19 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 		if (!st.hasMoreTokens()) {
 			throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12011));
 		}
-		
+
 		ArrayList<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
-		
+
 		if(st.hasMoreElements()) {
 			String var = st.nextToken();
-			
+
 			int index = var.indexOf('=');
 			if (index == -1) {
 				throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12011));
 			}
 			String key = var.substring(0, index).trim();
 			String value = var.substring(index+1).trim();
-			
+
 			if (key.equalsIgnoreCase(ATTRIBUTES)) {
 				StringTokenizer attrTokens = new StringTokenizer(value, ","); //$NON-NLS-1$
 				int attrCount = 0;
@@ -164,7 +164,7 @@ public class LDAPDirectCreateUpdateDeleteQueryExecution implements ProcedureExec
 					if (argument.getArgumentValue().getValue() != null) {
 						anObj = IQueryToLdapSearchParser.getLiteralString(argument.getArgumentValue());
 					}
-					
+
 					attributes.add(new BasicAttribute(name, anObj));
 				}
 			} else {

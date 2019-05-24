@@ -34,21 +34,21 @@ public class WrappedConnectionFactory implements ConnectionFactory, Referenceabl
 
 	private static final long serialVersionUID = 5499157394014613035L;
 	private BasicConnectionFactory delegate;
-	private ConnectionManager cm;	
+	private ConnectionManager cm;
 	private BasicManagedConnectionFactory mcf;
 	private Reference reference;
-	
+
 	public WrappedConnectionFactory() {
-		// need by spec 17.5.1.1, not sure how this will effect as the this 
+		// need by spec 17.5.1.1, not sure how this will effect as the this
 		// connection factory is always built by ManagedConnectionfactory
 	}
-	
+
 	public WrappedConnectionFactory(BasicConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
 		this.delegate = delegate;
 		this.cm = cm;
 		this.mcf = mcf;
 	}
-	
+
 	@Override
 	public WrappedConnection getConnection() throws ResourceException {
 		return (WrappedConnection)cm.allocateConnection(mcf, null);

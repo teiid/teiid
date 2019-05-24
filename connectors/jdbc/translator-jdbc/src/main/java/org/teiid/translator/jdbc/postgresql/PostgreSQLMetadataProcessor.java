@@ -32,7 +32,7 @@ import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 public class PostgreSQLMetadataProcessor
         extends JDBCMetadataProcessor {
-    
+
     @Override
     protected String getRuntimeType(int type, String typeName, int precision) {
         //pg will otherwise report a 1111/other type for geometry
@@ -45,12 +45,12 @@ public class PostgreSQLMetadataProcessor
     	if ("json".equalsIgnoreCase(typeName) || "jsonb".equalsIgnoreCase(typeName)) { //$NON-NLS-1$ //$NON-NLS-2$
             return TypeFacility.RUNTIME_NAMES.JSON;
         }
-    	if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) { 
+    	if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) {
     	    return TypeFacility.RUNTIME_NAMES.STRING;
     	}
-        return super.getRuntimeType(type, typeName, precision);                    
+        return super.getRuntimeType(type, typeName, precision);
     }
-    
+
     @Override
     protected String getNativeComponentType(String typeName) {
         if (typeName.startsWith("_")) { //$NON-NLS-1$
@@ -64,18 +64,18 @@ public class PostgreSQLMetadataProcessor
             MetadataFactory metadataFactory, int rsColumns)
             throws SQLException {
         Column result = super.addColumn(columns, table, metadataFactory, rsColumns);
-        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(result.getNativeType())) { 
+        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(result.getNativeType())) {
             result.setLength(36); //pg reports max int
             result.setCaseSensitive(false);
         }
         return result;
     }
-    
+
     @Override
     protected String getGeographyMetadataTableName() {
         return "public.geometry_columns"; //$NON-NLS-1$
     }
-    
+
     @Override
     protected String getGeometryMetadataTableName() {
         return "public.geography_columns"; //$NON-NLS-1$
@@ -92,12 +92,12 @@ public class PostgreSQLMetadataProcessor
         ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
         return ps.executeQuery();
     }
-    
+
     @Override
     protected String getSequenceNextSQL(String fullyQualifiedName) {
-        return "nextval('" + StringUtil.replaceAll(fullyQualifiedName, "'", "''") + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
+        return "nextval('" + StringUtil.replaceAll(fullyQualifiedName, "'", "''") + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-    
+
     @Override
     protected Table addTable(MetadataFactory metadataFactory,
             String tableCatalog, String tableSchema, String tableName,
@@ -106,7 +106,7 @@ public class PostgreSQLMetadataProcessor
         String type = tables.getString(4);
         if (type == null || type.contains("INDEX") //$NON-NLS-1$
                 || type.equalsIgnoreCase("TYPE") //$NON-NLS-1$
-                || type.equalsIgnoreCase("SEQUENCE")) { //$NON-NLS-1$ 
+                || type.equalsIgnoreCase("SEQUENCE")) { //$NON-NLS-1$
             return null;
         }
         return super.addTable(metadataFactory, tableCatalog, tableSchema, tableName,

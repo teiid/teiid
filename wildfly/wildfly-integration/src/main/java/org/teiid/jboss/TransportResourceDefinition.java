@@ -27,17 +27,17 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
 	/*
 	private final List<AccessConstraintDefinition> accessConstraints;
 	*/
-	
+
 	public TransportResourceDefinition() {
-		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()), 
+		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()),
 				TransportAdd.INSTANCE,
 				TransportRemove.INSTANCE);
 		/*
         ApplicationTypeConfig atc = new ApplicationTypeConfig(TeiidExtension.TEIID_SUBSYSTEM, Element.TRANSPORT_ELEMENT.getLocalName());
         this.accessConstraints = new ApplicationTypeAccessConstraintDefinition(atc).wrapAsList();
-        */       
+        */
 	}
-	
+
     @Override
     public void registerOperations(ManagementResourceRegistration resourceRegistration) {
         super.registerOperations(resourceRegistration);
@@ -48,17 +48,17 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
 		for (int i = 0; i < TransportAdd.ATTRIBUTES.length; i++) {
 			resourceRegistration.registerReadWriteAttribute(TransportAdd.ATTRIBUTES[i], null, new AttributeWrite(TransportAdd.ATTRIBUTES[i]));
-		}    	
+		}
     }
 
     @Override
     public void registerChildren(ManagementResourceRegistration resourceRegistration) {
     }
-    
+
     /*
     @Override
     public List<AccessConstraintDefinition> getAccessConstraints() {
         return this.accessConstraints;
-    } 
-    */    
+    }
+    */
 }

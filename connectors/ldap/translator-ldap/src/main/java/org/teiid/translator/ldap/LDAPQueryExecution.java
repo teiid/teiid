@@ -17,43 +17,43 @@
  */
 
 /**
- * 
+ *
  * Please see the user's guide for a full description of capabilties, etc.
- * 
+ *
  * Description/Assumptions:
  * 1. Table's name in source defines the base DN (or context) for the search.
  * Example: Table.NameInSource=ou=people,dc=gene,dc=com
  * [Optional] The table's name in source can also define a search scope. Append
- * a "?" character as a delimiter to the base DN, and add the search scope string. 
+ * a "?" character as a delimiter to the base DN, and add the search scope string.
  * The following scopes are available:
  * SUBTREE_SCOPE
  * ONELEVEL_SCOPE
  * OBJECT_SCOPE
- * [Default] LDAPConnectorConstants.ldapDefaultSearchScope 
+ * [Default] LDAPConnectorConstants.ldapDefaultSearchScope
  * is the default scope used, if no scope is defined (currently, ONELEVEL_SCOPE).
- * 
+ *
  * 2. Column's name in source defines the LDAP attribute name.
  * [Default] If no name in source is defined, then we attempt to use the column name
  * as the LDAP attribute name.
- * 
- * 
+ *
+ *
  * TODO: Implement paged searches -- the LDAP server must support VirtualListViews.
  * TODO: Implement cancel.
  * TODO: Add Sun/Netscape implementation, AD/OpenLDAP implementation.
- * 
- * 
- * Note: 
+ *
+ *
+ * Note:
  * Greater than is treated as >=
  * Less-than is treater as <=
  * If an LDAP entry has more than one entry for an attribute of interest (e.g. a select item), we only return the
  * first occurrance. The first occurance is not predictably the same each time, either, according to the LDAP spec.
  * If an attribute is not present, we return the empty string. Arguably, we could throw an exception.
- * 
+ *
  * Sun LDAP won't support Sort Orders for very large datasets. So, we've set the sorting to NONCRITICAL, which
  * allows Sun to ignore the sort order. This will result in the results to come back as unsorted, without any error.
- * 
+ *
  * Removed support for ORDER BY for two reasons:
- * 1: LDAP appears to have a limit to the number of records that 
+ * 1: LDAP appears to have a limit to the number of records that
  * can be server-side sorted. When the limit is reached, two things can happen:
  * a. If sortControl is set to CRITICAL, then the search fails.
  * b. If sortControl is NONCRITICAL, then the search returns, unsorted.
@@ -106,15 +106,15 @@ import org.teiid.translator.TypeFacility;
 
 
 
-/** 
- * LDAPSyncQueryExecution is responsible for executing an LDAP search 
+/**
+ * LDAPSyncQueryExecution is responsible for executing an LDAP search
  * corresponding to a read-only "select" query.
  */
 public class LDAPQueryExecution implements ResultSetExecution {
 
 	static final String MULTIVALUED_CONCAT = "multivalued-concat"; //$NON-NLS-1$
 	static final String delimiter = "?"; //$NON-NLS-1$
-	
+
 	private LDAPSearchDetails searchDetails;
 	private LdapContext ldapCtx;
 	private NamingEnumeration<?> searchEnumeration;
@@ -125,7 +125,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	private Iterator<List<Object>> unwrapIterator;
 	private int unwrapPos = -1;
 
-	/** 
+	/**
 	 * Constructor
 	 * @param executionMode the execution mode.
 	 * @param ctx the execution context.
@@ -140,7 +140,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		this.executionContext = context;
 	}
 
-	/** 
+	/**
 	 * method to execute the supplied query
 	 * @param query the query object.
 	 * @param maxBatchSize the max batch size.
@@ -154,7 +154,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		}
 
 		ArrayList<Column> attributeList = searchDetails.getElementList();
-		
+
 		//determine if there is an array value to unwrap
 		for (int i = 0; i < attributeList.size(); i++) {
 			Column col = attributeList.get(i);
@@ -165,19 +165,19 @@ public class LDAPQueryExecution implements ResultSetExecution {
 				unwrapPos = i;
 			}
 		}
-		
+
 		setRequestControls(null);
 		// Execute the search.
 		executeSearch();
 	}
 
-	/** 
+	/**
 	 * Set the standard request controls
 	 */
 	private void setRequestControls(byte[] cookie) throws TranslatorException {
 		List<Control> ctrl = new ArrayList<Control>();
 		SortKey[] keys = searchDetails.getSortKeys();
-		try {			
+		try {
 			if (keys != null) {
 				ctrl.add(new SortControl(keys, Control.NONCRITICAL));
 			}
@@ -198,7 +198,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	}
 
 	/**
-	 * Perform the LDAP search against the subcontext, using the filter and 
+	 * Perform the LDAP search against the subcontext, using the filter and
 	 * search controls appropriate to the query and model metadata.
 	 */
 	private void executeSearch() throws TranslatorException {
@@ -207,10 +207,10 @@ public class LDAPQueryExecution implements ResultSetExecution {
 			searchEnumeration = this.ldapCtx.search("", filter, ctrls); //$NON-NLS-1$
 		} catch (NamingException ne) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
-			throw new TranslatorException(ne, msg + " : " + ne.getExplanation());  //$NON-NLS-1$ 
+			throw new TranslatorException(ne, msg + " : " + ne.getExplanation());  //$NON-NLS-1$
 		} catch(Exception e) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.execSearchError"); //$NON-NLS-1$
-			throw new TranslatorException(e, msg); 
+			throw new TranslatorException(e, msg);
 		}
 	}
 
@@ -245,7 +245,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 			}
 		}
 	}
-	
+
 	/**
 	 * Fetch the next batch of data from the LDAP searchEnumerationr result.
 	 * @return the next Batch of results.
@@ -274,10 +274,10 @@ public class LDAPQueryExecution implements ResultSetExecution {
 				try {
 					result = getRow(searchResult);
 				} catch (InvalidNameException e) {
-					
+
 				}
 			}
-			
+
 			if (result == null && this.executionFactory.usePagination()) {
 			    byte[] cookie = null;
 				Control[] controls = ldapCtx.getResponseControls();
@@ -289,11 +289,11 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		        		}
 		        	}
 		        }
-		        
+
 		        if (cookie == null) {
 		        	return null;
 		        }
-	
+
 		        setRequestControls(cookie);
 		        executeSearch();
 		        return next();
@@ -311,7 +311,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 					throw te;
 				}
 				this.executionContext.addWarning(te);
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, msg); 
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, msg);
 			}
 			return null; // GHH 20080326 - if size limit exceeded don't try to read more results
 		} catch (NamingException ne) {
@@ -323,7 +323,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	 * Create a row using the searchResult and add it to the supplied batch.
 	 * @param batch the supplied batch
 	 * @param result the search result
-	 * @throws InvalidNameException 
+	 * @throws InvalidNameException
 	 */
 	// GHH 20080326 - added fetching of DN of result, for directories that
 	// do not include it as an attribute
@@ -331,13 +331,13 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		Attributes attrs = result.getAttributes();
 		ArrayList<Column> attributeList = searchDetails.getElementList();
 		final List<Object> row = new ArrayList<Object>(attributeList.size());
-		
+
 		for (int i = 0; i < attributeList.size(); i++) {
 			Column col = attributeList.get(i);
 			Object val = getValue(col, result, attrs, i == unwrapPos);  // GHH 20080326 - added resultDN parameter to call
 			row.add(val);
 		}
-		
+
 		if (unwrapPos > -1) {
 			Object toUnwrap = row.get(unwrapPos);
 			if (toUnwrap == null) {
@@ -362,7 +362,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 						}
 						@Override
 						public void remove() {
-							
+
 						}
 					};
 					if (unwrapIterator.hasNext()) {
@@ -379,7 +379,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 	 * @param modelElement the model element
 	 * @param attrs the attributes
 	 * @param row the row
-	 * @throws InvalidNameException 
+	 * @throws InvalidNameException
 	 */
 	// GHH 20080326 - added resultDistinguishedName to method signature.  If
 	// there is an element in the model named "DN" and there is no attribute
@@ -391,16 +391,16 @@ public class LDAPQueryExecution implements ResultSetExecution {
 
 		String modelAttrName = modelElement.getSourceName();
 		Class<?> modelAttrClass = modelElement.getJavaType();
-		
+
 		String multivalAttr = modelElement.getDefaultValue();
-		
+
 		if(modelAttrName == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPSyncQueryExecution.nullAttrError"); //$NON-NLS-1$
-			throw new TranslatorException(msg); 
+			throw new TranslatorException(msg);
 		}
 
 		Attribute resultAttr = attrs.get(modelAttrName);
-		
+
 		// If the attribute is not present, we return NULL.
 		if(resultAttr == null) {
 			// GHH 20080326 - return DN from input parameter
@@ -412,9 +412,9 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		}
 		Object objResult = null;
 		try {
-			if(TypeFacility.RUNTIME_TYPES.STRING.equals(modelAttrClass) && MULTIVALUED_CONCAT.equalsIgnoreCase(multivalAttr)) { 
+			if(TypeFacility.RUNTIME_TYPES.STRING.equals(modelAttrClass) && MULTIVALUED_CONCAT.equalsIgnoreCase(multivalAttr)) {
 				// mpw 5/09
-				// Order the multi-valued attrs alphabetically before creating a single string, 
+				// Order the multi-valued attrs alphabetically before creating a single string,
 				// using the delimiter to separate each token
 				ArrayList<String> multivalList = new ArrayList<String>();
 				NamingEnumeration<?> attrNE = resultAttr.getAll();
@@ -425,7 +425,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 					length += ((val==null?0:val.length()) + 1);
 				}
 				Collections.sort(multivalList);
-	
+
 				StringBuilder multivalSB = new StringBuilder(length);
 				Iterator<String> itr = multivalList.iterator();
 				while(itr.hasNext()) {
@@ -442,7 +442,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 			if (unwrap && resultAttr.size() > 1) {
 				return getArray(modelAttrClass, resultAttr, modelElement, modelAttrName);
 			}
-			
+
 			//just a single value
 			objResult = resultAttr.get();
 		} catch (NamingException ne) {
@@ -487,13 +487,13 @@ public class LDAPQueryExecution implements ResultSetExecution {
 				return tsResult;
 			} catch(ParseException pe) {
 				throw new TranslatorException(pe, LDAPPlugin.Util.getString("LDAPSyncQueryExecution.timestampParseFailed", modelAttrName)); //$NON-NLS-1$
-			}		
-			
+			}
+
 			//	TODO: Extend support for more types in the future.
 			// Specifically, add support for byte arrays, since that's actually supported
 			// in the underlying data source.
 		}
-		
+
 		//extract rdn
 		String type = modelElement.getProperty(LDAPExecutionFactory.RDN_TYPE, false);
 		if (type != null) {
@@ -508,11 +508,11 @@ public class LDAPQueryExecution implements ResultSetExecution {
 			}
 			Rdn rdn = name.getRdn(name.size() - 1);
 			if (!rdn.getType().equals(type)) {
-				throw new InvalidNameException(); 
+				throw new InvalidNameException();
 			}
 			return rdn.getValue();
 		}
-		
+
 		return strResult; //the Teiid type conversion logic will handle refine from here if necessary
 	}
 
@@ -533,7 +533,7 @@ public class LDAPQueryExecution implements ResultSetExecution {
 		ArrayImpl value = new ArrayImpl(multivalList.toArray(values));
 		return value;
 	}
-	
+
 	// for testing.
 	LDAPSearchDetails getSearchDetails() {
 		return this.searchDetails;

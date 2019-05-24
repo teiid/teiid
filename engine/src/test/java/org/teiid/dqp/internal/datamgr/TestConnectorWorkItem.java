@@ -94,11 +94,11 @@ public class TestConnectorWorkItem {
 
 	static AtomicRequestMessage createNewAtomicRequestMessage(int requestid, int nodeid) throws Exception {
 		RequestMessage rm = new RequestMessage();
-		
+
 		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(EXAMPLE_BQT, RealMetadataFactory.exampleBQTVDB());
 		workContext.getSession().setSessionId(String.valueOf(1));
 		workContext.getSession().setUserName("foo"); //$NON-NLS-1$
-		
+
 		AtomicRequestMessage request = new AtomicRequestMessage(rm, workContext, nodeid);
 		request.setCommand(helpGetCommand("SELECT BQT1.SmallA.INTKEY FROM BQT1.SmallA", EXAMPLE_BQT)); //$NON-NLS-1$
 		request.setRequestID(new RequestID(requestid));
@@ -113,7 +113,7 @@ public class TestConnectorWorkItem {
 
 		// this has two result set columns and 1 out parameter
 		int total_columns = 3;
-		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
+		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$
 		command.getInputParameters().get(0).setExpression(new Constant(1));
 		Call proc = new LanguageBridgeFactory(EXAMPLE_BQT).translate(command);
 
@@ -122,7 +122,7 @@ public class TestConnectorWorkItem {
 		assertEquals(total_columns, pbh.padRow(Arrays.asList(null, null)).size());
 
 		List params = pbh.getParameterRow();
-		
+
 		assertEquals(total_columns, params.size());
 		// check the parameter value
 		assertEquals(Integer.valueOf(0), params.get(2));
@@ -155,26 +155,26 @@ public class TestConnectorWorkItem {
 		synchConnectorWorkItem.execute();
 		return synchConnectorWorkItem.more();
 	}
-	
+
 	@Test public void testBatchUpdateExecution() throws Throwable {
 		AtomicResultsMessage results = helpExecuteUpdate(true, false);
 		assertEquals(2, results.getResults().length);
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 		assertEquals(1, results.getResults()[1].get(0));
 	}
-	
+
 	@Test public void testBatchUpdateExecutionSingleResult() throws Throwable {
 		AtomicResultsMessage results = helpExecuteUpdate(true, true);
 		assertEquals(2, results.getResults().length);
 		assertEquals(Integer.valueOf(1), results.getResults()[0].get(0));
 		assertEquals(1, results.getResults()[1].get(0));
 	}
-	
+
 	@Test public void testExecutionWarning() throws Throwable {
 		AtomicResultsMessage results = helpExecuteUpdate(false, false);
 		assertEquals(1, results.getWarnings().size());
 	}
-	
+
 	@Test public void testSourceNotRequired() throws Exception {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
@@ -188,7 +188,7 @@ public class TestConnectorWorkItem {
 		assertEquals(1, fc.getConnectionCount());
 		assertEquals(1, fc.getCloseCount());
 	}
-	
+
    @Test public void testConvertIn() throws Exception {
         Command command = helpGetCommand("select intkey from bqt1.smalla where stringkey in ('1', '2')", EXAMPLE_BQT); //$NON-NLS-1$
         AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
@@ -204,71 +204,71 @@ public class TestConnectorWorkItem {
         assertEquals(1, fc.getCloseCount());
     }
 
-	@Ignore    
+	@Ignore
 	@Test public void testIsImmutablePropertySucceeds() throws Exception {
     	/*
     	 * Setup:
-    	 *  1. requestMsg.isTransactional() must be TRUE 
+    	 *  1. requestMsg.isTransactional() must be TRUE
     	 *  2. manager.isXa() must be FALSE  ()
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to TRUE, we should SUCCEED
     	 */
 		ConnectorManager cm = TestConnectorManager.getConnectorManager();
 		((FakeConnector)cm.getExecutionFactory()).setImmutable(true);
-		
+
 
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
 		requestMsg.setCommand(command);
-		
+
 		// To make the AtomicRequestMessage transactional, construct your own
 		requestMsg.setTransactionContext( new TransactionContext(){
 			@Override
 			public Xid getXid() {
 				return Mockito.mock(Xid.class);
 			}} );
-		
+
 		new ConnectorWorkItem(requestMsg, cm);
     }
-    
+
 	@Ignore
 	@Test(expected=TranslatorException.class) public void testIsImmutablePropertyFails() throws Exception {
     	/*
     	 * Setup:
-    	 *  1. requestMsg.isTransactional() must be TRUE 
+    	 *  1. requestMsg.isTransactional() must be TRUE
     	 *  2. manager.isXa() must be FALSE  ()
     	 *  3. command must NOT be a SELECT
     	 *  4. Then, set isImmutable to FALSE, and we should FAIL
     	 */
 		ConnectorManager cm = TestConnectorManager.getConnectorManager();
 		((FakeConnector)cm.getExecutionFactory()).setImmutable(false);
-		
-        
+
+
 		// command must not be a SELECT
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
 		requestMsg.setCommand(command);
-		
+
 		// To make the AtomicRequestMessage transactional, construct your own
 		requestMsg.setTransactionContext( new TransactionContext(){
 			@Override
 			public Xid getXid() {
 				return Mockito.mock(Xid.class);
 			}} );
-		
+
 		new ConnectorWorkItem(requestMsg, cm);
     }
-	
+
     @Test public void testTypeConversion() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-    	
+
     	String str = "hello world";
-    	
+
     	Object source = new StreamSource(new StringReader(str));
     	XMLType xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML, null);
     	assertEquals(str, xml.getString());
-    	
+
     	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
     	xml = (XMLType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML, null);
     	XMLInputFactory in = XMLType.getXmlInputFactory();
@@ -277,29 +277,29 @@ public class TestConnectorWorkItem {
     	assertEquals(XMLEvent.START_ELEMENT, reader.next());
     	assertEquals("a", reader.getLocalName());
     	assertEquals(XMLEvent.END_ELEMENT, reader.next());
-    	
+
     	byte[] bytes = str.getBytes(Streamable.ENCODING);
 		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));
     	BlobType blob = (BlobType) ConnectorWorkItem.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB, null);
-    	
+
     	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
     }
-    
+
     @Test public void testTypeConversionClob() throws Exception {
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        
+
         String str = "hello world";
-        
+
         Clob clob = (Clob) ConnectorWorkItem.convertToRuntimeType(bm, new InputStreamFactory() {
             @Override
             public InputStream getInputStream() throws IOException {
                 return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
             }
         }, DataTypeManager.DefaultDataClasses.CLOB, null);
-        
+
         assertEquals(str, clob.getSubString(1, str.length()));
     }
-    
+
     @Test public void testLobs() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
     	final List<Object> result = Arrays.asList(AutoGenDataService.CLOB_VAL);
@@ -314,24 +314,24 @@ public class TestConnectorWorkItem {
     				RuntimeMetadata metadata, Object connection)
     				throws TranslatorException {
     			return new ResultSetExecution() {
-					
+
 					private boolean returned;
 
 					@Override
 					public void execute() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public void close() {
-						
+
 					}
-					
+
 					@Override
 					public void cancel() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public List<?> next() throws TranslatorException, DataNotAvailableException {
 						if (returned) {
@@ -360,49 +360,49 @@ public class TestConnectorWorkItem {
     	cwi.execute();
     	AtomicResultsMessage message = cwi.more();
     	List[] resutls = message.getResults();
-    	
+
 		List<?> tuple = resutls[0];
 		ClobType clob = (ClobType)tuple.get(0);
 		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
 		assertTrue(message.supportsImplicitClose());
-		
+
 		result.set(0, AutoGenDataService.CLOB_VAL);
 		ef.setCopyLobs(false);
 		cwi = new ConnectorWorkItem(requestMsg, cm);
     	cwi.execute();
     	message = cwi.more();
     	resutls = message.getResults();
-    	
+
 		tuple = resutls[0];
 		clob = (ClobType)tuple.get(0);
 		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
 		assertFalse(message.supportsImplicitClose());
-		
+
 		result.set(0, new ClobImpl(new InputStreamFactory() {
             @Override
             public InputStream getInputStream() throws IOException {
                 return new ByteArrayInputStream(new byte[0]);
             }
-            
+
             @Override
             public StorageMode getStorageMode() {
                 return StorageMode.FREE; //TODO: introduce an explicit streaming
             }
-            
+
         }, -1));
 		requestMsg.setCopyStreamingLobs(true);
         cwi = new ConnectorWorkItem(requestMsg, cm);
         cwi.execute();
         message = cwi.more();
         resutls = message.getResults();
-        
+
         tuple = resutls[0];
         clob = (ClobType)tuple.get(0);
         //switched from FREE to PERSISTENT
         assertEquals(StorageMode.PERSISTENT, InputStreamFactory.getStorageMode(clob));
         assertFalse(message.supportsImplicitClose());
     }
-    
+
     @Test public void testConversionError() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
     	final ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object> () {
@@ -419,24 +419,24 @@ public class TestConnectorWorkItem {
     			list1.add("1");
     			List<String> list2 = new ArrayList<String>();
     			list2.add("a");
-    			final Iterator<List<String>> iter = Arrays.asList(list1, list2).iterator(); 
+    			final Iterator<List<String>> iter = Arrays.asList(list1, list2).iterator();
     			return new ResultSetExecution() {
-					
+
 					@Override
 					public void execute() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public void close() {
-						
+
 					}
-					
+
 					@Override
 					public void cancel() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public List<?> next() throws TranslatorException, DataNotAvailableException {
 						if (iter.hasNext()) {
@@ -475,7 +475,7 @@ public class TestConnectorWorkItem {
 			//should throw the conversion error
 		}
     }
-    
+
     @Test public void testUnmodifibleList() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
     	final ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object> () {
@@ -489,24 +489,24 @@ public class TestConnectorWorkItem {
     				RuntimeMetadata metadata, Object connection)
     				throws TranslatorException {
     			List<String> list1 = Collections.singletonList("1");
-    			final Iterator<List<String>> iter = Arrays.asList(list1).iterator(); 
+    			final Iterator<List<String>> iter = Arrays.asList(list1).iterator();
     			return new ResultSetExecution() {
-					
+
 					@Override
 					public void execute() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public void close() {
-						
+
 					}
-					
+
 					@Override
 					public void cancel() throws TranslatorException {
-						
+
 					}
-					
+
 					@Override
 					public List<?> next() throws TranslatorException, DataNotAvailableException {
 						if (iter.hasNext()) {
@@ -538,7 +538,7 @@ public class TestConnectorWorkItem {
 		assertEquals(1, tuple.get(0));
 		assertEquals(1, message.getFinalRow());
     }
-    
+
 	@Test public void testSourcHints() throws Exception {
 		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
 		command.setSourceHint(new SourceHint());
@@ -547,7 +547,7 @@ public class TestConnectorWorkItem {
 		ConnectorManager cm = TestConnectorManager.getConnectorManager();
 		cm.registerRequest(arm);
 	}
-	
+
 	@Test public void testIsThreadBound() throws Exception {
         Command command = helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT); //$NON-NLS-1$
         AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
@@ -571,7 +571,7 @@ public class TestConnectorWorkItem {
         cm.start();
         ConnectorWorkItem cwi = new ConnectorWorkItem(arm, cm);
         assertTrue(cwi.isThreadBound());
-        
+
         cwi = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
         assertFalse(cwi.isThreadBound());
     }

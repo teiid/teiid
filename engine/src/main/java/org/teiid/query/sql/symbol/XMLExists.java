@@ -22,13 +22,13 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Criteria;
 
 public class XMLExists extends Criteria {
-	
+
 	private XMLQuery xmlQuery;
-	
+
 	public XMLExists(XMLQuery xmlQuery) {
 		this.xmlQuery = xmlQuery;
 	}
-	
+
 	public XMLQuery getXmlQuery() {
 		return xmlQuery;
 	}
@@ -42,12 +42,12 @@ public class XMLExists extends Criteria {
 	public Object clone() {
 		return new XMLExists(xmlQuery.clone());
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return xmlQuery.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -61,5 +61,5 @@ public class XMLExists extends Criteria {
 		}
 		return xmlQuery.equals(((XMLExists)obj).getXmlQuery());
 	}
-	
+
 }

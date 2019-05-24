@@ -38,22 +38,22 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
 
 public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
-	
+
 	@Override
     public boolean useAsInGroupAlias() {
     	return false;
     }
-    
+
     @Override
     public boolean hasTimeType() {
     	return false;
     }
-    
+
     @Override
     public int getTimestampNanoPrecision() {
     	return 3;
     }
-    
+
     /**
      * SetQueries don't have a concept of TOP, an inline view is needed.
      */
@@ -87,7 +87,7 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
 		}
 		return parts;
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (!supportsCrossJoin()) {
@@ -95,22 +95,22 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translate(obj, context);
     }
-    
+
     protected boolean supportsCrossJoin() {
     	return false;
     }
-    
+
     @SuppressWarnings("unchecked")
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean useSelectLimit() {
     	return true;
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
     		Class<?> expectedType) throws SQLException {
@@ -119,7 +119,7 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.retrieveValue(results, columnIndex, expectedType);
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
     		Class<?> expectedType) throws SQLException {
@@ -128,7 +128,7 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.retrieveValue(results, parameterIndex, expectedType);
     }
-    
+
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
     		Class<?> paramType, int i) throws SQLException {
@@ -138,25 +138,25 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     	}
     	super.bindValue(stmt, param, paramType, i);
     }
-    
+
     public boolean nullPlusNonNullIsNull() {
     	return false;
     }
-    
+
     public boolean booleanNullable() {
     	return false;
     }
-    
+
     @Override
     public String getTemporaryTableName(String prefix) {
     	return "#" + super.getTemporaryTableName(prefix); //$NON-NLS-1$
     }
-    
+
     @Override
     protected boolean supportsBooleanExpressions() {
         return false;
     }
-    
+
     @Override
     public boolean supportsAggregatesCountBig() {
         return true;

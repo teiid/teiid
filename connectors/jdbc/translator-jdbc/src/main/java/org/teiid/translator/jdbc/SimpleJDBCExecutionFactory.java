@@ -24,10 +24,10 @@ import org.teiid.translator.Translator;
 
 
 /**
- * This is a "simple" capabilities class that allows criteria but no 
+ * This is a "simple" capabilities class that allows criteria but no
  * complicated joins, subqueries, etc to be passed to the connector.
- * This capabilities class may come in handy for testing and for 
- * sources that support JDBC but don't support extended JDBC capabilities.  
+ * This capabilities class may come in handy for testing and for
+ * sources that support JDBC but don't support extended JDBC capabilities.
  */
 @Translator(name="jdbc-simple", description="An extended JDBC ANSI translator with some simple capabilities")
 public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
@@ -39,7 +39,7 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 		setMaxInCriteriaSize(250);
 		setMaxDependentInPredicates(10);
 	}
-	
+
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
@@ -162,13 +162,13 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
     public boolean supportsInlineViews() {
         return false;
-    }       
+    }
 
     @Override
     public boolean supportsUnions() {
         return false;
     }
-    
+
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return false;

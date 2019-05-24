@@ -50,7 +50,7 @@ import org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory;
 
 @Translator(name="h2", description="A translator for open source H2 Database")
 public class H2ExecutionFactory extends JDBCExecutionFactory {
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -64,10 +64,10 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(SourceSystemFunctions.MOD, getLanguageFactory()));
 		//TODO: this behavior is configurable in h2 starting with 1.1.119
 		registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
-		
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, getLanguageFactory())); 
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, getLanguageFactory())); 
-	
+
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new AddDiffModifier(true, getLanguageFactory()));
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new AddDiffModifier(false, getLanguageFactory()));
+
 		ConvertModifier convert = new ConvertModifier();
 		convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
 		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
@@ -83,10 +83,10 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
+		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
 		addPushDownFunction("h2", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
     @Override
     public String translateLiteralDate(Date dateValue) {
         return "DATE '" + formatDateValue(dateValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
@@ -96,19 +96,19 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
         return "TIME '" + formatDateValue(timeValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$ 
+        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$
     }
-	
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
 
-        supportedFunctions.add(SourceSystemFunctions.ABS); 
-        supportedFunctions.add(SourceSystemFunctions.ACOS); 
+        supportedFunctions.add(SourceSystemFunctions.ABS);
+        supportedFunctions.add(SourceSystemFunctions.ACOS);
         supportedFunctions.add(SourceSystemFunctions.ASIN);
         supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ATAN2);
@@ -153,18 +153,18 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
-        
+
         supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
-        
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
-        
+
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
@@ -182,12 +182,12 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         return supportedFunctions;
     }
-	
+
     @Override
     public boolean supportsInlineViews() {
         return true;
     }
-    
+
     @Override
     public boolean supportsRowLimit() {
         return true;
@@ -197,42 +197,42 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsRowOffset() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
     	return true;
     }
-    
+
     @Override
     public String getLikeRegexString() {
     	return "REGEXP"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsArrayType() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return true;
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof Like) {
@@ -243,27 +243,27 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translate(obj, context);
     }
-    
+
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
     	return "org.hibernate.dialect.H2Dialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean tempTableRequiresTransaction() {
     	return true;
     }
-    
+
     @Override
     public boolean useParensForJoins() {
     	return true;
     }
-    
+
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this) {
@@ -275,28 +275,28 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     		protected boolean useParensForLHSJoins() {
     			return false;
     		}
-    		
+
     		@Override
     		protected String getUpsertKeyword() {
     		    return "MERGE"; //$NON-NLS-1$
     		}
     	};
     }
-    
+
     @Override
     public boolean supportsUpsert() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIsDistinctCriteria() {
         return true;
     }
-    
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new JDBCMetadataProcessor() {
-            
+
             @Override
             protected ResultSet executeSequenceQuery(Connection conn)
                     throws SQLException {
@@ -309,10 +309,10 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
                 ps.setString(3, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
                 return ps.executeQuery();
             }
-            
+
         };
     }
-    
+
     @Override
     public boolean supportsFunctionsInGroupBy() {
         return true;

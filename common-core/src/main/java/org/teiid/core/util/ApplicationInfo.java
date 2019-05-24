@@ -28,11 +28,11 @@ import org.teiid.core.TeiidRuntimeException;
 
 
 public final class ApplicationInfo implements Serializable {
-    
+
     public static final String APPLICATION_PRODUCT_INFORMATION       = "Product Information"; //$NON-NLS-1$
 
     public static final String APPLICATION_BUILD_NUMBER_PROPERTY       = "Build"; //$NON-NLS-1$
-    
+
     private static final ApplicationInfo INSTANCE = new ApplicationInfo();
 
 	private Properties props = new Properties();
@@ -49,34 +49,34 @@ public final class ApplicationInfo implements Serializable {
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10045, e);
 		}
     }
-    
+
     public String getReleaseNumber() {
 		return props.getProperty("build.releaseNumber"); //$NON-NLS-1$
 	}
-    
+
 	public int getMajorReleaseVersion() {
 		String version = getReleaseNumber().substring(0, getReleaseNumber().indexOf('.'));
 		return Integer.parseInt(version);
 	}
-	
+
     public int getMinorReleaseVersion() {
     	int majorIndex = getReleaseNumber().indexOf('.');
     	String version = getReleaseNumber().substring(majorIndex+1, getReleaseNumber().indexOf('.', majorIndex+1));
         return Integer.parseInt(version);
     }
-	
+
 	public String getBuildNumber() {
 		return props.getProperty("build.number"); //$NON-NLS-1$
 	}
-	
+
 	public String getUrl() {
 		return props.getProperty("url"); //$NON-NLS-1$
 	}
-	
+
 	public String getCopyright() {
 		return props.getProperty("copyright"); //$NON-NLS-1$
 	}
-	
+
 	public String getBuildDate() {
 		return props.getProperty("build.date"); //$NON-NLS-1$
 	}
@@ -88,5 +88,5 @@ public final class ApplicationInfo implements Serializable {
     public static ApplicationInfo getInstance() {
         return INSTANCE;
     }
-    
+
 }

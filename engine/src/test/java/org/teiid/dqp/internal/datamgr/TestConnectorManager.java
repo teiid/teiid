@@ -40,7 +40,7 @@ import org.teiid.translator.TranslatorException;
 public final class TestConnectorManager {
     private AtomicRequestMessage request;
     private ConnectorManager csm;
-    
+
 	static ConnectorManager getConnectorManager() throws Exception {
 		final FakeConnector c = new FakeConnector();
 		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
@@ -94,7 +94,7 @@ public final class TestConnectorManager {
 
         assertEquals("Expected size of 1", 1, csm.size()); //$NON-NLS-1$
     }
-    
+
     @Test public void testGetCapabilities() throws Exception {
     	final Object cf = new Object();
     	ExecutionFactory ef = new ExecutionFactory() {
@@ -102,9 +102,9 @@ public final class TestConnectorManager {
     			return true;
     		}
     	};
-    	final Object[] cfHolder = new Object[1]; 
+    	final Object[] cfHolder = new Object[1];
 		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			public Object getConnectionFactory(){
 				return cfHolder[0];
 			}
@@ -114,10 +114,10 @@ public final class TestConnectorManager {
 			cm.getCapabilities();
 			fail();
 		} catch (TranslatorException e) {
-			
+
 		}
 		ef = new ExecutionFactory() {
-			
+
     		public boolean isSourceRequiredForCapabilities() {
     			return true;
     		}
@@ -133,7 +133,7 @@ public final class TestConnectorManager {
         	}
 		};
 		cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
-			
+
 			public Object getConnectionFactory(){
 				return cfHolder[0];
 			}
@@ -141,5 +141,5 @@ public final class TestConnectorManager {
 		cfHolder[0] = cf;
 		cm.getCapabilities();
     }
-           
+
 }

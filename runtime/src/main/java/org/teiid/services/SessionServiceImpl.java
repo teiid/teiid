@@ -79,7 +79,7 @@ public class SessionServiceImpl implements SessionService {
     private long sessionMaxLimit = DEFAULT_MAX_SESSIONS;
 	private long sessionExpirationTimeLimit = DEFAULT_SESSION_EXPIRATION;
 	private AuthenticationType defaultAuthenticationType = AuthenticationType.USERPASSWORD;
-	
+
 	private static boolean CHECK_PING = PropertiesUtils.getHierarchicalProperty("org.teiid.checkPing", true, Boolean.class); //$NON-NLS-1$
 	/*
 	 * Injected state
@@ -90,14 +90,14 @@ public class SessionServiceImpl implements SessionService {
     private DQPCore dqp;
 
     private Map<String, SessionMetadata> sessionCache = new ConcurrentHashMap<String, SessionMetadata>();
-    private Timer sessionMonitor = null;    
+    private Timer sessionMonitor = null;
     private String securityDomainName;
 	private boolean trustAllLocal = true;
-    
+
     public void setSecurityDomain(String domainName) {
         this.securityDomainName = domainName;
     }
-    
+
     // -----------------------------------------------------------------------------------
     // S E R V I C E - R E L A T E D M E T H O D S
     // -----------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ public class SessionServiceImpl implements SessionService {
 		info.setClosed();
 		info.getSessionVariables().clear();
 	}
-	
+
 	@Override
 	public SessionMetadata createSession(String vdbName,
 			String vdbVersion, AuthenticationType authType, String userName,
@@ -147,7 +147,7 @@ public class SessionServiceImpl implements SessionService {
 			throws LoginException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
-        
+
         Object securityContext = null;
         Subject subject = null;
 
@@ -158,12 +158,12 @@ public class SessionServiceImpl implements SessionService {
                 "false")); //$NON-NLS-1$
 
         AuditMessage.LogonInfo info = new AuditMessage.LogonInfo(vdbName, vdbVersion, authType.toString(), userName, applicationName, hostName, ipAddress, clientMac, onlyAllowPassthrough);
-        
+
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_AUDITLOGGING, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, new AuditMessage("session", "logon-request", info, null)); //$NON-NLS-1$ //$NON-NLS-2$
         }
         try {
-        
+
 	        // Validate VDB and version if logging on to server product...
 	        VDBMetaData vdb = null;
 	        if (vdbName != null) {
@@ -172,18 +172,18 @@ public class SessionServiceImpl implements SessionService {
         	        throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
 	        	}
 	        }
-	
+
 	        if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
 	             throw new SessionServiceException(RuntimePlugin.Event.TEIID40043, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40043, new Long(sessionMaxLimit)));
 	        }
-	        
+
 	        String securityDomain = getSecurityDomain(vdbName, vdbVersion, vdb);
-	        
+
 			if (securityDomain != null) {
 		        // Authenticate user...
 		        // if not authenticated, this method throws exception
 	            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
-	
+
 	    		if (onlyAllowPassthrough || authType.equals(AuthenticationType.GSS)) {
 	    		    securityContext = this.securityHelper.getSecurityContext(securityDomain);
 	    		    if (securityContext != null) {
@@ -203,13 +203,13 @@ public class SessionServiceImpl implements SessionService {
 	        	}
 			}
 			else {
-	        	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117)); 
+	        	LogManager.logDetail(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40117));
 			}
-			
+
 			enforceMaxSessions(userName, vdb);
-	        
+
 	        long creationTime = System.currentTimeMillis();
-	
+
 	        // Return a new session info object
 	        SessionMetadata newSession = new SessionMetadata();
 	        newSession.setSessionToken(new SessionToken(userName));
@@ -248,7 +248,7 @@ public class SessionServiceImpl implements SessionService {
         	throw e;
         }
 	}
-	
+
 	static class MaxSessions {
 	    Integer val;
 	}
@@ -281,9 +281,9 @@ public class SessionServiceImpl implements SessionService {
             throw new SessionServiceException(RuntimePlugin.Event.TEIID40044, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40044, max.val));
         }
     }
-	
+
 	/**
-	 * 
+	 *
 	 * @param vdbName
 	 * @param vdbVersion
 	 * @return the vdb or null if it doesn't exist
@@ -291,7 +291,7 @@ public class SessionServiceImpl implements SessionService {
 	 */
 	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;
-		
+
 		try {
 			if (vdbVersion == null) {
 				vdb = this.vdbRepository.getLiveVDB(vdbName);
@@ -315,11 +315,11 @@ public class SessionServiceImpl implements SessionService {
 	public Collection<SessionMetadata> getActiveSessions() {
 		return new ArrayList<SessionMetadata>(this.sessionCache.values());
 	}
-	
+
 	@Override
 	public SessionMetadata getActiveSession(String sessionID) {
 		return this.sessionCache.get(sessionID);
-	}	
+	}
 
 	@Override
 	public int getActiveSessionsCount() throws SessionServiceException{
@@ -330,11 +330,11 @@ public class SessionServiceImpl implements SessionService {
 	public Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey key) {
 	    return getSessionsLoggedInToVDB(key, null);
 	}
-	    
+
     public Collection<SessionMetadata> getSessionsLoggedInToVDB(VDBKey key, String username) {
 		ArrayList<SessionMetadata> results = new ArrayList<SessionMetadata>();
 		for (SessionMetadata info : this.sessionCache.values()) {
-			if (info.getVdb() != null && key.equals(info.getVdb().getAttachment(VDBKey.class)) && 
+			if (info.getVdb() != null && key.equals(info.getVdb().getAttachment(VDBKey.class)) &&
 			        (username == null || info.getUserName().equals(username))) {
 				results.add(info);
 			}
@@ -379,27 +379,27 @@ public class SessionServiceImpl implements SessionService {
 		}
 		return info;
 	}
-	
+
 	public long getSessionMaxLimit() {
 		return this.sessionMaxLimit;
 	}
-	
+
 	public void setSessionMaxLimit(long limit) {
 		this.sessionMaxLimit = limit;
 	}
-	
+
 	public long getSessionExpirationTimeLimit() {
 		return this.sessionExpirationTimeLimit;
 	}
-	
+
 	public void setSessionExpirationTimeLimit(long limit) {
 		this.sessionExpirationTimeLimit = limit;
 	}
-		
+
 	public void setAuthenticationType(AuthenticationType flag) {
-		this.defaultAuthenticationType = flag;		
-	}	
-	
+		this.defaultAuthenticationType = flag;
+	}
+
 	public void start() {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Default security domain configured=", this.securityDomainName}); //$NON-NLS-1$
 		this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
@@ -419,7 +419,7 @@ public class SessionServiceImpl implements SessionService {
 		    try {
                 closeSession(session.getSessionId());
             } catch (InvalidSessionException e) {
-                
+
             }
 		}
 	}
@@ -427,15 +427,15 @@ public class SessionServiceImpl implements SessionService {
 	public void setVDBRepository(VDBRepository repo) {
 		this.vdbRepository = repo;
 	}
-	
+
 	public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
-	
+
 	public void setDqp(DQPCore dqp) {
 		this.dqp = dqp;
 	}
-	
+
 	@Override
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -455,19 +455,19 @@ public class SessionServiceImpl implements SessionService {
 			}
 			if (vdb != null) {
 				String gssPattern = vdb.getPropertyValue(GSS_PATTERN_PROPERTY);
-				
+
 				//TODO: cache the patterns
-				
+
 				if (gssPattern != null && Pattern.matches(gssPattern, userName)) {
 					return AuthenticationType.GSS;
 				}
-				
+
 				String passwordPattern = vdb.getPropertyValue(PASSWORD_PATTERN_PROPERTY);
-				
+
 				if (passwordPattern != null && Pattern.matches(passwordPattern, userName)) {
 					return AuthenticationType.USERPASSWORD;
 				}
-				
+
 				String typeProperty = vdb.getPropertyValue(AUTHENTICATION_TYPE_PROPERTY);
 				if (typeProperty != null) {
 					return AuthenticationType.valueOf(typeProperty);
@@ -479,24 +479,24 @@ public class SessionServiceImpl implements SessionService {
 
 	public String getSecurityDomain(String vdbName, String version, VDB vdb) {
 		if (vdbName != null) {
-	    	try {    		
+	    	try {
 	    		if (vdb == null) {
 	    			vdb = getActiveVDB(vdbName, version);
 	    		}
 	    		if (vdb != null) {
-					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);				
+					String typeProperty = vdb.getPropertyValue(SECURITY_DOMAIN_PROPERTY);
 					if (typeProperty != null) {
 						return typeProperty;
 					}
 	    		}
 			} catch (SessionServiceException e) {
-				// ignore and return default, this only occur if the name and version are wrong 
-			}			
-		} 
-		
+				// ignore and return default, this only occur if the name and version are wrong
+			}
+		}
+
 		return this.securityDomainName;
 	}
-	
+
 	@Override
 	public GSSResult neogitiateGssLogin(String user, String vdbName,
 			String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException {
@@ -506,11 +506,11 @@ public class SessionServiceImpl implements SessionService {
 		}
 		return this.securityHelper.negotiateGssLogin(securityDomain, serviceTicket);
 	}
-	
+
 	public AuthenticationType getDefaultAuthenticationType() {
 		return defaultAuthenticationType;
 	}
-	
+
     private String getUserName(Subject subject, String userName) {
         Set<Principal> principals = subject.getPrincipals();
         for (Principal p:principals) {
@@ -524,13 +524,13 @@ public class SessionServiceImpl implements SessionService {
         }
         return userName;
     }
-    
+
     public boolean isTrustAllLocal() {
 		return trustAllLocal;
 	}
-    
+
     public void setTrustAllLocal(boolean trustAllLocal) {
 		this.trustAllLocal = trustAllLocal;
 	}
-    
+
 }

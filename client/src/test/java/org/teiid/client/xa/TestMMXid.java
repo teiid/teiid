@@ -37,22 +37,22 @@ public class TestMMXid extends TestCase {
         assertEquals(XID1, XID1Copy);
         assertFalse(XID1.equals(XID2));
     }
-    
+
     public void testCopyConstructor() {
         XidImpl xidcopy = new XidImpl(XID1);
         assertEquals(XID1Copy, xidcopy);
         assertNotSame(XID1Copy, xidcopy);
     }
-    
+
     public void testHashCode() {
         assertEquals(XID1.hashCode(), XID1Copy.hashCode());
         assertFalse(XID1.hashCode() == XID2.hashCode());
     }
-    
+
     public void testToString() {
         assertEquals(XID1Copy.toString(), XID1.toString());
         assertEquals("Teiid-Xid global:1 branch:null format:0", XID1.toString()); //$NON-NLS-1$
         assertEquals("Teiid-Xid global:2 branch:3 format:0", XID2.toString()); //$NON-NLS-1$
     }
-    
+
 }

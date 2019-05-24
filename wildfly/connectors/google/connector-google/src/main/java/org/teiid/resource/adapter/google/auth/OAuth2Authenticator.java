@@ -39,19 +39,19 @@ import org.teiid.translator.google.api.SpreadsheetAuthException;
 
 /**
  * This authenticator is used to work with OAuth2 for devices[1]. This class can be used for
- * two purposes: 
+ * two purposes:
  *  - Allowing user to give permission to Teiid Connector thus creating a refresh and access tokens
  *  - Allowing refreshing the access token using the refresh token.
- *  
- *  
+ *
+ *
  * The authResponse contains link which user has to type into the browser. Then he has to enter
  * userCode.
- * 
- * After he has done that we can use the deviceCode to retrieve access and refresh tokens: 
- * <code> 
+ *
+ * After he has done that we can use the deviceCode to retrieve access and refresh tokens:
+ * <code>
  * System.out.println(oauth.getAccessGoogleTokens(authResponse.getDeviceCode()));
  * </code>
- * 
+ *
  * [1] https://developers.google.com/accounts/docs/OAuth2ForDevices
  * @author fnguyen
  *
@@ -64,9 +64,9 @@ public class OAuth2Authenticator {
 
 
 	/**
-	 * 
-	 * @param clientSecret 
-	 * @param clientId 
+	 *
+	 * @param clientSecret
+	 * @param clientId
 	 * @param new immutable instance of OAuth2Tokens
 	 * @return
 	 */
@@ -76,7 +76,7 @@ public class OAuth2Authenticator {
 //	--data-urlencode grant_type=refresh_token \
 //	https://accounts.google.com/o/oauth2/token
 	public OAuth2Tokens refreshToken(OAuth2Tokens at, String clientId, String clientSecret) {
-		
+
 		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
 		nvps.add(new BasicNameValuePair("client_id", clientId)); //$NON-NLS-1$
 		nvps.add(new BasicNameValuePair("client_secret", clientSecret)); //$NON-NLS-1$
@@ -106,7 +106,7 @@ public class OAuth2Authenticator {
 					+ response.getStatusLine().getReasonPhrase();
 			throw new SpreadsheetAuthException(
 					"Error when attempting OAuth2 process: " + msg);
-		} 
+		}
 
 		InputStream is = null;
 		try {
@@ -114,7 +114,7 @@ public class OAuth2Authenticator {
 			is = response.getEntity().getContent();
 			GoogleJSONParser parser = new GoogleJSONParser();
 			Map<?,?> jsonResponse = (Map<?, ?>) parser.parseObject(new InputStreamReader(is, Charset.forName(GoogleDataProtocolAPI.ENCODING)), false);
-			
+
 			//Report errors
 			if (jsonResponse.get("error") != null){ //$NON-NLS-1$
 				throw new SpreadsheetAuthException("OAuth2 service says: "+ jsonResponse.get("error")); //$NON-NLS-2$

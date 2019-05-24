@@ -86,17 +86,17 @@ public class PlanToProcessConverter {
 	private IDGenerator idGenerator;
 	private AnalysisRecord analysisRecord;
 	private CapabilitiesFinder capFinder;
-	
+
 	//state for detecting and reusing source queries
 	private Map<Command, AccessNode> sharedCommands = new HashMap<Command, AccessNode>();
 	private CommandContext context;
 	private static AtomicInteger sharedId = new AtomicInteger();
-	
+
 	public static class SharedStateKey {
 		int id;
 		int expectedReaders;
 	}
-	
+
 	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder, CommandContext context) {
 		this.metadata = metadata;
 		this.idGenerator = idGenerator;
@@ -104,7 +104,7 @@ public class PlanToProcessConverter {
 		this.capFinder = capFinder;
 		this.context = context;
 	}
-	
+
     public RelationalPlan convert(PlanNode planNode)
         throws QueryPlannerException, TeiidComponentException {
     	try {
@@ -113,7 +113,7 @@ public class PlanToProcessConverter {
 	            analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
 	            analysisRecord.println("CONVERTING PLAN TREE TO PROCESS TREE"); //$NON-NLS-1$
 	        }
-	
+
 	        // Convert plan tree nodes into process tree nodes
 	        RelationalNode processNode;
 			try {
@@ -128,7 +128,7 @@ public class PlanToProcessConverter {
 	            analysisRecord.println("\nPROCESS PLAN = \n" + processNode); //$NON-NLS-1$
 	            analysisRecord.println("============================================================================"); //$NON-NLS-1$
 	        }
-	
+
 	        RelationalPlan processPlan = new RelationalPlan(processNode);
 	        return processPlan;
     	} finally {
@@ -141,19 +141,19 @@ public class PlanToProcessConverter {
 
 		// Convert current node in planTree
 		RelationalNode convertedNode = convertNode(planNode);
-		
+
 		if(convertedNode == null) {
 		    Assertion.assertTrue(planNode.getChildCount() == 1);
 	        return convertPlan(planNode.getFirstChild());
 		}
-		
+
 		RelationalNode nextParent = convertedNode;
-		
+
         // convertedNode may be the head of 1 or more nodes   - go to end of chain
         while(nextParent.getChildren()[0] != null) {
             nextParent = nextParent.getChildren()[0];
         }
-		
+
 		// Call convertPlan recursively on children
 		for (PlanNode childNode : planNode.getChildren()) {
 			RelationalNode child = convertPlan(childNode);
@@ -177,7 +177,7 @@ public class PlanToProcessConverter {
     protected int getID() {
         return idGenerator.nextInt();
     }
-    
+
 	protected RelationalNode convertNode(PlanNode node)
 		throws TeiidComponentException, TeiidProcessingException {
 
@@ -190,7 +190,7 @@ public class PlanToProcessConverter {
                     try {
                     	Insert insert = (Insert)node.getFirstChild().getProperty(Info.VIRTUAL_COMMAND);
                         List<ElementSymbol> allIntoElements = insert.getVariables();
-                        
+
                         Object groupID = intoGroup.getMetadataID();
                         Object modelID = metadata.getModelID(groupID);
                         String modelName = metadata.getFullName(modelID);
@@ -228,14 +228,14 @@ public class PlanToProcessConverter {
 
                 } else {
                     List<Expression> symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
-                    
+
                     ProjectNode pnode = new ProjectNode(getID());
                     pnode.setSelectSymbols(symbols);
             		processNode = pnode;
-            		
+
             		if (node.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
             			WindowFunctionProjectNode wfpn = new WindowFunctionProjectNode(getID());
-            			
+
             			//with partial projection the window function may already be pushed, we'll check for that here
             			ArrayList<Expression> filtered = new ArrayList<Expression>();
             			List<Expression> childSymbols = (List) node.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
@@ -278,7 +278,7 @@ public class PlanToProcessConverter {
                 SortOption leftSort = (SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT);
                 if(stype == JoinStrategyType.MERGE || stype == JoinStrategyType.ENHANCED_SORT) {
                 	MergeJoinStrategy mjStrategy = null;
-                	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) { 
+                	if (stype.equals(JoinStrategyType.ENHANCED_SORT)) {
                 		EnhancedSortMergeJoinStrategy esmjStrategy = new EnhancedSortMergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
                 		esmjStrategy.setSemiDep(node.hasBooleanProperty(Info.IS_SEMI_DEP));
                 		mjStrategy = esmjStrategy;
@@ -305,30 +305,30 @@ public class PlanToProcessConverter {
                 }
                 Criteria joinCrit = Criteria.combineCriteria(joinCrits);
                 jnode.setJoinCriteria(joinCrit);
-                               
+
                 processNode = jnode;
-                
+
                 jnode.setDependentValueSource(depValueSource);
-                
+
 				break;
 
 			case NodeConstants.Types.ACCESS:
                 ProcessorPlan plan = (ProcessorPlan) node.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
                 if(plan != null) {
-                    
+
                     PlanExecutionNode peNode = null;
-                    
+
                     Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.PROCEDURE_CRITERIA);
-                    
+
                     if (crit != null) {
                         List references = (List)node.getProperty(NodeConstants.Info.PROCEDURE_INPUTS);
                         List defaults = (List)node.getProperty(NodeConstants.Info.PROCEDURE_DEFAULTS);
-                        
-                        peNode = new DependentProcedureExecutionNode(getID(), crit, references, defaults);                        
+
+                        peNode = new DependentProcedureExecutionNode(getID(), crit, references, defaults);
                     } else {
                         peNode = new PlanExecutionNode(getID());
                     }
-                    
+
                     peNode.setProcessorPlan(plan);
                     processNode = peNode;
 
@@ -357,25 +357,25 @@ public class PlanToProcessConverter {
                             List references = (List)node.getProperty(NodeConstants.Info.PROCEDURE_INPUTS);
                             List defaults = (List)node.getProperty(NodeConstants.Info.PROCEDURE_DEFAULTS);
                             Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.PROCEDURE_CRITERIA);
-                            
+
                             DependentProcedureAccessNode depAccessNode = new DependentProcedureAccessNode(getID(), crit, references, defaults);
                             processNode = depAccessNode;
                             aNode = depAccessNode;
                         } else {
                             //create dependent access node
                             DependentAccessNode depAccessNode = new DependentAccessNode(getID());
-                            
+
                             if(modelID != null){
                             	depAccessNode.setPushdown(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN, modelID, metadata, capFinder));
                                 depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));
-                                depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder));   
+                                depAccessNode.setMaxPredicates(CapabilitiesUtil.getMaxDependentPredicates(modelID, metadata, capFinder));
                                 depAccessNode.setUseBindings(CapabilitiesUtil.supports(Capability.DEPENDENT_JOIN_BINDINGS, modelID, metadata, capFinder));
                                 //TODO: allow the translator to drive this property
                                 //simplistic check of whether this query is complex to re-execute
                                 Query query = (Query)command;
-                                if (query.getGroupBy() != null 
-                                		|| query.getFrom().getClauses().size() > 1 
-                                		|| !(query.getFrom().getClauses().get(0) instanceof UnaryFromClause) 
+                                if (query.getGroupBy() != null
+                                		|| query.getFrom().getClauses().size() > 1
+                                		|| !(query.getFrom().getClauses().get(0) instanceof UnaryFromClause)
                                 		|| query.getWith() != null) {
                                     depAccessNode.setComplexQuery(true);
                                 } else {
@@ -401,11 +401,11 @@ public class PlanToProcessConverter {
                         }
                         aNode.setShouldEvaluateExpressions(true);
                     } else {
-                        
+
                         // create access node
                         aNode = new AccessNode(getID());
                         processNode = aNode;
-                                                
+
                     }
                     //-- special handling for system tables. currently they cannot perform projection
                     try {
@@ -465,7 +465,7 @@ public class PlanToProcessConverter {
 						aNode.setTransactionSupport((TransactionSupport) caps.getSourceProperty(Capability.TRANSACTION_SUPPORT));
                     }
                     Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
-                    
+
                     //it makes more sense to allow the multisource affect to be elevated above just access nodes
                     if (aNode.getModelId() != null && metadata.isMultiSource(aNode.getModelId())) {
                 		VDBMetaData vdb = context.getVdb();
@@ -532,7 +532,7 @@ public class PlanToProcessConverter {
                 selnode.setShouldEvaluateExpressions(postitional);
 
 				processNode = selnode;
-                
+
 				break;
 
 			case NodeConstants.Types.SORT:
@@ -548,7 +548,7 @@ public class PlanToProcessConverter {
 					if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
 						sortNode.setMode(Mode.DUP_REMOVE_SORT);
 					}
-	
+
 					processNode = sortNode;
 				}
 				break;
@@ -686,7 +686,7 @@ public class PlanToProcessConverter {
                         	sNode.setMode(Mode.DUP_REMOVE_SORT);
                             processNode = sNode;
                     	}
-                        
+
                         unionAllNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                         processNode.addChild(unionAllNode);
                     }
@@ -710,7 +710,7 @@ public class PlanToProcessConverter {
                 ln.setImplicit(node.hasBooleanProperty(Info.IS_IMPLICIT_LIMIT));
                 processNode = ln;
                 break;
-                
+
             case NodeConstants.Types.NULL:
                 processNode = new NullNode(getID());
                 break;
@@ -737,7 +737,7 @@ public class PlanToProcessConverter {
 			QueryPlannerException {
 		try {
 		    command = (Command)command.clone();
-		    boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder) 
+		    boolean aliasGroups = modelID != null && (CapabilitiesUtil.supportsGroupAliases(modelID, metadata, capFinder)
 		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
 		    boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
 		    		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
@@ -776,15 +776,15 @@ public class PlanToProcessConverter {
 		}
 		return command;
 	}
-	
+
 	private void checkForSharedSourceCommand(AccessNode aNode, PlanNode node) {
 		//create a top level key to avoid the full command toString
 		String modelName = aNode.getModelName();
 		Command cmd = aNode.getCommand();
-		
+
 		//don't share full scans against internal sources, it's a waste of buffering
-		if (CoreConstants.SYSTEM_MODEL.equals(modelName) 
-				|| CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName) 
+		if (CoreConstants.SYSTEM_MODEL.equals(modelName)
+				|| CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)
 				|| TempMetadataAdapter.TEMP_MODEL.getName().equals(modelName)) {
 			if (!(cmd instanceof Query)) {
 				return;
@@ -794,15 +794,15 @@ public class PlanToProcessConverter {
 				return;
 			}
 		}
-		
+
 		AccessNode other = sharedCommands.get(cmd);
-		
+
 		//lateral may be reused any number of times,
 		//so this requires special handling
 		//we will clean it up at the end
 		boolean lateral = false;
 		while (node.getParent() != null) {
-		    if (node.getParent().getType() == NodeConstants.Types.JOIN 
+		    if (node.getParent().getType() == NodeConstants.Types.JOIN
 		            && node.getParent().getProperty(Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_TABLE
 		            && node.getParent().getLastChild() == node) {
 		        lateral = true;
@@ -810,7 +810,7 @@ public class PlanToProcessConverter {
 		    }
 		    node = node.getParent();
 		}
-		
+
 		if (other == null) {
 			sharedCommands.put(cmd, aNode);
 			if (lateral) {
@@ -847,7 +847,7 @@ public class PlanToProcessConverter {
             return aNode;
         }
         GroupSymbol group = node.getGroups().iterator().next();
-        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID()))) 
+        if (!CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))
         		&& !CoreConstants.SYSTEM_ADMIN_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
             return aNode;
         }
@@ -862,7 +862,7 @@ public class PlanToProcessConverter {
             return aNode;
         }
         ProjectNode pnode = new ProjectNode(getID());
-  
+
         pnode.setSelectSymbols(projectSymbols);
         aNode = (AccessNode)prepareToAdd(node, aNode);
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectSymbols);
@@ -876,7 +876,7 @@ public class PlanToProcessConverter {
         List cols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 
         processNode.setElements(cols);
-        
+
         // Set the Cost Estimates
         Number estimateNodeCardinality = (Number) node.getProperty(NodeConstants.Info.EST_CARDINALITY);
         processNode.setEstimateNodeCardinality(estimateNodeCardinality);
@@ -888,7 +888,7 @@ public class PlanToProcessConverter {
         processNode.setEstimateDepJoinCost(estimateDepJoinCost);
         Number estimateJoinCost = (Number) node.getProperty(NodeConstants.Info.EST_JOIN_COST);
         processNode.setEstimateJoinCost(estimateJoinCost);
-       
+
         return processNode;
     }
 
@@ -916,7 +916,7 @@ public class PlanToProcessConverter {
              throw new QueryPlannerException(QueryPlugin.Event.TEIID30251, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30251));
 		}
 	}
-	
+
 	private Expression rewriteMultiSourceCommand(Command command) throws TeiidComponentException {
 		Expression result = null;
 		if (command instanceof StoredProcedure) {
@@ -940,7 +940,7 @@ public class PlanToProcessConverter {
 			Insert obj = (Insert)command;
 			for (int i = 0; i < obj.getVariables().size(); i++) {
 				ElementSymbol elem = obj.getVariables().get(i);
-		        Object metadataID = elem.getMetadataID();            
+		        Object metadataID = elem.getMetadataID();
 		        if(metadata.isMultiSourceElement(metadataID)) {
 		        	Expression source = (Expression)obj.getValues().get(i);
 		    		obj.getVariables().remove(i);
@@ -968,5 +968,5 @@ public class PlanToProcessConverter {
 		}
 		return result;
 	}
-	
+
 }

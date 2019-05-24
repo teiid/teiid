@@ -36,12 +36,12 @@ import org.teiid.core.TeiidComponentException;
 
 
 public class MemoryStorageManager implements Cache<Long> {
-	
+
 	public static final int MAX_FILE_SIZE = 1 << 17;
-    
+
 	private final class MemoryFileStore extends FileStore {
 		private ByteBuffer buffer = ByteBuffer.allocate(MAX_FILE_SIZE);
-		
+
 		public MemoryFileStore() {
 			buffer.limit(0);
 		}
@@ -51,7 +51,7 @@ public class MemoryStorageManager implements Cache<Long> {
 			removed.incrementAndGet();
 			buffer = ByteBuffer.allocate(0);
 		}
-		
+
 		@Override
 		protected synchronized int readWrite(long fileOffset, byte[] b, int offSet,
 				int length, boolean write) {
@@ -63,7 +63,7 @@ public class MemoryStorageManager implements Cache<Long> {
 				buffer.position(position);
 				length = Math.min(length, (int)getLength() - position);
 				buffer.get(b, offSet, length);
-				return length;	
+				return length;
 			}
 			int requiredLength = (int)(fileOffset + length);
 			if (requiredLength > buffer.limit()) {
@@ -78,7 +78,7 @@ public class MemoryStorageManager implements Cache<Long> {
 		public synchronized void setLength(long length) {
 			buffer.limit((int)length);
 		}
-		
+
 		@Override
 		public synchronized long getLength() {
 			return buffer.limit();
@@ -89,7 +89,7 @@ public class MemoryStorageManager implements Cache<Long> {
 	private Map<Long, Map<Long, CacheEntry>> groups = new ConcurrentHashMap<Long, Map<Long, CacheEntry>>();
 	private AtomicInteger created = new AtomicInteger();
 	private AtomicInteger removed = new AtomicInteger();
-	
+
     public void initialize() {
     }
 
@@ -98,15 +98,15 @@ public class MemoryStorageManager implements Cache<Long> {
 		created.incrementAndGet();
 		return new MemoryFileStore();
 	}
-	
+
 	public int getCreated() {
 		return created.get();
 	}
-	
+
 	public int getRemoved() {
 		return removed.get();
 	}
-	
+
 	@Override
 	public boolean add(CacheEntry entry, Serializer<?> s) {
 		Map<Long, CacheEntry> group = groups.get(s.getId());
@@ -115,7 +115,7 @@ public class MemoryStorageManager implements Cache<Long> {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public boolean addToCacheGroup(Long gid, Long oid) {
 		Map<Long, CacheEntry> group = groups.get(gid);
@@ -125,22 +125,22 @@ public class MemoryStorageManager implements Cache<Long> {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void createCacheGroup(Long gid) {
 		groups.put(gid, Collections.synchronizedMap(new HashMap<Long, CacheEntry>()));
 	}
-	
+
 	@Override
 	public Long lockForLoad(Long oid, Serializer<?> serializer) {
 		return oid;
 	}
-	
+
 	@Override
 	public void unlockForLoad(Long o) {
 		//nothing to do no locking
 	}
-	
+
 	@Override
 	public CacheEntry get(Long lock, Long oid,
 			WeakReference<? extends Serializer<?>> ref)
@@ -151,7 +151,7 @@ public class MemoryStorageManager implements Cache<Long> {
 		}
 		return null;
 	}
-		
+
 	@Override
 	public Integer remove(Long gid, Long id) {
 		Map<Long, CacheEntry> group = groups.get(gid);
@@ -165,7 +165,7 @@ public class MemoryStorageManager implements Cache<Long> {
 		}
 		return null;
 	}
-	
+
 	@Override
 	public Collection<Long> removeCacheGroup(Long gid) {
 		Map<Long, CacheEntry> group = groups.remove(gid);
@@ -179,14 +179,14 @@ public class MemoryStorageManager implements Cache<Long> {
 
 	@Override
 	public void shutdown() {
-		
+
 	}
-	
+
 	@Override
 	public long getMaxStorageSpace() {
 	    return Runtime.getRuntime().maxMemory();
 	}
-	
+
 	@Override
 	public long getMemoryBufferSpace() {
 	    return 0;
@@ -196,5 +196,5 @@ public class MemoryStorageManager implements Cache<Long> {
     public int getCacheGroupCount() {
         return groups.size();
     }
-	
+
 }

@@ -60,7 +60,7 @@ public class MergeDetails implements Cloneable {
 	public MongoDocument getDocument() {
 		return this.document;
 	}
-	
+
 	public String getName() {
 		return this.name;
 	}

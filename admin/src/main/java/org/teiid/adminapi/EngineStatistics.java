@@ -18,5 +18,5 @@
 package org.teiid.adminapi;
 
 public interface EngineStatistics extends EngineStatisticsBean, AdminObject, DomainAware {
-	
+
 }

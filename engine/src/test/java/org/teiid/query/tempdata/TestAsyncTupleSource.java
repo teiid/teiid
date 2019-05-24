@@ -35,7 +35,7 @@ public class TestAsyncTupleSource {
 
     @Test public void testTupleSource() throws TeiidComponentException, TeiidProcessingException {
         AsyncTupleSource ats = new AsyncTupleSource(new Callable<TupleSource>() {
-            
+
             @Override
             public TupleSource call() throws Exception {
                 return new CollectionTupleSource(Arrays.asList(Arrays.asList(1), Arrays.asList(2)).iterator());
@@ -55,5 +55,5 @@ public class TestAsyncTupleSource {
         assertEquals(Arrays.asList(2), ats.nextTuple());
         assertNull(ats.nextTuple());
     }
-    
+
 }

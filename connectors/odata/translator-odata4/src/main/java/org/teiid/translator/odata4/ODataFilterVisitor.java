@@ -58,13 +58,13 @@ public class ODataFilterVisitor extends HierarchyVisitor {
     private RuntimeMetadata metadata;
     private ODataDocumentNode filterOnElement;
     private BaseColumn currentExpression;
-    
+
     public ODataFilterVisitor(ODataExecutionFactory ef, RuntimeMetadata metadata, ODataQuery query) {
         this.ef = ef;
         this.query = query;
         this.metadata = metadata;
     }
-    
+
     public void appendFilter(Condition condition) throws TranslatorException{
         append(condition);
         if (!this.exceptions.isEmpty()) {
@@ -74,7 +74,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             this.filterOnElement.addFilter(this.filter.toString());
         }
     }
-    
+
     @Override
     public void visit(Comparison obj) {
         append(obj.getLeftExpression());
@@ -176,7 +176,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         }
         return type;
     }
-    
+
     @Override
     public void visit(ColumnReference obj) {
         Column column = obj.getMetadataObject();
@@ -191,15 +191,15 @@ public class ODataFilterVisitor extends HierarchyVisitor {
                 this.exceptions.add(e);
             }
         }
-        
+
         if (this.filterOnElement == null) {
             this.filterOnElement = schemaElement;
         } else if (schemaElement.isExpandType() && (!this.filterOnElement.isExpandType())) {
             this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17026)));
         }
-        
+
         try {
-            if (this.filterOnElement.isComplexType()) {            
+            if (this.filterOnElement.isComplexType()) {
                 if (ODataMetadataProcessor.isPseudo(column)) {
                     Column realColumn = ODataMetadataProcessor.normalizePseudoColumn(this.metadata, column);
                     this.filter.append(realColumn.getName());
@@ -216,9 +216,9 @@ public class ODataFilterVisitor extends HierarchyVisitor {
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
-        }        
+        }
     }
-        
+
     protected boolean isInfixFunction(String function) {
         return infixFunctions.containsKey(function);
     }
@@ -290,7 +290,7 @@ public class ODataFilterVisitor extends HierarchyVisitor {
         try {
             String odataType = ODataTypeManager.odataType(obj.getType()).toString();
             if (currentExpression != null) {
-                //TODO: this is an attempt at contextually figuring out the type, but it 
+                //TODO: this is an attempt at contextually figuring out the type, but it
                 //may not be sufficient in all cases
                 odataType = odataType(currentExpression.getNativeType(), currentExpression.getRuntimeType());
             }

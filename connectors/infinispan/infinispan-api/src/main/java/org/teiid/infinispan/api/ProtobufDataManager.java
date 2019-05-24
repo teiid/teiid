@@ -189,7 +189,7 @@ public class ProtobufDataManager {
         }
         else if (contents instanceof Character && expectedType.isAssignableFrom(String.class)) {
         	return expectedType.cast(((Character)contents).toString());
-        }        
+        }
         // date/time
         else if (contents instanceof Date && expectedType.isAssignableFrom(Long.class)) {
             return expectedType.cast(((Date) contents).getTime());
@@ -289,7 +289,7 @@ public class ProtobufDataManager {
         }
         return Type.BYTES;
     }
-    
+
     public static boolean shouldPreserveType(String ispnType, String teiidType) {
     	if (teiidType.endsWith("[]")) {
     		teiidType = teiidType.substring(0, teiidType.length()-2);
@@ -317,5 +317,5 @@ public class ProtobufDataManager {
     		return false;
     	}
         return true;
-    }    
+    }
 }

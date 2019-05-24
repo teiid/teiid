@@ -50,13 +50,13 @@ public class TestSearchedCaseExpressionImpl extends TestCase {
         }
         return list;
     }
-    
+
     public static SearchedCaseExpression helpExample() {
         SearchedCaseExpression caseExpr = new SearchedCaseExpression(getWhenCriteria(3), TestCaseExpression.getThenExpressions(3));
         caseExpr.setElseExpression(new Constant(new Integer(9999)));
         return caseExpr;
     }
-    
+
     public static SearchedCase example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }

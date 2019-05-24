@@ -44,18 +44,18 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.validator.ValidatorReport;
 
 public class SystemMetadata {
-	
+
 	private static SystemMetadata INSTANCE = new SystemMetadata();
-	
+
 	public static SystemMetadata getInstance() {
 		return INSTANCE;
 	}
-	
+
 	private List<Datatype> dataTypes = new ArrayList<Datatype>();
 	private Map<String, Datatype> typeMap = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
 	private MetadataStore systemStore;
 	private final SystemFunctionManager systemFunctionManager;
-	
+
 	public SystemMetadata() {
 		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
 		try {
@@ -108,7 +108,7 @@ public class SystemMetadata {
 				Assertion.isNotNull(typeMap.get(name), name);
 			}
 		}
-		
+
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("System");  //$NON-NLS-1$
 		vdb.setVersion(1);
@@ -147,7 +147,7 @@ public class SystemMetadata {
 			}
 		}
 	}
-	
+
 	private void addAliasType(String alias) {
 		Class<?> typeClass = DataTypeManager.getDataTypeClass(alias);
 		String primaryType = DataTypeManager.getDataTypeName(typeClass);
@@ -155,7 +155,7 @@ public class SystemMetadata {
 		Assertion.isNotNull(dt, alias);
 		typeMap.put(alias, dt);
 	}
-	
+
 	/**
 	 * List of all "built-in" datatypes.  Note that the datatype names do not necessarily match the corresponding runtime type names i.e. int vs. integer
 	 * @return
@@ -163,7 +163,7 @@ public class SystemMetadata {
 	public List<Datatype> getDataTypes() {
 		return dataTypes;
 	}
-	
+
 	/**
 	 * Map of runtime types and aliases to runtime datatypes
 	 * @return
@@ -171,11 +171,11 @@ public class SystemMetadata {
 	public Map<String, Datatype> getRuntimeTypeMap() {
 		return typeMap;
 	}
-	
+
 	public MetadataStore getSystemStore() {
 		return systemStore;
 	}
-	
+
 	public SystemFunctionManager getSystemFunctionManager() {
         return systemFunctionManager;
     }

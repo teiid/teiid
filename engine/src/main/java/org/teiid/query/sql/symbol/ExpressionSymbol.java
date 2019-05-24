@@ -38,7 +38,7 @@ public class ExpressionSymbol extends Symbol implements DerivedExpression {
 	public Expression getExpression() {
 		return this.expression;
 	}
-	
+
 	/**
   	 * Set the expression represented by this symbol.
   	 * @param expression Expression for this expression symbol
@@ -53,8 +53,8 @@ public class ExpressionSymbol extends Symbol implements DerivedExpression {
 	 */
 	public Class getType() {
 		return this.expression.getType();
-	}	
-	
+	}
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -65,14 +65,14 @@ public class ExpressionSymbol extends Symbol implements DerivedExpression {
 	 */
 	public Object clone() {
 	    Expression clonedExpr = null;
-	    if(getExpression() != null) { 
-			clonedExpr = (Expression) getExpression().clone();		
+	    if(getExpression() != null) {
+			clonedExpr = (Expression) getExpression().clone();
 	    }
 	    ExpressionSymbol copy = new ExpressionSymbol(getName(), clonedExpr);
 	    return copy;
 	}
 
-    /** 
+    /**
      * @see org.teiid.query.sql.symbol.Symbol#hashCode()
      */
     public int hashCode() {
@@ -81,28 +81,28 @@ public class ExpressionSymbol extends Symbol implements DerivedExpression {
         }
         return super.hashCode();
     }
-    
-    /** 
+
+    /**
      * ExpressionSymbol matching is not based upon the name
-     * 
+     *
      * @see org.teiid.query.sql.symbol.Symbol#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof ExpressionSymbol)) {
             return false;
         }
-        
+
         ExpressionSymbol exprSymbol = (ExpressionSymbol)obj;
-        
+
         if (expression == null ) {
             return exprSymbol.getExpression() == null;
         }
-        
+
         return expression.equals(exprSymbol.getExpression());
     }
-        	
+
 }

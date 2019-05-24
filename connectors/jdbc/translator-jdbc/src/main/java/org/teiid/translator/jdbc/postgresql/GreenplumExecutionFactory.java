@@ -20,17 +20,17 @@ package org.teiid.translator.jdbc.postgresql;
 
 import org.teiid.translator.Translator;
 
-/** 
+/**
  * Translator for Greenplum.
  */
 @Translator(name="greenplum", description="A translator for the Greenplum Database")
 public class GreenplumExecutionFactory extends PostgreSQLExecutionFactory {
-	
+
 	@Override
 	public boolean supportsCorrelatedSubqueries() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean supportsElementaryOlapOperations() {
 	    //greenplum is/was based upon postgresql 8.2, but added extensions for window functions

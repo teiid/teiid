@@ -31,27 +31,27 @@ import org.teiid.core.util.StringUtil;
 
 
 /**
- * Represents the information needed in a socket connection handshake  
+ * Represents the information needed in a socket connection handshake
  */
 public class Handshake implements Externalizable {
-    
+
 	private static final long serialVersionUID = 7839271224736355515L;
-    
+
     private String version = ApplicationInfo.getInstance().getReleaseNumber();
     private byte[] publicKey;
     private byte[] publicKeyLarge;
     private AuthenticationType authType = AuthenticationType.USERPASSWORD;
     private boolean cbc = true;
-    
+
     public Handshake() {
-    	
+
     }
-    
+
     Handshake(String version) {
     	this.version = version;
     }
-    
-    /** 
+
+    /**
      * @return Returns the version.
      */
     public String getVersion() {
@@ -59,7 +59,7 @@ public class Handshake implements Externalizable {
     		//normalize to allow for more increments
     		StringBuilder builder = new StringBuilder();
     		List<String> parts = StringUtil.split(this.version, "."); //$NON-NLS-1$
-    		for (int i = 0; i < parts.size(); i++) { 
+    		for (int i = 0; i < parts.size(); i++) {
     			if (i > 0) {
         			builder.append('.');
     			}
@@ -73,52 +73,52 @@ public class Handshake implements Externalizable {
     	}
         return this.version;
     }
-    
-    /** 
+
+    /**
      * @param version The version to set.
      */
     public void setVersion() {
         this.version = ApplicationInfo.getInstance().getReleaseNumber();
     }
 
-    /** 
+    /**
      * @return Returns the key.
      */
     public byte[] getPublicKey() {
         return this.publicKey;
     }
-    
-    /** 
+
+    /**
      * @param key The key to set.
      */
     public void setPublicKey(byte[] key) {
         this.publicKey = key;
     }
-    
+
     public AuthenticationType getAuthType() {
 		return authType;
 	}
-    
+
     public void setAuthType(AuthenticationType authType) {
 		this.authType = authType;
 	}
-    
+
     public byte[] getPublicKeyLarge() {
 		return publicKeyLarge;
 	}
-    
+
     public void setPublicKeyLarge(byte[] publicKeyLarge) {
 		this.publicKeyLarge = publicKeyLarge;
 	}
-    
+
     public boolean isCbc() {
         return cbc;
     }
-    
+
     public void setCbc(boolean cbc) {
         this.cbc = cbc;
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
@@ -142,7 +142,7 @@ public class Handshake implements Externalizable {
     	    cbc = false;
     	}
     }
-    
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
     	out.writeObject(version);
@@ -156,5 +156,5 @@ public class Handshake implements Externalizable {
     	}
     	out.writeBoolean(cbc);
     }
-    
+
 }

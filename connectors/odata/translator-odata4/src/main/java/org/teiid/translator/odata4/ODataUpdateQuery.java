@@ -47,7 +47,7 @@ public class ODataUpdateQuery extends ODataQuery {
     private Map<String, Object> expandKeys = new LinkedHashMap<String, Object>();
     private List<Property> payloadProperties = new ArrayList<Property>();
     private Condition condition;
-    
+
     public ODataUpdateQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
         super(executionFactory, metadata);
     }
@@ -60,7 +60,7 @@ public class ODataUpdateQuery extends ODataQuery {
         } else if (!this.keys.isEmpty()){
             uriBuilder.appendKeySegment(this.keys);
         }
-        
+
         if (!this.complexTables.isEmpty()) {
             uriBuilder.appendPropertySegment(this.complexTables.get(0).getName());
         }
@@ -88,12 +88,12 @@ public class ODataUpdateQuery extends ODataQuery {
         }
         return method;
     }
-    
-    
+
+
     public String getPayload(Entity parentEntity) throws TranslatorException {
         JsonSerializer serializer = new JsonSerializer(false, ContentType.JSON_FULL_METADATA);
         StringWriter writer = new StringWriter();
-        
+
         try {
             if (!this.complexTables.isEmpty()) {
                 Table table = this.complexTables.get(0).getTable();
@@ -110,12 +110,12 @@ public class ODataUpdateQuery extends ODataQuery {
                 } else {
                     complexProperty.setValue(ValueType.COMPLEX, value);
                 }
-                serializer.write(writer, complexProperty);                
+                serializer.write(writer, complexProperty);
             } else if (!this.expandTables.isEmpty()) {
                 Table table = this.expandTables.get(0).getTable();
                 Entity entity = new Entity();
                 entity.setType(table.getProperty(
-                        ODataMetadataProcessor.NAME_IN_SCHEMA, false));            
+                        ODataMetadataProcessor.NAME_IN_SCHEMA, false));
                 for (Property p:this.payloadProperties) {
                     entity.addProperty(p);
                 }
@@ -123,7 +123,7 @@ public class ODataUpdateQuery extends ODataQuery {
             } else {
                 Entity entity = new Entity();
                 entity.setType(this.rootDocument.getTable().getProperty(
-                        ODataMetadataProcessor.NAME_IN_SCHEMA, false));            
+                        ODataMetadataProcessor.NAME_IN_SCHEMA, false));
                 for (Property p:this.payloadProperties) {
                     entity.addProperty(p);
                 }
@@ -160,7 +160,7 @@ public class ODataUpdateQuery extends ODataQuery {
                 }
             }
         }
-        
+
         if (!this.expandTables.isEmpty()) {
             if (childTable.getPrimaryKey() != null) {
                 for (Column column:childTable.getPrimaryKey().getColumns()) {
@@ -173,24 +173,24 @@ public class ODataUpdateQuery extends ODataQuery {
             }
         }
     }
-    
+
     private boolean isPseudo(Column column) {
         String property = column.getProperty(ODataMetadataProcessor.PSEUDO, false);
         return property != null;
     }
-    
+
     private String getName(Table table) {
         if (table.getNameInSource() != null) {
             return table.getNameInSource();
         }
         return table.getName();
-    }    
-    
+    }
+
     public void addInsertProperty(Column column, String type, Object value) {
         buildKeyColumns(getRootDocument().getTable(), (Table)column.getParent(), column.getName(), value);
         addUpdateProperty(column, type, value);
     }
-    
+
     public void addUpdateProperty(Column column, String type, Object value) {
         boolean collection = (value instanceof List<?>);
         if (!isPseudo(column)) {
@@ -198,34 +198,34 @@ public class ODataUpdateQuery extends ODataQuery {
                     collection ? ValueType.COLLECTION_PRIMITIVE
                             : ValueType.PRIMITIVE, value));
         }
-    }    
+    }
 
     public void setCondition(Condition where) {
         this.condition = where;
-    }   
-    
+    }
+
     public String buildUpdateSelectionURL(String serviceRoot) throws TranslatorException {
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
         uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
-        
+
         List<String> selection = this.rootDocument.getIdentityColumns();
         uriBuilder.select(selection.toArray(new String[selection.size()]));
-        
+
         if (!this.expandTables.isEmpty()) {
             ODataDocumentNode use = this.expandTables.get(0);
             List<String> keys = use.getIdentityColumns();
             for (String key:keys) {
                 use.appendSelect(key);
             }
-            uriBuilder.expandWithOptions(use.getName(), use.getOptions());            
+            uriBuilder.expandWithOptions(use.getName(), use.getOptions());
         }
-        
+
         String filter = processFilter(condition);
         if (filter != null) {
             uriBuilder.filter(filter);
         }
         URI uri = uriBuilder.build();
-        return uri.toString();        
+        return uri.toString();
     }
 
     public String getUpdateMethod() {
@@ -244,11 +244,11 @@ public class ODataUpdateQuery extends ODataQuery {
         }
         return method;
     }
-    
+
     public String buildUpdateURL(String serviceRoot, List<?> row) {
         URIBuilderImpl uriBuilder = new URIBuilderImpl(new ConfigurationImpl(), serviceRoot);
         uriBuilder.appendEntitySetSegment(this.rootDocument.getName());
-        
+
         List<String> selection = this.rootDocument.getIdentityColumns();
         if (selection.size() == 1) {
             uriBuilder.appendKeySegment(row.get(0));
@@ -259,7 +259,7 @@ public class ODataUpdateQuery extends ODataQuery {
             }
             uriBuilder.appendKeySegment(keys);
         }
-        
+
         if (!this.complexTables.isEmpty()) {
             uriBuilder.appendPropertySegment(this.complexTables.get(0).getName());
         }
@@ -279,6 +279,6 @@ public class ODataUpdateQuery extends ODataQuery {
         }
 
         URI uri = uriBuilder.build();
-        return uri.toString();        
+        return uri.toString();
     }
 }

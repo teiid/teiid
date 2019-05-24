@@ -33,10 +33,10 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Translates SQL UPDATE commands
- * 
- * 
+ *
+ *
  * @author felias
- * 
+ *
  */
 public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 
@@ -63,7 +63,7 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 		}
 		translateWhere(obj.getWhere());
 	}
-	
+
 	protected String getStringValue(Expression obj) {
         Literal literal;
         if (obj instanceof Literal) {
@@ -81,7 +81,7 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
             return new java.text.SimpleDateFormat("MM/dd/yyyy").format(literal.getValue());
         } else if (literal.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
             return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(literal.getValue());
-        } 
+        }
         if (literal.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
             return "'"+literal.getValue().toString();
         }

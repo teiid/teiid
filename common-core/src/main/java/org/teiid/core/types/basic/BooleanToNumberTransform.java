@@ -27,7 +27,7 @@ public class BooleanToNumberTransform extends Transform {
 	private Object trueVal;
 	private Object falseVal;
 	private Class<?> targetType;
-	
+
 	public BooleanToNumberTransform(Object trueVal, Object falseVal) {
 		this.trueVal = trueVal;
 		this.falseVal = falseVal;
@@ -38,15 +38,15 @@ public class BooleanToNumberTransform extends Transform {
 	public Class getSourceType() {
 		return DataTypeManager.DefaultDataClasses.BOOLEAN;
 	}
-	
+
 	@Override
 	public Class getTargetType() {
 		return targetType;
 	}
-	
+
 	@Override
 	public Object transformDirect(Object value) throws TransformationException {
 		return value.equals(Boolean.TRUE)?trueVal:falseVal;
 	}
-	
+
 }

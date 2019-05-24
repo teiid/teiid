@@ -21,8 +21,8 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
- * Represents an IN criteria that uses a subquery on the right side rather than a 
- * list of values.  
+ * Represents an IN criteria that uses a subquery on the right side rather than a
+ * list of values.
  */
 public class SubqueryIn extends BaseInCondition implements SubqueryContainer {
 

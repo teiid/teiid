@@ -38,35 +38,35 @@ public class ExtendedPropertyMetadata {
 	String dataType;
 	String defaultValue;
 	String category;
-	String owner; 
-	
+	String owner;
+
 	public ExtendedPropertyMetadata() {
 	}
-	
+
 	public ExtendedPropertyMetadata(String name, String type, String encodedData, String defaultValue) {
 		this.name = name;
 		this.dataType = type;
 		this.defaultValue = defaultValue;
-		
+
 		encodedData = encodedData.trim();
-		
+
 		// if not begins with { then treat as if just a simple description field.
 		if (!encodedData.startsWith("{")) { //$NON-NLS-1$
 			this.displayName = encodedData;
 			return;
 		}
-		
+
 		if (!encodedData.endsWith("}")) { //$NON-NLS-1$
 			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40034, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40034, encodedData));
 		}
 		encodedData = encodedData.substring(1, encodedData.length()-1);
-		
+
 		int index = 0;
 		int start = -1;
 		boolean inQuotes = false;
 		int inQuotesStart = -1;
 		boolean inArray = false;
-		
+
 		String propertyName = null;
 		ArrayList<String> values = new ArrayList<String>();
 		for (char c:encodedData.toCharArray()) {
@@ -110,7 +110,7 @@ public class ExtendedPropertyMetadata {
 			addProperty(propertyName, values);
 		}
 	}
-	
+
 	private void addProperty(String name, ArrayList<String> values) {
 		if (name.equals("$display")) { //$NON-NLS-1$
 			this.displayName = values.get(0);
@@ -134,7 +134,7 @@ public class ExtendedPropertyMetadata {
 			this.required = Boolean.parseBoolean(values.get(0));
 		}
 	}
-	
+
 	public String name() {
 		return this.name;
 	}

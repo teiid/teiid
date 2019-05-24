@@ -28,14 +28,14 @@ import org.teiid.query.sql.visitor.EvaluatableVisitor;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class RelationalNodeUtil {
-    
+
     private RelationalNodeUtil() {
     }
-    
+
     /**
      * Decides whether a command needs to be executed.
      * <br/><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
@@ -44,30 +44,30 @@ public class RelationalNodeUtil {
      * @param simplifyCriteria whether to simplify the criteria of the command if they always evaluate to true
      * @return true if this command should be executed by the connector; false otherwise.
      * @throws TeiidComponentException
-     * @throws ExpressionEvaluationException 
+     * @throws ExpressionEvaluationException
      * @since 4.2
      */
     public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws TeiidComponentException, ExpressionEvaluationException {
     	return shouldExecute(command, simplifyCriteria, false);
     }
-    
+
     public static boolean shouldExecute(Command command, boolean simplifyCriteria, boolean duringPlanning) throws TeiidComponentException, ExpressionEvaluationException {
         int cmdType = command.getType();
         Criteria criteria = null;
         switch(cmdType) {
             case Command.TYPE_QUERY:
-                
+
                 QueryCommand queryCommand = (QueryCommand) command;
-                
+
                 Limit limit = queryCommand.getLimit();
-                
+
                 if (limit != null && limit.getRowLimit() instanceof Constant) {
                     Constant rowLimit = (Constant)limit.getRowLimit();
                     if (Integer.valueOf(0).equals(rowLimit.getValue())) {
                         return false;
                     }
                 }
-            
+
                 if(queryCommand instanceof SetQuery) {
                     SetQuery union = (SetQuery) queryCommand;
                     boolean shouldExecute = false;
@@ -75,27 +75,27 @@ public class RelationalNodeUtil {
                         boolean shouldInner = shouldExecute(innerQuery, simplifyCriteria, duringPlanning);
                         if(shouldInner) {
                         	shouldExecute = true;
-                            break;                            
-                        }                        
+                            break;
+                        }
                     }
                     return shouldExecute;
-                } 
+                }
 
                 // Else this is a query
-                Query query = (Query) queryCommand;                
+                Query query = (Query) queryCommand;
                 criteria = query.getCriteria();
 
                 boolean shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, criteria, query, false);
-                
+
                 if (shouldEvaluate) {
                     //check for false having as well
                     shouldEvaluate = shouldEvaluate(simplifyCriteria, duringPlanning, query.getHaving(), query, true);
                 }
-                
+
                 if (shouldEvaluate) {
                     return true;
                 }
-                
+
                 if (query.hasAggregates() && query.getGroupBy() == null) {
                 	return true;
                 }
@@ -110,11 +110,11 @@ public class RelationalNodeUtil {
             	return true;
             case Command.TYPE_UPDATE:
                 Update update = (Update) command;
-                
+
                 if (update.getChangeList().isEmpty()) {
                     return false;
                 }
-                
+
                 criteria = update.getCriteria();
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
@@ -175,7 +175,7 @@ public class RelationalNodeUtil {
         }
         return false;
     }
-    
+
     /**
      * Returns whether the relational command is an update.
      * @param command

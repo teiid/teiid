@@ -36,7 +36,7 @@ public class VirtualDatabaseException extends TeiidProcessingException {
     public VirtualDatabaseException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -63,7 +63,7 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      */
     public VirtualDatabaseException(Exception e) {
         super(e);
-    }    
+    }
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *

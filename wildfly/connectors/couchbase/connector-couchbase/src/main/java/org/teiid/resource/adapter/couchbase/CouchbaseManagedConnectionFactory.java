@@ -32,54 +32,54 @@ import com.couchbase.client.java.query.consistency.ScanConsistency;
 
 /**
  * Represents a managed connection factory instance for create {@code CouchbaseConnection}.
- * 
+ *
  * @author kylin
  *
  */
 public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFactory{
- 
+
     private static final long serialVersionUID = 8822399069779170119L;
 
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CouchbaseManagedConnectionFactory.class);
-	
+
 	private Long managementTimeout = TimeUnit.SECONDS.toMillis(75);
-    
+
     private Long queryTimeout = TimeUnit.SECONDS.toMillis(75);
-    
+
     private Long viewTimeout = TimeUnit.SECONDS.toMillis(75);
-    
+
     private Long kvTimeout = Long.valueOf(2500);
-    
+
     private Long searchTimeout = TimeUnit.SECONDS.toMillis(75);
-    
+
     private Long connectTimeout = TimeUnit.SECONDS.toMillis(5);
-    
+
     private String scanConsistency = ScanConsistency.NOT_BOUNDED.name();
-    
+
     private Boolean dnsSrvEnabled = false;
 
 	/**
      * The connection string to identify the remote cluster
      */
 	private String connectionString = null;
-	
+
 	/**
 	 * The Keyspace/Bucket in Couchbase Server
 	 */
 	private String keyspace = null;
-	
+
 	private String namespace = null;
-	
+
 	/**
 	 * The Keyspace/Bucket password in Couchbase Server
 	 */
 	private String password = null;
-	
+
 	/**
 	 * Pair with connectTimeout, allowed value including MILLISECONDS, SECONDS, etc.
 	 */
 	private String timeUnit = null;
-	
+
 
 	public Long getManagementTimeout() {
         return managementTimeout;
@@ -176,11 +176,11 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
     public void setTimeUnit(String timeUnit) {
         this.timeUnit = timeUnit;
     }
-    
+
     public String getScanConsistency() {
         return scanConsistency;
     }
-    
+
     public void setScanConsistency(String scanConsistency) {
         this.scanConsistency = scanConsistency;
     }
@@ -188,7 +188,7 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
     @SuppressWarnings("serial")
     @Override
 	public BasicConnectionFactory<CouchbaseConnectionImpl> createConnectionFactory() throws ResourceException {
-		
+
 		final CouchbaseEnvironment environment = DefaultCouchbaseEnvironment.builder()
                 .managementTimeout(managementTimeout)
                 .queryTimeout(queryTimeout)
@@ -198,21 +198,21 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
                 .connectTimeout(connectTimeout)
                 .dnsSrvEnabled(dnsSrvEnabled)
                 .build();
-		
+
 		if (this.connectionString == null) {
             throw new InvalidPropertyException(UTIL.getString("no_server")); //$NON-NLS-1$
         }
-		
+
 		if (this.keyspace == null) {
             throw new InvalidPropertyException(UTIL.getString("no_keyspace")); //$NON-NLS-1$
         }
-		
+
 		if (this.namespace == null) {
             throw new InvalidPropertyException(UTIL.getString("no_namespace")); //$NON-NLS-1$
         }
-		
-		final ScanConsistency consistency = ScanConsistency.valueOf(scanConsistency); 
-		
+
+		final ScanConsistency consistency = ScanConsistency.valueOf(scanConsistency);
+
 		TimeUnit unit = TimeUnit.MILLISECONDS;
 		if(this.timeUnit != null) {
 		    try {
@@ -229,7 +229,7 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
             public CouchbaseConnectionImpl getConnection() throws ResourceException {
                 return new CouchbaseConnectionImpl(environment, connectionString, keyspace, password, timeoutUnit, namespace, consistency);
             }};
-		
+
 	}
 
 	@Override

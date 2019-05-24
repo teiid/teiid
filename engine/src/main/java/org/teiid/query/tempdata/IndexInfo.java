@@ -35,9 +35,9 @@ import org.teiid.translator.ExecutionFactory.NullOrder;
  * Accumulates information about index usage.
  */
 class IndexInfo extends BaseIndexInfo<TempTable> {
-	
+
 	TupleSource valueTs;
-	
+
 	public IndexInfo(TempTable table, final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
 		super(table, projectedCols, condition, orderBy, primary);
 	}
@@ -60,8 +60,8 @@ class IndexInfo extends BaseIndexInfo<TempTable> {
 		}
 		if (lower != null || upper != null) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for range query", lower, upper); //$NON-NLS-1$
-		} 
+		}
 		return new TupleBrowser(this.table.getTree(), lower, upper, direction, readOnly);
 	}
-	
+
 }

@@ -94,8 +94,8 @@ import nux.xom.xquery.StreamingTransform;
  * Used to isolate the xom/nux dependency and to better isolate the saxon processing logic.
  */
 public class XQueryEvaluator {
-	
-	private static Nodes NONE = new Nodes(); 
+
+	private static Nodes NONE = new Nodes();
 	private static InputStream FAKE_IS = new InputStream() {
 
 		@Override
@@ -106,14 +106,14 @@ public class XQueryEvaluator {
 
 	public static SaxonXQueryExpression.Result evaluateXQuery(final SaxonXQueryExpression xquery, Object context, Map<String, Object> parameterValues, final RowProcessor processor, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 	    DynamicQueryContext dynamicContext = new DynamicQueryContext(xquery.config);
-	
+
 	    SaxonXQueryExpression.Result result = new SaxonXQueryExpression.Result();
 	    try {
 	        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
 	            try {
     	            Object value = entry.getValue();
     	            Sequence s = null;
-    	            if(value instanceof SQLXML) {                    
+    	            if(value instanceof SQLXML) {
     	            	value = XMLSystemFunctions.convertToSource(value);
     	            	result.sources.add((Source)value);
     	            	Source source = wrapStax((Source)value);
@@ -136,14 +136,14 @@ public class XQueryEvaluator {
 	            	//create our own filter as this logic is not provided in the free saxon
 	                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
 	                sourceInput.addFilter(new FilterFactory() {
-						
+
 						@Override
 						public ProxyReceiver makeFilter(Receiver arg0) {
 							return new PathMapFilter(xquery.contextRoot, arg0);
 						}
 					});
 	                source = sourceInput;
-	
+
 	            	//use streamable processing instead
 	                if (xquery.streamingPath != null && processor != null) {
 	                	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -152,15 +152,15 @@ public class XQueryEvaluator {
 	                	//set to non-blocking in case default expression evaluation blocks
 	                	boolean isNonBlocking = commandContext.isNonBlocking();
 						commandContext.setNonBlocking(true);
-						
+
 						final StreamingTransform myTransform = new StreamingTransform() {
 							public Nodes transform(Element elem) {
 								processor.processRow(XQueryEvaluator.wrap(elem, xquery.config));
 								return NONE;
 							}
 						};
-						
-						Builder builder = new Builder(new SaxonReader(xquery.config, sourceInput), false, 
+
+						Builder builder = new Builder(new SaxonReader(xquery.config, sourceInput), false,
 								new StreamingPathFilter(xquery.streamingPath, xquery.namespaceMap).createNodeFactory(null, myTransform));
 						try {
 							//the builder is hard wired to parse the source, but the api will throw an exception if the stream is null
@@ -193,7 +193,7 @@ public class XQueryEvaluator {
 	        	return result;
 	        } catch (TransformerException e) {
 	        	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30152, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30152));
-	        }       
+	        }
 	    } finally {
 	    	if (result.iter == null) {
 	    		result.close();
@@ -224,27 +224,27 @@ public class XQueryEvaluator {
 	 * @return
 	 */
 	static NodeInfo wrap(Node node, Configuration config) {
-		if (node == null) 
+		if (node == null)
 			throw new IllegalArgumentException("node must not be null"); //$NON-NLS-1$
 		if (node instanceof DocType)
 			throw new IllegalArgumentException("DocType can't be queried by XQuery/XPath"); //$NON-NLS-1$
-		
+
 		Node root = node;
 		while (root.getParent() != null) {
 			root = root.getParent();
 		}
-	
+
 		XOMDocumentWrapper docWrapper = new XOMDocumentWrapper(root, config);
-		
+
 		return docWrapper.wrap(node);
 	}
-	
+
     static final class XMLQueryRowProcessor implements RowProcessor {
         XmlConcat concat; //just used to get a writer
         Type type;
         private javax.xml.transform.Result result;
         boolean hasItem;
-        
+
         XMLQueryRowProcessor(boolean exists, CommandContext context) throws TeiidProcessingException {
             if (!exists) {
                 concat = new XmlConcat(context.getBufferManager());
@@ -270,9 +270,9 @@ public class XQueryEvaluator {
             }
         }
      }
-    
+
     /**
-     * 
+     *
      * @param tuple
      * @param xmlQuery
      * @param exists - check only for the existence of a non-empty result
@@ -342,14 +342,14 @@ public class XQueryEvaluator {
             }
         }
     }
-	    
+
     public static Object evaluate(XMLType value, XMLCast expression, CommandContext context) throws ExpressionEvaluationException {
         Configuration config = new Configuration();
         Type t = value.getType();
         try {
             Item i = null;
             switch (t) {
-                case CONTENT: 
+                case CONTENT:
                     //content could map to an array value, but we aren't handling that case here yet - only in xmltable
                 case COMMENT:
                 case PI:

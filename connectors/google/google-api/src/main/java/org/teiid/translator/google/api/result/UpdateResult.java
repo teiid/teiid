@@ -21,9 +21,9 @@ package org.teiid.translator.google.api.result;
 
 /**
  * This class represents number of updated rows
- * 
+ *
  * @author felias
- * 
+ *
  */
 public class UpdateResult {
 
@@ -31,7 +31,7 @@ public class UpdateResult {
 	private int actualNumberOfRows = -1;
 
 	/**
-	 * 
+	 *
 	 * @param expectedNumberOfRows
 	 *            number of rows that should have been updated
 	 * @param actualNumberOfRows
@@ -51,7 +51,7 @@ public class UpdateResult {
 
 	/**
 	 * Returns actual number of updated rows
-	 * 
+	 *
 	 */
 	public int getActualNumberOfRows() {
 		return actualNumberOfRows;

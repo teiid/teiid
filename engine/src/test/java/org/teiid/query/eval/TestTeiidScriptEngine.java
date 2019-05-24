@@ -38,7 +38,7 @@ public class TestTeiidScriptEngine {
 		assertEquals(map, tse.getMethodMap(Object.class));
 		assertEquals(4, map.size());
 	}
-	
+
 	@Test public void testArraySyntax() throws Exception {
 		TeiidScriptEngine tse = new TeiidScriptEngine();
 		CompiledScript cs = tse.compile("root.1.2");
@@ -46,5 +46,5 @@ public class TestTeiidScriptEngine {
 		ssc.setAttribute("root", new Object[] {new Object[] {"x", "y"}}, SimpleScriptContext.ENGINE_SCOPE);
 		assertEquals("y", cs.eval(ssc));
 	}
-	
+
 }

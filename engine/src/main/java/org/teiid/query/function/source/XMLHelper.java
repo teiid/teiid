@@ -45,9 +45,9 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.XQueryExpression;
 
 public class XMLHelper {
-    
+
     private static XMLHelper INSTANCE;
-    
+
     public static XMLHelper getInstance() {
         if (INSTANCE == null) {
             try {
@@ -60,7 +60,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param xpath
      * @throws TeiidProcessingException
      */
@@ -69,7 +69,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param name
      * @return
      * @throws TeiidProcessingException
@@ -79,7 +79,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param prefix
      * @return
      * @throws TeiidProcessingException
@@ -89,7 +89,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param value
      * @return
      * @throws TransformerException
@@ -99,7 +99,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param name
      * @param fully
      * @return
@@ -109,7 +109,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param xquery
      * @param namespaces
      * @param passing
@@ -123,7 +123,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param tuple
      * @param xmlQuery
      * @param exists
@@ -131,8 +131,8 @@ public class XMLHelper {
      * @param context
      * @return
      * @throws FunctionExecutionException
-     * @throws TeiidComponentException 
-     * @throws BlockedException 
+     * @throws TeiidComponentException
+     * @throws BlockedException
      */
     public Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery,
             boolean exists, Map<String, Object> parameters,
@@ -141,12 +141,12 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param val
      * @param expression
      * @param context
      * @return
-     * @throws ExpressionEvaluationException 
+     * @throws ExpressionEvaluationException
      */
     public Object evaluate(XMLType val, XMLCast expression,
             CommandContext context) throws ExpressionEvaluationException {
@@ -154,7 +154,7 @@ public class XMLHelper {
     }
 
     /**
-     * 
+     *
      * @param id
      * @param xt
      * @param filteredColumns
@@ -165,7 +165,7 @@ public class XMLHelper {
             ArrayList<XMLColumn> filteredColumns) throws TeiidComponentException {
         throw new TeiidComponentException("Cannot perform without the optional XML depedency"); //$NON-NLS-1$
     }
-    
+
     public boolean isRealImplementation() {
         return false;
     }

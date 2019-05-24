@@ -22,10 +22,10 @@ import java.util.ResourceBundle;
 
 import org.teiid.core.BundleUtil;
 
-public class AdminPlugin { 
+public class AdminPlugin {
     public static final String PLUGIN_ID = "org.teiid.adminapi" ; //$NON-NLS-1$
 	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
-	
+
 	public static enum Event implements BundleUtil.Event {
 		TEIID70000,
 		TEIID70003,
@@ -71,14 +71,14 @@ public class AdminPlugin {
 		TEIID70047,
 		TEIID70048,
 		TEIID70049,
-		TEIID70050,	
+		TEIID70050,
 		TEIID70051,
-		TEIID70052, 
-		TEIID70053, 
+		TEIID70052,
+		TEIID70053,
 		TEIID70054,
-		TEIID70055, 
+		TEIID70055,
 		TEIID70056,
-		TEIID70057, 
+		TEIID70057,
 		TEIID70058
 	}
 }

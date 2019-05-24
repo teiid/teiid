@@ -2,22 +2,22 @@
  * Copyright (c) 2005, The Regents of the University of California, through
  * Lawrence Berkeley National Laboratory (subject to receipt of any required
  * approvals from the U.S. Dept. of Energy). All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * (1) Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * (2) Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * (3) Neither the name of the University of California, Lawrence Berkeley
  * National Laboratory, U.S. Dept. of Energy nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,7 +29,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * You are under no obligation whatsoever to provide any bug fixes, patches, or
  * upgrades to the features, functionality or performance of the source code
  * ("Enhancements") to anyone; however, if you choose to make your Enhancements
@@ -47,7 +47,7 @@ package nux.xom.binary;
 /**
  * Efficient resizable auto-expanding list holding <code>char</code> elements;
  * implemented with arrays.
- * 
+ *
  * @author whoschek.AT.lbl.DOT.gov
  * @author $Author: hoschek3 $
  * @version $Revision: 1.5 $, $Date: 2006/04/29 02:42:53 $
@@ -74,7 +74,7 @@ final class ArrayCharList {
 
 	/**
 	 * Constructs an empty list with the specified initial capacity.
-	 * 
+	 *
 	 * @param initialCapacity
 	 *            the number of elements the receiver can hold without
 	 *            auto-expanding itself by allocating new internal memory.
@@ -87,7 +87,7 @@ final class ArrayCharList {
 
 	/**
 	 * Appends the specified element to the end of this list.
-	 * 
+	 *
 	 * @param elem
 	 *            element to be appended to this list.
 	 */
@@ -95,7 +95,7 @@ final class ArrayCharList {
 		if (size == elements.length) ensureCapacity(size + 1);
 		elements[size++] = elem;
 	}
-	
+
 	/**
 	 * Returns the elements currently stored, including invalid elements between
 	 * size and capacity, if any.
@@ -104,7 +104,7 @@ final class ArrayCharList {
 	 * <b>the array is SHARED, not copied </b>. So if subsequently you modify the
 	 * returned array directly via the [] operator, be sure you know what you're
 	 * doing.
-	 * 
+	 *
 	 * @return the elements currently stored.
 	 */
 	public char[] asArray() {
@@ -118,12 +118,12 @@ final class ArrayCharList {
 	public void clear() {
 		size = 0;
 	}
-		
+
 	/**
 	 * Ensures that the receiver can hold at least the specified number of
 	 * elements without needing to allocate new internal memory. If necessary,
 	 * allocates new internal memory and increases the capacity of the receiver.
-	 * 
+	 *
 	 * @param minCapacity
 	 *            the desired minimum capacity.
 	 */
@@ -133,7 +133,7 @@ final class ArrayCharList {
 			elements = subArray(0, size, newCapacity);
 		}
 	}
-	
+
 	/**
 	 * Returns the number of contained elements.
 	 *
@@ -142,15 +142,15 @@ final class ArrayCharList {
 	public int size() {
 		return size;
 	}
-	
+
 	public void setSize(int size) {	// ugly hack
 		this.size = size;
 	}
-	
+
 	public int capacity() {	// ugly hack
 		return elements.length;
 	}
-	
+
 	/** Small helper method eliminating redundancy. */
 	private char[] subArray(int from, int length, int capacity) {
 		char[] subArray = new char[capacity];
@@ -172,5 +172,5 @@ final class ArrayCharList {
 	public String toString() {
 		return new String(elements, 0, size);
 	}
-	
+
 }

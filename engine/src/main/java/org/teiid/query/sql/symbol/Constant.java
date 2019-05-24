@@ -43,14 +43,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class Constant implements Expression, Comparable<Constant> {
 
 	public static final Constant NULL_CONSTANT = new Constant(null);
-	
+
 	private Object value;
 	private Class<?> type;
 	private boolean multiValued;
 	private boolean bindEligible;
 
 	public static final Comparator<Object> COMPARATOR = getComparator(DataTypeManager.COLLATION_LOCALE, DataTypeManager.PAD_SPACE);
-	
+
 	static Comparator<Object> getComparator(String localeString, final boolean padSpace) {
 		if (localeString == null) {
 			return getComparator(padSpace);
@@ -86,7 +86,7 @@ public class Constant implements Expression, Comparable<Constant> {
 			}
 		};
 	}
-	
+
 	static Comparator<Object> getComparator(boolean padSpace) {
 		if (!padSpace) {
 			return new Comparator<Object>() {
@@ -139,7 +139,7 @@ public class Constant implements Expression, Comparable<Constant> {
 		this.value = value;
 		if (this.value == null) {
 			this.type = DataTypeManager.DefaultDataClasses.NULL;
-		} else { 
+		} else {
 		    this.type = DataTypeManager.getRuntimeType(value.getClass());
 		}
 	}
@@ -151,7 +151,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	public Class<?> getType() {
 		return this.type;
 	}
-	
+
 	/**
 	 * TODO: remove me when a null type is supported
 	 * @param type
@@ -180,7 +180,7 @@ public class Constant implements Expression, Comparable<Constant> {
 		this.multiValued = true;
 		this.value = value;
 	}
-    
+
     public boolean isMultiValued() {
 		return multiValued;
 	}
@@ -188,7 +188,7 @@ public class Constant implements Expression, Comparable<Constant> {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
 	/**
 	 * Compare this constant to another constant for equality.
 	 * @param obj Other object
@@ -211,7 +211,7 @@ public class Constant implements Expression, Comparable<Constant> {
 			}
 			return false;
 		}
-		
+
 		if (this.isNull()) {
 			return false;
 		}
@@ -280,7 +280,7 @@ public class Constant implements Expression, Comparable<Constant> {
 		}
 		return COMPARATOR.compare(this.value, o.getValue());
 	}
-	
+
 	final static int comparePadded(CharSequence s1, CharSequence s2) {
 		int len1 = s1.length();
 		int len2 = s2.length();
@@ -307,13 +307,13 @@ public class Constant implements Expression, Comparable<Constant> {
 		}
 		return 0;
 	}
-	
+
 	public boolean isBindEligible() {
 		return bindEligible;
 	}
-	
+
 	public void setBindEligible(boolean bindEligible) {
 		this.bindEligible = bindEligible;
 	}
-	
+
 }

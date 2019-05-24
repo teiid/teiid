@@ -22,23 +22,23 @@ import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 
 public interface RequestBean {
-    
+
     /**
      * Get the ExecutionId for a Request
      * @return ExecutionId
      */
     public long getExecutionId();
-    
+
     /**
      * Get the SessionID for a Request
-     * 
+     *
      * @return String SessionID
      */
     public String getSessionId();
 
     /**
      * Get the SQL Command sent to the Server for a Request
-     * 
+     *
      * @return SQL Command
      */
     public String getCommand();
@@ -51,27 +51,27 @@ public interface RequestBean {
 
     /**
      * Get the TransactionID of the Request
-     * 
+     *
      * @return String of TransactionID if in a transaction
      */
     public String getTransactionId();
-    
-    /** 
+
+    /**
      * @return Returns whether this is a Source Request.
      */
     public boolean isSourceRequest();
-    
-    /**  
+
+    /**
      * @return In the case that this is a source request this represents the node id. Otherwise null
      */
     public Integer getNodeId();
-    
-    /**  
+
+    /**
      * @return The request state
      */
     ProcessingState getState();
 
-    /**  
+    /**
      * @return The thread state
      */
     ThreadState getThreadState();

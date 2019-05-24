@@ -13,61 +13,61 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.xquery.XQueryExpression;
 
 public class XMLQuery implements Expression {
-	
+
     private XMLNamespaces namespaces;
     private String xquery;
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
     private Boolean emptyOnEmpty;
-    
+
     private XQueryExpression xqueryExpression;
-    
+
     @Override
     public Class<?> getType() {
     	return DataTypeManager.DefaultDataClasses.XML;
     }
-    
+
     public Boolean getEmptyOnEmpty() {
 		return emptyOnEmpty;
 	}
-    
+
     public void setEmptyOnEmpty(Boolean emptyOnEmpty) {
 		this.emptyOnEmpty = emptyOnEmpty;
 	}
-    
+
     public List<DerivedColumn> getPassing() {
 		return passing;
 	}
-    
+
     //TODO: display the analysis record info
     public void compileXqueryExpression() throws QueryResolverException {
     	this.xqueryExpression = XMLHelper.getInstance().compile(xquery, namespaces, passing, null);
     	this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
     }
-    
+
     public XQueryExpression getXQueryExpression() {
 		return xqueryExpression;
 	}
-    
+
     public void setPassing(List<DerivedColumn> passing) {
 		this.passing = passing;
 	}
-    
+
     public String getXquery() {
 		return xquery;
 	}
-    
+
     public void setXquery(String xquery) {
 		this.xquery = xquery;
 	}
-    
+
     public XMLNamespaces getNamespaces() {
 		return namespaces;
 	}
-    
+
     public void setNamespaces(XMLNamespaces namespaces) {
 		this.namespaces = namespaces;
 	}
-    
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
@@ -106,12 +106,12 @@ public class XMLQuery implements Expression {
 			  && this.xquery.equals(other.xquery)
 			  && EquivalenceUtil.areEqual(this.emptyOnEmpty, other.emptyOnEmpty);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return this.xquery.hashCode();
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);

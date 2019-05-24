@@ -31,7 +31,7 @@ public class InfinispanDocument extends Document {
     private boolean matched = true;
     private Map<String, Stats> statsMap = new HashMap<>();
     private Object identifier;
-    
+
     public Object getIdentifier() {
 		return identifier;
 	}
@@ -97,7 +97,7 @@ public class InfinispanDocument extends Document {
             return s.unmatched.get();
         }
     }
-    
+
     public int merge(InfinispanDocument updates) {
         int updated = 1;
         for (Entry<String, Object> entry:updates.getProperties().entrySet()) {
@@ -131,5 +131,5 @@ public class InfinispanDocument extends Document {
             }
         }
         return updated;
-    }    
+    }
 }

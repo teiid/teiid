@@ -36,11 +36,11 @@ public interface LogConstants {
 	public static final String CTX_ODBC = "org.teiid.ODBC"; //$NON-NLS-1$
 	public static final String CTX_ODATA = "org.teiid.ODATA"; //$NON-NLS-1$
 	public static final String CTX_METASTORE = "org.teiid.METASTORE"; //$NON-NLS-1$
-	
+
 	// Query contexts
 	public static final String CTX_FUNCTION_TREE = CTX_QUERY_PLANNER + ".FUNCTION_TREE"; //$NON-NLS-1$
 	public static final String CTX_QUERY_RESOLVER = CTX_QUERY_PLANNER + ".RESOLVER"; //$NON-NLS-1$
 	public static final String CTX_MATVIEWS = CTX_DQP + ".MATVIEWS"; //$NON-NLS-1$
-	
+
 	public static final String CTX_WS = LogConstants.CTX_CONNECTOR + ".WS"; //$NON-NLS-1$
 }

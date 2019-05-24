@@ -72,21 +72,21 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.ssl.SslHandler;
 /**
- * Represents the messages going from Server --> PG ODBC Client  
+ * Represents the messages going from Server --> PG ODBC Client
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")
 public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements ODBCClientRemote {
-    
+
     public static final String APPLICATION_NAME = "application_name"; //$NON-NLS-1$
     public static final String DEFAULT_APPLICATION_NAME = "ODBC"; //$NON-NLS-1$
 
 	public static final String SSL_HANDLER_KEY = "sslHandler";
 
     private final class SSLEnabler implements ChannelFutureListener {
-    	
+
     	private SSLEngine engine;
-    	
+
 		public SSLEnabler(SSLEngine engine) {
 			this.engine = engine;
 		}
@@ -99,7 +99,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			}
 		}
 	}
-	
+
 	private final class ResultsWorkItem implements Runnable {
 		private final List<PgColInfo> cols;
 		private final ResultSetImpl rs;
@@ -147,7 +147,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 				}
 			}
 		}
-		
+
 		private boolean processRow(ResultsFuture<Boolean> future) {
 		    //synchronize the local state as this can be
             //used by both nio and the engine threads
@@ -155,7 +155,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
                 return processRowInternal(future);
             }
 		}
-		
+
 		private boolean processRowInternal(ResultsFuture<Boolean> future) {
 			nextFuture = null;
 			boolean processNext = true;
@@ -187,14 +187,14 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			}
 			return processNext;
 		}
-		
+
 		private void flushResults(boolean force) {
 			int avgRowsize = dataOut.writerIndex()/rowsInBuffer;
 			if (force || (maxBufferSize - dataOut.writerIndex()) < (avgRowsize*2)) {
 				sendContents();
 				initBuffer(maxBufferSize / 8);
 				rowsInBuffer = 0;
-			}			
+			}
 		}
 	}
 
@@ -204,7 +204,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
     private ByteBuf dataOut;
 	private OutputStreamWriter writer;
 
-    private Properties props;    
+    private Properties props;
     private Charset encoding = Charset.forName("UTF-8");
     private String clientEncoding = DEFAULT_ENCODING;
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
@@ -212,7 +212,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
     private int maxLobSize = (2*1024*1024); // 2 MB
 	private final int maxBufferSize;
 	private boolean requireSecure;
-    
+
 	private volatile ResultsFuture<Boolean> nextFuture;
 
 	private SSLConfiguration config;
@@ -223,7 +223,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
     	this.config = config;
 		this.requireSecure = requireSecure;
     }
-    
+
 	@Override
 	public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
 		this.ctx = ctx;
@@ -239,20 +239,20 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
                 }
 			} catch (InvocationTargetException e) {
 				throw e.getCause();
-			}		
+			}
 		} catch (Throwable e) {
 		    synchronized (this) {
 	            terminate(e);
             }
 		}
 	}
-		
+
 	@Override
 	public void initialized(Properties props) {
 		this.props = props;
 		setEncoding(props.getProperty("client_encoding", this.clientEncoding), true);
 	}
-	
+
 	@Override
 	public void useClearTextAuthentication() {
 		if (requireSecure && config != null && config.isClientEncryptionEnabled()) {
@@ -261,28 +261,28 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			sendAuthenticationCleartextPassword();
 		}
 	}
-	
+
 	@Override
 	public void useAuthenticationGSS() {
 		sendAuthenticationGSS();
 	}
-	
+
 	@Override
 	public void authenticationGSSContinue(byte[] serviceToken) {
 		sendAuthenticationGSSContinue(serviceToken);
 	}
-	
+
 	@Override
 	public void authenticationSucess(int processId, int screctKey) {
 		sendAuthenticationOk();
-		// server_version, server_encoding, client_encoding, application_name, 
-		// is_superuser, session_authorization, DateStyle, IntervalStyle, TimeZone, 
-		// integer_datetimes, and standard_conforming_strings. 
-		// (server_encoding, TimeZone, and integer_datetimes were not reported 
-		// by releases before 8.0; standard_conforming_strings was not reported by 
-		// releases before 8.1; IntervalStyle was not reported by releases before 8.4; 
+		// server_version, server_encoding, client_encoding, application_name,
+		// is_superuser, session_authorization, DateStyle, IntervalStyle, TimeZone,
+		// integer_datetimes, and standard_conforming_strings.
+		// (server_encoding, TimeZone, and integer_datetimes were not reported
+		// by releases before 8.0; standard_conforming_strings was not reported by
+		// releases before 8.1; IntervalStyle was not reported by releases before 8.4;
 		// application_name was not reported by releases before 9.0.)
-		
+
 		sendParameterStatus("client_encoding", clientEncoding);
 		sendParameterStatus("DateStyle", this.props.getProperty("DateStyle", "ISO"));
 		sendParameterStatus("integer_datetimes", "off");
@@ -292,10 +292,10 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		sendParameterStatus("session_authorization", this.props.getProperty("user"));
 		sendParameterStatus("standard_conforming_strings", "on");
 		sendParameterStatus(APPLICATION_NAME, this.props.getProperty(APPLICATION_NAME, DEFAULT_APPLICATION_NAME));
-		
+
 		// TODO PostgreSQL TimeZone
 		sendParameterStatus("TimeZone", "CET");
-		
+
 		sendBackendKeyData(processId, screctKey);
 	}
 
@@ -303,7 +303,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	public void prepareCompleted(String preparedName) {
 		sendParseComplete();
 	}
-	
+
 	@Override
 	public void bindComplete() {
 		sendBindComplete();
@@ -323,7 +323,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	public void ready(boolean inTransaction, boolean failedTransaction) {
 		sendReadyForQuery(inTransaction, failedTransaction);
 	}
-	
+
 	public void setEncoding(String value, boolean init) {
 		if (value == null || value.equals(this.clientEncoding)) {
 			return;
@@ -339,11 +339,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			LogManager.logWarning(LogConstants.CTX_ODBC, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40105, value));
 		}
 	}
-	
+
 	public String getClientEncoding() {
 		return clientEncoding;
 	}
-	
+
 	public Charset getEncoding() {
 		return encoding;
 	}
@@ -363,7 +363,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	        short[] resultColumnFormat) {
 		sendRowDescription(cols, resultColumnFormat);
 	}
-	
+
 	@Override
 	public void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols,
 	        ResultsFuture<Integer> result, CursorDirection direction,
@@ -371,7 +371,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		if (nextFuture != null) {
 			sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 		}
-    	
+
     	if (describeRows) {
     		sendRowDescription(cols, resultColumnFormat);
     	}
@@ -422,7 +422,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		// no need to send any reply; this is showing as malformed packet.
 		this.ctx.channel().close();
 	}
-	
+
 	@Override
 	public void flush() {
 		this.dataOut = null;
@@ -434,7 +434,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	public void emptyQueryReceived() {
 		sendEmptyQueryResponse();
 	}
-	
+
 	private void terminate(Throwable t) {
 	    LogManager.logDetail(LogConstants.CTX_ODBC, "channel being terminated - ", t.getMessage());
 		this.ctx.channel().close();
@@ -469,7 +469,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		} else {
 			tag = SqlUtil.getKeyword(sql).toUpperCase();
 			if (tag.equals("EXEC") || tag.equals("CALL")) {
-				tag = "SELECT"; 
+				tag = "SELECT";
 			}
 			useCount = true;
 		}
@@ -502,7 +502,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		}
 		this.dataOut.setInt(lengthIndex, this.dataOut.writerIndex() - lengthIndex);
 	}
-	
+
     private void getBinaryContent(ResultSet rs, PgColInfo col, int column) throws SQLException, TeiidSQLException, IOException {
 	    switch (col.type) {
 	    case PG_TYPE_INT2:
@@ -542,7 +542,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
                     byte[] bytes = ObjectConverterUtil.convertToByteArray(blob.getBinaryStream(), this.maxLobSize);
                     write(bytes);
                 } catch(OutOfMemoryError e) {
-                    throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$ 
+                    throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$
                 }
             }
             break;
@@ -559,7 +559,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	        throw new AssertionError();
 	    }
 	}
-	
+
 	private void getContent(ResultSet rs, PgColInfo col, int column) throws SQLException, TeiidSQLException, IOException {
 		switch (col.type) {
 			case PG_TYPE_BOOL:
@@ -603,9 +603,9 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		    		} finally {
 		    			r.close();
 		    		}
-		    	}		        	
+		    	}
 		    	break;
-		    	
+
 		    case PG_TYPE_BYTEA:
 		    	Blob blob = rs.getBlob(column);
 		    	if (blob != null) {
@@ -613,11 +613,11 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			    		String blobString = PGbytea.toPGString(ObjectConverterUtil.convertToByteArray(blob.getBinaryStream(), this.maxLobSize));
 			    		writer.write(blobString);
 		    		} catch(OutOfMemoryError e) {
-		    			throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$ 
+		    			throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$
 		    		}
 		    	}
 		    	break;
-		    	
+
 		    case PG_TYPE_CHARARRAY:
 		    case PG_TYPE_TEXTARRAY:
 		    case PG_TYPE_OIDARRAY:
@@ -678,10 +678,10 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			    			writer.append('0');
 			    		}
 			    	}
-		    	}	
+		    	}
 		    	}
 		    	break;
-		    	
+
 		    default:
 		    	Object obj = rs.getObject(column);
 		    	if (obj != null) {
@@ -690,7 +690,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		    	break;
 		}
 	}
-	
+
 	public static void escapeQuote(Writer sb, String s) throws IOException {
 		sb.append('"');
 		for (int i = 0; i < s.length(); i++) {
@@ -702,8 +702,8 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 			sb.append(c);
 		}
 		sb.append('"');
-	}	
-	
+	}
+
 	@Override
 	public void sendSslResponse() {
 		SSLEngine engine = null;
@@ -730,7 +730,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		}
 		this.ctx.writeAndFlush(buffer, promise);
 	}
-	
+
 	private void sendErrorResponse(Throwable t) {
 		if (t instanceof SQLException) {
 			//we are just re-logging an exception raised by the engine
@@ -754,7 +754,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		write(0);
 		sendMessage();
 	}
-	
+
 	boolean isBinary(int oid) {
 	    switch (oid) {
 	    case PG_TYPE_INT2:
@@ -768,7 +768,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	    }
 	    return false;
 	}
-	
+
 	private void sendRowDescription(List<PgColInfo> cols, short[] resultColumnFormat) {
 		if (cols == null) {
 			//send NoData
@@ -823,7 +823,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		write(0);
 		sendMessage();
 	}
-	
+
 	private void sendParseComplete() {
 		startMessage('1');
 		sendMessage();
@@ -833,32 +833,32 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		startMessage('2');
 		sendMessage();
 	}
-	
+
 	@Override
 	public void sendPortalSuspended() {
 		startMessage('s');
 		sendMessage();
-	}	
+	}
 
 	private void sendAuthenticationCleartextPassword() {
 		startMessage('R');
 		writeInt(3);
 		sendMessage();
 	}
-	
+
 	private void sendAuthenticationGSS() {
 		startMessage('R');
 		writeInt(7);
 		sendMessage();
 	}
-	
+
 	private void sendAuthenticationGSSContinue(byte[] serviceToken)  {
 		startMessage('R');
 		writeInt(8);
 		write(serviceToken);
 		sendMessage();
-	}	
-	
+	}
+
 	private void sendAuthenticationOk() {
 		startMessage('R');
 		writeInt(0);
@@ -875,10 +875,10 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		else {
 			if (inTransaction) {
 				// in a transaction block
-				c = 'T';				
+				c = 'T';
 			} else {
 				// idle
-				c = 'I';				
+				c = 'I';
 			}
 		}
 		write((byte) c);
@@ -899,7 +899,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		writeString(value);
 		sendMessage();
 	}
-	
+
 	@Override
 	public void functionCallResponse(Object data, boolean binary) {
 		startMessage('V', -1);
@@ -921,7 +921,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		this.dataOut.setInt(lengthIndex, this.dataOut.writerIndex() - lengthIndex);
 		sendMessage();
 	}
-	
+
 	private void writeString(String s) {
 		write(s.getBytes(this.encoding));
 		write(0);
@@ -968,7 +968,7 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 		this.dataOut.setInt(1, pos - 1);
 		sendContents();
 	}
-	
+
 	private void sendContents() {
 		ByteBuf cb = this.dataOut;
 		this.dataOut = null;
@@ -979,9 +979,9 @@ public class PgBackendProtocol extends ChannelOutboundHandlerAdapter implements 
 	private static void trace(String... msg) {
 		LogManager.logTrace(LogConstants.CTX_ODBC, (Object[])msg);
 	}
-	
+
 	public boolean secureData() {
 		return requireSecure && config != null && config.isSslEnabled();
 	}
-	
+
 }

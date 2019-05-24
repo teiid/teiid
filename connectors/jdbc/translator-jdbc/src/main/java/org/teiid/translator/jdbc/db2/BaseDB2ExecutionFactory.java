@@ -58,14 +58,14 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());  
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
 
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("MOD", getLanguageFactory()));  //$NON-NLS-1$
-        
+
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
     	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
@@ -104,13 +104,13 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
     	convertModifier.addNumericBooleanConversions();
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
-		
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<?> translateLimit(Limit limit, ExecutionContext context) {
-		return Arrays.asList("FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ 
+		return Arrays.asList("FETCH FIRST ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	@Override
 	public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		//DB2 doesn't support cross join
@@ -142,12 +142,12 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 			}
 		}
 	}
-	
+
 	@Override
 	public NullOrder getDefaultNullOrder() {
 		return NullOrder.HIGH;
 	}
-	
+
 	@Override
 	public boolean supportsInlineViews() {
 		return true;
@@ -162,17 +162,17 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsIntersect() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsSubqueryInOn() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean supportsSelectWithoutFrom() {
 		return true;
 	}
-	
+
 	@Override
 	public List<?> translateCommand(Command command, ExecutionContext context) {
 		if (command instanceof Select) {
@@ -186,7 +186,7 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 						result.add(", "); //$NON-NLS-1$
 					}
 					result.add(dc.getExpression());
-					
+
 				}
 				result.add(")"); //$NON-NLS-1$
 				return result;
@@ -194,5 +194,5 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 		}
 		return super.translateCommand(command, context);
 	}
-	
+
 }

@@ -32,7 +32,7 @@ import org.teiid.metadata.Column;
 
 /**
  * Utility class used to maintain the details of a particular LDAP search,
- * such as the context, the attributes of interest, the filter, and the 
+ * such as the context, the attributes of interest, the filter, and the
  * search scope.
  */
 public class LDAPSearchDetails {
@@ -45,7 +45,7 @@ public class LDAPSearchDetails {
 	private long limit;
 	private ArrayList<Column> elementList;
 	private int timeLimit;
-	
+
 	/**
 	 * Constructor
 	 * @param name the context name
@@ -66,7 +66,7 @@ public class LDAPSearchDetails {
 		this.elementList = elementList;
 		this.timeLimit = timeLimit;
 	}
-	
+
 	/**
 	 * get the context name
 	 * @return the context name
@@ -74,7 +74,7 @@ public class LDAPSearchDetails {
 	public String getContextName() {
 		return contextName;
 	}
-	
+
 	/**
 	 * get the context name
 	 * @return the context name
@@ -82,7 +82,7 @@ public class LDAPSearchDetails {
 	public int getSearchScope() {
 		return searchScope;
 	}
-	
+
 	/**
 	 * get the context filter
 	 * @return the context filter
@@ -90,7 +90,7 @@ public class LDAPSearchDetails {
 	public String getContextFilter() {
 		return contextFilter;
 	}
-	
+
 	/**
 	 * get the element list
 	 * @return the element list
@@ -98,7 +98,7 @@ public class LDAPSearchDetails {
 	public ArrayList<Column> getElementList() {
 		return elementList;
 	}
-	
+
 	/**
 	 * get the sort keys
 	 * @return the sort keys
@@ -106,7 +106,7 @@ public class LDAPSearchDetails {
 	public SortKey[] getSortKeys() {
 		return keys;
 	}
-	
+
 	/**
 	 * get the count limit
 	 * @return the count limit
@@ -118,11 +118,11 @@ public class LDAPSearchDetails {
 	public LdapSortKey[] getNetscapeSortKeys() {
 		return netscapeKeys;
 	}
-	private void createNetscapeKeys() {	
+	private void createNetscapeKeys() {
 		if(keys != null) {
 			netscapeKeys = new LdapSortKey[keys.length];
 			for(int i=0; i<keys.length; i++) {
-				LdapSortKey nKey = new LdapSortKey(keys[i].getAttributeID(), 
+				LdapSortKey nKey = new LdapSortKey(keys[i].getAttributeID(),
 						keys[i].isAscending());
 				netscapeKeys[i] = nKey;
 			}
@@ -130,9 +130,9 @@ public class LDAPSearchDetails {
 			// set it null
 			netscapeKeys = null;
 		}
-	}	
+	}
 	*/
-	
+
 	/**
 	 * Print Method for Logging - (Detail level logging)
 	 */
@@ -146,9 +146,9 @@ public class LDAPSearchDetails {
 		} else if(searchScope == SearchControls.ONELEVEL_SCOPE) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Search scope = ONELEVEL_SCOPE"); //$NON-NLS-1$
 		}
-		
+
 		// Log Search Attributes
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Search attributes: "); //$NON-NLS-1$	
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Search attributes: "); //$NON-NLS-1$
 		Iterator itr = this.elementList.iterator();
 		int i = 0;
 		while(itr.hasNext()) {
@@ -157,14 +157,14 @@ public class LDAPSearchDetails {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Attribute [" + i + "]: " + attrName + " (" +attr.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			i++;
 		}
-		
+
 		// Log Context Filter
 		if(contextFilter != null && (!contextFilter.equals(""))) { //$NON-NLS-1$
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Where clause was translated into Ldap search filter: " + contextFilter); //$NON-NLS-1$
 		}
-		
+
 		// Log Sort Keys
-		if(keys != null) { 
+		if(keys != null) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Sort keys: "); //$NON-NLS-1$
 			for(int j=0; j<keys.length; j++) {
 				LogManager.logDetail(LogConstants.CTX_CONNECTOR,"\tName: " + keys[j].getAttributeID()); //$NON-NLS-1$
@@ -177,11 +177,11 @@ public class LDAPSearchDetails {
 			}
 		}
 	}
-	
+
 	public int getTimeLimit() {
 		return this.timeLimit;
 	}
-	
+
 	public String[] getAttributes() {
 		ArrayList<String> attributes = new ArrayList<String>();
 		for (Column c:elementList) {

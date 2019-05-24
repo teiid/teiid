@@ -43,21 +43,21 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 
-/** 
+/**
  * @since 5.5
  */
 public class TempTableResolver implements CommandResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-        
+
         if(command.getType() == Command.TYPE_CREATE) {
             Create create = (Create)command;
             GroupSymbol group = create.getTable();
-            
+
             //this will only check non-temp groups
             Collection exitsingGroups = metadata.getMetadata().getGroupsForPartialName(group.getName());
             if(!exitsingGroups.isEmpty()) {
@@ -66,7 +66,7 @@ public class TempTableResolver implements CommandResolver {
         	if (metadata.getMetadata().hasProcedure(group.getName())) {
         		 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
         	}
-            
+
             //now we will be more specific for temp groups
             TempMetadataID id = metadata.getMetadataStore().getTempGroupID(group.getName());
             if (id != null && !metadata.isTemporaryTable(id)) {
@@ -113,7 +113,7 @@ public class TempTableResolver implements CommandResolver {
 					primaryKey.add((TempMetadataID)mid);
 				} else if (mid instanceof Column) {
 					//TODO: this breaks our normal metadata usage
-					primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));					
+					primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));
 				}
 			}
 			tempTable.setPrimaryKey(primaryKey);

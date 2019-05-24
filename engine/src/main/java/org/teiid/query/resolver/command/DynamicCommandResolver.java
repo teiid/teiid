@@ -43,19 +43,19 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class DynamicCommandResolver implements CommandResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         DynamicCommand dynamicCmd = (DynamicCommand)command;
-        
+
         Iterator columns = dynamicCmd.getAsColumns().iterator();
 
         Set groups = new HashSet();
         boolean resolvedColumns = false;
-        
+
         //if there is no into group, just create temp metadata ids
         if (dynamicCmd.getIntoGroup() == null) {
             while (columns.hasNext()) {
@@ -69,17 +69,17 @@ public class DynamicCommandResolver implements CommandResolver {
                 column.setGroupSymbol(new GroupSymbol(dynamicCmd.getIntoGroup().getName()));
             }
         }
-        
+
         ResolverVisitor.resolveLanguageObject(dynamicCmd, groups, dynamicCmd.getExternalGroupContexts(), metadata);
-        
+
         String sqlType = DataTypeManager.getDataTypeName(dynamicCmd.getSql().getType());
         String targetType = DataTypeManager.DefaultDataTypes.CLOB;
-        
+
         if (!targetType.equals(sqlType) && !DataTypeManager.isImplicitConversion(sqlType, targetType)) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30100, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30100, sqlType));
         }
         dynamicCmd.setSql(ResolverUtil.convertExpression(dynamicCmd.getSql(), targetType, metadata));
-        
+
         if (dynamicCmd.getUsing() != null && !dynamicCmd.getUsing().isEmpty()) {
             for (SetClause clause : dynamicCmd.getUsing().getClauses()) {
                 ElementSymbol id = clause.getSymbol();
@@ -88,7 +88,7 @@ public class DynamicCommandResolver implements CommandResolver {
                 id.setMetadataID(new TempMetadataID(id.getName(), id.getType()));
             }
         }
-        
+
         GroupSymbol intoSymbol = dynamicCmd.getIntoGroup();
         if (intoSymbol != null) {
             if (!intoSymbol.isImplicitTempGroupSymbol()) {
@@ -97,7 +97,7 @@ public class DynamicCommandResolver implements CommandResolver {
                 	//must be a temp table from a higher scope
                 	for (ElementSymbol column : (List<ElementSymbol>)dynamicCmd.getAsColumns()) {
                         column.setGroupSymbol(dynamicCmd.getIntoGroup().clone());
-                    }   	
+                    }
                 }
             } else {
                 List symbols = dynamicCmd.getAsColumns();

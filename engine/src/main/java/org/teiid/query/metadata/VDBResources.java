@@ -25,10 +25,10 @@ import java.util.LinkedHashMap;
 import org.teiid.metadata.VDBResource;
 
 public class VDBResources {
-	
+
 	public static final String DEPLOYMENT_FILE = "vdb.xml"; // !!! DO NOT CHANGE VALUE as this would cause problems with existing VDBs having DEF files !!! //$NON-NLS-1$
 	public final static String INDEX_EXT        = ".INDEX";     //$NON-NLS-1$
-	
+
 	public static class Resource implements VDBResource {
         VirtualFile file;
 	    public Resource(VirtualFile file) {
@@ -49,7 +49,7 @@ public class VDBResources {
 	}
 
 	private LinkedHashMap<String, VDBResources.Resource> vdbEntries;
-	
+
 	public VDBResources(VirtualFile root) throws IOException {
 	    int length = root.getPathName().length();
 	    boolean correctNames = (length > 1 || !root.getPathName().equals("/")); //$NON-NLS-1$
@@ -63,11 +63,11 @@ public class VDBResources {
 					path = "/" + path; //$NON-NLS-1$
 				}
 			}
-			visibilityMap.put(path, new VDBResources.Resource(f)); 
+			visibilityMap.put(path, new VDBResources.Resource(f));
 		}
 		this.vdbEntries = visibilityMap;
 	}
-	
+
 	public LinkedHashMap<String, VDBResources.Resource> getEntriesPlusVisibilities(){
 		return this.vdbEntries;
 	}

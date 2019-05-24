@@ -160,7 +160,7 @@ public final class MessageLevel {
     public static boolean isMessageLevelValid( int newMessageLevel ) {
         return !( newMessageLevel < MessageLevel.NONE || newMessageLevel > MessageLevel.TRACE );
     }
-    
+
     /**
      * Utility method for knowing what is the lower boundary for
      * a valid message level.
@@ -170,7 +170,7 @@ public final class MessageLevel {
     public static int getValidLowerMessageLevel() {
     	return MessageLevel.NONE;
     }
-    
+
     /**
      * Utility method for knowing what is the upper boundary for
      * a valid message level.
@@ -213,7 +213,7 @@ public final class MessageLevel {
     public static Collection getDisplayNames() {
         return DISPLAYS;
     }
-    
+
 
     /**
      * Utility method to get the labels for the levels, starting with the lowest
@@ -224,7 +224,7 @@ public final class MessageLevel {
         return LABELS;
     }
 
-  
+
 
 }
 

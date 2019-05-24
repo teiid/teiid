@@ -28,7 +28,7 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.Type;
 
 class CacheService<T> implements Service<SessionAwareCache<T>> {
-	
+
 	private SessionAwareCache<T> cache;
 	protected InjectedValue<TupleBufferCache> tupleBufferCacheInjector = new InjectedValue<TupleBufferCache>();
 	protected InjectedValue<CacheFactory> cacheFactoryInjector = new InjectedValue<CacheFactory>();
@@ -36,13 +36,13 @@ class CacheService<T> implements Service<SessionAwareCache<T>> {
 	private SessionAwareCache.Type type;
 	private String cacheName;
 	private int maxStaleness;
-	
+
 	public CacheService(String cacheName, SessionAwareCache.Type type, int maxStaleness){
 		this.cacheName = cacheName;
 		this.type = type;
 		this.maxStaleness = maxStaleness;
 	}
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		this.cache = new SessionAwareCache<T>(this.cacheName, cacheFactoryInjector.getValue(), this.type, this.maxStaleness);

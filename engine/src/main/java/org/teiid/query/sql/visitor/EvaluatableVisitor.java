@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
  * if the current expression can be evaluated</p>
  */
 public class EvaluatableVisitor extends LanguageVisitor {
-	
+
 	public enum EvaluationLevel {
 		PLANNING,
 		PROCESSING,
@@ -68,17 +68,17 @@ public class EvaluatableVisitor extends LanguageVisitor {
 	private Object modelId;
 	private QueryMetadataInterface metadata;
 	private CapabilitiesFinder capFinder;
-	
+
 	public EvaluatableVisitor() {
-		
+
 	}
-	
+
 	public EvaluatableVisitor(Object modelId, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
 		this.modelId = modelId;
 		this.metadata = metadata;
 		this.capFinder = capFinder;
 	}
-	    
+
     public void visit(Function obj) {
         FunctionDescriptor fd = obj.getFunctionDescriptor();
 		this.setDeterminismLevel(fd.getDeterministic());
@@ -97,20 +97,20 @@ public class EvaluatableVisitor extends LanguageVisitor {
         	evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
     }
-    
+
     @Override
     public void visit(Constant obj) {
     	if (obj.isMultiValued()) {
             evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     	}
     }
-    
+
     public void setDeterminismLevel(Determinism value) {
     	if (determinismLevel == null || value.compareTo(determinismLevel) < 0) {
     		determinismLevel = value;
     	}
     }
-    
+
     public void evaluationNotPossible(EvaluationLevel newLevel) {
     	levels.add(newLevel);
     	EvaluationLevel level = levels.last();
@@ -118,7 +118,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
     		setAbort(true);
     	}
     }
-        
+
     public void visit(ElementSymbol obj) {
     	if (obj.getGroupSymbol() == null) {
     		evaluationNotPossible(EvaluationLevel.PROCESSING);
@@ -135,22 +135,22 @@ public class EvaluatableVisitor extends LanguageVisitor {
 		}
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
-    
+
     public void visit(ExpressionSymbol obj) {
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
-    
+
     public void visit(AliasSymbol obj) {
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
-    
+
     public void visit(AggregateSymbol obj) {
     	if (obj.getFunctionDescriptor() != null) {
     		this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
     	}
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
-    
+
     /**
      * We assume the non-push down for correlation variables,
      * then make specific checks when correlated variables are allowed.
@@ -165,7 +165,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
         }
     	evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
-    
+
     public void visit(StoredProcedure proc){
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
 		for (SPParameter param : proc.getInputParameters()) {
@@ -174,7 +174,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
 			}
 		}
     }
-    
+
     public void visit(ScalarSubquery obj){
     	if (obj.shouldEvaluate()) {
     		evaluationNotPossible(EvaluationLevel.PROCESSING);
@@ -182,45 +182,45 @@ public class EvaluatableVisitor extends LanguageVisitor {
     		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     	}
     }
-    
+
     public void visit(DependentSetCriteria obj) {
     	//without knowing what is feeding this, we need to treat it as non-deterministic
     	setDeterminismLevel(Determinism.NONDETERMINISTIC);
 		evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
-    
+
     public void visit(ExistsCriteria obj) {
     	if (obj.shouldEvaluate()) {
     		evaluationNotPossible(EvaluationLevel.PROCESSING);
     	} else {
     		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     	}
-    }        
+    }
 
     public void visit(SubquerySetCriteria obj) {
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
-    }        
+    }
 
     public void visit(SubqueryCompareCriteria obj) {
     	if (obj.getCommand() != null) {
     		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     	}
     }
-    
+
     @Override
     public void visit(IsDistinctCriteria isDistinctCriteria) {
         if (isDistinctCriteria.getLeftRowValue() instanceof GroupSymbol || isDistinctCriteria.getRightRowValue() instanceof GroupSymbol) {
             evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
     }
-    
+
     private boolean isEvaluationPossible() {
     	if (levels.isEmpty()) {
     		return true;
     	}
     	return levels.last().compareTo(targetLevel) <= 0;
     }
-    
+
     /**
 	 *  Will return true if the expression can be deterministically evaluated at runtime, but it may not be
 	 *  evaluatable during planning
@@ -242,7 +242,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
         PreOrderNavigator.doVisit(obj, visitor);
         return visitor.isEvaluationPossible();
     }
-    
+
     public static final boolean willBecomeConstant(LanguageObject obj, boolean pushdown) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.targetLevel = EvaluationLevel.PROCESSING;
@@ -252,25 +252,25 @@ public class EvaluatableVisitor extends LanguageVisitor {
         }
         return visitor.isEvaluationPossible();
     }
-    
+
     public static final boolean needsProcessingEvaluation(LanguageObject obj) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor.levels.contains(EvaluationLevel.PROCESSING);
     }
-    
+
     public boolean requiresEvaluation(EvaluationLevel evaluationLevel) {
     	return levels.contains(evaluationLevel);
     }
-    
+
     public Determinism getDeterminismLevel() {
 		return determinismLevel;
 	}
-    
+
     public boolean hasCorrelatedReferences() {
 		return hasCorrelatedReferences;
 	}
-    
+
     public static final EvaluatableVisitor needsEvaluationVisitor(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.modelId = modelID;

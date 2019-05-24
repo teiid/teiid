@@ -42,7 +42,7 @@ import org.teiid.olingo.service.ODataSchemaBuilder.ODataSchemaInfo;
 import org.teiid.olingo.service.ODataSchemaBuilder.SchemaResolver;
 
 public class OlingoBridge {
-    
+
     public static class HandlerInfo {
         public final ODataHttpHandler oDataHttpHandler;
         public final ServiceMetadata serviceMetadata;
@@ -52,30 +52,30 @@ public class OlingoBridge {
             this.serviceMetadata = serviceMetadata;
         }
     }
-    
+
     public static List<String> RESERVED = Arrays.asList("teiid", "edm", "core", "olingo-extensions"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    
+
     //the schema name is handled as case insensitive
     private ConcurrentSkipListMap<String, HandlerInfo> handlers = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
-    
+
     public HandlerInfo getHandlers(String baseUri, Client client, String schemaName) throws ServletException, TeiidProcessingException {
         HandlerInfo handler = this.handlers.get(schemaName);
         if (handler != null) {
             return handler;
         }
         VDBMetaData vdb = client.getVDB();
-        
+
         org.teiid.metadata.Schema teiidSchema = client.getMetadataStore().getSchema(schemaName);
         if (teiidSchema == null || !isVisible(vdb, teiidSchema)) {
             throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16022));
         }
-        
+
         synchronized (this) {
             handler = this.handlers.get(schemaName);
             if (handler != null) {
                 return handler;
             }
-            
+
             loadAllHandlers(baseUri, client, vdb);
         }
         return handlers.get(schemaName);
@@ -84,41 +84,41 @@ public class OlingoBridge {
     private void loadAllHandlers(String baseUri, Client client, VDBMetaData vdb)
             throws ServletException {
         final Map<String, ODataSchemaInfo> infoMap = new LinkedHashMap<>();
-        
+
         Set<String> aliases = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         aliases.addAll(RESERVED);
-        
+
         //process the base metadata structure
         for (Schema s : client.getMetadataStore().getSchemaList()) {
             if (!isVisible(vdb, s)) {
-                 continue;   
+                 continue;
             }
-            
+
             //prevent collisions with the reserved, and then with any other schemas
             int i = 1;
             String alias = s.getName();
             while (!aliases.add(alias)) {
                 alias = alias + "_" + i++; //$NON-NLS-1$
             }
-            
+
             ODataSchemaInfo info = ODataSchemaBuilder.buildStructuralMetadata(vdb.getFullName(), s, alias);
             infoMap.put(s.getName(), info);
             try {
-                info.edmProvider = new TeiidEdmProvider(baseUri, info.schema, 
+                info.edmProvider = new TeiidEdmProvider(baseUri, info.schema,
                         client.getProperty(Client.INVALID_CHARACTER_REPLACEMENT));
             } catch (XMLStreamException e) {
                 throw new ServletException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16054));
             }
         }
-        
+
         //process navigation links
         for (Schema s : client.getMetadataStore().getSchemaList()) {
             if (!isVisible(vdb, s)) {
-                continue;    
+                continue;
             }
             final ODataSchemaInfo info = infoMap.get(s.getName());
             ODataSchemaBuilder.buildNavigationProperties(s, info.entityTypes, info.entitySets, new SchemaResolver() {
-                
+
                 @Override
                 public ODataSchemaInfo getSchemaInfo(String name) {
                     ODataSchemaInfo result = infoMap.get(name);
@@ -144,7 +144,7 @@ public class OlingoBridge {
             this.handlers.put(entry.getKey(), new HandlerInfo(handler, metadata));
         }
     }
-    
+
     private static boolean isVisible(VDBMetaData vdb, org.teiid.metadata.Schema schema) {
         String schemaName = schema.getName();
         Model model = vdb.getModel(schemaName);
@@ -153,5 +153,5 @@ public class OlingoBridge {
             return false;
         }
         return model.isVisible();
-    }    
+    }
 }

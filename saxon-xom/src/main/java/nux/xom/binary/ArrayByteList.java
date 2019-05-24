@@ -2,22 +2,22 @@
  * Copyright (c) 2005, The Regents of the University of California, through
  * Lawrence Berkeley National Laboratory (subject to receipt of any required
  * approvals from the U.S. Dept. of Energy). All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * (1) Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * (2) Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * (3) Neither the name of the University of California, Lawrence Berkeley
  * National Laboratory, U.S. Dept. of Energy nor the names of its contributors
  * may be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -29,7 +29,7 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * You are under no obligation whatsoever to provide any bug fixes, patches, or
  * upgrades to the features, functionality or performance of the source code
  * ("Enhancements") to anyone; however, if you choose to make your Enhancements
@@ -54,7 +54,7 @@ import java.util.zip.Inflater;
 /**
  * Efficient resizable auto-expanding list holding <code>byte</code> elements;
  * implemented with arrays; more practical and efficient than NIO ByteBuffer.
- * 
+ *
  * @author whoschek.AT.lbl.DOT.gov
  * @author $Author: hoschek $
  * @version $Revision: 1.27 $, $Date: 2006/06/18 21:25:02 $
@@ -79,7 +79,7 @@ final class ArrayByteList {
 
 	private static final boolean DEBUG = false;
 
-	
+
 	/**
 	 * Constructs an empty list.
 	 */
@@ -89,7 +89,7 @@ final class ArrayByteList {
 
 	/**
 	 * Constructs an empty list with the specified initial capacity.
-	 * 
+	 *
 	 * @param initialCapacity
 	 *            the number of elements the receiver can hold without
 	 *            auto-expanding itself by allocating new internal memory.
@@ -112,10 +112,10 @@ final class ArrayByteList {
 	 * <code>copy = new ArrayByteList(byte[] elems).copy()</code> or similar.
 	 * <p>
 	 * If you need a list containing a copy of <code>elems[from..to)</code>, use
-	 * <code>list = new ArrayByteList(to-from).add(elems, from, to-from)</code> 
+	 * <code>list = new ArrayByteList(to-from).add(elems, from, to-from)</code>
 	 * or <code>list = new ArrayByteList(ByteBuffer.wrap(elems, from, to-from))</code>
 	 * or similar.
-	 * 
+	 *
 	 * @param elems
 	 *            the array backing the constructed list
 	 */
@@ -126,7 +126,7 @@ final class ArrayByteList {
 
 	/**
 	 * Appends the specified element to the end of this list.
-	 * 
+	 *
 	 * @param elem
 	 *            element to be appended to this list.
 	 */
@@ -138,7 +138,7 @@ final class ArrayByteList {
 	/**
 	 * Appends the elements in the range <code>[offset..offset+length)</code>
 	 * to the end of this list.
-	 * 
+	 *
 	 * @param elems
 	 *            the elements to be appended
 	 * @param offset
@@ -149,15 +149,15 @@ final class ArrayByteList {
 	 *             if indexes are out of range.
 	 */
 	public void add(byte[] elems, int offset, int length) {
-		if (offset < 0 || length < 0 || offset + length > elems.length) 
-			throw new IndexOutOfBoundsException("offset: " + offset + 
+		if (offset < 0 || length < 0 || offset + length > elems.length)
+			throw new IndexOutOfBoundsException("offset: " + offset +
 				", length: " + length + ", elems.length: " + elems.length);
 
 		ensureCapacity(size + length);
 		System.arraycopy(elems, offset, this.elements, size, length);
 		size += length;
 	}
-	
+
 	/**
 	 * Returns the elements currently stored, including invalid elements between
 	 * size and capacity, if any.
@@ -166,7 +166,7 @@ final class ArrayByteList {
 	 * <b>the array is SHARED, not copied </b>. So if subsequently you modify the
 	 * returned array directly via the [] operator, be sure you know what you're
 	 * doing.
-	 * 
+	 *
 	 * @return the elements currently stored.
 	 */
 	public byte[] asArray() {
@@ -181,12 +181,12 @@ final class ArrayByteList {
 		size = 0;
 		position = 0;
 	}
-		
+
 	/**
 	 * Ensures that the receiver can hold at least the specified number of
 	 * elements without needing to allocate new internal memory. If necessary,
 	 * allocates new internal memory and increases the capacity of the receiver.
-	 * 
+	 *
 	 * @param minCapacity
 	 *            the desired minimum capacity.
 	 */
@@ -196,13 +196,13 @@ final class ArrayByteList {
 			elements = subArray(0, size, newCapacity);
 		}
 	}
-	
+
 	/**
 	 * Ensures that there are at least <code>need</code> bytes remaining to be
 	 * read. If there are currenty less bytes remaining, this method reads from
 	 * the given input stream until there exactly holds
 	 * <code>remaining() == need</code>.
-	 * 
+	 *
 	 * @param input
 	 *            the stream to read from
 	 * @param need
@@ -216,7 +216,7 @@ final class ArrayByteList {
 		int remaining = remaining();
 		need -= remaining;
 		if (need <= 0) return true;
-		
+
 		int free = elements.length - size;
 		if (free < need) { // not enough room available
 			if (free + position >= need) { // compaction yields enough room
@@ -230,18 +230,18 @@ final class ArrayByteList {
 			size = remaining;
 			position = 0;
 		}
-		
+
 		// read nomore bytes than necessary (message framing protocol)
 		return read(input, need) <= 0;
 	}
-	
+
 	/**
 	 * Reads <code>length</code> bytes from the given input stream, and appends
 	 * them.
 	 * <p>
 	 * Assertion: There is enough room available, i.e. there holds
 	 * <code>elements.length - size >= length</code>.
-	 * 
+	 *
 	 * @return the number of bytes missing in case of premature end-of-stream
 	 */
 	private int read(InputStream input, int length) throws IOException {
@@ -252,10 +252,10 @@ final class ArrayByteList {
 		}
 		return length;
 	}
-	
+
 	/**
 	 * Writes all contained elements onto the given output stream.
-	 * 
+	 *
 	 * @param out
 	 *            the output stream to write to
 	 * @throws IOException
@@ -271,7 +271,7 @@ final class ArrayByteList {
 
 	/**
 	 * Returns the element at the specified index.
-	 * 
+	 *
 	 * @param index
 	 *            index of element to return.
 	 * @throws IndexOutOfBoundsException if index is out of range.
@@ -284,7 +284,7 @@ final class ArrayByteList {
 	/**
 	 * Replaces the element at the specified index with the specified
 	 * element.
-	 * 
+	 *
 	 * @param index
 	 *            index of element to replace.
 	 * @param element
@@ -335,7 +335,7 @@ final class ArrayByteList {
 		buf.append("]");
 		return buf.toString();
 	}
-	
+
 	/**
 	 * Checks if the given index is in range.
 	 */
@@ -348,24 +348,24 @@ final class ArrayByteList {
 	public int position() {
 		return position;
 	}
-	
+
 	/** Sets the current position offset for relative gets. */
 	public void position(int position) {
 		if (DEBUG && position > size) throwIndex(position);
 		this.position = position;
 	}
-	
+
 	/** Returns the number of elements that are left to be read. */
 	public int remaining() {
 		return size - position;
 	}
-	
+
 	/** Reads and returns the byte value at the current position offset. */
 	public byte get() {
 		if (DEBUG && position >= size) throwIndex(position);
 		return elements[position++];
 	}
-	
+
 	/** Reads and returns the 4 byte big endian value at the current position offset. */
 	public int getInt() {
 		if (DEBUG && position + 4 > size) throwIndex(position);
@@ -374,10 +374,10 @@ final class ArrayByteList {
 		byte b1 = elements[position+2];
 		byte b0 = elements[position+3];
 		position += 4;
-		return ((((b3 & 0xff) << 24) | ((b2 & 0xff) << 16) | 
+		return ((((b3 & 0xff) << 24) | ((b2 & 0xff) << 16) |
 				((b1 & 0xff) << 8) | ((b0 & 0xff) << 0)));
 	}
-		
+
 	/** Reads and returns the 2 byte big endian value at the current position offset. */
 	public short getShort() {
 		if (DEBUG && position + 2 > size) throwIndex(position);
@@ -386,16 +386,16 @@ final class ArrayByteList {
 		position += 2;
 		return (short) ((b1 << 8) | (b0 & 0xff));
 	}
-	
+
 	/** Writes the given value at the given index in 4 byte big endian.  */
-	public void setInt(int index, int v) { 
+	public void setInt(int index, int v) {
 		if (DEBUG && index + 4 > size) throwIndex(index);
 		elements[index+0] = (byte) (v >> 24);
 		elements[index+1] = (byte) (v >> 16);
 		elements[index+2] = (byte) (v >> 8);
 		elements[index+3] = (byte) (v >> 0);
 	}
-	
+
 	/** Appends the given value in 4 byte big endian. */
 	public void addInt(int v) {
 		if (size + 4 > elements.length) ensureCapacity(size + 4);
@@ -405,20 +405,20 @@ final class ArrayByteList {
 		elements[size+3] = (byte) (v >> 0);
 		size += 4;
 	}
-	
+
 	/** Appends the given value in 2 byte big endian. */
-	public void addShort(short v) { 
+	public void addShort(short v) {
 		if (size + 2 > elements.length) ensureCapacity(size + 2);
 		elements[size+0] = (byte) (v >> 8);
 		elements[size+1] = (byte) (v >> 0);
 		size += 2;
 	}
-			
+
 	/**
 	 * Removes the elements in the range <code>[from..to)</code>. Shifts any
 	 * subsequent elements to the left.  Keeps the current capacity.
 	 * Note: To remove a single element use <code>remove(index, index+1)</code>.
-	 * 
+	 *
 	 * @param from
 	 *            the index of the first element to removed (inclusive).
 	 * @param to
@@ -429,7 +429,7 @@ final class ArrayByteList {
 	public void remove(int from, int to) {
 		shrinkOrExpand(from, to, 0);
 	}
-	
+
 	/**
 	 * The powerful work horse for all add/insert/replace/remove methods.
 	 * One powerful efficient method does it all :-)
@@ -455,14 +455,14 @@ final class ArrayByteList {
 			throw new IndexOutOfBoundsException("from: " + from + ", to: "
 						+ to + ", size: " + size);
 	}
-	
+
 	/** Exchanges the internal state of the two lists. */
 	public void swap(ArrayByteList dst) {
 		byte[] e = elements; elements = dst.elements; dst.elements = e;
 		int s = size; size = dst.size; dst.size = s;
 		int p = position; position = dst.position; dst.position = p;
 	}
-	
+
 	/**
 	 * Compresses the elements in the range
 	 * <code>src[src.position()..src.size())</code>, appending the compressed
@@ -474,12 +474,12 @@ final class ArrayByteList {
 		compressor.setInput(src.asArray(), src.position(), src.remaining());
 		int minBufSize = 256;
 		ensureCapacity(size + Math.max(minBufSize, src.remaining() / 3));
-		
+
 		do {
 			ensureCapacity(size + minBufSize);
 			size += compressor.deflate(elements, size, elements.length - size);
 		} while (!compressor.needsInput());
-		
+
 		if (!compressor.finished()) {
 		    compressor.finish();
 		    while (!compressor.finished()) {
@@ -487,10 +487,10 @@ final class ArrayByteList {
 				size += compressor.deflate(elements, size, elements.length - size);
 		    }
 		}
-		
+
 		compressor.reset();
 	}
-	
+
 	/**
 	 * Decompresses the elements in the range
 	 * <code>src[src.position()..src.size())</code>, appending the decompressed
@@ -499,14 +499,14 @@ final class ArrayByteList {
 	 * <p>
 	 * If ZLIB decompression finishes before reaching the end of the range, the
 	 * remaining trailing bytes are added to the receiver as well.
-	 * 
+	 *
 	 * @param decompressor
 	 *            the ZLIB decompressor to use
 	 * @param src
 	 *            the input data to decompress
 	 * @return the number of trailing bytes that were found not to be part of
 	 *         the ZLIB data.
-	 * 
+	 *
 	 * @throws DataFormatException
 	 *             if the compressed data format is invalid
 	 */
@@ -516,12 +516,12 @@ final class ArrayByteList {
 
 		int minBufSize = 256;
 		ensureCapacity(size + Math.max(minBufSize, src.remaining() * 3));
-		
+
 		do {
 			ensureCapacity(size + minBufSize);
 			size += decompressor.inflate(elements, size, elements.length - size);
 		} while (!(decompressor.finished() || decompressor.needsDictionary()));
-		
+
 		int remaining = decompressor.getRemaining();
 		if (remaining > 0) { // copy trailer that wasn't compressed to begin with
 			ensureCapacity(size + remaining);
@@ -532,33 +532,33 @@ final class ArrayByteList {
 		decompressor.reset();
 		return remaining;
 	}
-	
+
 	private void addUTF16String(String prefix, String localName) {
 //		length prefixed string:
 //		bit 0..6 [0..127]
 //		bit 7: is4ByteInt. if so, then bit 0..6 are ignored and next 4 bytes are signed int big endian length
 		int len = localName.length();
 		if (prefix.length() != 0) len += prefix.length() + 1;
-		
+
 		if (len <= 127) {
 			add((byte)len);
 		} else {
 			add((byte)-1);
 			addInt(len);
 		}
-		
+
 		if (prefix.length() != 0) {
-			addUTF16String(prefix);			
+			addUTF16String(prefix);
 			addUTF16String(":");
 //			add((byte)0);
 //			add((byte)':'); // ASCII 58
 //			elements[size++] = (byte)':';
 		}
-		addUTF16String(localName);						
+		addUTF16String(localName);
 	}
 
 	private void addUTF16String(String str) {
-		int len = str.length();		
+		int len = str.length();
 		for (int i=0; i < len; i++) {
 			char c = str.charAt(i);
 			add((byte)(c >> 8));
@@ -570,7 +570,7 @@ final class ArrayByteList {
 		buf.clear();
 		int len = get();
 		if (len < 0) len = getInt();
-		
+
 		for (int i=0; i < len; i++) {
 			int b1 = get() & 0xFF;
 			int b2 = get() & 0xFF;
@@ -585,24 +585,24 @@ final class ArrayByteList {
 		final ArrayCharList buffer = new ArrayCharList(32);
 		final byte[] elems = elements;
 		int off = position;
-		
+
 		for (int k = 0; k < count; k++) {
 			dst[k] = getUTF16String(buffer);
 		}
-		
+
 		return dst;
 	}
-	
+
 	/** Appends the UTF-8 encoding of the given string, followed by a zero byte terminator. */
 	public void addUTF8String(String prefix, String localName) {
 		// assert: array capacity is large enough, so there's no need to expand
 		if (prefix.length() != 0) {
-			addUTF8String(prefix);				
+			addUTF8String(prefix);
 //			add((byte)':'); // ASCII 58
 			elements[size++] = (byte)':';
 		}
 		addUTF8String(localName);
-		
+
 		/*
 		 * We exploit the facts that 1) the UTF-8 spec guarantees that a zero
 		 * byte is never introduced as a side effect of UTF-8 encoding (unless a
@@ -615,10 +615,10 @@ final class ArrayByteList {
 		 * http://www.cl.cam.ac.uk/~mgk25/unicode.html and
 		 * http://marc.theaimsgroup.com/?t=112253855300002&r=1&w=2&n=13
 		 */
-//		add((byte) 0); 
+//		add((byte) 0);
 		elements[size++] = (byte) 0;
 	}
-	
+
 	/** Appends the UTF-8 encoding of the given string. */
 	private void addUTF8String(String str) {
 		int len = str.length();
@@ -659,11 +659,11 @@ final class ArrayByteList {
 
 		size = s;
 	}
-	
+
 	private int addUTFSurrogate(char c, String str, int i) {
 		int uc = 0;
 		if (UnicodeUtil.isHighSurrogate(c)) {
-			if (str.length() - i < 2) charCodingException("underflow", str);			
+			if (str.length() - i < 2) charCodingException("underflow", str);
 			char d = str.charAt(++i);
 			if (!UnicodeUtil.isLowSurrogate(d)) charCodingException("malformedForLength(1)", str);
 			uc = UnicodeUtil.toUCS4(c, d);
@@ -672,7 +672,7 @@ final class ArrayByteList {
 			if (UnicodeUtil.isLowSurrogate(c)) charCodingException("malformedForLength(1)", str);
 			uc = c;
 		}
-		
+
 		if (uc < 0x200000) {
 			add((byte) (0xf0 | ((uc >> 18))));
 			add((byte) (0x80 | ((uc >> 12) & 0x3f)));
@@ -681,24 +681,24 @@ final class ArrayByteList {
 		}
 		return i;
 	}
-	
+
 	private static void charCodingException(String msg, String str) {
 		throw new RuntimeException("CharacterCodingException: " + msg
 				+ " for string '" + str + "'");
 	}
-	
+
 	private static void charCodingException(String msg, ArrayCharList str) {
 		throw new RuntimeException("CharacterCodingException: " + msg
 				+ " for string '" + str + "'");
 	}
-			
+
 	/**
 	 * Reads and returns the next "count" (zero terminated) 7 bit ASCII encoded
 	 * strings, starting at the current position offset. Note that 7 bit ASCII
 	 * is a proper subset of UTF-8.
 	 */
 	public String[] getASCIIStrings(int count) {
-		final String[] dst = new String[count]; 
+		final String[] dst = new String[count];
 		final byte[] elems = elements;
 		int off = position;
 		for (int k = 0; k < count; k++) {
@@ -709,12 +709,12 @@ final class ArrayByteList {
 			dst[k] = new String(elems, 0, start, off-start); // intentional and safe!
 			off++; // read past zero byte string terminator
 		}
-			
+
 		position = off;
 		if (DEBUG && position > size) throwIndex(position);
 		return dst;
 	}
-	
+
 	/**
 	 * Reads and returns the next "count" (zero terminated) UTF-8 encoded
 	 * strings, starting at the current position offset.
@@ -724,12 +724,12 @@ final class ArrayByteList {
 		final ArrayCharList buffer = new ArrayCharList(32);
 		final byte[] elems = elements;
 		int off = position;
-		
+
 		for (int k = 0; k < count; k++) {
 			int start = off;
 			int b;
 			while ((b = elems[off]) > 0) { // scan to see if string is pure 7 bit ASCII
-				off++; 
+				off++;
 			}
 			if (b == 0) { // fast path: pure 7 bit ASCII (safe)
 				dst[k] = new String(elems, 0, start, off-start); // intentional and safe!
@@ -739,28 +739,28 @@ final class ArrayByteList {
 			}
 			off++; // read past zero byte string terminator
 		}
-		
+
 		position = off;
 		if (DEBUG && position > size) throwIndex(position);
 		return dst;
 	}
-	
+
 	private String getUTF8String(int i, int asciiEnd, ArrayCharList buffer) {
 		buffer.clear();
 		final byte[] src = elements;
-		
-		// Decode remaining UTF-8 bytes and add corresponding chars. 		
+
+		// Decode remaining UTF-8 bytes and add corresponding chars.
 		// We use doubly nested loop so we can use buf[s++] = ... instead of buf.add(char)
 		while (true) {
 			int s = buffer.size();
 			final int max = i + buffer.capacity() - s - 6; // better safe than sorry
 			final char[] dst = buffer.asArray();
-			
+
 			int b1;
 			while (i < max && ((b1 = src[i]) != 0)) { // until bnux string terminator
 				int b2, b3;
 				switch ((b1 >> 4) & 0x0f) {
-	
+
 				case 0:
 				case 1:
 				case 2:
@@ -794,7 +794,7 @@ final class ArrayByteList {
 					if (isLast(b2)) charCodingException("malformedForLength(1)", buffer);
 					b3 = src[i+2];
 					if (isLast(b3)) charCodingException("malformedForLength(2)", buffer);
-					dst[s++] = (char) (((b1 & 0x0f) << 12) 
+					dst[s++] = (char) (((b1 & 0x0f) << 12)
 							| ((b2 & 0x3f) << 06) | ((b3 & 0x3f) << 0));
 //					buffer.add((char) (((b1 & 0x0f) << 12)
 //							| ((b2 & 0x3f) << 06) | ((b3 & 0x3f) << 0)));
@@ -810,18 +810,18 @@ final class ArrayByteList {
 				default:
 					charCodingException("malformedForLength(1)", buffer);
 				}
-	
+
 			} // end while
-			
+
 			buffer.setSize(s);
 			if (i < max) break; // we're done
 			buffer.ensureCapacity(buffer.capacity() << 1);
 		} // end while(true)
-		
+
 		position = i;
 		return buffer.toString();
 	}
-	
+
 	private int getUTF8String456(int i, ArrayCharList buffer) {
 		final byte[] elems = elements;
 		int b1 = elems[i];
@@ -831,7 +831,7 @@ final class ArrayByteList {
 		int b6;
 		int uc = 0;
 		int n = 0;
-		
+
 		switch (b1 & 0x0f) {
 
 		case 0:
@@ -868,7 +868,7 @@ final class ArrayByteList {
 			b5 = elems[i+4];
 			if (isLast(b5)) charCodingException("malformedForLength(4)", buffer);
 			uc = (((b1 & 0x03) << 24) | ((b2 & 0x3f) << 18)
-				| ((b3 & 0x3f) << 12) | ((b4 & 0x3f) << 06) 
+				| ((b3 & 0x3f) << 12) | ((b4 & 0x3f) << 06)
 				| ((b5 & 0x3f) << 00));
 			n = 5;
 			break;
@@ -901,11 +901,11 @@ final class ArrayByteList {
 		return i;
 //		continue;
 	}
-		
+
 	private static boolean isLast(int v) {
 	    return DEBUG && (0x80 != (v & 0xc0));
-	}	
-	
+	}
+
 	private static void addSurrogate(int uc, int len, ArrayCharList dst) {
 		if (uc <= 0xffff) {
 			if (UnicodeUtil.isSurrogate(uc)) charCodingException("malformedForLength(len)", dst);

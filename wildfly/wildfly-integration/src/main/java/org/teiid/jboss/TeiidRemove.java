@@ -29,13 +29,13 @@ class TeiidRemove extends AbstractRemoveStepHandler {
     protected void performRuntime(OperationContext context,
             final ModelNode operation, final ModelNode model)
             throws OperationFailedException {
-		
+
 		context.removeService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY);
 		context.removeService(TeiidServiceNames.RESULTSET_CACHE_FACTORY);
 		context.removeService(TeiidServiceNames.AUTHORIZATION_VALIDATOR);
 		context.removeService(TeiidServiceNames.PREPARSER);
 		context.removeService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY);
-		
+
 		context.removeService(TeiidServiceNames.ENGINE);
 		context.removeService(TeiidServiceNames.CACHE_PREPAREDPLAN);
 		context.removeService(TeiidServiceNames.CACHE_RESULTSET);

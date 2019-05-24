@@ -22,7 +22,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToByteTransform extends NumberToNumberTransform {
-	
+
 	public NumberToByteTransform(Class<?> sourceType) {
 	    super(Byte.MIN_VALUE, Byte.MAX_VALUE, sourceType);
 	}
@@ -47,10 +47,10 @@ public class NumberToByteTransform extends NumberToNumberTransform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.BYTE;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;
 	}
-	
+
 }

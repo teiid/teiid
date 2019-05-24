@@ -43,7 +43,7 @@ public class TestLikeCriteriaImpl extends TestCase {
         match.setNegated(negated);
         return match;
     }
-    
+
     public static Like example(String right, char escape, boolean negated) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(right, escape, negated));
     }

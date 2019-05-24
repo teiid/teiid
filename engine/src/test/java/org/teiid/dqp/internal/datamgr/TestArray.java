@@ -31,7 +31,7 @@ public class TestArray {
     public static Array example(Object... values) throws Exception {
         ArrayImpl array = new ArrayImpl(values);
         return (Array) TstLanguageBridgeFactory.factory.translate(new Constant(array));
-        
+
     }
 
     @Test

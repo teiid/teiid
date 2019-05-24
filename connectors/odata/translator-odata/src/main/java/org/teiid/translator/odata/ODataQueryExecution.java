@@ -40,23 +40,23 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 import org.teiid.translator.ws.WSConnection;
 
 public class ODataQueryExecution extends BaseQueryExecution implements ResultSetExecution {
-    
+
 	private ODataSQLVisitor visitor;
 	private int countResponse = -1;
 	private Class<?>[] expectedColumnTypes;
 	private ODataEntitiesResponse response;
-	
+
 	public ODataQueryExecution(ODataExecutionFactory translator,
 			QueryExpression command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		super(translator, executionContext, metadata, connection);
-		
+
 		this.visitor = new ODataSQLVisitor(this.translator, metadata);
     	this.visitor.visitNode(command);
     	if (!this.visitor.exceptions.isEmpty()) {
     		throw visitor.exceptions.get(0);
     	}
-    	
+
     	this.expectedColumnTypes = command.getColumnTypes();
 	}
 
@@ -67,12 +67,12 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 		if (this.visitor.isCount()) {
 			Map<String, List<String>> headers = new TreeMap<String, List<String>>();
 			headers.put("Accept", Arrays.asList("text/xml", "text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			
+
 			BinaryWSProcedureExecution execution = executeDirect("GET", URI, null, headers); //$NON-NLS-1$
 			if (execution.getResponseCode() != Status.OK.getStatusCode()) {
 				throw buildError(execution);
 			}
-			
+
 			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			try {
 				this.countResponse = Integer.parseInt(ObjectConverterUtil.convertToString(blob.getBinaryStream()));
@@ -80,7 +80,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 				throw new TranslatorException(e);
 			} catch (SQLException e) {
 				throw new TranslatorException(e);
-			}			
+			}
 		}
 		else {
 			Schema schema = visitor.getEnityTable().getParent();
@@ -91,7 +91,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			}
 		}
 	}
-	
+
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (visitor.isCount() && this.countResponse != -1) {
@@ -106,12 +106,12 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 		}
 		return null;
 	}
-	
+
 	@Override
 	public void close() {
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-	}	
+	}
 }

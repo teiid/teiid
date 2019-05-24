@@ -54,7 +54,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
     private String baseURI;
     private ServiceMetadata serviceMetadata;
     private OData odata;
-    
+
     private ScopedTable updateTable;
     private ScopedTable referenceTable;
     private boolean collection;
@@ -62,8 +62,8 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
 
     static class ScopedTable extends DocumentNode {
         private ForeignKey fk;
-        
-        public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {            
+
+        public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {
             setTable(table);
             setEdmEntityType(type);
             setGroupSymbol(new GroupSymbol(table.getFullName()));
@@ -76,7 +76,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             this.fk = fk;
         }
     }
-    
+
     public ReferenceUpdateSQLBuilder(MetadataStore metadata, String baseURI,
             ServiceMetadata serviceMetadata, OData odata) {
         this.metadata = metadata;
@@ -92,19 +92,19 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         List<UriParameter> keys = info.getKeyPredicates();
         this.updateTable = new ScopedTable(table, type, keys);
     }
-    
+
     @Override
     public void visit(UriResourceNavigation info) {
         EdmNavigationProperty property = info.getProperty();
-        
-        this.referenceTable = new ScopedTable(DocumentNode.findTable(property.getType(), 
+
+        this.referenceTable = new ScopedTable(DocumentNode.findTable(property.getType(),
                 this.metadata), property.getType(),
                 info.getKeyPredicates());
-        
+
         if (property.isCollection()) {
             ForeignKey fk = DocumentNode.joinFK(referenceTable, this.updateTable, property);
             referenceTable.setFk(fk);
-            
+
             ScopedTable temp = this.updateTable;
             this.updateTable = referenceTable;
             this.referenceTable = temp;
@@ -114,9 +114,9 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
             ForeignKey fk = DocumentNode.joinFK(this.updateTable, referenceTable, property);
             this.updateTable.setFk(fk);
         }
-    }    
-    
-    
+    }
+
+
     public Update updateReference(URI referenceId, boolean prepared, boolean delete) throws SQLException {
         try {
             if (referenceId != null) {
@@ -136,20 +136,20 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         } catch (UriValidationException e) {
             throw new SQLException(e);
         }
-        
+
         try {
             Update update = new Update();
             update.setGroup(this.updateTable.getGroupSymbol());
-            
+
             List<String> columnNames = DocumentNode.getColumnNames(this.updateTable.getFk().getColumns());
             for (int i = 0; i < columnNames.size(); i++) {
                 Column column = this.updateTable.getFk().getColumns().get(i);
                 String columnName = columnNames.get(i);
                 ElementSymbol symbol = new ElementSymbol(columnName, this.updateTable.getGroupSymbol());
-                
+
                 EdmEntityType entityType = this.updateTable.getEdmEntityType();
                 EdmProperty edmProperty = (EdmProperty)entityType.getProperty(columnName);
-                
+
                 // reference table keys will be null for delete scenario
                 Object value = null;
                 if (!delete) {
@@ -157,7 +157,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                             this.referenceTable.getKeyPredicates());
                     value = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), parameter.getText());
                 }
-                
+
                 if (prepared) {
                     update.addChange(symbol, new Reference(i++));
                     this.params.add(ODataSQLBuilder.asParam(edmProperty, value));
@@ -166,17 +166,17 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                     update.addChange(symbol, new Constant(ODataSQLBuilder.asParam(edmProperty, value).getValue()));
                 }
             }
-            
+
             Criteria criteria = DocumentNode.buildEntityKeyCriteria(
                     this.updateTable, null, this.metadata, this.odata, null, null);
             update.setCriteria(criteria);
-            
+
             return update;
         } catch (TeiidException e) {
             throw new SQLException(e);
         }
-    }    
-    
+    }
+
     private UriParameter getParameter(String name, List<UriParameter> keys) {
         for (UriParameter parameter:keys) {
             String propertyName = parameter.getName();
@@ -186,8 +186,8 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
         }
         return null;
     }
-    
+
     public List<SQLParameter> getParameters(){
         return this.params;
-    }    
+    }
 }

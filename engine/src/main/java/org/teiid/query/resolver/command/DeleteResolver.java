@@ -39,10 +39,10 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  */
 public class DeleteResolver extends ProcedureContainerResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         //Cast to known type
@@ -53,8 +53,8 @@ public class DeleteResolver extends ProcedureContainerResolver {
         QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(delete, groups, delete.getExternalGroupContexts(), metadata);
     }
-    
-    /** 
+
+    /**
      * @param metadata
      * @param group
      * @return
@@ -66,5 +66,5 @@ public class DeleteResolver extends ProcedureContainerResolver {
                                              QueryMetadataException {
         return metadata.getDeletePlan(group.getMetadataID());
     }
-    
+
 }

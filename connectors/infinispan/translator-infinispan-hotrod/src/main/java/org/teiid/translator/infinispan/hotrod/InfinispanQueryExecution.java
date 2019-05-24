@@ -71,14 +71,14 @@ public class InfinispanQueryExecution implements ResultSetExecution {
             if (useAliasCache) {
             	useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
             }
-            
+
             final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
             visitor.append(this.command);
             Table table = visitor.getParentTable();
-            
+
             String queryStr = visitor.getQuery();
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, "SourceQuery:", queryStr);
-            
+
             DocumentFilter docFilter = null;
             if (queryStr.startsWith("FROM ") && ((Select)command).getWhere() != null) {
                 SQLStringVisitor ssv = new SQLStringVisitor() {

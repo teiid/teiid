@@ -33,7 +33,7 @@ import org.teiid.query.function.metadata.FunctionCategoryConstants;
 
 /**
  * This class will be reflectively loaded in engine, so be cautioned about
- * renaming this. 
+ * renaming this.
  */
 public class OSDQFunctions {
 
@@ -51,13 +51,13 @@ public class OSDQFunctions {
      * @param a
      * This function will return digit characters of the string
      * @return
-     * 
+     *
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
     public static String digit(String sourceValue) {
         return StringCaseFormatUtil.digitString(sourceValue);
     }
-    
+
     /**
      * @param val
      * @return -1 of no match otherwise index of the first match
@@ -66,7 +66,7 @@ public class OSDQFunctions {
     public static int whitespaceIndex(String val) {
         return StringCaseFormatUtil.whitespaceIndex(val);
     }
-    
+
     /**
      * @param Credit Card number
      * @return boolean if matches credit card logic and checksum
@@ -75,7 +75,7 @@ public class OSDQFunctions {
     public static boolean validCreditCard(String cc) {
         return new PIIValidator().isCreditCard(cc);
     }
-    
+
     /**
      * @param ssn number
      * @return boolean if matches ssn logic
@@ -84,7 +84,7 @@ public class OSDQFunctions {
     public static boolean validSSN(String ssn) {
         return new PIIValidator().isSSN(ssn);
     }
-    
+
     /**
      * @param phone number
      * @return boolean if matches phone  logic more than 8 character less than 12 character
@@ -94,7 +94,7 @@ public class OSDQFunctions {
     public static boolean validPhone(String phone) {
         return new PIIValidator().isPhone(phone);
     }
-    
+
     /**
      * @param email
      * @return boolean if valid email
@@ -103,7 +103,7 @@ public class OSDQFunctions {
     public static boolean validEmail(String email) {
         return new PIIValidator().isEmail(email);
     }
-    
+
     /**
      * @param String a
      * @param String b
@@ -117,7 +117,7 @@ public class OSDQFunctions {
         java.util.Set<Character> bset = new java.util.HashSet<Character>(blist);
         return new CosineSimilarity<Character>().compare(aset, bset);
     }
-    
+
     /**
      * @param String a
      * @param String b
@@ -131,7 +131,7 @@ public class OSDQFunctions {
         java.util.Set<Character> bset = new java.util.HashSet<Character>(blist);
         return new JaccardSimilarity<Character>().compare(aset, bset);
     }
-    
+
     /**
      * @param String a
      * @param String b
@@ -141,7 +141,7 @@ public class OSDQFunctions {
     public static float jaroWinklerDistance(String a, String b) {
         return new JaroWinkler().compare(a, b);
     }
-    
+
     /**
      * @param String a
      * @param String b
@@ -151,5 +151,5 @@ public class OSDQFunctions {
     public static float levenshteinDistance(String a, String b) {
         return new Levenshtein().compare(a, b);
     }
-    
+
 }

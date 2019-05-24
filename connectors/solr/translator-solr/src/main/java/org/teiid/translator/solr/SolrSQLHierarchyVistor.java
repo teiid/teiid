@@ -44,7 +44,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
         sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss:SSS'Z'"); //$NON-NLS-1$
         sdf.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
     }
-    
+
 	@SuppressWarnings("unused")
 	private RuntimeMetadata metadata;
 	protected StringBuilder buffer = new StringBuilder();
@@ -64,12 +64,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	@Override
 	public void visit(DerivedColumn obj) {
 		visitNode(obj.getExpression());
-		
+
 		String expr = this.onGoingExpression.pop();
 		if (obj.getAlias() != null) {
 			this.columnAliasMap.put(obj.getAlias(), expr);
-		}		
-		
+		}
+
 		query.addField(expr);
 		fieldNameList.add(expr);
 	}
@@ -83,15 +83,15 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             elemShortName = obj.getName();
         }
 		return elemShortName;
-	}	
-	
+	}
+
 	@Override
 	public void visit(ColumnReference obj) {
 		if (obj.getMetadataObject() != null) {
 			this.onGoingExpression.push(getColumnName(obj));
 		}
 		else {
-			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));	
+			this.onGoingExpression.push(this.columnAliasMap.get(getColumnName(obj)));
 		}
 	}
 
@@ -110,10 +110,10 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	public void visit(Comparison obj) {
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
-		
+
 		visitNode(obj.getRightExpression());
 		String rhs = this.onGoingExpression.pop();
-		
+
 		if (lhs != null) {
 			switch (obj.getOperator()) {
 			case EQ:
@@ -125,12 +125,12 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 				break;
 			case LE:
 				buffer.append(lhs).append(":[* TO"); //$NON-NLS-1$
-				buffer.append(Tokens.SPACE).append(rhs).append(Tokens.RSBRACE);  
+				buffer.append(Tokens.SPACE).append(rhs).append(Tokens.RSBRACE);
 				break;
 			case LT:
 				buffer.append(lhs).append(":[* TO"); //$NON-NLS-1$
 				buffer.append(Tokens.SPACE).append(rhs).append(Tokens.RSBRACE);
-				buffer.append(Tokens.SPACE).append(Reserved.AND).append(Tokens.SPACE); 
+				buffer.append(Tokens.SPACE).append(Reserved.AND).append(Tokens.SPACE);
 				buffer.append(Reserved.NOT).append(Tokens.SPACE).append(lhs);
 				buffer.append(Tokens.COLON).append(rhs);
 				break;
@@ -168,7 +168,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			break;
 		}
 		buffer.append(Tokens.LPAREN);
-		
+
 		//walk right node
 		super.visitNode(obj.getRightCondition());
 		buffer.append(Tokens.RPAREN);
@@ -179,30 +179,30 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	public void visit(In obj) {
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
-		
+
 		visitNodes(obj.getRightExpressions());
-		
+
 		if (obj.isNegated()){
 			buffer.append(Reserved.NOT).append(Tokens.SPACE);
 		}
-		
+
 		//start solr expression
 		buffer.append(lhs).append(Tokens.COLON).append(Tokens.LPAREN);
-		
+
 		int i = obj.getRightExpressions().size();
 		while(i-- > 0) {
 			//append rhs side as we iterates
 			buffer.append(onGoingExpression.pop());
-			
-			if(i > 0) {				
+
+			if(i > 0) {
 				buffer.append(Tokens.SPACE).append(Reserved.OR).append(Tokens.SPACE);
 			}
 		}
 		buffer.append(Tokens.RPAREN);
 	}
 
-	
-	/** 
+
+	/**
 	 * @see org.teiid.language.visitor.HierarchyVisitor#visit(org.teiid.language.Like)
 	 * Description: transforms the like statements into solor syntax
 	 */
@@ -210,10 +210,10 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 	public void visit(Like obj) {
 		visitNode(obj.getLeftExpression());
 		String lhs = this.onGoingExpression.pop();
-		
+
 		visitNode(obj.getRightExpression());
 		String rhs = this.onGoingExpression.pop();
-		
+
 		if (obj.isNegated()){
 			buffer.append(Reserved.NOT).append(Tokens.SPACE);
 		}
@@ -228,18 +228,18 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
             Class<?> type = obj.getType();
             Object val = obj.getValue();
             if(Number.class.isAssignableFrom(type)) {
-            	this.onGoingExpression.push(escapeString(String.valueOf(val))); 
-            } 
+            	this.onGoingExpression.push(escapeString(String.valueOf(val)));
+            }
             else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
             	this.onGoingExpression.push(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
-            } 
-            else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) 
-                    || type.equals(DataTypeManager.DefaultDataClasses.TIME) 
+            }
+            else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)
+                    || type.equals(DataTypeManager.DefaultDataClasses.TIME)
                     || type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
             	synchronized (sdf) {
                 	this.onGoingExpression.push(escapeString(sdf.format(val)));
 				}
-            } 
+            }
             else {
             	this.onGoingExpression.push(escapeString(val.toString()));
             }
@@ -260,8 +260,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
     		str = StringUtil.replaceAll(str, array[i],  "\\" + array[i]); //$NON-NLS-1$
     	}
     	return str;
-    }	
-    
+    }
+
 	@Override
 	public void visit(Limit obj) {
 		this.limitInUse = true;
@@ -270,26 +270,26 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 			this.query.setStart(obj.getRowOffset());
 		}
 	}
-	
+
 	@Override
 	public void visit(OrderBy obj) {
 		visitNodes(obj.getSortSpecifications());
 	}
-	
+
 	@Override
 	public void visit(SortSpecification obj) {
 		visitNode(obj.getExpression());
 		String expr = this.onGoingExpression.pop();
 		this.query.addSort(expr, obj.getOrdering() == SortSpecification.Ordering.ASC?SolrQuery.ORDER.asc:SolrQuery.ORDER.desc);
 	}
-	
+
 	@Override
 	public void visit(Function obj) {
 		FunctionModifier funcModifier = this.ef.getFunctionModifiers().get(obj.getName());
 		if (funcModifier != null) {
 			funcModifier.translate(obj);
 		}
-			
+
 		StringBuilder sb = new StringBuilder();
 		visitNodes(obj.getParameters());
 		for (int i = 0; i < obj.getParameters().size(); i++) {
@@ -303,7 +303,7 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		sb.append(Tokens.RPAREN);
 		this.onGoingExpression.push(sb.toString());
 	}
-	
+
 	@Override
 	public void visit(AggregateFunction obj) {
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
@@ -322,8 +322,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		else {
 		}
-    }	
-	
+    }
+
 	private String formatSolrQuery(String solrQuery) {
 		solrQuery = solrQuery.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
 		solrQuery = solrQuery.replace("'",""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -337,13 +337,13 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
 		}
 		return query.setQuery(buffer.toString());
 	}
-	
+
 	public boolean isLimitInUse() {
 		return this.limitInUse;
 	}
-	
+
 	public boolean isCountStarInUse() {
 		return countStarInUse;
 	}
-	
+
 }

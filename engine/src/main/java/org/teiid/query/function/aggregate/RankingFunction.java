@@ -31,11 +31,11 @@ import org.teiid.query.util.CommandContext;
  * computes rank/dense_rank
  */
 public class RankingFunction extends AggregateFunction {
-	
+
 	private int count = 0;
 	private int lastCount = 0;
 	private Type type;
-	
+
 	public RankingFunction(Type function) {
 		this.type = function;
 	}
@@ -45,7 +45,7 @@ public class RankingFunction extends AggregateFunction {
 		count = 0;
 		lastCount = 0;
 	}
-	
+
 	@Override
 	public void addInputDirect(List<?> tuple, CommandContext commandContext)
 			throws FunctionExecutionException, ExpressionEvaluationException,
@@ -57,7 +57,7 @@ public class RankingFunction extends AggregateFunction {
 			count++;
 		}
 	}
-	
+
 	@Override
 	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException {

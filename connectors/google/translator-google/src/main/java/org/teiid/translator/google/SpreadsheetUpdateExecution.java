@@ -35,7 +35,7 @@ import org.teiid.translator.google.visitor.SpreadsheetInsertVisitor;
 import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
 /**
  * Execution of INSERT, DELETE and UPDATE commands
- * 
+ *
  * @author felias
  *
  */

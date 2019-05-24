@@ -70,7 +70,7 @@ public class TestWSTranslator {
 		for (int i = 0; i < p.getParameters().size(); i++) {
 			p.getParameters().get(i).setPosition(i+1);
 		}
-		
+
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
@@ -80,15 +80,15 @@ public class TestWSTranslator {
 		for (int i = 0; i < p.getParameters().size(); i++) {
 			p.getParameters().get(i).setPosition(i+1);
 		}
-		
+
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
-		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);		
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		Dispatch<Object> mockDispatch = mockDispatch();
 		DataSource source = Mockito.mock(DataSource.class);
 		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(source);
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
-		
+
 		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null)");
 		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		pe.execute();
@@ -104,7 +104,7 @@ public class TestWSTranslator {
 		wpe.execute();
 		wpe.getOutputParameterValues();
 	}
-	
+
 	@Test public void testStreaming() throws Exception {
 		WSExecutionFactory ef = new WSExecutionFactory();
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
@@ -112,39 +112,7 @@ public class TestWSTranslator {
 		ef.getMetadata(mf, mockConnection);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(7, p.getParameters().size());
-		
-		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
-		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);		
-		Dispatch<Object> mockDispatch = mockDispatch();
-		DataSource mock = Mockito.mock(DataSource.class);
-		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
-		Mockito.stub(mock.getInputStream()).toReturn(baos);
-		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
-		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
-		CommandBuilder cb = new CommandBuilder(tm);
-		
-		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
-		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
-		pe.execute();
-		List<?> result = pe.getOutputParameterValues();
-		
-		Blob b = (Blob) result.get(0);
-		assertEquals(100, ObjectConverterUtil.convertToByteArray(b.getBinaryStream()).length);
-		try {
-			ObjectConverterUtil.convertToByteArray(b.getBinaryStream());
-			fail();
-		} catch (SQLException e) {
-			//should only be able to read once
-		}
-	}
-	
-	@Test public void testHeaders() throws Exception {
-		WSExecutionFactory ef = new WSExecutionFactory();
-		WSConnection mockConnection = Mockito.mock(WSConnection.class);
-    	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		ef.getMetadata(mf, mockConnection);
-		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
-		
+
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		Dispatch<Object> mockDispatch = mockDispatch();
@@ -154,11 +122,43 @@ public class TestWSTranslator {
 		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
-		
+
+		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
+		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
+		pe.execute();
+		List<?> result = pe.getOutputParameterValues();
+
+		Blob b = (Blob) result.get(0);
+		assertEquals(100, ObjectConverterUtil.convertToByteArray(b.getBinaryStream()).length);
+		try {
+			ObjectConverterUtil.convertToByteArray(b.getBinaryStream());
+			fail();
+		} catch (SQLException e) {
+			//should only be able to read once
+		}
+	}
+
+	@Test public void testHeaders() throws Exception {
+		WSExecutionFactory ef = new WSExecutionFactory();
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
+    	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+		ef.getMetadata(mf, mockConnection);
+		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
+
+		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
+		Dispatch<Object> mockDispatch = mockDispatch();
+		DataSource mock = Mockito.mock(DataSource.class);
+		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
+		Mockito.stub(mock.getInputStream()).toReturn(baos);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
+		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+		CommandBuilder cb = new CommandBuilder(tm);
+
 		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, false, '{\"ContentType\":\"application/json\"}')");
 		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		pe.execute();
-		
+
 		Map<String, List<String>> headers = (Map<String, List<String>>) mockDispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
 		assertEquals(Arrays.asList("application/json"), headers.get("ContentType"));
 	}
@@ -173,7 +173,7 @@ public class TestWSTranslator {
 		Mockito.stub(mockDispatch.getResponseContext()).toReturn(map);
 		return mockDispatch;
 	}
-	
+
 	@Test public void testJSONHeader() throws Exception {
 		HashMap<String, List<String>> vals = new HashMap<String, List<String>>();
 		BinaryWSProcedureExecution.parseHeader(vals, new ClobImpl("{\"a\":1, \"b\":[\"x\",\"y\"]}"));
@@ -181,10 +181,10 @@ public class TestWSTranslator {
 		assertEquals(vals.get("b"), Arrays.asList("x", "y"));
 		assertEquals(vals.get("a"), Arrays.asList("1"));
 	}
-	
+
 	@Test(expected=TranslatorException.class) public void testJSONHeaderInvalid() throws Exception {
 		HashMap<String, List<String>> vals = new HashMap<String, List<String>>();
 		BinaryWSProcedureExecution.parseHeader(vals, new ClobImpl("[]"));
 	}
-	
+
 }

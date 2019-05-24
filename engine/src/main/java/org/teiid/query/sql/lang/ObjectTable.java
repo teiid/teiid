@@ -30,48 +30,48 @@ import org.teiid.query.sql.symbol.DerivedColumn;
 import org.teiid.query.sql.symbol.Expression;
 
 public class ObjectTable extends TableFunctionReference {
-	
+
 	public static final String DEFAULT_LANGUAGE = "teiid_script"; //$NON-NLS-1$
-	
+
 	public static class ObjectColumn extends ProjectedColumn {
 		private String path;
 		private Expression defaultExpression;
 		private CompiledScript compiledScript;
-		
+
 		public ObjectColumn(String name, String type, String path, Expression defaultExpression) {
 			super(name, type);
 			this.path = path;
 			this.defaultExpression = defaultExpression;
 		}
-		
+
 		protected ObjectColumn() {
-			
+
 		}
-		
+
 		public Expression getDefaultExpression() {
 			return defaultExpression;
 		}
-		
+
 		public void setDefaultExpression(Expression defaultExpression) {
 			this.defaultExpression = defaultExpression;
 		}
-		
+
 		public String getPath() {
 			return path;
 		}
-		
+
 		public void setPath(String path) {
 			this.path = path;
 		}
-		
+
 		public CompiledScript getCompiledScript() {
 			return compiledScript;
 		}
-		
+
 		public void setCompiledScript(CompiledScript compiledScript) {
 			this.compiledScript = compiledScript;
 		}
-		
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -84,7 +84,7 @@ public class ObjectTable extends TableFunctionReference {
 			return EquivalenceUtil.areEqual(this.path, other.path)
 				&& EquivalenceUtil.areEqual(this.defaultExpression, other.defaultExpression);
 		}
-		
+
 		@Override
 		public ObjectColumn clone() {
 			ObjectColumn clone = new ObjectColumn();
@@ -97,55 +97,55 @@ public class ObjectTable extends TableFunctionReference {
 			return clone;
 		}
 	}
-	
+
     private List<ObjectColumn> columns = new ArrayList<ObjectColumn>();
     private String rowScript;
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
     private String scriptingLanguage;
-    
+
     private CompiledScript compiledScript;
     private ScriptEngine scriptEngine;
-    
+
     public CompiledScript getCompiledScript() {
 		return compiledScript;
 	}
-    
+
     public void setCompiledScript(CompiledScript compiledScript) {
 		this.compiledScript = compiledScript;
 	}
-    
+
     public String getScriptingLanguage() {
 		return scriptingLanguage;
 	}
-    
+
     public void setScriptingLanguage(String scriptingLanguage) {
 		this.scriptingLanguage = scriptingLanguage;
 	}
-    
+
     public List<DerivedColumn> getPassing() {
 		return passing;
 	}
-    
+
     public void setPassing(List<DerivedColumn> passing) {
 		this.passing = passing;
 	}
-    
+
     public String getRowScript() {
 		return rowScript;
 	}
-    
+
     public void setRowScript(String query) {
 		this.rowScript = query;
 	}
-    
+
     public List<ObjectColumn> getColumns() {
 		return columns;
 	}
-    
+
     public void setColumns(List<ObjectColumn> columns) {
 		this.columns = columns;
 	}
-    
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
@@ -178,7 +178,7 @@ public class ObjectTable extends TableFunctionReference {
 			return false;
 		}
 		ObjectTable other = (ObjectTable)obj;
-		return this.columns.equals(other.columns) 
+		return this.columns.equals(other.columns)
 			&& this.rowScript.equals(other.rowScript)
 			&& this.passing.equals(other.passing)
 			&& EquivalenceUtil.areEqual(scriptingLanguage, other.scriptingLanguage);
@@ -187,9 +187,9 @@ public class ObjectTable extends TableFunctionReference {
 	public ScriptEngine getScriptEngine() {
 		return scriptEngine;
 	}
-	
+
 	public void setScriptEngine(ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;
 	}
-	
+
 }

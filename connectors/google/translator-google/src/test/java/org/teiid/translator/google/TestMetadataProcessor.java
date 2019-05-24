@@ -39,7 +39,7 @@ public class TestMetadataProcessor {
 
     @Test public void testRemoveColumns() throws Exception {
         GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
-        
+
         SpreadsheetInfo people=  new SpreadsheetInfo("People");
         Worksheet worksheet = people.createWorksheet("PeopleList");
         worksheet.setHeaderEnabled(true);
@@ -55,7 +55,7 @@ public class TestMetadataProcessor {
         Column newCol = new Column();
         newCol.setAlphaName("empty");
         worksheet.addColumn(null, newCol);
-        
+
         Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
         MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
@@ -65,12 +65,12 @@ public class TestMetadataProcessor {
         assertTrue(t.supportsUpdate());
         assertEquals(3, t.getColumns().size());
         assertTrue(t.getColumns().get(0).isUpdatable());
-        
+
         processor.setAllTypesUpdatable(false);
         factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
         processor.process(factory, conn);
         t = factory.getSchema().getTables().get("PeopleList");
         assertFalse(t.getColumns().get(0).isUpdatable());
     }
-    
+
 }

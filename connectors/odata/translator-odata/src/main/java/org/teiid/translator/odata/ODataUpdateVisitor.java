@@ -50,17 +50,17 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 	private Table entity;
 	private List<OProperty<?>> payload;
 	private String uri;
-	
+
 	public ODataUpdateVisitor(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
 		super(executionFactory, metadata);
 	}
-	
+
 	@Override
     public void visit(Insert obj) {
 		this.method = "POST"; //$NON-NLS-1$
 		this.entity = obj.getTable().getMetadataObject();
 		this.uri = this.entity.getName();
-		
+
 		final List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		int elementCount = obj.getColumns().size();
 		for (int i = 0; i < elementCount; i++) {
@@ -69,29 +69,29 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 			OProperty<?> property = readProperty(column, values.get(i));
 			props.add(property);
 		}
-		this.payload = props;	
-	}	
-	
+		this.payload = props;
+	}
+
 	@Override
     public void visit(Update obj) {
 		this.method = "PUT"; //$NON-NLS-1$
 		this.entity = obj.getTable().getMetadataObject();
 		visitNode(obj.getTable());
-		
+
 		// only pk are allowed, no other criteria not allowed
 		obj.setWhere(buildEntityKey(obj.getWhere()));
-        
+
         // this will build with entity keys
         this.uri = getEnitityURL();
-        
+
         if (this.uri.indexOf('(') == -1) {
         	this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17011, this.filter.toString())));
         }
-        
+
         if (this.filter.length() > 0) {
         	this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17009, this.filter.toString())));
         }
-		
+
 		final List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		int elementCount = obj.getChanges().size();
 		for (int i = 0; i < elementCount; i++) {
@@ -101,7 +101,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		}
 		this.payload = props;
 	}
-	
+
 	private OProperty<?> readProperty(Column column, Object value) {
         if (value instanceof Array) {
             EdmType componentType = ODataTypeManager.odataType(column.getRuntimeType());
@@ -128,34 +128,34 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		this.method = "DELETE"; //$NON-NLS-1$
 		this.entity = obj.getTable().getMetadataObject();
 		visitNode(obj.getTable());
-		
+
 		// only pk are allowed, no other criteria not allowed
         obj.setWhere(buildEntityKey(obj.getWhere()));
-        
+
         // this will build with entity keys
         this.uri = getEnitityURL();
         if (this.uri.indexOf('(') == -1) {
         	this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17011, this.filter.toString())));
         }
-        
+
         if (this.filter.length() > 0) {
         	this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17009, this.filter.toString())));
         }
 	}
-	
+
 	public Table getTable() {
 		return this.entity;
 	}
-	
+
 	@Override
 	public String buildURL() {
 		return this.uri;
-	}	
-	
+	}
+
 	public String getMethod() {
 		return this.method;
 	}
-	
+
 	public List<OProperty<?>> getPayload() {
 		return this.payload;
 	}

@@ -48,9 +48,9 @@ import com.google.gdata.util.ServiceException;
 
 /**
  * Spreadsheet browser implemented by gdata-java-client: http://code.google.com/p/gdata-java-client/
- * 
- * This browser authenticates using Client Login. 
- * 
+ *
+ * This browser authenticates using Client Login.
+ *
  * @author fnguyen
  *
  */
@@ -85,17 +85,17 @@ public class GDataClientLoginAPI {
 		List<SpreadsheetEntry> entry = feed.getEntries();
 		if (entry.size() == 0)
 			throw new SpreadsheetOperationException("Couldn't find spreadsheet:" + sheetName);
-		
+
 		if (entry.size() > 1) {
 		    throw new SpreadsheetOperationException("Multiple worksheets with the given title:" + sheetName + ".  Consider using a sheet key instead.");
 		}
 
 		return entry.get(0);
 	}
-	
+
 
 	protected BaseFeed<?, ?> getSpreadsheetFeedQuery(SpreadsheetQuery squery, Class<? extends BaseFeed<?, ?>> feedClass) {
-		try { 
+		try {
 			return service.getFeed(squery, feedClass);
 		} catch (Exception ex) {
 			try {
@@ -111,9 +111,9 @@ public class GDataClientLoginAPI {
 			}
 		}
 	}
-	
+
     private <E extends IEntry> E getSpreadsheetEntry(URL entryUrl, Class<E> entryClass) {
-        try { 
+        try {
             return service.getEntry(entryUrl, entryClass);
         } catch (Exception ex) {
             try {
@@ -135,13 +135,13 @@ public class GDataClientLoginAPI {
 		service.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
 	}
 /**
- * Updates spreadsheet using the listfeed. 
- * 
+ * Updates spreadsheet using the listfeed.
+ *
  * @param spreadsheetKey  key that identifies spreadsheet
  * @param worksheetID  id that identifies worksheet
  * @param criteria  update criteria
  * @param updateSet  fields that should be updated
- * @param allColumns 
+ * @param allColumns
  * @return number of updated rows
  */
 	public UpdateResult listFeedUpdate(String spreadsheetKey, String worksheetID, String criteria, List<UpdateSet> updateSet, List<Column> allColumns) {
@@ -157,7 +157,7 @@ public class GDataClientLoginAPI {
 		}
 		ListFeed listfeed = (ListFeed) getSpreadsheetFeedQuery(query, ListFeed.class);
 		int counter=0;
-		
+
 		//TEIID-4870 existing string values can get corrupted unless we re-set the entry
 		List<Column> stringColumns = new ArrayList<Column>();
         for (Column c : allColumns) {
@@ -191,8 +191,8 @@ public class GDataClientLoginAPI {
 		return new UpdateResult(listfeed.getEntries().size(), counter);
 	}
 	/**
-	 * Deletes spreadsheet rows using the listfeed. 
-	 * 
+	 * Deletes spreadsheet rows using the listfeed.
+	 *
 	 * @param spreadsheetKey  key that identifies spreadsheet
 	 * @param worksheetID  id that identifies worksheet
 	 * @param criteria  delete criteria

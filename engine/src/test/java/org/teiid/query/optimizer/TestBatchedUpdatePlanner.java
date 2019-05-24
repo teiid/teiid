@@ -54,12 +54,12 @@ import org.teiid.query.validator.ValidatorReport;
 
 
 
-/** 
+/**
  * @since 4.2
  */
 public class TestBatchedUpdatePlanner {
 
-    public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException  { 
+    public static List<Command> helpGetCommands(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException  {
         if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
         List<Command> commands = new ArrayList<Command>(sql.length);
         for (int i = 0; i < sql.length; i++) {
@@ -70,21 +70,21 @@ public class TestBatchedUpdatePlanner {
             repo.collectInvalidObjects(failures);
             if (failures.size() > 0){
                 fail("Exception during validation (" + repo); //$NON-NLS-1$
-            }                    
-            
+            }
+
             command = QueryRewriter.rewrite(command, md, null);
             commands.add(command);
         }
         return commands;
     }
-    
-    private BatchedUpdateCommand helpGetCommand(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException { 
+
+    private BatchedUpdateCommand helpGetCommand(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException {
         BatchedUpdateCommand command = new BatchedUpdateCommand(helpGetCommands(sql, md));
         return command;
     }
-    
-    private BatchedUpdatePlan helpPlanCommand(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) throws QueryPlannerException, QueryMetadataException, TeiidComponentException { 
-        
+
+    private BatchedUpdatePlan helpPlanCommand(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+
         // plan
         ProcessorPlan plan = null;
         AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
@@ -117,7 +117,7 @@ public class TestBatchedUpdatePlanner {
         assertNotNull("Expected exception but did not get one.", exception); //$NON-NLS-1$
         return null;
     }
-    
+
     public static CapabilitiesFinder getGenericFinder() {
         return new DefaultCapabilitiesFinder(new FakeCapabilities(true));
     }
@@ -125,7 +125,7 @@ public class TestBatchedUpdatePlanner {
     private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md) throws TeiidComponentException, QueryMetadataException, TeiidProcessingException {
         return helpPlan(sql, md, getGenericFinder(), true);
     }
-    
+
     private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md, CapabilitiesFinder capFinder, boolean shouldSucceed) throws TeiidComponentException, QueryMetadataException, TeiidProcessingException {
         Command command = helpGetCommand(sql, md);
 
@@ -134,8 +134,8 @@ public class TestBatchedUpdatePlanner {
         }
 
         return helpPlanCommand(command, md, capFinder, shouldSucceed);
-    } 
-    
+    }
+
     private void helpAssertIsBatchedPlan(RelationalPlan plan, boolean isBatchedPlan) {
         RelationalNode node = plan.getRootNode();
         if (node instanceof ProjectNode) {
@@ -147,7 +147,7 @@ public class TestBatchedUpdatePlanner {
             assertTrue("Plan should not have been batched.", node instanceof AccessNode); //$NON-NLS-1$
         }
     }
-    
+
     private void helpTestPlanner(String[] sql, boolean[] expectedBatching) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         BatchedUpdatePlan plan = helpPlan(sql, RealMetadataFactory.example1Cached());
         List plans = plan.getUpdatePlans();
@@ -155,8 +155,8 @@ public class TestBatchedUpdatePlanner {
         for (int i = 0; i < expectedBatching.length; i++) {
             helpAssertIsBatchedPlan((RelationalPlan)plans.get(i), expectedBatching[i]);
         }
-    }    
-    
+    }
+
     private void helpTestPlanner(String[] sql, boolean[] expectedBatching, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         BatchedUpdatePlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), capFinder, true);
         List plans = plan.getUpdatePlans();
@@ -164,8 +164,8 @@ public class TestBatchedUpdatePlanner {
         for (int i = 0; i < expectedBatching.length; i++) {
             helpAssertIsBatchedPlan((RelationalPlan)plans.get(i), expectedBatching[i]);
         }
-    }    
-    
+    }
+
     @Test public void testPlannerAllCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
@@ -175,7 +175,7 @@ public class TestBatchedUpdatePlanner {
         boolean[] expectedBatching = {true};
         helpTestPlanner(sql, expectedBatching);
     }
-    
+
     @Test public void testPlannerNoCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
@@ -187,7 +187,7 @@ public class TestBatchedUpdatePlanner {
         boolean[] expectedBatching = {false, false, false, false};
         helpTestPlanner(sql, expectedBatching, finder);
     }
-    
+
     @Test public void testPlannerSomeCommandsBatched() throws Exception {
         String[] sql = {"INSERT INTO pm1.g1 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
                         "INSERT INTO pm1.g2 (e1, e2, e3, e4) values ('string1', 1, {b'true'}, 1.0)", //$NON-NLS-1$
@@ -210,9 +210,9 @@ public class TestBatchedUpdatePlanner {
         }
         public boolean supportsCapability(Capability capability) {
             return !capability.equals(Capability.BATCHED_UPDATES) || supportsBatching;
-        }        
+        }
     }
-    
+
     private static final boolean DEBUG = false;
-    
+
 }

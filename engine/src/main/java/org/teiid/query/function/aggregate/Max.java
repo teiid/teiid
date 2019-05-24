@@ -38,7 +38,7 @@ public class Max extends SingleArgumentAggregateFunction {
     public void reset() {
         maxValue = null;
     }
-    
+
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
     	this.outputType = inputType;
@@ -67,21 +67,21 @@ public class Max extends SingleArgumentAggregateFunction {
     public Object getResult(CommandContext commandContext) {
         return this.maxValue;
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
     	return Arrays.asList(outputType);
     }
-    
+
     @Override
     public void getState(List<Object> state) {
     	state.add(maxValue);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
     	this.maxValue = state.get(index);
     	return index++;
     }
-    
+
 }

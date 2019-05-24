@@ -58,13 +58,13 @@ public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
 		if (result.getExpectedNumberOfRows() != result.getActualNumberOfRows()) {
 			if (result.getExpectedNumberOfRows() > result.getActualNumberOfRows()) {
 				context.addWarning(new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("partial_update", result.getExpectedNumberOfRows(), result.getActualNumberOfRows()))); //$NON-NLS-1$
-			} else { 
+			} else {
 				throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("unexpected_updatecount", result.getExpectedNumberOfRows(), result.getActualNumberOfRows())); //$NON-NLS-1$
 			}
 		}
 		return new int[]{result.getActualNumberOfRows()};
 	}
-    
+
 	 void checkHeaders(String worksheetTitle) throws TranslatorException{
 		SpreadsheetInfo info=connection.getSpreadsheetInfo();
 		Worksheet worksheet=info.getWorksheetByName(worksheetTitle);
@@ -75,7 +75,7 @@ public abstract class AbstractSpreadsheetExecution implements UpdateExecution {
 			throw new TranslatorException(SpreadsheetExecutionFactory.UTIL.gs("headers_required")); //$NON-NLS-1$
 		}
 	}
-	
+
 	public GoogleSpreadsheetConnection getConnection(){
 		return connection;
 	}

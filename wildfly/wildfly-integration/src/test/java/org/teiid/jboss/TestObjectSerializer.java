@@ -29,7 +29,7 @@ import org.teiid.jboss.ObjectSerializer;
 
 @SuppressWarnings("nls")
 public class TestObjectSerializer {
-	
+
 	@Test public void testLoadSafe() throws Exception {
 		ObjectSerializer os = new ObjectSerializer(System.getProperty("java.io.tmpdir"));
 		File f = UnitTestUtil.getTestScratchFile("foo");
@@ -37,5 +37,5 @@ public class TestObjectSerializer {
 		assertNotNull(os.loadAttachment(f, Long.class));
 		assertNull(os.loadSafe(f, Integer.class));
 	}
-	
+
 }

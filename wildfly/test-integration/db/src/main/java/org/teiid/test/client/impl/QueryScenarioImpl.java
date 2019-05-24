@@ -28,19 +28,19 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 /**
  * The QueryScenarioImpl extends the QueryScenerio handle the testresults for defaults settings.
- * 
+ *
  * @author vanhalbert
  *
  */
 @SuppressWarnings("nls")
 public class QueryScenarioImpl extends QueryScenario {
-    
-    
+
+
     public QueryScenarioImpl(String scenarioName, Properties queryProperties) {
 	super(scenarioName, queryProperties);
 
     }
-    
+
 
     /* (non-Javadoc)
      * @see org.teiid.test.client.QueryScenario#handleTestResult(org.teiid.test.client.TestResult, java.lang.String)
@@ -50,23 +50,23 @@ public class QueryScenarioImpl extends QueryScenario {
  	Throwable resultException = tr.getException();
 	if (getResultsMode().equalsIgnoreCase(
 		TestProperties.RESULT_MODES.COMPARE)) {
-	    
+
 		Object results = null;
 		try {
-		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
-			    sql, 
-			    resultSet, 
-			    resultException, 
+		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(),
+			    sql,
+			    resultSet,
+			    resultException,
 			    tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
-		    
+
 		    if (results == null) {
 			tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
 		    } else {
 			tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
 			tr.setExceptionMessage("Results did not compare to expected results");
 		    }
-		    
-		    
+
+
 		} catch (QueryTestFailedException qtf) {
 		    resultException = (resultException != null ? resultException
 			    : qtf);
@@ -74,13 +74,13 @@ public class QueryScenarioImpl extends QueryScenario {
 		    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
 
 		}
-		
+
 		if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 		    try {
     		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
     			    tr.getQueryID(), sql, resultSet, resultException,
-    			    results );	
-    		    	
+    			    results );
+
 		    } catch (QueryTestFailedException qtfe) {
 			    throw new TransactionRuntimeException(qtfe.getMessage());
 		    }
@@ -91,10 +91,10 @@ public class QueryScenarioImpl extends QueryScenario {
 		TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
 
 	    try {
-		
+
 		this.getResultsGenerator().generateQueryResultFile(tr.getQuerySetID(),
 			tr.getQueryID(), sql, resultSet, resultException, tr.getStatus());
-			
+
 	    } catch (QueryTestFailedException qtfe) {
 		throw new TransactionRuntimeException(qtfe.getMessage());
 	    }
@@ -114,9 +114,9 @@ public class QueryScenarioImpl extends QueryScenario {
 	}
 
 
-	
+
     }
-    
+
 
     private boolean isOrdered(String sql) {
 
@@ -126,5 +126,5 @@ public class QueryScenarioImpl extends QueryScenario {
 	return false;
 
     }
-  
+
 }

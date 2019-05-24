@@ -32,12 +32,12 @@ import junit.framework.*;
 public class TestIfStatement  extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestIfStatement(String name) { 
+
+	public TestIfStatement(String name) {
 		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
+	}
+
+	// ################################## TEST HELPERS ################################
 
 	public static final IfStatement sample1() {
 		Block ifBlock = TestBlock.sample1();
@@ -46,31 +46,31 @@ public class TestIfStatement  extends TestCase {
 		return new IfStatement(criteria, ifBlock, elseBlock);
 	}
 
-	public static final IfStatement sample2() { 
+	public static final IfStatement sample2() {
 		Block ifBlock = TestBlock.sample2();
 		Block elseBlock = TestBlock.sample1();
 		Criteria criteria = TestSetCriteria.sample2();
 		return new IfStatement(criteria, ifBlock, elseBlock);
 	}
-	
-	// ################################## ACTUAL TESTS ################################	
+
+	// ################################## ACTUAL TESTS ################################
 
 
 	public void testGetIfBlock() {
 		IfStatement b1 = sample1();
         assertTrue("Incorrect IfBlock on statement", b1.getIfBlock().equals(TestBlock.sample1())); //$NON-NLS-1$
 	}
-	
+
 	public void testGetElseBlock() {
 		IfStatement b1 = sample1();
         assertTrue("Incorrect IfBlock on statement", b1.getElseBlock().equals(TestBlock.sample2())); //$NON-NLS-1$
 	}
-	
+
 	public void testGetCondition() {
 		IfStatement b1 = sample1();
         assertTrue("Incorrect IfBlock on statement", b1.getCondition().equals(TestSetCriteria.sample1())); //$NON-NLS-1$
 	}
-	
+
 	public void testSelfEquivalence(){
 		IfStatement s1 = sample1();
 		int equals = 0;
@@ -83,7 +83,7 @@ public class TestIfStatement  extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
 	public void testNonEquivalence(){
 		IfStatement s1 = sample1();
 		IfStatement s2 = sample2();

@@ -53,7 +53,7 @@ public class BulkInsertTask implements ServerTask<Long> {
 
 		boolean upsert = Boolean.parseBoolean((String) params.get("upsert"));
 		int rowCount = (Integer)params.get("row-count");
-		
+
 		long updateCount = 0;
 		for (int i = 0; i < rowCount; i++) {
 			Object key = params.get("row-key-" + i);

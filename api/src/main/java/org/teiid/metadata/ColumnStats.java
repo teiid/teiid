@@ -23,24 +23,24 @@ import java.io.Serializable;
 public class ColumnStats implements Serializable {
 
 	private static final long serialVersionUID = 7827734836519486538L;
-	
+
 	private Number distinctValues;
     private Number nullValues;
     private String minimumValue;
     private String maximumValue;
-	
+
 	public String getMinimumValue() {
 		return minimumValue;
 	}
-	
+
 	public void setMinimumValue(String min) {
 		this.minimumValue = min;
 	}
-	
+
 	public String getMaximumValue() {
 		return maximumValue;
 	}
-	
+
 	public void setMaximumValue(String max) {
 		this.maximumValue = max;
 	}
@@ -60,5 +60,5 @@ public class ColumnStats implements Serializable {
 	public void setNullValues(Number numNullValues) {
 		this.nullValues = numNullValues;
 	}
-    
+
 }

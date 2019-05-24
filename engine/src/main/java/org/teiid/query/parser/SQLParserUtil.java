@@ -53,20 +53,20 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class SQLParserUtil {
-	    
+
     static final Pattern hintPattern = Pattern.compile("\\s*(\\w+(?:\\(\\s*(max:\\d+)?\\s*((?:no)?\\s*join)\\s*\\))?)\\s*", Pattern.DOTALL | Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	
+
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getHierarchicalProperty("org.teiid.decimalAsDouble", false, Boolean.class); //$NON-NLS-1$
-	
+
 	public static final boolean RESULT_ANY_POSITION = PropertiesUtils.getHierarchicalProperty("org.teiid.resultAnyPosition", false, Boolean.class); //$NON-NLS-1$
-	
+
 	String prependSign(String sign, String literal) {
 		if (sign != null && sign.charAt(0) == '-') {
 			return sign + literal;
 		}
 		return literal;
 	}
-	
+
 	void convertToParameters(List<Expression> values, StoredProcedure storedProcedure, int paramIndex) {
 		for (Expression value : values) {
 			SPParameter parameter = new SPParameter(paramIndex++, value);
@@ -74,7 +74,7 @@ public class SQLParserUtil {
 			storedProcedure.setParameter(parameter);
 		}
 	}
-	
+
 	String matchesAny(String arg, String ... expected) {
 		for (String string : expected) {
 			if (string.equalsIgnoreCase(arg)) {
@@ -83,7 +83,7 @@ public class SQLParserUtil {
 		}
 		return null;
 	}
-	
+
 	String normalizeStringLiteral(String s) {
 		int start = 1;
 		boolean unescape = false;
@@ -101,11 +101,11 @@ public class SQLParserUtil {
   		}
   		return result;
 	}
-	
+
 	public static String normalizeId(String s) throws ParseException {
 	    return normalizeId(s, false);
 	}
-	
+
 	public static String normalizeId(String s, boolean singlePart) throws ParseException {
 		if (s.indexOf('"') == -1 && !singlePart) {
 			return s;
@@ -133,7 +133,7 @@ public class SQLParserUtil {
 				if (index == -1) {
 					nameParts.add(s);
 					break;
-				} 
+				}
 				nameParts.add(s.substring(0, index));
 				s = s.substring(index + 1);
 			}
@@ -153,7 +153,7 @@ public class SQLParserUtil {
 		}
 		return sb.toString();
 	}
-	
+
     /**
      * Check if this is a valid string literal
      * @param id Possible string literal
@@ -174,33 +174,33 @@ public class SQLParserUtil {
     		index += 2;
     	}
     	return true;
-    }    
+    }
 
     String validateName(String id, boolean nonAlias) throws ParseException {
-        if(id.indexOf('.') != -1) { 
+        if(id.indexOf('.') != -1) {
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
             if (nonAlias) {
                 key = "SQLParser.Invalid_short_name"; //$NON-NLS-1$
             }
-            throw new ParseException(QueryPlugin.Util.getString(key, id)); 
+            throw new ParseException(QueryPlugin.Util.getString(key, id));
         }
         return id;
     }
-    
+
     void validateQuotedName(String aliasID, String rawAlias) throws ParseException {
         String adjustedAlias = aliasID;
         if (rawAlias.charAt(0) == '"') {
           adjustedAlias = '"' + StringUtil.replaceAll(aliasID, "\"", "\"\"") + '"'; //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!rawAlias.equals(adjustedAlias)) {
-          throw new ParseException(QueryPlugin.Util.getString("SQLParser.ddl_id_unqualified", rawAlias)); //$NON-NLS-1$ 
+          throw new ParseException(QueryPlugin.Util.getString("SQLParser.ddl_id_unqualified", rawAlias)); //$NON-NLS-1$
         }
     }
-    
+
     static String removeEscapeChars(String str, String tickChar) {
         return StringUtil.replaceAll(str, tickChar + tickChar, tickChar);
     }
-    
+
     void setFromClauseOptions(Token groupID, FromClause fromClause){
     	String comment = getComment(groupID);
     	if (comment == null || comment.isEmpty()) {
@@ -232,7 +232,7 @@ public class SQLParserUtil {
             }
     	}
     }
-    
+
     void parseWithHints(Token paren, WithQueryCommand with){
     	String comment = getComment(paren);
     	if (comment == null || comment.isEmpty()) {
@@ -261,7 +261,7 @@ public class SQLParserUtil {
 			option.setMax(Integer.valueOf(m.group(2).trim().substring(4)));
 		}
 	}
-    
+
     SubqueryHint getSubqueryHint(Token t) {
     	SubqueryHint hint = new SubqueryHint();
     	String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
@@ -276,7 +276,7 @@ public class SQLParserUtil {
         }
     	return hint;
     }
-    
+
 	String getComment(Token t) {
 		String comment = getFullComment(t, false);
 		if (comment.length() == 0) {
@@ -291,18 +291,18 @@ public class SQLParserUtil {
         }
         return hint;
 	}
-	
+
 	/**
 	 * Get the full comment including the nesting characters -- or \* *\/
 	 * Or return the empty string if there is no comment.
 	 * @param includeEnding if true include a space or newline after the comment
 	 */
 	String getFullComment(Token t, boolean includeEnding) {
-	    if (t == null) { 
+	    if (t == null) {
             return ""; //$NON-NLS-1$
         }
         Token optToken = t.specialToken;
-        if (optToken == null) { 
+        if (optToken == null) {
             return ""; //$NON-NLS-1$
         }
         //handle nested comments
@@ -311,7 +311,7 @@ public class SQLParserUtil {
             optToken = optToken.specialToken;
             image = optToken.image + image;
         }
-        
+
         if (includeEnding && image.startsWith("--")) { //$NON-NLS-1$
             return image + "\n"; //$NON-NLS-1$
         }
@@ -320,12 +320,12 @@ public class SQLParserUtil {
         }
         return image;
     }
-	
+
 	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(\\s+KEEP ALIASES)?\\s*(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^: ]+)(\\s+KEEP ALIASES)?\\s*:((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
-	
+
 	SourceHint getSourceHint(SQLParser parser) {
-		int index = 1; 
+		int index = 1;
 		//scan for the first keyword
 	    Token t = null;
 	    do {
@@ -356,7 +356,7 @@ public class SQLParserUtil {
 		}
 		return sourceHint;
 	}
-	
+
 	void setSourceHint(SourceHint sourceHint, Command command) {
 	    if (sourceHint != null) {
 	        if (command instanceof SetQuery) {
@@ -366,7 +366,7 @@ public class SQLParserUtil {
 	    	}
 	    }
 	}
-	
+
 	boolean isNonStrictHint(Token t) {
 		String[] parts = getComment(t).split("\\s"); //$NON-NLS-1$
     	for (int i = 0; i < parts.length; i++) {
@@ -376,10 +376,10 @@ public class SQLParserUtil {
     	}
     	return false;
 	}
-	
+
 	private static Pattern HINT = Pattern.compile("\\s*/\\*([^/]*)\\*/", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern CACHE_HINT = Pattern.compile("\\+?\\s*cache(\\(\\s*(pref_mem)?\\s*(ttl:\\d{1,19})?\\s*(updatable)?\\s*(scope:(session|vdb|user))?\\s*(min:\\d{1,19})?[^\\)]*\\))?[^\\*]*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
-    
+
 	static CacheHint getQueryCacheOption(String query) {
     	Matcher hintMatch = HINT.matcher(query);
     	int start = 0;
@@ -431,16 +431,16 @@ public class SQLParserUtil {
         } else if (opString.equals(">=")) { //$NON-NLS-1$
             return CompareCriteria.GE;
         }
-        
+
         Assertion.failed("unknown operator"); //$NON-NLS-1$
         return 0;
     }
-    
+
     SetQuery addQueryToSetOperation(QueryCommand query, QueryCommand rightQuery, SetQuery.Operation type, boolean all) {
         SetQuery setQuery = new SetQuery(type, all, query, rightQuery);
         return setQuery;
     }
-    
+
     static Block asBlock(Statement stmt) {
     	if (stmt == null) {
     		return null;
@@ -450,7 +450,7 @@ public class SQLParserUtil {
     	}
     	return new Block(stmt);
     }
-        
+
 	static FunctionMethod replaceProcedureWithFunction(MetadataFactory factory,
 			Procedure proc) throws MetadataException {
 		if (proc.isFunction() && proc.getQueryPlan() != null) {
@@ -461,7 +461,7 @@ public class SQLParserUtil {
 		//remove the old proc
 		factory.getSchema().getResolvingOrder().remove(factory.getSchema().getResolvingOrder().size() - 1);
 		factory.getSchema().getProcedures().remove(proc.getName());
-		
+
 		factory.getSchema().addFunction(method);
 		return method;
 	}
@@ -470,7 +470,7 @@ public class SQLParserUtil {
 		FunctionMethod method = new FunctionMethod();
 		method.setName(proc.getName());
 		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
-		
+
 		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
 		for (ProcedureParameter pp:proc.getParameters()) {
 			if (pp.getType() == ProcedureParameter.Type.InOut || pp.getType() == ProcedureParameter.Type.Out) {
@@ -500,36 +500,36 @@ public class SQLParserUtil {
 			}
 		}
 		method.setInputParameters(ins);
-		
+
 		if (proc.getResultSet() != null || method.getOutputParameter() == null) {
 			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
 		}
-		
+
 		method.setAnnotation(proc.getAnnotation());
 		method.setNameInSource(proc.getNameInSource());
 		method.setUUID(proc.getUUID());
-		
+
 		Map<String, String> props = proc.getProperties();
 
-		String value = props.remove(DDLConstants.CATEGORY); 
+		String value = props.remove(DDLConstants.CATEGORY);
 		method.setCategory(value);
-		
-		value = props.remove(DDLConstants.DETERMINISM); 
+
+		value = props.remove(DDLConstants.DETERMINISM);
 		if (value != null) {
 			method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
 		}
-		
-		value = props.remove(DDLConstants.JAVA_CLASS); 
+
+		value = props.remove(DDLConstants.JAVA_CLASS);
 		method.setInvocationClass(value);
-		
-		value = props.remove(DDLConstants.JAVA_METHOD); 
+
+		value = props.remove(DDLConstants.JAVA_METHOD);
 		method.setInvocationMethod(value);
-		
+
 		for (String key:props.keySet()) {
 			value = props.get(key);
 			method.setProperty(key, value);
 		}
-		
+
 		FunctionMethod.convertExtensionMetadata(proc, method);
 		if (method.getInvocationMethod() != null) {
     		method.setPushdown(PushDown.CAN_PUSHDOWN);
@@ -539,8 +539,8 @@ public class SQLParserUtil {
 
 	public static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
-    }    
-    
+    }
+
     AbstractMetadataRecord getChild(String name, AbstractMetadataRecord record, boolean parameter) {
     	if (record instanceof Table) {
     		if (parameter) {
@@ -551,7 +551,7 @@ public class SQLParserUtil {
 		return getColumn(name, (Procedure)record, parameter);
     	//TODO: function is not supported yet because we store by uid, which should instead be a more friendly "unique name"
     }
-	
+
 	Column getColumn(String columnName, Table table) throws MetadataException {
 		Column c = table.getColumnByName(columnName);
 		if (c != null) {
@@ -559,7 +559,7 @@ public class SQLParserUtil {
 		}
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
-	
+
 	AbstractMetadataRecord getColumn(String paramName, Procedure proc, boolean parameter) throws MetadataException {
 		if (proc.getResultSet() != null) {
 			Column result = proc.getResultSet().getColumnByName(paramName);
@@ -577,7 +577,7 @@ public class SQLParserUtil {
 		}
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_param_doesnot_exist", paramName, proc.getName())); //$NON-NLS-1$
 	}
-	
+
 	FunctionParameter getParameter(String paramName, FunctionMethod func) throws MetadataException {
 		List<FunctionParameter> params = func.getInputParameters();
 		for (FunctionParameter param:params) {
@@ -586,13 +586,13 @@ public class SQLParserUtil {
 			}
 		}
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_function_param_doesnot_exist", paramName, func.getName())); //$NON-NLS-1$
-	}	
-	
+	}
+
 	void createDDLTrigger(DatabaseStore events, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
 		events.setTableTriggerPlan(trigger.getName(), group.getName(), trigger.getEvent(), trigger.getDefinition().toString(), trigger.isAfter());
 	}
-	
+
 	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws MetadataException {
 		BaseColumn column = null;
 		if (rs) {
@@ -633,8 +633,8 @@ public class SQLParserUtil {
 		        column.setScale(0);
 		    }
 		}
-	}	
-	
+	}
+
 	KeyRecord addFBI(MetadataFactory factory, List<Expression> expressions, Table table, String name) throws MetadataException {
 		List<String> columnNames = new ArrayList<String>(expressions.size());
 		List<Boolean> nonColumnExpressions = new ArrayList<Boolean>(expressions.size());
@@ -652,12 +652,12 @@ public class SQLParserUtil {
 		}
     	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
 	}
-	
+
 	MetadataFactory getTempMetadataFactory() {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		return workContext.getTempMetadataFactory();
 	}
-	
+
 	List<Expression> arrayExpressions(List<Expression> expressions, Expression expr) {
 		if (expressions == null) {
 			expressions = new ArrayList<Expression>();
@@ -667,20 +667,20 @@ public class SQLParserUtil {
 		}
 		return expressions;
 	}
-	
+
 	public static class  ParsedDataType{
 		String type;
 		Integer length;
 		Integer scale;
 		Integer precision;
-		
+
 		public ParsedDataType(String type) {
 			this.type = type;
 		}
-		
+
 		public ParsedDataType(String type, int length, boolean precision) {
 			this.type = type;
-			
+
 			if (precision) {
 				this.precision = length;
 			}
@@ -688,7 +688,7 @@ public class SQLParserUtil {
 				this.length = length;
 			}
 		}
-		
+
 		public ParsedDataType(String type, int length, int scale, boolean precision) {
 			this.type = type;
 			this.scale = scale;
@@ -697,14 +697,14 @@ public class SQLParserUtil {
 			}
 			else {
 				this.length = length;
-			}			
+			}
 		}
-		
+
 		public String getType() {
             return type;
         }
 	}
-	
+
 	public static void setDefault(BaseColumn column, Expression value) {
 		if ((value instanceof Constant) && value.getType() == DataTypeManager.DefaultDataClasses.STRING) {
 			column.setDefaultValue(((Constant)value).getValue().toString());
@@ -714,7 +714,7 @@ public class SQLParserUtil {
 			column.setDefaultValue(value.toString());
 		}
 	}
-	
+
 	public static Expression arrayFromQuery(QueryCommand subquery) throws ParseException {
 	    List<Expression> projected = subquery.getProjectedSymbols();
         if (projected.size() != 1) {
@@ -722,7 +722,7 @@ public class SQLParserUtil {
                 throw new ParseException(QueryPlugin.Util.getString("ERR.015.008.0032", subquery)); //$NON-NLS-1$
             }
             throw new ParseException(QueryPlugin.Util.getString("SQLParser.array_query", subquery)); //$NON-NLS-1$
-        } 
+        }
         Expression ex = projected.get(0);
         String name = Symbol.getName(ex);
         Query query = new Query();

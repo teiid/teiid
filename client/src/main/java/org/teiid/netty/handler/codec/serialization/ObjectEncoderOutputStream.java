@@ -40,13 +40,13 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
 
     private final DataOutputStream out;
 	private MultiArrayOutputStream baos;
-    
+
     public ObjectEncoderOutputStream(DataOutputStream out, int initialBufferSize) throws SecurityException, IOException {
     	super();
     	this.out = out;
         baos = new MultiArrayOutputStream(initialBufferSize);
     }
-    
+
     @Override
     final protected void writeObjectOverride(Object obj) throws IOException {
         baos.reset(4);
@@ -55,7 +55,7 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
         ExternalizeUtil.writeCollection(oout, oout.getReferences());
         oout.flush();
         oout.close();
-        
+
         int val = baos.getCount()-4;
         byte[] b = baos.getBuffers()[0];
         b[3] = (byte) (val >>> 0);
@@ -63,7 +63,7 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
     	b[1] = (byte) (val >>> 16);
     	b[0] = (byte) (val >>> 24);
     	baos.writeTo(out);
-        
+
     	if (!oout.getStreams().isEmpty()) {
     		baos.reset(0);
     		byte[] chunk = new byte[(1 << 16)];
@@ -93,20 +93,20 @@ public class ObjectEncoderOutputStream extends ObjectOutputStream {
         	}
     	}
     }
-    
+
     @Override
     public void close() throws IOException {
     	out.close();
     }
-    
+
     @Override
     public void flush() throws IOException {
     	out.flush();
     }
-    
+
     @Override
     public void reset() throws IOException {
     	//automatically resets with each use
     }
-    
+
 }

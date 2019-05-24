@@ -29,25 +29,25 @@ public interface SecurityHelper {
 	 * @return
 	 */
 	Object associateSecurityContext(Object context);
-	
+
 	/**
-	 * Clear any security context associated with the thread 
+	 * Clear any security context associated with the thread
 	 */
 	void clearSecurityContext();
-	
+
 	/**
 	 * Get the current security context associated with the thread
 	 * @return
 	 */
 	Object getSecurityContext(String securityDomain);
-	
+
 	/**
 	 * Get the subject associated with the security context.
 	 * @param context
 	 * @return
 	 */
 	Subject getSubjectInContext(Object context);
-	
+
 	/**
 	 * Authenticate the user and return the security context
 	 * @param securityDomain
@@ -59,7 +59,7 @@ public interface SecurityHelper {
 	 */
 	Object authenticate(String securityDomain, String baseUserName, Credentials credentials, String applicationName)
             throws LoginException;
-    
+
 	/**
 	 * Negotiate the GSS login
 	 * @param securityDomain
@@ -68,5 +68,5 @@ public interface SecurityHelper {
 	 * @throws LoginException
 	 */
 	GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException;
-	
+
 }

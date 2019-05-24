@@ -29,13 +29,13 @@ public interface VirtualFile {
     String getName();
 
     InputStreamFactory createInputStreamFactory();
-    
+
     InputStream openInputStream(boolean lock) throws IOException;
-    
+
     OutputStream openOutputStream(boolean lock) throws IOException;
 
     long getLastModified();
-    
+
     long getCreationTime();
 
     long getSize();

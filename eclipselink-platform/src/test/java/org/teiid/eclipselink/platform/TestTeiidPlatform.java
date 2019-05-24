@@ -44,17 +44,17 @@ import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestTeiidPlatform {
-	
+
 	static EmbeddedServer server;
 	static EntityManagerFactory factory;
-	
-	@BeforeClass 
+
+	@BeforeClass
 	public static void init() throws Exception {
-		
+
 		server = new EmbeddedServer();
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		server.addTranslator("file", executionFactory);
-		
+
 		server.addConnectionFactory("java:/marketdata-file", new ConnectionFactory<VirtualFileConnection>() {
 		    @Override
 		    public VirtualFileConnection getConnection() throws Exception {
@@ -64,16 +64,16 @@ public class TestTeiidPlatform {
 		        return result;
 		    }
         });
-		
+
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		server.start(config);
 		DriverManager.registerDriver(server.getDriver());
-		
+
 		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("vdb"+File.separator+"marketdata-vdb.xml")));
-		
+
 		factory = Persistence.createEntityManagerFactory("org.teiid.eclipselink.test");
 	}
-	
+
 	@Test
 	public void testInit() throws Exception {
 		assertNotNull(factory);
@@ -81,7 +81,7 @@ public class TestTeiidPlatform {
 		assertNotNull(em);
 		em.close();
 	}
-	
+
 	@Test
 	public void testJPQLQuery() {
 		EntityManager em = factory.createEntityManager();
@@ -90,10 +90,10 @@ public class TestTeiidPlatform {
 		assertEquals(10, list.size());
 		em.close();
 	}
-	
-	@AfterClass 
+
+	@AfterClass
 	public static void destory() {
-		
+
 		factory.close();
 		try {
 			DriverManager.deregisterDriver(server.getDriver());

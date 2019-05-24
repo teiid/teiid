@@ -27,11 +27,11 @@ import org.teiid.core.util.PropertiesUtils;
 
 
 public class FloatingNumberToBigDecimalTransform extends Transform {
-    
+
     public static final boolean PRESERVE_APPROXIMATE_SCALE = PropertiesUtils.getHierarchicalProperty("org.teiid.preserveApproximateScale", false, Boolean.class); //$NON-NLS-1$
 
 	private Class<?> sourceType;
-	
+
 	public FloatingNumberToBigDecimalTransform(Class<?> sourceType) {
 		this.sourceType = sourceType;
 	}

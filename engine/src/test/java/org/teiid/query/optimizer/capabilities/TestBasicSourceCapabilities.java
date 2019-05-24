@@ -33,16 +33,16 @@ public class TestBasicSourceCapabilities extends TestCase {
 
     public void testPutGet() {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        
+
         // Check initial state
         assertEquals("Default value for capability should be false", false, caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER)); //$NON-NLS-1$
-        
+
         // Change state
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);        
-        
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+
         // Check current state
         assertEquals("Changed value for capability should be true", true, caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER));         //$NON-NLS-1$
     }
-    
-    
+
+
 }

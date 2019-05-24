@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.jdbc;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class NonBlockingRowProcessor implements
 	@Override
 	public void onCompletion(ResultsFuture<Boolean> future) {
 		try {
-			boolean hasResultSet = future.get(); 
+			boolean hasResultSet = future.get();
 			if (!hasResultSet) {
 				callback.onComplete(stmt);
 				return;
@@ -64,7 +64,7 @@ public class NonBlockingRowProcessor implements
 							synchronized (hasNext) {
 								if (!hasNext.isDone()) {
 									hasNext.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-	
+
 												@Override
 												public void onCompletion(
 														ResultsFuture<Boolean> f) {
@@ -109,7 +109,7 @@ public class NonBlockingRowProcessor implements
 				}
 				return true;
 			}
-			
+
 			callback.onRow(stmt, stmt.getResultSet());
 
 			return true;
@@ -118,7 +118,7 @@ public class NonBlockingRowProcessor implements
 			return false;
 		} catch (Throwable t) {
 			onException(new TeiidRuntimeException(t));
-			return false;	
+			return false;
 		}
 	}
 

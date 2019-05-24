@@ -60,5 +60,5 @@ public class StringToDoubleTransform extends Transform {
 	public boolean isExplicit() {
 		return true;
 	}
-	
+
 }

@@ -82,9 +82,9 @@ public class CryptoException extends TeiidException {
     public CryptoException(BundleUtil.Event code, Throwable e, String message ) {
         super(code, e, message);
     }
-    
+
     public CryptoException(BundleUtil.Event code, Throwable e) {
         super(code, e);
-    }    
+    }
 
 } // END CLASS

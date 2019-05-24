@@ -32,7 +32,7 @@ public class DupRemoveNode extends RelationalNode {
 	private STree stree = null;
 	private TupleBatch batch;
 	private int counter;
-	
+
 	public DupRemoveNode(int nodeID) {
 		super(nodeID);
 	}
@@ -43,11 +43,11 @@ public class DupRemoveNode extends RelationalNode {
         counter = 0;
         batch = null;
     }
-    
+
     @Override
     public void open() throws TeiidComponentException, TeiidProcessingException {
     	super.open();
-    	
+
     	stree = getBufferManager().createSTree(this.getElements(), this.getConnectionID(), this.getElements().size());
     }
 
@@ -57,7 +57,7 @@ public class DupRemoveNode extends RelationalNode {
 			if (batch == null) {
 				batch = this.getChildren()[0].nextBatch();
 			}
-			
+
 			List<List<?>> tuples = batch.getTuples();
 			for (;counter < tuples.size(); counter++) {
 				List<?> tuple = tuples.get(counter);
@@ -90,5 +90,5 @@ public class DupRemoveNode extends RelationalNode {
 		copyTo(clonedNode);
 		return clonedNode;
 	}
-    
+
 }

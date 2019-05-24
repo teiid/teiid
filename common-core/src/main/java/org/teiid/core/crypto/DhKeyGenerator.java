@@ -35,7 +35,7 @@ import org.teiid.core.TeiidRuntimeException;
 
 /**
  * Helper class that supports anonymous ephemeral Diffie-Hellman
- * 
+ *
  * Parameters are stored in the dh.properties file
  */
 public class DhKeyGenerator {
@@ -54,8 +54,8 @@ public class DhKeyGenerator {
 		Properties props = new Properties();
 		InputStream is = null;
 		try {
-			is = DhKeyGenerator.class.getResourceAsStream(propsFile); 
-			props.load(is); 
+			is = DhKeyGenerator.class.getResourceAsStream(propsFile);
+			props.load(is);
 		} catch (IOException e) {
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10000, e);
 		} finally {
@@ -72,7 +72,7 @@ public class DhKeyGenerator {
 				.getProperty("l"))); //$NON-NLS-1$
 		return result;
 	}
-	
+
 	private PrivateKey privateKey;
 	private PrivateKey privateKeyLarge;
 
@@ -96,7 +96,7 @@ public class DhKeyGenerator {
 			} else {
 				privateKey = keypair.getPrivate();
 			}
-			
+
 			PublicKey publicKey = keypair.getPublic();
 
 			return publicKey.getEncoded();

@@ -22,10 +22,10 @@ public interface OAuthCredential {
      * Get Authorization Header for the OAuth 1.0a &amp; OAuth 2.0 specification
      * @param resourceURI - protected resource that is being accessed
      * @param httpMethod - for ex: GET, PUT
-     * @return Authorization header for HTTP call. 
+     * @return Authorization header for HTTP call.
      */
     String getAuthorizationHeader(String resourceURI, String httpMethod);
-    
+
     /**
      * Get Authorization Token properties by Name
      */

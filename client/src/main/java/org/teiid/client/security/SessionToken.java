@@ -31,41 +31,41 @@ import org.teiid.core.util.Base64;
 /**
  * This class is an immutable identifier for a unique session that also
  * maintains the name of the principal for that session.
- * 
- * Since this class can be used to authenticate a user, it must be secure in 
- * transit if sent to the client.  Also it should only be sent to the client 
+ *
+ * Since this class can be used to authenticate a user, it must be secure in
+ * transit if sent to the client.  Also it should only be sent to the client
  * who creates the session.
  */
 public class SessionToken implements Externalizable {
 	public final static long serialVersionUID = -2853708320435636107L;
 
 	private static final SecureRandom random = new SecureRandom();
-	
+
 	/** The session ID */
 	private String sessionID;
 	private String userName;
 	private byte[] secret = new byte[16];
-	
+
 	public SessionToken() {
 	}
 
 	/**
 	 * Used by tests to control the session id
-	 * 
+	 *
 	 * @param id
 	 * @param userName
 	 */
 	public SessionToken(long id, String userName) {
 		this.sessionID = Long.toString(id);
 		this.userName = userName;
-	}	
+	}
 
 	/**
 	 * The primary constructor that specifies userName
-	 * 
+	 *
 	 * @param userName
 	 * 		(String) the userName for this session
-	 */	
+	 */
 	public SessionToken(String userName) {
 		byte[] bytes = new byte[9]; //9 bytes fits evenly into base64 and should be sufficiently cluster unique
 		random.nextBytes(bytes);
@@ -73,7 +73,7 @@ public class SessionToken implements Externalizable {
 		this.userName = userName;
 		random.nextBytes(secret);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -83,14 +83,14 @@ public class SessionToken implements Externalizable {
 			return false;
 		}
 		SessionToken other = (SessionToken)obj;
-		return userName.equals(other.userName) 
+		return userName.equals(other.userName)
 			&& sessionID.equals(other.sessionID)
 			&& Arrays.equals(secret, other.secret);
 	}
-	
+
 	/**
 	 * Returns unique session identifier
-	 * 
+	 *
 	 * @return the session ID
 	 */
 	public String getSessionID() {
@@ -99,7 +99,7 @@ public class SessionToken implements Externalizable {
 
 	/**
 	 * Get the principal name for this session's user.
-	 * 
+	 *
 	 * @return the user name
 	 */
 	public String getUsername() {
@@ -120,7 +120,7 @@ public class SessionToken implements Externalizable {
 		sessionID = (String)in.readObject();
 		userName = (String)in.readObject();
 	}
-	
+
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(secret);

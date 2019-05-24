@@ -29,34 +29,34 @@ public class AtomicResultsMessage {
 
     // Final row index in complete result set, if known
     private long finalRow = -1;
-    
+
     // by default we support implicit close.
     private boolean supportsImplicitClose = true;
-    
+
     private List<Exception> warnings;
-    
+
     private Scope scope;
 
     // to honor the externalizable contract
 	public AtomicResultsMessage() {
 	}
-	
+
 	public AtomicResultsMessage(List<?>[] results) {
         this.results = results;
 	}
-	
+
     public boolean supportsImplicitClose() {
         return this.supportsImplicitClose;
     }
-    
+
     public void setSupportsImplicitClose(boolean supportsImplicitClose) {
         this.supportsImplicitClose = supportsImplicitClose;
-    }    
-    
+    }
+
     public long getFinalRow() {
         return finalRow;
     }
-    
+
     public void setFinalRow(long i) {
         finalRow = i;
     }
@@ -68,15 +68,15 @@ public class AtomicResultsMessage {
 	public void setWarnings(List<Exception> warnings) {
 		this.warnings = warnings;
 	}
-	
+
 	public List<Exception> getWarnings() {
 		return warnings;
 	}
-	
+
 	public void setScope(Scope scope) {
 		this.scope = scope;
 	}
-	
+
 	public Scope getScope() {
 		return scope;
 	}

@@ -31,28 +31,28 @@ import org.jboss.vfs.VirtualFile;
 class DynamicVDBRootMountDeployer  implements DeploymentUnitProcessor {
 	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
 	private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
-	
+
 	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-        
+
         if(deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT) != null) {
             return;
         }
-        
+
         final String deploymentName = deploymentUnit.getName();
         final VirtualFile deploymentContents = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_CONTENTS);
 
         // internal deployments do not have any contents, so there is nothing to mount
         if (deploymentContents == null)
             return;
-        
+
         if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE) || deploymentName.endsWith(DDL_VDB_STRUCTURE)) {
             // use the contents directly
             // nothing was mounted
             final ResourceRoot resourceRoot = new ResourceRoot(deploymentContents, null);
             ModuleRootMarker.mark(resourceRoot);
             deploymentUnit.putAttachment(Attachments.DEPLOYMENT_ROOT, resourceRoot);
-            deploymentUnit.putAttachment(Attachments.MODULE_SPECIFICATION, new ModuleSpecification());            
+            deploymentUnit.putAttachment(Attachments.MODULE_SPECIFICATION, new ModuleSpecification());
         }
     }
 

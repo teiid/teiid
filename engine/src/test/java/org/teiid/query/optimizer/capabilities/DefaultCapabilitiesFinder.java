@@ -26,15 +26,15 @@ public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
 
 	private static final BasicSourceCapabilities defaultInstance = new BasicSourceCapabilities();
 	public static final DefaultCapabilitiesFinder INSTANCE = new DefaultCapabilitiesFinder();
-	
+
 	private SourceCapabilities capabilities;
     /**
-     * 
+     *
      */
     public DefaultCapabilitiesFinder() {
     	this.capabilities = defaultInstance;
     }
-    
+
     public DefaultCapabilitiesFinder(SourceCapabilities capabilities) {
     	this.capabilities = capabilities;
     }
@@ -42,7 +42,7 @@ public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
         return capabilities;
     }
-    
+
     @Override
     public boolean isValid(String fullName) {
     	return true;

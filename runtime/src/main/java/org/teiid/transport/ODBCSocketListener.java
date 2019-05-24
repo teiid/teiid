@@ -32,19 +32,19 @@ public class ODBCSocketListener extends SocketListener {
 	private int maxLobSize;
 	private TeiidDriver driver;
 	private LogonImpl logonService;
-	
+
 	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, LogonImpl logon, TeiidDriver driver) {
-		//the clientserviceregistry isn't actually used by ODBC 
+		//the clientserviceregistry isn't actually used by ODBC
 		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
 		this.driver = driver;
 		this.logonService = logon;
 	}
-	
+
 	public void setDriver(TeiidDriver driver) {
 		this.driver = driver;
 	}
-	
+
 	public void setMaxBufferSize(int maxBufferSize) {
 		this.maxBufferSize = maxBufferSize;
 	}
@@ -54,14 +54,14 @@ public class ODBCSocketListener extends SocketListener {
         PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config, requireSecure);
         pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(pgBackendProtocol, 1 << 20)); //$NON-NLS-1$
         pipeline.addLast("odbcBackendProtocol", pgBackendProtocol); //$NON-NLS-1$
-        pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$                
-    }	
-	
+        pipeline.addLast("handler", this.channelHandler); //$NON-NLS-1$
+    }
+
 	@Override
 	public ChannelListener createChannelListener(ObjectChannel channel) {
 		return new ODBCClientInstance(channel, driver, logonService);
 	}
-	
+
 	public void setRequireSecure(boolean requireSecure) {
 		this.requireSecure = requireSecure;
 	}

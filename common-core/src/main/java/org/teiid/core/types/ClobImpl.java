@@ -43,7 +43,7 @@ import org.teiid.core.util.SqlUtil;
  * objects.
  */
 public class ClobImpl extends BaseLob implements Clob {
-    
+
 	private static final class StringInputStreamFactory extends
 			InputStreamFactory {
 		String str;
@@ -78,7 +78,7 @@ public class ClobImpl extends BaseLob implements Clob {
 
 		public InputStream getBinaryStream() throws SQLException {
 		    final Reader reader = searchstr.getCharacterStream();
-		
+
 			return new InputStream() {
 			    int currentChar = -1;
                 @Override
@@ -100,11 +100,11 @@ public class ClobImpl extends BaseLob implements Clob {
 	}
 
 	private long len = -1;
-	
+
 	public ClobImpl() {
-		
+
 	}
-	
+
 	/**
 	 * Creates a new ClobImpl.  Note that the length is not taken from the {@link InputStreamFactory} since
 	 * it refers to bytes and not chars.
@@ -115,11 +115,11 @@ public class ClobImpl extends BaseLob implements Clob {
 		super(streamFactory);
 		this.len = length;
 	}
-    
+
     public ClobImpl(final char[] chars) {
     	this(new StringInputStreamFactory(new String(chars)), chars.length);
     }
-    
+
     public ClobImpl(String str) {
     	this(new StringInputStreamFactory(str), str.length());
     }
@@ -153,7 +153,7 @@ public class ClobImpl extends BaseLob implements Clob {
 	        	return new String(ObjectConverterUtil.convertToCharArray(in, length));
 	        } finally {
 	        	in.close();
-	        } 
+	        }
         } catch (IOException e) {
         	throw new SQLException(e);
         }
@@ -200,10 +200,10 @@ public class ClobImpl extends BaseLob implements Clob {
         if (searchstr == null) {
             return -1;
         }
-        
+
         return LobSearchUtil.position(new ClobStreamProvider(searchstr), searchstr.length(), new ClobStreamProvider(this), this.length(), start, 2);
     }
-    
+
     /**
     * Determines the character position at which the specified substring
     * <code>searchstr</code> appears in the SQL <code>CLOB</code> value
@@ -223,26 +223,26 @@ public class ClobImpl extends BaseLob implements Clob {
         }
     	return position(new ClobImpl(searchstr), start);
     }
-    	    
+
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public OutputStream setAsciiStream(long arg0) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Writer setCharacterStream(long arg0) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public int setString(long arg0, String arg1) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public int setString(long arg0, String arg1, int arg2, int arg3)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void truncate(long arg0) throws SQLException {

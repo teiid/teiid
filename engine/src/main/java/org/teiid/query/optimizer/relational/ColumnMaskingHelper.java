@@ -58,12 +58,12 @@ import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
 public class ColumnMaskingHelper {
-	
+
 	private static class WhenThen implements Comparable<WhenThen> {
 		int order;
 		Criteria when;
 		Expression then;
-		
+
 		public WhenThen(Integer order, Criteria when, Expression then) {
 			this.order = (order == null?0:order);
 			this.when = when;
@@ -180,5 +180,5 @@ public class ColumnMaskingHelper {
         }
         return result;
 	}
-	
+
 }

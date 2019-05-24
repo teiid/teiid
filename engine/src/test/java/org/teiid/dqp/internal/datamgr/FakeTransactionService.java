@@ -31,5 +31,5 @@ public class FakeTransactionService extends TransactionServerImpl {
 		this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 		this.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
 	}
-	
+
 }

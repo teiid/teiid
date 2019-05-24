@@ -29,7 +29,7 @@ public interface TeiidConnection extends Connection {
 	/**
 	 * Re-authenticate with the given username and password.  If the re-authentication
 	 * fails the connection will remain under the current user.
-	 * 
+	 *
 	 * @param userName
      *            the username to authenticate with
    	 * @param newPassword

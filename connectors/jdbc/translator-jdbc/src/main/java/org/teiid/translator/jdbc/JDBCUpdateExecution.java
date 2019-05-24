@@ -54,7 +54,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 	private int[] result;
 	private int maxPreparedInsertBatchSize;
 	private boolean atomic = true;
-	
+
     /**
      * @param connection
      * @param sqlTranslator
@@ -106,7 +106,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             List<TranslatedCommand> executedCmds = new ArrayList<TranslatedCommand>();
 
             TranslatedCommand previousCommand = null;
-            
+
             for (; i < commands.length; i++) {
             	tCommand = translateCommand(commands[i]);
                 if (tCommand.isPrepared()) {
@@ -152,7 +152,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 	        	for (int j = 0; j < batchResults.length; j++) {
 	        		result[batchStart + j] = batchResults[j];
 	            }
-	        	size = batchStart + batchResults.length; 
+	        	size = batchStart + batchResults.length;
         	} else {
         	    size = batchStart;
         	}
@@ -254,7 +254,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             	    BulkCommand batchCommand = (BulkCommand)command;
             		vi = batchCommand.getParameterValues();
             	}
-            	
+
             	int k = 0;
             	int batchStart = 0;
                 if (vi != null) {
@@ -317,7 +317,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                 }
                 addStatementWarnings();
                 succeeded = true;
-            } 
+            }
             if (keyColumnDataTypes != null) {
             	try {
 	        		ResultSet keys = statement.getGeneratedKeys();
@@ -332,7 +332,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 	                        	LogManager.logDetail(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11023, keyColumnDataTypes[i], keyColumnNames[i], value.getClass()));
 	                        	continue outer;
 	                        }
-	                        vals.add(value); 
+	                        vals.add(value);
 	                    }
 	                    generatedKeys.addKey(vals);
 	        		}
@@ -368,7 +368,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
 
     /**
      * Set autoCommit back to true
-     * 
+     *
      * @param exceptionOccurred
      * @param command
      * @throws TranslatorException
@@ -392,17 +392,17 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
             }
         }
     }
-    
+
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException,
     		TranslatorException {
     	return result;
     }
-    
+
     public void setMaxPreparedInsertBatchSize(int maxPreparedInsertBatchSize) {
 		this.maxPreparedInsertBatchSize = maxPreparedInsertBatchSize;
 	}
-    
+
     public void setAtomic(boolean atomic) {
 		this.atomic = atomic;
 	}

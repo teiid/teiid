@@ -29,27 +29,27 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * {@link TransactionQueryTestCase}. This provides the default logic for perform a testcase.
  * The only method to implement in order to perform a basic, single datasource, test
  * is the {@link #testCase()} method.
- * 
+ *
  * AbstractQueryTransactionTest is the class that should be extended when a
  * testcase is being created to validate certain behavior
- * 
+ *
  * <br>
  * The following methods are useful when writing validation logic because they provide
  * a direct connection to the datasource that was used by the VDB.  This enables data
  * validation of expected behavior of Teiid.
  * <li>{@link #getSource(String)}. </li>
  * <li>{@link #getXASource(String)} </li>
- * 
+ *
  * <br>
- * 
+ *
  * @see QueryExecution for use when direct queries to the source are used to
  *      validate the results of the testcase.
- * 
+ *
  */
 @SuppressWarnings("nls")
 public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.AbstractQueryTest
 	implements TransactionQueryTestCase {
-    
+
     private static String initialized = null;
 
     protected String testname = "NA";
@@ -57,15 +57,15 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     protected int queryTimeout = -1;
 
     protected ConnectionStrategy connStrategy;
-    
-    // because only a SQLException is accounted for in AbstractQueryTest, 
+
+    // because only a SQLException is accounted for in AbstractQueryTest,
     //	the applicationException is used to when unaccounted for exceptions occur.  This could
     // unintentional errors from the driver or ctc client test code.
     private Throwable applicationException=null;
 
     public AbstractQueryTransactionTest() {
 	super();
-	
+
 	this.connStrategy = ConnectionStrategyFactory
 	    .createConnectionStrategy();
     }
@@ -77,9 +77,9 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 
     public String getTestName() {
 	return this.testname;
-	
+
     }
-    
+
     @Override
     public ConnectionStrategy getConnectionStrategy() {
 	// TODO Auto-generated method stub
@@ -101,13 +101,13 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 			    CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP,
 			    txnautowrap);
 		}
-		
+
 		String fetchSizeStr = executionProperties
 		    .getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE);
 		if (fetchSizeStr != null) {
 		    try {
 			fetchSize = Integer.parseInt(fetchSizeStr);
-			
+
 			TestLogger.log("FetchSize = " + fetchSize);
 		    } catch (NumberFormatException e) {
 			fetchSize = -1;
@@ -117,7 +117,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 		}
 
 	    }
-	    
+
 
 
 	    if (this.fetchSize > 0) {
@@ -144,32 +144,32 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     /**
      * Override <code>setupDataSource</code> if there is different mechanism for
      * setting up the datasources for the testcase
-     * 
+     *
      * @throws QueryTestFailedException
      * @throws QueryTestFailedException
-     * 
+     *
      * @since
      */
     @Override
     public void setup() throws QueryTestFailedException {
-	
+
 	this.applicationException = null;
 	this.setConnection(connStrategy.getConnection());
 	setupDataStore();
-	
+
     }
-    
+
     protected void setupDataStore() {
-	
-	
+
+
 	if (! this.getConnectionStrategy().isDataStoreDisabled()) {
 	    TestLogger.logDebug("Perform DataStore setup for test: " + this.testname );
         	if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
         	    initialized = this.getClass().getSimpleName();
         	    DataStore.initialize(connStrategy);
-        	    
+
         	}
-        	
+
         	DataStore.setup(connStrategy);
 	} else {
 	    TestLogger.logDebug("DataStore setup is disabled for test: " + this.testname );
@@ -188,7 +188,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      */
     public Connection getSource(String identifier)
 	    throws QueryTestFailedException {
-	
+
 	Connection conn = this.connStrategy.createDriverConnection(identifier);
 	// force autocommit back to true, just in case the last user didnt
 	try {
@@ -196,7 +196,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 	} catch (Exception sqle) {
 		throw new QueryTestFailedException(sqle);
 	}
-	
+
 	return conn;
 
     }
@@ -210,9 +210,9 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 
     /**
      * Implement testCase(), it is the entry point to the execution of the test.
-     * 
+     *
      * @throws Exception
-     * 
+     *
      * @since
      */
     public abstract void testCase() throws Exception;
@@ -220,9 +220,9 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     /**
      * Indicates what should be done when a failure occurs in
      * {@link #testCase()}
-     * 
+     *
      * @return boolean
-     * 
+     *
      * @since
      */
     public boolean rollbackAllways() {
@@ -232,8 +232,8 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     /**
      * Override <code>before</code> if there is behavior that needs to be
      * performed prior to {@link #testCase()} being called.
-     * 
-     * 
+     *
+     *
      * @since
      */
     public void before() {
@@ -242,8 +242,8 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     /**
      * Override <code>after</code> if there is behavior that needs to be
      * performed after {@link #testCase()} being called.
-     * 
-     * 
+     *
+     *
      * @since
      */
     public void after() {
@@ -251,7 +251,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 
     /**
      * At end of each test, perform any cleanup that your test requires. Note:
-     * Do not cleanup any connections by calling {@link ConnectionStrategy#shutdown()}. 
+     * Do not cleanup any connections by calling {@link ConnectionStrategy#shutdown()}.
      * That is performed by the
      * {@link TransactionContainer#runTransaction(TransactionQueryTestCase)} at the
      * end of the test.
@@ -264,13 +264,13 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     @Override
     public XAConnection getXAConnection() {
 	return null;
-	
+
     }
 
     @Override
     public void setApplicationException(Throwable t) {
 	this.applicationException = t;
-	
+
     }
 
     @Override
@@ -278,7 +278,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 	return (super.exceptionOccurred() ? super.exceptionOccurred() : this.applicationException != null);
 
     }
-    
+
     @Override
     public SQLException getLastException() {
 	if (super.getLastException() != null) {
@@ -288,12 +288,12 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 	    if (this.applicationException instanceof SQLException) {
 		return (SQLException) this.applicationException;
 	    }
-	    
+
 	    TeiidSQLException mm = new TeiidSQLException(this.applicationException.getMessage());
 	    return mm;
 
 	}
-	
+
 	return null;
      }
 
@@ -303,9 +303,9 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
 	return this.applicationException;
     }
 
-    
-    
-    
-    
+
+
+
+
 
 }

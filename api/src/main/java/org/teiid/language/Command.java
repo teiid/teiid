@@ -19,10 +19,10 @@
 package org.teiid.language;
 
 /**
- * Represents a command in the language objects.  A command is an instruction of 
- * something to execute sent to the connector.  Typical commands perform 
+ * Represents a command in the language objects.  A command is an instruction of
+ * something to execute sent to the connector.  Typical commands perform
  * SELECT, INSERT, UPDATE, DELETE, etc type operations.
  */
 public interface Command extends LanguageObject {
-    
+
 }

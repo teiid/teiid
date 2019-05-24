@@ -43,48 +43,48 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.XQueryExpression;
 
 public class XMLHelperImpl extends XMLHelper {
-    
+
     @Override
     public XQueryExpression compile(String xquery, XMLNamespaces namespaces,
             List<DerivedColumn> passing, List<XMLColumn> columns)
             throws QueryResolverException {
         return SaxonXQueryExpression.compile(xquery, namespaces, passing, columns);
     }
-    
+
     @Override
     public String convertToAtomicValue(Object value)
             throws TransformerException {
         return XQueryEvaluator.convertToAtomicValue(value).getStringValue();
     }
-    
+
     @Override
     public String escapeName(String name, boolean fully) {
         return XMLFunctions.escapeName(name, fully);
     }
-    
+
     @Override
     public Object evaluate(XMLType val, XMLCast expression,
             CommandContext context) throws ExpressionEvaluationException {
         return XQueryEvaluator.evaluate(val, expression, context);
     }
-    
+
     @Override
     public Object evaluateXMLQuery(List<?> tuple, XMLQuery xmlQuery,
             boolean exists, Map<String, Object> parameters,
             CommandContext context) throws FunctionExecutionException, BlockedException, TeiidComponentException {
         return XQueryEvaluator.evaluateXMLQuery(tuple, xmlQuery, exists, parameters, context);
     }
-    
+
     @Override
     public boolean isRealImplementation() {
         return true;
     }
-    
+
     @Override
     public boolean isValidNCName(String prefix) throws TeiidProcessingException {
         return XMLFunctions.isValidNCName(prefix);
     }
-    
+
     @Override
     public RelationalNode newXMLTableNode(int id, XMLTable xt,
             ArrayList<XMLColumn> filteredColumns)
@@ -94,12 +94,12 @@ public class XMLHelperImpl extends XMLHelper {
         result.setProjectedColumns(filteredColumns);
         return result;
     }
-    
+
     @Override
     public String[] validateQName(String name) throws TeiidProcessingException {
         return XMLFunctions.validateQName(name);
     }
-    
+
     @Override
     public void validateXpath(String xpath) throws TeiidProcessingException {
         XMLFunctions.validateXpath(xpath);

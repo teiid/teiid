@@ -30,14 +30,14 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.GeneratedKeysImpl;
 
 public class SystemFunctionMethods {
-	
+
 	private static final int MAX_VARIABLES = 512;
 
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static Object teiid_session_get(CommandContext context, String key) {
 		return context.getSessionVariable(key);
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static Object teiid_session_set(CommandContext context, String key, Object value) throws FunctionExecutionException {
 		SessionMetadata session = context.getSession();
@@ -47,7 +47,7 @@ public class SystemFunctionMethods {
 		}
 		return context.setSessionVariable(key, value);
 	}
-	
+
     @TeiidFunction(category=FunctionCategoryConstants.SYSTEM, pushdown=PushDown.CANNOT_PUSHDOWN, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
     public static Object generated_key(CommandContext context, String column) {
         GeneratedKeysImpl keys = context.getGeneratedKeys();

@@ -32,16 +32,16 @@ import org.teiid.query.QueryPlugin;
 public class DefaultCacheFactory implements CacheFactory, Serializable {
 	private static final long serialVersionUID = -5541424157695857527L;
 	private static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100, "default"); // 1 hours with 100 nodes. //$NON-NLS-1$
-	
+
 	public static DefaultCacheFactory INSTANCE = new DefaultCacheFactory(DEFAULT);
-	
+
 	private volatile boolean destroyed = false;
 	private CacheConfiguration config;
-		
+
 	public DefaultCacheFactory(CacheConfiguration config) {
 		this.config = config;
 	}
-	
+
 	@Override
 	public void destroy() {
 		this.destroyed = true;
@@ -54,32 +54,32 @@ public class DefaultCacheFactory implements CacheFactory, Serializable {
 		}
 		 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30562, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30562));
 	}
-	
+
 	@SuppressWarnings("serial")
 	private static class MockCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
-	
+
 		private String name;
-		
+
 		public MockCache(String cacheName, int maxSize) {
 			super(maxSize<0?Integer.MAX_VALUE:maxSize);
 			this.name = cacheName;
 		}
-		
+
 		@Override
 		public V put(K key, V value, Long ttl) {
 			return put(key, value);
 		}
-		
+
 		@Override
 		public Set<K> keySet() {
 		    return new HashSet<K>(super.keySet());
 		}
-	
+
 		@Override
 		public String getName() {
 			return this.name;
 		}
-	
+
 		@Override
 		public boolean isTransactional() {
 			return false;

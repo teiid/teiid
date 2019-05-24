@@ -46,7 +46,7 @@ public class TestSubqueryInCriteriaImpl extends TestCase {
         ssc.setNegated(true);
         return ssc;
     }
-    
+
     public static SubqueryIn example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
@@ -58,7 +58,7 @@ public class TestSubqueryInCriteriaImpl extends TestCase {
     public void testGetQuery() throws Exception {
         assertNotNull(example().getSubquery());
     }
-    
+
     public void testIsNegated() throws Exception {
         assertEquals("Wrong negation", true, example().isNegated()); //$NON-NLS-1$
     }

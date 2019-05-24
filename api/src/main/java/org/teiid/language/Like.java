@@ -21,7 +21,7 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class Like extends Condition implements Predicate {
-	
+
 	public enum MatchMode {
 		LIKE,
 		SIMILAR,
@@ -30,19 +30,19 @@ public class Like extends Condition implements Predicate {
 		 */
 		REGEX
 	}
-        
+
     private Expression leftExpression;
     private Expression rightExpression;
     private Character escapeCharacter;
     private boolean isNegated;
     private MatchMode mode = MatchMode.LIKE;
-    
+
     public Like(Expression left, Expression right, Character escapeCharacter, boolean negated) {
         leftExpression = left;
         rightExpression = right;
         this.escapeCharacter = escapeCharacter;
         this.isNegated = negated;
-        
+
     }
 
     public Expression getLeftExpression() {
@@ -66,13 +66,13 @@ public class Like extends Condition implements Predicate {
     }
 
     public void setLeftExpression(Expression expression) {
-        this.leftExpression = expression;        
+        this.leftExpression = expression;
     }
 
     public void setRightExpression(Expression expression) {
         this.rightExpression = expression;
     }
-    
+
     public void setEscapeCharacter(Character character) {
         this.escapeCharacter = character;
     }
@@ -80,11 +80,11 @@ public class Like extends Condition implements Predicate {
     public void setNegated(boolean negated) {
         this.isNegated = negated;
     }
-    
+
     public MatchMode getMode() {
 		return mode;
 	}
-    
+
     public void setMode(MatchMode mode) {
 		this.mode = mode;
 	}

@@ -33,22 +33,22 @@ public class TestRaiseErrorStatement  extends TestCase {
 	/**
 	 * Constructor for TestAssignmentStatement.
 	 */
-	public TestRaiseErrorStatement(String name) { 
+	public TestRaiseErrorStatement(String name) {
 		super(name);
 	}
-	
-	// ################################## TEST HELPERS ################################	
 
-	public static final RaiseStatement sample1() { 
+	// ################################## TEST HELPERS ################################
+
+	public static final RaiseStatement sample1() {
 		return new RaiseStatement(new Constant("a")); //$NON-NLS-1$
 	}
-	
+
 	public static final RaiseStatement sample2() {
 		return new RaiseStatement(new Constant("b")); //$NON-NLS-1$
 	}
-	
-	// ################################## ACTUAL TESTS ################################	
-	
+
+	// ################################## ACTUAL TESTS ################################
+
 	public void testSelfEquivalence(){
 		RaiseStatement s1 = sample1();
 		int equals = 0;
@@ -61,7 +61,7 @@ public class TestRaiseErrorStatement  extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
 	public void testNonEquivalence(){
 		RaiseStatement s1 = sample1();
 		RaiseStatement s2 = sample2();

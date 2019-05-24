@@ -34,21 +34,21 @@ public class Schema extends AbstractMetadataRecord {
 	private boolean physical = true;
 	protected boolean visible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
-    
+
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
 	private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-	private NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);	
+	private NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);
 	private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
-	
+
 	public void addTable(Table table) {
 		table.setParent(this);
 		if (this.tables.put(table.getName(), table) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName()));
 		}
 		resolvingOrder.add(table);
 	}
-	
+
 	public Table removeTable(String tableName) {
 		Table previous = this.tables.remove(tableName);
 		if (previous != null){
@@ -56,15 +56,15 @@ public class Schema extends AbstractMetadataRecord {
 		}
 		return previous;
 	}
-	
+
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
 		if (this.procedures.put(procedure.getName(), procedure) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName()));
 		}
 		resolvingOrder.add(procedure);
 	}
-	
+
 	public Procedure removeProcedure(String procedureName) {
 		Procedure previous = this.procedures.remove(procedureName);
 		if (previous != null){
@@ -72,7 +72,7 @@ public class Schema extends AbstractMetadataRecord {
 		}
 		return previous;
 	}
-	
+
 	public void addFunction(FunctionMethod function) {
 	    function.setParent(this);
 	    // hash based check, which allows overloaded functions
@@ -84,22 +84,22 @@ public class Schema extends AbstractMetadataRecord {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60015,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
         }
-        
+
 		//TODO: ensure that all uuids are unique
 		if (this.functions.put(function.getUUID(), function) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
 		}
 		resolvingOrder.add(function);
-	}	
-	
+	}
+
 	public List<FunctionMethod> removeFunctions(String functionName) {
 		ArrayList<FunctionMethod> funcs = new ArrayList<FunctionMethod>();
 		for (FunctionMethod fm : this.functions.values()){
         	if (fm.getName().equalsIgnoreCase(functionName)){
-        		funcs.add(fm);        			
+        		funcs.add(fm);
         	}
         }
-		
+
 		for (FunctionMethod func:funcs) {
 			this.functions.remove(func.getUUID());
 		}
@@ -113,11 +113,11 @@ public class Schema extends AbstractMetadataRecord {
 	public NavigableMap<String, Table> getTables() {
 		return tables;
 	}
-	
+
 	public Table getTable(String tableName) {
 		return tables.get(tableName);
 	}
-	
+
 	/**
 	 * Get the procedures defined in this schema
 	 * @return
@@ -125,11 +125,11 @@ public class Schema extends AbstractMetadataRecord {
 	public NavigableMap<String, Procedure> getProcedures() {
 		return procedures;
 	}
-	
+
 	public Procedure getProcedure(String procName) {
 		return procedures.get(procName);
 	}
-	
+
 	/**
 	 * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
 	 * @return
@@ -137,15 +137,15 @@ public class Schema extends AbstractMetadataRecord {
 	public NavigableMap<String, FunctionMethod> getFunctions() {
 		return functions;
 	}
-	
+
 	/**
 	 * Get a function by uid
 	 * @return
 	 */
 	public FunctionMethod getFunction(String uid) {
 		return functions.get(uid);
-	}	
-	
+	}
+
     public String getPrimaryMetamodelUri() {
         return primaryMetamodelUri;
     }
@@ -164,7 +164,7 @@ public class Schema extends AbstractMetadataRecord {
     public void setPhysical(boolean physical) {
 		this.physical = physical;
 	}
-    
+
     /**
      * 7.1 schemas did not have functions
      */
@@ -181,19 +181,19 @@ public class Schema extends AbstractMetadataRecord {
     		this.resolvingOrder.addAll(this.functions.values());
     	}
     }
-    
+
     public List<AbstractMetadataRecord> getResolvingOrder() {
 		return resolvingOrder;
 	}
-    
+
     public void addServer(Server server) {
         this.servers.put(server.getName(), server);
     }
-    
+
     public Server getServer(String serverName) {
         return this.servers.get(serverName);
     }
-    
+
     public List<Server> getServers(){
         return new ArrayList<Server>(this.servers.values());
     }

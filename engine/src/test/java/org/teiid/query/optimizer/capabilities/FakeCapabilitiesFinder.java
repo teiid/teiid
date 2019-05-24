@@ -31,7 +31,7 @@ public class FakeCapabilitiesFinder implements CapabilitiesFinder {
     private Map<String, SourceCapabilities> caps = new HashMap<String, SourceCapabilities>();
 
     /**
-     * 
+     *
      */
     public FakeCapabilitiesFinder() {
     }
@@ -46,11 +46,11 @@ public class FakeCapabilitiesFinder implements CapabilitiesFinder {
     public SourceCapabilities findCapabilities(String connectorBindingID) throws TeiidComponentException {
         return caps.get(connectorBindingID);
     }
-    
+
     public String toString() {
         return caps.toString();
     }
-    
+
     @Override
     public boolean isValid(String fullName) {
     	return true;

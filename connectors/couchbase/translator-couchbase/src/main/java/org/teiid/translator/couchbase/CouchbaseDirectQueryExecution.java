@@ -41,16 +41,16 @@ import org.teiid.translator.TranslatorException;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseDirectQueryExecution extends CouchbaseExecution implements ProcedureExecution {
-    
+
     private List<Argument> arguments;
-    
+
     private Iterator<N1qlQueryRow> results;
 
     public CouchbaseDirectQueryExecution(List<Argument> arguments, Command command, CouchbaseExecutionFactory executionFactory, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) {
         super(executionFactory, executionContext, metadata, connection);
         this.arguments = arguments;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         String n1ql = (String)this.arguments.get(0).getArgumentValue().getValue();
@@ -58,7 +58,7 @@ public class CouchbaseDirectQueryExecution extends CouchbaseExecution implements
         executionContext.logCommand(n1ql);
         this.results = connection.execute(n1ql).iterator();
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         ArrayList<Object[]> returns = new ArrayList<>(1);
@@ -77,7 +77,7 @@ public class CouchbaseDirectQueryExecution extends CouchbaseExecution implements
         } else {
             return null;
         }
-        
+
     }
 
     @Override

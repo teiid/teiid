@@ -42,5 +42,5 @@ final class BlockInputStream extends ExtensibleBufferedInputStream {
 		}
 		return manager.getBlock(blockIndex++);
 	}
-	
+
 }

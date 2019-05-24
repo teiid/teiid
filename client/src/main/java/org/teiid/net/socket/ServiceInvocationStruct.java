@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.net.socket;
 
@@ -35,9 +35,9 @@ public final class ServiceInvocationStruct implements Externalizable {
 	public Class<?> targetClass;
 	public String methodName;
 	public Object[] args;
-	
+
 	public ServiceInvocationStruct() {
-		
+
 	}
 
 	public ServiceInvocationStruct(Object[] args, String methodName,
@@ -61,7 +61,7 @@ public final class ServiceInvocationStruct implements Externalizable {
 		out.writeObject(methodName);
 		ExternalizeUtil.writeArray(out, args);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Invoke " + targetClass + "." + methodName + " " + args.length ; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

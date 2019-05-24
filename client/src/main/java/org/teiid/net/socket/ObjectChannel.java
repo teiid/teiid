@@ -24,15 +24,15 @@ import java.net.SocketAddress;
 import java.util.concurrent.Future;
 
 public interface ObjectChannel {
-	
+
 	Object read() throws IOException, ClassNotFoundException;
-	
+
 	SocketAddress getRemoteAddress();
-		
+
 	Future<?> write(Object msg);
-	
+
 	boolean isOpen();
-	
+
 	void close();
 
 	InetAddress getLocalAddress();

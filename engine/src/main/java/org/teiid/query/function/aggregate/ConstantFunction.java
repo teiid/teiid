@@ -35,7 +35,7 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
     public void reset() {
         this.value = null;
     }
-    
+
     @Override
     public boolean respectsNull() {
     	return true;
@@ -46,7 +46,7 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
+
         value = input;
     }
 
@@ -55,7 +55,7 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
      */
     public Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
+
         return this.value;
     }
 

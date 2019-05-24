@@ -36,7 +36,7 @@ public class TestBaseDelegatingExecutionFactory {
 		//excluding the setter methods the counts should be equal
 		assertEquals(methods.length+101, proxyMethods.length);
 	}
-	
+
 	@Test public void testExecution() throws TranslatorException {
 		BaseDelegatingExecutionFactory<Void, Void> ef = new BaseDelegatingExecutionFactory<Void, Void>() {
 			@Override
@@ -58,5 +58,5 @@ public class TestBaseDelegatingExecutionFactory {
 		});
 		ef.createExecution(new Select(null, false, null, null, null, null, null), null, null, null);
 	}
-	
+
 }

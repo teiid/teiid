@@ -28,7 +28,7 @@ import org.teiid.core.types.TransformationException;
 public class FloatingNumberToBigIntegerTransform extends Transform {
 
 	private Class<?> sourceType;
-	
+
 	public FloatingNumberToBigIntegerTransform(Class<?> sourceType) {
 		this.sourceType = sourceType;
 	}

@@ -57,10 +57,10 @@ import org.teiid.security.SecurityHelper;
 
 
 public class LogonImpl implements ILogon {
-	
+
 	private SessionService service;
 	private String clusterName;
-	protected Map<String, Object> gssServiceTickets = Collections.synchronizedMap(new LRUCache<String, Object>()); 
+	protected Map<String, Object> gssServiceTickets = Collections.synchronizedMap(new LRUCache<String, Object>());
 
 	public LogonImpl(SessionService service, String clusterName) {
 		this.service = service;
@@ -75,11 +75,11 @@ public class LogonImpl implements ILogon {
                 "false")); //$NON-NLS-1$
 
 		AuthenticationType authType = AuthenticationType.USERPASSWORD;
-		
+
 		if (!onlyAllowPassthrough) {
 			authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
 		}
-		
+
 		// the presence of the KRB5 token take as GSS based login.
 		if (connProps.get(ILogon.KRB5TOKEN) != null) {
 			if (authType == AuthenticationType.GSS) {
@@ -91,7 +91,7 @@ public class LogonImpl implements ILogon {
 					Object securityContext = this.gssServiceTickets.remove(Base64.encodeBytes(MD5(krb5Token)));
 					if (securityContext == null) {
 						 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
-					}				
+					}
 					previous = securityHelper.associateSecurityContext(securityContext);
 					assosiated = true;
 					return logon(connProps, krb5Token, AuthenticationType.GSS, user);
@@ -108,18 +108,18 @@ public class LogonImpl implements ILogon {
 			//send a login result with a GSS challange
 			if (v.compareTo(Version.EIGHT_7) >= 0) {
 				LogonResult result = new LogonResult();
-				result.addProperty(ILogon.AUTH_TYPE, authType); 
+				result.addProperty(ILogon.AUTH_TYPE, authType);
 				return result;
 			}
 			//throw an exception
 			throw new LogonException(RuntimePlugin.Event.TEIID40149, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40149));
 		}
-		
+
 		//default to username password
-		
+
 		if (!AuthenticationType.USERPASSWORD.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
-		}		
+		}
 		return logon(connProps, null, AuthenticationType.USERPASSWORD, user);
 	}
 
@@ -133,20 +133,20 @@ public class LogonImpl implements ILogon {
         if (password != null) {
             credential = new Credentials(password.toCharArray());
         }
-        
+
 		try {
 			SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
-			
+
 			if (connProps.get(GSSCredential.class.getName()) != null) {
 			    addCredentials(sessionInfo.getSubject(), (GSSCredential)connProps.get(GSSCredential.class.getName()));
 			}
-			
+
 	        updateDQPContext(sessionInfo);
 	        if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
 				sessionInfo.setEmbedded(true);
 	        }
 	        //if (oldSessionId != null) {
-	        	//TODO: we should be smarter about disassociating the old sessions from the client.  we'll just rely on 
+	        	//TODO: we should be smarter about disassociating the old sessions from the client.  we'll just rely on
 	        	//ping based clean up
 	        //}
 			LogonResult result = new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), clusterName);
@@ -160,22 +160,22 @@ public class LogonImpl implements ILogon {
 			 throw new LogonException(e);
 		}
 	}
-		
+
 	@Override
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
 		String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
 		String user = connProps.getProperty(BaseDataSource.USER_NAME);
-		
+
 		AuthenticationType authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
-		
+
 		if (!AuthenticationType.GSS.equals(authType)) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "Kerberos")); //$NON-NLS-1$
 		}
-		
+
 		// Using SPENGO security domain establish a token and subject.
 		GSSResult result = neogitiateGssLogin(serviceTicket, vdbName, vdbVersion, user);
-					
+
 		if (!result.isAuthenticated() || !createSession) {
 			LogonResult logonResult = new LogonResult(new SessionToken(0, "temp"), "internal", "internal"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			logonResult.addProperty(ILogon.KRB5TOKEN, result.getServiceToken());
@@ -184,8 +184,8 @@ public class LogonImpl implements ILogon {
 			    logonResult.addProperty(GSSCredential.class.getName(), result.getDelegationCredential());
 			}
 			return logonResult;
-		}		
-		
+		}
+
 		// GSS API (jdbc) will make the session in one single call
 		connProps.setProperty(TeiidURL.CONNECTION.USER_NAME, result.getUserName());
 		connProps.put(ILogon.KRB5TOKEN, result.getServiceToken());
@@ -208,9 +208,9 @@ public class LogonImpl implements ILogon {
 		if (result == null) {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 		}
-		
+
 		if (result.isAuthenticated()) {
-			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$	
+			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$
 			this.gssServiceTickets.put(Base64.encodeBytes(MD5(result.getServiceToken())), result.getSecurityContext());
 		}
 		return result;
@@ -222,9 +222,9 @@ public class LogonImpl implements ILogon {
 			return md.digest(content);
 		} catch (java.security.NoSuchAlgorithmException e) {
 			return content;
-		}		
+		}
 	}
-	
+
 	private void updateDQPContext(SessionMetadata s) {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		SessionMetadata old = workContext.getSession();
@@ -236,7 +236,7 @@ public class LogonImpl implements ILogon {
 		    s.setActive(true);
 		}
 	}
-		
+
 	public ResultsFuture<?> logoff() throws InvalidSessionException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
@@ -254,7 +254,7 @@ public class LogonImpl implements ILogon {
 	}
 
 	public ResultsFuture<?> ping() throws InvalidSessionException,TeiidComponentException {
-		// ping is double used to alert the aliveness of the client, as well as check the server instance is 
+		// ping is double used to alert the aliveness of the client, as well as check the server instance is
 		// alive by socket server instance, so that they can be cached.
 		String id = DQPWorkContext.getWorkContext().getSessionId();
 		if (id != null) {
@@ -263,7 +263,7 @@ public class LogonImpl implements ILogon {
 		LogManager.logTrace(LogConstants.CTX_SECURITY, "Ping", id); //$NON-NLS-1$
 		return ResultsFuture.NULL_FUTURE;
 	}
-	
+
 	@Override
 	public ResultsFuture<?> ping(Collection<String> sessions)
 			throws TeiidComponentException, CommunicationException {
@@ -289,32 +289,32 @@ public class LogonImpl implements ILogon {
 		} catch (SessionServiceException e) {
 			 throw new TeiidComponentException(RuntimePlugin.Event.TEIID40062, e);
 		}
-		
+
 		if (sessionInfo == null) {
 			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40063);
 		}
-		
+
 		SessionToken st = sessionInfo.getSessionToken();
 		if (!st.equals(checkSession)) {
 			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40064);
 		}
 		this.updateDQPContext(sessionInfo);
 	}
-	
+
 	public SessionService getSessionService() {
 		return service;
 	}
-	
+
 	static void addCredentials(final Subject subject, final GSSCredential cred) {
 	    if (System.getSecurityManager() == null) {
 	        subject.getPrivateCredentials().add(cred);
 	    }
-	    
-	    AccessController.doPrivileged(new PrivilegedAction<Void>() { 
+
+	    AccessController.doPrivileged(new PrivilegedAction<Void>() {
 	        public Void run() {
 	            subject.getPrivateCredentials().add(cred);
 	            return null;
 	        }
-	    });        
-	}	
+	    });
+	}
 }

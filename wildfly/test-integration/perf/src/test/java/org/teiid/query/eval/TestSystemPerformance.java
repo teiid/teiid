@@ -39,11 +39,11 @@ import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings({"nls"})
 public class TestSystemPerformance extends AbstractQueryTest {
-	
+
 	private static final int TABLES = 2000;
 	private static final int COLS = 16;
 	EmbeddedServer es;
-	
+
 	@Before public void setup() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException {
 		es = new EmbeddedServer();
 		es.start(new EmbeddedConfiguration());
@@ -66,7 +66,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 					}
 				}
 			}
-			
+
 			@Override
 			public boolean isSourceRequiredForMetadata() {
 				return false;
@@ -75,11 +75,11 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		es.addTranslator("hc", hardCodedExecutionFactory);
 		es.deployVDB("test", mmm);
 	}
-	
+
 	@After public void teardown() {
 		es.stop();
 	}
-	
+
 	@Test public void testColumnPerformance() throws Exception {
 		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
 		setConnection(c);
@@ -90,7 +90,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 			internalResultSet.close();
 		}
 	}
-	
+
 	@Test public void testSQLXML() throws Exception {
 		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
 		String sql = "select xmlelement(root, xmlelement(root1, xmlagg(x))) from (select xmlelement(x, tablename, xmlagg(xmlforest(name)), '\n') as x from sys.columns group by tablename) as y"; //$NON-NLS-1$
@@ -104,5 +104,5 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		}
 		c.close();
 	}
-	
+
 }

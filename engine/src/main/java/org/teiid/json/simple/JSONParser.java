@@ -14,16 +14,16 @@ import java.util.LinkedList;
 
 /**
  * Parser for JSON text. Please note that JSONParser is NOT thread-safe.
- * 
+ *
  * @author FangYidong<fangyidong@yahoo.com.cn>
  */
 public class JSONParser {
-	
+
     /**
-     * Modified from JSONValue 
+     * Modified from JSONValue
      * @param s - Must not be null.
      * @param sb
-     * @throws IOException 
+     * @throws IOException
      */
     public static void escape(CharSequence s, Appendable sb) throws IOException {
                 for(int i=0;i<s.length();i++){
@@ -69,7 +69,7 @@ public class JSONParser {
                         }
                 }//for
         }
-	
+
 	public static final int S_INIT=0;
 	public static final int S_IN_FINISHED_VALUE=1;//string,number,boolean,null,object,array
 	public static final int S_IN_OBJECT=2;
@@ -78,19 +78,19 @@ public class JSONParser {
 	public static final int S_IN_PAIR_VALUE=5;
 	public static final int S_END=6;
 	public static final int S_IN_ERROR=-1;
-	
+
 	private LinkedList handlerStatusStack;
 	private Yylex lexer = new Yylex((Reader)null);
 	private Yytoken token = null;
 	private int status = S_INIT;
-	
+
 	private int peekStatus(LinkedList statusStack){
 		if(statusStack.size()==0)
 			return -1;
 		Integer status=(Integer)statusStack.getFirst();
 		return status.intValue();
 	}
-	
+
     /**
      *  Reset the parser to the initial state without resetting the underlying reader.
      *
@@ -100,34 +100,34 @@ public class JSONParser {
         status = S_INIT;
         handlerStatusStack = null;
     }
-    
+
     /**
      * Reset the parser to the initial state with a new character reader.
-     * 
+     *
      * @param in - The new character reader.
      */
 	public void reset(Reader in){
 		lexer.yyreset(in);
 		reset();
 	}
-	
+
 	/**
 	 * @return The position of the beginning of the current token.
 	 */
 	public int getPosition(){
 		return lexer.getPosition();
 	}
-	
+
 	private void nextToken() throws ParseException, IOException{
 		token = lexer.yylex();
 		if(token == null)
 			token = Yytoken.EOF;
 	}
-	
+
 	public void parse(String s, ContentHandler contentHandler) throws ParseException{
 		parse(s, contentHandler, false);
 	}
-	
+
 	public void parse(String s, ContentHandler contentHandler, boolean isResume) throws ParseException{
 		StringReader in=new StringReader(s);
 		try{
@@ -140,22 +140,22 @@ public class JSONParser {
 			throw new ParseException(-1, ParseException.ERROR_UNEXPECTED_EXCEPTION, ie);
 		}
 	}
-	
+
 	public void parse(Reader in, ContentHandler contentHandler) throws IOException, ParseException{
 		parse(in, contentHandler, false);
 	}
-	
+
 	/**
 	 * Stream processing of JSON text.
-	 * 
+	 *
 	 * @see ContentHandler
-	 * 
+	 *
 	 * @param in
 	 * @param contentHandler
 	 * @param isResume - Indicates if it continues previous parsing operation.
-     *                   If set to true, resume parsing the old stream, and parameter 'in' will be ignored. 
+     *                   If set to true, resume parsing the old stream, and parameter 'in' will be ignored.
 	 *                   If this method is called for the first time in this instance, isResume will be ignored.
-	 * 
+	 *
 	 * @throws IOException
 	 * @throws ParseException
 	 */
@@ -171,9 +171,9 @@ public class JSONParser {
 				handlerStatusStack = new LinkedList();
 			}
 		}
-		
-		LinkedList statusStack = handlerStatusStack;	
-		
+
+		LinkedList statusStack = handlerStatusStack;
+
 		try{
 			do{
 				switch(status){
@@ -203,7 +203,7 @@ public class JSONParser {
 						status=S_IN_ERROR;
 					}//inner switch
 					break;
-					
+
 				case S_IN_FINISHED_VALUE:
 					nextToken();
 					if(token.type==Yytoken.TYPE_EOF){
@@ -215,7 +215,7 @@ public class JSONParser {
 						status = S_IN_ERROR;
 						throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
 					}
-			
+
 				case S_IN_OBJECT:
 					nextToken();
 					switch(token.type){
@@ -249,7 +249,7 @@ public class JSONParser {
 						break;
 					}//inner switch
 					break;
-					
+
 				case S_PASSED_PAIR_KEY:
 					nextToken();
 					switch(token.type){
@@ -283,7 +283,7 @@ public class JSONParser {
 						status=S_IN_ERROR;
 					}
 					break;
-				
+
 				case S_IN_PAIR_VALUE:
 					/*
 					 * S_IN_PAIR_VALUE is just a marker to indicate the end of an object entry, it doesn't proccess any token,
@@ -294,7 +294,7 @@ public class JSONParser {
 					if(!contentHandler.endObjectEntry())
 						return;
 					break;
-					
+
 				case S_IN_ARRAY:
 					nextToken();
 					switch(token.type){
@@ -331,10 +331,10 @@ public class JSONParser {
 						status=S_IN_ERROR;
 					}//inner switch
 					break;
-					
+
 				case S_END:
 					return;
-					
+
 				case S_IN_ERROR:
 					throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
 				}//switch
@@ -359,7 +359,7 @@ public class JSONParser {
 			status = S_IN_ERROR;
 			throw e;
 		}
-		
+
 		status = S_IN_ERROR;
 		throw new ParseException(getPosition(), ParseException.ERROR_UNEXPECTED_TOKEN, token);
 	}

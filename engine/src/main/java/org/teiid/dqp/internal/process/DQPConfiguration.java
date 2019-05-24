@@ -29,7 +29,7 @@ import io.opentracing.Tracer;
 import io.opentracing.contrib.concurrent.TracedRunnable;
 
 public class DQPConfiguration{
-	
+
     //Constants
     static final int DEFAULT_FETCH_SIZE = RequestMessage.DEFAULT_FETCH_SIZE * 10;
     static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
@@ -42,7 +42,7 @@ public class DQPConfiguration{
 	public static final int DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY = 0;
 	public static final int DEFAULT_MAX_STALENESS_SECONDS = 0;
 
-    
+
 	private int maxThreads = DEFAULT_MAX_PROCESS_WORKERS;
 	private int timeSliceInMilli = DEFAULT_PROCESSOR_TIMESLICE;
 	private int maxRowsFetchSize = DEFAULT_FETCH_SIZE;
@@ -51,16 +51,16 @@ public class DQPConfiguration{
 	private boolean exceptionOnMaxSourceRows = true;
 	private int maxSourceRows = -1;
 	private int maxActivePlans = DEFAULT_MAX_ACTIVE_PLANS;
-	
+
     private int userRequestSourceConcurrency = DEFAULT_USER_REQUEST_SOURCE_CONCURRENCY;
     private boolean detectingChangeEvents = true;
     private long queryTimeout;
-    
+
     private transient AuthorizationValidator authorizationValidator;
     private transient PreParser preParser;
-    
+
     private Properties properties;
-    
+
     public DQPConfiguration() {
         properties = PropertiesUtils.getCombinedProperties();
     }
@@ -68,19 +68,19 @@ public class DQPConfiguration{
 	public int getMaxActivePlans() {
 		return maxActivePlans;
 	}
-	
+
 	public void setMaxActivePlans(int maxActivePlans) {
 		this.maxActivePlans = maxActivePlans;
 	}
-	
+
 	public int getUserRequestSourceConcurrency() {
 		return userRequestSourceConcurrency;
 	}
-	
+
 	public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
 		this.userRequestSourceConcurrency = userRequestSourceConcurrency;
 	}
-	
+
 	public int getMaxThreads() {
 		return maxThreads;
 	}
@@ -96,7 +96,7 @@ public class DQPConfiguration{
 	public void setTimeSliceInMilli(int timeSliceInMilli) {
 		this.timeSliceInMilli = timeSliceInMilli;
 	}
-	
+
 	public int getMaxRowsFetchSize() {
 		return maxRowsFetchSize;
 	}
@@ -112,15 +112,15 @@ public class DQPConfiguration{
 	public void setLobChunkSizeInKB(int lobChunkSizeInKB) {
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
 	}
-	
+
 	public int getQueryThresholdInSecs() {
 		return (int)queryThresholdInMilli/1000;
 	}
-	
+
 	public long getQueryThresholdInMilli() {
 		return queryThresholdInMilli;
 	}
-	
+
 	public void setQueryThresholdInMilli(long queryThreshold) {
 		this.queryThresholdInMilli = queryThreshold;
 	}
@@ -128,7 +128,7 @@ public class DQPConfiguration{
 	public void setQueryThresholdInSecs(int queryThresholdInSecs) {
 		this.queryThresholdInMilli = queryThresholdInSecs * 1000;
 	}
-		
+
 	/**
 	 * Throw exception if there are more rows in the result set than specified in the MaxSourceRows setting.
 	 * @return
@@ -136,7 +136,7 @@ public class DQPConfiguration{
 	public boolean isExceptionOnMaxSourceRows() {
 		return exceptionOnMaxSourceRows;
 	}
-	
+
 	public void setExceptionOnMaxSourceRows(boolean exceptionOnMaxSourceRows) {
 		this.exceptionOnMaxSourceRows = exceptionOnMaxSourceRows;
 	}
@@ -152,28 +152,28 @@ public class DQPConfiguration{
 	public void setMaxSourceRows(int maxSourceRows) {
 		this.maxSourceRows = maxSourceRows;
 	}
-		
+
 	public AuthorizationValidator getAuthorizationValidator() {
 		return authorizationValidator;
 	}
-	
+
 	public void setAuthorizationValidator(
 			AuthorizationValidator authorizationValidator) {
 		this.authorizationValidator = authorizationValidator;
 	}
-	
+
 	public boolean isDetectingChangeEvents() {
 		return detectingChangeEvents;
 	}
-	
+
 	public void setDetectingChangeEvents(boolean detectingChangeEvents) {
 		this.detectingChangeEvents = detectingChangeEvents;
 	}
-	
+
 	public void setQueryTimeout(long queryTimeout) {
 		this.queryTimeout = queryTimeout;
 	}
-	
+
 	public long getQueryTimeout() {
 		return queryTimeout;
 	}
@@ -188,11 +188,11 @@ public class DQPConfiguration{
 	        }
 	    };
 	}
-	
+
 	public void setPreParser(PreParser preParser) {
 		this.preParser = preParser;
 	}
-	
+
 	public PreParser getPreParser() {
 		return preParser;
 	}
@@ -204,7 +204,7 @@ public class DQPConfiguration{
 	public Properties getProperties() {
 		return this.properties;
 	}
-	
+
 	/**
 	 * Set the properties used to initialize the engine {@link Options}
 	 * @param properties

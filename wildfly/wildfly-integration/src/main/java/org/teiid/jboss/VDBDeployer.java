@@ -73,31 +73,31 @@ import org.teiid.vdb.runtime.VDBKey;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
-	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
+	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 	private TranslatorRepository translatorRepository;
 	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
-	
-    public VDBDeployer(TranslatorRepository translatorRepo,            
+
+    public VDBDeployer(TranslatorRepository translatorRepo,
             VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
 		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
 	}
-	
+
 	public void deploy(final DeploymentPhaseContext context)  throws DeploymentUnitProcessingException {
 		final DeploymentUnit deploymentUnit = context.getDeploymentUnit();
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		
+
 		VDBMetaData other = this.vdbRepository.getVDB(deployment.getName(), deployment.getVersion());
 		if (other != null) {
 			String deploymentName = other.getPropertyValue(TranslatorUtil.DEPLOYMENT_NAME);
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50106, deployment, deploymentName));
 		}
-		
+
 		deployment.addProperty(TranslatorUtil.DEPLOYMENT_NAME, deploymentUnit.getName());
 		// check to see if there is old vdb already deployed.
         final ServiceController<?> controller = context.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
@@ -105,48 +105,48 @@ class VDBDeployer implements DeploymentUnitProcessor {
         	LogManager.logInfo(LogConstants.CTX_RUNTIME,  IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50019, deployment));
             controller.setMode(ServiceController.Mode.REMOVE);
         }
-		
+
 		boolean preview = deployment.isPreview();
 		if (!preview && deployment.hasErrors()) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50074, deployment));
 		}
-		
+
 		// make sure the translator defined exists in configuration; otherwise add as error
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			if (!model.isSource() || model.getSourceNames().isEmpty()) {
 				continue;
 			}
 			for (String source:model.getSourceNames()) {
-				
+
 				String translatorName = model.getSourceTranslatorName(source);
 				if (deployment.isOverideTranslator(translatorName)) {
 					VDBTranslatorMetaData parent = deployment.getTranslator(translatorName);
 					translatorName = parent.getType();
 				}
-				
+
 				Translator translator = this.translatorRepository.getTranslatorMetaData(translatorName);
-				if ( translator == null) {	
+				if ( translator == null) {
 					String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deployment.getName(), deployment.getVersion());
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, msg);
-				}	
+				}
 			}
 		}
-		
+
 		// add VDB module's classloader as an attachment
 		ModuleClassLoader classLoader = deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader();
 		deployment.addAttchment(ClassLoader.class, classLoader);
 		deployment.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
-		
+
 		try {
             EmbeddedServer.createPreParser(deployment);
         } catch (TeiidException e1) {
             throw new DeploymentUnitProcessingException(e1);
         }
-		
+
 		UDFMetaData udf = new UDFMetaData();
 		udf.setFunctionClassLoader(classLoader);
 		deployment.addAttchment(UDFMetaData.class, udf);
-		
+
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		VDBResources resources;
 		try {
@@ -154,17 +154,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		} catch (IOException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
-		
+
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
 		final VDBService vdb = new VDBService(deployment, resources, shutdownListener);
 		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
-		
+
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
-		
+
 		// add dependencies to data-sources
 		dataSourceDependencies(deployment, context.getServiceTarget());
-		
+
 		for (VDBImport vdbImport : deployment.getVDBImports()) {
 			VDBKey vdbKey = new VDBKey(vdbImport.getName(), vdbImport.getVersion());
 			if (vdbKey.isAtMost()) {
@@ -174,7 +174,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME,  IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50115, deployment, vdbKey));
 			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbKey.getVersion()));
 		}
-		
+
 		// adding the translator services is redundant, however if one is removed then it is an issue.
 		for (Model model:deployment.getModels()) {
 			List<String> sourceNames = model.getSourceNames();
@@ -182,12 +182,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				String translatorName = model.getSourceTranslatorName(sourceName);
 				if (deployment.isOverideTranslator(translatorName)) {
 					VDBTranslatorMetaData translator = deployment.getTranslator(translatorName);
-					translatorName = translator.getType();					
+					translatorName = translator.getType();
 				}
 				vdbService.addDependency(TeiidServiceNames.translatorServiceName(translatorName));
 			}
 		}
-		
+
 		ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
@@ -198,11 +198,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		//ensure that the secondary services have started
 		vdbService.addDependency(TeiidServiceNames.MATVIEW_SERVICE);
         vdbService.addDependency(TeiidServiceNames.REST_WAR_SERVICE);
-				
+
 		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
 		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone
 		installVDBSwitchService(context.getServiceTarget(), vdbSwitchServiceName);
-		
+
 		vdbService.addListener(new AbstractServiceListener<Object>() {
         	@Override
             public void transition(final ServiceController controller, final ServiceController.Transition transition) {
@@ -222,11 +222,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
             			installVDBSwitchService(controller.getServiceContainer(), vdbSwitchServiceName);
         			}
         		}
-            }			
+            }
 		});
 		vdbService.setInitialMode(Mode.PASSIVE).install();
 	}
-	
+
 	private void installVDBSwitchService(final ServiceTarget serviceTarget, ServiceName vdbSwitchServiceName) {
 		// install switch service now.
 		ServiceBuilder<CountDownLatch> svc = serviceTarget.addService(vdbSwitchServiceName, new Service<CountDownLatch>() {
@@ -252,8 +252,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 		});
 		svc.install();
-	}	
-	
+	}
+
 	static void addDataSourceListener(
 			final ServiceTarget serviceTarget,
 			final VDBKey vdbKey,
@@ -268,13 +268,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 		ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
 		final ServiceName svcName = bindInfo.getBinderServiceName();
-		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbKey);									
+		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbKey);
 		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(dsListenerServiceName, dsl);
 		sb.addDependency(svcName);
 		sb.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, dsl.vdbStatusCheckInjector);
 		sb.setInitialMode(Mode.PASSIVE).install();
 	}
-	
+
 	private void dataSourceDependencies(VDBMetaData deployment, ServiceTarget serviceTarget) {
 		final VDBKey vdbKey = new VDBKey(deployment.getName(), deployment.getVersion());
 		Set<String> dataSources = new HashSet<String>();
@@ -288,23 +288,23 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				if (!dataSources.add(VDBStatusChecker.stripContext(dsName))) {
 					continue; //already listening
 				}
-				addDataSourceListener(serviceTarget, vdbKey, dsName);				
+				addDataSourceListener(serviceTarget, vdbKey, dsName);
 			}
 		}
 	}
-	
+
 	static class DataSourceListener implements Service<DataSourceListener>{
 		private String dsName;
 		private ServiceName svcName;
 		private VDBKey vdb;
 		InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
-		
+
 		public DataSourceListener(String dsName, ServiceName svcName, VDBKey vdb) {
 			this.dsName = dsName;
 			this.svcName = svcName;
 			this.vdb = vdb;
 		}
-		
+
 		public DataSourceListener getValue() throws IllegalStateException,IllegalArgumentException {
 			return this;
 		}
@@ -323,7 +323,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			if (s.getMode().equals(Mode.REMOVE) || s.getState().equals(State.STOPPING)) {
 				this.vdbStatusCheckInjector.getValue().dataSourceRemoved(this.dsName, vdb);
 			}
-		}		
+		}
 	}
 
 	public static String getJndiName(String name) {
@@ -332,24 +332,24 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			jndiName = JAVA_CONTEXT + jndiName;
 		}
 		return jndiName;
-	}	
-	
+	}
+
 	@Override
 	public void undeploy(final DeploymentUnit deploymentUnit) {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
-		}	
-		
+		}
+
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		if (!this.shutdownListener.isShutdownInProgress()) {
 			final VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-			
+
 			ServiceController<?> sc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
 			if (sc != null) {
 				ObjectSerializer serilalizer = ObjectSerializer.class.cast(sc.getValue());
-				serilalizer.removeAttachments(vdb);	
+				serilalizer.removeAttachments(vdb);
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
-			}		
+			}
 		}
 		this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
 
@@ -364,7 +364,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				if (dsName == null) {
 					continue;
 				}
-		        
+
 				ServiceController<?> dsService;
 				try {
 					dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
@@ -376,7 +376,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				}
 			}
 		}
-		
+
         final ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);

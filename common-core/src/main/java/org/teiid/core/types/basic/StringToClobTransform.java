@@ -54,5 +54,5 @@ public class StringToClobTransform extends Transform {
 	public Class getTargetType() {
 		return ClobType.class;
 	}
-	
+
 }

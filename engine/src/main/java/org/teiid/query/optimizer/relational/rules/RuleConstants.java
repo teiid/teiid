@@ -33,8 +33,8 @@ public final class RuleConstants {
     public static final OptimizerRule CHOOSE_DEPENDENT = new RuleChooseDependent();
 	public static final OptimizerRule COLLAPSE_SOURCE = new RuleCollapseSource();
     public static final OptimizerRule COPY_CRITERIA = new RuleCopyCriteria();
-    public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();    
-    public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();    
+    public static final OptimizerRule CLEAN_CRITERIA = new RuleCleanCriteria();
+    public static final OptimizerRule VALIDATE_WHERE_ALL = new RuleValidateWhereAll();
     public static final OptimizerRule REMOVE_OPTIONAL_JOINS = new RuleRemoveOptionalJoins();
     public static final OptimizerRule PUSH_NON_JOIN_CRITERIA = new RulePushNonJoinCriteria(true);
     public static final OptimizerRule RAISE_NULL = new RuleRaiseNull();

@@ -30,12 +30,12 @@ import org.jboss.msc.service.ServiceRegistry;
 
 class TranslatorRemove extends AbstractRemoveStepHandler {
 	public static TranslatorRemove INSTANCE = new TranslatorRemove();
-	
+
     @Override
     protected void performRuntime(OperationContext context,
             final ModelNode operation, final ModelNode model)
             throws OperationFailedException {
-				
+
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 

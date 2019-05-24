@@ -44,7 +44,7 @@ public final class NodeEditor {
 			throw new AssertionError("Cannot promote a multinode child"); //$NON-NLS-1$
 		}
 	}
-	
+
     public static final PlanNode findNodePreOrder(PlanNode root, int types) {
         return findNodePreOrder(root, types, NodeConstants.Types.NO_TYPE);
     }
@@ -67,7 +67,7 @@ public final class NodeEditor {
 		}
 		return null;
 	}
-	
+
 	public static final PlanNode findParent(PlanNode root,
                                             int types) {
 	    return findParent(root, types, NodeConstants.Types.NO_TYPE);
@@ -101,11 +101,11 @@ public final class NodeEditor {
 		findAllNodesHelper(root, types, nodes, NodeConstants.Types.NO_TYPE);
 		return nodes;
 	}
-    
+
 	/**
-     * Find all nodes of a type, starting at the root of a tree or subtree of 
+     * Find all nodes of a type, starting at the root of a tree or subtree of
      * PlanNodes and searching downward, but not searching past nodes of type equal
-     * to stopType. 
+     * to stopType.
 	 * @param root the top node of the subtree, the point at which searching begins
 	 * @param types the types of the node to search for
 	 * @param stopTypes type of nodes not to search past
@@ -117,13 +117,13 @@ public final class NodeEditor {
         findAllNodesHelper(root, types, nodes, stopTypes);
         return nodes;
     }
-    
+
 	private static final void findAllNodesHelper(PlanNode node, int types, List<PlanNode> foundNodes, int stopTypes) {
 		if((node.getType() & types) == node.getType()) {
 			foundNodes.add(node);
 		}
 
-		if(node.getChildCount() > 0 && (stopTypes == NodeConstants.Types.NO_TYPE || (stopTypes & node.getType()) != node.getType() ) ) { 
+		if(node.getChildCount() > 0 && (stopTypes == NodeConstants.Types.NO_TYPE || (stopTypes & node.getType()) != node.getType() ) ) {
 			for (PlanNode child : node.getChildren()) {
     		    findAllNodesHelper(child, types, foundNodes, stopTypes);
 			}

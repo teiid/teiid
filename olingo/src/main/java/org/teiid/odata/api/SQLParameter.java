@@ -29,17 +29,17 @@ public class SQLParameter {
         this.value = value;
         this.sqlType = sqlType;
     }
-    
+
     public SQLParameter(String name, Object value, Integer sqlType) {
         this.name = name;
         this.value = value;
         this.sqlType = sqlType;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public Object getValue() {
         return value;
     }
@@ -47,12 +47,12 @@ public class SQLParameter {
     public Integer getSqlType() {
         return sqlType;
     }
-    
+
     @Override
     public int hashCode() {
         return value == null ? 0 : value.hashCode();
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof SQLParameter)) {

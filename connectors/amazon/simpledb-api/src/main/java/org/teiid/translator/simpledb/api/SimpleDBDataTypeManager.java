@@ -36,7 +36,7 @@ public class SimpleDBDataTypeManager {
         if (value == null) {
             return null;
         }
-        if (type.isArray()) {            
+        if (type.isArray()) {
             int length = Array.getLength(value);
             String[] arrayValue = new String[length];
             for (int i = 0; i < length; i++) {
@@ -44,8 +44,8 @@ public class SimpleDBDataTypeManager {
             }
             return arrayValue;
         }
-        
-        return convertToSimpleDBType(value);    
+
+        return convertToSimpleDBType(value);
     }
 
     private static String convertToSimpleDBType(Object value) throws TranslatorException {
@@ -72,11 +72,11 @@ public class SimpleDBDataTypeManager {
             if (expectedType.getComponentType().isAssignableFrom(String.class)) {
                 return origialValue.toArray(new String[origialValue.size()]);
             }
-            Object array = Array.newInstance(expectedType, origialValue.size());                
+            Object array = Array.newInstance(expectedType, origialValue.size());
             for (int i = 0; i < origialValue.size(); i++) {
                 Object arrayItem = convertFromSimpleDBType(origialValue.get(i), expectedType.getComponentType());
                 Array.set(array, i, arrayItem);
-            }               
+            }
             return array;
         }
 
@@ -85,7 +85,7 @@ public class SimpleDBDataTypeManager {
     }
 
     private static Object convertFromSimpleDBType(final String value, final Class<?> expectedType) throws TranslatorException {
-        
+
         if (expectedType.isAssignableFrom(String.class)) {
             return value;
         }
@@ -109,7 +109,7 @@ public class SimpleDBDataTypeManager {
                 throw new TranslatorException(e);
             }
         } else {
-            throw new TranslatorException("Failed to convert "+ value +" to target type of "+ expectedType);//$NON-NLS-1$ //$NON-NLS-2$ 
+            throw new TranslatorException("Failed to convert "+ value +" to target type of "+ expectedType);//$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 }

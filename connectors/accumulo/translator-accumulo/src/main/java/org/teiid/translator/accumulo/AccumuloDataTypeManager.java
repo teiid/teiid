@@ -68,7 +68,7 @@ public class AccumuloDataTypeManager {
         if (value == null) {
             return EMPTY_BYTES;
         }
-	    
+
         try {
             if (value instanceof Clob) {
                 // TODO:Accumulo streaming support would have been good?
@@ -101,9 +101,9 @@ public class AccumuloDataTypeManager {
                 return bytesLexicoder.encode((byte[])value);
             }
             else if (value instanceof Object[] ) {
-                throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19003, 
+                throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19003,
                         AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19003));
-            }            
+            }
             else if (value instanceof String ||
                         value instanceof Boolean ||
                         value instanceof Byte ||
@@ -134,14 +134,14 @@ public class AccumuloDataTypeManager {
             throw new TeiidRuntimeException(e);
         } catch (TransformationException e) {
             throw new TeiidRuntimeException(e);
-        }        
+        }
 	}
-	
+
     public static Object deserialize(final byte[] value, final Class<?> expectedType) {
         if (value == null || Arrays.equals(value, EMPTY_BYTES)) {
             return null;
         }
-        
+
         try {
             if (expectedType.isAssignableFrom(Clob.class)) {
                 return new ClobImpl(new InputStreamFactory() {
@@ -149,29 +149,29 @@ public class AccumuloDataTypeManager {
                     public InputStream getInputStream() throws IOException {
                         return ObjectConverterUtil.convertToInputStream(value);
                     }
-                }, -1);           
+                }, -1);
             } else if (expectedType.isAssignableFrom(Blob.class)) {
                 return new BlobType(new BlobImpl(new InputStreamFactory() {
                     @Override
                     public InputStream getInputStream() throws IOException {
                         return ObjectConverterUtil.convertToInputStream(value);
                     }
-                }));            
+                }));
             } else if (expectedType.isAssignableFrom(SQLXML.class)) {
                 return new SQLXMLImpl(new InputStreamFactory() {
                     @Override
                     public InputStream getInputStream() throws IOException {
                         return ObjectConverterUtil.convertToInputStream(value);
                     }
-                });            
+                });
             } else if (expectedType.isAssignableFrom(BinaryType.class)) {
-            	
+
                 return new BinaryType(value);
             } else if (expectedType.isAssignableFrom(GeometryType.class)) {
                 GeometryType result = new GeometryType(Arrays.copyOf(value, value.length -4));
-                int srid = (((value[value.length - 4] & 0xff) << 24) + 
-                		((value[value.length - 3] & 0xff) << 16) + 
-                		((value[value.length - 2] & 0xff) << 8) + 
+                int srid = (((value[value.length - 4] & 0xff) << 24) +
+                		((value[value.length - 3] & 0xff) << 16) +
+                		((value[value.length - 2] & 0xff) << 8) +
                 		((value[value.length - 1] & 0xff) << 0));
                 result.setSrid(srid);
                 return result;
@@ -207,13 +207,13 @@ public class AccumuloDataTypeManager {
         } catch (TransformationException e) {
             throw new TeiidRuntimeException(e);
         }
-    }	
-	
+    }
+
 	private static byte[] toLexiCode(Object value) {
 		if (value == null) {
 			return EMPTY_BYTES;
 		}
-		
+
 		try {
 			if (value instanceof java.sql.Date
                                 || value instanceof java.sql.Timestamp
@@ -269,12 +269,12 @@ public class AccumuloDataTypeManager {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-		
+
 	private static Object fromLexiCode(final byte[] value, final Class<?> expectedType) {
 		if (value == null || Arrays.equals(value, EMPTY_BYTES)) {
 			return null;
 		}
-		
+
 		if (expectedType.isAssignableFrom(String.class)) {
 			return stringLexicoder.decode(value);
 		} else if (expectedType.isAssignableFrom(java.sql.Date.class)) {
@@ -305,22 +305,22 @@ public class AccumuloDataTypeManager {
                 public InputStream getInputStream() throws IOException {
                     return ObjectConverterUtil.convertToInputStream(bytesLexicoder.decode(value));
                 }
-            }, -1);           
+            }, -1);
         } else if (expectedType.isAssignableFrom(Blob.class)) {
             return new BlobType(new BlobImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return ObjectConverterUtil.convertToInputStream(bytesLexicoder.decode(value));
                 }
-                
-            }));            
+
+            }));
         } else if (expectedType.isAssignableFrom(SQLXML.class)) {
             return new SQLXMLImpl(new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return ObjectConverterUtil.convertToInputStream(bytesLexicoder.decode(value));
                 }
-            });            
+            });
         } else if (expectedType.isAssignableFrom(BinaryType.class)) {
             return new BinaryType(bytesLexicoder.decode(value));
         } else if (expectedType.isAssignableFrom(GeometryType.class)) {
@@ -331,7 +331,7 @@ public class AccumuloDataTypeManager {
         else {
             throw new TeiidRuntimeException(AccumuloPlugin.Event.TEIID19004,
                     AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19004,
-                            expectedType.getName()));    
+                            expectedType.getName()));
         }
-	}	
+	}
 }

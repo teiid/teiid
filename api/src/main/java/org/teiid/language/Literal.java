@@ -26,16 +26,16 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  * the type specified by {@link #getType()}
  */
 public class Literal extends BaseLanguageObject implements Expression {
-    
+
     private Object value;
     private Class<?> type;
     private boolean isBindEligible;
-    
+
     public Literal(Object value, Class<?> type) {
         this.value = value;
         this.type = type;
     }
-    
+
     public Object getValue() {
         return this.value;
     }
@@ -55,7 +55,7 @@ public class Literal extends BaseLanguageObject implements Expression {
 	public void setType(Class<?> type) {
 		this.type = type;
 	}
-	
+
 	/**
 	 * Set by the optimizer if the literal was created by the evaluation of another expression.
 	 * Setting to true will not always result in the value being handled as a bind value.
@@ -64,7 +64,7 @@ public class Literal extends BaseLanguageObject implements Expression {
 	public boolean isBindEligible() {
 		return isBindEligible;
 	}
-	
+
 	public void setBindEligible(boolean isBindEligible) {
 		this.isBindEligible = isBindEligible;
 	}

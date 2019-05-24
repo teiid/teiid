@@ -30,10 +30,10 @@ public class JDBCExecutionException extends TranslatorException {
 	private static final long serialVersionUID = 1758087499488916573L;
 
 	public JDBCExecutionException(BundleUtil.Event event, SQLException error,TranslatedCommand... commands) {
-		super(error, commands == null || commands.length == 0 ? event.toString()+":"+error.getMessage() : event.toString()+":"+JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, Arrays.toString(commands))); //$NON-NLS-1$ //$NON-NLS-2$ 
+		super(error, commands == null || commands.length == 0 ? event.toString()+":"+error.getMessage() : event.toString()+":"+JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, Arrays.toString(commands))); //$NON-NLS-1$ //$NON-NLS-2$
 		setCode(String.valueOf(error.getErrorCode()));
 	}
-	
+
 	public JDBCExecutionException(BundleUtil.Event event, SQLException error, String command) {
 		super(error, event.toString()+":"+JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, command)); //$NON-NLS-1$
 		setCode(String.valueOf(error.getErrorCode()));

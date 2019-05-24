@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 
 public class ResolverVisitor extends LanguageVisitor {
-    
+
     public static final String TEIID_PASS_THROUGH_TYPE = "teiid:pass-through-type"; //$NON-NLS-1$
 	private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
 
@@ -68,10 +68,10 @@ public class ResolverVisitor extends LanguageVisitor {
     private List<ElementSymbol> matches = new ArrayList<ElementSymbol>(2);
     private List<GroupSymbol> groupMatches = new ArrayList<GroupSymbol>(2);
 	private boolean hasUserDefinedAggregate;
-    
+
     /**
      * Constructor for ResolveElementsVisitor.
-     * 
+     *
      * External groups are ordered from inner to outer most
      */
     public ResolverVisitor(QueryMetadataInterface metadata, Collection<GroupSymbol> internalGroups, GroupContext externalContext) {
@@ -94,7 +94,7 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         } catch (QueryResolverException e) {
 			handleException(e);
-		} 
+		}
     }
 
     private QueryResolverException handleUnresolvedElement(ElementSymbol symbol, String description) {
@@ -111,7 +111,7 @@ public class ResolverVisitor extends LanguageVisitor {
         if(elementSymbol.getMetadataID() != null) {
         	return;
         }
-        
+
         // look up group and element parts of the potentialID
         String groupContext = null;
         if (elementSymbol.getGroupSymbol() != null) {
@@ -131,7 +131,7 @@ public class ResolverVisitor extends LanguageVisitor {
 				//ignore
 			}
         }
-        
+
         internalResolveElementSymbol(elementSymbol, groupContext, elementShortName, null);
    }
 
@@ -140,9 +140,9 @@ public class ResolverVisitor extends LanguageVisitor {
 			throws TeiidComponentException, QueryResolverException {
 		boolean isExternal = false;
         boolean groupMatched = false;
-        
+
         GroupContext root = null;
-        
+
         if (groups != null || externalContext != null) {
             if (groups != null) {
                 root = new GroupContext(externalContext, groups);
@@ -154,7 +154,7 @@ public class ResolverVisitor extends LanguageVisitor {
         } else {
             try {
                 LinkedList<GroupSymbol> matchedGroups = new LinkedList<GroupSymbol>();
-                
+
                 if (groupContext != null) {
                     //assume that this is fully qualified
                     Object groupID = this.metadata.getGroupID(groupContext);
@@ -163,40 +163,40 @@ public class ResolverVisitor extends LanguageVisitor {
                     groupSymbol.setMetadataID(groupID);
                     matchedGroups.add(groupSymbol);
                 }
-                
+
                 root = new GroupContext(null, matchedGroups);
             } catch(QueryMetadataException e) {
-                // ignore 
+                // ignore
             }
         }
-        
+
         matches.clear();
         groupMatches.clear();
         while (root != null) {
             Collection<GroupSymbol> matchedGroups = ResolverUtil.findMatchingGroups(groupContext, root.getGroups(), metadata);
             if (matchedGroups != null && !matchedGroups.isEmpty()) {
                 groupMatched = true;
-                    
+
                 resolveAgainstGroups(shortCanonicalName, matchedGroups);
-                
+
                 if (matches.size() > 1) {
             	    throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31117, elementSymbol, groupMatches));
                 }
-                
+
                 if (matches.size() == 1) {
                     break;
                 }
             }
-            
+
             root = root.getParent();
             isExternal = true;
         }
-        
+
         if (matches.isEmpty()) {
             if (groupMatched) {
-                throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31118, elementSymbol)); 
+                throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31118, elementSymbol));
             }
-            throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31119, elementSymbol)); 
+            throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31119, elementSymbol));
         }
         //copy the match information
         ElementSymbol resolvedSymbol = matches.get(0);
@@ -215,13 +215,13 @@ public class ResolverVisitor extends LanguageVisitor {
         }
         return true;
 	}
-    
+
     private void resolveAgainstGroups(String elementShortName,
                                       Collection<GroupSymbol> matchedGroups) throws QueryMetadataException,
                                                          TeiidComponentException {
     	for (GroupSymbol group : matchedGroups) {
             GroupInfo groupInfo = ResolverUtil.getGroupInfo(group, metadata);
-            
+
             ElementSymbol result = groupInfo.getSymbol(elementShortName);
             if (result != null) {
             	matches.add(result);
@@ -229,7 +229,7 @@ public class ResolverVisitor extends LanguageVisitor {
             }
         }
     }
-        
+
     public void visit(BetweenCriteria obj) {
         try {
             resolveBetweenCriteria(obj);
@@ -247,33 +247,33 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     @Override
     public void visit(IsDistinctCriteria obj) {
         try {
             if (!(obj.getLeftRowValue() instanceof GroupSymbol) && !(obj.getRightRowValue() instanceof GroupSymbol)) {
                 resolveCompareCriteria(new BinaryComparison() {
-                    
+
                     @Override
                     public void setRightExpression(Expression ex) {
                         obj.setRightRowValue(ex);
                     }
-                    
+
                     @Override
-                    public void setLeftExpression(Expression ex) {                        
+                    public void setLeftExpression(Expression ex) {
                         obj.setLeftRowValue(ex);
                     }
-                    
+
                     @Override
                     public Expression getRightExpression() {
                         return (Expression) obj.getRightRowValue();
                     }
-                    
+
                     @Override
                     public Expression getLeftExpression() {
                         return (Expression) obj.getLeftRowValue();
                     }
-                    
+
                 }, obj);
             }
         } catch(QueryResolverException e) {
@@ -318,46 +318,46 @@ public class ResolverVisitor extends LanguageVisitor {
 	private void resolveQuantifiedCompareArray(SubqueryCompareCriteria obj)
 			throws QueryResolverException, AssertionError {
 		Class<?> expressionType = obj.getArrayExpression().getType();
-		
+
 		if (expressionType == null || !expressionType.isArray()) {
 			throw new QueryResolverException(QueryPlugin.Event.TEIID31175, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31175, new Object[] { obj.getArrayExpression(), expressionType }));
 		}
-		
+
 		Class<?> rightType = expressionType.getComponentType();
-		
+
 		Expression leftExpression = obj.getLeftExpression();
-		
+
 		setDesiredType(leftExpression, rightType, obj);
-		
+
 		if(leftExpression.getType().equals(rightType) ) {
 			return;
 		}
-		
+
 		// Try to apply an implicit conversion from one side to the other
 		String leftTypeName = DataTypeManager.getDataTypeName(leftExpression.getType());
 		String rightTypeName = DataTypeManager.getDataTypeName(rightType);
-		
+
 		if (leftExpression.getType() == DataTypeManager.DefaultDataClasses.NULL) {
 			obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, rightTypeName, metadata) );
 			return;
 		}
-  	
+
 		boolean leftChar = isCharacter(leftExpression, true);
 		boolean rightChar = isCharacter(rightType, true);
-		
+
 		// Special cases when left expression is a constant
 		if(leftExpression instanceof Constant && (!rightChar || leftChar)) {
 		    // Auto-convert constant string on left to expected type on right
 		    try {
 		        obj.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata, true));
-		        return;                                           
+		        return;
 		    } catch (QueryResolverException qre) {
 		    	if (leftChar && !metadata.widenComparisonToString()) {
 		        	throw qre;
 		        }
 		    }
 		}
-  	
+
 		// Try to apply a conversion generically
 		if ((rightChar ^ leftChar) && !metadata.widenComparisonToString()) {
 			throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, obj));
@@ -386,7 +386,7 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     public void visit(Function obj) {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
@@ -406,7 +406,7 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     @Override
     public void visit(Array array) {
     	try {
@@ -456,7 +456,7 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     public void visit(SearchedCaseExpression obj) {
         try {
             resolveSearchedCaseExpression(obj);
@@ -464,17 +464,17 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     public void visit(SetClause obj) {
     	String type = DataTypeManager.getDataTypeName(obj.getSymbol().getType());
     	try {
     		setDesiredType(obj.getValue(), obj.getSymbol().getType(), obj);
-            obj.setValue(ResolverUtil.convertExpression(obj.getValue(), type, metadata));                    
+            obj.setValue(ResolverUtil.convertExpression(obj.getValue(), type, metadata));
         } catch(QueryResolverException e) {
             handleException(new QueryResolverException(e, QueryPlugin.Util.getString("SetClause.resolvingError", new Object[] {obj.getValue(), obj.getSymbol(), type}))); //$NON-NLS-1$
-        } 
+        }
     }
-    
+
     @Override
     public void visit(XMLSerialize obj) {
     	try {
@@ -483,22 +483,22 @@ public class ResolverVisitor extends LanguageVisitor {
 			handleException(new QueryResolverException(e, QueryPlugin.Util.getString("XMLSerialize.resolvingError", obj))); //$NON-NLS-1$
 		}
     }
-    
+
     @Override
     public void visit(XMLQuery obj) {
     	try {
 	    	ResolverUtil.setDesiredType(obj.getPassing(), obj);
 			obj.compileXqueryExpression();
 		} catch (QueryResolverException e) {
-			handleException(e); 
+			handleException(e);
 		}
     }
-    
+
     @Override
     public void visit(XMLExists obj) {
     	visit(obj.getXmlQuery());
     }
-    
+
     @Override
     public void visit(XMLCast xmlCast) {
         String typeName = xmlCast.getTypeName();
@@ -508,7 +508,7 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
-    
+
     @Override
     public void visit(QueryString obj) {
     	try {
@@ -520,7 +520,7 @@ public class ResolverVisitor extends LanguageVisitor {
 			handleException(new QueryResolverException(e, QueryPlugin.Util.getString("XMLQuery.resolvingError", obj))); //$NON-NLS-1$
 		}
     }
-    
+
     @Override
     public void visit(ExpressionCriteria obj) {
 		try {
@@ -529,7 +529,7 @@ public class ResolverVisitor extends LanguageVisitor {
 			handleException(e);
 		}
     }
-    
+
     @Override
     public void visit(ExceptionExpression obj) {
     	try {
@@ -569,7 +569,7 @@ public class ResolverVisitor extends LanguageVisitor {
 			throw new QueryResolverException(QueryPlugin.Event.TEIID31120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31120, obj));
 		}
 	}
-    
+
     @Override
     public void visit(AggregateSymbol obj) {
     	if (obj.getCondition() != null) {
@@ -602,7 +602,7 @@ public class ResolverVisitor extends LanguageVisitor {
     	                }
                     } catch (QueryResolverException e) {
                         handleException(e);
-                    }   
+                    }
     	        }
     	    }
     	    break;
@@ -722,8 +722,8 @@ public class ResolverVisitor extends LanguageVisitor {
         if(getResolverException() != null) {
             throw getResolverException();
         }
-        
-        if (includeUnresolvedFunctions 
+
+        if (includeUnresolvedFunctions
         		&& unresolvedFunctions != null && !unresolvedFunctions.isEmpty()) {
         	throw unresolvedFunctions.values().iterator().next();
         }
@@ -734,12 +734,12 @@ public class ResolverVisitor extends LanguageVisitor {
 	 */
 	void resolveFunction(Function function, FunctionLibrary library)
 	    throws QueryResolverException, TeiidComponentException {
-	
+
 	    // Check whether this function is already resolved
 	    if(function.getFunctionDescriptor() != null) {
 	        return;
 	    }
-	
+
 	    // Look up types for all args
 	    boolean hasArgWithoutType = false;
 	    Expression[] args = function.getArgs();
@@ -753,17 +753,17 @@ public class ResolverVisitor extends LanguageVisitor {
 	            hasArgWithoutType = true;
 	        }
 	    }
-	
+
 	    //special case handling for convert of an untyped reference
 	    if (FunctionLibrary.isConvert(function) && hasArgWithoutType) {
 	        Constant constant = (Constant)function.getArg(1);
 	        Class<?> type = metadata.getDataTypeClass((String)constant.getValue());
-	
+
 	        setDesiredType(function.getArg(0), type, function);
 	        types[0] = type;
 	        hasArgWithoutType = false;
 	    }
-	
+
 	    // Attempt to get exact match of function for this signature
 	    List<FunctionDescriptor> fds;
 		try {
@@ -777,7 +777,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		        if (hasArgWithoutType) {
 		             throw new QueryResolverException(QueryPlugin.Event.TEIID30069, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30069, function));
 		        }
-		        
+
 		        // Known function form - unable to find implicit conversions
 		        throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
 		    }
@@ -791,26 +791,26 @@ public class ResolverVisitor extends LanguageVisitor {
 	        }
 			throw new QueryResolverException(QueryPlugin.Event.TEIID31150, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31150, function));
 		}
-	    
+
 	    FunctionDescriptor fd = fds.get(0);
-	    if (fd.getMethod().isVarArgs() 
-	    		&& fd.getTypes().length == types.length 
+	    if (fd.getMethod().isVarArgs()
+	    		&& fd.getTypes().length == types.length
 	    		&& library.isVarArgArrayParam(fd.getMethod(), types, types.length - 1, fd.getTypes()[types.length - 1])) {
 	    	fd = fd.clone();
 	    	fd.setCalledWithVarArgArrayParam(true);
 	    }
-	    
+
 	    if(fd.isSystemFunction(FunctionLibrary.CONVERT) || fd.isSystemFunction(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
 	        Class<?> dataTypeClass = metadata.getDataTypeClass(dataType);
 	        fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);
-	
+
 	        // Verify that the type conversion from src to type is even valid
 	        Class<?> srcTypeClass = args[0].getType();
 	        if(srcTypeClass != null && dataTypeClass != null &&
 	           !srcTypeClass.equals(dataTypeClass) &&
 	           !DataTypeManager.isTransformable(srcTypeClass, dataTypeClass)) {
-	
+
 	             throw new QueryResolverException(QueryPlugin.Event.TEIID30071, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30071, new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType}));
 	        }
 	    } else if(fd.isSystemFunction(FunctionLibrary.LOOKUP)) {
@@ -831,14 +831,14 @@ public class ResolverVisitor extends LanguageVisitor {
 	    	//hack largely to support pg
 	    	fd = library.copyFunctionChangeReturnType(fd, args[0].getType());
 	    }
-	
+
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());
 	    if (CoreConstants.SYSTEM_MODEL.equals(fd.getSchema())) {
 	        if (StringUtil.startsWithIgnoreCase(function.getName(), SYS_PREFIX)) {
 	            function.setName(function.getName().substring(SYS_PREFIX.length()));
 	        }
-	    } else if (library.getSystemFunctions().hasFunctionWithName(function.getName()) 
+	    } else if (library.getSystemFunctions().hasFunctionWithName(function.getName())
 	            && !StringUtil.startsWithIgnoreCase(function.getName(), function.getFunctionDescriptor().getSchema() + ElementSymbol.SEPARATOR)) {
             function.setName(function.getFunctionDescriptor().getSchema() + ElementSymbol.SEPARATOR + function.getName());
 	    }
@@ -852,8 +852,8 @@ public class ResolverVisitor extends LanguageVisitor {
 	 * @param function
 	 * @param types
 	 * @return
-	 * @throws TeiidComponentException 
-	 * @throws InvalidFunctionException 
+	 * @throws TeiidComponentException
+	 * @throws InvalidFunctionException
 	 * @since 4.3
 	 */
 	private List<FunctionDescriptor> findWithImplicitConversions(FunctionLibrary library, Function function, Expression[] args, Class<?>[] types, boolean hasArgWithoutType) throws QueryResolverException, TeiidComponentException, InvalidFunctionException {
@@ -868,14 +868,14 @@ public class ResolverVisitor extends LanguageVisitor {
 		    newSignature = new Class[conversions.length];
 		    // Insert new conversion functions as necessary, while building new signature
 		    for(int i=0; i<conversions.length; i++) {
-		        
+
 		        Class<?> newType = types[i];
-		        
+
 		        if(conversions[i] != null) {
 		            newType = conversions[i].getReturnType();
-		            
+
 		            setDesiredType(args[i], newType, function);
-		                                
+
 		            //only currently typed expressions need conversions
 		            if (types[i] != null && newType != DataTypeManager.DefaultDataClasses.OBJECT) {
 		            	//directly resolve constants
@@ -885,13 +885,13 @@ public class ResolverVisitor extends LanguageVisitor {
 		            		function.insertConversion(i, conversions[i]);
 		            	}
 		            }
-		        } 
-		                    
+		        }
+
 		        newSignature[i] = newType;
 		    }
 		}
 	    String name = cr.method.getFullName();
-	
+
 	    // Now resolve using the new signature to get the function's descriptor
 	    return library.findAllFunctions(name, newSignature);
 	}
@@ -908,16 +908,16 @@ public class ResolverVisitor extends LanguageVisitor {
 	 * </ol>
 	 * @param criteria
 	 * @throws QueryResolverException
-	 * @throws TeiidComponentException 
+	 * @throws TeiidComponentException
 	 * @throws TeiidComponentException
 	 */
 	void resolveBetweenCriteria(BetweenCriteria criteria)
 	    throws QueryResolverException, TeiidComponentException {
-	
+
 	    Expression exp = criteria.getExpression();
 	    Expression lower = criteria.getLowerExpression();
 	    Expression upper = criteria.getUpperExpression();
-	
+
 	    // invariants: none of the expressions is an aggregate symbol
 	    setDesiredType(exp,
 	                                   (lower.getType() == null)
@@ -927,33 +927,33 @@ public class ResolverVisitor extends LanguageVisitor {
 	    setDesiredType(lower, exp.getType(), criteria);
 	    setDesiredType(upper, exp.getType(), criteria);
 	    // invariants: none of the types is null
-	    
+
 	    if (exp.getType() == lower.getType() && exp.getType() == upper.getType()) {
 	        return;
 	    }
-	    
+
 	    String expTypeName = DataTypeManager.getDataTypeName(exp.getType());
 	    String lowerTypeName = DataTypeManager.getDataTypeName(lower.getType());
 	    String upperTypeName = DataTypeManager.getDataTypeName(upper.getType());
-	    
+
 	  //check if all types are the same, or if there is a common type
 	    String[] types = new String[2];
 	    types[0] = lowerTypeName;
 	    types[1] = upperTypeName;
 	    Class<?> type = null;
-	    
+
 	    String commonType = ResolverUtil.getCommonRuntimeType(types);
     	if (commonType != null) {
     		type = DataTypeManager.getDataTypeClass(commonType);
     	}
-	    
+
 	    boolean exprChar = isCharacter(exp, true);
-	    
+
 	    if (exp.getType() != DataTypeManager.DefaultDataClasses.NULL) {
 	    	boolean success = true;
             // try to apply cast
         	// Apply cast and replace current value
-	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(lower, true)) { 
+	    	if (!exprChar || metadata.widenComparisonToString() || isCharacter(lower, true)) {
 	            try {
 	            	criteria.setLowerExpression(ResolverUtil.convertExpression(lower, lowerTypeName, expTypeName, metadata, true) );
 	            	lower = criteria.getLowerExpression();
@@ -993,23 +993,23 @@ public class ResolverVisitor extends LanguageVisitor {
             	return;
             }
 	    }
-	
+
 	    // If no convert found for first element, check whether everything in the
 	    // set is the same and the convert can be placed on the left side
     	if (type == null) {
 	        // Couldn't find a common type to implicitly convert to
     		throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30077, criteria));
     	}
-    	
+
         // Is there a possible conversion from left to right?
         String typeName = DataTypeManager.getDataTypeName(type);
-        
+
         if (!isCharacter(type, true) || metadata.widenComparisonToString() || exp.getType() == DataTypeManager.DefaultDataClasses.NULL) {
         	criteria.setExpression(ResolverUtil.convertExpression(exp, expTypeName, typeName, metadata, true));
         } else if (type != exp.getType()) {
         	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, criteria));
         }
-        
+
         if(lower.getType() != type) {
         	if (!metadata.widenComparisonToString() && exprChar ^ isCharacter(lower, true)) {
         		throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, criteria));
@@ -1027,22 +1027,22 @@ public class ResolverVisitor extends LanguageVisitor {
 
 	void resolveCompareCriteria(BinaryComparison ccrit, LanguageObject surrounding)
 		throws QueryResolverException {
-	
+
 		Expression leftExpression = ccrit.getLeftExpression();
 		Expression rightExpression = ccrit.getRightExpression();
-	
+
 		// Check typing between expressions
 	    setDesiredType(leftExpression, rightExpression.getType(), surrounding);
 	    setDesiredType(rightExpression, leftExpression.getType(), surrounding);
-	
+
 		if(leftExpression.getType() == rightExpression.getType()) {
 			return;
 		}
-	
+
 		// Try to apply an implicit conversion from one side to the other
 		String leftTypeName = DataTypeManager.getDataTypeName(leftExpression.getType());
 		String rightTypeName = DataTypeManager.getDataTypeName(rightExpression.getType());
-		
+
 		if (leftExpression.getType() == DataTypeManager.DefaultDataClasses.NULL) {
 			ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata, true) );
 			return;
@@ -1051,10 +1051,10 @@ public class ResolverVisitor extends LanguageVisitor {
 			ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName, metadata, true) );
 			return;
 		}
-		
+
 		boolean leftChar = isCharacter(leftExpression, true);
 		boolean rightChar = isCharacter(rightExpression, true);
-		
+
 	    // Special cases when right expression is a constant
 	    if(rightExpression instanceof Constant && (!leftChar || rightChar)) {
 	        // Auto-convert constant string on right to expected type on left
@@ -1066,39 +1066,39 @@ public class ResolverVisitor extends LanguageVisitor {
 	            	throw qre;
 	            }
 	        }
-	    } 
-	    
+	    }
+
 	    // Special cases when left expression is a constant
 	    if(leftExpression instanceof Constant && (!rightChar || leftChar)) {
 	        // Auto-convert constant string on left to expected type on right
 	        try {
 	            ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata, true));
-	            return;                                           
+	            return;
 	        } catch (QueryResolverException qre) {
 	        	if (leftChar && !metadata.widenComparisonToString()) {
 	            	throw qre;
 	            }
 	        }
 	    }
-	
+
 	    // Try to apply a conversion generically
-	    
+
 	    if ((rightChar ^ leftChar) && !metadata.widenComparisonToString()) {
 	    	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, surrounding));
 	    }
-		
+
 	    if(ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
 			ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName, metadata, true) );
 			return;
 		}
-	
+
 		if(ResolverUtil.canImplicitlyConvert(rightTypeName, leftTypeName)) {
 			ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName, metadata, true) );
 			return;
 	    }
-	
+
 		String commonType = ResolverUtil.getCommonRuntimeType(new String[] {leftTypeName, rightTypeName});
-		
+
 		if (commonType == null) {
 	        // Neither are aggs, but types can't be reconciled
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30072, new Object[] { leftTypeName, rightTypeName, surrounding }));
@@ -1109,10 +1109,10 @@ public class ResolverVisitor extends LanguageVisitor {
 
 	void resolveMatchCriteria(MatchCriteria mcrit)
 	    throws QueryResolverException {
-	
+
 	    setDesiredType(mcrit.getLeftExpression(), mcrit.getRightExpression().getType(), mcrit);
 	    mcrit.setLeftExpression(resolveMatchCriteriaExpression(mcrit, mcrit.getLeftExpression()));
-	
+
 	    setDesiredType(mcrit.getRightExpression(), mcrit.getLeftExpression().getType(), mcrit);
 	    mcrit.setRightExpression(resolveMatchCriteriaExpression(mcrit, mcrit.getRightExpression()));
 	}
@@ -1131,15 +1131,15 @@ public class ResolverVisitor extends LanguageVisitor {
 	    Expression result = expr;
 	    if(type != null) {
 	        if (!isCharacter(expr, false)) {
-	                
+
 	            if(ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.STRING)) {
-	
+
 	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.STRING, metadata, false);
-	                
+
 	            } else if (ResolverUtil.canImplicitlyConvert(type, DataTypeManager.DefaultDataTypes.CLOB)){
-	                    
+
 	                result = ResolverUtil.convertExpression(expr, type, DataTypeManager.DefaultDataTypes.CLOB, metadata, false);
-	
+
 	            } else {
 	                 throw new QueryResolverException(QueryPlugin.Event.TEIID30074, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30074, mcrit));
 	            }
@@ -1150,7 +1150,7 @@ public class ResolverVisitor extends LanguageVisitor {
 
 	void resolveSetCriteria(SetCriteria scrit)
 	    throws QueryResolverException {
-	
+
 	    // Check that each of the values are the same type as expression
 	    Class<?> exprType = scrit.getExpression().getType();
 	    if(exprType == null) {
@@ -1174,7 +1174,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    if (same && type == exprType) {
     		return;
 	    }
-	    
+
 	    if (!same) {
 		    String commonType = ResolverUtil.getCommonRuntimeType(types);
 	    	if (commonType != null) {
@@ -1183,11 +1183,11 @@ public class ResolverVisitor extends LanguageVisitor {
 	    		type = null;
 	    	}
 	    }
-	    
+
 	    String exprTypeName = DataTypeManager.getDataTypeName(exprType);
-	    
+
 	    boolean attemptConvert = !isCharacter(exprType, true) || metadata.widenComparisonToString();
-	    
+
 	    List<Expression> newVals = new ArrayList<Expression>(scrit.getValues().size());
 	    if (scrit.getExpression().getType() != DataTypeManager.DefaultDataClasses.NULL) {
 		    valIter = scrit.getValues().iterator();
@@ -1220,22 +1220,22 @@ public class ResolverVisitor extends LanguageVisitor {
 		    	return;
 		    }
 	    }
-	
+
 	    // If no convert found for first element, check whether everything in the
 	    // set is the same and the convert can be placed on the left side
     	if (type == null) {
     		 throw new QueryResolverException(QueryPlugin.Event.TEIID30077, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30077, scrit));
     	}
-    	
+
         // Is there a possible conversion from left to right?
         String setTypeName = DataTypeManager.getDataTypeName(type);
-        
+
         if (type == DefaultDataClasses.CHAR || !isCharacter(type, true) || metadata.widenComparisonToString() || scrit.getExpression().getType() == DataTypeManager.DefaultDataClasses.NULL) {
         	scrit.setExpression(ResolverUtil.convertExpression(scrit.getExpression(), exprTypeName, setTypeName, metadata, true));
         } else if (type != scrit.getExpression().getType()) {
         	throw new QueryResolverException(QueryPlugin.Event.TEIID31172, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31172, scrit));
         }
-        
+
         boolean exprChar = isCharacter(scrit.getExpression(), true);
 
         newVals.clear();
@@ -1262,7 +1262,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	    final int whenCount = obj.getWhenCount();
 	    Expression expr = obj.getExpression();
-	
+
 	    Class<?> whenType = null;
 	    Class<?> thenType = null;
 	    // Get the WHEN and THEN types, and get a candidate type for each (for the next step)
@@ -1274,7 +1274,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            thenType = obj.getThenExpression(i).getType();
 	        }
 	    }
-	
+
 	    Expression elseExpr = obj.getElseExpression();
 	    if (elseExpr != null) {
 	        if (thenType == null) {
@@ -1282,7 +1282,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	        }
 	    }
 	    // Invariant: All the expressions contained in the obj are resolved (except References)
-	
+
 	    // 2. Attempt to set the target types of all contained expressions,
 	    //    and collect their type names for the next step
 	    ArrayList<String> whenTypeNames = new ArrayList<String>(whenCount + 1);
@@ -1297,10 +1297,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    for (int i = 0; i < whenCount; i++) {
 	        when = obj.getWhenExpression(i);
 	        then = obj.getThenExpression(i);
-	
+
 	        setDesiredType(when, expr.getType(), obj);
 	        setDesiredType(then, thenType, obj);
-	
+
 	        if (!whenTypeNames.contains(DataTypeManager.getDataTypeName(when.getType()))) {
 	            whenTypeNames.add(DataTypeManager.getDataTypeName(when.getType()));
 	        }
@@ -1318,9 +1318,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	            thenTypeNames.add(DataTypeManager.getDataTypeName(elseExpr.getType()));
 	        }
 	    }
-	
+
 	    // Invariants: all the expressions' types are non-null
-	
+
 	    // 3. Perform implicit type conversions
 	    String whenTypeName = ResolverUtil.getCommonRuntimeType(whenTypeNames.toArray(new String[whenTypeNames.size()]));
 	    if (whenTypeName == null) {
@@ -1375,7 +1375,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	    final int whenCount = obj.getWhenCount();
 	    // 1. Call recursively to resolve any contained CASE expressions
-	
+
 	    Class<?> thenType = null;
 	    // Get the WHEN and THEN types, and get a candidate type for each (for the next step)
 	    for (int i = 0; i < whenCount; i++) {
@@ -1383,7 +1383,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            thenType = obj.getThenExpression(i).getType();
 	        }
 	    }
-	
+
 	    Expression elseExpr = obj.getElseExpression();
 	    if (elseExpr != null) {
 	        if (thenType == null) {
@@ -1391,7 +1391,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	        }
 	    }
 	    // Invariant: All the expressions contained in the obj are resolved (except References)
-	
+
 	    // 2. Attempt to set the target types of all contained expressions,
 	    //    and collect their type names for the next step
 	    ArrayList<String> thenTypeNames = new ArrayList<String>(whenCount + 1);
@@ -1407,9 +1407,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	        setDesiredType(elseExpr, thenType, obj);
             thenTypeNames.add(DataTypeManager.getDataTypeName(elseExpr.getType()));
 	    }
-	
+
 	    // Invariants: all the expressions' types are non-null
-	
+
 	    // 3. Perform implicit type conversions
 	    String thenTypeName = ResolverUtil.getCommonRuntimeType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
@@ -1426,27 +1426,27 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Set this CASE expression's type to the common THEN type, and we're done.
 	    obj.setType(DataTypeManager.getDataTypeClass(thenTypeName));
 	}
-	
+
     public static void resolveLanguageObject(LanguageObject obj, QueryMetadataInterface metadata)
     throws TeiidComponentException, QueryResolverException {
 	    ResolverVisitor.resolveLanguageObject(obj, null, metadata);
 	}
-	
+
 	public static void resolveLanguageObject(LanguageObject obj, Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
 	    throws TeiidComponentException, QueryResolverException {
 	    ResolverVisitor.resolveLanguageObject(obj, groups, null, metadata);
 	}
-	
+
 	public static void resolveLanguageObject(LanguageObject obj, Collection<GroupSymbol> groups, GroupContext externalContext, QueryMetadataInterface metadata)
 	    throws TeiidComponentException, QueryResolverException {
-	
+
 	    if(obj == null) {
 	        return;
 	    }
-	
+
 	    // Resolve elements, deal with errors
 	    final ResolverVisitor elementsVisitor = new ResolverVisitor(metadata, groups, externalContext);
-	    //special handling for is distinct - we must resolve as both element and group 
+	    //special handling for is distinct - we must resolve as both element and group
 	    //until we generalize the notion of a scalar group reference as an "elementsymbol"
 	    PostOrderNavigator nav = new PostOrderNavigator(elementsVisitor) {
 	        @Override
@@ -1476,14 +1476,14 @@ public class ResolverVisitor extends LanguageVisitor {
                     }
                 }
                 return rowValue;
-            }  
+            }
 	    };
         obj.acceptVisitor(nav);
 	    elementsVisitor.throwException(true);
 	}
-	
+
 	public boolean hasUserDefinedAggregate() {
 		return hasUserDefinedAggregate;
 	}
-    
+
 }

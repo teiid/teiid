@@ -26,7 +26,7 @@ import javax.persistence.ManyToOne;
 
 @Entity
 public class Marketdata implements Serializable {
-	
+
 	private static final long serialVersionUID = 1783712327461134953L;
 
 	@Id
@@ -36,11 +36,11 @@ public class Marketdata implements Serializable {
 	private BigDecimal price;
 	@ManyToOne
 	private Exchange exchange;
-	
+
 	public Stock getStock() {
         return stock;
     }
-	
+
 	public void setStock(Stock stock) {
         this.stock = stock;
     }
@@ -52,13 +52,13 @@ public class Marketdata implements Serializable {
 	public void setPrice(BigDecimal price) {
 		this.price = price;
 	}
-	
+
 	public Exchange getExchange() {
         return exchange;
     }
-	
+
 	public void setExchange(Exchange exchange) {
         this.exchange = exchange;
     }
-	
+
 }

@@ -55,7 +55,7 @@ public class StringToIntegerTransform extends Transform {
 	public Class getTargetType() {
 		return Integer.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

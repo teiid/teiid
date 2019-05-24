@@ -22,7 +22,7 @@ import java.net.UnknownHostException;
 
 
 public class SocketConfiguration {
-	
+
 	private int outputBufferSize;
 	private int inputBufferSize;
 	private int maxSocketThreads;
@@ -32,39 +32,39 @@ public class SocketConfiguration {
 	private String hostName;
 	private String name;
 	private WireProtocol protocol = WireProtocol.teiid;
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public void setBindAddress(String addr) {
 		this.hostName = addr;
 	}
-	
+
 	public void setPortNumber(int port) {
 		this.portNumber = port;
 	}
-	
+
 	public void setMaxSocketThreads(int value) {
 		this.maxSocketThreads = value;
 	}
-	
+
 	public void setInputBufferSize(int value) {
 		this.inputBufferSize = value;
 	}
-	
+
 	public void setOutputBufferSize(int value) {
 		this.outputBufferSize = value;
 	}
-	
+
 	public void setSSLConfiguration(SSLConfiguration value) {
 		this.sslConfiguration = value;
-	}	
- 	
+	}
+
 	public int getOutputBufferSize() {
 		return outputBufferSize;
 	}
@@ -93,19 +93,19 @@ public class SocketConfiguration {
 		if (this.hostName == null) {
 			this.hostName = InetAddress.getLocalHost().getHostName();
 		}
-		//only cache inetaddresses if they represent the ip. 
+		//only cache inetaddresses if they represent the ip.
 		InetAddress addr = InetAddress.getByName(this.hostName);
 		if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
 			this.hostAddress = addr;
 		}
 		return addr;
 	}
-	
+
 	public void setHostAddress(InetAddress hostAddress) {
 		this.hostAddress = hostAddress;
 		this.hostName = hostAddress.getHostName();
-	}	
-	
+	}
+
 	public String getHostName() {
 		return this.hostName;
 	}
@@ -113,7 +113,7 @@ public class SocketConfiguration {
 	public SSLConfiguration getSSLConfiguration() {
 		return sslConfiguration;
 	}
-	
+
 	public boolean getSslEnabled() {
 		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
 	}
@@ -125,8 +125,8 @@ public class SocketConfiguration {
 	public void setProtocol(String protocol) {
 		this.protocol = WireProtocol.valueOf(protocol);
 	}
-	
+
 	public void setProtocol(WireProtocol protocol) {
 		this.protocol = protocol;
-	}	
+	}
 }

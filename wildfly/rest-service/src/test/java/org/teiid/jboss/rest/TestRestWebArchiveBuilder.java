@@ -53,13 +53,13 @@ import io.swagger.annotations.ApiOperation;
 
 @SuppressWarnings("nls")
 public class TestRestWebArchiveBuilder {
-    
+
     private static class ASMUtilities {
-        
+
         public static Class<?> defineClass(String name, byte[] bytes) {
             return new TestClassLoader(TestClassLoader.class.getClassLoader()).defineClassForName(name, bytes);
         }
-        
+
         private static  class TestClassLoader extends ClassLoader {
 
             public TestClassLoader(ClassLoader classLoader) {
@@ -72,7 +72,7 @@ public class TestRestWebArchiveBuilder {
 
         }
     }
-    
+
     private VDBMetaData getTestVDBMetaData() throws FileNotFoundException, XMLStreamException {
         VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
         MetadataStore ms = new MetadataStore();
@@ -80,7 +80,7 @@ public class TestRestWebArchiveBuilder {
             MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
             ms.addSchema(mf.getSchema());
         }
-        
+
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
         vdb.addAttchment(QueryMetadataInterface.class, metadata);
         vdb.addAttchment(TransformationMetadata.class, metadata);
@@ -90,11 +90,11 @@ public class TestRestWebArchiveBuilder {
 
     @Test
     public void testBuildArchive() throws Exception {
-        
+
         VDBMetaData vdb = getTestVDBMetaData();
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
         byte[] contents = builder.getContent(vdb, "vdb");
-        
+
         ArrayList<String> files = new ArrayList<String>();
         files.add("WEB-INF/web.xml");
         files.add("WEB-INF/jboss-web.xml");
@@ -102,27 +102,27 @@ public class TestRestWebArchiveBuilder {
         files.add("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class");
         files.add("WEB-INF/classes/org/teiid/jboss/rest/Bootstrap.class");
         files.add("META-INF/MANIFEST.MF");
-        
+
         files.add("api.html");
         files.add("images/teiid_logo_450px.png");
-        
+
         files.add("swagger/swagger-ui.js");
-        
+
         files.add("swagger/css/print.css");
         files.add("swagger/css/reset.css");
         files.add("swagger/css/screen.css");
         files.add("swagger/css/style.css");
         files.add("swagger/css/typography.css");
-        
+
         files.add("swagger/images/favicon-16x16.png");
         files.add("swagger/images/favicon-32x32.png");
-        
+
         files.add("swagger/lang/en.js");
         files.add("swagger/lang/es.js");
         files.add("swagger/lang/pt.js");
         files.add("swagger/lang/ru.js");
         files.add("swagger/lang/translator.js");
-        
+
         files.add("swagger/lib/backbone-min.js");
         files.add("swagger/lib/handlebars-2.0.0.js");
         files.add("swagger/lib/highlight.7.3.pack.js");
@@ -134,7 +134,7 @@ public class TestRestWebArchiveBuilder {
         files.add("swagger/lib/swagger-oauth.js");
         files.add("swagger/lib/underscore-min.js");
         files.add("swagger/lib/underscore-min.map");
-        
+
         ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(contents));
         ZipEntry ze;
         while ((ze = zipIn.getNextEntry()) != null) {
@@ -145,45 +145,45 @@ public class TestRestWebArchiveBuilder {
 
     @Test
     public void testBuildArchiveSwagger() throws Exception {
-        
+
         VDBMetaData vdb = getTestVDBMetaData();
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-        
+
         MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
         for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
             Schema schema = metadataStore.getSchema(model.getName());
             byte[] viewContents = builder.getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema, false);
             if (viewContents != null){
                 Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.View", viewContents);
-                
+
                 Set<Annotation> annotationSet = new HashSet<Annotation>();
                 for(Annotation annotation : cls.getAnnotations()) {
                     annotationSet.add(annotation);
                 }
                 assertEquals(2, annotationSet.size());
-                
+
                 for(Method m : cls.getMethods()){
                     if(m.getName().equals("g1Tableapplication_xml")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("g1Table", annotation.value());
-                        
+
                     } else if(m.getName().equals("sqlQueryxml")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("xml", annotation.value());
-                        
+
                     } else if(m.getName().equals("sqlQueryjson")){
                         ApiOperation annotation = m.getAnnotation(ApiOperation.class);
                         assertEquals("json", annotation.value());
-                        
+
                     }
-                }                
+                }
             }
         }
     }
-    
+
     @Test
     public void testBootstrapServletClass() throws InstantiationException, IllegalAccessException {
-        
+
         RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
         byte[] bytes = builder.getBootstrapServletClass("vdbName", "", "version", new String[]{"http"}, "baseUrl", "packages", true);
         Class<?> cls = ASMUtilities.defineClass("org.teiid.jboss.rest.Bootstrap", bytes);
@@ -191,19 +191,19 @@ public class TestRestWebArchiveBuilder {
         assertEquals(cls, obj.getClass());
     }
 
-    
-	@Test 
+
+	@Test
 	public void testOtherModels() throws Exception {
-		
+
 		MetadataStore ms = new MetadataStore();
-		
+
 		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
 		vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
 		ModelMetaData model = new ModelMetaData();
 		model.setName("other");
 		model.setModelType(Type.OTHER);
 		vdb.getVDB().addModel(model);
-		
+
 		RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
 		builder.getContent(vdb.getVDB(), "vdb");
 	}

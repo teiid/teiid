@@ -50,7 +50,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
     private int result;
     private VirtualFile writeTo;
     private boolean modified;
-    
+
     public ExcelUpdateExecution(LanguageObject command, ExecutionContext executionContext,
             RuntimeMetadata metadata, VirtualFileConnection connection) throws TranslatorException {
         super(executionContext, metadata, connection);
@@ -63,7 +63,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
             throws DataNotAvailableException, TranslatorException {
         return new int[] {result};
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         super.execute();
@@ -104,7 +104,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
     private void handleUpdate() throws TranslatorException {
         Update update = (Update)command;
         List<SetClause> changes = update.getChanges();
-        
+
         while (true) {
             Row row = nextRow();
             if (row == null) {
@@ -159,7 +159,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
                 if (row.getFirstCellNum() == -1) {
                     continue;
                 }
-                
+
                 if (!this.visitor.allows(row.getRowNum())) {
                     continue;
                 }
@@ -169,7 +169,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
             }
         }
     }
-    
+
     @Override
     protected VirtualFile getNextXLSFile() throws TranslatorException {
         if (modified) {
@@ -177,7 +177,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
         }
         return super.getNextXLSFile();
     }
-    
+
     private void writeXLSFile() throws TranslatorException {
         try (OutputStream fos = (writeTo==null?getCurrentXLSFile():writeTo).openOutputStream(true)) {
             workbook.write(fos);
@@ -185,7 +185,7 @@ public class ExcelUpdateExecution extends BaseExcelExecution implements UpdateEx
             throw new TranslatorException(e);
         }
     }
-    
+
     public void setWriteTo(VirtualFile writeTo) {
         this.writeTo = writeTo;
     }

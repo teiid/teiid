@@ -25,7 +25,7 @@ import org.teiid.jdbc.EnhancedTimer.Task;
 
 @SuppressWarnings("nls")
 public class TestEnhancedTimer {
-	
+
 	private final class SimpleCancelTask implements Runnable {
 		@Override
 		public void run() {
@@ -45,5 +45,5 @@ public class TestEnhancedTimer {
 		tt2.cancel();
 		assertEquals(0, ct.getQueueSize());
 	}
-	
+
 }

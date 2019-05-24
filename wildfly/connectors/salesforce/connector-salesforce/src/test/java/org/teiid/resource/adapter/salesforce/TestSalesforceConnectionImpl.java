@@ -32,7 +32,7 @@ import com.sforce.soap.partner.PartnerConnection;
 
 @SuppressWarnings("nls")
 public class TestSalesforceConnectionImpl {
-	
+
 	@Test public void testGetDeleted() throws Exception {
 		PartnerConnection pc = Mockito.mock(PartnerConnection.class);
 		GetDeletedResult gdr = new GetDeletedResult();

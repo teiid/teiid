@@ -47,33 +47,33 @@ public class TestJDBCSocketAuthentication {
 	static SocketListener jdbcTransport;
 	static FakeServer server;
 	static int delay;
-	
+
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		SocketConfiguration config = new SocketConfiguration();
 		config.setSSLConfiguration(new SSLConfiguration());
 		addr = new InetSocketAddress(0);
 		config.setBindAddress(addr.getHostName());
 		config.setPortNumber(0);
-		
+
 		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
 		dqpConfig.setMaxActivePlans(2);
 		dqpConfig.setSecurityHelper(new DoNothingSecurityHelper() {
-            
+
             @Override
             public Subject getSubjectInContext(Object context) {
                 return null;
             }
-            
+
             @Override
             public Object getSecurityContext(String securityDomain) {
                 return null;
             }
-            
+
         });
 		server = new FakeServer(false);
 		server.start(dqpConfig, false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-		
+
 		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
 			@Override
 			protected SSLAwareChannelHandler createChannelHandler() {
@@ -86,26 +86,26 @@ public class TestJDBCSocketAuthentication {
                         super.messageReceived(ctx, msg);
                     }
 			    };
-                return result;			    
+                return result;
 		    }
 		};
 	}
-	
+
 	@AfterClass public static void oneTimeTearDown() throws Exception {
 		if (jdbcTransport != null) {
 			jdbcTransport.stop();
 		}
 		server.stop();
 	}
-	
+
 	Connection conn;
-	
+
 	@After public void tearDown() throws Exception {
 		if (conn != null) {
 			conn.close();
 		}
 	}
-	
+
 	@Test(expected=TeiidSQLException.class) public void testTrustLocalFails() throws Exception {
 	    Properties p = new Properties();
         p.setProperty("user", "testuser");
@@ -113,14 +113,14 @@ public class TestJDBCSocketAuthentication {
         p.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true");
         conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
 	}
-	
+
     @Test public void testTrustLocal() throws Exception {
         Properties p = new Properties();
         p.setProperty("user", "testuser");
         p.setProperty("password", "testpassword");
         conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
     }
-    
+
     @Test public void testSetAuthType() throws Exception {
         FakeServer es = new FakeServer(false);
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -131,5 +131,5 @@ public class TestJDBCSocketAuthentication {
         assertEquals(AuthenticationType.GSS, es.getClientServiceRegistry().getAuthenticationType());
         es.stop();
     }
-	
+
 }

@@ -24,7 +24,7 @@ import org.teiid.translator.TranslatorException;
 
 public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 
-	public UpdateVisitor(RuntimeMetadata metadata) { 
+	public UpdateVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
 
@@ -39,7 +39,7 @@ public class UpdateVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			exceptions.add(ce);
 		}
 	}
-	
+
 	/*
 	 * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
 	 * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]

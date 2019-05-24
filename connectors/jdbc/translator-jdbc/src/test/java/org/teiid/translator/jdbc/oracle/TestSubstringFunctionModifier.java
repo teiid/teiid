@@ -46,21 +46,21 @@ public class TestSubstringFunctionModifier extends TestCase {
     public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
         Function func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
             Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
-        
+
         OracleExecutionFactory trans = new OracleExecutionFactory();
         trans.start();
 
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(func);  
-        
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(func);
+
         assertEquals(expectedStr, sqlVisitor.toString());
     }
 
     public void testTwoArgs() throws Exception {
         Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)           
-        }; 
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
         helpTestMod(args, "substr('a.b.c', 1)"); //$NON-NLS-1$
     }
 
@@ -68,8 +68,8 @@ public class TestSubstringFunctionModifier extends TestCase {
         Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(new Integer(3), Integer.class),
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
-        }; 
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
         helpTestMod(args, "substr('a.b.c', 3, 1)"); //$NON-NLS-1$
     }
 
@@ -77,8 +77,8 @@ public class TestSubstringFunctionModifier extends TestCase {
         Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), //$NON-NLS-1$
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
-        }; 
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
         helpTestMod(args, "substr('a.b.c', e1, 1)"); //$NON-NLS-1$
     }
 
@@ -86,8 +86,8 @@ public class TestSubstringFunctionModifier extends TestCase {
         Expression[] args = new Expression[] {
             LANG_FACTORY.createLiteral("a.b.c", String.class), //$NON-NLS-1$
             LANG_FACTORY.createLiteral(null, Integer.class),
-            LANG_FACTORY.createLiteral(new Integer(5), Integer.class) 
-        }; 
+            LANG_FACTORY.createLiteral(new Integer(5), Integer.class)
+        };
         helpTestMod(args, "substr('a.b.c', NULL, 5)"); //$NON-NLS-1$
     }
 

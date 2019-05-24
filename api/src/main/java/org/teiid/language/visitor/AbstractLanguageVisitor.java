@@ -31,10 +31,10 @@ import org.teiid.language.*;
  * visitor framework to let the instance invoke the type-specific visit() method
  */
 public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
-    
+
     protected AbstractLanguageVisitor() {
     }
-    
+
     /**
      * Visit the LanguageObject instance to perform the Visitor's operation on
      * that instance. This method can also be used by the subclass to visit any
@@ -47,7 +47,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
             obj.acceptVisitor(this);
         }
     }
-    
+
     /**
      * Visits a Collection of LanguageObjects in iteration order. This method
      * can be used by subclasses to visit each LanguageObject in the Collection
@@ -60,7 +60,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
             }
         }
     }
-    
+
     /**
      * Visits an array of LanguageObjects in order. This method can be used by
      * subclasses to visit each LanguageObject in the array.
@@ -73,7 +73,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
             }
         }
     }
-    
+
     public void visit(AggregateFunction obj) {}
     public void visit(BatchedUpdates obj) {}
     public void visit(Comparison obj) {}
@@ -125,5 +125,5 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(IsDistinct isDistinct) {}
     @Override
     public void visit(WindowFrame windowFrame) {}
-    
+
 }

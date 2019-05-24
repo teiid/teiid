@@ -60,7 +60,7 @@ import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
-	
+
 	private static final MockTransactionManager TRANSACTION_MANAGER = new TestEmbeddedServer.MockTransactionManager();
 
 	enum Mode {
@@ -69,12 +69,12 @@ public class TestODBCSocketTransport {
 		LOGIN,
 		DISABLED
 	}
-	
+
 	static class FakeOdbcServer {
 		InetSocketAddress addr;
 		ODBCSocketListener odbcTransport;
 		FakeServer server;
-		
+
 		public void start(Mode mode) throws Exception {
 			SocketConfiguration config = new SocketConfiguration();
 			SSLConfiguration sslConfig = new SSLConfiguration();
@@ -104,26 +104,26 @@ public class TestODBCSocketTransport {
 			}
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		}
-		
+
 		public void stop() {
 			server.stop();
 			odbcTransport.stop();
 		}
-		
+
 	}
-	
+
 	static FakeOdbcServer odbcServer = new FakeOdbcServer();
-	
+
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		odbcServer.start(Mode.LEGACY);
 	}
-	
+
 	@AfterClass public static void oneTimeTearDown() throws Exception {
 		odbcServer.stop();
 	}
-	
+
 	Connection conn;
-	
+
 	@Before public void setUp() throws Exception {
 		String database = "parts";
 		TRANSACTION_MANAGER.reset();
@@ -137,13 +137,13 @@ public class TestODBCSocketTransport {
 		p.setProperty("password", "testpassword");
 		conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/"+database, p);
 	}
-	
+
 	@After public void tearDown() throws Exception {
 		if (conn != null) {
 			conn.close();
 		}
 	}
-	
+
 	/**
 	 * Under the covers this still executes a prepared statement due to the driver handling
 	 */
@@ -152,7 +152,7 @@ public class TestODBCSocketTransport {
 		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
-	
+
 	@Test public void testTransactionalMultibatch() throws Exception {
 		Statement s = conn.createStatement();
 		conn.setAutoCommit(false);
@@ -164,7 +164,7 @@ public class TestODBCSocketTransport {
 		assertEquals(1025, count);
 		conn.setAutoCommit(true);
 	}
-	
+
 	@Test public void testMultibatchSelect() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from sys.tables, sys.columns limit 7000"));
@@ -176,7 +176,7 @@ public class TestODBCSocketTransport {
 		}
 		assertEquals(7000, i);
 	}
-	
+
 	/**
 	 * tests that the portal max is handled correctly
 	 */
@@ -193,7 +193,7 @@ public class TestODBCSocketTransport {
 		}
 		assertEquals(441, i);
 	}
-	
+
 	@Test public void testBlob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select to_bytes('abc', 'UTF-16')"));
@@ -202,7 +202,7 @@ public class TestODBCSocketTransport {
 		byte[] bytes = rs.getBytes(1);
 		assertEquals("abc", new String(bytes, Charset.forName("UTF-16")));
 	}
-	
+
 	@Test public void testTextCat() throws Exception {
         Statement s = conn.createStatement();
         assertTrue(s.execute("SELECT textcat('a','b')"));
@@ -211,7 +211,7 @@ public class TestODBCSocketTransport {
         String val = rs.getString(1);
         assertEquals("ab", val);
     }
-	
+
 	@Test public void testClob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select cast('abc' as clob)"));
@@ -221,7 +221,7 @@ public class TestODBCSocketTransport {
 		String clob = rs.getString(1);
 		assertEquals("abc", clob);
 	}
-	
+
 	@Test public void testLargeClob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select cast(repeat('_', 3000) as clob)"));
@@ -231,7 +231,7 @@ public class TestODBCSocketTransport {
 		String clob = rs.getString(1);
 		assertEquals(3000, clob.length());
 	}
-	
+
 	@Test public void testMultiRowBuffering() throws Exception {
 		Statement s = conn.createStatement();
 		StringBuilder sb = new StringBuilder();
@@ -248,25 +248,25 @@ public class TestODBCSocketTransport {
 
 	@Test public void testTransactionCycle() throws Exception {
 		//TODO: drill in to ensure that the underlying statement has been set to autocommit false
-		conn.setAutoCommit(false); 
+		conn.setAutoCommit(false);
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from sys.tables order by name"));
 		conn.setAutoCommit(true);
 	}
-	
+
 	@Test public void testRollbackSavepointNoOp() throws Exception {
-		conn.setAutoCommit(false); 
+		conn.setAutoCommit(false);
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("rollback to foo1"));
 		assertFalse(conn.getAutoCommit());
 	}
-	
+
 	@Test public void testTxnStatement() throws Exception {
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("begin work"));
 		assertFalse(s.execute("rollback transaction"));
 	}
-	
+
 	@Test public void testPk() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
@@ -274,47 +274,47 @@ public class TestODBCSocketTransport {
 			"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'pg_attribute' AND n.nspname = E'pg_catalog'");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
-	
+
 	@Test public void testPkPrepared() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 				"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
 				"pg_catalog.pg_namespace n, pg_catalog.pg_class ic where tc.relname = E'pg_attribute' AND n.nspname = E'pg_catalog'");
 		ResultSet rs = stmt.executeQuery();
 		TestMMDatabaseMetaData.compareResultSet(rs);
-	}	
-	
+	}
+
 	@Test public void testColumnMetadataWithAlias() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select ta.attname as x from pg_catalog.pg_attribute ta limit 1");
 		ResultSet rs = stmt.executeQuery();
 		TestMMDatabaseMetaData.compareResultSet(rs);
-	}	
-	
+	}
+
     @Test public void testInsertComplete() throws Exception {
         Statement stmt = conn.createStatement();
         stmt.execute("create temporary table foobar (id integer, optional varchar);");
-        
+
         PreparedStatement ps = conn.prepareStatement("insert into foobar (id, optional) values (?, ?)");
         ps.setInt(1, 1);
         ps.setString(2, "a");
         ps.execute();
         assertEquals(1, ps.getUpdateCount());
     }
-    
+
     @Test public void testPreparedNull() throws Exception {
         Statement stmt = conn.createStatement();
         stmt.execute("create temporary table foobar (id integer, optional varchar);");
-        
+
         PreparedStatement ps = conn.prepareStatement("insert into foobar (id, optional) values (?, ?)");
         ps.setInt(1, 1);
         ps.setString(2, null);
         ps.execute();
         assertEquals(1, ps.getUpdateCount());
-        
+
         ResultSet rs = stmt.executeQuery("select optional from foobar");
         rs.next();
         assertNull(rs.getString(1));
     }
-	
+
 	@Test public void testPreparedError() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select cast(? as integer)");
 		stmt.setString(1, "a");
@@ -324,7 +324,7 @@ public class TestODBCSocketTransport {
 			assertTrue(e.getMessage(), e.getMessage().contains("Error converting"));
 		}
 	}
-	
+
 	@Test public void testPreparedError1() throws Exception {
 		PreparedStatement stmt = conn.prepareStatement("select");
 		try {
@@ -333,14 +333,14 @@ public class TestODBCSocketTransport {
 			assertTrue(e.getMessage(), e.getMessage().contains("Parsing error"));
 		}
 	}
-	
+
 	@Test public void testEscapedLiteral() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select E'\\n\\thello pg'");
 		assertTrue(rs.next());
 		assertEquals("\n\thello pg", rs.getString(1));
 	}
-	
+
 	@Test public void testPgProc() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select * from pg_proc");
@@ -348,13 +348,13 @@ public class TestODBCSocketTransport {
 		assertEquals("oid", rs.getArray("proargtypes").getBaseTypeName());
 		TestMMDatabaseMetaData.compareResultSet(rs); //compare the rest
 	}
-	
+
 	@Test public void testCursor() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc limit 13;"));
-			
+
 			//should get a single row
 			stmt.execute("fetch \"foo\"");
 			ResultSet rs = stmt.getResultSet();
@@ -363,10 +363,10 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(1, rowCount);
-			
+
 			//move 5
 			assertFalse(stmt.execute("move 5 in \"foo\""));
-			
+
 			//fetch 10, but only 7 are left
 			stmt.execute("fetch 10 in \"foo\"");
 			rs = stmt.getResultSet();
@@ -375,29 +375,29 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(7, rowCount);
-			
+
 			stmt.execute("close \"foo\"");
-			
+
 			//start a new cursor and check failure
 			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
 			try {
 				stmt.execute("fetch 9999999999 in \"foo\"");
 				fail();
 			} catch (SQLException e) {
-				
+
 			}
 		} finally {
 			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
-		
-	}	
-	
+
+	}
+
 	@Test public void testCursorUnquoted() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExecutorImpl.simplePortal = "foo";
 		try {
 			assertFalse(stmt.execute("declare foo cursor for select * from pg_proc limit 13;"));
-			
+
 			//should get a single row
 			stmt.execute("fetch foo");
 			ResultSet rs = stmt.getResultSet();
@@ -406,10 +406,10 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(1, rowCount);
-			
+
 			//move 5
 			assertFalse(stmt.execute("move 5 in foo"));
-			
+
 			//fetch 10, but only 7 are left
 			stmt.execute("fetch 10 in \"foo\"");
 			rs = stmt.getResultSet();
@@ -418,14 +418,14 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(7, rowCount);
-			
-			stmt.execute("close foo");			
+
+			stmt.execute("close foo");
 		} finally {
 			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
-		
+
 	}
-	
+
 	@Test public void testScrollCursor() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExecutorImpl.simplePortal = "foo";
@@ -439,12 +439,12 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(6, rowCount);
-			
+
 			//move past the end
 			//assertFalse(stmt.execute("move forward 0 in \"foo\""));
 			//move back
 			assertFalse(stmt.execute("move backward 2 in \"foo\""));
-			
+
 			stmt.execute("fetch 6 in \"foo\"");
 			rs = stmt.getResultSet();
 			rowCount = 0;
@@ -452,14 +452,14 @@ public class TestODBCSocketTransport {
 				rowCount++;
 			}
 			assertEquals(1, rowCount);
-			
+
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
-		
+
 	}
-	
+
 	@Test public void testScrollCursorWithHold() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExecutorImpl.simplePortal = "foo";
@@ -477,9 +477,9 @@ public class TestODBCSocketTransport {
 		} finally {
 			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
-		
+
 	}
-	
+
 	@Test public void testScrollCursorOtherFetches() throws Exception {
 		Statement stmt = conn.createStatement();
 		ExtendedQueryExecutorImpl.simplePortal = "foo";
@@ -490,36 +490,36 @@ public class TestODBCSocketTransport {
 			assertTrue(rs.next());
 			assertEquals(1, rs.getInt(1));
 			assertFalse(rs.next());
-			
+
 			stmt.execute("fetch last in \"foo\"");
 			rs = stmt.getResultSet();
 			assertTrue(rs.next());
 			assertEquals(3, rs.getInt(1));
 			assertFalse(rs.next());
-			
+
 			stmt.execute("fetch absolute 2 in \"foo\"");
 			rs = stmt.getResultSet();
 			assertTrue(rs.next());
 			assertEquals(2, rs.getInt(1));
 			assertFalse(rs.next());
-			
+
 			stmt.execute("fetch relative 1 in \"foo\"");
 			rs = stmt.getResultSet();
 			assertTrue(rs.next());
 			assertEquals(3, rs.getInt(1));
 			assertFalse(rs.next());
-			
+
 		} finally {
 			ExtendedQueryExecutorImpl.simplePortal = null;
 		}
 	}
-	
+
 	@Test public void testPgProcedure() throws Exception {
 		Statement stmt = conn.createStatement();
 		ResultSet rs = stmt.executeQuery("select has_function_privilege(100, 'foo')");
 		rs.next();
 	}
-	
+
 	@Test public void testPreparedUpdate() throws Exception {
 		Statement stmt = conn.createStatement();
 		assertFalse(stmt.execute("create local temporary table x (y string)"));
@@ -527,7 +527,7 @@ public class TestODBCSocketTransport {
 		assertFalse(ps.execute());
 		assertNull(ps.getMetaData());
 	}
-	
+
 	@Test public void testSelectSsl() throws Exception {
 		conn.close();
 		Driver d = new Driver();
@@ -541,7 +541,7 @@ public class TestODBCSocketTransport {
 		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 	}
-	
+
 	@Test public void testPayload() throws Exception {
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("SET PAYLOAD x y"));
@@ -551,7 +551,7 @@ public class TestODBCSocketTransport {
 		String str = rs.getString(1);
 		assertEquals("y", str);
 	}
-	
+
 	@Test public void testShowPlan() throws Exception {
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("SET SHOWPLAN ON"));
@@ -562,7 +562,7 @@ public class TestODBCSocketTransport {
 		String str = rs.getString(1);
 		assertTrue(str.startsWith("ProjectNode\n  + Relational Node ID:0\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
 	}
-	
+
 	@Test public void testSetEmptyLiteral() throws Exception {
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("SET min_client_messages TO ''"));
@@ -571,7 +571,7 @@ public class TestODBCSocketTransport {
 		assertTrue(rs.next());
 		assertEquals("", rs.getString(1));
 	}
-	
+
 	@Test public void testSetNonString() throws Exception {
 		Statement s = conn.createStatement();
 		assertFalse(s.execute("SET extra_float_digits TO 2"));
@@ -580,29 +580,29 @@ public class TestODBCSocketTransport {
 		assertTrue(rs.next());
 		assertEquals("2", rs.getString(1));
 	}
-	
+
 	@Test public void testColons() throws Exception {
 		Statement s = conn.createStatement();
 		//make sure that we aren't mishandling the ::
 		ResultSet rs = s.executeQuery("select 'a::b'");
 		assertTrue(rs.next());
 		assertEquals("a::b", rs.getString(1));
-		
+
 		rs = s.executeQuery("select ' a::b'");
 		assertTrue(rs.next());
 		assertEquals(" a::b", rs.getString(1));
-		
+
 		rs = s.executeQuery("select name::varchar from sys.tables where name = 'Columns'");
 		assertTrue(rs.next());
 		assertEquals("Columns", rs.getString(1));
 	}
-	
+
 	@Test public void testInt2Vector() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select indkey FROM pg_index order by indexrelid");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
-	
+
 	@Test public void test_pg_client_encoding() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select pg_client_encoding()");
@@ -614,7 +614,7 @@ public class TestODBCSocketTransport {
 		rs.next();
 		assertEquals("UTF8", rs.getString(1));
 	}
-	
+
 	/**
 	 * TODO: we really want an odbc test, but this confirms the pg_description table and ~ rewrite handling
 	 * @throws Exception
@@ -624,27 +624,27 @@ public class TestODBCSocketTransport {
 		ResultSet rs = metadata.getTables(null, null, "pg_index", null);
 		assertTrue(rs.next());
 	}
-	
+
 	@Test public void testIndexInfo() throws Exception {
         DatabaseMetaData metadata = conn.getMetaData();
         ResultSet rs = metadata.getIndexInfo(null, null, "pg_index", false, false);
         assertTrue(rs.next());
     }
-	
+
     @Test public void testPkMetadata() throws Exception {
         DatabaseMetaData metadata = conn.getMetaData();
         ResultSet rs = metadata.getPrimaryKeys(null, null, "pg_index");
         assertTrue(rs.next());
         assertFalse(rs.next());
     }
-	
+
 	@Test public void test_pg_cast() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select '2011-01-01'::date");
 		rs.next();
 		assertEquals("2011-01-01", rs.getString(1));
 	}
-	
+
 	/**
 	 * Ensures that the client is notified about the change.  However the driver will
 	 * throw an exception as it requires UTF8
@@ -654,7 +654,7 @@ public class TestODBCSocketTransport {
 		Statement s = conn.createStatement();
 		s.execute("set client_encoding LATIN1");
 	}
-	
+
 	@Test public void testArray() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select (1,2)");
@@ -663,14 +663,14 @@ public class TestODBCSocketTransport {
 		ResultSet rs1 = result.getResultSet();
 		rs1.next();
 		assertEquals(1, rs1.getInt(1));
-		
+
 		//TODO:we are squashing the result to a text array, since
 		//that is a known type - eventually we will need typed array support
 		//Object array = result.getArray();
 		//assertEquals(1, java.lang.reflect.Array.get(array, 0));
 	}
-	
-	
+
+
 	@Test public void testClientIp() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from objecttable('teiid_context' COLUMNS y string 'teiid_row.session.IPAddress') as X"));
@@ -679,7 +679,7 @@ public class TestODBCSocketTransport {
 		String value = rs.getString(1);
 		assertNotNull(value);
 	}
-	
+
 	@Test public void testVDBConnectionProperty() throws Exception {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("x");
@@ -700,7 +700,7 @@ public class TestODBCSocketTransport {
 		String value = rs.getString(1);
 		assertEquals("bar", value);
 	}
-	
+
 	@Test public void testDecimalPrecision() throws Exception {
         VDBMetaData vdb = new VDBMetaData();
         vdb.setName("decimal");
@@ -718,41 +718,41 @@ public class TestODBCSocketTransport {
         ResultSetMetaData metadata = s.getResultSet().getMetaData();
         assertEquals(2, metadata.getPrecision(1));
         assertEquals(0, metadata.getScale(1));
-        
+
         assertEquals(32767, metadata.getPrecision(2));
         assertEquals(16383, metadata.getScale(2));
-        
+
         s.execute("select atttypmod from pg_attribute where attname = 'y'");
         s.getResultSet().next();
         assertEquals(2147434499, s.getResultSet().getInt(1));
     }
-	
+
 	@Test public void testTransactionCycleDisabled() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set disableLocalTxn true");
-		conn.setAutoCommit(false); 
+		conn.setAutoCommit(false);
 		assertTrue(s.execute("select * from sys.tables order by name"));
 		conn.setAutoCommit(true);
 	}
-	
+
 	@Test public void testGropuByPositional() throws Exception {
 		Statement s = conn.createStatement();
 		//would normally throw an exception, but is allowable over odbc
 		s.execute("select name, count(schemaname) from sys.tables group by 1");
 	}
-	
+
 	@Test public void testImplicitPortalClosing() throws Exception {
 		Statement statement = conn.createStatement();
 		ResultSet rs = statement.executeQuery("select session_id()");
 		rs.next();
 		String id = rs.getString(1);
 		statement.close();
-		
+
 		PreparedStatement s = conn.prepareStatement("select 1");
 		s.executeQuery();
 		s.executeQuery();
 		s.executeQuery();
-		
+
 		//due to asynch close, there may be several requests
 		int runningCount = 0;
 		for (RequestMetadata request : odbcServer.server.getDqp().getRequestsForSession(id)) {
@@ -763,10 +763,10 @@ public class TestODBCSocketTransport {
 		assertEquals(1, runningCount);
 		s.close();
 	}
-	
+
 	@Test public void testExportedKey() throws Exception {
 		String sql = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-fk-query.txt"));
-		
+
 		Statement s = conn.createStatement();
 		s.execute(sql);
 		ResultSet rs = s.getResultSet();
@@ -774,7 +774,7 @@ public class TestODBCSocketTransport {
 		assertEquals("STATUS_ID", rs.getString(4));
 		assertFalse(rs.next());
 	}
-	
+
 	@Test public void testRegClass() throws Exception {
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery("select '\"pg_catalog.pg_class\"'::regclass");
@@ -785,7 +785,7 @@ public class TestODBCSocketTransport {
         int oid1 = rs.getInt(1);
         assertEquals(oid, oid1);
     }
-	
+
 	@Test public void testCharType() throws Exception {
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery("select cast('a' as char)");
@@ -795,14 +795,14 @@ public class TestODBCSocketTransport {
         assertEquals(1, rs.getMetaData().getColumnDisplaySize(1));
         assertEquals("bpchar", rs.getMetaData().getColumnTypeName(1));
     }
-	
+
     @Test public void testApplicationName() throws Exception {
         Statement s = conn.createStatement();
         checkApplicationName(s, "ODBC");
         s.execute("set application_name to other");
         checkApplicationName(s, "other");
     }
-    
+
     @Test public void testGeometry() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT ST_GeomFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
@@ -813,7 +813,7 @@ public class TestODBCSocketTransport {
         assertEquals("java.lang.Object", rsmd.getColumnClassName(1));
         assertEquals("00200000030000000000000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
     }
-    
+
     @Test public void testGeography() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT ST_GeogFromText('POLYGON ((40 0, 50 50, 0 50, 0 0, 40 0))')");
@@ -824,7 +824,7 @@ public class TestODBCSocketTransport {
         assertEquals("java.lang.Object", rsmd.getColumnClassName(1));
         assertEquals("0020000003000010E600000001000000054044000000000000000000000000000040490000000000004049000000000000000000000000000040490000000000000000000000000000000000000000000040440000000000000000000000000000", rs.getString(1));
     }
-    
+
     @Test public void testJson() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT jsonParse('[1,2]', false);");
@@ -835,7 +835,7 @@ public class TestODBCSocketTransport {
         assertEquals("org.postgresql.util.PGobject", rsmd.getColumnClassName(1));
         assertEquals("[1,2]", rs.getString(1));
     }
-    
+
     @Test(expected=PSQLException.class) public void testCancel() throws Exception {
         final Statement s = conn.createStatement();
         ForkJoinPool.commonPool().execute(() -> {
@@ -847,7 +847,7 @@ public class TestODBCSocketTransport {
         });
         s.execute("SELECT t1.* from sys.tables t1, sys.tables t2, sys.tables t3");
     }
-    
+
     @Test public void testConstraintDef() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
@@ -855,7 +855,7 @@ public class TestODBCSocketTransport {
         rs.next();
         assertEquals("FOREIGN KEY (VDBName,SchemaName) REFERENCES SYS.Schemas(VDBName,Name)", rs.getString(1));
     }
-    
+
     @Test public void testXML() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT xmlelement(name x)");
@@ -865,7 +865,7 @@ public class TestODBCSocketTransport {
         assertEquals("xml", rsmd.getColumnTypeName(1));
         assertEquals("<x></x>", rs.getString(1));
     }
-    
+
     @Test public void testVersion() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT version()");
@@ -873,7 +873,7 @@ public class TestODBCSocketTransport {
         rs.next();
         assertEquals(PgCatalogMetadataStore.POSTGRESQL_VERSION, rs.getString(1));
     }
-    
+
     @Test public void testBooleanValues() throws Exception {
         Statement s = conn.createStatement();
         s.execute("SELECT true, false, unknown");
@@ -883,11 +883,11 @@ public class TestODBCSocketTransport {
         assertFalse(rs.getBoolean(2));
         assertTrue(!rs.getBoolean(3) && rs.wasNull());
     }
-    
+
     @Test public void testEmptySQL() throws Exception {
         PreparedStatement stmt = conn.prepareStatement("");
         stmt.executeUpdate();
-        
+
         //make sure the unamed portal can close
         Statement s = conn.createStatement();
         s.executeQuery("select 1");
@@ -911,5 +911,5 @@ public class TestODBCSocketTransport {
         }
         assertEquals(value, current.getApplicationName());
     }
-	
+
 }

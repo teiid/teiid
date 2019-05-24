@@ -21,7 +21,7 @@ package org.teiid.common.buffer.impl;
 import java.io.IOException;
 
 public class OutOfDiskException extends IOException {
-	
+
 	private static final long serialVersionUID = -1332091322315668612L;
 
 	public OutOfDiskException(String message) {

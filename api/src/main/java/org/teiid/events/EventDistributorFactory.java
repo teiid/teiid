@@ -19,9 +19,9 @@
 package org.teiid.events;
 
 public interface EventDistributorFactory {
-	
+
 	/**
-	 * Get an {@link EventDistributor} that will distribute events to 
+	 * Get an {@link EventDistributor} that will distribute events to
 	 * all members.
 	 * @return
 	 */

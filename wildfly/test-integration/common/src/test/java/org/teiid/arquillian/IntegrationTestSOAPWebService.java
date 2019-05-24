@@ -45,13 +45,13 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestSOAPWebService {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
         admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin",
                 "admin".toCharArray());
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
@@ -66,17 +66,17 @@ public class IntegrationTestSOAPWebService {
 		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
         String raSource = "web-ds";
         assertFalse(admin.getDataSourceNames().contains(raSource));
-        
+
         admin.deploy("addressing-service.war", new FileInputStream(UnitTestUtil.getTestDataFile("addressing-service.war")));
-        
+
         Properties p = new Properties();
         p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
         p.setProperty("EndPoint", "http://localhost:8080/jboss-jaxws-addressing/AddressingService");
-        
-        admin.createDataSource(raSource, "webservice", p);      
-        
+
+        admin.createDataSource(raSource, "webservice", p);
+
         assertTrue(admin.getDataSourceNames().contains(raSource));
-		
+
 		admin.deploy("soapsvc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("soapsvc-vdb.xml")));
 		vdbs = admin.getVDBs();
 		assertFalse(vdbs.isEmpty());
@@ -90,11 +90,11 @@ public class IntegrationTestSOAPWebService {
 
         Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:WSMSG@mm://localhost:31000;user=user;password=user;", null);
         Statement stmt = conn.createStatement();
-        String sql = "SELECT *\n" + 
-                "FROM ADDRESSINGSERVICE.SAYHELLO\n" + 
-                "WHERE MESSAGEID = 'uuid:73e4d992-6bfe-4434-b8c3-37e00f36ad97' AND SAYHELLO = 'Teiid'\n" + 
-                "AND ADDRESSINGSERVICE.SAYHELLO.To = 'http://localhost:8080/jboss-jaxws-addressing/AddressingService'\n" + 
-                "AND ADDRESSINGSERVICE.SAYHELLO.ReplyTo = 'http://www.w3.org/2005/08/addressing/anonymous'\n" + 
+        String sql = "SELECT *\n" +
+                "FROM ADDRESSINGSERVICE.SAYHELLO\n" +
+                "WHERE MESSAGEID = 'uuid:73e4d992-6bfe-4434-b8c3-37e00f36ad97' AND SAYHELLO = 'Teiid'\n" +
+                "AND ADDRESSINGSERVICE.SAYHELLO.To = 'http://localhost:8080/jboss-jaxws-addressing/AddressingService'\n" +
+                "AND ADDRESSINGSERVICE.SAYHELLO.ReplyTo = 'http://www.w3.org/2005/08/addressing/anonymous'\n" +
                 "AND ADDRESSINGSERVICE.SAYHELLO.Action = 'http://www.jboss.org/jbossws/ws-extensions/wsaddressing/ServiceIface/sayHello'";
         ResultSet rs = stmt.executeQuery(sql);
         assertTrue(rs.next());

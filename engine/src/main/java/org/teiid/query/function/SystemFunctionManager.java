@@ -33,7 +33,7 @@ public class SystemFunctionManager {
 
 	private FunctionTree systemFunctionTree;
 	private Map<String, Datatype> types;
-	
+
 	public SystemFunctionManager(Map<String, Datatype> typeMap) {
 		this.types = typeMap;
 		// Create the system source and add it to the source list
@@ -48,13 +48,13 @@ public class SystemFunctionManager {
         }
         systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
 	}
-	
+
 	public FunctionTree getSystemFunctions() {
     	return systemFunctionTree;
     }
-    
+
     public FunctionLibrary getSystemFunctionLibrary() {
     	return new FunctionLibrary(getSystemFunctions());
     }
-    
+
 }

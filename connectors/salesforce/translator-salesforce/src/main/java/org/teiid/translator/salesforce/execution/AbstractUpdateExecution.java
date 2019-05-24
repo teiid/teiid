@@ -37,9 +37,9 @@ import com.sforce.soap.partner.QueryResult;
 import com.sforce.soap.partner.sobject.SObject;
 
 /**
- * 
+ *
  * Parent class to the Update, Delete, and Insert execution classes.
- * Provisions the correct impl and contains some common code to 
+ * Provisions the correct impl and contains some common code to
  * get IDs of Salesforce objects.
  *
  */
@@ -68,7 +68,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 	@Override
 	public void close() {
 	}
-	
+
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
 			TranslatorException {
@@ -96,7 +96,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
             }
-	
+
 		} else {
 			String query = visitor.getQuery();
 			context.logCommand(query);
@@ -117,7 +117,7 @@ public abstract class AbstractUpdateExecution implements UpdateExecution {
 				if (results.isDone()) {
 				    break;
 				}
-			    results = connection.queryMore(results.getQueryLocator(), batchSize);					    
+			    results = connection.queryMore(results.getQueryLocator(), batchSize);
 			}
             if (!idList.isEmpty()) {
                 Ids = idList.toArray(new String[0]);

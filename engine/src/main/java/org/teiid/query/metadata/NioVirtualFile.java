@@ -37,7 +37,7 @@ import java.util.List;
 public class NioVirtualFile implements VirtualFile {
     private Path path;
     private long size = -1;
-    
+
     public NioVirtualFile(Path path) {
         this.path = path;
     }
@@ -73,7 +73,7 @@ public class NioVirtualFile implements VirtualFile {
         List<VirtualFile> children = new ArrayList<>();
         //walking using the stream, seems to fail, so we'll collect with the visitor
         Files.walkFileTree(this.path, new FileVisitor<Path>() {
-            
+
             @Override
             public FileVisitResult visitFile(Path file,
                     BasicFileAttributes attrs) throws IOException {
@@ -98,7 +98,7 @@ public class NioVirtualFile implements VirtualFile {
                     throws IOException {
                 return FileVisitResult.CONTINUE;
             }
-            
+
         });
         return children;
     }
@@ -112,12 +112,12 @@ public class NioVirtualFile implements VirtualFile {
     public String getPathName() {
         return path.toString();
     }
-    
+
     @Override
     public VirtualFile getChild(String child) {
         return new NioVirtualFile(this.path.resolve("/" + child)); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean exists() {
         return Files.exists(this.path);

@@ -43,13 +43,13 @@ import org.teiid.translator.ExecutionFactory;
 
 class TranslatorAdd extends AbstractAddStepHandler {
 	public static TranslatorAdd INSTANCE = new TranslatorAdd();
-    
+
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
 		TRANSLATOR_MODULE_ATTRIBUTE.validateAndSet(operation, model);
 		TRANSLATOR_SLOT_ATTRIBUTE.validateAndSet(operation, model);
 	}
-	
+
 	@Override
     protected void performRuntime(final OperationContext context,
             final ModelNode operation, final ModelNode model)
@@ -59,17 +59,17 @@ class TranslatorAdd extends AbstractAddStepHandler {
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
     	final String translatorName = pathAddress.getLastElement().getValue();
-		
+
     	String moduleName = null;
     	if (isDefined(TRANSLATOR_MODULE_ATTRIBUTE, operation, context)) {
     		moduleName = asString(TRANSLATOR_MODULE_ATTRIBUTE, operation, context);
     	}
-    	
+
         String slot = null;
         if (isDefined(TRANSLATOR_SLOT_ATTRIBUTE, operation, context)) {
             slot = asString(TRANSLATOR_SLOT_ATTRIBUTE, operation, context);
-        }    	
-		
+        }
+
         final ServiceTarget target = context.getServiceTarget();
 
         final Module module;
@@ -84,10 +84,10 @@ class TranslatorAdd extends AbstractAddStepHandler {
             	module = ml.loadModule(id);
             	translatorLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50007, moduleName, translatorName), e); 
+	            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50007, moduleName, translatorName), e);
 	        }
         }
-        
+
         boolean added = false;
         final ServiceLoader<ExecutionFactory> serviceLoader =  ServiceLoader.load(ExecutionFactory.class, translatorLoader);
         if (serviceLoader != null) {
@@ -96,20 +96,20 @@ class TranslatorAdd extends AbstractAddStepHandler {
         		if (metadata == null) {
         			throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50008, translatorName));
         		}
-        		
+
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		if (translatorName.equalsIgnoreCase(metadata.getName())) {
 	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
-	        		
+
 	        		TranslatorDeployer.buildService(target, metadata);
 	                added = true;
 	                break;
         		}
         	}
         }
-        
+
         if (!added) {
         	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50009, translatorName, moduleName));
         }
-    }    
+    }
 }

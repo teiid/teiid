@@ -54,7 +54,7 @@ public class TestBatchIterator {
 		bi.reset();
 		bi.nextTuple();
 	}
-	
+
 	@Test public void testReset1() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 			Arrays.asList(1),
@@ -71,7 +71,7 @@ public class TestBatchIterator {
 		assertEquals(2, bi.getCurrentIndex());
 		assertEquals(2, bi.nextTuple().get(0));
 	}
-	
+
 	@Test public void testReset2() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 			Arrays.asList(1),
@@ -90,7 +90,7 @@ public class TestBatchIterator {
 		assertEquals(1, bi.getCurrentIndex());
 		assertEquals(1, bi.nextTuple().get(0));
 	}
-	
+
 	@Test public void testBatchReadDuringMark() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 			Arrays.asList(1),
@@ -111,7 +111,7 @@ public class TestBatchIterator {
 		assertNotNull(bi.nextTuple());
 		assertNull(bi.nextTuple());
 	}
-	
+
 	@Test public void testDisableSave() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 			Arrays.asList(1),
@@ -135,7 +135,7 @@ public class TestBatchIterator {
 		assertNull(bi.nextTuple());
 		assertEquals(0, tb.getManagedRowCount());
 	}
-	
+
 	@Test public void testReadAhead() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 				Arrays.asList(1),
@@ -164,7 +164,7 @@ public class TestBatchIterator {
 		}
 		assertNull(bi.nextTuple());
 	}
-	
+
 	@Test public void testReadAheadMark() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 				Arrays.asList(1),
@@ -186,7 +186,7 @@ public class TestBatchIterator {
 		//shouldn't keep reading
 		bi.readAhead(2);
 		assertEquals(4, bi.getBuffer().getRowCount());
-		
+
 		bi.readAhead(5);
 		assertEquals(6, bi.getBuffer().getRowCount());
 		bi.readAhead(8); //does nothing
@@ -195,7 +195,7 @@ public class TestBatchIterator {
 		}
 		assertNull(bi.nextTuple());
 	}
-	
+
 	@Test public void testNoSaveForwardOnly() throws Exception {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 				Arrays.asList(1),
@@ -210,20 +210,20 @@ public class TestBatchIterator {
 				tb.setRowOffset(tb.getBeginRow() + 3);
 				return tb;
 			}
-			
+
 		});
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
 		tb.setForwardOnly(true);
 		bi.setBuffer(tb, false);  //$NON-NLS-1$
-		
+
 		tb.addTuple(Arrays.asList(2));
 		tb.addTuple(Arrays.asList(2));
 		tb.addTuple(Arrays.asList(2));
 		assertEquals(3, bi.getBuffer().getManagedRowCount());
 		bi.nextTuple();
 		//pull the first batch
-		assertEquals(2, bi.available()); 
+		assertEquals(2, bi.available());
 		assertEquals(0, bi.getBuffer().getManagedRowCount());
 		for (int i = 0; i < 2; i++) {
 			assertNotNull(bi.nextTuple());
@@ -238,5 +238,5 @@ public class TestBatchIterator {
 		assertNull(bi.nextTuple());
 		assertEquals(0, bi.getBuffer().getManagedRowCount());
 	}
-	
+
 }

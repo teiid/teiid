@@ -12,7 +12,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 @SuppressWarnings("nls")
 public class PropUtils {
-	
+
 
 
 	public static Properties loadProperties(String filename, Properties defaults) {
@@ -21,22 +21,22 @@ public class PropUtils {
 		Properties props = new Properties();
 		if (defaults != null) {
 			props.putAll(defaults);
-		} 
+		}
 	    try {
-		
+
 		File f = new File(filename);
 		if (f.exists()) {
 			return PropertiesUtils.load(filename);
 
 		}
-		
-		
+
+
 	        in = ConfigPropertyLoader.class.getResourceAsStream("/" + filename);
 	        if (in != null) {
 	        	Properties lprops = new Properties();
 	        	lprops.load(in);
 	        	props.putAll(lprops);
-	        	
+
 	        }
 	        else {
 	        	throw new TransactionRuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
@@ -47,10 +47,10 @@ public class PropUtils {
 		try {
 		    in.close();
 		} catch(Exception e){
-		    
+
 		}
 	    }
-	    
+
 	    return props;
 	}
 }

@@ -30,20 +30,20 @@ import org.teiid.translator.TranslatorException;
 
 public interface SimpleDBConnection extends Connection {
     public static final String ITEM_NAME = "itemName()"; //$NON-NLS-1$
-    
+
     public static class SimpleDBAttribute {
         private String name;
         private boolean multi;
-        
+
         public SimpleDBAttribute(String name, boolean multi) {
             this.name = name;
             this.multi = multi;
         }
-        
+
         public String getName() {
             return this.name;
         }
-        
+
         public boolean hasMultipleValues() {
             return this.multi;
         }
@@ -70,9 +70,9 @@ public interface SimpleDBConnection extends Connection {
             } else if (!name.equals(other.name))
                 return false;
             return true;
-        }        
-    }    
-    
+        }
+    }
+
     /**
      * Create a domain
      * @param domainName
@@ -86,21 +86,21 @@ public interface SimpleDBConnection extends Connection {
      * @throws TranslatorException
      */
     public void deleteDomain(String domainName) throws TranslatorException;
-    
+
     /**
      * Lists all domains of database
      * @return
-     */    
+     */
     public List<String> getDomains() throws TranslatorException;
-    
+
     /**
-     * Get the attributes for given domain name 
-     * @param domainName 
+     * Get the attributes for given domain name
+     * @param domainName
      * @return Set of attribute names for given domain
      */
-    
+
     public Set<SimpleDBAttribute> getAttributeNames(String domainName) throws TranslatorException;
-    
+
     /**
      *  Inserts item into given domain.
      * @param domainName
@@ -108,31 +108,31 @@ public interface SimpleDBConnection extends Connection {
      * @param columnsMap
      * @return
      */
-    
+
     public int performInsert(String domainName, List<Column> columns, Iterator<? extends List<?>> values) throws TranslatorException;
-    
+
     /**
      * Performs select expression. This expression must be in format which is understandable to SimpleDB database
      * @param selectExpression
      * @param columns
-     * @return Iterator of List<String> results 
+     * @return Iterator of List<String> results
      */
-    
+
     public com.amazonaws.services.simpledb.model.SelectResult performSelect(String selectExpression, String nextToken) throws TranslatorException;
-    
+
     /**
      *  Performs update on given domain and items
      * @param domainName
      * @param items
      */
-    
+
     public int performUpdate(String domainName, Map<String, Object> updateAttributes, String selectExpression) throws TranslatorException;
-    
+
     /**
      * Removes item with given ItemName from domain
      * @param domainName
      * @param itemName
      */
-    
-    public int performDelete(String domainName, String selectExpression) throws TranslatorException;    
+
+    public int performDelete(String domainName, String selectExpression) throws TranslatorException;
 }

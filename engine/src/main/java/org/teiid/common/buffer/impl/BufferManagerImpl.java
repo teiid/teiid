@@ -71,29 +71,29 @@ import org.teiid.query.util.Options;
  * <p>Default implementation of BufferManager.</p>
  * Responsible for creating/tracking TupleBuffers and providing access to the StorageManager.
  * </p>
- * 
+ *
  * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
  *       - this is not necessary for already persistent batches, since we hold a weak reference
- *       
- * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.      
+ *
+ * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.
  */
 public class BufferManagerImpl implements BufferManager, ReplicatedObject<String>, SessionKiller {
 
 	private static final int SYSTEM_OVERHEAD_MEGS = 150;
 
 	/**
-	 * Async cleaner attempts to age out old entries and to reduce the memory size when 
+	 * Async cleaner attempts to age out old entries and to reduce the memory size when
 	 * little is reserved.
 	 */
 	private static final int MAX_READ_AGE = 1<<19;
 	private static final class Cleaner extends TimerTask {
 		WeakReference<BufferManagerImpl> bufferRef;
 		private volatile boolean canceled;
-		
+
 		public Cleaner(BufferManagerImpl bufferManagerImpl) {
 			this.bufferRef = new WeakReference<BufferManagerImpl>(bufferManagerImpl);
 		}
-		
+
 		@Override
 		public void run() {
 			while (true) {
@@ -160,18 +160,18 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
                 LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, "Detected an unexpected number of orphaned heap cache memory entries."); //$NON-NLS-1$
             }
         }
-		
+
 		@Override
 		public boolean cancel() {
 		    this.canceled = true;
 		    return super.cancel();
 		}
 	}
-	
+
 	private final class Remover implements Removable {
 		private Long id;
 		private AtomicBoolean prefersMemory;
-		
+
 		public Remover(Long id, AtomicBoolean prefersMemory) {
 			this.id = id;
 			this.prefersMemory = prefersMemory;
@@ -187,7 +187,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	 * This estimate is based upon adding the value to 2/3 maps and having CacheEntry/PhysicalInfo keys
 	 */
 	private static final long BATCH_OVERHEAD = 128;
-	
+
 	final class BatchManagerImpl implements BatchManager, Serializer<List<? extends List<?>>> {
 		final Long id;
 		SizeUtility sizeUtility;
@@ -210,42 +210,42 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				this.types[i] = DataTypeManager.getDataTypeName(types[i]);
 			}
 		}
-		
+
 		@Override
 		public Long getId() {
 			return id;
 		}
-		
+
 		public void setLobManager(LobManager lobManager) {
 			this.lobManager = lobManager;
 		}
-		
+
 		@Override
 		public String[] getTypes() {
 			return types;
 		}
-		
+
 		@Override
 		public boolean prefersMemory() {
 			return prefersMemory.get();
 		}
-		
+
 		@Override
 		public void setPrefersMemory(boolean prefers) {
 			//TODO: it's only expected to move from not preferring to preferring
 			this.prefersMemory.set(prefers);
 		}
-		
+
 		@Override
 		public boolean useSoftCache() {
 			return prefersMemory.get();
 		}
-		
+
 		@Override
 		public Reference<? extends BatchManager> getBatchManagerReference() {
 			return ref;
 		}
-		
+
 		@Override
 		public Long createManagedBatch(List<? extends List<?>> batch,
 				Long previous, boolean removeOld)
@@ -292,7 +292,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			addMemoryEntry(ce);
 			return oid;
 		}
-		
+
 		private void updateEstimates(long sizeEstimate, boolean remove) throws TeiidComponentException {
             if (remove) {
                 sizeEstimate = -sizeEstimate;
@@ -334,7 +334,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			return batch;
 		}
-		
+
 		@Override
 		public void serialize(List<? extends List<?>> obj,
 				ObjectOutput oos) throws IOException {
@@ -349,7 +349,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				if (ExceptionUtil.getExceptionOfType(e, ClassCastException.class) != null) {
 					throw e;
 				}
-				//there is a chance of a concurrent persist while modifying 
+				//there is a chance of a concurrent persist while modifying
 				//in which case we want to swallow this exception
 				if (list == null) {
 					throw e;
@@ -357,11 +357,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, e, "Possible Concurrent Modification", id); //$NON-NLS-1$
 			}
 		}
-		
+
 		public int getSizeEstimate(List<? extends List<?>> obj) {
 			return (int) Math.max(1, sizeUtility.getBatchSize(DataTypeManager.isValueCacheEnabled(), obj));
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public List<List<?>> getBatch(Long batch, boolean retain)
@@ -441,7 +441,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		public String toString() {
 			return id.toString();
 		}
-		
+
 		@Override
 		public int getRowSizeEstimate() {
 			if (rowsSampled == 0) {
@@ -449,18 +449,18 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			return (int)(totalSize/rowsSampled);
 		}
-		
+
 		@Override
 		public String describe(List<? extends List<?>> obj) {
-		    return "Batch of " + (obj==null?0:obj.size()) + " rows of " + types; //$NON-NLS-1$ //$NON-NLS-2$ 
+		    return "Batch of " + (obj==null?0:obj.size()) + " rows of " + types; //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
-	
+
 	private static class BatchSoftReference extends SoftReference<CacheEntry> {
 
 		private int sizeEstimate;
 		private Long key;
-		
+
 		public BatchSoftReference(CacheEntry referent,
 				ReferenceQueue<? super CacheEntry> q, int sizeEstimate) {
 			super(referent, q);
@@ -472,11 +472,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	static final int CONCURRENCY_LEVEL = 32; //TODO: make this configurable since it is roughly the same as max active plans
 	private static final int TARGET_BYTES_PER_ROW = 1 << 11; //2k bytes per row
 	private static ReferenceQueue<CacheEntry> SOFT_QUEUE = new ReferenceQueue<CacheEntry>();
-	
-	// Configuration 
+
+	// Configuration
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     //set to acceptable defaults for testing
-    private int maxProcessingBytes = 1 << 21; 
+    private int maxProcessingBytes = 1 << 21;
     private Integer maxProcessingBytesOrig;
     long maxReserveBytes = 1 << 28;
     AtomicLong reserveBatchBytes = new AtomicLong();
@@ -490,17 +490,17 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
     private ReentrantLock lock = new ReentrantLock();
     private Condition batchesFreed = lock.newCondition();
-    
+
     AtomicLong activeBatchBytes = new AtomicLong();
-    
+
     private AtomicLong readAttempts = new AtomicLong();
     //TODO: consider the size estimate in the weighting function
     LrfuEvictionQueue<CacheEntry> evictionQueue = new LrfuEvictionQueue<CacheEntry>(readAttempts);
     LrfuEvictionQueue<CacheEntry> initialEvictionQueue = new LrfuEvictionQueue<CacheEntry>(readAttempts);
     ConcurrentHashMap<Long, CacheEntry> memoryEntries = new ConcurrentHashMap<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL);
-    
+
     //limited size reference caches based upon the memory settings
-    private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
+    private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache;
     private Map<Long, BatchSoftReference> softCache = Collections.synchronizedMap(new LinkedHashMap<Long, BatchSoftReference>(16, .75f, false) {
 		private static final long serialVersionUID = 1L;
 
@@ -514,22 +514,22 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	}
 
     });
-    
+
     private Cache cache;
     private StorageManager storageManager;
-    
+
 	private Map<String, TupleReference> tupleBufferMap = new ConcurrentHashMap<String, TupleReference>();
 	private ReferenceQueue<TupleBuffer> tupleBufferQueue = new ReferenceQueue<TupleBuffer>();
-    
+
     private AtomicLong tsId = new AtomicLong();
     private AtomicLong batchAdded = new AtomicLong();
     private AtomicLong readCount = new AtomicLong();
 	private AtomicLong writeCount = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
-	
+
 	private static Timer SHARED_TIMER;
 	private Timer timer;
-	
+
 	private Cleaner cleaner;
 	private AtomicBoolean cleaning = new AtomicBoolean();
 
@@ -537,13 +537,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     private long maxBatchManagerSizeEstimate = Long.MAX_VALUE;
     private boolean enforceMaxBatchManagerSizeEstimate = false;
     private long maxSessionBatchManagerSizeEstimate = Long.MAX_VALUE;
-    
+
     private SessionService sessionService;
-	    
+
     public BufferManagerImpl() {
         this(true);
     }
-    
+
 	public BufferManagerImpl(boolean sharedTimer) {
 		this.cleaner = new Cleaner(this);
 		if (sharedTimer) {
@@ -556,7 +556,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		timer.schedule(cleaner, 100);
 	}
-	
+
 	void clearSoftReference(BatchSoftReference bsr) {
 		synchronized (bsr) {
 			overheadBytes.addAndGet(-bsr.sizeEstimate);
@@ -564,7 +564,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		bsr.clear();
 	}
-	
+
 	private Integer removeFromCache(Long gid, Long batch) {
 	    Integer result = cache.remove(gid, batch);
 		if (result != null) {
@@ -572,38 +572,38 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		return result;
 	}
-	
+
 	public long getBatchesAdded() {
 		return batchAdded.get();
 	}
-	
+
 	public long getReadCount() {
 		return readCount.get();
 	}
-	
+
 	public long getWriteCount() {
 		return writeCount.get();
 	}
-	
+
 	public long getReadAttempts() {
 		return readAttempts.get();
 	}
-	
+
 	@Override
 	public int getMaxProcessingSize() {
 		return maxProcessingBytes;
 	}
-	
+
 	public long getReserveBatchBytes() {
 		return reserveBatchBytes.get();
 	}
-    
+
     /**
      * Get processor batch size
      * @return Number of rows in a processor batch
      */
     @Override
-    public int getProcessorBatchSize() {        
+    public int getProcessorBatchSize() {
         return this.processorBatchSize;
     }
 
@@ -613,7 +613,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
     public void setProcessorBatchSize(int processorBatchSize) {
         this.processorBatchSize = processorBatchSize;
-    } 
+    }
 
     @Override
     public TupleBuffer createTupleBuffer(final List elements, String groupName,
@@ -635,7 +635,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	tupleBuffer.setInlineLobs(inlineLobs);
         return tupleBuffer;
     }
-    
+
     public STree createSTree(final List<? extends Expression> elements, String groupName, int keyLength) {
     	Long newID = this.tsId.getAndIncrement();
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
@@ -677,11 +677,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Creating FileStore:", name); //$NON-NLS-1$
     	}
-    	
+
     	FileStore delegate = this.storageManager.createFileStore(name);
-    	
+
     	ConstraintedFileStore wrapper = new ConstraintedFileStore(delegate, this);
-    	
+
     	wrapper.setMaxLength(this.maxFileStoreLength);
     	CommandContext cc = CommandContext.getThreadLocalContext();
         if (cc != null) {
@@ -689,20 +689,20 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
         }
     	return wrapper;
     }
-    
+
     @Override
     public long getMaxStorageSpace() {
         return this.storageManager.getMaxStorageSpace();
     }
-    
+
     public Cache getCache() {
 		return cache;
 	}
-        
+
     public void setMaxActivePlans(int maxActivePlans) {
 		this.maxActivePlans = maxActivePlans;
 	}
-    
+
     public void setMaxProcessingKB(int maxProcessingKB) {
     	if (maxProcessingKB > -1) {
     		this.maxProcessingBytes = maxProcessingKB<<10;
@@ -710,7 +710,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     		this.maxProcessingBytes = -1;
     	}
 	}
-    
+
     public void setMaxReserveKB(int maxReserveBatchKB) {
 		if (maxReserveBatchKB > -1) {
 			long maxReserve = ((long)maxReserveBatchKB)<<10;
@@ -720,7 +720,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxReserveBytes = -1;
 		}
 	}
-    
+
 	@Override
 	public void initialize() throws TeiidComponentException {
 		long maxMemory = Runtime.getRuntime().maxMemory();
@@ -740,14 +740,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxProcessingBytesOrig = this.maxProcessingBytes;
 		}
 		if (this.maxProcessingBytesOrig < 0) {
-			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.07 * maxMemory)/Math.pow(maxActivePlans, .8)),  Integer.MAX_VALUE);
-		} 
+			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16L, (.07 * maxMemory)/Math.pow(maxActivePlans, .8)),  Integer.MAX_VALUE);
+		}
 		if (this.storageManager != null) {
     		long max = this.storageManager.getMaxStorageSpace();
             this.maxFileStoreLength  = (max/maxActivePlans)>>2;
-		    //note the increase of the storage / memory buffer values here to normalize to heap estimates 
+		    //note the increase of the storage / memory buffer values here to normalize to heap estimates
 		    //batches in serialized form are much more compact
-		    
+
             this.maxBatchManagerSizeEstimate = (long)(.8*((((long)this.getMaxReserveKB())<<10) + (max<<3) + (cache.getMemoryBufferSpace()<<3))/Math.sqrt(maxActivePlans));
             if (this.options != null) {
                 this.maxSessionBatchManagerSizeEstimate = this.options.getMaxSessionBufferSizeEstimate();
@@ -765,7 +765,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		this.maxSoftReferences = 1 << Math.min(30, logSize);
 		this.nominalProcessingMemoryMax = (int)Math.max(Math.min(this.maxReserveBytes, 2*this.maxProcessingBytes), Math.min(Integer.MAX_VALUE, 2*this.maxReserveBytes/maxActivePlans));
 	}
-	
+
 	void setNominalProcessingMemoryMax(int nominalProcessingMemoryMax) {
 		this.nominalProcessingMemoryMax = nominalProcessingMemoryMax;
 	}
@@ -774,12 +774,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     public void releaseOrphanedBuffers(long count) {
     	releaseBuffers(count, false);
     }
-    	
+
     @Override
     public void releaseBuffers(int count) {
     	releaseBuffers(count, true);
     }
-    
+
     private void releaseBuffers(long count, boolean updateContext) {
     	if (count < 1) {
     		return;
@@ -805,7 +805,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     		lock.unlock();
     	}
     }
-    
+
     @Override
     public int reserveBuffers(int count, BufferReserveMode mode) {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
@@ -838,7 +838,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			context.addAndGetReservedBuffers(count);
 		}
 	}
-    
+
     @Override
     public int reserveBuffersBlocking(int count, long[] val, boolean force) throws BlockedException {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
@@ -854,7 +854,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		long reserved = 0;
 		if (context != null) {
 			reserved = context.addAndGetReservedBuffers(0);
-			//TODO: in theory we have to check the whole stack as we could be 
+			//TODO: in theory we have to check the whole stack as we could be
 			//issuing embedded queries back to ourselves
 		}
 		count = Math.min(count, (int)Math.min(Integer.MAX_VALUE, nominalProcessingMemoryMax - reserved));
@@ -877,7 +877,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						batchesFreed.await(20, TimeUnit.MILLISECONDS);
 					}
 					if ((val[0] << (force?16:18)) > count) {
-						//aging out 
+						//aging out
 						//TOOD: ideally we should be using a priority queue and better scheduling
 						if (!force) {
 							return 0;
@@ -907,7 +907,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				if (context != null) {
 			    	RequestWorkItem workItem = context.getWorkItem();
 			    	if (workItem != null) {
-			    		//if we have a workitem (non-test scenario) then before 
+			    		//if we have a workitem (non-test scenario) then before
 			    		//throwing blocked on memory to indicate there's more work
 			    		workItem.moreWork();
 			    	}
@@ -953,7 +953,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		return count;
 	}
-    
+
 	void persistBatchReferences(int max) {
 		if (max <= 0) {
 			return;
@@ -993,15 +993,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 		}
 	}
-	
+
 	long doEvictions(long maxToFree, boolean ageOut, LrfuEvictionQueue<CacheEntry> queue) {
 		if (queue == evictionQueue) {
 			maxToFree = Math.min(maxToFree, this.maxProcessingBytes);
 		}
 		long freed = 0;
 		while (freed <= maxToFree && (
-				ageOut 
-				|| (queue == evictionQueue && activeBatchBytes.get() + overheadBytes.get() + this.maxReserveBytes/2 > reserveBatchBytes.get()) //nominal cleaning criterion 
+				ageOut
+				|| (queue == evictionQueue && activeBatchBytes.get() + overheadBytes.get() + this.maxReserveBytes/2 > reserveBatchBytes.get()) //nominal cleaning criterion
 				|| (queue != evictionQueue && activeBatchBytes.get() + overheadBytes.get() + 3*this.maxReserveBytes/4 > reserveBatchBytes.get()))) { //assume that basically all initial batches will need to be written out at some point
 			CacheEntry ce = queue.firstEntry(!ageOut);
 			if (ce == null) {
@@ -1078,14 +1078,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	private void createSoftReference(CacheEntry ce) {
-		//if we don't set aside some reserve, we 
+		//if we don't set aside some reserve, we
 		//will push the soft ref out of memory potentially too quickly
 		int sizeEstimate = ce.getSizeEstimate()/2;
 		BatchSoftReference ref = new BatchSoftReference(ce, SOFT_QUEUE, sizeEstimate);
 		softCache.put(ce.getId(), ref);
 		overheadBytes.addAndGet(sizeEstimate);
 	}
-	
+
 	/**
 	 * Get a CacheEntry without hitting storage
 	 */
@@ -1146,9 +1146,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		return null;
 	}
-	
+
 	private Options options;
-	
+
 	private Integer remove(Long gid, Long batch, boolean prefersMemory) {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 			LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Removing batch from BufferManager", gid, batch); //$NON-NLS-1$
@@ -1179,7 +1179,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			removeFromCache(s.getId(), ce.getId());
 		}
 	}
-	
+
 	void addMemoryEntry(CacheEntry ce) {
 		persistBatchReferences(ce.getSizeEstimate());
 		synchronized (ce) {
@@ -1192,7 +1192,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		activeBatchBytes.getAndAdd(ce.getSizeEstimate());
 	}
-	
+
 	void removeCacheGroup(Long id, Boolean prefersMemory) {
 		cleanSoftReferences();
 		if (cache == null) {
@@ -1208,7 +1208,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 		}
 	}
-	
+
 	void cleanSoftReferences() {
 		for (int i = 0; i < 10; i++) {
 			BatchSoftReference ref = (BatchSoftReference)SOFT_QUEUE.poll();
@@ -1219,12 +1219,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			clearSoftReference(ref);
 		}
 	}
-	
+
 	@Override
 	public int getProcessorBatchSize(List<? extends Expression> schema) {
 		return getSizeEstimates(schema)[0];
 	}
-	
+
 	private int[] getSizeEstimates(List<? extends Expression> elements) {
 		int total = 0;
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
@@ -1234,13 +1234,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		//assume 64-bit
 		total += 8*elements.size() + 36;  // column list / row overhead
-		
+
 		//nominal targetBytesPerRow but can scale up or down
-		
+
 		int totalCopy = total;
 		boolean less = totalCopy < targetBytesPerRow;
 		int rowCount = processorBatchSize;
-		
+
 		for (int i = 0; i < 3; i++) {
 			if (less) {
 				totalCopy <<= 1;
@@ -1258,10 +1258,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 		}
 		rowCount = Math.max(1, rowCount);
-		total *= rowCount; 
+		total *= rowCount;
 		return new int[]{rowCount, Math.max(1, total)};
 	}
-	
+
 	@Override
 	public int getSchemaSize(List<? extends Expression> elements) {
 		return getSizeEstimates(elements)[1];
@@ -1284,15 +1284,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		cleanDefunctTupleBuffers();
 		this.tupleBufferMap.put(tb.getId(), new TupleReference(tb, this.tupleBufferQueue));
 	}
-	
+
 	@Override
 	public void distributeTupleBuffer(String uuid, TupleBuffer tb) {
 		tb.setId(uuid);
 		addTupleBuffer(tb);
 	}
-	
+
 	@Override
-	public TupleBuffer getTupleBuffer(String id) {		
+	public TupleBuffer getTupleBuffer(String id) {
 		cleanDefunctTupleBuffers();
 		Reference<TupleBuffer> r = this.tupleBufferMap.get(id);
 		if (r != null) {
@@ -1300,7 +1300,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
 		return null;
 	}
-	
+
 	private void cleanDefunctTupleBuffers() {
 		while (true) {
 			Reference<?> r = this.tupleBufferQueue.poll();
@@ -1310,7 +1310,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.tupleBufferMap.remove(((TupleReference)r).id);
 		}
 	}
-	
+
 	static class TupleReference extends WeakReference<TupleBuffer>{
 		String id;
 		public TupleReference(TupleBuffer referent, ReferenceQueue<? super TupleBuffer> q) {
@@ -1318,15 +1318,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			id = referent.getId();
 		}
 	}
-	
+
 	public void setUseWeakReferences(boolean useWeakReferences) {
 		this.useWeakReferences = useWeakReferences;
-	}	
-	
+	}
+
 	@Override
 	public void getState(OutputStream ostream) {
 	}
-	
+
 	@Override
 	public void getState(String state_id, OutputStream ostream) {
 		TupleBuffer buffer = this.getTupleBuffer(state_id);
@@ -1355,8 +1355,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	@Override
 	public void setState(InputStream istream) {
-	}	
-	
+	}
+
 	@Override
 	public void setState(String state_id, InputStream istream) {
 		TupleBuffer buffer = this.getTupleBuffer(state_id);
@@ -1378,7 +1378,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		long rowCount = in.readLong();
 		int batchSize = in.readInt();
 		String[] types = (String[])in.readObject();
-		
+
 		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
 		for (int i = 0; i < types.length; i++) {
 			ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
@@ -1388,17 +1388,17 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		TupleBuffer buffer = createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 		buffer.setBatchSize(batchSize);
 		buffer.setId(state_id);
-		
+
 		for (int row = 1; row <= rowCount; row+=batchSize) {
 			List<List<Object>> batch = BatchSerializer.readBatch(in, types);
 			for (int i = 0; i < batch.size(); i++) {
 				buffer.addTuple(batch.get(i));
 			}
 		}
-		if (buffer.getRowCount() != rowCount) {					
+		if (buffer.getRowCount() != rowCount) {
 			buffer.remove();
 			throw new IOException(QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
-		}	
+		}
 		buffer.close();
 		addTupleBuffer(buffer);
 	}
@@ -1409,7 +1409,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	@Override
 	public void droppedMembers(Collection<Serializable> addresses) {
-	}	
+	}
 
 	public void setInlineLobs(boolean inlineLobs) {
 		this.inlineLobs = inlineLobs;
@@ -1418,29 +1418,29 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public int getMaxReserveKB() {
 		return (int)(maxReserveBytes>>10);
 	}
-	
+
 	public void setCache(Cache cache) {
 		this.cache = cache;
 		this.storageManager = cache;
 	}
-	
+
 	public int getMemoryCacheEntries() {
 		return memoryEntries.size();
 	}
-	
+
 	public long getActiveBatchBytes() {
 		return activeBatchBytes.get();
 	}
-	
+
 	@Override
 	public boolean hasState(String stateId) {
 		return this.getTupleBuffer(stateId) != null;
 	}
-	
+
 	public long getReferenceHits() {
 		return referenceHit.get();
 	}
-	
+
 	@Override
 	public void persistLob(Streamable<?> lob, FileStore store,
 			byte[] bytes) throws TeiidComponentException {
@@ -1450,12 +1450,12 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public void invalidCacheGroup(Long gid) {
 		removeCacheGroup(gid, null);
 	}
-	
+
 	@Override
 	public void setOptions(Options options) {
 		this.options = options;
 	}
-	
+
 	@Override
 	public Options getOptions() {
 		if (options == null) {
@@ -1467,30 +1467,30 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public void setStorageManager(StorageManager ssm) {
 		this.storageManager = ssm;
 	}
-	
+
 	public void setMaxSessionBatchManagerSizeEstimate(
             long maxSessionBatchManagerSizeEstimate) {
         this.maxSessionBatchManagerSizeEstimate = maxSessionBatchManagerSizeEstimate;
     }
-	
+
 	public void setMaxBatchManagerSizeEstimate(
             long maxBatchManagerSizeEstimate) {
         this.maxBatchManagerSizeEstimate = maxBatchManagerSizeEstimate;
     }
-	
+
 	public void setEnforceMaxBatchManagerSizeEstimate(
             boolean enforceMaxBatchManagerSizeEstimate) {
         this.enforceMaxBatchManagerSizeEstimate = enforceMaxBatchManagerSizeEstimate;
     }
-	
+
 	private AtomicBoolean killing = new AtomicBoolean();
-	
+
 	@Override
 	public boolean killLargestConsumer() {
 	    if (sessionService == null) {
 	        return false;
 	    }
-	    
+
 	    //this could be called from competing threads
 	    //we only need 1 session killed at a time
 	    //TODO: may need to introduce a further timeout between killings
@@ -1516,16 +1516,16 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	    for (int i = 0; i < 10; i++) {
             if (killing.get()) {
                 try {
-                    Thread.sleep(10); 
+                    Thread.sleep(10);
                 } catch (InterruptedException e) {
                     throw new TeiidRuntimeException(e);
                 }
             }
 	    }
-	    
+
 	    return true;
 	}
-	
+
 	public void setSessionService(SessionService sessionService) {
         this.sessionService = sessionService;
     }

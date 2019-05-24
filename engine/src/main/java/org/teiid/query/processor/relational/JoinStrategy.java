@@ -27,7 +27,7 @@ import org.teiid.core.TeiidProcessingException;
 
 
 public abstract class JoinStrategy {
-            
+
     protected JoinNode joinNode;
     protected SourceState leftSource;
     protected SourceState rightSource;
@@ -54,7 +54,7 @@ public abstract class JoinStrategy {
             }
         }
     }
-        
+
     public void initialize(JoinNode joinNode) {
         this.joinNode = joinNode;
         this.leftSource = new SourceState(joinNode.getChildren()[0], joinNode.getLeftExpressions());
@@ -62,15 +62,15 @@ public abstract class JoinStrategy {
         this.rightSource = new SourceState(joinNode.getChildren()[1], joinNode.getRightExpressions());
         this.rightSource.markExpressionsDistinct(this.joinNode.isRightDistinct());
     }
-            
+
     protected void loadLeft() throws TeiidComponentException, TeiidProcessingException {
     }
-    
+
     protected void loadRight() throws TeiidComponentException, TeiidProcessingException {
     }
-    
+
     /**
-     * Output a combined, projected tuple based on tuple parts from the left and right. 
+     * Output a combined, projected tuple based on tuple parts from the left and right.
      * @param leftTuple Left tuple part
      * @param rightTuple Right tuple part
      * @throws TeiidComponentException
@@ -79,20 +79,20 @@ public abstract class JoinStrategy {
         List combinedRow = new ArrayList(this.joinNode.getCombinedElementMap().size());
         combinedRow.addAll(leftTuple);
         combinedRow.addAll(rightTuple);
-        return combinedRow; 
+        return combinedRow;
     }
-    
+
     protected abstract void process() throws TeiidComponentException, TeiidProcessingException;
-    
+
     public abstract JoinStrategy clone();
-    
+
     protected void openLeft() throws TeiidComponentException, TeiidProcessingException {
         if (!this.leftSource.open) {
             leftSource.getSource().open();
             this.leftSource.open = true;
         }
     }
-    
+
     protected void openRight() throws TeiidComponentException, TeiidProcessingException {
     	if (!this.rightSource.open) {
 			if (reserved == 0) {
@@ -102,5 +102,5 @@ public abstract class JoinStrategy {
 			this.rightSource.open = true;
 		}
     }
-        
+
 }

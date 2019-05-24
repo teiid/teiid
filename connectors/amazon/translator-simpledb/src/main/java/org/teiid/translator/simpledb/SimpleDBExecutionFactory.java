@@ -47,23 +47,23 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
     public static final String ASTRING = "ASTRING"; //$NON-NLS-1$
     public static final String EVERY = "EVERY"; //$NON-NLS-1$
     public static final String SIMPLEDB = "SIMPLEDB"; //$NON-NLS-1$
-    
+
     public SimpleDBExecutionFactory() {
         setSupportsOrderBy(true);
         setSupportsDirectQueryProcedure(false);
         setSourceRequiredForMetadata(true);
         setTransactionSupport(TransactionSupport.NONE);
     }
-    
+
     @Override
     public void start() throws TranslatorException {
         super.start();
-        addPushDownFunction(SIMPLEDB, EVERY, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING+"[]"); //$NON-NLS-1$ 
-        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
-        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
-        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$ 
+        addPushDownFunction(SIMPLEDB, EVERY, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING+"[]"); //$NON-NLS-1$
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(SIMPLEDB, INTERSECTION, TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING+"[]", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
     }
-    
+
     @Override
     public UpdateExecution createUpdateExecution(final Command command, ExecutionContext executionContext,
             RuntimeMetadata metadata, final SimpleDBConnection connection) throws TranslatorException {
@@ -77,17 +77,17 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
             throw new TranslatorException("Just INSERT, DELETE and UPDATE are supported"); //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SimpleDBConnection connection) throws TranslatorException {
         return new SimpleDBDirectQueryExecution(arguments, command, metadata, connection, executionContext);
-    }       
+    }
 
     @Override
     public ResultSetExecution createResultSetExecution(final QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata, final SimpleDBConnection connection)
                     throws TranslatorException {
-        return new SimpleDBQueryExecution((Select)command, executionContext, metadata, connection); 
+        return new SimpleDBQueryExecution((Select)command, executionContext, metadata, connection);
     }
 
     @Override
@@ -114,7 +114,7 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
     public boolean supportsIsNullCriteria() {
         return true;
     }
-    
+
     @Override
     public boolean supportsOnlyLiteralComparison() {
         return true;
@@ -139,27 +139,27 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
     public boolean supportsLikeCriteria() {
         return true;
     }
-    
+
     @Override
     public boolean supportsLikeCriteriaEscapeCharacter() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesCountStar() {
         return true;
     }
-    
+
     @Override
     public boolean supportsArrayType() {
         return true;
     }
-    
+
     @Override
     public boolean supportsBulkUpdate() {
         return true;
     }
-    
+
     @Override
     public boolean returnsSingleUpdateCount() {
     	return true;

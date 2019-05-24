@@ -30,9 +30,9 @@ import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 
 /**
  * TestClientTransaction
- * 
+ *
  * @author vanhalbert
- * 
+ *
  */
 @SuppressWarnings("nls")
 public class TestClientTransaction extends AbstractQueryTransactionTest {
@@ -47,10 +47,10 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     private int testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
 
     private boolean errorExpected = false;
-    
+
     private String sql = null;
     private boolean resultFromQuery = false;
-    
+
     private TestResultsSummary testResultsSummary;
 
     public TestClientTransaction(QueryScenario querySet) {
@@ -58,15 +58,15 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	this.querySet = querySet;
 
     }
-    
-    
-    
+
+
+
 
     public void init(TestResultsSummary testResultsSummary, ExpectedResults expectedResults, QueryTest query) {
 	this.query = query;
 	this.testResultsSummary = testResultsSummary;
 	this.expectedResults = expectedResults;
-	
+
 	endTS = 0;
 	beginTS = 0;
 
@@ -76,10 +76,10 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	resultFromQuery = false;
 
     }
-    
+
     public String getTestName() {
 	return query.getQueryScenarioID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
-	
+
     }
 
     @Override
@@ -104,7 +104,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     public void testCase() throws Exception {
 	TestLogger.logDebug("expected error: " + this.errorExpected);
 	TestLogger.logInfo("ID: " + query.geQuerySetID() + "  -  " + query.getQueryID());
-        
+
 	QuerySQL[] queries = query.getQueries();
 	int l = queries.length;
 
@@ -113,19 +113,19 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	    // error properly.
 
 	    beginTS = System.currentTimeMillis();
-	    
+
 	    for (int i= 0; i < l; i++) {
 		QuerySQL qsql = queries[i];
 		this.sql = qsql.getSql();
 		resultFromQuery = execute(sql, qsql.getParms());
-		if (qsql.getUpdateCnt() >= 0) {	    
+		if (qsql.getUpdateCnt() >= 0) {
 		    this.assertUpdateCount(qsql.getUpdateCnt());
 
 		} else if (qsql.getRowCnt() >= 0) {
 		    this.assertRowCount(qsql.getRowCnt());
 
 		}
-		
+
 	    }
 
 	} catch (Throwable t) {
@@ -143,13 +143,13 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 	// TODO Auto-generated method stub
 	super.after();
 	TestResult rs = null;
-	
+
 	Throwable resultException = null;
 
 	resultException = (this.getLastException() != null ? this
 		    .getLastException() : this.getApplicationException());
 
-	
+
 	if (resultException != null) {
 	    if (this.exceptionExpected()) {
 		testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
@@ -161,7 +161,7 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 	rs = new TestResultStat(query.geQuerySetID(), query.getQueryID(), sql,
 		testStatus, beginTS, endTS, resultException, null);
-	
+
 	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
 
 	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
@@ -186,21 +186,21 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     /**
      * Override the super cleanup() so that the connection to Teiid is not
      * cleaned up at this time.
-     * 
+     *
      * This will be handled after all queries in the set have been executed.
-     * 
+     *
      * @see TestClient#runTest();
-     * 
+     *
      */
     @Override
     public void cleanup() {
-	//	
+	//
 	// NOTE: do not cleanup TestResults because {@link #getTestResult} is called
 	// after cleanup
 
     }
 
 
-    
+
 
 }

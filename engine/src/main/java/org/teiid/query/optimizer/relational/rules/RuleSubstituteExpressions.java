@@ -45,7 +45,7 @@ import org.teiid.query.util.CommandContext;
  * Substitutes column references for expressions
  */
 public class RuleSubstituteExpressions implements OptimizerRule {
-	
+
 	@Override
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, RuleStack rules,
@@ -53,7 +53,7 @@ public class RuleSubstituteExpressions implements OptimizerRule {
 			throws QueryPlannerException, QueryMetadataException,
 			TeiidComponentException {
 		boolean substitued = false;
-		
+
         for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
         	if (accessNode.getParent() == null) {
         		continue;
@@ -87,7 +87,7 @@ public class RuleSubstituteExpressions implements OptimizerRule {
         }
         return plan;
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Substitue Expressions"; //$NON-NLS-1$

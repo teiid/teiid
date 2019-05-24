@@ -42,5 +42,5 @@ public class SpreadsheetAuthException extends RuntimeException {
 	public SpreadsheetAuthException(Throwable cause) {
 		super(cause);
 	}
-	
+
 }

@@ -41,16 +41,16 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 		this.parentName = Thread.currentThread().getName();
 		this.priority = priority;
 	}
-	
+
 	public FutureWork(final Runnable processor, T result, int priority) {
 		super(processor, result);
 		this.priority = priority;
 	}
-	
+
 	public void setRequestId(String requestId) {
 		this.requestId = requestId;
 	}
-	
+
 	@Override
 	public void run() {
 		LogManager.logDetail(LogConstants.CTX_DQP, "Running task for parent thread", parentName); //$NON-NLS-1$
@@ -61,22 +61,22 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 			LogManager.removeMdc(RequestWorkItem.REQUEST_KEY);
 		}
 	}
-	
+
 	@Override
 	public int getPriority() {
 		return priority;
 	}
-	
+
 	@Override
 	public long getCreationTime() {
 		return creationTime;
 	}
-	
+
 	@Override
 	public DQPWorkContext getDqpWorkContext() {
 		return workContext;
 	}
-	
+
 	synchronized void addCompletionListener(CompletionListener<T> completionListener) {
 		if (this.isDone()) {
 			completionListener.onCompletion(this);
@@ -84,7 +84,7 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 		}
 		this.completionListeners.add(completionListener);
 	}
-	
+
 	@Override
 	protected synchronized void done() {
 		for (CompletionListener<T> listener : this.completionListeners) {
@@ -96,5 +96,5 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 		}
 		completionListeners.clear();
 	}
-	
+
 }

@@ -56,14 +56,14 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 			throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14008));
 		}
 		String firstToken = query.substring(0, 7);
-		
+
 		String jpql = query.substring(7);
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
 
 		if (firstToken.equalsIgnoreCase("search;")) { // //$NON-NLS-1$
 			StringBuilder buffer = new StringBuilder();
 			SQLStringVisitor.parseNativeQueryParts(jpql, arguments, buffer, new SQLStringVisitor.Substitutor() {
-				
+
 				@Override
 				public void substitute(Argument arg, StringBuilder builder, int index) {
 					Literal argumentValue = arg.getArgumentValue();
@@ -74,7 +74,7 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 			Query queryCommand = this.enityManager.createQuery(jpql);
 			List<?> results = queryCommand.getResultList();
 			this.resultsIterator = results.iterator();
-		}		
+		}
 		else if (firstToken.equalsIgnoreCase("create;")) { // //$NON-NLS-1$
 			Object entity = arguments.get(0).getArgumentValue().getValue();
 			this.enityManager.merge(entity);
@@ -106,7 +106,7 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 		this.resultsIterator = null;
 		return null;
 	}
-	
+
 	@Override
 	public void close() {
 		// no close

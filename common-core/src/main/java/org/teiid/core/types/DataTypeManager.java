@@ -42,18 +42,18 @@ import org.teiid.core.util.PropertiesUtils;
  * for data types. In the future other data type information may be managed
  * here.
  * </p>
- * 
+ *
  * <p>
  * In general, methods are provided to refer to types either by Class, or by
  * Class name. The benefit of the Class name option is that the user does not
  * need to load the Class object, which may not be in the classpath. The
  * advantage of the Class option is speed.
  * </p>
- * 
+ *
  * TODO: refactor the string/class/code into an enum
  */
 public class DataTypeManager {
-	
+
 	public static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
 	public static final boolean USE_VALUE_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.useValueCache", false, Boolean.class); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getHierarchicalProperty("org.teiid.comparableLobs", false, Boolean.class); //$NON-NLS-1$
@@ -61,64 +61,64 @@ public class DataTypeManager {
 	public static final boolean PAD_SPACE = PropertiesUtils.getHierarchicalProperty("org.teiid.padSpace", false, Boolean.class); //$NON-NLS-1$
 	public static final String DEFAULT_COLLATION = "UCS-2"; //$NON-NLS-1$
 	public static final String COLLATION_LOCALE = PropertiesUtils.getHierarchicalProperty("org.teiid.collationLocale", null); //$NON-NLS-1$
-	
+
 	private static boolean valueCacheEnabled = USE_VALUE_CACHE;
-	
+
 	private interface ValueCache<T> {
 		T getValue(T value);
 	}
-	
+
 	private static class HashedValueCache<T> implements ValueCache<T> {
-		
+
 		final Object[] cache;
-		
+
 		HashedValueCache(int size) {
 			cache = new Object[1 << size];
 		}
-				
+
 		@SuppressWarnings("unchecked")
 		public T getValue(T value) {
 			int index = hash(primaryHash(value)) & (cache.length - 1);
 	    	Object canonicalValue = get(index);
 	    	if (value.equals(canonicalValue)) {
 	    		return (T)canonicalValue;
-	    	} 
+	    	}
 	    	set(index, value);
 	    	return value;
 		}
-		
+
 		protected Object get(int index) {
 			return cache[index];
 		}
-		
+
 		protected void set(int index, T value) {
 			cache[index] = value;
 		}
-		
+
 		protected int primaryHash(T value) {
 			return value.hashCode();
 		}
 
 		/*
-		 * The same power of 2 hash bucketing from the Java HashMap  
+		 * The same power of 2 hash bucketing from the Java HashMap
 		 */
 		final static int hash(int h) {
 			h ^= (h >>> 20) ^ (h >>> 12);
 	        return h ^= (h >>> 7) ^ (h >>> 4);
 		}
 	}
-	
+
 	public static class WeakReferenceHashedValueCache<T> extends HashedValueCache<T> {
-		
+
 		public WeakReferenceHashedValueCache(int size) {
 			super(size);
 		}
-		
+
 		public T getByHash(Object obj) {
 			int index = hash(obj.hashCode()) & (cache.length - 1);
 	    	return get(index);
 		}
-		
+
 		@Override
 		protected T get(int index) {
 			WeakReference<T> ref = (WeakReference<T>) cache[index];
@@ -131,17 +131,17 @@ public class DataTypeManager {
 			}
 			return null;
 		}
-		
+
 		@Override
 		protected void set(int index, T value) {
 			cache[index] = new WeakReference<T>(value);
-		}		
-		
+		}
+
 	}
-	
+
 	private static Map<Class<?>, ValueCache<?>> valueMaps = new HashMap<Class<?>, ValueCache<?>>(128);
 	private static HashedValueCache<String> stringCache = new WeakReferenceHashedValueCache<String>(17) {
-		
+
 		@Override
 		protected int primaryHash(String value) {
 			if (value.length() < 14) {
@@ -154,7 +154,7 @@ public class DataTypeManager {
 	public static final int MAX_STRING_LENGTH = PropertiesUtils.getHierarchicalProperty("org.teiid.maxStringLength", 4000, Integer.class); //$NON-NLS-1$
 	public static final int MAX_VARBINARY_BYTES = Math.max(nextPowOf2(2*MAX_STRING_LENGTH), 1<<13);
 	public static final int MAX_LOB_MEMORY_BYTES = Math.max(nextPowOf2(8*MAX_STRING_LENGTH), 1<<15);
-	
+
 	public static int nextPowOf2(int val) {
 		int result = 1;
         while (result < val) {
@@ -162,7 +162,7 @@ public class DataTypeManager {
         }
         return result;
 	}
-	
+
 	public static final class DataTypeAliases {
 		public static final String VARCHAR = "varchar"; //$NON-NLS-1$
 		public static final String TINYINT = "tinyint"; //$NON-NLS-1$
@@ -223,7 +223,7 @@ public class DataTypeManager {
 		public static final Class<GeographyType> GEOGRAPHY = GeographyType.class;
 		public static final Class<JsonType> JSON = JsonType.class;
 	}
-	
+
 	public static final class DefaultTypeCodes {
 		public static final int STRING = 0;
 		public static final int CHAR = 1;
@@ -249,12 +249,12 @@ public class DataTypeManager {
 		public static final int GEOGRAPHY = 21;
 		public static final int JSON = 22;
 	}
-	
+
 	public static final int MAX_TYPE_CODE = DefaultTypeCodes.JSON;
-	
+
     private static final Map<Class<?>, Integer> typeMap = new LinkedHashMap<Class<?>, Integer>(64);
     private static final List<Class<?>> typeList;
-    
+
     static {
         typeMap.put(DataTypeManager.DefaultDataClasses.STRING, DefaultTypeCodes.STRING);
         typeMap.put(DataTypeManager.DefaultDataClasses.CHAR, DefaultTypeCodes.CHAR);
@@ -270,7 +270,7 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.DATE, DefaultTypeCodes.DATE);
         typeMap.put(DataTypeManager.DefaultDataClasses.TIME, DefaultTypeCodes.TIME);
         typeMap.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, DefaultTypeCodes.TIMESTAMP);
-        typeMap.put(DataTypeManager.DefaultDataClasses.OBJECT, DefaultTypeCodes.OBJECT);        
+        typeMap.put(DataTypeManager.DefaultDataClasses.OBJECT, DefaultTypeCodes.OBJECT);
         typeMap.put(DataTypeManager.DefaultDataClasses.BLOB, DefaultTypeCodes.BLOB);
         typeMap.put(DataTypeManager.DefaultDataClasses.CLOB, DefaultTypeCodes.CLOB);
         typeMap.put(DataTypeManager.DefaultDataClasses.XML, DefaultTypeCodes.XML);
@@ -280,8 +280,8 @@ public class DataTypeManager {
         typeMap.put(DataTypeManager.DefaultDataClasses.GEOGRAPHY, DefaultTypeCodes.GEOGRAPHY);
         typeMap.put(DataTypeManager.DefaultDataClasses.JSON, DefaultTypeCodes.JSON);
         typeList = new ArrayList<Class<?>>(typeMap.keySet());
-    }    
-    
+    }
+
     public static int getTypeCode(Class<?> source) {
     	Integer result = typeMap.get(source);
     	if (result == null) {
@@ -289,7 +289,7 @@ public class DataTypeManager {
     	}
         return result;
     }
-    
+
     public static Class<?> getClass(int code) {
     	Class<?> result = typeList.get(code);
     	if (result == null) {
@@ -359,9 +359,9 @@ public class DataTypeManager {
 
 	/** Base data type names and classes, Type class --> Type name */
 	private static Map<Class<?>, String> dataTypeClasses = new LinkedHashMap<Class<?>, String>(128);
-	
-	private static Map<Class<?>, Class<?>> arrayTypes = new HashMap<Class<?>, Class<?>>(128); 
-	private static Map<Class<?>, String> arrayTypeNames = new HashMap<Class<?>, String>(128); 
+
+	private static Map<Class<?>, Class<?>> arrayTypes = new HashMap<Class<?>, Class<?>>(128);
+	private static Map<Class<?>, String> arrayTypeNames = new HashMap<Class<?>, String>(128);
 
 	/** a set of all type names roughly ordered based upon data width */
 	private static Set<String> DATA_TYPE_NAMES;
@@ -375,7 +375,7 @@ public class DataTypeManager {
 
 		// Load default transforms
 		loadBasicTransforms();
-		
+
 		for (Map.Entry<String, Class<?>> entry : dataTypeNames.entrySet()) {
 			Class<?> arrayType = getArrayType(entry.getValue());
 			arrayTypes.put(entry.getValue(), arrayType);
@@ -393,7 +393,7 @@ public class DataTypeManager {
 	 * Add a new data type. For now this consists just of the Class - in the
 	 * future a data type will be a more complicated entity. This is
 	 * package-level for now as it is just used to add the default data types.
-	 * 
+	 *
 	 * @param dataType
 	 * 		New data type defined by Class
 	 */
@@ -404,7 +404,7 @@ public class DataTypeManager {
 
 	/**
 	 * Get a set of all data type names.
-	 * 
+	 *
 	 * @return Set of data type names (String)
 	 */
 	public static Set<String> getAllDataTypeNames() {
@@ -418,7 +418,7 @@ public class DataTypeManager {
 	/**
 	 * Get data type class.
 	 * <br>IMPORTANT: only valid for default runtime types
-	 * 
+	 *
 	 * @param name
 	 * 		Data type name
 	 * @return Data type class
@@ -444,7 +444,7 @@ public class DataTypeManager {
 		}
 		return dataTypeClass;
 	}
-	
+
 	public static boolean isArrayType(String name) {
 		return name.endsWith(ARRAY_SUFFIX);
 	}
@@ -491,7 +491,7 @@ public class DataTypeManager {
 	/**
 	 * Get a data value transformation between the sourceType and the
 	 * targetType.
-	 * 
+	 *
 	 * @param sourceType
 	 * 		Incoming value type
 	 * @param targetType
@@ -512,7 +512,7 @@ public class DataTypeManager {
 	 * Get a data value transformation between the sourceType with given name
 	 * and the targetType of given name. The Class for source and target type
 	 * are not needed to do this lookup.
-	 * 
+	 *
 	 * @param sourceTypeName
 	 * 		Incoming value type name
 	 * @param targetTypeName
@@ -531,7 +531,7 @@ public class DataTypeManager {
 
 	/**
 	 * Does a transformation exist between the source and target type?
-	 * 
+	 *
 	 * @param sourceType
 	 * 		Incoming value type
 	 * @param targetType
@@ -546,7 +546,7 @@ public class DataTypeManager {
 	 * Does a transformation exist between the source and target type of given
 	 * names? The Class for source and target type are not needed to do this
 	 * lookup.
-	 * 
+	 *
 	 * @param sourceTypeName
 	 * 		Incoming value type name
 	 * @param targetTypeName
@@ -565,7 +565,7 @@ public class DataTypeManager {
 
 	/**
 	 * Add a new transform to the known transform types.
-	 * 
+	 *
 	 * @param transform
 	 * 		New transform to add
 	 */
@@ -633,12 +633,12 @@ public class DataTypeManager {
 
 	/**
 	 * Is the supplied class type a LOB based data type?
-	 * 
+	 *
 	 * @param type
 	 * @return true if yes; false otherwise
 	 */
 	public static boolean isLOB(Class<?> type) {
-		return type == DefaultDataClasses.BLOB 
+		return type == DefaultDataClasses.BLOB
 		        || type == DefaultDataClasses.CLOB
                 || type == DefaultDataClasses.XML
                 || type == DefaultDataClasses.GEOMETRY
@@ -689,7 +689,7 @@ public class DataTypeManager {
 		dataTypeNames.put(DataTypeAliases.SMALLINT, DefaultDataClasses.SHORT);
 		dataTypeNames.put(DataTypeAliases.TINYINT, DefaultDataClasses.BYTE);
 		dataTypeNames.put(DataTypeAliases.VARCHAR, DefaultDataClasses.STRING);
-		
+
 		valueMaps.put(DefaultDataClasses.BOOLEAN, new ValueCache<Boolean>() {
 			@Override
 			public Boolean getValue(Boolean value) {
@@ -702,7 +702,7 @@ public class DataTypeManager {
 				return Byte.valueOf(value);
 			}
 		});
-		
+
 		if (USE_VALUE_CACHE) {
 			valueMaps.put(DefaultDataClasses.SHORT, new HashedValueCache<Short>(13));
 			valueMaps.put(DefaultDataClasses.CHAR, new HashedValueCache<Character>(13));
@@ -746,7 +746,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BYTE));
 
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.CHAR));
-		
+
 		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.SHORT));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(DefaultDataClasses.SHORT, false));
@@ -756,7 +756,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.SHORT, false, false));
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.SHORT));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.SHORT));
-		
+
 		DataTypeManager.addTransform(new NumberToBooleanTransform(Integer.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.INTEGER));
 		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.INTEGER, true));
@@ -796,7 +796,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToFloatTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(DefaultDataClasses.BIG_DECIMAL, true, false));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_DECIMAL));
-		
+
 		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(DefaultDataClasses.FLOAT));
 		DataTypeManager.addTransform(new NumberToShortTransform(DefaultDataClasses.FLOAT, true));
@@ -849,13 +849,13 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.ClobToStringTransform(DefaultDataClasses.JSON));
 
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.BlobToBinaryTransform());
-		
+
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.SQLXMLToStringTransform());
-		
+
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.GeographyToGeometryTransform());
-		
+
 		DataTypeManager.addTransform(new org.teiid.core.types.basic.JsonToClobTransform());
-		
+
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.OBJECT) {
 			@Override
 			public boolean isExplicit() {
@@ -885,7 +885,7 @@ public class DataTypeManager {
 				return new BinaryType((byte[])value);
 			}
 			if (java.util.Date.class.isAssignableFrom(c)) {
-				return new Timestamp(((java.util.Date)value).getTime());				
+				return new Timestamp(((java.util.Date)value).getTime());
 			}
 			if (Object[].class.isAssignableFrom(c)) {
 				return new ArrayImpl((Object[])value);
@@ -893,16 +893,16 @@ public class DataTypeManager {
 		}
 		if (Clob.class.isAssignableFrom(c)) {
 			return new ClobType((Clob)value);
-		} 
+		}
 		if (Blob.class.isAssignableFrom(c)) {
 			return new BlobType((Blob)value);
-		} 
+		}
 		if (SQLXML.class.isAssignableFrom(c)) {
 			return new XMLType((SQLXML)value);
-		} 
+		}
 		return value; // "object type"
 	}
-	
+
 	public static Class<?> getRuntimeType(Class<?> c) {
 		if (c == null) {
 			return DefaultDataClasses.NULL;
@@ -917,19 +917,19 @@ public class DataTypeManager {
 			return DefaultDataClasses.VARBINARY;
 		}
 		if (java.util.Date.class.isAssignableFrom(c)) {
-			return DefaultDataClasses.DATE;				
+			return DefaultDataClasses.DATE;
 		}
 		if (Clob.class.isAssignableFrom(c)) {
 			return DefaultDataClasses.CLOB;
-		} 
+		}
 		if (Blob.class.isAssignableFrom(c)) {
 			return DefaultDataClasses.BLOB;
-		} 
+		}
 		if (SQLXML.class.isAssignableFrom(c)) {
 			return DefaultDataClasses.XML;
-		} 
+		}
 		if (c == ArrayImpl.class) {
-			return getArrayType(DefaultDataClasses.OBJECT); 
+			return getArrayType(DefaultDataClasses.OBJECT);
 		}
 		if (c.isArray()) {
 			return getDataTypeClass(getDataTypeName(c));
@@ -959,7 +959,7 @@ public class DataTypeManager {
 		Object result = transform.transform(value, targetClass);
 		return getCanonicalValue(result);
 	}
-	
+
     public static boolean isNonComparable(String type) {
         return (!COMPARABLE_OBJECT && DataTypeManager.DefaultDataTypes.OBJECT.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
@@ -969,15 +969,15 @@ public class DataTypeManager {
             || DataTypeManager.DefaultDataTypes.GEOGRAPHY.equals(type)
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
     }
-    
+
     public static void setValueCacheEnabled(boolean enabled) {
     	valueCacheEnabled = enabled;
     }
-    
+
     public static final boolean isValueCacheEnabled() {
     	return valueCacheEnabled;
     }
-    
+
     @SuppressWarnings("unchecked")
 	public static final <T> T getCanonicalValue(T value) {
     	if (valueCacheEnabled) {
@@ -992,18 +992,18 @@ public class DataTypeManager {
     	}
 		return value;
     }
-    
+
     public static final String getCanonicalString(String value) {
     	if (value == null) {
     		return null;
     	}
     	return stringCache.getValue(value);
     }
-    
+
 	public static boolean isHashable(Class<?> type) {
 		return isHashable(type, PAD_SPACE, COLLATION_LOCALE);
 	}
-    
+
 	static boolean isHashable(Class<?> type, boolean padSpace, String collationLocale) {
 	    if (type == null) {
 	        return true;
@@ -1013,9 +1013,9 @@ public class DataTypeManager {
                 || type == DataTypeManager.DefaultDataClasses.CLOB) ) {
             return false;
         }
-        if (type == DataTypeManager.DefaultDataClasses.STRING 
+        if (type == DataTypeManager.DefaultDataClasses.STRING
                 || type == DataTypeManager.DefaultDataClasses.CLOB) {
-            return !padSpace; 
+            return !padSpace;
         }
         if (type.isArray() ) {
             return isHashable(type.getComponentType(), padSpace, collationLocale);
@@ -1024,7 +1024,7 @@ public class DataTypeManager {
                 || type == DataTypeManager.DefaultDataClasses.BLOB
                 || type == DataTypeManager.DefaultDataClasses.OBJECT);
     }
-    
+
 
 	public static Class<?> getArrayType(Class<?> classType) {
 		Class<?> result = arrayTypes.get(classType);
@@ -1033,7 +1033,7 @@ public class DataTypeManager {
 		}
 		return Array.newInstance(classType, 0).getClass();
 	}
-	
+
 	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
             Arrays.asList(
                     DataTypeManager.DefaultDataTypes.CHAR,
@@ -1045,7 +1045,7 @@ public class DataTypeManager {
                     DataTypeManager.DefaultDataTypes.STRING,
                     DataTypeManager.DefaultDataTypes.VARBINARY,
                     DataTypeManager.DefaultDataTypes.BIG_INTEGER));
-	
+
 	/**
 	 * Return true if the type may be defined with a length
 	 */

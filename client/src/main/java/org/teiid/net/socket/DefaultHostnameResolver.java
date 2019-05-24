@@ -36,7 +36,7 @@ import org.teiid.core.util.ExecutorUtils;
  * the call asynchronous.
  */
 public class DefaultHostnameResolver {
-    
+
     private class Resolver implements Callable<String> {
         private InetAddress addr;
 
@@ -56,7 +56,7 @@ public class DefaultHostnameResolver {
     //how many addresses will be resolved
     private ConcurrentHashMap<String, Future<String>> resolved = new ConcurrentHashMap<String, Future<String>>();
     private ExecutorService executor = ExecutorUtils.newFixedThreadPool(1, "resolver"); //$NON-NLS-1$
-    
+
     /**
      * Resolve the given address in the given milliseconds or return null if it's not possible
      * @param addr
@@ -78,7 +78,7 @@ public class DefaultHostnameResolver {
                 }
             }
         }
-        
+
         try {
             return hostName.get(timeoutMillis, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
@@ -86,8 +86,8 @@ public class DefaultHostnameResolver {
         } catch (ExecutionException e) {
         } catch (TimeoutException e) {
         }
-        
+
         return null;
     }
-    
+
 }

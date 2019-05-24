@@ -35,33 +35,33 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 /**
  */
 public class CreateCursorResultSetInstruction extends ProgramInstruction {
-	
+
 	public enum Mode {
 		UPDATE,
 		HOLD,
 		NOHOLD
 	}
-	
+
     protected String rsName;
     protected ProcessorPlan plan;
     private Mode mode;
     private Map<ElementSymbol, ElementSymbol> procAssignments;
 	private boolean usesLocalTemp;
-    
+
     public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, Mode mode){
         this.rsName = rsName;
         this.plan = plan;
         this.mode = mode;
     }
-    
+
     public void setProcAssignments(
 			Map<ElementSymbol, ElementSymbol> procAssignments) {
 		this.procAssignments = procAssignments;
 	}
-    
+
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
-    	
+
         procEnv.executePlan(plan, rsName, procAssignments, mode, usesLocalTemp);
     }
 
@@ -75,22 +75,22 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         clone.usesLocalTemp = true;
         return clone;
     }
-    
+
     public String toString(){
         return "CREATE CURSOR RESULTSET INSTRUCTION - " + rsName; //$NON-NLS-1$
     }
-    
+
     public PlanNode getDescriptionProperties() {
         PlanNode props = new PlanNode("CREATE CURSOR"); //$NON-NLS-1$
         props.addProperty(PROP_RESULT_SET, this.rsName);
         props.addProperty(PROP_SQL, this.plan.getDescriptionProperties());
         return props;
     }
-    
+
     public ProcessorPlan getCommand() { //Defect 13291 - added method to support changes to ProcedurePlan
         return plan;
     }
-    
+
     public Mode getMode() {
 		return mode;
 	}
@@ -98,10 +98,10 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
 	public void setUsesLocalTemp(boolean b) {
 		this.usesLocalTemp = b;
 	}
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 	    return plan.requiresTransaction(transactionalReads);
 	}
-    
+
 }

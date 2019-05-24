@@ -54,7 +54,7 @@ public class TestRequestMessage {
 			message.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_ON);
 		} catch (TeiidProcessingException e) {
 			throw new RuntimeException(e);
-		} 
+		}
 
         message.setShowPlan(ShowPlan.ON);
         message.setRowLimit(1313);
@@ -86,7 +86,7 @@ public class TestRequestMessage {
         assertTrue(copy.isDelaySerialization());
         assertEquals("foo", copy.getSpanContext());
     }
-    
+
     @Test public void testInvalidTxnAutoWrap() {
 		RequestMessage rm = new RequestMessage();
 		try {
@@ -96,7 +96,7 @@ public class TestRequestMessage {
 			assertEquals("TEIID20000 'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
-    
+
     @Test public void test83() throws FileNotFoundException, IOException, ClassNotFoundException {
     	CompactObjectInputStream ois = new CompactObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("req.ser")), RequestMessage.class.getClassLoader());
     	RequestMessage rm = (RequestMessage) ois.readObject();

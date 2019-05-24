@@ -39,19 +39,19 @@ import org.teiid.vdb.runtime.VDBKey;
 
 public abstract class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
-	
+
 	/**
-	 * @param translatorName  
+	 * @param translatorName
 	 */
 	public void translatorAdded(String translatorName) {
 	}
-	
+
 	/**
-	 * @param translatorName  
+	 * @param translatorName
 	 */
 	public void translatorRemoved(String translatorName) {
 	}
-	
+
 	public void dataSourceAdded(String dataSourceName, VDBKey vdbKey) {
 		dataSourceName = stripContext(dataSourceName);
 		if (vdbKey == null) {
@@ -76,9 +76,9 @@ public abstract class VDBStatusChecker {
 		}
 		return dataSourceName;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param dataSourceName
 	 * @param vdbKey which cannot be null
 	 */
@@ -104,13 +104,13 @@ public abstract class VDBStatusChecker {
 				if (cm.getExecutionFactory().isSourceRequired() && vdb.getStatus() == Status.ACTIVE) {
 					severity = Severity.ERROR;
 				}
-				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), dataSourceName); 
+				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), dataSourceName);
 				model.addRuntimeMessage(severity, msg);
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 			}
 		}
-	}	
-	
+	}
+
 	public boolean dataSourceReplaced(String vdbName, String vdbVersion,
 			String modelName, String sourceName, String translatorName,
 			String dsName) throws AdminProcessingException {
@@ -122,8 +122,8 @@ public abstract class VDBStatusChecker {
 	 * @throws AdminProcessingException
 	 */
 	public boolean updateSource(String vdbName, String vdbVersion, SourceMappingMetadata mapping, boolean replace) throws AdminProcessingException {
-		String dsName = stripContext(mapping.getConnectionJndiName());		
-		
+		String dsName = stripContext(mapping.getConnectionJndiName());
+
 		VDBMetaData vdb = getVDBRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || vdb.getStatus() == Status.FAILED) {
 			return false;
@@ -186,7 +186,7 @@ public abstract class VDBStatusChecker {
 	private void updateVDB(List<Runnable> runnables, VDBMetaData vdb) {
 		if (!runnables.isEmpty()) {
 			//the task themselves will set the status on completion/failure
-			for (Runnable runnable : runnables) {						
+			for (Runnable runnable : runnables) {
 				getExecutor().execute(runnable);
 			}
 			runnables.clear();
@@ -217,7 +217,7 @@ public abstract class VDBStatusChecker {
 			}
 		}
 	}
-	
+
 	private String getSourceName(String factoryName, ModelMetaData model) {
 		for (SourceMappingMetadata source:model.getSources().values()) {
 			String jndiName = source.getConnectionJndiName();
@@ -231,9 +231,9 @@ public abstract class VDBStatusChecker {
 		}
 		return null;
 	}
-	
+
 	public abstract Executor getExecutor();
-	
+
 	public abstract VDBRepository getVDBRepository();
 
 }

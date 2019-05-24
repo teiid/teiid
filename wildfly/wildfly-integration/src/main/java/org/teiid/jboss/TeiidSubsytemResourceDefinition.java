@@ -28,7 +28,7 @@ import org.jboss.as.controller.registry.OperationEntry;
 public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	protected static final PathElement PATH_SUBSYSTEM = PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM);
 	private boolean server;
-	
+
 	public TeiidSubsytemResourceDefinition(boolean server) {
         super(new Parameters(PATH_SUBSYSTEM, TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM))
               .setAddHandler(TeiidAdd.INSTANCE).setRemoveHandler(TeiidRemove.INSTANCE)
@@ -41,7 +41,7 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     public void registerOperations(ManagementResourceRegistration resourceRegistration) {
         super.registerOperations(resourceRegistration);
         resourceRegistration.registerOperationHandler(GenericSubsystemDescribeHandler.DEFINITION,  GenericSubsystemDescribeHandler.INSTANCE);
-        
+
 		// teiid level admin api operation handlers
 		new GetTranslator().register(resourceRegistration);
 		new ListTranslators().register(resourceRegistration);
@@ -82,13 +82,13 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
     	if (this.server) {
-	    	resourceRegistration.registerMetric(TeiidConstants.RUNTIME_VERSION, new GetRuntimeVersion(TeiidConstants.RUNTIME_VERSION.getName())); 
+	    	resourceRegistration.registerMetric(TeiidConstants.RUNTIME_VERSION, new GetRuntimeVersion(TeiidConstants.RUNTIME_VERSION.getName()));
 	    	resourceRegistration.registerMetric(TeiidConstants.ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(TeiidConstants.ACTIVE_SESSION_COUNT.getName()));
     	}
-    	
+
 		for (int i = 0; i < TeiidAdd.ATTRIBUTES.length; i++) {
 			resourceRegistration.registerReadWriteAttribute(TeiidAdd.ATTRIBUTES[i], null, new AttributeWrite(TeiidAdd.ATTRIBUTES[i]));
-		}    	
+		}
     }
 
     @Override

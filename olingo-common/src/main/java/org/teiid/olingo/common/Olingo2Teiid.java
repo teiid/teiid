@@ -36,7 +36,7 @@ import org.teiid.core.types.GeographyType;
 import org.teiid.query.function.GeometryUtils;
 
 class Olingo2Teiid {
-    
+
     public static AbstractGeospatialType convert(Geospatial geospatial, Class<?> expectedType, String srid) {
         Geometry result = convertToJTS(geospatial);
         if (geospatial.getSrid() != null && geospatial.getSrid().isNotDefault()) {
@@ -46,7 +46,7 @@ class Olingo2Teiid {
             try {
                 result.setSRID(Integer.valueOf(geospatial.getSrid().toString()));
             } catch (NumberFormatException e) {
-                
+
             }
         }
 
@@ -60,12 +60,12 @@ class Olingo2Teiid {
     public static Geometry convertToJTS(Geospatial geospatial) {
         if (geospatial instanceof Point) {
             Point point = (Point) geospatial;
-            org.locationtech.jts.geom.Point result = 
+            org.locationtech.jts.geom.Point result =
                     GeometryUtils.GEOMETRY_FACTORY.createPoint(new Coordinate(point.getX(), point.getY(), point.getZ()));
             return result;
         } else if (geospatial instanceof LineString) {
             LineString lineString = (LineString) geospatial;
-            org.locationtech.jts.geom.LineString result = 
+            org.locationtech.jts.geom.LineString result =
                     GeometryUtils.GEOMETRY_FACTORY.createLineString(convertLineStringToPoints(lineString));
             return result;
         } else if (geospatial instanceof Polygon) {

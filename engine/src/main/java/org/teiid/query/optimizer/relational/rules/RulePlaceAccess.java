@@ -93,8 +93,8 @@ public final class RulePlaceAccess implements
     }
 
     /**
-     * Adds a access node if the node is a source leaf node.  
-     * 
+     * Adds a access node if the node is a source leaf node.
+     *
      * @param metadata
      * @param sourceNode
      * @return true if the source node has an access pattern
@@ -109,7 +109,7 @@ public final class RulePlaceAccess implements
         if (req == null) {
             req = sourceNode.getProperty(NodeConstants.Info.NESTED_COMMAND);
         }
-        
+
         if (sourceNode.getProperty(NodeConstants.Info.TABLE_FUNCTION) != null) {
         	return;
         }
@@ -139,7 +139,7 @@ public final class RulePlaceAccess implements
             if (hint != null) {
                 accessNode.setProperty(NodeConstants.Info.IS_OPTIONAL, hint);
             }
-            
+
             Object modelId = null;
             if (sourceNode.getGroups().size() == 1) {
             	GroupSymbol gs = sourceNode.getGroups().iterator().next();
@@ -160,12 +160,12 @@ public final class RulePlaceAccess implements
 	            }
 	            accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
-            
+
             if (req == null && modelId != null) {
             	//add "conformed" sources if they exist
             	GroupSymbol group = sourceNode.getGroups().iterator().next();
             	Object gid = group.getMetadataID();
-            	String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false); 
+            	String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false);
             	if (sources != null) {
             		Set<Object> conformed = new LinkedHashSet<Object>();
             		conformed.add(modelId);
@@ -180,12 +180,12 @@ public final class RulePlaceAccess implements
             		accessNode.setProperty(Info.CONFORMED_SOURCES, conformed);
             	}
             }
-            
+
             // Insert
             sourceNode.addAsParent(accessNode);
 
             apNode = accessNode;
-            
+
             // set additional information
     		for (GroupSymbol group : accessNode.getGroups()) {
     		    if (group.getCheckMatViewStatus() != null) {
@@ -208,7 +208,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Ensures that the group is uniquely named within the current optimizer run
-     * 
+     *
      * @param sourceNode
      * @param groups
      * @param metadata
@@ -280,7 +280,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Creates a uniquely named group symbol given the old symbol
-     * 
+     *
      * @param oldSymbol
      * @param names a case insensitive set of all known groups
      * @return
@@ -356,7 +356,7 @@ public final class RulePlaceAccess implements
     /**
      * This method checks for access patterns and attaches those patterns as a property of the PlanNode. (The property will be a
      * Collection of Collections - each inner Collection will be the ElementSymbols comprising a single access pattern.)
-     * 
+     *
      * @param node
      *            PlanNode
      * @param metadata
@@ -389,7 +389,7 @@ public final class RulePlaceAccess implements
 
     /**
      * Return rule name
-     * 
+     *
      * @return Rule name
      */
     public String toString() {

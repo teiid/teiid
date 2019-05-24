@@ -31,7 +31,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 
 @SuppressWarnings("nls")
 public class TestXMLInputStream {
-	
+
 	@Test public void testStreaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
 		xmlBuilder.append("<root>");
@@ -41,7 +41,7 @@ public class TestXMLInputStream {
 		}
 		xmlBuilder.append("</root>");
 		String xml = xmlBuilder.toString();
-		
+
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory());
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
@@ -50,7 +50,7 @@ public class TestXMLInputStream {
 		//omit document declaration
         assertEquals(xml, string.substring(string.indexOf("><") + 1));
 	}
-	
+
 	@Test public void testUTF16Streaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
 		xmlBuilder.append("<root>");
@@ -60,7 +60,7 @@ public class TestXMLInputStream {
 		}
 		xmlBuilder.append("</root>");
 		String xml = xmlBuilder.toString();
-		
+
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory(), "UTF-16");
 		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);

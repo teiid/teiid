@@ -21,32 +21,32 @@ package org.teiid.adminapi;
 
 
 
-/** 
+/**
  * When a user submits a SQL command to the system for processing, usually that represents
  * a single request. A single request might have one or more source
  * requests (the requests that are being processed on the physical data sources) as part
- * of original request. 
- * 
- *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged 
+ * of original request.
+ *
+ *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged
  *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
  */
 public interface Request extends RequestBean, AdminObject, DomainAware {
-	
+
 	public enum ProcessingState {
 		PROCESSING,
 		DONE,
 		CANCELED
 	}
-	
+
 	public enum ThreadState {
-		RUNNING, 
-		QUEUED, 
+		RUNNING,
+		QUEUED,
 		IDLE
 	}
 
-    /** 
+    /**
      * @return Returns whether this is a Source Request.
      */
     public boolean sourceRequest();
-    
+
 }

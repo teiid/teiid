@@ -71,20 +71,20 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
 
 			for (ProcessingNode ref:this.visitor.mergePlanner.getNodes()) {
-                buildAggregate(ops, ref.getInstruction()); 
+                buildAggregate(ops, ref.getInstruction());
             }
-			
+
 			if (this.visitor.project.isEmpty()) {
 			    throw new TranslatorException(MongoDBPlugin.Event.TEIID18025, MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18025));
 			}
-			
+
 			assert visitor.selectColumns.size() == visitor.selectColumnReferences.size();
-			
+
 			if (this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}
 
-			
+
 			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
 
 			buildAggregate(ops, "$group", this.visitor.group); //$NON-NLS-1$
@@ -93,7 +93,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			if (!this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}
-			
+
 			buildAggregate(ops, "$sort", this.visitor.sort); //$NON-NLS-1$
 			buildAggregate(ops, "$skip", this.visitor.skip); //$NON-NLS-1$
 			buildAggregate(ops, "$limit", this.visitor.limit); //$NON-NLS-1$
@@ -108,16 +108,16 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	private void buildAggregate(List<DBObject> query, String type, Object object) {
 		if (object != null) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\""+type+"\": {"+object.toString()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "{\""+type+"\": {"+object.toString()+"}}"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			query.add(new BasicDBObject(type, object));
 		}
 	}
-	
+
     private void buildAggregate(List<DBObject> query, DBObject dbObject) {
         if (dbObject != null) {
             query.add(dbObject);
         }
-    }	
+    }
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {

@@ -27,14 +27,14 @@ public class RestServicePlugin {
     private static final String PLUGIN_ID = "org.teiid.jboss.rest" ; //$NON-NLS-1$
     static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
-    
+
     public static ResourceBundle getResourceBundle(Locale locale) {
         if (locale == null) {
             locale = Locale.getDefault();
         }
         return ResourceBundle.getBundle(RestServicePlugin.BUNDLE_NAME, locale);
     }
-    
+
     public static enum Event implements BundleUtil.Event {
     	TEIID28001,
     	TEIID28002,

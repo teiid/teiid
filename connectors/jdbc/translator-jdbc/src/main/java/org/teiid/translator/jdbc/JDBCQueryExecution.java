@@ -44,7 +44,7 @@ import org.teiid.translator.TranslatorException;
 
 
 /**
- * 
+ *
  */
 public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetExecution {
 
@@ -83,19 +83,19 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     public JDBCQueryExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         // get column types
     	QueryExpression qe = (QueryExpression)command;
-    	
+
         columnDataTypes = qe.getColumnTypes();
         TranslatedCommand translatedComm = null;
-        
+
         boolean usingTxn = false;
         boolean success = false;
         try {
-        
+
 	        if (command instanceof Select) {
 	        	Select select = (Select)command;
 	        	if (select.getDependentValues() != null) {
@@ -105,19 +105,19 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 	        if (qe.getWith() != null) {
 	        	usingTxn = createFullTempTables(qe, usingTxn);
 	        }
-	
+
 	        // translate command
 	        translatedComm = translateCommand(command);
-	
+
 	        String sql = translatedComm.getSql();
-	        
+
             if (!translatedComm.isPrepared()) {
                 results = getStatement().executeQuery(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
                 bind(pstatement, translatedComm.getPreparedValues(), null);
                 results = pstatement.executeQuery();
-            } 
+            }
             addStatementWarnings();
             success = true;
         } catch (SQLException e) {
@@ -144,7 +144,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     }
 
     /**
-     * 
+     *
      * @param qe
      * @param usingTxn
      * @return
@@ -154,7 +154,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 	protected boolean createFullTempTables(QueryExpression qe, boolean usingTxn)
 			throws SQLException, TranslatorException {
 		//TODO: should likely consolidate the two temp table mechansims
-		
+
 		With with = qe.getWith();
 		int t = 1;
 		Map<String, String> nameMap = null;
@@ -201,7 +201,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 	}
 
 	/**
-	 * 
+	 *
 	 * @param select
 	 * @return
 	 * @throws SQLException
@@ -250,7 +250,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 			}
 			compares.add(comp);
 		}
-		
+
 		//turn each dependent source into a temp table
 		int t = 1;
 		for (Map.Entry<String, List<Comparison>> entry : tables.entrySet()) {
@@ -275,7 +275,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 			tempTables.add(table);
 
 			select.getFrom().add(0, table); //TODO: assumes that ansi and non-ansi can be mixed
-			//replace each condition with the appropriate comparison 
+			//replace each condition with the appropriate comparison
 			int i = 1;
 			for (Comparison comp : entry.getValue()) {
 				Expression ex = comp.getLeftExpression();
@@ -288,12 +288,12 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 					conditions.add(new Comparison(ex, new ColumnReference(table, COL_PREFIX+i++, null, ex.getType()), Comparison.Operator.EQ));
 				}
 			}
-			
+
 			//bulk load
 			List<? extends List<?>> list = select.getDependentValues().get(entry.getKey());
 			loadTempTable(cols, params, tableName, table, list);
 		}
-		
+
 		select.setDependentValues(null);
 		select.setWhere(LanguageUtil.combineCriteria(conditions));
 		return result;
@@ -325,7 +325,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 			return new ColumnReference(null, COL_PREFIX + i, left.getMetadataObject(), ex.getType());
 		}
 		//just an expression - there's a lot of metadata lost here
-		return new ColumnReference(null, COL_PREFIX + i, null, ex.getType()); 
+		return new ColumnReference(null, COL_PREFIX + i, null, ex.getType());
 	}
 
     @Override
@@ -338,19 +338,19 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
                     Object value = this.executionFactory.retrieveValue(results, i+1, columnDataTypes[i]);
-                    vals.add(value); 
+                    vals.add(value);
                 }
 
                 return vals;
-            } 
+            }
         } catch (SQLException e) {
             throw new TranslatorException(e,
                     JDBCPlugin.Util.getString("JDBCTranslator.Unexpected_exception_translating_results___8", e.getMessage())); //$NON-NLS-1$
         }
-        
+
         return null;
     }
-    
+
     /**
      * @see org.teiid.translator.jdbc.JDBCBaseExecution#close()
      */

@@ -41,14 +41,14 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 @Translator(name="actian-vector", description="A translator for Actian Vector in Hadoop")
 public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
-    
+
     public static final String ACTIAN = "actian"; //$NON-NLS-1$
-    
+
 
     @Override
     public void start() throws TranslatorException {
         super.start();
-        
+
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("CHAR(1)", FunctionModifier.CHAR);  //$NON-NLS-1$
         convertModifier.addTypeMapping("VARCHAR", FunctionModifier.STRING);  //$NON-NLS-1$
@@ -70,8 +70,8 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         convertModifier.addTypeMapping("TIMESTAMP WITH LOCAL TIME ZONE", FunctionModifier.TIMESTAMP);  //$NON-NLS-1$
 
         registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-        
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("CHR")); 
+
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("CHR"));
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWERCASE"));
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPERCASE"));
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));
@@ -79,7 +79,7 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new Constant("CURRENT_DATE"));
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new Constant("CURRENT_TIME"));
         registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));
-        
+
         registerFunctionModifier("CURRENT_TIMESTAMP", new Constant());
         registerFunctionModifier("CURRENT_USER", new Constant());
         registerFunctionModifier("INITIAL_USER", new Constant());
@@ -88,7 +88,7 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         registerFunctionModifier("SESSION_USER", new Constant());
         registerFunctionModifier("SYSTEM_USER", new Constant());
         registerFunctionModifier("USER", new Constant());
-        
+
         //pushdown
         addPushDownFunction(ACTIAN, "CHAREXTRACT", CHAR, STRING, INTEGER);
         addPushDownFunction(ACTIAN, "SHIFT", STRING, STRING, INTEGER);
@@ -139,7 +139,7 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.addAll(super.getSupportedFunctions());
 
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
-        
+
         // string functions
         supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add(SourceSystemFunctions.CHAR);
@@ -147,8 +147,8 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.INITCAP);
         supportedFunctions.add(SourceSystemFunctions.LEFT);
         supportedFunctions.add(SourceSystemFunctions.LENGTH);
-        supportedFunctions.add(SourceSystemFunctions.LOCATE);        
-        supportedFunctions.add(SourceSystemFunctions.LCASE);        
+        supportedFunctions.add(SourceSystemFunctions.LOCATE);
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
         supportedFunctions.add(SourceSystemFunctions.LPAD);
         supportedFunctions.add(SourceSystemFunctions.LTRIM);
         supportedFunctions.add(SourceSystemFunctions.REPEAT);
@@ -159,14 +159,14 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
-        
+
         // numeric functions
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.ACOS);
         supportedFunctions.add(SourceSystemFunctions.ASIN);
         supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ATAN2);
-        supportedFunctions.add(SourceSystemFunctions.CEILING); 
+        supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.COS);
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.FLOOR);
@@ -176,17 +176,17 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.POWER);
         supportedFunctions.add(SourceSystemFunctions.RAND);
         supportedFunctions.add(SourceSystemFunctions.ROUND);
-        supportedFunctions.add(SourceSystemFunctions.SIGN); 
+        supportedFunctions.add(SourceSystemFunctions.SIGN);
         supportedFunctions.add(SourceSystemFunctions.SIN);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
         supportedFunctions.add(SourceSystemFunctions.TAN);
-        
+
         //date time functions
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
-        supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);         
+        supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
-        supportedFunctions.add(SourceSystemFunctions.HOUR); 
-        supportedFunctions.add(SourceSystemFunctions.MINUTE); 
+        supportedFunctions.add(SourceSystemFunctions.HOUR);
+        supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
         supportedFunctions.add(SourceSystemFunctions.NOW);
@@ -196,13 +196,13 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         supportedFunctions.add(SourceSystemFunctions.CURDATE);
         supportedFunctions.add(SourceSystemFunctions.CURTIME);
-        
+
         supportedFunctions.add(SourceSystemFunctions.IFNULL);
         supportedFunctions.add(SourceSystemFunctions.NULLIF);
-        
+
         return supportedFunctions;
     }
-    
+
     static class Constant extends FunctionModifier{
         private String name;
         public Constant() {
@@ -210,7 +210,7 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
         public Constant(String name) {
             this.name = name;
         }
-        
+
         @Override
         public List<?> translate(Function function) {
             if (this.name != null) {
@@ -219,12 +219,12 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
             return Arrays.asList(function.getName());
         }
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
-    } 
-    
+    }
+
     @Override
     public boolean supportsIntersect() {
         return true;
@@ -239,47 +239,47 @@ public class ActianVectorInHadoopExecutionFactory extends JDBCExecutionFactory{
     public boolean supportsGroupByRollup() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
         return true;
     }
-    
+
     @Override
     public boolean supportsExcept() {
         return true;
     }
-    
+
     @Override
     public boolean supportsSetQueryOrderBy() {
         return true;
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
         return true;
-    } 
-    
+    }
+
     @Override
     public boolean supportsSubqueryCommonTableExpressions() {
         return true;
     }
-    
+
     @Override
     public boolean supportsElementaryOlapOperations(){
         return true;
     }
-    
+
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
         return true;
     }
-    
+
     @Override
     public boolean supportsSelectWithoutFrom() {
         return true;
     }
-    
+
     @Override
     public boolean supportsSelectExpression() {
         return true;

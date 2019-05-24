@@ -35,26 +35,26 @@ import org.teiid.query.sql.symbol.*;
 import junit.framework.*;
 
 /**
- * Test the <code>JoinPredicate</code> implementation to verify it is producing  
+ * Test the <code>JoinPredicate</code> implementation to verify it is producing
  * expected <code>JoinPredicate</code> objects.
  */
 public class TestJoinPredicate extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestJoinPredicate(String name) { 
+
+	public TestJoinPredicate(String name) {
 		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
-		
+	}
+
+	// ################################## TEST HELPERS ################################
+
 	/**
-	 * Constructs an example <code>JoinPredicate</code> object that can be used 
+	 * Constructs an example <code>JoinPredicate</code> object that can be used
 	 * as join predicate in a query.
-	 * 
+	 *
 	 * @param joinType the type of join to be constructed
-	 * @param joinOnElement the element name to be used in the left and right 
-	 * 						side criteria of the ON expression of the join 
+	 * @param joinOnElement the element name to be used in the left and right
+	 * 						side criteria of the ON expression of the join
 	 * @return a join predicate object
 	 */
 	public static JoinPredicate example(JoinType joinType, String joinOnElement) {
@@ -68,33 +68,33 @@ public class TestJoinPredicate extends TestCase {
 		Expression le = new ElementSymbol("m.g1." + joinOnElement); //$NON-NLS-1$
 		Expression re = new ElementSymbol("m.g2." + joinOnElement); //$NON-NLS-1$
 		Criteria c1 = new CompareCriteria(le, CompareCriteria.EQ, re);
-		
+
 		jp.setLeftClause(lc);
 		jp.setRightClause(rc);
 		jp.setJoinType(joinType != null ? joinType : JoinType.JOIN_LEFT_OUTER);
 		jp.setJoinCriteria( Arrays.asList(new Object[]{c1}));
 
-		return jp;		    
-	}		
+		return jp;
+	}
 
 	/**
-	 * Constructs an example <code>JoinPredicate</code> object that contains 
-	 * compound criteria in the join's ON expression.  The resulting object 
+	 * Constructs an example <code>JoinPredicate</code> object that contains
+	 * compound criteria in the join's ON expression.  The resulting object
 	 * could be used as join predicate in a query.
 	 * <p>
-	 * This method calls <code>example(joinType, joinOnElement)</code> to 
-	 * construct the initial join predicate object.  The join criteria of 
-	 * the initial join predicate object is then modified to add the use 
-	 * of compound criteria which include the original criteria from the 
-	 * initial join predicate object and the newly constructed criteria 
+	 * This method calls <code>example(joinType, joinOnElement)</code> to
+	 * construct the initial join predicate object.  The join criteria of
+	 * the initial join predicate object is then modified to add the use
+	 * of compound criteria which include the original criteria from the
+	 * initial join predicate object and the newly constructed criteria
 	 * specified from the <code>andJoinOnElement</code> string.
-	 *  
+	 *
 	 * @param joinType the type of join to be constructed
-	 * @param joinOnElement the element name to be used in the left and right 
+	 * @param joinOnElement the element name to be used in the left and right
 	 * 						side criteria of the ON expression of the join
-	 * @param andJoinOnElement the element name to be used in the left and right 
-	 *                         side criteria of the right hand expression of AND 
-	 *                         criteria of the ON expression of the join  
+	 * @param andJoinOnElement the element name to be used in the left and right
+	 *                         side criteria of the right hand expression of AND
+	 *                         criteria of the ON expression of the join
 	 * @return a join predicate object
 	 */
 	public static JoinPredicate example(JoinType joinType, String joinOnElement, String andJoinOnElement) {
@@ -105,13 +105,13 @@ public class TestJoinPredicate extends TestCase {
 		Expression le = new ElementSymbol("m.g1." + andJoinOnElement); //$NON-NLS-1$
 		Expression re = new ElementSymbol("m.g2." + andJoinOnElement); //$NON-NLS-1$
 		Criteria c1 = new CompareCriteria(le, CompareCriteria.EQ, re);
-		
+
 		Iterator<Criteria> ci = joinCrits.iterator();
 
 		if (!ci.hasNext()) {
 			newJoinCrits.add(c1);
 		}
-		
+
 		while (ci.hasNext()) {
 			Criteria crit = ci.next();
 			if ( ci.hasNext() ) newJoinCrits.add(crit);
@@ -122,113 +122,113 @@ public class TestJoinPredicate extends TestCase {
 		}
 
 		jp.setJoinCriteria(newJoinCrits);
-		
+
 		return jp;
-	}		
+	}
 
 	// ################################## ACTUAL TESTS ################################
-	
+
 	/**
-	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to 
-	 * verify it properly evaluates the equality of two <code>JoinPredicate</code> 
+	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to
+	 * verify it properly evaluates the equality of two <code>JoinPredicate</code>
 	 * objects.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects 
-	 * that were constructed with the same join type and with the same criteria 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * that were constructed with the same join type and with the same criteria
 	 * evaluate as equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 LEFT OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
+	 * ... m.g1 LEFT OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1
 	 */
-	public void testEquals1() {    
+	public void testEquals1() {
 		JoinPredicate jp1 = example(JoinType.JOIN_LEFT_OUTER, "e1"); //$NON-NLS-1$
 		JoinPredicate jp2 = example(JoinType.JOIN_LEFT_OUTER, "e1"); //$NON-NLS-1$
 		assertTrue("Equivalent join predicate don't compare as equal: " + jp1 + ", " + jp2, jp1.equals(jp2)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to 
-	 * verify it properly evaluates the equality of two 
+	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to
+	 * verify it properly evaluates the equality of two
 	 * <code>JoinPredicate</code> objects.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects 
-	 * that were constructed with the same join type and with the same 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * that were constructed with the same join type and with the same
 	 * compound criteria evaluate as equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 LEFT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
+	 * ... m.g1 LEFT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
 	 */
-	public void testEquals2() {    
+	public void testEquals2() {
 		JoinPredicate jp1 = example(JoinType.JOIN_LEFT_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
         JoinPredicate jp2 = example(JoinType.JOIN_LEFT_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue("Equivalent join predicate don't compare as equal: " + jp1 + ", " + jp2, jp1.equals(jp2)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to 
-	 * verify it properly evaluates the equality of two <code>JoinPredicate</code> 
+	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to
+	 * verify it properly evaluates the equality of two <code>JoinPredicate</code>
 	 * objects.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects 
-	 * that were constructed with different join types but with the same 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * that were constructed with different join types but with the same
 	 * compound criteria evaluate as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 LEFT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
-	 * ... m.g1 RIGHT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
+	 * ... m.g1 LEFT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
+	 * ... m.g1 RIGHT OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
 	 */
-	public void testEquals3() {    
+	public void testEquals3() {
 		JoinPredicate jp1 = example(JoinType.JOIN_LEFT_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
         JoinPredicate jp2 = example(JoinType.JOIN_RIGHT_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue("Different join predicate compare as equal: " + jp1 + ", " + jp2, !jp1.equals(jp2)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to 
-	 * verify it properly evaluates the equality of two <code>JoinPredicate</code> 
+	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to
+	 * verify it properly evaluates the equality of two <code>JoinPredicate</code>
 	 * objects.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects 
-	 * that were constructed with the same join type but with different 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * that were constructed with the same join type but with different
 	 * criteria evaluate as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 INNER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
-	 * ... m.g1 INNER JOIN m.g2 ON m.g1.e2 = m.g2.e2 
+	 * ... m.g1 INNER JOIN m.g2 ON m.g1.e1 = m.g2.e1
+	 * ... m.g1 INNER JOIN m.g2 ON m.g1.e2 = m.g2.e2
 	 */
-	public void testEquals4() {    
+	public void testEquals4() {
 		JoinPredicate jp1 = example(JoinType.JOIN_INNER, "e1"); //$NON-NLS-1$
         JoinPredicate jp2 = example(JoinType.JOIN_INNER, "e2"); //$NON-NLS-1$
 		assertTrue("Different join predicate compare as equal: " + jp1 + ", " + jp2, !jp1.equals(jp2)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to 
-	 * verify it properly evaluates the equality of two <code>JoinPredicate</code> 
+	 * Test <code>equals()</code> method of <code>JoinPredicate</code> to
+	 * verify it properly evaluates the equality of two <code>JoinPredicate</code>
 	 * objects.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects 
-	 * that were constructed with the same join type but with different 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * that were constructed with the same join type but with different
 	 * compound criteria evaluate as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 CROSS JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
-	 * ... m.g1 CROSS JOIN m.g2 ON ((m.g1.e2 = m.g2.e2) AND (m.g1.e2 = m.g2.e2)) 
+	 * ... m.g1 CROSS JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
+	 * ... m.g1 CROSS JOIN m.g2 ON ((m.g1.e2 = m.g2.e2) AND (m.g1.e2 = m.g2.e2))
 	 */
-	public void testEquals5() {    
+	public void testEquals5() {
 		JoinPredicate jp1 = example(JoinType.JOIN_CROSS, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
         JoinPredicate jp2 = example(JoinType.JOIN_CROSS, "e2", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue("Different join predicate compare as equal: " + jp1 + ", " + jp2, !jp1.equals(jp2)); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that the same <code>JoinPredicate</code> object 
+	 * This test ensures that the same <code>JoinPredicate</code> object
 	 * evaluates as equal when it is compared to itself.
 	 * <p>
 	 * For example:
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1
 	 */
 	public void testSelfEquivalence(){
 		JoinPredicate jp1 = example(JoinType.JOIN_FULL_OUTER, "e1"); //$NON-NLS-1$
@@ -237,15 +237,15 @@ public class TestJoinPredicate extends TestCase {
 	}
 
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects  
-	 * constructed with the same join type and the same criteria evaluates as 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * constructed with the same join type and the same criteria evaluates as
 	 * equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1
 	 */
 	public void testEquivalence(){
 		JoinPredicate jp1 = example(JoinType.JOIN_FULL_OUTER, "e1"); //$NON-NLS-1$
@@ -253,33 +253,33 @@ public class TestJoinPredicate extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
 	}
-	
+
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that a <code>JoinPredicate</code> object's clone   
+	 * This test ensures that a <code>JoinPredicate</code> object's clone
 	 * evaluate as equal when compared to the original object.
 	 * <p>
 	 * For example:
-	 * ... m.g1 UNION JOIN m.g2 ON m.g1.e1 = m.g2.e1 
+	 * ... m.g1 UNION JOIN m.g2 ON m.g1.e1 = m.g2.e1
 	 */
 	public void testCloneEquivalence(){
 		JoinPredicate jp1 = example(JoinType.JOIN_UNION, "e1"); //$NON-NLS-1$
 		JoinPredicate jp2 = (JoinPredicate)jp1.clone();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
-	}	
-	
+	}
+
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects    
-	 * constructed with the same join type but with different criteria evaluate 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * constructed with the same join type but with different criteria evaluate
 	 * as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e400 = m.g2.e400 
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON m.g1.e400 = m.g2.e400
 	 */
     public void testNonEquivalence1(){
     	JoinPredicate jp1 = example(JoinType.JOIN_FULL_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -287,17 +287,17 @@ public class TestJoinPredicate extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
     }
-    
+
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects    
-	 * constructed with the same join type but with different criteria evaluate 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * constructed with the same join type but with different criteria evaluate
 	 * as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2)) 
-	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e2 = m.g2.e2) AND (m.g1.e1 = m.g2.e1)) 
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e1 = m.g2.e1) AND (m.g1.e2 = m.g2.e2))
+	 * ... m.g1 FULL OUTER JOIN m.g2 ON ((m.g1.e2 = m.g2.e2) AND (m.g1.e1 = m.g2.e1))
 	 */
     public void testNonEquivalence2(){
     	JoinPredicate jp1 = example(JoinType.JOIN_LEFT_OUTER, "e1", "e2"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -305,17 +305,17 @@ public class TestJoinPredicate extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
     }
-    
+
 	/**
-	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>. 
+	 * Test a <code>JoinPredicate</code> object using <code>UnitTestUtil.helpTestEquivalence</code>.
 	 * <p>
-	 * This test ensures that two different <code>JoinPredicate</code> objects    
-	 * constructed with different join types but with the same criteria evaluate 
+	 * This test ensures that two different <code>JoinPredicate</code> objects
+	 * constructed with different join types but with the same criteria evaluate
 	 * as not equal.
 	 * <p>
 	 * For example:
-	 * ... m.g1 LEFT OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1 
-	 * ... m.g1 RIGHT OUTER JOIN m.g2 ON m.g1.e2 = m.g2.e2 
+	 * ... m.g1 LEFT OUTER JOIN m.g2 ON m.g1.e1 = m.g2.e1
+	 * ... m.g1 RIGHT OUTER JOIN m.g2 ON m.g1.e2 = m.g2.e2
 	 */
     public void testNonEquivalence3(){
     	JoinPredicate jp1 = example(JoinType.JOIN_LEFT_OUTER, "e1"); //$NON-NLS-1$
@@ -323,5 +323,5 @@ public class TestJoinPredicate extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
     }
-    
+
 }

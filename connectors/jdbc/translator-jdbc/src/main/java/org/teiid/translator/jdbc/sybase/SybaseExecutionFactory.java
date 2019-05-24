@@ -66,7 +66,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	public static final class SybaseFormatFunctionModifier extends
 			ParseFormatFunctionModifier {
 	    private Map<String, Object> formatMap;
-	    
+
 	    public SybaseFormatFunctionModifier(String prefix, Map<String, Object> formatMap) {
 			super(prefix);
 			this.formatMap = formatMap;
@@ -97,18 +97,18 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	public static final Version TWELVE_5 = Version.getVersion("12.5"); //$NON-NLS-1$
 	public static final Version FIFTEEN_0_2 = Version.getVersion("15.0.2"); //$NON-NLS-1$
 	public static final Version FIFTEEN_5 = Version.getVersion("15.5"); //$NON-NLS-1$
-	
+
 	protected Map<String, Object> formatMap = new HashMap<String, Object>();
 	protected boolean jtdsDriver;
 	protected ConvertModifier convertModifier = new ConvertModifier();
-	
+
 	public SybaseExecutionFactory() {
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
 		setMaxDependentInPredicates(7);
 		populateDateFormats();
 	}
-	
+
 	protected void populateDateFormats() {
 		formatMap.put("MM/dd/yy", 1); //$NON-NLS-1$
 		formatMap.put("yy.MM.dd", 2); //$NON-NLS-1$
@@ -139,7 +139,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		formatMap.put("yy/MM/dd hh:mm:ssa", 22); //$NON-NLS-1$
 		formatMap.put("yyyy-MM-dd'T'HH:mm:ss", 23); //$NON-NLS-1$
 	}
-    
+
     public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory())); //$NON-NLS-1$
@@ -170,18 +170,18 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
                     }
                     result.add(" THEN NULL ELSE "); //$NON-NLS-1$
                 }
-                
+
                 result.addAll(Arrays.asList("RIGHT(REPLICATE(", //$NON-NLS-1$
                         params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$
                                 params.get(1), ") + LEFT(", params.get(0), ", ", params.get(1), "), ", params.get(1), ")")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                
+
                 if (!nullPlusNonNullIsNull()) {
                     result.add(" END"); //$NON-NLS-1$
                 }
-                
+
                 return result;
             }
-        }); 
+        });
         registerFunctionModifier(SourceSystemFunctions.RPAD, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
@@ -198,21 +198,21 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
                     }
                     result.add(" THEN NULL ELSE "); //$NON-NLS-1$
                 }
-                
-                result.addAll(Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$ 
-                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$ 
+
+                result.addAll(Arrays.asList("LEFT(", params.get(0), " + REPLICATE(", //$NON-NLS-1$ //$NON-NLS-2$
+                        params.size()>2?params.get(2):new Literal(" ", TypeFacility.RUNTIME_TYPES.STRING), ", ", //$NON-NLS-1$ //$NON-NLS-2$
                                 params.get(1), "), ", params.get(1), ")")); //$NON-NLS-1$ //$NON-NLS-2$
-                
+
                 if (!nullPlusNonNullIsNull()) {
                     result.add(" END"); //$NON-NLS-1$
                 }
-                
+
                 return result;
             }
         });
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("isnull")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
@@ -228,7 +228,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LENGTH, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.ATAN2, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				if (!isFracSeconds(function)) {
@@ -239,7 +239,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			}
 		});
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				if (!isFracSeconds(function)) {
@@ -249,7 +249,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 				return Arrays.asList("datediff(millisecond, ", function.getParameters().get(1), ",", function.getParameters().get(2), ")*1000000"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		});
-        
+
         //add in type conversion
         convertModifier.setBooleanNullable(booleanNullable());
         //boolean isn't treated as bit, since it doesn't support null
@@ -298,7 +298,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			public List<?> translate(Function function) {
 				return convertTimeToString(function);
 			}
-		}); 
+		});
     	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -331,7 +331,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     					result.add(function.getParameters().get(0));
     					result.add(" IS NOT NULL THEN "); //$NON-NLS-1$
     					needsEnd = true;
-    				} 
+    				}
     				result.add("'1970-01-01 ' + "); //$NON-NLS-1$
     				result.addAll(convertTimeToString(function));
     				if (needsEnd) {
@@ -346,15 +346,15 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     		convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
     	}
 	}
-    
+
 	private List<Object> convertTimeToString(Function function) {
 		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 8)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-    
+
     protected List<Object> convertDateToString(Function function) {
 		return Arrays.asList("stuff(stuff(convert(varchar, ", function.getParameters().get(0), ", 102), 5, 1, '-'), 8, 1, '-')"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-    
+
     //TODO: this looses the milliseconds
 	protected List<?> convertTimestampToString(Function function) {
 	    if (getVersion().compareTo(FIFTEEN_5) >= 0) {
@@ -366,7 +366,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         result.addAll(convertTimeToString(function));
         return result;
 	}
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -433,12 +433,12 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL");      //$NON-NLS-1$ 
+        supportedFunctions.add("NVL");      //$NON-NLS-1$
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP);
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
         return true;
@@ -448,40 +448,40 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     public boolean supportsFunctionsInGroupBy() {
         return true;
     }
-    
+
     @Override
     public int getMaxFromGroups() {
         return 50;
-    } 
-    
+    }
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return getVersion().compareTo(FIFTEEN_0_2) >= 0;
     }
-    
+
     public boolean nullPlusNonNullIsNull() {
     	return false;
     }
-    
+
     public boolean booleanNullable() {
     	return false;
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
     	return "CAST('" + formatDateValue(timestampValue) +"' AS DATETIME)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralDate(Date dateValue) {
     	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
 	private boolean isFracSeconds(Function function) {
 		Expression e = function.getParameters().get(0);
 		return (e instanceof Literal && SQLConstants.NonReserved.SQL_TSI_FRAC_SECOND.equalsIgnoreCase((String)((Literal)e).getValue()));
 	}
-	
+
 	@Override
 	public boolean supportsRowLimit() {
 		return (getVersion().getMajorVersion() == 12 && getVersion().compareTo(TWELVE_5_3) >= 0) || getVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
@@ -491,15 +491,15 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	public boolean isJtdsDriver() {
 		return jtdsDriver;
 	}
-	
+
 	public void setJtdsDriver(boolean jtdsDriver) {
 		this.jtdsDriver = jtdsDriver;
 	}
-	
+
 	protected boolean setFetchSize() {
 		return isJtdsDriver();
 	}
-	
+
 	@Override
 	public void setFetchSize(Command command, ExecutionContext context,
 			Statement statement, int fetchSize) throws SQLException {
@@ -508,7 +508,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		}
 		super.setFetchSize(command, context, statement, fetchSize);
 	}
-	
+
 	@Override
 	public void initCapabilities(Connection connection)
 			throws TranslatorException {
@@ -522,17 +522,17 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		}
 		handleTimeConversions();
 	}
-	
+
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
-	
+
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
     	if (getVersion().compareTo(FIFTEEN_0_2) >= 0) {
@@ -540,23 +540,23 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	}
     	return "org.hibernate.dialect.Sybase11Dialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsGroupByRollup() {
     	//TODO: there is support in SQL Anywhere/IQ, but not ASE
     	return false;
     }
-    
+
     @Override
     public boolean useUnicodePrefix() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsOnlyFormatLiterals() {
         return true;
     }
-    
+
     @Override
     public boolean supportsFormatLiteral(String literal,
     		org.teiid.translator.ExecutionFactory.Format format) {
@@ -565,7 +565,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	}
     	return formatMap.containsKey(literal);
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (!supportsLiteralOnlyWithGrouping() && (command instanceof Select)) {
@@ -579,14 +579,14 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	}
     	return super.translateCommand(command, context);
     }
-    
+
     public boolean supportsLiteralOnlyWithGrouping() {
     	return false;
     }
-    
+
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
     	return "0x" + obj; //$NON-NLS-1$
     }
-    
+
 }

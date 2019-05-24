@@ -39,7 +39,7 @@ import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
 
 public final class RuleMergeCriteria implements OptimizerRule {
-	
+
     /**
      * @see OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
      */
@@ -48,7 +48,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
         // Find strings of criteria and merge them, removing duplicates
         List<PlanNode> criteriaChains = new ArrayList<PlanNode>();
         findCriteriaChains(plan, criteriaChains);
-        
+
         // Merge chains
         for (PlanNode critNode : criteriaChains) {
             mergeChain(critNode, metadata);
@@ -66,7 +66,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         PlanNode recurseRoot = root;
         if(root.getType() == NodeConstants.Types.SELECT) {
-        	
+
             // Walk to end of the chain and change recurse root
             while(recurseRoot.getType() == NodeConstants.Types.SELECT) {
                 recurseRoot = recurseRoot.getLastChild();
@@ -78,7 +78,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
                 foundNodes.add(root);
             }
         }
-        
+
         if (recurseRoot.getType() != NodeConstants.Types.ACCESS) {
             for (PlanNode child : recurseRoot.getChildren()) {
                 findCriteriaChains(child, foundNodes);
@@ -97,11 +97,11 @@ public final class RuleMergeCriteria implements OptimizerRule {
         		//add at the end for delayed evaluation
         		subqueryCriteria.add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
         	} else {
-        		critParts.getCriteria().add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));	
+        		critParts.getCriteria().add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
         	}
-            
+
             isDependentSet |= current.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET);
-            
+
             // Recurse
             PlanNode last = current;
             current = current.getLastChild();
@@ -117,13 +117,13 @@ public final class RuleMergeCriteria implements OptimizerRule {
         if (isDependentSet) {
             chainRoot.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
         }
-        
+
         // Replace criteria at root with new combined criteria
         chainRoot.setProperty(NodeConstants.Info.SELECT_CRITERIA, combinedCrit);
-        
+
         // Reset group for node based on combined criteria
         chainRoot.getGroups().clear();
-        
+
         chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(combinedCrit));
         chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(chainRoot.getCorrelatedReferenceElements()));
     }

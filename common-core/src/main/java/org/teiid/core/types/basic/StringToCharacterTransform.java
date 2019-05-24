@@ -33,11 +33,11 @@ public class StringToCharacterTransform extends Transform {
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
 		String s = (String) value;
-		
+
 		if (s.length() == 0) {
-			return Character.valueOf(' '); 
+			return Character.valueOf(' ');
 		}
-		
+
         return Character.valueOf(s.charAt(0));
 	}
 
@@ -56,7 +56,7 @@ public class StringToCharacterTransform extends Transform {
 	public Class<?> getTargetType() {
 		return Character.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

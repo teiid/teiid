@@ -30,7 +30,7 @@ import java.security.PrivilegedExceptionAction;
 /**
  *  Privileged Blocks
  *  @author Anil.Saldhana@redhat.com
- *  @since  Sep 26, 2007 
+ *  @since  Sep 26, 2007
  *  @version $Revision$
  */
 class ResourceActions
@@ -38,31 +38,31 @@ class ResourceActions
    static ClassLoader getContextClassLoader()
    {
       return AccessController.doPrivileged(new PrivilegedAction<ClassLoader>()
-      { 
+      {
          public ClassLoader run()
-         { 
+         {
             return Thread.currentThread().getContextClassLoader();
          }
-       });  
+       });
    }
-   
+
    static URL findResource(final URLClassLoader cl, final String name)
    {
       return AccessController.doPrivileged(new PrivilegedAction<URL>()
-      { 
+      {
          public URL run()
-         { 
+         {
             return cl.findResource(name);
          }
-       });  
+       });
    }
-   
+
    static InputStream openStream(final URL url) throws PrivilegedActionException
    {
       return AccessController.doPrivileged(new PrivilegedExceptionAction<InputStream>()
-      { 
+      {
          public InputStream run() throws IOException
-         { 
+         {
             return url.openStream();
          }
        });

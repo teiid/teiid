@@ -34,12 +34,12 @@ public class TestMultipleModelIndexes {
 		assertEquals(1, names.size());
 		names = tm.getGroupsForPartialName("PARTS");
 		assertEquals(1, names.size());
-		
+
 		//ensure that datatypes are set
 		Table t = tm.getGroupID(names.iterator().next());
 		assertNotNull(t.getColumns().get(0).getDatatype());
 	}
-	
+
 	@Test public void testUniqueReferencedKey() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/keys.vdb");
 		Collection fks = tm.getForeignKeysInGroup(tm.getGroupID("x.a"));
@@ -47,27 +47,27 @@ public class TestMultipleModelIndexes {
 		Object pk = tm.getPrimaryKeyIDForForeignKeyID(fks.iterator().next());
 		assertNotNull(pk);
 	}
-	
+
 	@Test public void testIndex() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/ora.vdb");
 		Collection indexes = tm.getIndexesInGroup(tm.getGroupID("ORACLE_BQT.SMALLA"));
 		assertEquals(1, indexes.size());
 	}
-	
+
 	@Test public void testSchemaLoad() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/Test.vdb");
-		
+
 		//ensure that datatypes are set
 		Table t = tm.getGroupID("Northwind.Northwind.dbo.Employees");
 		assertFalse(t.isVirtual());
 	}
-	
+
 	@Test public void test81Schema() throws Exception {
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("schema.ser")));
 		Schema schema = (Schema) ois.readObject();
 		assertNotNull(schema.getFunctions());
 	}
-	
+
 	@Test public void testFunctionMetadata() throws Exception {
 		TransformationMetadata tm = VDBMetadataFactory.getVDBMetadata(UnitTestUtil.getTestDataPath() + "/TEIIDDES992_VDB.vdb");
 		Map<String, FunctionMethod> functions = tm.getMetadataStore().getSchema("TEIIDDES992").getFunctions();
@@ -79,5 +79,5 @@ public class TestMultipleModelIndexes {
 		assertEquals("mmuuid:f9ded2ae-9652-414e-b5a9-74185f8703c0", fm.getOutputParameter().getUUID());
 		assertNotNull(fm.getInputParameters().get(0).getParent());
 	}
-	
+
 }

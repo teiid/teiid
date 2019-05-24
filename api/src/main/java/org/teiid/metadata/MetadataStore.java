@@ -43,34 +43,34 @@ public class MetadataStore implements Serializable {
 	protected NavigableMap<String, Datatype> unmondifiableDatatypes = Collections.unmodifiableNavigableMap(datatypes);
 	private Map<String, Grant> grants = new TreeMap<String, Grant>(String.CASE_INSENSITIVE_ORDER);
 	protected LinkedHashMap<String, Role> roles = new LinkedHashMap<String, Role>();
-	
+
 	public NavigableMap<String, Schema> getSchemas() {
 		return schemas;
 	}
-	
+
 	public Schema getSchema(String name) {
 		return this.schemas.get(name);
 	}
-	
+
 	public void addSchema(Schema schema) {
 		if (this.schemas.put(schema.getName(), schema) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60012, DataPlugin.Util.gs(DataPlugin.Event.TEIID60012, schema.getName()));
-		}		
+		}
 		this.schemaList.add(schema);
 	}
-	
+
 	public List<Schema> getSchemaList() {
 		return schemaList;
 	}
-	
+
 	public Schema removeSchema(String schemaName) {
 	    Schema s = this.schemas.remove(schemaName);
         if ( s != null) {
             this.schemaList.remove(s);
-        }       
+        }
         return s;
 	}
-	
+
 	public void addDataTypes(Map<String, Datatype> typeMap) {
 		if (typeMap != null){
 			for (Map.Entry<String, Datatype> entry:typeMap.entrySet()) {
@@ -78,17 +78,17 @@ public class MetadataStore implements Serializable {
 			}
 		}
 	}
-	
+
 	public void addDatatype(String name, Datatype datatype) {
 		if (!this.datatypes.containsKey(name)) {
 			this.datatypes.put(name, datatype);
 		}
 	}
-		
+
 	public NavigableMap<String, Datatype> getDatatypes() {
 		return unmondifiableDatatypes;
 	}
-	
+
 	/**
 	 * Get the type information excluding aliases and case sensitive by name
 	 * @return
@@ -102,7 +102,7 @@ public class MetadataStore implements Serializable {
         }
         return result;
     }
-	
+
 	public void merge(MetadataStore store) {
 		if (store != null) {
 			for (Schema s:store.getSchemaList()) {
@@ -151,7 +151,7 @@ public class MetadataStore implements Serializable {
                         }
                         currentPermission.appendPrivileges(addPermission.getPrivileges());
                     }
-                    if (currentPermission.getPrivileges().isEmpty() 
+                    if (currentPermission.getPrivileges().isEmpty()
                             && currentPermission.getRevokePrivileges().isEmpty()
                             && currentPermission.getCondition() == null
                             && currentPermission.getMask() == null) {
@@ -170,7 +170,7 @@ public class MetadataStore implements Serializable {
             }
 	    }
 	}
-	
+
 	public void removeGrant(Grant toRemoveGrant) {
 	    if (toRemoveGrant == null) {
 	        return;
@@ -201,7 +201,7 @@ public class MetadataStore implements Serializable {
                         }
                         currentPermission.removePrivileges(revokePermission.getRevokePrivileges());
                     }
-                    if (currentPermission.getPrivileges().isEmpty() 
+                    if (currentPermission.getPrivileges().isEmpty()
                             && currentPermission.getRevokePrivileges().isEmpty()
                             && currentPermission.getCondition() == null
                             && currentPermission.getMask() == null) {
@@ -217,18 +217,18 @@ public class MetadataStore implements Serializable {
             }
             if (previous.getPermissions().isEmpty()) {
                 this.grants.remove(toRemoveGrant.getRole());
-            }	        
+            }
 	    }
-	}	
-	
+	}
+
 	public Collection<Grant> getGrants() {
 	    return this.grants.values();
 	}
-    
+
     void addRole(Role role) {
         this.roles.put(role.getName(), role);
     }
-    
+
     Role getRole(String roleName) {
         return this.roles.get(roleName);
     }
@@ -236,8 +236,8 @@ public class MetadataStore implements Serializable {
     Collection<Role> getRoles() {
         return this.roles.values();
     }
-    
+
     Role removeRole(String roleName) {
         return this.roles.remove(roleName);
-    }    
+    }
 }

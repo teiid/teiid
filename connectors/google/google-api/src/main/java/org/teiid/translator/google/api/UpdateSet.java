@@ -23,7 +23,7 @@ public class UpdateSet {
 
 	String columnID;
 	String value;
-	
+
 	public UpdateSet(String columnID, String value){
 		this.columnID = columnID;
 		this.value = value;
@@ -44,7 +44,7 @@ public class UpdateSet {
 	public void setValue(String value) {
 		this.value = value;
 	}
-	
-	
-	
+
+
+
 }

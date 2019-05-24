@@ -23,7 +23,7 @@ package org.teiid.core.crypto;
  * Interface defining a utility that can perform both encryption and decryption.
  */
 public interface Cryptor {
-	
+
     /**
      * Encrypt the cleartext in byte array format.
      * @param cleartext The text to be encrypted, in byte form
@@ -32,7 +32,7 @@ public interface Cryptor {
     byte[] encrypt( byte[] cleartext ) throws CryptoException;
 
     Object sealObject(Object object) throws CryptoException;
-    
+
     /**
      * Decrypt the ciphertext in byte array format to yield the original
      * cleartext.
@@ -42,5 +42,5 @@ public interface Cryptor {
     byte[] decrypt( byte[] ciphertext ) throws CryptoException;
 
     Object unsealObject(Object object) throws CryptoException;
-    
+
 }

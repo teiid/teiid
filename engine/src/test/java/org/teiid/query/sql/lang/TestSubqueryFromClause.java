@@ -53,7 +53,7 @@ public class TestSubqueryFromClause extends TestCase {
         crit.setRightExpression(new Constant(new Integer(5)));
         crit.setOperator(CompareCriteria.EQ);
         query.setCriteria(crit);
-        
+
         return new SubqueryFromClause("temp", query); //$NON-NLS-1$
     }
 
@@ -71,7 +71,7 @@ public class TestSubqueryFromClause extends TestCase {
         crit.setRightExpression(new Constant(new Integer(10)));
         crit.setOperator(CompareCriteria.EQ);
         query.setCriteria(crit);
-        
+
         return new SubqueryFromClause("temp", query); //$NON-NLS-1$
     }
 
@@ -89,12 +89,12 @@ public class TestSubqueryFromClause extends TestCase {
         crit.setRightExpression(new Constant(new Integer(5)));
         crit.setOperator(CompareCriteria.EQ);
         query.setCriteria(crit);
-        
+
         return new SubqueryFromClause("temp2", query); //$NON-NLS-1$
     }
 
     // ################################## ACTUAL TESTS ################################
-    
+
     public void testSelfEquivalence(){
         Object s1 = example1();
         int equals = 0;
@@ -114,14 +114,14 @@ public class TestSubqueryFromClause extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-   
+
     public void testCommandNonEquivalence(){
         Object s1 = example1();
         Object s2 = example2();
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-    
+
     public void testEquivalenceDifferentOptional(){
         Object s1 = example1();
         SubqueryFromClause s2 = example1();
@@ -129,7 +129,7 @@ public class TestSubqueryFromClause extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-    
+
     public void testClone() {
         SubqueryFromClause s1 = example1();
         Object clonedS1 = s1.clone();

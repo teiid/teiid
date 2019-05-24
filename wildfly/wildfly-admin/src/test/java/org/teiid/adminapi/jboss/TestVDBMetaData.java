@@ -36,51 +36,51 @@ import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
-	
+
 	@Test
 	public void testMarshellUnmarshellDirectParsing() throws Exception {
-		
+
 		VDBMetaData vdb = TestVDBUtility.buildVDB();
-		
+
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		VDBMetadataParser.marshell(vdb, out);
-		
+
 		//System.out.println(new String(out.toByteArray()));
 
 		// UnMarshell
 		vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(out.toByteArray()));
-		
+
 		TestVDBUtility.validateVDB(vdb);
-	}	
+	}
 
 
-	
+
 	@Test
 	public void testAdminMOCreation() {
 		VDBMetaData vdb = new VDBMetaData();
-		
+
 		PropertiesUtils.setBeanProperty(vdb, "name", "x");
-		
+
 		assertEquals("x", vdb.getName());
 	}
-	
+
 	@Test public void testVDBMetaDataMapper() {
 		VDBMetaData vdb = TestVDBUtility.buildVDB();
-		
+
 		ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
-		
+
 		vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
 		TestVDBUtility.validateVDB(vdb);
 	}
-	
+
 	@Test
 	public void testVDBMetaDataDescribe() throws Exception {
 	    ModelNode node = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
 		String actual = node.toJSONString(false);
-		
+
 		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
 	}
-	
+
 	@Test
 	public void testClone() {
 		VDBMetaData vdb = TestVDBUtility.buildVDB();

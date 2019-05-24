@@ -35,7 +35,7 @@ import org.teiid.core.TeiidRuntimeException;
 
 public class DataPolicyMetadata implements DataPolicy, Serializable {
 	private static final long serialVersionUID = -4119646357275977190L;
-	
+
     protected String name;
     protected String description;
 	protected boolean anyAuthenticated;
@@ -43,13 +43,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
     protected Map<String, PermissionMetaData> permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
     protected Map<String, PermissionMetaData> languagePermissions = new HashMap<String, PermissionMetaData>(2);
-    
+
     protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
-    
+
     private Set<String> hasRowPermissions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
 	private boolean grantAll;
-	
+
 	private Set<String> schemas;
 
 	@Override
@@ -60,7 +60,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     public void setName(String value) {
         this.name = value;
     }
-    
+
     @Override
     public String getDescription() {
         return description;
@@ -76,22 +76,22 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		result.addAll(this.languagePermissions.values());
 		return result;
 	}
-	
+
 	public Map<String, PermissionMetaData> getPermissionMap() {
 		return permissions;
 	}
-	
+
 	public boolean hasRowSecurity(String resourceName) {
 		return hasRowPermissions.contains(resourceName);
 	}
-	
+
 	public void setPermissions(List<DataPermission> permissions) {
 		this.permissions.clear();
 		for (DataPermission permission:permissions) {
 			addPermissionMetadata((PermissionMetaData)permission);
 		}
-	}	
-	
+	}
+
 	public void addPermission(PermissionMetaData... perms) {
 		for (PermissionMetaData permission:perms) {
 			addPermissionMetadata(permission);
@@ -116,7 +116,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			this.hasRowPermissions.add(resourceName);
 		}
-		
+
 		if (previous != null) {
 			permission.bits |= previous.bits;
 			permission.bitsSet |= previous.bitsSet;
@@ -137,7 +137,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 		}
 	}
-	
+
     @Override
     public List<String> getMappedRoleNames() {
 		return mappedRoleNames;
@@ -146,16 +146,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	public void setMappedRoleNames(List<String> names) {
 		this.mappedRoleNames.clear();
 		this.mappedRoleNames.addAll(names);
-	}    
-	
+	}
+
 	public void addMappedRoleName(String mappedName) {
 		this.mappedRoleNames.add(mappedName);
-	}  	
-	
+	}
+
 	public void removeMappedRoleName(String mappedName) {
 		this.mappedRoleNames.remove(mappedName);
-	}  		
-	
+	}
+
 	public Boolean allows(String resourceName, DataPolicy.PermissionType type) {
 		PermissionMetaData p = null;
 		if (type == PermissionType.LANGUAGE) {
@@ -168,7 +168,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		}
 		return null;
 	}
-	
+
 	private static class RowSecurityState {
 		private String condition;
         private volatile SoftReference<Object> resolvedCondition;
@@ -177,18 +177,18 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         private Integer order;
         private Boolean constraint;
 	}
-	
+
 	public static class PermissionMetaData implements DataPermission, Serializable {
 		private static final long serialVersionUID = 7034744531663164277L;
-        
+
         // XML based fields
         private String resourceName;
         protected byte bits;
         protected byte bitsSet;
         private ResourceType resourceType;
-        
+
         private RowSecurityState rowSecurityState;
-        
+
         @Override
         public String getResourceName() {
             return resourceName;
@@ -197,11 +197,11 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         public void setResourceName(String value) {
             this.resourceName = value;
         }
-        
+
         public void setResourceType(ResourceType resourceType) {
             this.resourceType = resourceType;
         }
-        
+
         @Override
         public ResourceType getResourceType() {
             return resourceType;
@@ -221,7 +221,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	}
             return null;
 		}
-		
+
 		private void setBit(int bitMask, Boolean bool) {
 			if (bool == null) {
 				bitsSet &= (~bitMask);
@@ -266,7 +266,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         public void setAllowDelete(Boolean value) {
         	setBit(0x08, value);
         }
-        
+
         public String getType() {
         	StringBuilder sb = new StringBuilder();
         	if (Boolean.TRUE.equals(getAllowCreate())) {
@@ -280,13 +280,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	}
         	if (Boolean.TRUE.equals(getAllowDelete())) {
         		sb.append("D");//$NON-NLS-1$
-        	}     
+        	}
         	if (Boolean.TRUE.equals(getAllowExecute())) {
         		sb.append("E");//$NON-NLS-1$
-        	}     
+        	}
         	if (Boolean.TRUE.equals(getAllowAlter())) {
         		sb.append("A");//$NON-NLS-1$
-        	}     
+        	}
         	if (Boolean.TRUE.equals(getAllowLanguage())) {
         		sb.append("L");//$NON-NLS-1$
         	}
@@ -300,7 +300,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	}
         	return sb.toString();
         }
-        
+
         public Boolean allows(PermissionType type) {
             switch (type) {
             case ALTER:
@@ -322,7 +322,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	        }
             throw new AssertionError();
         }
-        
+
         @Override
         public Boolean getAllowAlter() {
         	return bitSet(0x10);
@@ -332,20 +332,20 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		public Boolean getAllowExecute() {
         	return bitSet(0x20);
 		}
-		
+
 		public void setAllowAlter(Boolean allowAlter) {
 			setBit(0x10, allowAlter);
 		}
-		
+
 		public void setAllowExecute(Boolean allowExecute) {
 			setBit(0x20, allowExecute);
 		}
-		
+
 		@Override
 		public Boolean getAllowLanguage() {
 			return bitSet(0x40);
 		}
-		
+
 		public void setAllowLanguage(Boolean value) {
 			setBit(0x40, value);
 		}
@@ -358,7 +358,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	sb.append("]");//$NON-NLS-1$
         	return sb.toString();
         }
-		
+
 		@Override
 		public String getCondition() {
 			if (rowSecurityState == null) {
@@ -366,7 +366,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return rowSecurityState.condition;
 		}
-		
+
 		public void setCondition(String filter) {
 			if (rowSecurityState == null) {
 				if (filter == null) {
@@ -376,7 +376,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			this.rowSecurityState.condition = filter;
 		}
-		
+
 		@Override
 		public String getMask() {
 			if (rowSecurityState == null) {
@@ -384,7 +384,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return rowSecurityState.mask;
 		}
-		
+
 		public void setMask(String mask) {
 			if (rowSecurityState == null) {
 				if (mask == null) {
@@ -394,7 +394,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			this.rowSecurityState.mask = mask;
 		}
-		
+
 		@Override
 		public Integer getOrder() {
 			if (rowSecurityState == null) {
@@ -402,7 +402,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return rowSecurityState.order;
 		}
-		
+
 		public void setOrder(Integer order) {
 			if (rowSecurityState == null) {
 				if (order == null) {
@@ -412,7 +412,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			this.rowSecurityState.order = order;
 		}
-		
+
 		public Object getResolvedCondition() {
 			if (rowSecurityState == null) {
 				return null;
@@ -422,14 +422,14 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return null;
 		}
-		
+
 		public void setResolvedCondition(Object resolvedCondition) {
 			if (rowSecurityState == null) {
 				rowSecurityState = new RowSecurityState();
 			}
 			this.rowSecurityState.resolvedCondition = new SoftReference<Object>(resolvedCondition);
 		}
-		
+
 		public Object getResolvedMask() {
 			if (rowSecurityState == null) {
 				return null;
@@ -439,7 +439,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return null;
 		}
-		
+
 		public void setResolvedMask(Object resolvedMask) {
 			if (rowSecurityState == null) {
 				rowSecurityState = new RowSecurityState();
@@ -454,7 +454,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 			}
 			return rowSecurityState.constraint;
 		}
-		
+
 		public void setConstraint(Boolean constraint) {
 			if (rowSecurityState == null) {
 				if (constraint == null) {
@@ -469,7 +469,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     public Boolean isAllowCreateTemporaryTables() {
 		return allowCreateTemporaryTables;
 	}
-    
+
     public void setAllowCreateTemporaryTables(Boolean allowCreateTemporaryTables) {
 		this.allowCreateTemporaryTables = allowCreateTemporaryTables;
 	}
@@ -478,20 +478,20 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	public boolean isAnyAuthenticated() {
 		return this.anyAuthenticated;
 	}
-    
+
     public void setAnyAuthenticated(boolean anyAuthenticated) {
 		this.anyAuthenticated = anyAuthenticated;
 	}
-    
+
     @Override
     public boolean isGrantAll() {
     	return this.grantAll;
     }
-    
+
     public void setGrantAll(boolean grantAll) {
 		this.grantAll = grantAll;
 	}
-    
+
     public DataPolicyMetadata clone() {
     	DataPolicyMetadata clone = new DataPolicyMetadata();
     	clone.allowCreateTemporaryTables = this.allowCreateTemporaryTables;
@@ -507,13 +507,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     	clone.permissions.putAll(this.permissions);
     	return clone;
     }
-    
+
     public Set<String> getSchemas() {
 		return schemas;
 	}
-    
+
     public void setSchemas(Set<String> schemas) {
 		this.schemas = schemas;
 	}
-    
+
 }

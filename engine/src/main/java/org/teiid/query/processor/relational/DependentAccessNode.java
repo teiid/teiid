@@ -53,7 +53,7 @@ public class DependentAccessNode extends AccessNode {
     private Command rewrittenCommand;
 	private boolean useBindings;
 	private boolean complexQuery;
-    
+
     public DependentAccessNode(int nodeID) {
         super(nodeID);
     }
@@ -76,7 +76,7 @@ public class DependentAccessNode extends AccessNode {
         sort = true;
         rewrittenCommand = null;
     }
-    
+
     @Override
     protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
     	if (rewrittenCommand == null) {
@@ -117,11 +117,11 @@ public class DependentAccessNode extends AccessNode {
     public int getMaxSetSize() {
         return this.maxSetSize;
     }
-    
+
     public int getMaxPredicates() {
 		return maxPredicates;
 	}
-    
+
     public void setMaxPredicates(int maxPredicates) {
 		this.maxPredicates = maxPredicates;
 	}
@@ -133,7 +133,7 @@ public class DependentAccessNode extends AccessNode {
     public void setMaxSetSize(int maxSize) {
         this.maxSetSize = maxSize;
     }
-    
+
     /**
      * @see org.teiid.query.processor.relational.AccessNode#prepareNextCommand(org.teiid.query.sql.lang.Command)
      */
@@ -142,7 +142,7 @@ public class DependentAccessNode extends AccessNode {
         Assertion.assertTrue(atomicCommand instanceof Query);
 
         Query query = (Query)atomicCommand;
-        
+
         try {
             if (this.criteriaProcessor == null) {
                 this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
@@ -150,17 +150,17 @@ public class DependentAccessNode extends AccessNode {
                 this.criteriaProcessor.setUseBindings(useBindings);
                 this.criteriaProcessor.setComplexQuery(complexQuery);
             }
-            
+
             if (this.dependentCrit == null) {
                 dependentCrit = criteriaProcessor.prepareCriteria();
             }
-            
+
             query.setCriteria(dependentCrit);
         } catch (BlockedException be) {
             throw new AssertionError("Should not block prior to declining the sort"); //$NON-NLS-1$
             //TODO: the logic could proactively decline the sort rather than throwing an exception
         }
-        
+
         //walk up the tree and notify the parent join it is responsible for the sort
         if (sort && query.getOrderBy() != null && criteriaProcessor.hasNextCommand()) {
             declineSort();
@@ -168,13 +168,13 @@ public class DependentAccessNode extends AccessNode {
         if (!sort) {
             query.setOrderBy(null);
         }
-                
+
         boolean result = RelationalNodeUtil.shouldExecute(atomicCommand, true);
-        
+
         dependentCrit = null;
-        
+
         criteriaProcessor.consumedCriteria();
-        
+
         return result;
     }
 
@@ -212,7 +212,7 @@ public class DependentAccessNode extends AccessNode {
 	public void setPushdown(boolean pushdown) {
 		this.pushdown = pushdown;
 	}
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		Boolean required = super.requiresTransaction(transactionalReads);
@@ -224,15 +224,15 @@ public class DependentAccessNode extends AccessNode {
 		}
 		return null;
 	}
-	
+
 	public boolean isUseBindings() {
 		return useBindings;
 	}
-	
+
 	public void setUseBindings(boolean useBindings) {
 		this.useBindings = useBindings;
 	}
-	
+
 	public void setComplexQuery(boolean complexQuery) {
 		this.complexQuery = complexQuery;
 	}

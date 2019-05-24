@@ -40,20 +40,20 @@ public class TestVDBUtility {
         assertEquals("1", vdb.getVersion());
         assertEquals("vdb-value", vdb.getPropertyValue("vdb-property")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("vdb-value2", vdb.getPropertyValue("vdb-property2")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         assertNotNull(vdb.getModel("model-one")); //$NON-NLS-1$
         assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$
         assertNull(vdb.getModel("model-unknown")); //$NON-NLS-1$
-        
+
         assertEquals(1, vdb.getVDBImports().size());
         VDBImport vdbImport = vdb.getVDBImports().get(0);
         assertEquals("x", vdbImport.getName());
         assertEquals("2", vdbImport.getVersion());
-        
+
         modelOne = vdb.getModel("model-one"); //$NON-NLS-1$
         assertEquals("model-one", modelOne.getName()); //$NON-NLS-1$
         assertEquals("s1", modelOne.getSourceNames().get(0)); //$NON-NLS-1$
-        assertEquals(Model.Type.PHYSICAL, modelOne.getModelType()); 
+        assertEquals(Model.Type.PHYSICAL, modelOne.getModelType());
         assertEquals("model-value-override", modelOne.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
         assertFalse(modelOne.isVisible());
         assertEquals("model description", modelOne.getDescription());
@@ -61,7 +61,7 @@ public class TestVDBUtility {
         assertEquals("DDL Here", modelOne.getSourceMetadataText().get(0));
         assertEquals("OTHER", modelOne.getSourceMetadataType().get(1));
         assertEquals("other text", modelOne.getSourceMetadataText().get(1));
-        
+
         modelTwo = vdb.getModel("model-two"); //$NON-NLS-1$
         assertEquals("model-two", modelTwo.getName()); //$NON-NLS-1$
         assertTrue(modelTwo.getSourceNames().contains("s1")); //$NON-NLS-1$
@@ -70,22 +70,22 @@ public class TestVDBUtility {
         assertEquals("model-value", modelTwo.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("DDL", modelTwo.getSourceMetadataType().get(0));
         assertEquals("DDL Here", modelTwo.getSourceMetadataText().get(0));
-        
-        
+
+
         assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
-        
+
         List<Translator> translators = vdb.getOverrideTranslators();
         assertTrue(translators.size() == 1);
-        
+
         Translator translator = translators.get(0);
         assertEquals("oracleOverride", translator.getName());
         assertEquals("oracle", translator.getType());
         assertEquals("my-value", translator.getPropertyValue("my-property"));
         assertEquals("hello world", translator.getDescription());
         List<DataPolicy> roles = vdb.getDataPolicies();
-        
+
         assertTrue(roles.size() == 1);
-        
+
         DataPolicyMetadata role = vdb.getDataPolicyMap().get("roleOne"); //$NON-NLS-1$
         assertTrue(role.isGrantAll());
         assertTrue(role.isAllowCreateTemporaryTables());
@@ -93,10 +93,10 @@ public class TestVDBUtility {
         assertNotNull(role.getMappedRoleNames());
         assertTrue(role.getMappedRoleNames().contains("ROLE1")); //$NON-NLS-1$
         assertTrue(role.getMappedRoleNames().contains("ROLE2")); //$NON-NLS-1$
-        
+
         List<DataPolicy.DataPermission> permissions = role.getPermissions();
         assertEquals(4, permissions.size());
-        
+
         boolean lang = false;
         for (DataPolicy.DataPermission p: permissions) {
             if (p.getAllowLanguage() != null) {
@@ -131,12 +131,12 @@ public class TestVDBUtility {
         vdb.setVersion(1);
         vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
         vdb.addProperty("vdb-property2", "vdb-value2"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         VDBImportMetadata vdbImport = new VDBImportMetadata();
         vdbImport.setName("x");
         vdbImport.setVersion("2");
         vdb.getVDBImports().add(vdbImport);
-        
+
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model-one"); //$NON-NLS-1$
         modelOne.addSourceMapping("s1", "translator", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -149,9 +149,9 @@ public class TestVDBUtility {
         modelOne.setDescription("model description");
         modelOne.addSourceMetadata("DDL", "DDL Here");
         modelOne.addSourceMetadata("OTHER", "other text");
-        
+
         vdb.addModel(modelOne);
-        
+
         ModelMetaData modelTwo = new ModelMetaData();
         modelTwo.setName("model-two"); //$NON-NLS-1$
         modelTwo.addSourceMapping("s1", "translator", "java:binding-one"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -159,9 +159,9 @@ public class TestVDBUtility {
         modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
         modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
         modelTwo.addSourceMetadata("DDL", "DDL Here");
-        
+
         vdb.addModel(modelTwo);
-        
+
         VDBTranslatorMetaData t1 = new VDBTranslatorMetaData();
         t1.setName("oracleOverride");
         t1.setType("oracle");
@@ -170,18 +170,18 @@ public class TestVDBUtility {
         List<Translator> list = new ArrayList<Translator>();
         list.add(t1);
         vdb.setOverrideTranslators(list);
-        
+
         DataPolicyMetadata roleOne = new DataPolicyMetadata();
         roleOne.setName("roleOne"); //$NON-NLS-1$
         roleOne.setDescription("roleOne described"); //$NON-NLS-1$
         roleOne.setAllowCreateTemporaryTables(true);
         roleOne.setGrantAll(true);
-        
+
         PermissionMetaData perm1 = new PermissionMetaData();
         perm1.setResourceName("myTable.T1"); //$NON-NLS-1$
         perm1.setAllowRead(true);
         roleOne.addPermission(perm1);
-        
+
         PermissionMetaData perm2 = new PermissionMetaData();
         perm2.setResourceName("myTable.T2"); //$NON-NLS-1$
         perm2.setAllowRead(false);
@@ -189,28 +189,28 @@ public class TestVDBUtility {
         perm2.setCondition("col1 = user()");
         perm2.setConstraint(false);
         roleOne.addPermission(perm2);
-        
+
         PermissionMetaData perm3 = new PermissionMetaData();
         perm3.setResourceName("javascript"); //$NON-NLS-1$
         perm3.setAllowLanguage(true);
         roleOne.addPermission(perm3);
-        
+
         PermissionMetaData perm4 = new PermissionMetaData();
         perm4.setResourceName("myTable.T2.col1"); //$NON-NLS-1$
         perm4.setMask("col2");
         perm4.setOrder(1);
         roleOne.addPermission(perm4);
-        
+
         roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         vdb.addDataPolicy(roleOne);
-        
+
         EntryMetaData em = new EntryMetaData();
         em.setPath("/path-one");
         em.setDescription("entry one");
         em.addProperty("entryone", "1");
         vdb.getEntries().add(em);
-        
+
         EntryMetaData em2 = new EntryMetaData();
         em2.setPath("/path-two");
         vdb.getEntries().add(em2);

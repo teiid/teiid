@@ -28,7 +28,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "Marketdata")
 public class Marketdata implements Serializable {
-	
+
 
 	private static final long serialVersionUID = 1783712327461134953L;
 

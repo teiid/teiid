@@ -45,17 +45,17 @@ import org.teiid.translator.accumulo.AccumuloConnection;
 public class AccumuloConnectionImpl extends BasicConnection implements AccumuloConnection {
 	private ConnectorImpl conn;
 	private String[] roles;
-	
+
 	public AccumuloConnectionImpl(AccumuloManagedConnectionFactory mcf, ZooKeeperInstance inst) throws ResourceException {
 		try {
 			if (mcf.getRoles() != null) {
 				List<String> auths = StringUtil.getTokens(mcf.getRoles(), ",");  //$NON-NLS-1$
 				this.roles = auths.toArray(new String[auths.size()]);
 			}
-			
+
 			String userName = mcf.getUsername();
 			String password = mcf.getPassword();
-			
+
 			// if security-domain is specified and caller identity is used; then use
 			// credentials from subject
 			Subject subject = ConnectionContext.getSubject();
@@ -87,15 +87,15 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
             }
         }
     }
-	
+
 	@Override
 	public Connector getInstance() {
 		return conn;
-	}	
-	
+	}
+
 	@Override
 	public void close() throws ResourceException {
-		// Where is the close call on instance Accumulo? Am I supposed to 
+		// Where is the close call on instance Accumulo? Am I supposed to
 		// waste resources??
 	}
 

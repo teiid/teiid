@@ -35,7 +35,7 @@ public class AliasSymbol extends Symbol implements DerivedExpression {
 	private Expression symbol;
 
     /**
-     * Constructor used for cloning 
+     * Constructor used for cloning
      * @param name
      * @param canonicalName
      * @since 4.3
@@ -44,7 +44,7 @@ public class AliasSymbol extends Symbol implements DerivedExpression {
         super(name);
         setSymbol(symbol);
     }
-    
+
 	/**
 	 * Construct an AliasSymbol given the alias name and the underlying symbol.
 	 * @param name Name of the alias
@@ -95,8 +95,8 @@ public class AliasSymbol extends Symbol implements DerivedExpression {
 		result.outputName = this.outputName;
 		return result;
 	}
-	
-   /** 
+
+   /**
      * @see org.teiid.query.sql.symbol.Symbol#equals(java.lang.Object)
      */
     @Override

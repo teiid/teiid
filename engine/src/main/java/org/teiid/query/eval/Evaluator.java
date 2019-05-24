@@ -78,7 +78,7 @@ public class Evaluator {
 	private final class SequenceReader extends Reader {
 		private LinkedList<Reader> readers;
 		private Reader current = null;
-		
+
 		public SequenceReader(LinkedList<Reader> readers) {
 			this.readers = readers;
 		}
@@ -89,7 +89,7 @@ public class Evaluator {
 				try {
 					reader.close();
 				} catch (IOException e) {
-					
+
 				}
 			}
 		}
@@ -108,7 +108,7 @@ public class Evaluator {
 				current.close();
 				current = null;
 				read = 0;
-			} 
+			}
 			if (read < len) {
 				int nextRead = read(cbuf, off + read, len - read);
 				if (nextRead > 0) {
@@ -122,7 +122,7 @@ public class Evaluator {
 	public static class NameValuePair<T> {
 		public String name;
 		public T value;
-		
+
 		public NameValuePair(String name, T value) {
 			this.name = name;
 			this.value = value;
@@ -131,32 +131,32 @@ public class Evaluator {
 
 	public final static char[] REGEX_RESERVED = new char[] {'$', '(', ')', '*', '+', '.', '?', '[', '\\', ']', '^', '{', '|', '}'}; //in sorted order
     private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(new char[] {'%', '_'}, new String[] {".*", "."},  REGEX_RESERVED, '\\', Pattern.DOTALL);  //$NON-NLS-1$ //$NON-NLS-2$
-    
+
     private final static char[] SIMILAR_REGEX_RESERVED = new char[] {'$', '.', '\\', '^'}; //in sorted order
     public final static MatchCriteria.PatternTranslator SIMILAR_TO_REGEX = new MatchCriteria.PatternTranslator(
-    		new char[] {'%', '(', ')', '*', '?', '+', '[', ']', '_', '{', '|', '}'}, 
+    		new char[] {'%', '(', ')', '*', '?', '+', '[', ']', '_', '{', '|', '}'},
     		new String[] {"([a]|[^a])*", "(", ")", "*", "?", "+", //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$ //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$
-    				"[", "]", "([a]|[^a])", "{", "|", "}"},  SIMILAR_REGEX_RESERVED, '\\', 0);  //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$ //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$  
-    
+    				"[", "]", "([a]|[^a])", "{", "|", "}"},  SIMILAR_REGEX_RESERVED, '\\', 0);  //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$ //$NON-NLS-4$  //$NON-NLS-5$ //$NON-NLS-6$
+
     protected Map elements;
-    
+
     protected ProcessorDataManager dataMgr;
     protected CommandContext context;
-    
+
     public static boolean evaluate(Criteria criteria) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
     	return new Evaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
     }
-    
+
     public static Object evaluate(Expression expression) throws ExpressionEvaluationException, BlockedException, TeiidComponentException  {
     	return new Evaluator(Collections.emptyMap(), null, null).evaluate(expression, Collections.emptyList());
     }
-    
+
     public Evaluator(Map elements, ProcessorDataManager dataMgr, CommandContext context) {
 		this.context = context;
 		this.dataMgr = dataMgr;
 		this.elements = elements;
 	}
-    
+
     public void initialize(CommandContext context, ProcessorDataManager dataMgr) {
 		this.context = context;
 		this.dataMgr = dataMgr;
@@ -170,7 +170,7 @@ public class Evaluator {
 
     public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
         throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-    	
+
 		return internalEvaluateTVL(criteria, tuple);
 	}
 
@@ -203,7 +203,7 @@ public class Evaluator {
              throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30311, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30311, criteria));
 		}
 	}
-	
+
 	private interface RowValue {
 	    Object get(int index) throws ExpressionEvaluationException, BlockedException, TeiidComponentException;
 	    int length();
@@ -224,7 +224,7 @@ public class Evaluator {
         		if (r != null) {
         			result = true;
         			break;
-        		} 
+        		}
     		    continue;
         	} else if (r == null) {
         	    result = true;
@@ -248,7 +248,7 @@ public class Evaluator {
         }
         if (idc.isNegated()) {
         	return !result;
-        } 
+        }
         return result;
     }
 
@@ -258,14 +258,14 @@ public class Evaluator {
             TempMetadataID id = (TempMetadataID)leftRowValue.getMetadataID();
             VariableContext vc = this.context.getVariableContext();
             List<TempMetadataID> cols = id.getElements();
-                
+
             return new RowValue() {
-                
+
                 @Override
                 public int length() {
                     return cols.size();
                 }
-                
+
                 @Override
                 public Object get(int index) {
                     return vc.getValue(new ElementSymbol(cols.get(index).getName(), leftRowValue));
@@ -273,12 +273,12 @@ public class Evaluator {
             };
         }
         return new RowValue() {
-            
+
             @Override
             public int length() {
                 return 1;
             }
-            
+
             @Override
             public Object get(int index) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
                 return internalEvaluate((Expression) lo, tuple);
@@ -371,9 +371,9 @@ public class Evaluator {
 		if(value == null) {
             return null;
         }
-        
+
         CharSequence leftValue = null;
-        
+
         if (value instanceof CharSequence) {
             leftValue = (CharSequence)value;
         } else {
@@ -396,9 +396,9 @@ public class Evaluator {
 		if(rightValue == null) {
             return null;
         }
-        
+
         result = match(rightValue, criteria.getEscapeChar(), leftValue, criteria.getMode());
-        
+
         return Boolean.valueOf(result ^ criteria.isNegated());
 	}
 
@@ -419,7 +419,7 @@ public class Evaluator {
 		default:
 			throw new AssertionError();
 		}
-		
+
         Matcher matcher = patternRegex.matcher(search);
         return matcher.find();
 	}
@@ -511,11 +511,11 @@ public class Evaluator {
 			    result = null;
             }
 		}
-        
+
         if (result == null) {
             return null;
         }
-        
+
         return Boolean.valueOf(criteria.isNegated());
 	}
 
@@ -574,12 +574,12 @@ public class Evaluator {
 			}
         	valueIter = new ValueIterator() {
 				int index = 0;
-				
+
 				@Override
 				public void reset() {
 					index = 0;
 				}
-				
+
 				@Override
 				public boolean hasNext() {
 					return index < vals.length;
@@ -596,7 +596,7 @@ public class Evaluator {
         }
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
-            
+
             // Shortcut if null
             if(leftValue == null) {
                 return null;
@@ -701,20 +701,20 @@ public class Evaluator {
         }
         return criteria.isNegated();
     }
-    
+
 	public Object evaluate(Expression expression, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-	
+
 	    try {
 			return internalEvaluate(expression, tuple);
 	    } catch (ExpressionEvaluationException e) {
 	         throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30328, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, new Object[] {expression, e.getMessage()}));
 	    }
 	}
-	
+
 	protected Object internalEvaluate(Expression expression, List<?> tuple)
 	   throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-	
+
 	   if(expression instanceof DerivedExpression) {
 		   if (elements != null) {
 		       // Try to evaluate by lookup in the elements map (may work for both ElementSymbol and ExpressionSymbol
@@ -723,16 +723,16 @@ public class Evaluator {
 		           return tuple.get(index.intValue());
 		       }
 		   }
-		   
+
 	       // Otherwise this should be an ExpressionSymbol and we just need to dive in and evaluate the expression itself
-	       if (expression instanceof ExpressionSymbol) {            
+	       if (expression instanceof ExpressionSymbol) {
 	           ExpressionSymbol exprSyb = (ExpressionSymbol) expression;
 	           Expression expr = exprSyb.getExpression();
 	           return internalEvaluate(expr, tuple);
-	       } 
-	       
+	       }
+
 	       return getContext(expression).getFromContext(expression);
-	   } 
+	   }
 	   if(expression instanceof Constant) {
 	       Constant c = (Constant) expression;
 	       if (c.isMultiValued()) {
@@ -920,7 +920,7 @@ public class Evaluator {
 		String path = (String)internalEvaluate(queryString.getPath(), tuple);
 		if (path == null) {
 			path = ""; //$NON-NLS-1$
-		} 
+		}
 		boolean appendedAny = false;
 		StringBuilder result = new StringBuilder();
 		for (Evaluator.NameValuePair<Object> nameValuePair : pairs) {
@@ -942,7 +942,7 @@ public class Evaluator {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param tuple
 	 * @param xmlQuery
 	 * @param exists - check only for the existence of a non-empty result
@@ -962,7 +962,7 @@ public class Evaluator {
         }
         return XMLHelper.getInstance().evaluateXMLQuery(tuple, xmlQuery, exists, parameters, context);
 	}
-	
+
 	private Object evaluateXMLSerialize(List<?> tuple, XMLSerialize xs)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
@@ -988,7 +988,7 @@ public class Evaluator {
 		}
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30336, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30336));
 	}
-	
+
 	private static TextLine.ValueExtractor<NameValuePair<Object>> defaultExtractor = new TextLine.ValueExtractor<NameValuePair<Object>>() {
 		public Object getValue(NameValuePair<Object> t) {
 			return t.value;
@@ -998,7 +998,7 @@ public class Evaluator {
 	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
 		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, false, true);
-		
+
 		try {
 			return new ArrayImpl(TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function));
 		} catch (TransformationException e) {
@@ -1012,15 +1012,15 @@ public class Evaluator {
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getArgs();
-		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true, true); 
-			
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true, true);
+
 		try {
 			return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
 		} catch (TeiidProcessingException e) {
 			 throw new FunctionExecutionException(e);
 		}
 	}
-	
+
 	private JsonType evaluateJSONObject(List<?> tuple, JSONObject function, JSONBuilder builder)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, FunctionExecutionException {
@@ -1080,7 +1080,7 @@ public class Evaluator {
 			throw e;
 		}
 	}
-	
+
 	public static JsonType jsonArray(CommandContext context, Function f, Object[] vals, JSONBuilder builder, Evaluator eval, List<?> tuple) throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		boolean returnValue = false;
 		try {
@@ -1134,7 +1134,7 @@ public class Evaluator {
 			throw new FunctionExecutionException(e);
 		}
 	}
-	
+
 	/**
 	 * Evaluate the parameters and return the context item if it exists
 	 */
@@ -1205,7 +1205,7 @@ public class Evaluator {
 		}
 		return nameValuePairs;
 	}
-	
+
 	private Evaluator.NameValuePair<String>[] namespaces(XMLNamespaces namespaces) {
 		if (namespaces == null) {
 			return null;
@@ -1215,10 +1215,10 @@ public class Evaluator {
 	    for(int i=0; i < args.size(); i++) {
 	    	NamespaceItem item = args.get(i);
 	    	nameValuePairs[i] = new Evaluator.NameValuePair<String>(item.getPrefix(), item.getUri());
-	    } 
+	    }
 	    return nameValuePairs;
 	}
-	
+
 	private Object evaluate(CaseExpression expr, List<?> tuple)
 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	    Object exprVal = internalEvaluate(expr.getExpression(), tuple);
@@ -1232,7 +1232,7 @@ public class Evaluator {
 	    }
 	    return null;
 	}
-	
+
 	private Object evaluate(SearchedCaseExpression expr, List<?> tuple)
 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	    for (int i = 0; i < expr.getWhenCount(); i++) {
@@ -1245,18 +1245,18 @@ public class Evaluator {
 	    }
 	    return null;
 	}
-	
+
 	private Object evaluate(Function function, List<?> tuple)
 		throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
-	
+
 	    // Get function based on resolved function info
 	    FunctionDescriptor fd = function.getFunctionDescriptor();
-	    
+
 		// Evaluate args
 		Expression[] args = function.getArgs();
 	    Object[] values = null;
 	    int start = 0;
-	    
+
 	    if (fd.requiresContext()) {
 			values = new Object[args.length+1];
 	        values[0] = context;
@@ -1265,15 +1265,15 @@ public class Evaluator {
 	    else {
 	        values = new Object[args.length];
 	    }
-	    
+
 	    for(int i=0; i < args.length; i++) {
 	        values[i+start] = internalEvaluate(args[i], tuple);
 	        if (values[i+start] instanceof Constant) {
 	            //leaked a multivalued constant
 	            throw new AssertionError("Multi-valued constant not allowed to be directly evaluated"); //$NON-NLS-1$
 	        }
-	    }            
-	    
+	    }
+
 	    if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
 	    	try {
 				return evaluatePushdown(function, tuple, values);
@@ -1281,7 +1281,7 @@ public class Evaluator {
 				throw new ExpressionEvaluationException(e);
 			}
 	    }
-	    
+
 	    if (fd.getProcedure() != null) {
 	    	try {
 				return evaluateProcedure(function, tuple, values);
@@ -1289,28 +1289,28 @@ public class Evaluator {
 				throw new ExpressionEvaluationException(e);
 			}
 	    }
-	    
+
 	    // Check for special lookup function
 	    if(function.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 	        if(dataMgr == null) {
 	             throw new ComponentNotFoundException(QueryPlugin.Event.TEIID30342, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30342));
 	        }
-	
+
 	        String codeTableName = (String) values[0];
 	        String returnElementName = (String) values[1];
 	        String keyElementName = (String) values[2];
-	        
+
 	        try {
 				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
 			} catch (TeiidProcessingException e) {
 				throw new ExpressionEvaluationException(e);
 			}
 	    }
-	    
+
 		// Execute function
 		return fd.invokeFunction(values, context, null);
 	}
-	
+
 	protected Object evaluatePushdown(Function function, List<?> tuple,
 			Object[] values) throws FunctionExecutionException, TeiidComponentException, TeiidProcessingException {
 		throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, function.getFunctionDescriptor().getFullName()));
@@ -1318,7 +1318,7 @@ public class Evaluator {
 
 	private Object evaluate(ScalarSubquery scalarSubquery, List<?> tuple)
 	    throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-		
+
 	    Object result = null;
         ValueIterator valueIter;
 		try {
@@ -1336,7 +1336,7 @@ public class Evaluator {
 	    }
 	    return result;
 	}
-	
+
 	/**
 	 * @param container
 	 * @param tuple
@@ -1345,7 +1345,7 @@ public class Evaluator {
 	 * @throws BlockedException
 	 * @throws TeiidComponentException
 	 */
-	protected ValueIterator evaluateSubquery(SubqueryContainer<?> container, List<?> tuple) 
+	protected ValueIterator evaluateSubquery(SubqueryContainer<?> container, List<?> tuple)
 	throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		throw new UnsupportedOperationException("Subquery evaluation not possible with a base Evaluator"); //$NON-NLS-1$
 	}
@@ -1361,6 +1361,6 @@ public class Evaluator {
 			Object[] values) throws TeiidComponentException,
 			TeiidProcessingException {
 		throw new UnsupportedOperationException("Procedure evaluation not possible with a base Evaluator"); //$NON-NLS-1$
-	}   
-	    
+	}
+
 }

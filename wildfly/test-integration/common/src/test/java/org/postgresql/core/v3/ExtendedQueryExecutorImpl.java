@@ -31,7 +31,7 @@ import org.postgresql.core.ResultHandler;
 
 /**
  * Allows for simple query executions against an implied cursor portal
- * 
+ *
  * This is hack to test cursoring through jdbc
  *
  */
@@ -39,11 +39,11 @@ import org.postgresql.core.ResultHandler;
 public class ExtendedQueryExecutorImpl extends QueryExecutorImpl {
 
 	public static String simplePortal;
-	
+
 	public PGStream stream;
 	public Deque<ExecuteRequest> pendingExecute;
 	public Deque<SimpleQuery> pendingDescribe;
-	
+
 	public ExtendedQueryExecutorImpl(PGStream pgStream, String user, String database, int cancelSignalTimeout, Properties info) throws SQLException, IOException {
 		super(pgStream, user, database, cancelSignalTimeout, info);
 		this.stream = pgStream;
@@ -58,7 +58,7 @@ public class ExtendedQueryExecutorImpl extends QueryExecutorImpl {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@Override
 	public synchronized void execute(Query query, ParameterList parameters,
 			ResultHandler handler, int maxRows, int fetchSize, int flags)
@@ -66,7 +66,7 @@ public class ExtendedQueryExecutorImpl extends QueryExecutorImpl {
 		if (simplePortal != null) {
 			try {
 				byte[] bytes = query.toString().getBytes("UTF-8");
-				
+
 				stream.sendChar('Q');
 				stream.sendInteger4(bytes.length + 6);
 				stream.send(bytes);

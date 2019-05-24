@@ -28,12 +28,12 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
 
 /**
  * Note: this is currently only accurate for {@link PreparedStatement}s.
- * Only the basic type information will be accurate for {@link CallableStatement}s. 
+ * Only the basic type information will be accurate for {@link CallableStatement}s.
  */
 public class ParameterMetaDataImpl extends WrapperImpl implements ParameterMetaData {
-	
+
 	private ResultSetMetaDataImpl metadata;
-	
+
 	public ParameterMetaDataImpl(ResultSetMetaDataImpl metadata) {
 		this.metadata = metadata;
 	}
@@ -82,7 +82,7 @@ public class ParameterMetaDataImpl extends WrapperImpl implements ParameterMetaD
 	public boolean isSigned(int param) throws SQLException {
 		return metadata.isSigned(param);
 	}
-	
+
 	public String getParameterName(int param) throws SQLException {
 		return metadata.getColumnName(param);
 	}

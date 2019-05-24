@@ -27,14 +27,14 @@ import junit.framework.TestCase;
 
 
 public class TestYahooTranslation extends TestCase {
-	
+
     public void helpTestTranslation(String sql, String expectedUrl) throws Exception {
         Command command = FakeTranslationFactory.getInstance().getYahooTranslationUtility().parseCommand(sql);
-        
+
         String url = YahooExecution.translateIntoUrl((Select) command);
         assertEquals("Did not get expected url", expectedUrl, url); //$NON-NLS-1$
     }
-    
+
     public void testURLTranslation1() throws Exception {
         helpTestTranslation(
             "SELECT LastTrade FROM Yahoo.QuoteServer WHERE TickerSymbol = 'BA'",  //$NON-NLS-1$
@@ -46,7 +46,7 @@ public class TestYahooTranslation extends TestCase {
             "SELECT LastTrade FROM Yahoo.QuoteServer WHERE TickerSymbol IN ('BA', 'MON')",  //$NON-NLS-1$
             "http://finance.yahoo.com/d/quotes.csv?s=MON+BA&f=sl1d1t1c1ohgv&e=.csv"); //$NON-NLS-1$
     }
-    
+
     public void testURLTranslation3() throws Exception {
         helpTestTranslation(
             "SELECT LastTrade FROM Yahoo.QuoteServer WHERE TickerSymbol = 'BA' OR TickerSymbol = 'MON'",  //$NON-NLS-1$

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
  package org.teiid.query.sql.symbol;
 
 import org.teiid.core.util.EquivalenceUtil;
@@ -25,27 +25,27 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class WindowFunction implements LanguageObject, DerivedExpression {
-	
+
 	private AggregateSymbol function;
 	private WindowSpecification windowSpecification;
-	
+
 	public AggregateSymbol getFunction() {
 		return function;
 	}
-	
+
 	public void setFunction(AggregateSymbol expression) {
 		this.function = expression;
 		this.function.setWindowed(true);
 	}
-	
+
 	public WindowSpecification getWindowSpecification() {
 		return windowSpecification;
 	}
-	
+
 	public void setWindowSpecification(WindowSpecification windowSpecification) {
 		this.windowSpecification = windowSpecification;
 	}
-	
+
 	@Override
 	public Class<?> getType() {
 		return function.getType();
@@ -55,12 +55,12 @@ public class WindowFunction implements LanguageObject, DerivedExpression {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(function.hashCode(), windowSpecification);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -73,7 +73,7 @@ public class WindowFunction implements LanguageObject, DerivedExpression {
 		return EquivalenceUtil.areEqual(this.function, other.function) &&
 		EquivalenceUtil.areEqual(this.windowSpecification, other.windowSpecification);
 	}
-	
+
 	@Override
 	public WindowFunction clone() {
 		WindowFunction clone = new WindowFunction();
@@ -81,10 +81,10 @@ public class WindowFunction implements LanguageObject, DerivedExpression {
 		clone.setWindowSpecification(this.windowSpecification.clone());
 		return clone;
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

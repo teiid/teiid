@@ -32,12 +32,12 @@ import junit.framework.TestCase;
 
 
 /**
- * <p><code>TestCase</code> to cover processing of JOINs which use a scalar 
+ * <p><code>TestCase</code> to cover processing of JOINs which use a scalar
  * function as a symbol or as part of the JOIN criteria.</p>
- * 
- * <p>All tests should verify and validate that the scalar function's result 
- * is being used appropriately from the pre-JOIN and post-JOIN aspect.  Most 
- * specifically, the results returned from the JOIN should match the expected 
+ *
+ * <p>All tests should verify and validate that the scalar function's result
+ * is being used appropriately from the pre-JOIN and post-JOIN aspect.  Most
+ * specifically, the results returned from the JOIN should match the expected
  * results defined in each test method.</p>
  * @since 6.0
  */
@@ -46,11 +46,11 @@ public class TestJoinWithFunction extends TestCase {
 	/**
 	 * <p>Test the use of a non-deterministic function on a user command that
 	 * performs a JOIN of two sources.</p>
-	 * 
+	 *
 	 * <p>The function should be executed on the result returned from the JOIN and
 	 * is expected to be executed for each row of the final result set.</p>
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	public void testNonDeterministicPostJoin() throws Exception {
 		// source query for one side of a JOIN
@@ -63,7 +63,7 @@ public class TestJoinWithFunction extends TestCase {
 		// User Command
 		/*
 		 * Return everything from the JOIN. RandomTop is the use of RAND() on
-		 * the user command and should result in unique random numbers for each 
+		 * the user command and should result in unique random numbers for each
 		 * row in the JOINed output.
 		 */
 		String sql = "SELECT l.ID, l.e2, l.e3, l.e4, r.ID, r.e2, r.e3, r.e4, RAND() AS RandomTop " + //$NON-NLS-1$
@@ -73,8 +73,8 @@ public class TestJoinWithFunction extends TestCase {
 
 		/*
 		 * Populate a List with our expected results. We can predict the return value
-		 * for RAND() because the TestProcessor.helpProcess() method seeds the random 
-		 * number generator. 
+		 * for RAND() because the TestProcessor.helpProcess() method seeds the random
+		 * number generator.
 		 */
 		List<?>[] expected = new List[] {
 				Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -93,13 +93,13 @@ public class TestJoinWithFunction extends TestCase {
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
@@ -109,18 +109,18 @@ public class TestJoinWithFunction extends TestCase {
 	/**
 	 * <p>Test the use of a non-deterministic function on a source command of a JOIN
 	 * defined by a user command that performs a JOIN of two sources.</p>
-	 * 
+	 *
 	 * <p>The function should be executed on the result that will be used for one side
 	 * of the JOIN.  The function should only be executed for each row of the the result
-	 * set returned from the left-side of the JOIN which should result in the same return 
-	 * value for multiple rows of the final result set after the JOIN is completed.  For 
-	 * example, if the left-side query is expected to return one row and the right-side 
-	 * query will return three rows which match the JOIN criteria for the one row on the 
-	 * left-side then the expected result should be that the function be executed once to 
-	 * represent the one row from the left-side and the function's return value will be 
+	 * set returned from the left-side of the JOIN which should result in the same return
+	 * value for multiple rows of the final result set after the JOIN is completed.  For
+	 * example, if the left-side query is expected to return one row and the right-side
+	 * query will return three rows which match the JOIN criteria for the one row on the
+	 * left-side then the expected result should be that the function be executed once to
+	 * represent the one row from the left-side and the function's return value will be
 	 * repeated for each of the three post-JOINed results.</p>
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	public void testNonDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
@@ -143,8 +143,8 @@ public class TestJoinWithFunction extends TestCase {
 
 		/*
 		 * Populate a List with our expected results. We can predict the return value
-		 * for RAND() because the TestProcessor.helpProcess() method seeds the random 
-		 * number generator. 
+		 * for RAND() because the TestProcessor.helpProcess() method seeds the random
+		 * number generator.
 		 */
 		List<?>[] expected = new List[] {
 				Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -158,19 +158,19 @@ public class TestJoinWithFunction extends TestCase {
 						new Boolean(true), new Double(2.0), new Double(0.6374174253501083) }),
 				Arrays.asList(new Object[] { "b", new Integer(1), //$NON-NLS-1$
 						new Boolean(true), null, "b", new Integer(2), //$NON-NLS-1$
-						new Boolean(false), null, new Double(0.6374174253501083) }), 
+						new Boolean(false), null, new Double(0.6374174253501083) }),
 		};
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
@@ -180,12 +180,12 @@ public class TestJoinWithFunction extends TestCase {
 	/**
 	 * <p>Test the use of a non-deterministic function on the sub-command of a user
 	 * command and the user command itself, which performs a JOIN of two sources.</p>
-	 * 
+	 *
 	 * <p>This test combines the PostJoin and PreJoin test cases.</p>
 	 * @see #testNonDeterministicPostJoin
 	 * @see #testNonDeterministicPreJoin
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	public void testNonDeterministicPrePostJoin() throws Exception {
 		// source query for one side of a JOIN
@@ -205,11 +205,11 @@ public class TestJoinWithFunction extends TestCase {
 				"FROM (" + leftQuery + ") AS l, " + //$NON-NLS-1$ //$NON-NLS-2$
 				"(" + rightQuery + ") AS r " + //$NON-NLS-1$ //$NON-NLS-2$
 				"WHERE l.ID = r.ID"; //$NON-NLS-1$
-		
+
 		/*
 		 * Populate a List with our expected results. We can predict the return value
-		 * for RAND() because the TestProcessor.helpProcess() method seeds the random 
-		 * number generator. 
+		 * for RAND() because the TestProcessor.helpProcess() method seeds the random
+		 * number generator.
 		 */
 		List<?>[] expected = new List[] {
 			Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -229,13 +229,13 @@ public class TestJoinWithFunction extends TestCase {
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
@@ -245,8 +245,8 @@ public class TestJoinWithFunction extends TestCase {
 	/**
 	 * <p>Test the use of a deterministic function on the user command which
 	 * performs a JOIN of two sources.</p>
-	 * 
-	 * <p>The function should be executed prior to the JOIN being executed and should 
+	 *
+	 * <p>The function should be executed prior to the JOIN being executed and should
 	 * result in the projected symbol becoming a constant.</p>
 	 * @throws TeiidComponentException
 	 * @throws QueryMetadataException
@@ -262,7 +262,7 @@ public class TestJoinWithFunction extends TestCase {
 		// User Command
 		/*
 		 * Return everything from the JOIN. SqrtTop is the use of SQRT(100) on
-		 * the user command and should result in 10 for each row in the JOINed 
+		 * the user command and should result in 10 for each row in the JOINed
 		 * output.
 		 */
 		String sql = "SELECT l.ID, l.e2, l.e3, l.e4, r.ID, r.e2, r.e3, r.e4, SQRT(100) AS SqrtTop " + //$NON-NLS-1$
@@ -271,7 +271,7 @@ public class TestJoinWithFunction extends TestCase {
 				"WHERE l.ID = r.ID"; //$NON-NLS-1$
 
 		/*
-		 * Populate a List with our expected results.  
+		 * Populate a List with our expected results.
 		 */
 		List<?>[] expected = new List[] {
 				Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -285,19 +285,19 @@ public class TestJoinWithFunction extends TestCase {
 						new Boolean(true), new Double(2.0), new Double(10) }),
 				Arrays.asList(new Object[] { "b", new Integer(1), //$NON-NLS-1$
 						new Boolean(true), null, "b", new Integer(2), //$NON-NLS-1$
-						new Boolean(false), null, new Double(10) }), 
+						new Boolean(false), null, new Double(10) }),
 		};
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
@@ -305,17 +305,17 @@ public class TestJoinWithFunction extends TestCase {
 	}
 
 	/**
-	 * <p>The function should be executed prior to the JOIN being executed and should 
+	 * <p>The function should be executed prior to the JOIN being executed and should
 	 * result in the projected symbol becoming a constant.</p>
 
 	 * <p>Test the use of a deterministic function on the source command of a JOIN
 	 * defined by a user command which performs a JOIN of two sources.</p>
-	 * 
+	 *
 	 * <p>The function should be executed prior to the commands from either side of the
-	 * JOIN being executed and merged into user command prior to the JOIN actually being 
+	 * JOIN being executed and merged into user command prior to the JOIN actually being
 	 * executed.</p>
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	public void testDeterministicPreJoin() throws Exception {
 		// source query for one side of a JOIN
@@ -327,7 +327,7 @@ public class TestJoinWithFunction extends TestCase {
 
 		// User Command
 		/*
-		 * Return everything from the JOIN. SqrtLeft is the use of SQRT() 
+		 * Return everything from the JOIN. SqrtLeft is the use of SQRT()
 		 * within a source node.
 		 */
 		String sql = "SELECT l.ID, l.e2, l.e3, l.e4, r.ID, r.e2, r.e3, r.e4, l.SqrtLeft " + //$NON-NLS-1$
@@ -336,7 +336,7 @@ public class TestJoinWithFunction extends TestCase {
 				"WHERE l.ID = r.ID"; //$NON-NLS-1$
 
 		/*
-		 * Populate a List with our expected results. 
+		 * Populate a List with our expected results.
 		 */
 		List<?>[] expected = new List[] {
 				Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -350,19 +350,19 @@ public class TestJoinWithFunction extends TestCase {
 						new Boolean(true), new Double(2.0), new Double(10) }),
 				Arrays.asList(new Object[] { "b", new Integer(1), //$NON-NLS-1$
 						new Boolean(true), null, "b", new Integer(2), //$NON-NLS-1$
-						new Boolean(false), null, new Double(10) }), 
+						new Boolean(false), null, new Double(10) }),
 		};
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query
@@ -372,10 +372,10 @@ public class TestJoinWithFunction extends TestCase {
 	/**
 	 * <p>Test the use of a deterministic function on the sub-command of a user
 	 * command and the user command itself, which performs a JOIN of two sources.</p>
-	 * 
+	 *
 	 * <p>This test combines the PostJoin and PreJoin test cases.</p>
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 * @see #testDeterministicPostJoin
 	 * @see #testDeterministicPreJoin
 	 */
@@ -399,7 +399,7 @@ public class TestJoinWithFunction extends TestCase {
 				"WHERE l.ID = r.ID"; //$NON-NLS-1$
 
 		/*
-		 * Populate a List with our expected results. 
+		 * Populate a List with our expected results.
 		 */
 		List<?>[] expected = new List[] {
 				Arrays.asList(new Object[] { "a", new Integer(0), //$NON-NLS-1$
@@ -413,19 +413,19 @@ public class TestJoinWithFunction extends TestCase {
 						new Boolean(true), new Double(2.0), new Double(10.0), new Double(10.0) }),
 				Arrays.asList(new Object[] { "b", new Integer(1), //$NON-NLS-1$
 						new Boolean(true), null, "b", new Integer(2), //$NON-NLS-1$
-						new Boolean(false), null, new Double(10.0), new Double(10.0) }), 
+						new Boolean(false), null, new Double(10.0), new Double(10.0) }),
 		};
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
         FakeDataStore.sampleData2(dataManager);
-        
+
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        Command command = TestProcessor.helpParse(sql);   
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
 
         // Run query

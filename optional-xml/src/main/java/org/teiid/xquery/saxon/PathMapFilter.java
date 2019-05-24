@@ -42,20 +42,20 @@ import net.sf.saxon.type.Type;
 
 /**
  * A filter that uses the PathMap to determine what should be included in the document
- * 
+ *
  * TODO: optimize filtering by not reconstructing the matchcontexts
- * TODO: we may still need to do xom/nux style handling of large results, but 
+ * TODO: we may still need to do xom/nux style handling of large results, but
  *       that requires more analysis to determine subtree independence
  */
 class PathMapFilter extends ProxyReceiver {
-	
+
 	static class MatchContext {
 		List<PathMapArc> elementArcs;
 		List<PathMapArc> attributeArcs;
 		boolean matchedElement;
 		boolean matchesText;
 		boolean matchesComment;
-		
+
 		void bulidContext(PathMapNode node) {
 			for (PathMapArc arc : node.getArcs()) {
     			processArc(arc);
@@ -89,7 +89,7 @@ class PathMapFilter extends ProxyReceiver {
 		private void addAnyNodeArc(PathMapArc arc) {
 			if (arc.getAxis() == AxisInfo.ATTRIBUTE) {
 				addAttributeArc(arc);
-				return;	
+				return;
 			}
 			addElementArc(arc);
 			addAttributeArc(arc);
@@ -115,14 +115,14 @@ class PathMapFilter extends ProxyReceiver {
 	private boolean closed;
 	private LinkedList<MatchContext> matchContext = new LinkedList<MatchContext>();
 	private boolean logTrace = LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE);
-	
+
 	public PathMapFilter(PathMapRoot root, Receiver receiver) {
 		super(receiver);
 		MatchContext mc = new MatchContext();
 		mc.bulidContext(root);
 		matchContext.add(mc);
 	}
-	
+
 	@Override
 	public void startElement(NodeName elemName, SchemaType typeCode,
 			Location locationId, int properties) throws XPathException {
@@ -138,7 +138,7 @@ class PathMapFilter extends ProxyReceiver {
 					    //we must expect the text as there are no further arcs
 					    newContext.matchesText = true;
 					}
-				} 
+				}
 				if (arc.getAxis() == AxisInfo.DESCENDANT || arc.getAxis() == AxisInfo.DESCENDANT_OR_SELF) {
 					newContext.processArc(arc);
 				}
@@ -151,7 +151,7 @@ class PathMapFilter extends ProxyReceiver {
 			LogManager.logTrace(LogConstants.CTX_RUNTIME, "Document projection did not match element", elemName.getURI(), ':', elemName.getLocalPart()); //$NON-NLS-1$
 		}
 	}
-	
+
 	@Override
 	public void attribute(NodeName nameCode, SimpleType typeCode,
 			CharSequence value, Location locationId, int properties)
@@ -170,7 +170,7 @@ class PathMapFilter extends ProxyReceiver {
 				if (test == null || test.matches(Type.ATTRIBUTE, nameCode, typeCode)) {
 					super.attribute(nameCode, typeCode, value, locationId, properties);
 					return;
-				} 
+				}
 			}
 		}
 	}
@@ -202,7 +202,7 @@ class PathMapFilter extends ProxyReceiver {
 			super.processingInstruction(target, data, locationId, properties);
 		}
 	}
-	
+
 	@Override
 	public void namespace(NamespaceBindingSet namespaceBindings, int properties)
 	        throws XPathException {
@@ -219,7 +219,7 @@ class PathMapFilter extends ProxyReceiver {
 			super.endElement();
 		}
 	}
-	
+
 	@Override
 	public void startContent() throws XPathException {
 		MatchContext context = matchContext.getLast();
@@ -227,7 +227,7 @@ class PathMapFilter extends ProxyReceiver {
 			super.startContent();
 		}
 	}
-	
+
 	@Override
 	public void close() throws XPathException {
 		if (!closed) {

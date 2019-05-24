@@ -55,22 +55,22 @@ import org.teiid.query.util.CommandContext;
  * Handles object table processing.
  */
 public class ObjectTableNode extends SubqueryAwareRelationalNode {
-    
+
     private static class ReflectiveArrayIterator implements Iterator<Object> {
         private int index;
         private Object array;
         private int length;
-        
+
         ReflectiveArrayIterator(Object array) {
             this.array = array;
             length = java.lang.reflect.Array.getLength(this.array);
         }
-        
+
         @Override
         public boolean hasNext() {
             return index < length;
         }
-        
+
         @Override
         public Object next() {
             if (index >= length) {
@@ -78,33 +78,33 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
             }
             return java.lang.reflect.Array.get(array, index++);
         }
-        
+
     }
 
 	private static final String TEIID_ROW_NUMBER = "teiid_row_number"; //$NON-NLS-1$
 	private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
 	private static final String TEIID_CONTEXT = "teiid_context"; //$NON-NLS-1$
-	
+
 	private ObjectTable table;
 	private List<ObjectColumn> projectedColumns;
-	
+
 	//processing state
 	private int rowCount = 0;
 	private Object item;
 	private Iterator<?> result;
 	private SimpleScriptContext scriptContext;
-	
+
 	public ObjectTableNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
 		this.scriptContext = new SimpleScriptContext();
 	}
-	
+
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
 		super.open();
@@ -113,7 +113,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 		}
 		this.scriptContext.setAttribute(TEIID_CONTEXT, this.getContext(), ScriptContext.ENGINE_SCOPE);
 	}
-	
+
 	@Override
 	public synchronized void closeDirect() {
 		if (this.scriptContext != null) {
@@ -129,7 +129,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 		super.closeDirect();
 		reset();
 	}
-	
+
 	@Override
 	public void reset() {
 		super.reset();
@@ -140,15 +140,15 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 			this.scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).clear();
 		}
 	}
-	
+
 	public void setTable(ObjectTable table) {
 		this.table = table;
 	}
-	
+
 	public void setProjectedColumns(List<ObjectColumn> projectedColumns) {
 		this.projectedColumns = projectedColumns;
 	}
-	
+
 	@Override
 	public ObjectTableNode clone() {
 		ObjectTableNode clone = new ObjectTableNode(getID());
@@ -161,9 +161,9 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		
+
 		evaluate();
-		
+
 		while (!isBatchFull() && result.hasNext()) {
 			if (item == null) {
 				item = result.next();
@@ -245,7 +245,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 	public Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();

@@ -17,13 +17,13 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class XATransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
 	private XidImpl xid;
-	
+
 	public XATransaction() {
 		super();
 	}
-        
+
     protected void before(TransactionQueryTestCase test) {
-        try {          
+        try {
         	xid = createXid();
         	XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
         	xaResource.setTransactionTimeout(120);
@@ -32,7 +32,7 @@ public class XATransaction extends TransactionContainer {
 
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
-        }        
+        }
     }
 
 	public static XidImpl createXid() {
@@ -42,25 +42,25 @@ public class XATransaction extends TransactionContainer {
 		RANDOM.nextBytes(bid);
 		return new XidImpl(0, gid, bid);
 	}
-    
+
     protected void after(TransactionQueryTestCase test) {
         boolean delistSuccessful = false;
         boolean commit = false;
-        
+
         XAResource xaResource = null;
         boolean exception = false;
         try {
         	xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
-            
+
 		xaResource.end(xid, XAResource.TMSUCCESS);
-            
+
             if (!test.exceptionExpected() && xaResource.prepare(xid) == XAResource.XA_OK) {
             	commit = true;
             }
             delistSuccessful = true;
         } catch (Exception e) {
         	exception = true;
-            throw new TransactionRuntimeException(e);            
+            throw new TransactionRuntimeException(e);
         } finally {
             try {
                 if (!delistSuccessful || test.rollbackAllways()|| test.exceptionOccurred()) {
@@ -68,13 +68,13 @@ public class XATransaction extends TransactionContainer {
                 }
                 else if (commit) {
                 	xaResource.commit(xid, true);
-                }            
+                }
             } catch (Exception e) {
             	if (!exception) {
-            		throw new TransactionRuntimeException(e); 
+            		throw new TransactionRuntimeException(e);
             	}
-            } 
+            }
         }
-    }    
-    
+    }
+
 }

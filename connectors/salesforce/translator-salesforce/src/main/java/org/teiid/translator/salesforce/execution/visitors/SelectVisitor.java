@@ -44,7 +44,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	protected StringBuilder havingClause = new StringBuilder();
 	private Boolean objectSupportsRetrieve;
 	private Condition implicitCondition;
-	
+
 	public SelectVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
@@ -62,7 +62,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		        condition = implicitCondition;
 		    }
 		}
-		
+
 		super.visitNode(condition);
 		super.visitNode(query.getGroupBy());
 		if (query.getHaving() != null) {
@@ -97,11 +97,11 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			}
 		}
 	}
-	
+
     protected void addCriteria(Condition condition) {
         this.implicitCondition  = condition;
     }
-    
+
 	@Override
 	public void visit(GroupBy obj) {
 		this.groupByClause.append("GROUP BY "); //$NON-NLS-1$
@@ -114,7 +114,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		}
 		this.groupByClause.append(SPACE);
 	}
-	
+
 	@Override
 	public void visit(NamedTable obj) {
 		try {
@@ -129,13 +129,13 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			exceptions.add(ce);
 		}
 	}
-	
+
 	@Override
 	public void visit(Limit obj) {
 		super.visit(obj);
 		limitClause.append(LIMIT).append(SPACE).append(obj.getRowLimit());
 	}
-	
+
 	/*
 	 * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
 	 * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
@@ -146,7 +146,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}
-				
+
 		StringBuilder result = new StringBuilder();
 		result.append(SELECT).append(SPACE);
 		addSelectSymbols(result);
@@ -191,7 +191,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public Expression getSelectSymbolMetadata(int index) {
 		return selectSymbolIndexToElement.get(index);
 	}
-	
+
 	/**
 	 * Returns the index of the ID column.
 	 * @return the index of the ID column, -1 if there is no ID column.
@@ -220,7 +220,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		List<String> result = new ArrayList<String>(expressions.size());
 		for(int i = 0; i < expressions.size(); i++) {
 			result.add(getValue(expressions.get(i), true));
-		}      
+		}
 		return result;
 	}
 
@@ -233,7 +233,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public boolean hasOnlyIdInCriteria() {
 		return hasOnlyIDCriteria() && idInCriteria != null;
 	}
-	
+
 	public boolean canRetrieve() {
 		return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0;
 	}

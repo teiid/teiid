@@ -66,11 +66,11 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 
     static class ProjectingTupleSource extends
 			BatchCollector.BatchProducerTupleSource {
-    	
+
     	private Evaluator eval;
     	private List<Expression> collectedExpressions;
     	private int[] projectionIndexes;
-    	
+
 		ProjectingTupleSource(BatchProducer sourceNode, Evaluator eval, List<Expression> expressions, Map<Expression, Integer> elementMap) {
 			super(sourceNode);
 			this.eval = eval;
@@ -105,28 +105,28 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		}
 	}
 
-	// Grouping columns set by the planner 
+	// Grouping columns set by the planner
 	private List<OrderByItem> orderBy;
 	private boolean removeDuplicates;
 	private SymbolMap outputMapping;
-    
+
     // Collection phase
     private int phase = COLLECTION;
     private Map<Expression, Integer> elementMap;                    // Map of incoming symbol to index in source elements
     private LinkedHashMap<Expression, Integer> collectedExpressions;         // Collected Expressions
     private int distinctCols = -1;
-       
+
     // Sort phase
     private SortUtility sortUtility;
     private TupleBuffer sortBuffer;
     private TupleSource groupTupleSource;
-    
+
     // Group phase
     private AggregateFunction[][] functions;
     private List<?> lastRow;
 	private List<?> currentGroupTuple;
 	private boolean doneReading;
-	
+
 	// Group sort
 	private STree tree;
     private AggregateFunction[] groupSortfunctions;
@@ -151,14 +151,14 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         super.reset();
 
         phase = COLLECTION;
-                
+
         sortUtility = null;
         sortBuffer = null;
-        
+
         lastRow = null;
         currentGroupTuple = null;
         doneReading = false;
-        
+
         if (this.functions != null) {
 	    	for (AggregateFunction[] functions : this.functions) {
 	    		for (AggregateFunction function : functions) {
@@ -167,7 +167,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			}
         }
     }
-    
+
     public void setRemoveDuplicates(boolean removeDuplicates) {
 		this.removeDuplicates = removeDuplicates;
 	}
@@ -175,7 +175,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     public void setOrderBy(List<OrderByItem> orderBy) {
 		this.orderBy = orderBy;
 	}
-    
+
     public void setOutputMapping(SymbolMap outputMapping) {
 		this.outputMapping = outputMapping;
 	}
@@ -184,11 +184,11 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
-		
+
 		if (this.functions != null) {
 			return;
 		}
-		
+
         // Incoming elements and lookup map for evaluating expressions
         List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
@@ -206,7 +206,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             	distinctCols = collectedExpressions.size();
             }
         }
-        
+
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()][];
         for(int i=0; i<getElements().size(); i++) {
@@ -229,7 +229,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             }
         }
     }
-	
+
 	static Integer getIndex(Expression ex, LinkedHashMap<Expression, Integer> expressionIndexes) {
 		Integer index = expressionIndexes.get(ex);
 		if (index == null) {
@@ -239,7 +239,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		return index;
 	}
 
-	static AggregateFunction initAccumulator(AggregateSymbol aggSymbol, 
+	static AggregateFunction initAccumulator(AggregateSymbol aggSymbol,
 			RelationalNode node, LinkedHashMap<Expression, Integer> expressionIndexes) {
 		int[] argIndexes = new int[aggSymbol.getArgs().length];
 		AggregateFunction result = null;
@@ -288,7 +288,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			break;
 		case ARRAY_AGG:
 			result = new ArrayAgg();
-			break;                		
+			break;
 		case JSONARRAY_AGG:
 			result = new JSONArrayAgg();
 			break;
@@ -297,7 +297,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			break;
 		case STRING_AGG:
 			result = new StringAgg(aggSymbol.getType() == DataTypeManager.DefaultDataClasses.BLOB);
-			break; 
+			break;
 		case FIRST_VALUE:
 		    result = new FirstLastValue(aggSymbol.getType(), true);
             break;
@@ -389,7 +389,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         if(this.phase == COLLECTION) {
             collectionPhase();
         }
-        
+
         // If necessary, sort to determine groups (if no group cols, no need to sort)
         if(this.phase == SORT) {
             sortPhase();
@@ -399,24 +399,24 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         if(this.phase == GROUP) {
             return groupPhase();
         }
-        
+
         if (this.phase == GROUP_SORT) {
         	groupSortPhase();
         }
-        
+
         if (this.phase == GROUP_SORT_OUTPUT) {
         	return groupSortOutputPhase();
         }
-        
+
         this.terminateBatches();
         return pullBatch();
     }
-	
+
 	public TupleSource getGroupSortTupleSource() {
 		final RelationalNode sourceNode = this.getChildren()[0];
 		return new ProjectingTupleSource(sourceNode, getEvaluator(elementMap), new ArrayList<Expression>(collectedExpressions.keySet()), elementMap);
 	}
-	
+
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {
 		return this.getChildren()[0].getOutputElements();
@@ -447,7 +447,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         			nullOrdering.add(null);
         			sortTypes.add(OrderBy.ASC);
         		}
-        		sortIndexes[i] = index; 
+        		sortIndexes[i] = index;
         	}
         	this.indexes = Arrays.copyOf(sortIndexes, orderBy.size());
         	if (rollup) {
@@ -500,24 +500,24 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			    		es.setType(type);
 			    		schema.add(es);
 		    		}
-		    		
+
 		    		tree = this.getBufferManager().createSTree(schema, this.getConnectionID(), orderBy.size());
 		    		//non-default order needs to update the comparator
 		    		tree.getComparator().setNullOrdering(nullOrdering);
 		    		tree.getComparator().setOrderTypes(sortTypes);
-		    				
+
 		    		this.groupSortTupleSource = this.getGroupSortTupleSource();
 		    		this.phase = GROUP_SORT;
 		    		return;
         		}
         	}
-        	
+
             this.sortUtility = new SortUtility(getGroupSortTupleSource(), removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
                     getConnectionID(), new ArrayList<Expression>(collectedExpressions.keySet()), sortTypes, nullOrdering, sortIndexes);
             this.phase = SORT;
         }
     }
-    
+
     /**
      * Process the input and store the partial accumulator values
      * @throws TeiidComponentException
@@ -527,7 +527,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		List<?> tuple = null;
 		while ((tuple = groupSortTupleSource.nextTuple()) != null) {
 			List<?> current = tree.find(tuple);
-			
+
 			boolean update = false;
 			List<Object> accumulated = new ArrayList<Object>();
 			//not all collected expressions are needed for the key
@@ -607,22 +607,22 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         			break;
         		}
         	}
-        	
+
             if(lastRow == null) {
                 // First row we've seen
                 lastRow = currentGroupTuple;
 
             } else {
-            	int colDiff = sameGroup(indexes, currentGroupTuple, lastRow); 
+            	int colDiff = sameGroup(indexes, currentGroupTuple, lastRow);
             	if (colDiff != -1) {
                     // Close old group
             		closeGroup(colDiff, true, context);
 
                     // Reset last tuple
                     lastRow = currentGroupTuple;
-                    
+
                     // Save in output batch
-                    
+
                     if (this.isBatchFull()) {
                     	return pullBatch();
                     }
@@ -636,7 +636,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         if(lastRow != null || orderBy == null) {
             // Close last group
         	closeGroup(-1, false, context);
-        } 
+        }
 
         this.terminateBatches();
         return pullBatch();

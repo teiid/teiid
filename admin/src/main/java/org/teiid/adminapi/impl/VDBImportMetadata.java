@@ -21,37 +21,37 @@ package org.teiid.adminapi.impl;
 import org.teiid.adminapi.VDBImport;
 
 public class VDBImportMetadata extends AdminObjectImpl implements VDBImport {
-	
+
     private static final long serialVersionUID = 8827106139518843217L;
-	
+
 	private String name;
 	private String version;
 	private boolean importDataPolicies = true;
-	
+
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getVersion() {
 		return version;
 	}
-	
+
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	
+
 	public boolean isImportDataPolicies() {
 		return importDataPolicies;
 	}
-	
+
 	public void setImportDataPolicies(boolean importDataPolicies) {
 		this.importDataPolicies = importDataPolicies;
 	}
-	
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -85,7 +85,7 @@ public class VDBImportMetadata extends AdminObjectImpl implements VDBImport {
             return false;
         return true;
     }
-    
+
     @Override
     public String toString() {
         return "VDBImportMetadata [name=" + name + ", version=" + version //$NON-NLS-1$ //$NON-NLS-2$

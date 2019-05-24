@@ -34,7 +34,7 @@ import org.teiid.core.util.TimestampWithTimezone;
 /**
  */
 public class TypeFacility {
-	
+
 	public static final class RUNTIME_CODES {
 		public static final int STRING = DataTypeManager.DefaultTypeCodes.STRING;
 		public static final int CHAR = DataTypeManager.DefaultTypeCodes.CHAR;
@@ -86,7 +86,7 @@ public class TypeFacility {
         public static final Class<GeographyType> GEOGRAPHY         = DataTypeManager.DefaultDataClasses.GEOGRAPHY;
         public static final Class<JsonType> JSON         = DataTypeManager.DefaultDataClasses.JSON;
     }
-    
+
     public static final class RUNTIME_NAMES {
         public static final String STRING       = DataTypeManager.DefaultDataTypes.STRING;
         public static final String BOOLEAN      = DataTypeManager.DefaultDataTypes.BOOLEAN;
@@ -112,22 +112,22 @@ public class TypeFacility {
         public static final String GEOGRAPHY     = DataTypeManager.DefaultDataTypes.GEOGRAPHY;
         public static final String JSON         = DataTypeManager.DefaultDataTypes.JSON;
     }
-    
+
     /**
      * Get the Class constant for the given String runtime type name
      * <br>IMPORTANT: only considered the default runtime types
      */
     public static Class<?> getDataTypeClass(String type) {
-    	return DataTypeManager.getDataTypeClass(type);    	
+    	return DataTypeManager.getDataTypeClass(type);
     }
-    
+
     /**
      * Get the String constant for the given runtime type class
      */
     public static String getDataTypeName(Class<?> type) {
-    	return DataTypeManager.getDataTypeName(type);    	
+    	return DataTypeManager.getDataTypeName(type);
     }
-    
+
     /**
      * Get the closest runtime type for the given class
      */
@@ -135,9 +135,9 @@ public class TypeFacility {
     	if (type.isPrimitive()) {
     		return convertPrimitiveToObject(type);
     	}
-    	return DataTypeManager.getRuntimeType(type);    	
+    	return DataTypeManager.getRuntimeType(type);
     }
-    
+
     /**
      * Get the SQL type for the given runtime type Class constant
      * @param type
@@ -145,8 +145,8 @@ public class TypeFacility {
      */
     public static final int getSQLTypeFromRuntimeType(Class<?> type) {
         return JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
-    } 
-    
+    }
+
     /**
      * Get the runtime type name for the given SQL type
      * @param sqlType
@@ -158,7 +158,7 @@ public class TypeFacility {
     	}
     	return JDBCSQLTypeInfo.getTypeName(sqlType);
     }
-    
+
     /**
      * Convert the given value to the closest runtime type see {@link RUNTIME_TYPES}
      * @param value
@@ -167,9 +167,9 @@ public class TypeFacility {
 	public Object convertToRuntimeType(Object value) {
 		return DataTypeManager.convertToRuntimeType(value, true);
 	}
-	
+
     /**
-     * Convert the given date to a target type, optionally adjusting its display 
+     * Convert the given date to a target type, optionally adjusting its display
      * for a given target Calendar.
      * @param date
      * @param initial
@@ -181,7 +181,7 @@ public class TypeFacility {
 			Class<?> targetType) {
 		return TimestampWithTimezone.create(date, initial, target, targetType);
 	}
-	
+
 	/**
 	 * Convert a primitive class to the corresponding object class
 	 * @param clazz

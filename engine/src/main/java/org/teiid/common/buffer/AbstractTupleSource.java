@@ -42,7 +42,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 			currentTuple = null;
     	} else {
     		result = getCurrentTuple();
-    	} 
+    	}
     	if (result != null) {
     		currentRow++;
     	}
@@ -58,7 +58,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 					batch = getBatch(row);
 				}
 				return batch.getTuple(row);
-			//} 
+			//}
 			//TODO: determine if we should directly hold a soft reference here
 			//return getRow(currentRow);
 		}
@@ -67,24 +67,24 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 	}
 
 	protected abstract List<?> finalRow() throws BlockedException, TeiidComponentException, TeiidProcessingException;
-	
+
 	protected abstract TupleBatch getBatch(long row) throws TeiidComponentException, TeiidProcessingException;
-	
+
 	protected abstract long available();
-	
+
     @Override
     public void closeSource() {
     	batch = null;
         mark = 1;
         reset();
     }
-    
+
     @Override
 	public boolean hasNext() throws TeiidComponentException, TeiidProcessingException {
         if (this.currentTuple != null) {
             return true;
         }
-        
+
         this.currentTuple = getCurrentTuple();
 		return this.currentTuple != null;
 	}
@@ -107,5 +107,5 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 	        this.currentTuple = null;
         }
     }
-    
+
 }

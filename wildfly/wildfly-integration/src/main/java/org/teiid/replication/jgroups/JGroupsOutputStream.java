@@ -31,14 +31,14 @@ import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
 
 public class JGroupsOutputStream extends OutputStream {
-	
+
 	static final int CHUNK_SIZE=1<<15; //need to stay under the default of 64000 for the JGroups bundling size
-    
+
 	protected final RpcDispatcher disp;
     protected final List<Address> dests;
     protected final Serializable stateId;
     protected final short methodOffset;
-	
+
     private volatile boolean closed=false;
     private final byte[] buffer=new byte[CHUNK_SIZE];
     private int index=0;

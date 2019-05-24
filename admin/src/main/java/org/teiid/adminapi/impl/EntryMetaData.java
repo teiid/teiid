@@ -21,10 +21,10 @@ import org.teiid.adminapi.Entry;
 
 public class EntryMetaData extends AdminObjectImpl implements Entry {
 	private static final long serialVersionUID = -3602627159192411780L;
-	
+
 	private String path;
 	private String description;
-	
+
 	@Override
 	public String getDescription() {
 		return description;

@@ -35,7 +35,7 @@ import com.mongodb.DBRef;
 public class ExpressionEvaluator extends HierarchyVisitor {
 	private BasicDBObject row;
 	private RowInfo rowInfo;
-	private MongoDBExecutionFactory executionFactory; 
+	private MongoDBExecutionFactory executionFactory;
 	private DB mongoDB;
 	protected Stack<Boolean> match = new Stack<Boolean>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
@@ -96,7 +96,7 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18017));
 		}
 		ColumnReference column = (ColumnReference)obj;
-		
+
 		Object value = null;
 		if (MongoDBSelectVisitor.isPartOfPrimaryKey(column.getTable().getMetadataObject(), column.getName())) {
 			// this is true one to many case
@@ -106,7 +106,7 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 			}
 		}
         if (value == null && MongoDBSelectVisitor.isPartOfForeignKey(column.getTable().getMetadataObject(), column.getName())) {
-            value = getValueFromRowInfo(column, value);		    
+            value = getValueFromRowInfo(column, value);
 		}
 		if (value == null) {
 		    value = this.row.get(column.getName());
@@ -116,7 +116,7 @@ public class ExpressionEvaluator extends HierarchyVisitor {
 		}
 		if (value instanceof DBObject) {
 			value = ((DBObject) value).get(column.getName());
-		}		
+		}
 		return this.executionFactory.retrieveValue(value, column.getType(), this.mongoDB, column.getName(), column.getName());
 	}
 
@@ -127,14 +127,14 @@ public class ExpressionEvaluator extends HierarchyVisitor {
             value = this.rowInfo.PK;
         }
         else {
-            // one to many case                 
+            // one to many case
             RowInfo info = this.rowInfo;
             while(info.parent != null) {
                 info = info.parent;
                 if (info.tableName.equals(tableName) || info.mergedTableName.equals(tableName)) {
                     value = info.PK;
                     break;
-                }                       
+                }
             }
         }
         return value;

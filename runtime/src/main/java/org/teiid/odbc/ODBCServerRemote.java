@@ -24,41 +24,41 @@ import java.util.Properties;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
 
 public interface ODBCServerRemote {
-	
+
 	void initialize(Properties props);
-	
+
 	void logon(String databaseName, String userid, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress);
-	
+
 	void prepare(String prepareName, String sql, int[] paramType);
 
 	void bindParameters(String bindName, String prepareName, Object[] paramdata, int resultCodeCount, short[] resultColumnFormat, Charset charset);
-	
+
 	void execute(String bindName, int maxrows);
-	
+
 	void getParameterDescription(String prepareName);
-	
+
 	void getResultSetMetaDataDescription(String bindName);
-	
+
 	void sync();
-	
+
 	void executeQuery(String sql);
-	
+
 	void terminate();
-	
+
 	void closePreparedStatement(String preparedName);
-	
+
 	void closeBoundStatement(String bindName);
-	
+
 	void unsupportedOperation(String msg);
 
 	void flush();
 
 	void functionCall(int oid, Object[] params, short resultFormat);
-	
+
 	void sslRequest();
 
     void cancel(int pid, int key);
-	
+
 	//  unimplemented frontend messages
 	//	CopyData (F & B)
 	//	CopyDone (F & B)

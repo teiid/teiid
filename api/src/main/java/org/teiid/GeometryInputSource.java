@@ -26,20 +26,20 @@ import org.teiid.core.types.GeometryType;
 
 /**
  * Used to abstract how geometry and geography values are retrieved.
- * 
+ *
  * Converted by the engine into a {@link GeometryType} or {@link GeographyType}
- * 
+ *
  */
 public abstract class GeometryInputSource {
-	
+
 	public InputStream getEwkb() throws Exception {
 		return null;
 	}
-	
+
 	public Integer getSrid() {
 		return null;
 	}
-	
+
 	public Reader getGml() throws Exception {
 		return null;
 	}

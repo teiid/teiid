@@ -58,7 +58,7 @@ public class StringToBigIntegerTransform extends Transform {
 	public Class getTargetType() {
 		return BigInteger.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

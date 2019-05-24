@@ -150,7 +150,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 
 			this.returnValue = dispatch.invoke(ds);
-			
+
 			Map<String, Object> rc = dispatch.getResponseContext();
 			this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
 			if (this.useResponseContext) {
@@ -209,7 +209,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 		} finally {
 			characterStream.close();
 		}
-	
+
 	}
 
 	@Override
@@ -239,7 +239,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     public void cancel() throws TranslatorException {
         // no-op
     }
-    
+
     public void setCustomHeaders(Map<String, List<String>> customHeaders) {
 		this.customHeaders = customHeaders;
 	}
@@ -251,7 +251,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     public Map<String, Object> getResponseHeaders(){
         return new HashMap<String, Object>(this.responseContext) ;
     }
-    
+
     public int getResponseCode() {
     	return this.responseCode;
     }

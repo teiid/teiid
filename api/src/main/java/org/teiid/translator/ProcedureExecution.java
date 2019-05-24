@@ -36,5 +36,5 @@ public interface ProcedureExecution extends ResultSetExecution {
      * @throws TranslatorException If an error occurs while retrieving the output value
      */
     List<?> getOutputParameterValues() throws TranslatorException;
-    
+
 }

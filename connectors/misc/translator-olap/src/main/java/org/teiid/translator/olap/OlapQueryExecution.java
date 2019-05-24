@@ -58,13 +58,13 @@ public class OlapQueryExecution implements ProcedureExecution {
     private ListIterator<Position> rowPositionIterator;
     private String mdxQuery;
     private boolean returnsArray;
-    
+
 	public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory, String mdxQuery, boolean returnsArray) {
 		this.mdxQuery = mdxQuery;
-		if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility 
+		if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility
 			StringBuilder buffer = new StringBuilder();
 			SQLStringVisitor.parseNativeQueryParts(mdxQuery, arguments, buffer, new SQLStringVisitor.Substitutor() {
-				
+
 				@Override
 				public void substitute(Argument arg, StringBuilder builder, int index) {
 					Literal argumentValue = arg.getArgumentValue();
@@ -88,7 +88,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 		this.executionFactory = executionFactory;
 		this.returnsArray = returnsArray;
 	}
-	
+
 	@Override
 	public void execute() throws TranslatorException {
 		try {
@@ -100,9 +100,9 @@ public class OlapQueryExecution implements ProcedureExecution {
 	    	colWidth = rowAxis.getAxisMetaData().getHierarchies().size() + this.columnsAxis.getPositions().size();
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
-		} 
+		}
 	}
-	
+
 	@Override
 	public void cancel() throws TranslatorException {
 		try {
@@ -112,7 +112,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 			}
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
-		}		
+		}
 	}
 
 	@Override
@@ -126,7 +126,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
 		}
 	}
-	
+
     @Override
     public List<?> next() throws TranslatorException {
     	if (!rowPositionIterator.hasNext()) {
@@ -146,18 +146,18 @@ public class OlapQueryExecution implements ProcedureExecution {
 		for (Position colPos : columnsAxis) {
 			Cell cell = cellSet.getCell(colPos, rowPosition);
 			result[i++] = cell.getValue();
-		}	
+		}
 		if (returnsArray) {
 			ArrayList<Object[]> results = new ArrayList<Object[]>(1);
 			results.add(result);
 			return results;
 		}
 		return Arrays.asList(result);
-    }  
-    
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return null;
     }
-    
+
 }

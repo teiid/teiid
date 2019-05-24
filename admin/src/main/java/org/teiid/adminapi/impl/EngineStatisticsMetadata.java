@@ -21,19 +21,19 @@ import org.teiid.adminapi.EngineStatistics;
 
 public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineStatistics {
 	private static final long serialVersionUID = -6207621797253332528L;
-	
+
 	private int sessionCount;
 	private long totalMemoryUsedInKB;
 	private long memoryUsedByActivePlansInKB;
 	private long diskWriteCount;
 	private long diskReadCount;
 	private long cacheWriteCount;
-	private long cacheReadCount;	
+	private long cacheReadCount;
 	private long diskSpaceUsedInMB;
 	private int activePlanCount;
 	private int waitPlanCount;
 	private int maxWaitPlanCount;
-	
+
 	@Override
 	public int getSessionCount() {
 		return sessionCount;
@@ -142,7 +142,7 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 		sb.append("; diskWriteCount ").append(diskWriteCount); //$NON-NLS-1$
 		sb.append("; diskReadCount ").append(diskReadCount); //$NON-NLS-1$
 		sb.append("; cacheWriteCount ").append(cacheWriteCount); //$NON-NLS-1$
-		sb.append("; cacheReadCount ").append(cacheReadCount); //$NON-NLS-1$	
+		sb.append("; cacheReadCount ").append(cacheReadCount); //$NON-NLS-1$
 		sb.append("; diskSpaceUsedInMB ").append(diskSpaceUsedInMB); //$NON-NLS-1$
 		sb.append("; activePlanCount ").append(activePlanCount); //$NON-NLS-1$
 		sb.append("; waitPlanCount ").append(waitPlanCount); //$NON-NLS-1$

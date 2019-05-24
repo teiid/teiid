@@ -66,7 +66,7 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 
 @SuppressWarnings({"nls"})
 public class FakeServer extends EmbeddedServer {
-	
+
 	public static class DeployVDBParameter {
 		public Map<String, Collection<FunctionMethod>> udfs;
 		public MetadataRepository<?, ?> metadataRepo;
@@ -81,9 +81,9 @@ public class FakeServer extends EmbeddedServer {
 			this.metadataRepo = metadataRepo;
 		}
 	}
-	
+
 	private boolean realBufferManager;
-	
+
 	@SuppressWarnings("serial")
 	public FakeServer(boolean start) {
 		waitForLoad = true;
@@ -121,7 +121,7 @@ public class FakeServer extends EmbeddedServer {
 		start(config);
 		this.transactionService.setDetectTransactions(detectTxn);
 	}
-	
+
 	@Override
 	protected BufferService getBufferService() {
 		if (!realBufferManager) {
@@ -132,33 +132,33 @@ public class FakeServer extends EmbeddedServer {
 		bufferService.setDiskDirectory(UnitTestUtil.getTestScratchPath());
 		return super.getBufferService();
 	}
-	
+
 	public DQPCore getDqp() {
 		return dqp;
 	}
-	
+
 	public ConnectorManagerRepository getConnectorManagerRepository() {
 		return cmr;
 	}
-	
+
 	public void setConnectorManagerRepository(ConnectorManagerRepository cmr) {
 		this.cmr = cmr;
 	}
-	
+
 	public void setUseCallingThread(boolean useCallingThread) {
 		this.useCallingThread = useCallingThread;
 	}
-	
+
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-        deployVDB(vdbName, vdbPath, new DeployVDBParameter(null, null));		
-	}	
+        deployVDB(vdbName, vdbPath, new DeployVDBParameter(null, null));
+	}
 
 	public void deployVDB(String vdbName, String vdbPath, DeployVDBParameter parameterObject) throws Exception {
 		IndexVDB imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
 		parameterObject.vdbResources = imf.resources.getEntriesPlusVisibilities();
-        deployVDB(vdbName, imf.store, parameterObject);		
+        deployVDB(vdbName, imf.store, parameterObject);
 	}
-	
+
 	public void deployVDB(String vdbName, MetadataStore metadata) {
 		deployVDB(vdbName, metadata, new DeployVDBParameter(null, null));
 	}
@@ -175,7 +175,7 @@ public class FakeServer extends EmbeddedServer {
 			if (vdbMetaData == null) {
 				vdbMetaData = new VDBMetaData();
 		        vdbMetaData.setName(vdbName);
-		        
+
 		        for (Schema schema : metadata.getSchemas().values()) {
 		        	ModelMetaData model = addModel(vdbMetaData, schema);
 		        	if (parameterObject.metadataRepo != null) {
@@ -196,7 +196,7 @@ public class FakeServer extends EmbeddedServer {
 			    }
 				cmr.createConnectorManagers(vdbMetaData, this);
 			}
-                        
+
         	UDFMetaData udfMetaData = null;
         	if (parameterObject.udfs != null) {
         		udfMetaData = new UDFMetaData();
@@ -204,13 +204,13 @@ public class FakeServer extends EmbeddedServer {
         			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
         		}
         	}
-        	
+
         	if (parameterObject.vdbImports != null) {
         		for (VDBImportMetadata vdbImport : parameterObject.vdbImports) {
 					vdbMetaData.getVDBImports().add(vdbImport);
 				}
         	}
-        	
+
         	vdbMetaData.setStatus(VDB.Status.ACTIVE);
 			this.repo.addVDB(vdbMetaData, metadata, parameterObject.vdbResources, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
@@ -225,12 +225,12 @@ public class FakeServer extends EmbeddedServer {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public void deployVDB(VDBMetaData vdb) throws ConnectorManagerException,
 			VirtualDatabaseException, TranslatorException {
 		super.deployVDB(vdb, null);
 	}
-	
+
 	public void removeVDB(String vdbName) {
 		undeployVDB(vdbName);
 	}
@@ -243,23 +243,23 @@ public class FakeServer extends EmbeddedServer {
 		model.addSourceMapping("source", "translator", "jndi:source");
 		return model;
 	}
-	
+
 	public VDBMetaData getVDB(String vdbName) {
 		return this.repo.getLiveVDB(vdbName);
 	}
-	
+
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {
 		return getDriver().connect(embeddedURL, null);
 	}
-	
+
 	public ConnectionImpl createConnection(String embeddedURL, Properties prop) throws Exception {
 		return getDriver().connect(embeddedURL, prop);
-	}	
-	
+	}
+
 	public ClientServiceRegistryImpl getClientServiceRegistry() {
 		return services;
 	}
-	
+
 	public void setThrowMetadataErrors(boolean throwMetadataErrors) {
 		this.throwMetadataErrors = throwMetadataErrors;
 	}
@@ -267,5 +267,5 @@ public class FakeServer extends EmbeddedServer {
 	public SessionServiceImpl getSessionService() {
 		return this.sessionService;
 	}
-	
+
 }

@@ -32,7 +32,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestPartitionedJoinPlanning {
-	
+
     @Test public void testUsePartitionedMergeJoin() throws Exception {
         // Create query
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1";//$NON-NLS-1$
@@ -48,8 +48,8 @@ public class TestPartitionedJoinPlanning {
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 2, metadata);
         RealMetadataFactory.setCardinality("pm1.g2", BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE * 16, metadata);
-    
-        ProcessorPlan plan = helpPlan(sql, metadata,  
+
+        ProcessorPlan plan = helpPlan(sql, metadata,
             null, capFinder,
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1", "SELECT pm1.g2.e1 FROM pm1.g2" }, SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$
         checkNodeTypes(plan, new int[] {
@@ -67,9 +67,9 @@ public class TestPartitionedJoinPlanning {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });  
+        });
         checkNodeTypes(plan, new int[] {1}, new Class[] {EnhancedSortMergeJoinStrategy.class});
-    }    
+    }
 
 
 }

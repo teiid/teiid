@@ -38,11 +38,11 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 
 public class ModuleLocalProfile implements LocalProfile {
-    
+
     static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-    
+
     @Override
-    public ConnectionImpl connect(String url, Properties info) 
+    public ConnectionImpl connect(String url, Properties info)
         throws TeiidSQLException {
         try {
             ServerConnection sc = createServerConnection(info);
@@ -55,7 +55,7 @@ public class ModuleLocalProfile implements LocalProfile {
             throw TeiidSQLException.create(e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20039));
         }
     }
-    
+
     @Override
     public ServerConnection createServerConnection(Properties info)
             throws TeiidException {
@@ -65,7 +65,7 @@ public class ModuleLocalProfile implements LocalProfile {
             if (callerModuleLoader == null) {
                 logger.fine(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
                 return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
-            } 
+            }
             final Module module = callerModuleLoader.loadModule("org.jboss.teiid"); //$NON-NLS-1$
             Thread.currentThread().setContextClassLoader(module.getClassLoader());
             return (ServerConnection)ReflectionHelper.create("org.teiid.transport.LocalServerConnection", Arrays.asList(info, PropertiesUtils.getBooleanProperty(info, LocalProfile.USE_CALLING_THREAD, true)), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$

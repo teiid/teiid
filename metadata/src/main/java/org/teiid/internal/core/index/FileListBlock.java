@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -24,9 +24,9 @@ public class FileListBlock extends Block {
 		super(blockSize);
 	}
 	/**
-	 * add the name of the indexedfile to the buffr of the field. 
-	 * The name is not the entire name of the indexedfile, but the 
-	 * difference between its name and the name of the previous indexedfile ...	
+	 * add the name of the indexedfile to the buffr of the field.
+	 * The name is not the entire name of the indexedfile, but the
+	 * difference between its name and the name of the previous indexedfile ...
 	 */
 	public boolean addFile(IndexedFile indexedFile) {
 		int offset= this.offset;

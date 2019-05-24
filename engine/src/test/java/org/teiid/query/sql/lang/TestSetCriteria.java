@@ -34,7 +34,7 @@ import org.teiid.query.sql.symbol.Reference;
 
 public class TestSetCriteria {
 
-	public static final SetCriteria sample1() { 
+	public static final SetCriteria sample1() {
 	    SetCriteria c1 = new SetCriteria();
 	    c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
 		List vals = new ArrayList();
@@ -44,7 +44,7 @@ public class TestSetCriteria {
 		return c1;
 	}
 
-	public static final SetCriteria sample2() { 
+	public static final SetCriteria sample2() {
 	    SetCriteria c1 = new SetCriteria();
 	    c1.setExpression(new ElementSymbol("e2")); //$NON-NLS-1$
 		List vals = new ArrayList();
@@ -53,23 +53,23 @@ public class TestSetCriteria {
 		c1.setValues(vals);
 		return c1;
 	}
-		
+
 	// ################################## ACTUAL TESTS ################################
-	
-	@Test public void testEquals1() {   
+
+	@Test public void testEquals1() {
 	    SetCriteria c1 = new SetCriteria();
 	    c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
 		List vals = new ArrayList();
 		vals.add(new Constant("a")); //$NON-NLS-1$
 		vals.add(new Constant("b")); //$NON-NLS-1$
 		c1.setValues(vals);
-		
+
 		SetCriteria c2 = (SetCriteria) c1.clone();
-		
+
 		assertTrue("Equivalent set criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	@Test public void testEquals2() {   
+	@Test public void testEquals2() {
 	    SetCriteria c1 = new SetCriteria();
         c1.setNegated(true);
 	    c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -77,7 +77,7 @@ public class TestSetCriteria {
 		vals1.add(new Constant("a")); //$NON-NLS-1$
 		vals1.add(new Constant("b")); //$NON-NLS-1$
 		c1.setValues(vals1);
-		
+
 	    SetCriteria c2 = new SetCriteria();
         c2.setNegated(true);
 	    c2.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -85,7 +85,7 @@ public class TestSetCriteria {
 		vals2.add(new Constant("b")); //$NON-NLS-1$
 		vals2.add(new Constant("a")); //$NON-NLS-1$
 		c2.setValues(vals2);
-		
+
 		assertTrue("Equivalent set criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
@@ -101,7 +101,7 @@ public class TestSetCriteria {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
     @Test public void testNonEquivalence(){
         Object s1 = sample1();
         SetCriteria s1a = sample1();
@@ -109,14 +109,14 @@ public class TestSetCriteria {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
     }
-	
+
     @Test public void testNonEquivalence1(){
         Object s1 = sample1();
         Object s2 = sample2();
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-    
+
     @Test public void testNonEquivalence2(){
         SetCriteria c1 = new SetCriteria();
         c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -124,14 +124,14 @@ public class TestSetCriteria {
         vals.add(new Constant("a")); //$NON-NLS-1$
         vals.add(new Constant("b")); //$NON-NLS-1$
         c1.setValues(vals);
-        
+
         SetCriteria c2 = (SetCriteria) c1.clone();
         assertNotSame(c1.getValues().iterator().next(), c2.getValues().iterator().next());
         c2.setNegated(true);
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, c1, c2);
     }
-    
+
     @Test public void testNonHashableClone(){
         SetCriteria c1 = new SetCriteria();
         c1.setExpression(new ElementSymbol("e1")); //$NON-NLS-1$
@@ -140,11 +140,11 @@ public class TestSetCriteria {
         vals.add(new Constant(BigDecimal.valueOf(1.2)));
         c1.setValues(vals);
         c1.setAllConstants(true);
-        
+
         SetCriteria c2 = (SetCriteria) c1.clone();
         assertTrue(c2.getValues() instanceof TreeSet);
     }
-    
+
     @Test public void testNonEquivalence3(){
         Object s1 = sample1();
         SetCriteria s1a = sample1();

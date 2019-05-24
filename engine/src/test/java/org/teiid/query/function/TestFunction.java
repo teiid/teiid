@@ -40,12 +40,12 @@ import org.teiid.query.util.CommandContext;
 
 
 public class TestFunction {
-	
+
 	@Before
 	public void setUp() {
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5")); //$NON-NLS-1$
 	}
-	
+
 	@After
 	public void tearDown() {
 		TimestampWithTimezone.resetCalendar(null);
@@ -102,7 +102,7 @@ public class TestFunction {
             FunctionMethods.convert(null, src, tgtType);
             fail("Expected convert(" + src + "," + tgtType + ") to throw FunctionExecutionException, but it did not."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (FunctionExecutionException e) {
-        } 
+        }
     }
 
     public static void helpTestInitCap(String input, String expected) {
@@ -140,11 +140,11 @@ public class TestFunction {
         int actualLocation = location.intValue();
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
-    
+
     public static void helpTestEndssWith(String locateString, String input, Boolean expected) {
         Boolean actual = (Boolean) FunctionMethods.endsWith(locateString, input);
         assertEquals("Didn't get expected result from startsWith", expected, actual); //$NON-NLS-1$
-    }    
+    }
 
     public static void helpTestLocate(String locateString, String input, Integer start, int expectedLocation) {
         Integer location = (Integer) FunctionMethods.locate(locateString, input, start);
@@ -156,7 +156,7 @@ public class TestFunction {
         Object actual = FunctionMethods.round(number, places);
         assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     public static void helpTestRound(Float number, Integer places, Object expected) {
         Object actual = FunctionMethods.round(number, places);
         assertEquals("round(" + number + "," + places + ") failed.", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -186,26 +186,26 @@ public class TestFunction {
 
     public static void helpTestTimestampCreate(java.sql.Date date, Time time, String expected) {
         Object actual = FunctionMethods.timestampCreate(date, time);
-        assertEquals("timestampCreate(" + date + ", " + time + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-                     expected, actual.toString()); 
+        assertEquals("timestampCreate(" + date + ", " + time + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                     expected, actual.toString());
     }
 
     public static void helpTestTimestampDiff(String intervalType, Timestamp timeStamp1, Timestamp timeStamp2, Long expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
         assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                     expected, actual); 
+                     expected, actual);
 
-        // test reverse - should be 
+        // test reverse - should be
         Long expected2 = new Long(0 - expected.longValue());
         Object actual2 = FunctionMethods.timestampDiff(intervalType, timeStamp2, timeStamp1);
         assertEquals("timestampDiff(" + intervalType + ", " + timeStamp2 + ", " + timeStamp1 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                     expected2, actual2); 
+                     expected2, actual2);
     }
-    
+
     public static void helpTestParseTimestamp(String tsStr, String format, String expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.parseTimestamp(new CommandContext(), tsStr, format);
         assertEquals("parseTimestamp(" + tsStr + ", " + format + ") failed", expected.toString(), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                     new Constant(actual).toString()); 
+                     new Constant(actual).toString());
     }
 
     // ################################## ACTUAL TESTS ################################
@@ -339,32 +339,32 @@ public class TestFunction {
     @Test public void testSubstring7() throws Exception {
         helpSubstring("abc", new Integer(1), "abc"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testSubstring8() throws Exception {
         helpSubstring("abc", new Integer(-1), "c"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testSubstring9() throws Exception {
         helpSubstring("abc", new Integer(-3), "abc"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testSubstring10() throws Exception {
-        helpSubstring("abc", new Integer(-4), null); //$NON-NLS-1$ 
+        helpSubstring("abc", new Integer(-4), null); //$NON-NLS-1$
     }
-    
+
     @Test public void testSubstring11() throws Exception {
         helpSubstring("abc", new Integer(-1), new Integer(2), "c"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testSubstring12() throws Exception {
         helpSubstring("abc", new Integer(-3), new Integer(2), "ab"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testSubstring13() throws Exception {
         helpSubstring("abc", new Integer(0), new Integer(2), "ab"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    
+
     // ------------------------------ REPLACE ------------------------------
 
     @Test public void testReplace1() throws Exception {
@@ -545,7 +545,7 @@ public class TestFunction {
     @Test public void testInitCap5() throws Exception {
         helpTestInitCap("cows are FUN", "Cows Are Fun"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testInitCap6() throws Exception {
         helpTestInitCap("𐐩ome chars are fun 𐐨!", "𐐁ome Chars Are Fun 𐐀!"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -569,9 +569,9 @@ public class TestFunction {
     @Test public void testLpad6() throws Exception {
         helpTestLpad("10", 6, "0", "000010"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testLpad7() throws Exception {
-    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testRpad1() throws Exception {
@@ -617,7 +617,7 @@ public class TestFunction {
     @Test public void testLocate1() throws Exception {
         helpTestLocate(",", "Metamatrix, John Quincy", 11); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testTranslate5() throws Exception {
         helpTestTranslate("𐀀 a", "𐀀", "b", "b a"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
@@ -633,7 +633,7 @@ public class TestFunction {
     @Test public void testLocate4() throws Exception {
         helpTestLocate("y", "xx", 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testLocate5() throws Exception {
         helpTestLocate("b", "abab", 3, 4); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -641,19 +641,19 @@ public class TestFunction {
     @Test public void testLocate6() throws Exception {
         helpTestLocate("z", "abab", 0, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testLocate7() throws Exception {
         helpTestLocate("z", "abab", null, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testLocate8() throws Exception {
         helpTestLocate("z", "abab", -1, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testEndsWith1() throws Exception {
         helpTestEndssWith("z", "abab", false); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testEndsWith2() throws Exception {
     	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -749,7 +749,7 @@ public class TestFunction {
     @Test public void testRoundFloat9() throws Exception {
         helpTestRound(new Float(123.456F), new Integer(-4), new Float(0F));
     }
-    
+
     @Test public void testRoundFloat10() throws Exception {
         helpTestRound(new Float(123.456F), new Integer(4000), new Float(123.456F));
     }
@@ -789,11 +789,11 @@ public class TestFunction {
     @Test public void testRoundDouble9() throws Exception {
         helpTestRound(new Double(123.456), new Integer(-4), new Double(0));
     }
-    
+
     @Test public void testRoundDouble10() throws Exception {
         helpTestRound(new Double(-3.5), new Integer(0), new Double(-4));
     }
-    
+
     @Test public void testRoundBigDecimal1() throws Exception {
         helpTestRound(new BigDecimal("123.456"), new Integer(4), new BigDecimal("123.456")); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -829,7 +829,7 @@ public class TestFunction {
     @Test public void testRoundBigDecimal9() throws Exception {
         helpTestRound(new BigDecimal("123.456"), new Integer(-4), new BigDecimal("0.000")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testHour1() throws Exception {
         helpTestHour1("00:00:00", 0); //$NON-NLS-1$
     }
@@ -873,7 +873,7 @@ public class TestFunction {
     @Test public void testTimestampCreate1() throws Exception {
         helpTestTimestampCreate(TimestampUtil.createDate(103, 11, 1), TimestampUtil.createTime(23, 59, 59), "2003-12-01 23:59:59.0"); //$NON-NLS-1$
     }
-    
+
     @Test public void testTimestampAddLeapYear() throws Exception {
         assertEquals(TimestampUtil.createTimestamp(117, 1, 28, 15, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_YEAR, 1, TimestampUtil.createTimestamp(116, 1, 29, 15, 20, 30, 0)));
     }
@@ -881,25 +881,25 @@ public class TestFunction {
     @Test public void testTimestampAdd2() throws Exception {
     	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
-    
+
     @Test public void testTimestampAdd3() throws Exception {
         assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 29, 999999999), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_FRAC_SECOND, -1, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
-    
+
     @Test public void testTimestampAdd4() throws Exception {
         assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 31, 2), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_FRAC_SECOND, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 999999999)));
     }
-    
+
     @Test(expected=FunctionExecutionException.class) public void testTimestampAdd5() throws Exception {
         assertEquals(null, FunctionMethods.timestampAdd(NonReserved.SQL_TSI_FRAC_SECOND, Long.MAX_VALUE, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 999999999)));
     }
-    
+
     @Test(expected=FunctionExecutionException.class) public void testTimestampAdd6() throws Exception {
         assertEquals(null, FunctionMethods.timestampAdd(NonReserved.SQL_TSI_SECOND, (long)Integer.MAX_VALUE + 1, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_1() throws Exception {
-        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND, 
+        helpTestTimestampDiff(NonReserved.SQL_TSI_FRAC_SECOND,
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 1),
                               TimestampUtil.createTimestamp((2001-1900), 5, 21, 3, 9, 35, 100000000),
                               new Long(99999999));
@@ -999,7 +999,7 @@ public class TestFunction {
                 TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                 new Long(0));
     	//ensure that we get the same answer in a tz with an non-hour aligned offset and no dst
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$ 
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$
     	try {
     		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
@@ -1091,28 +1091,28 @@ public class TestFunction {
         helpTestParseTimestamp("1993-04-24 3:59:59 PM", "yyyy-MM-dd hh:mm:ss aa", "{ts'1993-04-24 15:59:59.0'}"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     }
-    
+
     public void helpTestModifyTimeZone(String tsStr, String tzStart, String tzEnd, String expectedStr) throws Exception {
         Timestamp ts = tsStr != null ? Timestamp.valueOf(tsStr) : null;
         Timestamp actual = null;
-        
+
         if(tzStart == null) {
             actual = (Timestamp) FunctionMethods.modifyTimeZone(new CommandContext(), ts, tzEnd);
         } else {
             actual = (Timestamp) FunctionMethods.modifyTimeZone(ts, tzStart, tzEnd);
         }
-        
+
         String actualStr = null;
         if(actual != null) {
             actualStr = actual.toString();
         }
         assertEquals("Did not get expected output timestamp", expectedStr, actualStr); //$NON-NLS-1$
     }
-    
+
     /*
      * The following test results may look odd, but it is due to the parsing of the initial date, which is done
      * against the system default timezone (not the startTz shown below).  The fianl date value is also being read
-     * against the default timezone and not the endTz shown. 
+     * against the default timezone and not the endTz shown.
      */
     @Test public void testModifyTimeZoneGMT() throws Exception {
         helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "GMT+00:00", "GMT-01:00", "2004-10-03 16:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -1125,110 +1125,110 @@ public class TestFunction {
     @Test public void testModifyTimeZoneNamedTZ() throws Exception {
         helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "America/New_York", "America/Chicago", "2004-10-03 16:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-    
+
     @Test public void testModifyTimeZoneNamedTZ2() throws Exception {
         helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "America/Chicago", "America/New_York", "2004-10-03 14:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-    
+
     @Test public void testModifyTimeZoneStartLocal() throws Exception {
-        helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "America/Chicago", "America/Los_Angeles", "2004-10-03 17:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+        helpTestModifyTimeZone("2004-10-03 15:19:59.123456789", "America/Chicago", "America/Los_Angeles", "2004-10-03 17:19:59.123456789"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-    
+
     // case 2458
     @Test public void testCurrentDate() throws Exception {
 
         Date curDate = (Date)FunctionMethods.currentDate(new CommandContext());
-     
+
         Calendar cal1 = Calendar.getInstance();
         cal1.setTime(curDate);
-        
+
         assertEquals(cal1.get(Calendar.HOUR_OF_DAY), 0);
         assertEquals(cal1.get(Calendar.MINUTE), 0);
         assertEquals(cal1.get(Calendar.SECOND), 0);
         assertEquals(cal1.get(Calendar.MILLISECOND), 0);
-             
+
     }
 
     // case 2458
     @Test public void testCurrentTime() throws Exception {
-        
+
         Time curDate = (Time)FunctionMethods.currentTime(new CommandContext());
 
         Calendar cal1 = Calendar.getInstance();
         cal1.setTime(curDate);
-        
+
         // can not test the current time without making a copy of current "time"
         // so check the normalization of the date to unix epoch
         assertEquals(cal1.get(Calendar.YEAR), 1970);
         assertEquals(cal1.get(Calendar.MONTH), Calendar.JANUARY);
         assertEquals(cal1.get(Calendar.DATE), 1);
-              
-    }    
-    
+
+    }
+
     @Test public void testCurrentTimestamp() throws Exception {
         CommandContext context = new CommandContext();
-        context.setCurrentTimestamp(1290123456789l);
+        context.setCurrentTimestamp(1290123456789L);
         Timestamp current = FunctionMethods.current_timestamp(context, 0);
         assertEquals(0, current.getNanos());
         assertNotEquals(context.currentTimestamp(), current);
         assertEquals(context.currentTimestamp().getTime()/1000, current.getTime()/1000);
-        
+
         current = FunctionMethods.current_timestamp(context, 3);
         assertEquals(789000000, current.getNanos());
     }
-    
+
     @Test public void testRand() throws Exception {
         Double d = (Double)FunctionMethods.rand(new CommandContext(), new Integer(100));
         assertEquals(new Double(0.7220096548596434), d);
-        
-        FunctionMethods.rand(new CommandContext());            
+
+        FunctionMethods.rand(new CommandContext());
     }
-    
+
     @Test public void testEnv() throws Exception {
-        String systemProperty = "SystemProperty"; //$NON-NLS-1$        
+        String systemProperty = "SystemProperty"; //$NON-NLS-1$
 
         // set the system property
         System.setProperty(systemProperty, systemProperty);
         System.setProperty(systemProperty.toLowerCase(), systemProperty+"_lowercase"); //$NON-NLS-1$
-        
+
         assertEquals(systemProperty, FunctionMethods.env(systemProperty));
         assertEquals(systemProperty+"_lowercase", FunctionMethods.env(systemProperty.toUpperCase())); //$NON-NLS-1$
     }
-    
+
     @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {
     	FunctionMethods.parseBigDecimal(new CommandContext(), "a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testParseDateStrictness() throws Exception {
     	assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testParseTimeWhitespace() throws Exception {
     	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @Test public void testMod() {
         assertEquals(new BigDecimal("-1.1"), FunctionMethods.mod(new BigDecimal("-3.1"), new BigDecimal("2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testMod1() {
         assertEquals(new BigDecimal("-1.1"), FunctionMethods.mod(new BigDecimal("-3.1"), new BigDecimal("-2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testMod2() {
         assertEquals(-40, FunctionMethods.mod(-340, 60), 0);
     }
-    
+
     @Test public void testMod3() {
         assertEquals(-40, FunctionMethods.mod(-340, -60), 0);
     }
-    
+
     @Test public void testMod4() {
         assertEquals(new BigInteger("-1"), FunctionMethods.mod(new BigInteger("-3"), new BigInteger("2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     @Test public void testMod5() {
         assertEquals(new BigInteger("-1"), FunctionMethods.mod(new BigInteger("-3"), new BigInteger("-2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
 }

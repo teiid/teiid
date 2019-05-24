@@ -25,7 +25,7 @@ import java.util.HashMap;
  */
 public class PGCharsetConverter {
 	private static HashMap<String, Charset> charSetMap = new HashMap<String, Charset>();
-	
+
 	static {
 		mapCharset("BIG5", Charset.forName("Big5")); //$NON-NLS-1$ //$NON-NLS-2$
 		mapCharset("EUC_CN", Charset.forName("GB2312")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -62,11 +62,11 @@ public class PGCharsetConverter {
 		mapCharset("WIN1256", Charset.forName("windows-1256")); //$NON-NLS-1$ //$NON-NLS-2$
 		mapCharset("WIN1258", Charset.forName("windows-1258")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	private static void mapCharset(String name, Charset cs) {
 		charSetMap.put(name, cs);
 	}
-	
+
 	public static Charset getCharset(String name) {
 		Charset cs = charSetMap.get(name);
 		if (cs == null) {
@@ -78,5 +78,5 @@ public class PGCharsetConverter {
 		}
 		return cs;
 	}
-	
+
 }

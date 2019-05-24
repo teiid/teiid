@@ -68,23 +68,23 @@ import org.xml.sax.SAXException;
  * TODO: determine if we should use buffermanager to minimize memory footprint
  */
 public class GeometryUtils {
-    
+
     public static enum Ordinate {
         X, Y, Z
     }
-	
+
 	public static GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
-	
+
     private static final int SRID_4326 = 4326;
-    
+
     private static String SRS_PREFIX = "EPSG:"; //$NON-NLS-1$
 
-	public static ClobType geometryToClob(AbstractGeospatialType geometry, 
-                                          boolean withSrid) 
+	public static ClobType geometryToClob(AbstractGeospatialType geometry,
+                                          boolean withSrid)
             throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
         int srid = jtsGeometry.getSRID();
-        StringBuilder geomText = new StringBuilder(); 
+        StringBuilder geomText = new StringBuilder();
         if (withSrid && srid != GeometryType.UNKNOWN_SRID) {
             geomText.append("SRID=").append(jtsGeometry.getSRID()).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -97,7 +97,7 @@ public class GeometryUtils {
         return getGeometryType(geometryFromClob(wkt, GeometryType.UNKNOWN_SRID, false));
     }
 
-    public static Geometry geometryFromClob(ClobType wkt, Integer srid, boolean allowEwkt) 
+    public static Geometry geometryFromClob(ClobType wkt, Integer srid, boolean allowEwkt)
             throws FunctionExecutionException {
     	Reader r = null;
         try {
@@ -135,7 +135,7 @@ public class GeometryUtils {
     					pbr.unread(charRead);
             			break;
             		}
-            		expectedIndex++;	
+            		expectedIndex++;
             	}
             	if (sridBuffer != null) {
             		srid = Integer.parseInt(sridBuffer.toString());
@@ -169,13 +169,13 @@ public class GeometryUtils {
         	}
         }
     }
-        
-    public static ClobType geometryToGml(CommandContext ctx, GeometryType geometry, 
-                                         boolean withGmlPrefix) 
-            throws FunctionExecutionException {        
+
+    public static ClobType geometryToGml(CommandContext ctx, GeometryType geometry,
+                                         boolean withGmlPrefix)
+            throws FunctionExecutionException {
         Geometry jtsGeometry = getGeometry(geometry);
         GMLWriter writer = new GMLWriter();
-        
+
         if (!withGmlPrefix) {
         	if (geometry.getSrid() != SRID_4326) {
         		if (geometry.getSrid() == GeometryType.UNKNOWN_SRID) {
@@ -190,8 +190,8 @@ public class GeometryUtils {
         String gmlText = writer.write(jtsGeometry);
         return new ClobType(new ClobImpl(gmlText));
     }
-        
-    public static GeometryType geometryFromGml(ClobType gml, Integer srid) 
+
+    public static GeometryType geometryFromGml(ClobType gml, Integer srid)
             throws FunctionExecutionException {
         try {
 			Geometry geom = geometryFromGml(gml.getCharacterStream(), srid);
@@ -200,22 +200,22 @@ public class GeometryUtils {
 			throw new FunctionExecutionException(e);
 		}
     }
-    
+
     /**
      * Custom SAX handler extending GMLHandler to handle parsing SRIDs.
-     * 
+     *
      * The default JTS logic only handles srsName=int or srsName=uri/int
      * whereas other systems commonly use srsName=name:int
      */
     private static class GmlSridHandler extends GMLHandler {
         private int srid = GeometryType.UNKNOWN_SRID;
-        
+
         public GmlSridHandler(GeometryFactory gf, ErrorHandler delegate) {
             super(gf, delegate);
         }
 
         @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) 
+        public void startElement(String uri, String localName, String qName, Attributes attributes)
                 throws SAXException {
             String srsName = attributes.getValue("srsName"); //$NON-NLS-1$
             if (srsName != null) {
@@ -227,30 +227,30 @@ public class GeometryUtils {
                 } catch (NumberFormatException e) {
                     // ignore
                 }
-            }            
+            }
             super.startElement(uri, localName, qName, attributes);
         }
 
         public int getSrid() {
             return srid;
-        } 
+        }
     }
-    
-    public static Geometry geometryFromGml(Reader reader, Integer srid) 
+
+    public static Geometry geometryFromGml(Reader reader, Integer srid)
             throws FunctionExecutionException {
         Geometry jtsGeometry = null;
-        try {            
+        try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             factory.setNamespaceAware(false);
-            factory.setValidating(false);            
-            SAXParser parser = factory.newSAXParser();            
-            
+            factory.setValidating(false);
+            SAXParser parser = factory.newSAXParser();
+
             GmlSridHandler handler = new GmlSridHandler(GEOMETRY_FACTORY, null);
             parser.parse(new InputSource(reader), handler);
-            
+
             jtsGeometry = handler.getGeometry();
-        
-            if (srid == null) { 
+
+            if (srid == null) {
         		if (jtsGeometry.getSRID() == GeometryType.UNKNOWN_SRID) {
         			jtsGeometry.setSRID(handler.getSrid());
         		}
@@ -274,68 +274,68 @@ public class GeometryUtils {
         }
         return jtsGeometry;
     }
-    
+
     public static GeometryType geometryFromBlob(BlobType wkb)
             throws FunctionExecutionException {
         return geometryFromBlob(wkb, GeometryType.UNKNOWN_SRID);
     }
-    
+
     //TODO: should allow an option to assume well formed
     public static GeometryType geometryFromBlob(BlobType wkb, int srid) throws FunctionExecutionException {
         //return as geometry
         GeometryType gt = new GeometryType(wkb.getReference(), srid);
-        
+
         //validate
         getGeometry(gt);
         return gt;
     }
-    
+
 	public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.intersects(g2);
 	}
-	
+
 	public static Boolean contains(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.contains(g2);
 	}
-	
+
 	public static Boolean disjoint(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.disjoint(g2);
 	}
-	
+
 	public static Boolean crosses(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.crosses(g2);
 	}
-	
+
 	public static Double distance(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.distance(g2);
 	}
-	
+
 	public static Boolean touches(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.touches(g2);
 	}
-	
+
 	public static Boolean overlaps(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return g1.overlaps(g2);
 	}
-	
+
     public static GeometryType getGeometryType(Geometry jtsGeom) {
-        return getGeometryType(jtsGeom, jtsGeom.getSRID());       
+        return getGeometryType(jtsGeom, jtsGeom.getSRID());
     }
-    
+
     public static GeometryType getGeometryType(Geometry jtsGeom, int srid) {
         jtsGeom.setSRID(srid);
         byte[] bytes = getBytes(jtsGeom, true);
@@ -343,7 +343,7 @@ public class GeometryUtils {
         result.setGeoCache(jtsGeom);
         return result;
     }
-    
+
     public static GeographyType getGeographyType(Geometry geom, CommandContext ctx) throws FunctionExecutionException {
         if (geom.getSRID() == GeometryType.UNKNOWN_SRID) {
             geom.setSRID(GeographyType.DEFAULT_SRID);
@@ -352,7 +352,7 @@ public class GeometryUtils {
             throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31290, geom.getSRID()));
         }
         geom.apply(new CoordinateFilter() {
-            
+
             @Override
             public void filter(Coordinate coord) {
                 if (coord.x > 180) {
@@ -381,19 +381,19 @@ public class GeometryUtils {
         result.setGeoCache(geom);
         return result;
     }
-    
+
     public static byte[] getBytes(Geometry jtsGeom, boolean bigEndian) {
         WKBWriter writer = new WKBWriter(2, bigEndian?ByteOrderValues.BIG_ENDIAN:ByteOrderValues.LITTLE_ENDIAN);
         return writer.write(jtsGeom);
     }
-    
+
     public static Geometry getGeometry(AbstractGeospatialType geom)
             throws FunctionExecutionException {
         Object value = geom.getGeoCache();
         if (value instanceof Geometry) {
             return (Geometry)value;
         }
-        
+
         try {
 			Geometry result = getGeometry(geom.getBinaryStream(), geom.getSrid(), false);
 			geom.setGeoCache(result);
@@ -403,7 +403,7 @@ public class GeometryUtils {
 		}
     }
 
-	public static Geometry getGeometry(InputStream is1, Integer srid, boolean allowEwkb) 
+	public static Geometry getGeometry(InputStream is1, Integer srid, boolean allowEwkb)
             throws FunctionExecutionException {
         try {
             WKBReader reader = new WKBReader();
@@ -412,7 +412,7 @@ public class GeometryUtils {
             	//don't allow ewkb - that needs an explicit function
             	throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31160, "EWKB")); //$NON-NLS-1$
             }
-            if (srid != null) { 
+            if (srid != null) {
             	jtsGeom.setSRID(srid);
             }
             return jtsGeom;
@@ -438,7 +438,7 @@ public class GeometryUtils {
 		Geometry geom = getGeometry(is, srid, true);
 		return getGeometryType(geom);
 	}
-	
+
 	public static GeographyType geographyFromEwkb(CommandContext ctx, InputStream is) throws FunctionExecutionException {
         Geometry geom = getGeometry(is, null, true);
         return getGeographyType(geom, ctx);
@@ -452,12 +452,12 @@ public class GeometryUtils {
 	    Geometry resultGeometry = douglasPeuckerSimplifier.getResultGeometry();
         return getGeometryType(resultGeometry, geom.getSrid());
 	}
-	
+
 	public static GeometryType simplifyPreserveTopology(
             GeometryType geom, double tolerance) throws FunctionExecutionException {
         return getGeometryType(TopologyPreservingSimplifier.simplify(getGeometry(geom), tolerance), geom.getSrid());
     }
-	
+
 	public static boolean boundingBoxIntersects(
 			GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
 		Geometry g1 = getGeometry(geom1);
@@ -474,34 +474,34 @@ public class GeometryUtils {
         Geometry g2 = getGeometry(geom2);
 		return g1.within(g2);
 	}
-	
+
 	public static Boolean dwithin(GeometryType geom1, GeometryType geom2, double distance) throws FunctionExecutionException {
 		return distance(geom1, geom2) < distance;
 	}
-	
+
 	public static class Extent implements UserDefinedAggregate<GeometryType> {
-		
+
 		private Envelope e;
 		private int srid = GeometryType.UNKNOWN_SRID;
-		
+
 		public Extent() {
 		}
-		
+
 		@Override
 		public void reset() {
 			e = null;
 		}
-		
+
 		@TeiidFunction(name=SourceSystemFunctions.ST_EXTENT, category=FunctionCategoryConstants.GEOMETRY)
 		public void addInput(GeometryType geom) throws FunctionExecutionException {
 		    srid = geom.getSrid();
 			Geometry g1 = getGeometry(geom);
 			if (e == null) {
 				e = new Envelope();
-			} 
+			}
 		    e.expandToInclude(g1.getEnvelopeInternal());
 		}
-		
+
 		@Override
 		public GeometryType getResult(CommandContext commandContext) {
 			if (e == null) {
@@ -526,7 +526,7 @@ public class GeometryUtils {
 	public static BlobType geometryToEwkb(final AbstractGeospatialType geometry) {
 		final Blob b = geometry.getReference();
     	BlobImpl blobImpl = new BlobImpl(new InputStreamFactory() {
-			
+
 			@Override
 			public InputStream getInputStream() throws IOException {
 				PushbackInputStream pbis;
@@ -565,12 +565,12 @@ public class GeometryUtils {
 		Geometry g = getGeometry(geom);
 		return getGeometryType(g.getBoundary(), geom.getSrid());
 	}
-	
+
 	public static GeometryType buffer(GeometryType geom, double distance)  throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return getGeometryType(g.buffer(distance), geom.getSrid());
 	}
-	
+
 	public static GeometryType buffer(GeometryType geom, double distance, int quadrantSegments)  throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return getGeometryType(g.buffer(distance, quadrantSegments), geom.getSrid());
@@ -580,7 +580,7 @@ public class GeometryUtils {
 		Geometry g = getGeometry(geom);
 		return getGeometryType(g.getCentroid(), geom.getSrid());
 	}
-	
+
 	public static GeometryType convexHull(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return getGeometryType(g.convexHull(), geom.getSrid());
@@ -630,7 +630,7 @@ public class GeometryUtils {
 		}
 		return null;
 	}
-	
+
 	public static GeometryType exteriorRing(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		if (!(g instanceof Polygon)) {
@@ -638,7 +638,7 @@ public class GeometryUtils {
 		}
 		return getGeometryType(((Polygon)g).getExteriorRing(), geom.getSrid());
 	}
-	
+
 	public static GeometryType geometryN(GeometryType geom, int index) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		int num = g.getNumGeometries();
@@ -662,12 +662,12 @@ public class GeometryUtils {
 		LineString lineString = ((LineString)g);
 		return lineString.isClosed();
 	}
-	
+
 	public static Boolean isEmpty(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return g.isEmpty();
 	}
-	
+
 	public static Boolean isRing(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		if (!(g instanceof LineString)) {
@@ -681,12 +681,12 @@ public class GeometryUtils {
 		Geometry g = getGeometry(geom);
 		return g.isSimple();
 	}
-	
+
 	public static Boolean isValid(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		return g.isValid();
 	}
-	
+
 	public static Double length(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		if (g instanceof LineString || g instanceof MultiLineString) {
@@ -694,7 +694,7 @@ public class GeometryUtils {
 		}
 		return 0.0;
 	}
-	
+
 	public static Integer numInteriorRings(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		if (!(g instanceof Polygon)) {
@@ -744,7 +744,7 @@ public class GeometryUtils {
 		}
 		return getGeometryType(g2.getPointN(i), geom.getSrid());
 	}
-	
+
 	public static Double perimeter(GeometryType geom) throws FunctionExecutionException {
 		Geometry g = getGeometry(geom);
 		if (g instanceof Polygon || g instanceof MultiPolygon) {
@@ -761,7 +761,7 @@ public class GeometryUtils {
 		}
 		return getGeometryType(point, geom.getSrid());
 	}
-	
+
 	public static GeometryType polygon(GeometryType geom, int srid) throws FunctionExecutionException {
         Geometry g = getGeometry(geom);
         if (!(g instanceof LineString)) {
@@ -777,26 +777,26 @@ public class GeometryUtils {
         Geometry g2 = getGeometry(geom2);
         return g1.relate(g2, intersectionPattern);
     }
-    
+
     public static String relate(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         IntersectionMatrix im = g1.relate(g2);
         return im.toString();
     }
-    
+
     public static GeometryType symDifference(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return getGeometryType(g1.symDifference(g2), geom1.getSrid());
     }
-    
+
     public static GeometryType union(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         Geometry g1 = getGeometry(geom1);
         Geometry g2 = getGeometry(geom2);
         return getGeometryType(g1.union(g2), geom1.getSrid());
     }
-    
+
     public static Double ordinate(GeometryType geom, Ordinate ordinate) throws FunctionExecutionException {
         Geometry g = getGeometry(geom);
         if (!(g instanceof Point)) {

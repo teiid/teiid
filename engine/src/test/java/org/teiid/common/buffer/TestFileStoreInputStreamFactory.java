@@ -40,5 +40,5 @@ public class TestFileStoreInputStreamFactory {
 		is.read();
 		assertEquals(-1, is.read());
 	}
-	
+
 }

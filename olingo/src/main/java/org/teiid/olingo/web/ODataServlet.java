@@ -38,7 +38,7 @@ public class ODataServlet extends HttpServlet {
             TeiidServiceHandler.setClient(client);
             handler.process(request, response);
         } finally {
-            TeiidServiceHandler.setClient(null);    
+            TeiidServiceHandler.setClient(null);
         }
     }
 }

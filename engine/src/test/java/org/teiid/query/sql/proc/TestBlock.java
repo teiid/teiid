@@ -28,9 +28,9 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestBlock {
 
-	// ################################## TEST HELPERS ################################	
+	// ################################## TEST HELPERS ################################
 
-	public static final Block sample1() { 
+	public static final Block sample1() {
 		Block block = new Block();
 		block.addStatement(TestAssignmentStatement.sample1());
 		block.addStatement(TestCommandStatement.sample1());
@@ -39,7 +39,7 @@ public class TestBlock {
 	    return block;
 	}
 
-	public static final Block sample2() { 
+	public static final Block sample2() {
 		Block block = new Block();
 		block.addStatement(TestAssignmentStatement.sample2());
 		block.addStatement(TestCommandStatement.sample2());
@@ -47,27 +47,27 @@ public class TestBlock {
 		block.addStatement(TestAssignmentStatement.sample2());
 	    return block;
 	}
-			
+
 	// ################################## ACTUAL TESTS ################################
-	
+
 	@Test public void testGetStatements1() {
 		Block b1 = sample1();
 		List<Statement> stmts = b1.getStatements();
         assertTrue("Incorrect number of statements in the Block", (stmts.size() == 4)); //$NON-NLS-1$
 	}
-	
+
 	@Test public void testGetStatements2() {
 		Block b1 = sample1();
 		Statement stmt = b1.getStatements().get(1);
         assertTrue("Incorrect statement in the Block", stmt.equals(TestCommandStatement.sample1())); //$NON-NLS-1$
 	}
-	
+
 	@Test public void testaddStatement1() {
 		Block b1 = sample1().clone();
 		b1.addStatement(TestCommandStatement.sample2());
         assertTrue("Incorrect number of statements in the Block", (b1.getStatements().size() == 5)); //$NON-NLS-1$
 	}
-	
+
 	@Test public void testaddStatement2() {
 		Block b1 = sample2().clone();
 		b1.addStatement(TestCommandStatement.sample2());
@@ -87,21 +87,21 @@ public class TestBlock {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, b1, b1a);
 	}
-	
+
 	@Test public void testNonEquivalence(){
 		Block b1 = sample1();
 		Block b2 = sample2();
 		int equals = -1;
 		UnitTestUtil.helpTestEquivalence(equals, b1, b2);
 	}
-	
+
 	@Test public void testClone() {
 		Block b1 = sample1();
 		Block b2 = b1.clone();
 		UnitTestUtil.helpTestEquivalence(0, b1, b2);
 		assertNotSame(b1.getStatements().get(0), b2.getStatements().get(0));
 	}
-	
+
 	@Test public void testExceptionGroup() {
 		Block b1 = sample1();
 		Block b2 = b1.clone();

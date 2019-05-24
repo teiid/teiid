@@ -33,7 +33,7 @@ public class SimpleDBUpdateExecute implements UpdateExecution {
     public SimpleDBUpdateExecute(Command command, SimpleDBConnection connection) throws TranslatorException {
         this.connection = connection;
         this.visitor = new SimpleDBUpdateVisitor((Update)command);
-        this.visitor.checkExceptions();        
+        this.visitor.checkExceptions();
     }
 
     @Override
@@ -50,13 +50,13 @@ public class SimpleDBUpdateExecute implements UpdateExecution {
             sb.append(" WHERE ").append(this.visitor.getCriteria()); //$NON-NLS-1$
         }
         return sb.toString();
-    }    
-    
+    }
+
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
         return new int[] { updatedCount };
     }
-    
+
     @Override
     public void close() {
     }

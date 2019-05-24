@@ -22,7 +22,7 @@ import java.sql.Blob;
 
 public final class GeometryType extends AbstractGeospatialType {
     public static final int UNKNOWN_SRID = 0;
-    
+
     public GeometryType() {
 
     }

@@ -38,23 +38,23 @@ import org.teiid.metadata.Grant.Permission.Privilege;
 
 public class DatabaseUtil {
 
-    public static Database convert(VDBMetaData vdb, MetadataStore metadataStore) {                 
+    public static Database convert(VDBMetaData vdb, MetadataStore metadataStore) {
         Database db = new Database(vdb.getName(), vdb.getVersion());
         db.setProperties(vdb.getPropertiesMap());
         if (vdb.getDescription() != null) {
             db.setAnnotation(vdb.getDescription());
         }
         db.setProperty("connection-type", vdb.getConnectionType().name());
-        
+
         db.getMetadataStore().addDataTypes(metadataStore.getDatatypes());
-        
+
         // override translators
         List<Translator> translators = vdb.getOverrideTranslators();
         for (Translator t: translators) {
             // add the base
             if (db.getDataWrapper(t.getType()) == null) {
                 DataWrapper dw = new DataWrapper(t.getType());
-                db.addDataWrapper(dw);                
+                db.addDataWrapper(dw);
             }
             // add override with properties
             if (db.getDataWrapper(t.getName()) == null) {
@@ -67,18 +67,18 @@ public class DatabaseUtil {
                     dw.setAnnotation(t.getDescription());
                 }
                 db.addDataWrapper(dw);
-            }            
+            }
         }
-        
-        Collection<ModelMetaData> models = vdb.getModelMetaDatas().values(); 
+
+        Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
         for (ModelMetaData m:models) {
         	Schema schema = metadataStore.getSchema(m.getName());
 
             // add servers
             if (m.isSource()){
             	Collection<SourceMappingMetadata> sources = m.getSourceMappings();
-                
-                
+
+
                 for (SourceMappingMetadata s: sources) {
                 	// add translators, that are not override
                 	if (db.getDataWrapper(s.getTranslatorName()) == null) {
@@ -97,22 +97,22 @@ public class DatabaseUtil {
 	                }
 	            }
             }
-            
+
             db.addSchema(schema);
         }
-        
+
         for (String key : vdb.getDataPolicyMap().keySet()) {
             DataPolicyMetadata dpm = vdb.getDataPolicyMap().get(key);
             Role role = new Role(dpm.getName());
             if (dpm.getMappedRoleNames() != null && !dpm.getMappedRoleNames().isEmpty()) {
                 role.setJaasRoles(dpm.getMappedRoleNames());
             }
-            
+
             if (dpm.isAnyAuthenticated()) {
                 role.setAnyAuthenticated(true);
             }
 
-            Grant grant = null;         
+            Grant grant = null;
             if (dpm.isGrantAll()) {
                 if (grant == null) {
                     grant = new Grant();
@@ -123,7 +123,7 @@ public class DatabaseUtil {
                 permission.setResourceType(ResourceType.DATABASE);
                 grant.addPermission(permission);
             }
-            
+
             if (dpm.isAllowCreateTemporaryTables() != null && dpm.isAllowCreateTemporaryTables()) {
                 if (grant == null) {
                     grant = new Grant();
@@ -132,15 +132,15 @@ public class DatabaseUtil {
                 Permission permission = new Permission();
                 permission.setAllowTemporyTables(true);
                 permission.setResourceType(ResourceType.DATABASE);
-                grant.addPermission(permission);                
+                grant.addPermission(permission);
             }
-            
+
             for (DataPolicy.DataPermission dp: dpm.getPermissions()) {
                 if (grant == null) {
                     grant = new Grant();
                     grant.setRole(role.getName());
                 }
-                
+
                 Permission permission = convert(dp);
                 grant.addPermission(permission);
             }
@@ -149,10 +149,10 @@ public class DatabaseUtil {
         }
         return db;
     }
-    
+
     private static Permission convert(DataPermission dp) {
         Permission p = new Permission();
-        
+
         p.setAllowAlter(dp.getAllowAlter());
         p.setAllowDelete(dp.getAllowDelete());
         p.setAllowExecute(dp.getAllowExecute());
@@ -160,7 +160,7 @@ public class DatabaseUtil {
         p.setAllowSelect(dp.getAllowRead());
         p.setAllowUpdate(dp.getAllowUpdate());
         p.setResourceName(dp.getResourceName());
-        
+
         if (dp.getAllowLanguage() != null && dp.getAllowLanguage()) {
             p.setAllowUsage(true);
             p.setResourceType(ResourceType.LANGUAGE);
@@ -168,7 +168,7 @@ public class DatabaseUtil {
             p.setResourceType(ResourceType.valueOf(dp.getResourceType().name()));
         } else {
             int dotCount = dp.getResourceName().length() - dp.getResourceName().replaceAll("\\.", "").length(); //$NON-NLS-1$ //$NON-NLS-2$
-            
+
             if (dotCount == 0) {
                 p.setResourceType(ResourceType.SCHEMA);
             } else if (dp.getAllowExecute() != null && dp.getAllowExecute()){
@@ -181,12 +181,12 @@ public class DatabaseUtil {
                 p.setResourceType(ResourceType.TABLE);
             }
         }
-        
+
         if (dp.getMask() != null) {
             p.setMask(dp.getMask());
             p.setMaskOrder(dp.getOrder());
         }
-        
+
         if (dp.getCondition() != null) {
             p.setCondition(dp.getCondition(), dp.getConstraint());
         }
@@ -198,24 +198,24 @@ public class DatabaseUtil {
         vdb.setName(database.getName());
         vdb.setVersion(database.getVersion());
         vdb.setDescription(database.getAnnotation());
-        
+
         if (database.getProperty("connection-type", false) != null) {
             vdb.setConnectionType(VDB.ConnectionType.valueOf(database.getProperty("connection-type", false)));
         }
         vdb.getPropertiesMap().putAll(database.getProperties());
-        
+
         String domainDDLString = DDLStringVisitor.getDomainDDLString(database);
         if (!domainDDLString.isEmpty()) {
             vdb.addProperty(VDBMetaData.TEIID_DOMAINS, domainDDLString);
         }
-        
+
         // translators
         for (DataWrapper dw : database.getDataWrappers()) {
             if (dw.getType() == null) {
                 // we only care about the override types in the VDB
                 continue;
             }
-            
+
             VDBTranslatorMetaData translator = new VDBTranslatorMetaData();
             translator.setName(dw.getName());
             translator.setType(dw.getType());
@@ -232,7 +232,7 @@ public class DatabaseUtil {
             mmd.getPropertiesMap().putAll(schema.getProperties());
             if (schema.isPhysical()) {
                 mmd.setModelType(Model.Type.PHYSICAL);
-                
+
                 for (Server server : schema.getServers()) {
                     // if there are more properties to create DS they will be lost in this translation
                     String connectionName = server.getJndiName();
@@ -246,9 +246,9 @@ public class DatabaseUtil {
             }
             vdb.addModel(mmd);
         }
-        
+
         copyDatabaseGrantsAndRoles(database, vdb);
-        
+
         return vdb;
     }
 
@@ -260,7 +260,7 @@ public class DatabaseUtil {
             DataPolicyMetadata dpm = convert(grant, role);
             vdb.addDataPolicy(dpm);
         }
-        
+
         for (Role role : database.getRoles()) {
             if (vdb.getDataPolicyMap().get(role.getName()) == null) {
                 DataPolicyMetadata dpm = convert(null, role);
@@ -268,7 +268,7 @@ public class DatabaseUtil {
             }
         }
     }
-    
+
     static PermissionMetaData convert(Permission from) {
         PermissionMetaData pmd = new PermissionMetaData();
         pmd.setResourceName(from.getResourceName());
@@ -280,7 +280,7 @@ public class DatabaseUtil {
         pmd.setAllowRead(from.hasPrivilege(Privilege.SELECT));
         pmd.setAllowUpdate(from.hasPrivilege(Privilege.UPDATE));
         pmd.setAllowLanguage(from.hasPrivilege(Privilege.USAGE));
-        
+
         pmd.setCondition(from.getCondition());
         pmd.setConstraint(from.isConditionAConstraint());
         pmd.setMask(from.getMask());
@@ -288,11 +288,11 @@ public class DatabaseUtil {
 
         return pmd;
     }
-    
+
     static DataPolicyMetadata convert(Grant from, Role role) {
         DataPolicyMetadata dpm = new DataPolicyMetadata();
         dpm.setName(role.getName());
-        
+
         if (from != null) {
             for (Permission p : from.getPermissions()) {
                 if (Boolean.TRUE.equals(p.hasPrivilege(Privilege.ALL_PRIVILEGES))) {
@@ -302,22 +302,22 @@ public class DatabaseUtil {
                     dpm.setAllowCreateTemporaryTables(true);
                     continue;
                 }
-                
-                PermissionMetaData pmd = convert(p);            
+
+                PermissionMetaData pmd = convert(p);
                 dpm.addPermission(pmd);
             }
         }
-        
+
         dpm.setDescription(role.getAnnotation());
-        
+
         if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
             dpm.setMappedRoleNames(role.getJassRoles());
         }
-        
+
         if (role.isAnyAuthenticated()) {
             dpm.setAnyAuthenticated(true);
         }
-        
+
         return dpm;
-    }    
+    }
 }

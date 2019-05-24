@@ -44,7 +44,7 @@ public class CassandraDirectQueryExecution extends CassandraQueryExecution imple
 	public void execute() throws TranslatorException {
 		StringBuilder buffer = new StringBuilder();
 		SQLStringVisitor.parseNativeQueryParts(cql, arguments, buffer, new SQLStringVisitor.Substitutor() {
-			
+
 			@Override
 			public void substitute(Argument arg, StringBuilder builder, int index) {
 				Literal argumentValue = arg.getArgumentValue();

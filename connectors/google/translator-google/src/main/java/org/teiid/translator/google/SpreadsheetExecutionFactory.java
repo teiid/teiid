@@ -46,18 +46,18 @@ import org.teiid.translator.google.api.GoogleSpreadsheetConnection;
 
 /**
  * Translator that is used to translate SQL to Google spreadsheet API. Translator uses Google Visualization API and Google Data API.
- * 
+ *
  * @author felias
  *
  */
 @Translator(name="google-spreadsheet", description="A translator for Google Spreadsheet")
 public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFactory, GoogleSpreadsheetConnection>{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetExecutionFactory.class);
-	
+
 	public SpreadsheetExecutionFactory() {
 		setTransactionSupport(TransactionSupport.NONE);
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -69,18 +69,18 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 			throws TranslatorException {
 		return new SpreadsheetQueryExecution((Select)command, connection, executionContext);
 	}
-	
+
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, GoogleSpreadsheetConnection connection) throws TranslatorException {
 		UpdateExecution result = new SpreadsheetUpdateExecution(command, connection, executionContext, metadata);
 		return result;
 	}
-	
+
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, GoogleSpreadsheetConnection connection) throws TranslatorException {
 		 return new DirectSpreadsheetQueryExecution((String)arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), executionContext, connection, true);
 	}
-	
+
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -91,12 +91,12 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 		}
 		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
 	}
-	
+
 	@Override
     public MetadataProcessor<GoogleSpreadsheetConnection> getMetadataProcessor(){
 	    return new GoogleMetadataProcessor();
 	}
-	
+
 	@Override
 	public boolean supportsCompareCriteriaEquals() {
 		return true;
@@ -186,5 +186,5 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 				SourceSystemFunctions.DAYOFWEEK, SourceSystemFunctions.UCASE,
 				SourceSystemFunctions.LCASE);
 	}
-	
+
 }

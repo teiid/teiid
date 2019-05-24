@@ -49,9 +49,9 @@ public class JPQLQueryExecution extends JPQLBaseExecution implements ResultSetEx
 	@Override
 	public void execute() throws TranslatorException {
 		String jpql = JPQLSelectVisitor.getJPQLString((Select)this.command, this.executionFactory, this.metadata);
-		
+
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
-		
+
 		Query query = this.enityManager.createQuery(jpql);
 		handleLimit(this.command, query);
 		List results = query.getResultList();
@@ -85,7 +85,7 @@ public class JPQLQueryExecution extends JPQLBaseExecution implements ResultSetEx
 		}
 		return null;
 	}
-	
+
 	@Override
 	public void close() {
 		// no close

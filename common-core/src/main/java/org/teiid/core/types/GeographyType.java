@@ -22,7 +22,7 @@ import java.sql.Blob;
 
 public final class GeographyType extends AbstractGeospatialType {
     public static final int DEFAULT_SRID = 4326;
-    
+
     public GeographyType() {
         setSrid(DEFAULT_SRID);
     }
@@ -44,7 +44,7 @@ public final class GeographyType extends AbstractGeospatialType {
         super(bytes);
         setSrid(srid);
     }
-    
+
     @Override
     public void setSrid(int srid) {
         if (srid == GeometryType.UNKNOWN_SRID) {

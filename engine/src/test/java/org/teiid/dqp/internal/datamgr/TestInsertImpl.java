@@ -49,38 +49,38 @@ public class TestInsertImpl extends TestCase {
         elements.add(TestElementImpl.helpExample(groupName, "e2")); //$NON-NLS-1$
         elements.add(TestElementImpl.helpExample(groupName, "e3")); //$NON-NLS-1$
         elements.add(TestElementImpl.helpExample(groupName, "e4")); //$NON-NLS-1$
-        
+
         ArrayList<Constant> values = new ArrayList<Constant>();
         values.add(TestLiteralImpl.helpExample(1));
         values.add(TestLiteralImpl.helpExample(2));
         values.add(TestLiteralImpl.helpExample(3));
         values.add(TestLiteralImpl.helpExample(4));
-        
+
         return new org.teiid.query.sql.lang.Insert(group,
                           elements,
                           values);
     }
-    
+
     public static org.teiid.query.sql.lang.Insert helpExample2(String groupName) {
         GroupSymbol group = TestGroupImpl.helpExample(groupName);
         ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
         elements.add(TestElementImpl.helpExample(groupName, "e1")); //$NON-NLS-1$
-        
+
         ArrayList<org.teiid.query.sql.symbol.Expression> values = new ArrayList<org.teiid.query.sql.symbol.Expression>();
         values.add(TestSearchedCaseExpressionImpl.helpExample());
-        
+
         return new org.teiid.query.sql.lang.Insert(group,
                           elements,
                           values);
     }
-  
+
     public static Insert example(String groupName) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(groupName));
-        
+
     }
     public static Insert example2(String groupName) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample2(groupName));
-        
+
     }
     public void testGetGroup() throws Exception {
         assertNotNull(example("a.b").getTable()); //$NON-NLS-1$
@@ -93,7 +93,7 @@ public class TestInsertImpl extends TestCase {
 
         // verify that elements are not qualified by group
         String sInsertSQL = insert.toString();
-        assertTrue(sInsertSQL.substring(sInsertSQL.indexOf('(')).indexOf( '.') == -1 );                        
+        assertTrue(sInsertSQL.substring(sInsertSQL.indexOf('(')).indexOf( '.') == -1 );
     }
 
     public void testGetValues() throws Exception {
@@ -104,7 +104,7 @@ public class TestInsertImpl extends TestCase {
             assertTrue(i.next() instanceof Expression);
         }
     }
-    
+
     public void testExpressionsInInsert() throws Exception {
         Insert insert = example2("a.b"); //$NON-NLS-1$
         assertNotNull(insert.getColumns());

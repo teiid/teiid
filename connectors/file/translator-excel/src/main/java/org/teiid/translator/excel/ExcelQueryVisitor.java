@@ -32,26 +32,26 @@ import org.teiid.translator.TranslatorException;
 public class ExcelQueryVisitor extends HierarchyVisitor {
 
     public static int ROW_ID_INDEX = -1;
-    
+
 	protected Stack<Object> onGoingExpression = new Stack<Object>();
 	private List<Integer> projectedColumns = new ArrayList<Integer>();
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
-	
+
 	private Table table;
 	private String xlsPath;
 	private String sheetName;
 	private int firstDataRowNumber;
-	
+
 	static interface Filter {
 		public boolean allows (int row);
 	}
-	
+
 	static class InFilter implements Filter {
 		Integer[] values;
 		public InFilter(Integer[] allowed) {
 			this.values = allowed;
 		}
-		
+
 		@Override
 		public boolean allows(int row) {
 			for (int i = 0; i < values.length; i++) {
@@ -62,16 +62,16 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 			return false;
 		}
 	}
-	
+
 	static class CompareFilter implements Filter {
 		int start;
 		Operator op;
-		
+
 		public CompareFilter (int start, Operator op) {
 			this.start = start;
 			this.op = op;
 		}
-		
+
 		public boolean allows (int row) {
 	    	switch(op) {
 	        case EQ:
@@ -86,17 +86,17 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 	        	return row > start;
 	        case GE:
 	        	return row >= start;
-	        }	
+	        }
 	    	return false;
 		}
 	}
-	
+
 	private ArrayList<ExcelQueryVisitor.Filter> filters = new ArrayList<ExcelQueryVisitor.Filter>();
-	
+
 	public List<Integer> getProjectedColumns() {
 		return projectedColumns;
 	}
-	
+
 	public int getFirstDataRowNumber() {
 		return firstDataRowNumber;
 	}
@@ -137,7 +137,7 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 			this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23007, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23007, column.getName())));
 			return;
 		}
-		
+
 		if (str.equalsIgnoreCase(ExcelMetadataProcessor.ROW_ID)) {
 		    if (!allowRowId) {
 		        this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23009, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23009, column.getName())));
@@ -148,7 +148,7 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 			this.projectedColumns.add(Integer.valueOf(str));
 		}
     }
-	
+
 	@Override
 	public void visit(SetClause clause) {
 	    visit(clause.getSymbol());
@@ -175,15 +175,15 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
         visitNode(obj.getLeftCondition());
         visitNode(obj.getRightCondition());
     }
-	
+
 	@Override
 	public void visit(Comparison obj) {
 		visitNode(obj.getLeftExpression());
 		Column column = (Column)this.onGoingExpression.pop();
-		
+
 		visitNode(obj.getRightExpression());
 		Integer rightExpr = (Integer)this.onGoingExpression.pop();
-		
+
 		if (isPartOfPrimaryKey(column)) {
 	    	switch(obj.getOperator()) {
 	        case EQ:
@@ -210,14 +210,14 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 			this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23008, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23008, column.getName())));
 		}
 	}
-	
+
 	@Override
 	public void visit(In obj) {
 		visitNode(obj.getLeftExpression());
 		Column column = (Column)this.onGoingExpression.pop();
-		
+
 		visitNodes(obj.getRightExpressions());
-		
+
 		if (isPartOfPrimaryKey(column)) {
 			ArrayList<Integer> values = new ArrayList<Integer>();
 			// NOTE: we are popping in reverse order to IN stmt
@@ -230,12 +230,12 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 			this.exceptions.add(new TranslatorException(ExcelPlugin.Event.TEIID23008, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23008, column.getName())));
 		}
 	}
-	
+
 	@Override
 	public void visit(Literal obj) {
 		this.onGoingExpression.push(obj.getValue());
-	}	
-	
+	}
+
 	@Override
 	public void visit(Limit obj) {
 		int offset = obj.getRowOffset();
@@ -244,27 +244,27 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 		}
 		this.filters.add(new CompareFilter(this.firstDataRowNumber, Operator.GE));
 		this.filters.add(new CompareFilter(this.firstDataRowNumber+obj.getRowLimit(), Operator.LT));
-	}	
-	
+	}
+
 	public static boolean isPartOfPrimaryKey(Column column) {
 		KeyRecord pk = ((Table)column.getParent()).getPrimaryKey();
 		if (pk != null) {
 			for (Column col:pk.getColumns()) {
 				if (col.getName().equals(column.getName())) {
 					if (col.getProperty(ExcelMetadataProcessor.CELL_NUMBER, false).equalsIgnoreCase(ExcelMetadataProcessor.ROW_ID)) {
-						return true;	
+						return true;
 					}
 				}
 			}
 		}
 		return false;
 	}
-	
+
 	public boolean allows(int row) {
 		if (this.filters.isEmpty()) {
 			return true;
 		}
-		
+
 		for (Filter f:this.filters) {
 			if (!f.allows(row)) {
 				return false;
@@ -272,7 +272,7 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 		}
 		return true;
 	}
-	
+
 	@Override
 	public void visit(Insert obj) {
 	    visit(obj.getTable());
@@ -289,5 +289,5 @@ public class ExcelQueryVisitor extends HierarchyVisitor {
 	        }
 	    }
 	}
-	
+
 }

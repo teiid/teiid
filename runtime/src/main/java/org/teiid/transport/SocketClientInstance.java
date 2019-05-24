@@ -48,21 +48,21 @@ import org.teiid.transport.ObjectEncoder.FailedWriteException;
 
 /**
  * Sockets implementation of the communication framework class representing the server's view of a client connection.
- * Implements the server-side of the sockets messaging protocol.  
+ * Implements the server-side of the sockets messaging protocol.
  * The client side of the protocol is implemented in SocketServerInstance.
  * Users of this class are expected to provide a WorkerPool for processing incoming messages.  Users must also call read().
- * Users also provide a ServerListener implementation.  The ServerListener is the application level object 
+ * Users also provide a ServerListener implementation.  The ServerListener is the application level object
  * processing the application level messages.
  */
 public class SocketClientInstance implements ChannelListener, ClientInstance {
-	
+
 	private final ObjectChannel objectSocket;
     private Cryptor cryptor;
     private ClientServiceRegistryImpl csr;
-    private boolean usingEncryption; 
+    private boolean usingEncryption;
     private DhKeyGenerator keyGen;
     private DQPWorkContext workContext = new DQPWorkContext().local(false);
-        
+
     public SocketClientInstance(ObjectChannel objectSocket, ClientServiceRegistryImpl csr, boolean isClientEncryptionEnabled) {
         this.objectSocket = objectSocket;
         this.csr = csr;
@@ -75,7 +75,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         	this.workContext.setClientHostname(addr.getHostString());
         }
     }
-    
+
     public void send(Message message, Serializable messageKey) {
     	message.setMessageKey(messageKey);
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
@@ -83,8 +83,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
         }
     	objectSocket.write(message);
     }
-    
-    /** 
+
+    /**
      * @return Returns the cryptor.
      */
     public Cryptor getCryptor() {
@@ -103,7 +103,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 						exception.setContents(m.getMessageKey());
 						exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
 						objectSocket.write(exception);
-						LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); 
+						LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113));
 						return;
 					}
 				}
@@ -112,12 +112,12 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 				Message exception = new Message();
 				exception.setMessageKey(new ExceptionHolder(t));
 				objectSocket.write(exception);
-				LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); 
+				LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113));
 				return;
 			}
 		}
 		int level = getLevel(t);
-		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage())); 
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage()));
 		objectSocket.close();
 	}
 
@@ -163,10 +163,10 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40051, e);
 			}
             handshake.setPublicKey(publicKey);
-        } 
+        }
         this.objectSocket.write(handshake);
 	}
-	
+
 	@Override
 	public void disconnected() {
 		if (workContext.getSessionId() != null) {
@@ -189,7 +189,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (usingEncryption) {
             byte[] returnedPublicKey = handshake.getPublicKey();
             byte[] returnedPublicKeyLarge = handshake.getPublicKeyLarge();
-            
+
             boolean large = false;
             //ensure the key information
             if (returnedPublicKey == null) {
@@ -199,7 +199,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             	large = true;
             	returnedPublicKey = returnedPublicKeyLarge;
             }
-            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
     			LogManager.logDetail(LogConstants.CTX_TRANSPORT, large?"2048":"1024", "key exchange being used."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
             boolean useCbc = handshake.isCbc();
@@ -219,11 +219,11 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             processMessagePacket((Message)msg);
         } else if (msg instanceof Handshake) {
         	receivedHahdshake((Handshake)msg);
-        } 
+        }
 	}
 
 	private void processMessagePacket(Message packet) {
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
 			LogManager.logDetail(LogConstants.CTX_TRANSPORT, "processing message:" + packet); //$NON-NLS-1$
         }
 		workContext.getSession().setLastPingTime(System.currentTimeMillis());

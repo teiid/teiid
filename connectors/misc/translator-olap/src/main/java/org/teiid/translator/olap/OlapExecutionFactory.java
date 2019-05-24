@@ -41,18 +41,18 @@ import org.teiid.translator.TranslatorException;
 @Translator(name="olap", description="A translator for OLAP Cubes")
 public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 	private static final String INVOKE_MDX = "invokeMdx"; //$NON-NLS-1$
-	
+
 	public OlapExecutionFactory() {
 		setSourceRequiredForMetadata(false);
 		setSupportsDirectQueryProcedure(true);
 		setDirectQueryProcedureName(INVOKE_MDX);
 	}
-	
+
     @Override
    	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
     	return new OlapQueryExecution(arguments.subList(1, arguments.size()), command, unwrap(connection), executionContext, this, (String) arguments.get(0).getArgumentValue().getValue(), true);
-	}    
-    
+	}
+
     @Override
     public ProcedureExecution createProcedureExecution(Call command,
     		ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -71,9 +71,9 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
     		return olapConn;
     	} catch(SQLException e) {
     		throw new TranslatorException(e);
-    	}		
+    	}
 	}
-	
+
     @Override
     public Connection getConnection(DataSource ds)
     		throws TranslatorException {
@@ -83,7 +83,7 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 			throw new TranslatorException(e);
 		}
     }
-    
+
     @Override
     public void closeConnection(Connection connection, DataSource factory) {
     	if (connection == null) {

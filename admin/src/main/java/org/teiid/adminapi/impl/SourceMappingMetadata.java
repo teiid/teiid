@@ -25,9 +25,9 @@ public class SourceMappingMetadata implements Serializable {
     private String name;
     private String jndiName;
     private String translatorName;
-    
+
 	public SourceMappingMetadata() {}
-    
+
     public SourceMappingMetadata(String name, String translatorName, String connJndiName) {
     	this.name = name;
     	this.translatorName = translatorName;
@@ -43,7 +43,7 @@ public class SourceMappingMetadata implements Serializable {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return the jndi name or null if no connection factory is defined
 	 */
 	public String getConnectionJndiName() {
@@ -53,15 +53,15 @@ public class SourceMappingMetadata implements Serializable {
 	public void setConnectionJndiName(String jndiName) {
 		this.jndiName = jndiName;
 	}
-	
+
     public String getTranslatorName() {
 		return translatorName;
 	}
 
 	public void setTranslatorName(String translatorName) {
 		this.translatorName = translatorName;
-	}	
-	
+	}
+
 	public String toString() {
 		return getName()+", "+getTranslatorName()+", "+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
 	}

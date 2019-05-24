@@ -80,7 +80,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 public final class RulePlanSubqueries implements OptimizerRule {
-	
+
 	private static final int LARGE_INDEPENDENT = 10000;
 
     /**
@@ -90,12 +90,12 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			ExpressionMappingVisitor {
 		private final SymbolMap refs;
 		private boolean replacedAny;
-		
+
 		public ReferenceReplacementVisitor(SymbolMap refs) {
 			super(null);
 			this.refs = refs;
 		}
-		
+
 		public Expression replaceExpression(Expression element) {
 			if (element instanceof Reference) {
 				Reference r = (Reference)element;
@@ -112,11 +112,11 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			return element;
 		}
-		
+
 	}
-	
+
 	public static class PlannedResult {
-		public List leftExpressions = new LinkedList(); 
+		public List leftExpressions = new LinkedList();
 		public List rightExpressions = new LinkedList();
 		public Query query;
 		public boolean not;
@@ -141,7 +141,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             this.multiRow = false;
         }
 	}
-	
+
     /**
      * Return true if the result from the subquery may be different
      * if non-distinct rows are used as input
@@ -177,7 +177,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 	private CommandContext context;
 	private QueryMetadataInterface metadata;
 	private boolean dependent;
-	
+
 	public RulePlanSubqueries(IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context, QueryMetadataInterface metadata) {
 		this.idGenerator = idGenerator;
     	this.capFinder = capFinder;
@@ -198,16 +198,16 @@ public final class RulePlanSubqueries implements OptimizerRule {
         }
         return plan;
     }
-    
+
     void processSubqueries(PlanNode root)
             throws QueryPlannerException, TeiidComponentException {
 
         PlanNode recurseRoot = root;
         if(root.getType() == NodeConstants.Types.SELECT) {
-            
+
             // Walk to end of the chain and change recurse root
             while(recurseRoot.getType() == NodeConstants.Types.SELECT) {
-                // Look for opportunities to replace with a semi-join 
+                // Look for opportunities to replace with a semi-join
                 recurseRoot = planMergeJoin(recurseRoot, root);
                 if (root.getChildCount() == 0) {
                     root = recurseRoot.getFirstChild();
@@ -225,7 +225,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
                 Expression symbol = symbols.get(i);
                 plannedResult.reset();
                 findSubquery(SymbolMap.getExpression(symbol), true, plannedResult, false);
-                if (plannedResult.query == null 
+                if (plannedResult.query == null
                         || plannedResult.query.getFrom() == null
                         || plannedResult.not) {
                     continue;
@@ -242,7 +242,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
                 }
             }
         }
-        
+
         if (recurseRoot.getType() != NodeConstants.Types.ACCESS) {
             for (PlanNode child : recurseRoot.getChildren()) {
                 processSubqueries(child);
@@ -254,13 +254,13 @@ public final class RulePlanSubqueries implements OptimizerRule {
      * Look for:
      * [NOT] EXISTS ( )
      * IN ( ) / SOME ( )
-     * 
+     *
      * and replace with a semi join
      */
 	private PlanNode planMergeJoin(PlanNode current, PlanNode root) throws QueryMetadataException,
 			TeiidComponentException {
 		Criteria crit = (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-		
+
 		PlannedResult plannedResult = findSubquery(crit, true);
 		if (plannedResult.query == null) {
 			return current;
@@ -276,12 +276,12 @@ public final class RulePlanSubqueries implements OptimizerRule {
             return current;
         }
         float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
-        if (!isProjection && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE 
+        if (!isProjection && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE
 				&& sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY && !plannedResult.mergeJoin) {
 			//TODO: see if a dependent join applies the other direction - which we now handle in the isProjection case
 			return current;
 		}
-        
+
 		RelationalPlan originalPlan = (RelationalPlan)plannedResult.query.getProcessorPlan();
         Number originalCardinality = originalPlan.getRootNode().getEstimateNodeCardinality();
         if (!plannedResult.mergeJoin && originalCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE) {
@@ -296,7 +296,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			return current;
 		}
-		
+
 		//check if the child is already ordered.  TODO: see if the ordering is compatible.
 		PlanNode childSort = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
 		if (childSort != null) {
@@ -305,7 +305,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			return current;
 		}
-		
+
 		//add an order by, which hopefully will get pushed down
 		if (!isProjection) { //we can't sort in the projection case as we can't later decline the sort from the subplan
     		plannedResult.query.setOrderBy(new OrderBy(plannedResult.rightExpressions).clone());
@@ -317,7 +317,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
     			item.setExpressionPosition(index);
     		}
 		}
-		
+
 		String id = null;
 		if (isProjection) {
 		    //basic cost determination, without a hint don't proceed if the outer side is "large"
@@ -342,7 +342,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             Criteria crit  = (Criteria)dep.getProperty(Info.SELECT_CRITERIA);
             plannedResult.query.setCriteria(Criteria.combineCriteria(plannedResult.query.getCriteria(), crit));
         }
-		
+
 		try {
 		    //clone the symbols as they may change during planning
             List<? extends Expression> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), Expression.class);
@@ -350,15 +350,15 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			//the major benefit would be to reuse the dependent join planning logic if possible.
 			RelationalPlan subPlan = (RelationalPlan)QueryOptimizer.optimizePlan(plannedResult.query, metadata, idGenerator, capFinder, analysisRecord, context);
 			Number planCardinality = subPlan.getRootNode().getEstimateNodeCardinality();
-            
+
 			if (!plannedResult.mergeJoin) {
 			    if (isProjection) {
 			        RelationalNode rn = subPlan.getRootNode();
 			        if (!isUsingDependentJoin(id, rn)) {
 			            return current;
 			        }
-	            } else //if we don't have a specific hint, then use costing 
-				if (planCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE 
+	            } else //if we don't have a specific hint, then use costing
+				if (planCardinality.floatValue() == NewCalculateCostUtil.UNKNOWN_VALUE
 	            		|| planCardinality.floatValue() > 10000000
 	            		|| (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && planCardinality.floatValue() > 1000)
 	            		|| (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost * originalCardinality.floatValue() < planCardinality.floatValue() / (100 * Math.log(Math.max(4, sourceCost))))) {
@@ -369,26 +369,26 @@ public final class RulePlanSubqueries implements OptimizerRule {
 	            	return current;
 	            }
 			}
-            
+
 			if (isProjection) {
 			    plannedResult.makeInd = false;
 			} else {
-			    //assume dependent 
+			    //assume dependent
 			    plannedResult.makeInd = makeDep(sourceCost, planCardinality.floatValue());
 			}
-			
-			/*if (plannedResult.makeInd 
+
+			/*if (plannedResult.makeInd
 					&& plannedResult.query.getCorrelatedReferences() == null
 					&& !plannedResult.not
 					&& plannedResult.leftExpressions.size() == 1) {
             	//TODO: this should just be a dependent criteria node to avoid sorts
             }*/
-			
+
 			current.recordDebugAnnotation("Conditions met (hint or cost)", null, "Converting to a semi merge join", analysisRecord, metadata); //$NON-NLS-1$ //$NON-NLS-2$
-			
+
             PlanNode semiJoin = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
             semiJoin.addGroups(current.getGroups());
-            
+
             //create a proper projection "sub" view.  then update the right expressions
             //to the virtual group columns
             GroupSymbol v = RulePlaceAccess.recontextSymbol(new GroupSymbol("sub"), context.getGroups()); //$NON-NLS-1$
@@ -412,7 +412,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
                 mappedRight.add(ex);
             }
             plannedResult.rightExpressions = mappedRight;
-            
+
             Set<GroupSymbol> groups = new LinkedHashSet<>();
             groups.add(v);
             semiJoin.addGroups(groups);
@@ -457,14 +457,14 @@ public final class RulePlanSubqueries implements OptimizerRule {
             semiJoin.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, plannedResult.rightExpressions);
             semiJoin.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.ALREADY_SORTED);
             semiJoin.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList((List<?>)root.getProperty(NodeConstants.Info.OUTPUT_COLS)));
-            
+
             List childOutput = (List)current.getFirstChild().getProperty(NodeConstants.Info.OUTPUT_COLS);
             PlanNode toCorrect = root;
             while (toCorrect != current) {
             	toCorrect.setProperty(NodeConstants.Info.OUTPUT_COLS, childOutput);
             	toCorrect = toCorrect.getFirstChild();
             }
-            
+
             PlanNode node = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
             node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, subPlan);
             node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectedSymbols);
@@ -489,7 +489,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         	    semiJoin.getFirstChild().addAsParent(dep);
             	semiJoin.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
             	this.dependent = true;
-            } 
+            }
             return result;
 		} catch (QueryPlannerException e) {
 			//can't be done - probably access patterns - what about dependent
@@ -527,7 +527,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
     }
 
     private boolean makeDep(float depSide, float indSide) {
-        return (depSide != NewCalculateCostUtil.UNKNOWN_VALUE && indSide != NewCalculateCostUtil.UNKNOWN_VALUE 
+        return (depSide != NewCalculateCostUtil.UNKNOWN_VALUE && indSide != NewCalculateCostUtil.UNKNOWN_VALUE
         	&& indSide < depSide / 8) || (depSide == NewCalculateCostUtil.UNKNOWN_VALUE && indSide <= 1000);
     }
 
@@ -537,11 +537,11 @@ public final class RulePlanSubqueries implements OptimizerRule {
             if (scc.getSubqueryHint().isNoUnnest()) {
                 return result;
             }
-    
+
             Query query = (Query)scc.getCommand();
-            
+
             result.multiRow = !isSingleRow(query);
-            
+
             result.type = scc.getClass();
             result.mergeJoin = scc.getSubqueryHint().isMergeJoin();
             if (!unnest && !result.mergeJoin) {
@@ -560,7 +560,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         return false;
         //unique key is looked at in planQuery
     }
-	
+
 	public PlannedResult findSubquery(Criteria crit, boolean unnest) throws TeiidComponentException, QueryMetadataException {
 		PlannedResult result = new PlannedResult();
 		if (crit instanceof SubquerySetCriteria) {
@@ -610,11 +610,11 @@ public final class RulePlanSubqueries implements OptimizerRule {
 					//TODO: could add an inline view if not a query
 					|| !(scc.getCommand() instanceof Query)) {
 				return result;
-			}     
+			}
 
 			Query query = (Query)scc.getCommand();
 			Expression rightExpr = SymbolMap.getExpression(query.getProjectedSymbols().get(0));
-			
+
 			if (result.not && !isNonNull(query, rightExpr)) {
 				return result;
 			}
@@ -636,7 +636,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			if (!(exists.getCommand() instanceof Query)) {
 				return result;
-			} 
+			}
 			result.type = crit.getClass();
 			result.not = exists.isNegated();
 			//the correlations can only be in where (if no group by or aggregates) or having
@@ -685,30 +685,30 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		}
 		return true;
 	}
-	
+
 	public boolean planQuery(Collection<GroupSymbol> leftGroups, boolean requireDistinct, PlannedResult plannedResult) throws QueryMetadataException, TeiidComponentException {
 		if ((plannedResult.query.getLimit() != null && !plannedResult.query.getLimit().isImplicit()) || plannedResult.query.getFrom() == null) {
 			return false;
 		}
-		
+
 		if ((plannedResult.type == ExistsCriteria.class || plannedResult.type == ScalarSubquery.class) && plannedResult.query.getCorrelatedReferences() == null) {
 			//we can't really improve on this case
 			//TODO: do this check earlier
 			return false;
 		}
-		
+
 		plannedResult.query = (Query)plannedResult.query.clone();
 		for (Command c : CommandCollectorVisitor.getCommands(plannedResult.query)) {
-		    //subqueries either need to be re-resolved or replanned to maintain 
+		    //subqueries either need to be re-resolved or replanned to maintain
 		    //multilevel correlated references.  it's easier for now to replan
 	        c.setProcessorPlan(null);
 		}
 		plannedResult.query.setLimit(null);
-		
+
 		List<GroupSymbol> rightGroups = plannedResult.query.getFrom().getGroups();
-        
+
 		boolean hasAggregates = plannedResult.query.hasAggregates();
-		
+
 		Set<Expression> requiredExpressions = new LinkedHashSet<Expression>();
 		final SymbolMap refs = plannedResult.query.getCorrelatedReferences();
 		boolean addGroupBy = false;
@@ -747,7 +747,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 			}
 			processCriteria(leftGroups, plannedResult, rightGroups, requiredExpressions, refs, having, plannedResult.query.getGroupBy(), false);
 		}
-		
+
 		if (plannedResult.additionalCritieria != null) {
 		    //move the additional subquery compare criteria onto the query
 		    //which effectively makes this an exists predicate
@@ -764,21 +764,21 @@ public final class RulePlanSubqueries implements OptimizerRule {
                 RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, plannedResult.leftExpressions, plannedResult.rightExpressions, Criteria.separateCriteriaByAnd(plannedResult.additionalCritieria), plannedResult.nonEquiJoinCriteria);
             }
         }
-		
+
 		if (plannedResult.leftExpressions.isEmpty()) {
 			return false;
 		}
-		
+
 		plannedResult.leftExpressions = RuleChooseJoinStrategy.createExpressionSymbols(plannedResult.leftExpressions);
 		plannedResult.rightExpressions = RuleChooseJoinStrategy.createExpressionSymbols(plannedResult.rightExpressions);
-		
+
 		if (requireDistinct && !addGroupBy) {
 			//ensure that uniqueness applies to the in condition
-			if (plannedResult.rightExpressions.size() > 1 
-					&& (plannedResult.type != SubquerySetCriteria.class || !isDistinct(plannedResult.query, plannedResult.rightExpressions.subList(plannedResult.rightExpressions.size() - 1, plannedResult.rightExpressions.size()), metadata))) { 
+			if (plannedResult.rightExpressions.size() > 1
+					&& (plannedResult.type != SubquerySetCriteria.class || !isDistinct(plannedResult.query, plannedResult.rightExpressions.subList(plannedResult.rightExpressions.size() - 1, plannedResult.rightExpressions.size()), metadata))) {
 				return false;
 			}
-			
+
 			if (!isDistinct(plannedResult.query, plannedResult.rightExpressions, metadata)) {
 				if (plannedResult.type == ExistsCriteria.class) {
 					if (requiredExpressions.size() > plannedResult.leftExpressions.size()) {
@@ -791,7 +791,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 				plannedResult.madeDistinct = true;
 			}
 		}
-		
+
 		//it doesn't matter what the select columns are
 		if (plannedResult.type == ExistsCriteria.class) {
 			plannedResult.query.getSelect().clearSymbols();
@@ -820,14 +820,14 @@ public final class RulePlanSubqueries implements OptimizerRule {
 				plannedResult.query.getSelect().addSymbol((Expression)ses.clone());
 			}
 		}
-		if (plannedResult.madeDistinct 
-		        && plannedResult.multiRow 
+		if (plannedResult.madeDistinct
+		        && plannedResult.multiRow
 		        && plannedResult.query.getSelect().getProjectedSymbols().size() > 1) {
 		    return false;
 		}
 		return true;
 	}
-	
+
     private boolean canAddGrouping(LanguageObject lo) {
         for (AggregateSymbol as : AggregateSymbolCollectorVisitor.getAggregates(lo, false)) {
             if (as.isCount() || as.getAggregateFunction() == Type.TEXTAGG) {
@@ -886,7 +886,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
 		}
 		HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
 		ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata, true);			
+		return NewCalculateCostUtil.usesKey(expressions, keyPreservingGroups, metadata, true);
 	}
 
 	private boolean hasCorrelatedReferences(LanguageObject object, SymbolMap correlatedReferences) {

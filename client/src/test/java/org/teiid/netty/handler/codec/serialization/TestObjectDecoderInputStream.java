@@ -51,7 +51,7 @@ public class TestObjectDecoderInputStream {
 			int count;
 			@Override
 			public int read() throws IOException {
-				if (count++%2==0) { 
+				if (count++%2==0) {
 					throw new SocketTimeoutException();
 				}
 				return bais.read();
@@ -63,28 +63,28 @@ public class TestObjectDecoderInputStream {
 			try {
 				result = odis.readObject();
 			} catch (IOException e) {
-				
+
 			}
 		} while (result == null);
 		assertEquals(obj, result);
 	}
-	
+
 	@Test public void testReplaceObject() throws Exception {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectEncoderOutputStream out = new ObjectEncoderOutputStream(new DataOutputStream(baos), 512);
-		
+
 		ClobImpl clob = new ClobImpl(new InputStreamFactory() {
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return new ReaderInputStream(new StringReader("Clob contents"),  Charset.forName(Streamable.ENCODING)); //$NON-NLS-1$
 			}
-			
+
 		}, -1);
-		
+
 		out.writeObject(clob);
-		
+
 		ObjectDecoderInputStream in = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(new ByteArrayInputStream(baos.toByteArray()), 1024), Thread.currentThread().getContextClassLoader(), 1024);
 		Object result = in.readObject();
 		assertTrue(result instanceof ClobImpl);
-	}	
+	}
 }

@@ -99,7 +99,7 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         	}
         }
 	}
-	
+
 	Table getTableWithEntityType(Schema schema, String entityType) {
 		for (Table t:schema.getTables().values()) {
 			if (entityType.equals(t.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false))) {
@@ -124,18 +124,18 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	public Table getTable() {
 		return this.entity;
 	}
-	
+
 	public boolean hasCollectionReturn() {
 		return this.returnsTable;
 	}
-	
+
 	public Column[] getReturnColumns() {
 		return this.returnColumns.toArray(new Column[this.returnColumns.size()]);
 	}
 
 	public boolean isReturnComplexType() {
 		return this.isComplexReturnType;
-	}	
+	}
 
 	public Procedure getProcedure() {
 		return this.procedure;

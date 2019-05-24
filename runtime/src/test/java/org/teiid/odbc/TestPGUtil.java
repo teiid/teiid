@@ -31,5 +31,5 @@ public class TestPGUtil {
         assertEquals(PGUtil.PG_TYPE_GEOMETRY, PGUtil.convertType(Types.BLOB, "geometry"));
         assertEquals(PGUtil.PG_TYPE_GEOGRAPHY, PGUtil.convertType(Types.LONGVARBINARY, "geography"));
     }
-    
+
 }

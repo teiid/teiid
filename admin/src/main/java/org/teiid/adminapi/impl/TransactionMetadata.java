@@ -57,12 +57,12 @@ public class TransactionMetadata extends AdminObjectImpl implements Transaction 
 	public void setId(String id) {
 		this.id = id;
 	}
-	
+
 	@Override
 	public long getCreatedTime() {
 		return createdTime;
 	}
-	
+
 	public void setCreatedTime(long time) {
 		this.createdTime = time;
 	}

@@ -49,7 +49,7 @@ public class StAXSQLXML extends SQLXMLImpl {
 	private static final class SingleUseStAXSourceProvider implements
 			StAXSourceProvider {
 		private StAXSource source;
-		
+
 		public SingleUseStAXSourceProvider(StAXSource source) {
 			this.source = source;
 		}
@@ -70,12 +70,12 @@ public class StAXSQLXML extends SQLXMLImpl {
 	public StAXSQLXML(StAXSource source) {
 		this(new SingleUseStAXSourceProvider(source), Streamable.CHARSET);
 	}
-	
+
 	public StAXSQLXML(StAXSourceProvider provider, Charset charSet) {
 		this.sourceProvider = provider;
 		this.setCharset(charSet);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
 		if (sourceClass == null || sourceClass == StAXSource.class) {
@@ -83,7 +83,7 @@ public class StAXSQLXML extends SQLXMLImpl {
 		}
 		return super.getSource(sourceClass);
 	}
-	
+
 	@Override
 	public String getString() throws SQLException {
 		StringWriter sw = new StringWriter();
@@ -96,7 +96,7 @@ public class StAXSQLXML extends SQLXMLImpl {
 		}
 		return sw.toString();
 	}
-	
+
 	@Override
 	public InputStream getBinaryStream() throws SQLException {
 		try {
@@ -107,7 +107,7 @@ public class StAXSQLXML extends SQLXMLImpl {
 			throw new SQLException(e);
 		}
 	}
-	
+
 	@Override
 	public Reader getCharacterStream() throws SQLException {
 		try {
@@ -118,5 +118,5 @@ public class StAXSQLXML extends SQLXMLImpl {
 			throw new SQLException(e);
 		}
 	}
-	
+
 }

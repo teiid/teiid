@@ -41,22 +41,22 @@ public class TestResteasyEnabler {
 			Admin getAdmin() {
 				return Mockito.mock(Admin.class);
 			}
-			
+
 			Executor getExecutor() {
 				return ExecutorUtils.getDirectExecutor();
-			}			
+			}
 		};
-		
+
 		MetadataStore ms = new MetadataStore();
-		
+
 		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
 		vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
 		ModelMetaData model = new ModelMetaData();
 		model.setName("other");
 		model.setModelType(Type.OTHER);
 		vdb.getVDB().addModel(model);
-		
+
 		resteasyEnabler.finishedDeployment("x", vdb);
 	}
-	
+
 }

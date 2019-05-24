@@ -36,7 +36,7 @@ import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.TeiidComponentException;
 
 public class TestBufferFrontedFileStoreCache {
-	
+
 	private BufferFrontedFileStoreCache cache;
 
 	private static class SimpleSerializer implements Serializer<Integer> {
@@ -52,7 +52,7 @@ public class TestBufferFrontedFileStoreCache {
 
 		@Override
 		public Long getId() {
-			return 1l;
+			return 1L;
 		}
 
 		@Override
@@ -68,13 +68,13 @@ public class TestBufferFrontedFileStoreCache {
 		public boolean useSoftCache() {
 			return false;
 		}
-		
+
 		@Override
 		public String describe(Integer obj) {
 		    return null;
 		}
 	}
-	
+
 	@After public void teardown() {
 		if (this.cache != null) {
 			cache.shutdown();
@@ -83,78 +83,78 @@ public class TestBufferFrontedFileStoreCache {
 
 	@Test public void testAddGetMultiBlock() throws Exception {
 		cache = createLayeredCache(1 << 26, 1 << 26, true);
-		
-		CacheEntry ce = new CacheEntry(2l);
+
+		CacheEntry ce = new CacheEntry(2L);
 		Serializer<Integer> s = new SimpleSerializer();
 		cache.createCacheGroup(s.getId());
 		Integer cacheObject = Integer.valueOf(2);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		ce = get(cache, 2l, s);
+		ce = get(cache, 2L, s);
 		assertEquals(cacheObject, ce.getObject());
-		
+
 		//test something that exceeds the direct inode data blocks
-		ce = new CacheEntry(3l);
+		ce = new CacheEntry(3L);
 		cacheObject = Integer.valueOf(80000);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = get(cache, 3l, s);
+
+		ce = get(cache, 3L, s);
 		assertEquals(cacheObject, ce.getObject());
-		
+
 		//repeat the test to ensure proper cleanup
-		ce = new CacheEntry(4l);
+		ce = new CacheEntry(4L);
 		cacheObject = Integer.valueOf(60000);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = get(cache, 4l, s);
+
+		ce = get(cache, 4L, s);
 		assertEquals(cacheObject, ce.getObject());
-		
-		cache.removeCacheGroup(1l);
-		
+
+		cache.removeCacheGroup(1L);
+
 		assertEquals(0, cache.getDataBlocksInUse());
 		assertEquals(0, cache.getInodesInUse());
-		
+
 		//test something that exceeds the indirect data blocks
-		ce = new CacheEntry(3l);
+		ce = new CacheEntry(3L);
 		cache.createCacheGroup(s.getId());
 		cacheObject = Integer.valueOf(5000000);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = get(cache, 3l, s);
+
+		ce = get(cache, 3L, s);
 		assertEquals(cacheObject, ce.getObject());
 
-		cache.removeCacheGroup(1l);
-		
+		cache.removeCacheGroup(1L);
+
 		assertEquals(0, cache.getDataBlocksInUse());
 		assertEquals(0, cache.getInodesInUse());
 
 		//test something that exceeds the allowable object size
-		ce = new CacheEntry(3l);
+		ce = new CacheEntry(3L);
 		cache.createCacheGroup(s.getId());
 		cacheObject = Integer.valueOf(500000000);
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = get(cache, 3l, s);
+
+		ce = get(cache, 3L, s);
 		assertNull(ce);
 
-		cache.removeCacheGroup(1l);
-		
+		cache.removeCacheGroup(1L);
+
 		assertEquals(0, cache.getDataBlocksInUse());
 		assertEquals(0, cache.getInodesInUse());
 	}
-	
+
 	@Test public void testMultipleAdds() throws Exception {
         cache = createLayeredCache(1 << 18, 1 << 18, true);
-        
+
         Serializer<Integer> s = new SimpleSerializer() {
             @Override
             public void serialize(Integer obj, ObjectOutput oos)
@@ -162,16 +162,16 @@ public class TestBufferFrontedFileStoreCache {
                 throw new IOException();
             }
         };
-        CacheEntry ce = new CacheEntry(new CacheKey(31l, 0, 0), 1000000, null, null, false);
+        CacheEntry ce = new CacheEntry(new CacheKey(31L, 0, 0), 1000000, null, null, false);
         cache.createCacheGroup(s.getId());
         Integer cacheObject = Integer.valueOf(50000);
         ce.setObject(cacheObject);
         cache.addToCacheGroup(s.getId(), ce.getId());
         assertTrue(cache.add(ce, s));
-        
+
         s = new SimpleSerializer();
         assertTrue(cache.add(ce, s));
-        
+
         assertNotNull(get(cache, ce.getId(), s));
     }
 
@@ -182,12 +182,12 @@ public class TestBufferFrontedFileStoreCache {
 		cache.unlockForLoad(o);
 		return ce;
 	}
-	
+
 	@Test public void testEviction() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		assertEquals(3, cache.getMaxMemoryBlocks());
-		
-		CacheEntry ce = new CacheEntry(2l);
+
+		CacheEntry ce = new CacheEntry(2L);
 		Serializer<Integer> s = new SimpleSerializer();
 		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
 		ce.setSerializer(ref);
@@ -196,8 +196,8 @@ public class TestBufferFrontedFileStoreCache {
 		ce.setObject(cacheObject);
 		cache.addToCacheGroup(s.getId(), ce.getId());
 		cache.add(ce, s);
-		
-		ce = new CacheEntry(3l);
+
+		ce = new CacheEntry(3L);
 		ce.setSerializer(ref);
 		cacheObject = Integer.valueOf(5001);
 		ce.setObject(cacheObject);
@@ -207,13 +207,13 @@ public class TestBufferFrontedFileStoreCache {
 		assertTrue(cache.getDataBlocksInUse() < 4);
 		assertTrue(cache.getInodesInUse() < 2);
 
-		ce = get(cache, 2l, s);
+		ce = get(cache, 2L, s);
 		assertEquals(Integer.valueOf(5000), ce.getObject());
-		
-		ce = get(cache, 3l, s);
+
+		ce = get(cache, 3L, s);
 		assertEquals(Integer.valueOf(5001), ce.getObject());
 	}
-	
+
 	@Test public void testEvictionFails() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, false);
 		BufferManagerImpl bmi = Mockito.mock(BufferManagerImpl.class);
@@ -221,7 +221,7 @@ public class TestBufferFrontedFileStoreCache {
 		Serializer<Integer> s = new SimpleSerializer();
 		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
 		cache.createCacheGroup(s.getId());
-		
+
 		for (int i = 0; i < 3; i++) {
 			add(cache, s, ref, i);
 		}
@@ -250,39 +250,39 @@ public class TestBufferFrontedFileStoreCache {
 			fsc.setStorageManager(ssm);
 		} else {
 			StorageManager sm = new StorageManager() {
-				
+
 				@Override
 				public void initialize() throws TeiidComponentException {
-					
+
 				}
-				
+
 				@Override
 				public FileStore createFileStore(String name) {
 					return new FileStore() {
-						
+
 						@Override
 						public void setLength(long length) throws IOException {
 							throw new OutOfDiskException(null);
 						}
-						
+
 						@Override
 						protected void removeDirect() {
-							
+
 						}
-						
+
 						@Override
 						protected int readWrite(long fileOffset, byte[] b, int offSet, int length,
 								boolean write) throws IOException {
 							return 0;
 						}
-						
+
 						@Override
 						public long getLength() {
 							return 0;
 						}
 					};
 				}
-				
+
 				@Override
 				public long getMaxStorageSpace() {
 				    return -1;
@@ -293,29 +293,29 @@ public class TestBufferFrontedFileStoreCache {
 		fsc.initialize();
 		return fsc;
 	}
-	
+
 	@Test public void testSizeIndex() throws Exception {
-		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0, 0);
+		PhysicalInfo info = new PhysicalInfo(1L, 1L, -1, 0, 0);
 		info.setSize(1<<13);
 		assertEquals(0, info.sizeIndex);
-		
-		info = new PhysicalInfo(1l, 1l, -1, 0, 0);
+
+		info = new PhysicalInfo(1L, 1L, -1, 0, 0);
 		info.setSize(1 + (1<<13));
 		assertEquals(1, info.sizeIndex);
 
-		info = new PhysicalInfo(1l, 1l, -1, 0, 0);
+		info = new PhysicalInfo(1L, 1L, -1, 0, 0);
 		info.setSize(2 + (1<<15));
 		assertEquals(3, info.sizeIndex);
 	}
-	
+
 	@Test(expected=Exception.class) public void testSizeChanged() throws Exception {
-		PhysicalInfo info = new PhysicalInfo(1l, 1l, -1, 0, 0);
+		PhysicalInfo info = new PhysicalInfo(1L, 1L, -1, 0, 0);
 		info.setSize(1<<13);
 		assertEquals(0, info.sizeIndex);
-		
+
 		info.setSize(1 + (1<<13));
 	}
-	
+
 	@Test public void testDefragTruncateEmpty() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		cache.setMinDefrag(10000000);
@@ -334,7 +334,7 @@ public class TestBufferFrontedFileStoreCache {
 		}
 		assertEquals(98304, cache.getDiskUsage());
 		for (int i = 0; i < 4; i++) {
-			cache.remove(1l, (long)i);
+			cache.remove(1L, (long)i);
 		}
 		assertEquals(98304, cache.getDiskUsage());
 		cache.setMinDefrag(0);
@@ -344,7 +344,7 @@ public class TestBufferFrontedFileStoreCache {
 		cache.defragTask.run();
 		assertEquals(0, cache.getDiskUsage());
 	}
-	
+
 	@Test public void testDefragTruncate() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		cache.setMinDefrag(10000000);
@@ -363,7 +363,7 @@ public class TestBufferFrontedFileStoreCache {
 		}
 		assertEquals(950272, cache.getDiskUsage());
 		for (int i = 0; i < 25; i++) {
-			cache.remove(1l, (long)i);
+			cache.remove(1L, (long)i);
 		}
 		assertEquals(950272, cache.getDiskUsage());
 		cache.setMinDefrag(0);
@@ -378,7 +378,7 @@ public class TestBufferFrontedFileStoreCache {
 		//we've reached a stable size
 		assertEquals(131072, cache.getDiskUsage());
 	}
-	
+
 	@Test public void testDefragTruncateCompact() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		cache.setCompactBufferFiles(true);
@@ -399,7 +399,7 @@ public class TestBufferFrontedFileStoreCache {
 		}
 		assertEquals(950272, cache.getDiskUsage());
 		for (int i = 0; i < 25; i++) {
-			cache.remove(1l, (long)i);
+			cache.remove(1L, (long)i);
 		}
 		assertEquals(950272, cache.getDiskUsage());
 		cache.setMinDefrag(0);
@@ -410,7 +410,7 @@ public class TestBufferFrontedFileStoreCache {
 		//we've reached a stable size
 		assertEquals(131072, cache.getDiskUsage());
 	}
-	
+
 	@Test public void testDefragMin() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		cache.setMinDefrag(10000000);
@@ -429,7 +429,7 @@ public class TestBufferFrontedFileStoreCache {
 		}
 		assertEquals(3244032, cache.getDiskUsage());
 		for (int i = 0; i < 90; i++) {
-			cache.remove(1l, (long)i);
+			cache.remove(1L, (long)i);
 		}
 		assertEquals(3244032, cache.getDiskUsage());
 		cache.setMinDefrag(5000);
@@ -440,18 +440,18 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(1114112, cache.getDiskUsage());
 		cache.defragTask.run();
 		assertEquals(655360, cache.getDiskUsage());
-		cache.defragTask.run(); 
+		cache.defragTask.run();
 		//we've reached a stable size
 		assertEquals(655360, cache.getDiskUsage());
 	}
-	
+
 	@Test public void testLargeMax() throws TeiidComponentException {
 		createLayeredCache(1 << 20, 1 << 30, false);
 	}
-	
+
 	@Test public void testNonAlignedMaxBlocks() throws TeiidComponentException {
 		BufferFrontedFileStoreCache bf = createLayeredCache(1 << 20, 8000000, false);
 		assertEquals(974, bf.getMaxMemoryBlocks());
 	}
-	
+
 }

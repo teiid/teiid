@@ -36,7 +36,7 @@ public class TeiidSecurityException extends TeiidProcessingException {
      *
      * @param e       An exception to chain to this exception
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public TeiidSecurityException(BundleUtil.Event code, Throwable t, String message ) {
         super(code, t, message);
@@ -45,7 +45,7 @@ public class TeiidSecurityException extends TeiidProcessingException {
      * Construct an instance with an error code and message specified.
      *
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public TeiidSecurityException(BundleUtil.Event code, String message ) {
         super( code, message );

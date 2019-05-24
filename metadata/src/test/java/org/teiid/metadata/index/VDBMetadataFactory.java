@@ -42,14 +42,14 @@ import org.teiid.query.metadata.VDBResources.Resource;
 
 
 public class VDBMetadataFactory {
-	
+
 	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
-	
+
 	public static class IndexVDB {
 		public MetadataStore store;
 		public VDBResources resources;
 	}
-	
+
 	public static TransformationMetadata getVDBMetadata(String vdbFile) {
 		try {
 			File f = new File(vdbFile);
@@ -58,7 +58,7 @@ public class VDBMetadataFactory {
 			throw new TeiidRuntimeException(e);
 		}
     }
-	
+
 	public static TransformationMetadata getVDBMetadata(String vdbName, URL vdbURL) throws IOException {
 		TransformationMetadata vdbmetadata = VDB_CACHE.get(vdbURL);
 		if (vdbmetadata != null) {
@@ -86,7 +86,7 @@ public class VDBMetadataFactory {
                 }
             }
 			SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
+			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees);
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (XMLStreamException e) {

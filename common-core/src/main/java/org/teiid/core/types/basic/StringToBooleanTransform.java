@@ -59,10 +59,10 @@ public class StringToBooleanTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DefaultDataClasses.BOOLEAN;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;
 	}
-	
+
 }

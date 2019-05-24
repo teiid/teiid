@@ -43,12 +43,12 @@ public class TestOlapTranslator {
 	@Test public void testCannedProcedure() throws Exception {
 		String ddl = "create foreign procedure proc(arg integer, arg1 date) returns table (x string) options (\"teiid_rel:native-query\" '$2 $1 something')";
 		String query = "exec proc(2, {d'1970-01-01'})";
-		
+
 		TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "phy");
-		
+
 		CommandBuilder commandBuilder = new CommandBuilder(tm);
         Command obj = commandBuilder.getCommand(query);
-	        
+
 		OlapExecutionFactory oef = new OlapExecutionFactory();
 		Connection mock = Mockito.mock(java.sql.Connection.class);
 		OlapWrapper mock2 = Mockito.mock(OlapWrapper.class);
@@ -66,5 +66,5 @@ public class TestOlapTranslator {
 			Mockito.verify(mock4).executeOlapQuery("'1970-01-01' 2 something");
 		}
 	}
-	
+
 }

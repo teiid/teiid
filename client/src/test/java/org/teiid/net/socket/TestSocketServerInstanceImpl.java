@@ -39,19 +39,19 @@ import org.teiid.net.HostInfo;
 
 @SuppressWarnings("nls")
 public class TestSocketServerInstanceImpl {
-	
+
 	private static class FakeObjectChannel implements ObjectChannel, ObjectChannelFactory {
 		List<Object> msgs = new ArrayList<Object>();
 		List<? extends Object> readMsgs;
 		int readCount;
-		
+
 		public FakeObjectChannel(List<? extends Object> readMsgs) {
 			this.readMsgs = readMsgs;
 		}
 
 		@Override
 		public void close() {
-			
+
 		}
 
 		@Override
@@ -66,7 +66,7 @@ public class TestSocketServerInstanceImpl {
 			result.getResultsReceiver().receiveResults(null);
 			return result;
 		}
-		
+
 		@Override
 		public Object read() throws IOException,
 				ClassNotFoundException {
@@ -86,18 +86,18 @@ public class TestSocketServerInstanceImpl {
 			}
 			return msg;
 		}
-		
+
 		@Override
 		public SocketAddress getRemoteAddress() {
 			return null;
 		}
-		
+
 		@Override
 		public ObjectChannel createObjectChannel(HostInfo info)
 				throws CommunicationException, IOException {
 			return this;
 		}
-		
+
 		@Override
 		public int getSoTimeout() {
 			return 1;
@@ -107,19 +107,19 @@ public class TestSocketServerInstanceImpl {
 		public InetAddress getLocalAddress() {
 			return null;
 		}
-		
+
 	}
 
 	@Test public void testHandshakeTimeout() throws Exception {
 		SocketTimeoutException[] exs = new SocketTimeoutException[1];
 		Arrays.fill(exs, new SocketTimeoutException());
 		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(exs));
-		
+
 		try {
 			createInstance(channel);
 			fail("Exception expected"); //$NON-NLS-1$
 		} catch (IOException e) {
-			
+
 		}
 	}
 
@@ -131,12 +131,12 @@ public class TestSocketServerInstanceImpl {
 		ssii.connect(channelFactory);
 		return ssii;
 	}
-	
+
 	@Test public void testSuccessfulHandshake() throws Exception {
 		final FakeObjectChannel channel = new FakeObjectChannel(Arrays.asList(new Handshake(), new SocketTimeoutException()));
-		
+
 		SocketServerInstanceImpl instance = createInstance(channel);
-		
+
 		//no remote server is hooked up, so this will timeout
 		ILogon logon = instance.getService(ILogon.class);
 		try {
@@ -146,5 +146,5 @@ public class TestSocketServerInstanceImpl {
 			assertTrue(e.getCause() instanceof TimeoutException);
 		}
 	}
-	
+
 }

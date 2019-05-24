@@ -25,7 +25,7 @@ public class BaseCacheEntry {
 	public BaseCacheEntry(CacheKey key) {
 		this.key = key;
 	}
-	
+
 	public Long getId() {
 		return key.getId();
 	}
@@ -34,7 +34,7 @@ public class BaseCacheEntry {
 	public int hashCode() {
 		return key.hashCode();
 	}
-	
+
 	@Override
 	public String toString() {
 		return key.toString();
@@ -43,7 +43,7 @@ public class BaseCacheEntry {
 	public void setKey(CacheKey key) {
 		this.key = key;
 	}
-	
+
 	public CacheKey getKey() {
 		return key;
 	}

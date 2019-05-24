@@ -91,9 +91,9 @@ public class SPParameter implements Cloneable {
         setParameterType(parameterType);
         this.parameterSymbol = new ElementSymbol(name);
     }
-    
+
     private SPParameter() {
-    	
+
     }
 
     /**
@@ -211,7 +211,7 @@ public class SPParameter implements Cloneable {
         rsColumn.setMetadataID(id);
 
         resultSetColumns.add(rsColumn);
-        
+
         resultSetIDs.add(id);
     }
 
@@ -225,13 +225,13 @@ public class SPParameter implements Cloneable {
         }
         return resultSetColumns;
     }
-    
+
     /**
      * Get the result set metadata IDs.  If none exist, return empty list.
      * @return List of Object representing result set metadata IDs
      */
     public List<Object> getResultSetIDs() {
-        if(resultSetIDs == null) { 
+        if(resultSetIDs == null) {
             return Collections.emptyList();
         }
         return this.resultSetIDs;
@@ -299,7 +299,7 @@ public class SPParameter implements Cloneable {
         if (this.getIndex() != other.getIndex()) {
             return false;
         }
-        
+
         // If indexes match, check associated IDs if existent
         return EquivalenceUtil.areEqual(this.expression, other.expression);
 	}
@@ -356,7 +356,7 @@ public class SPParameter implements Cloneable {
 	public void setVarArg(boolean varArg) {
 		this.varArg = varArg;
 	}
-	
+
 	public boolean isVarArg() {
 		return varArg;
 	}

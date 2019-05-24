@@ -29,37 +29,37 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
-	
+
     public static final String V_3 = "v3"; //$NON-NLS-1$
     public static final String V_4 = "v4"; //$NON-NLS-1$
-    
+
 	private static final long serialVersionUID = -1832915223199053471L;
 	private Integer batchSize = 4096;
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
 	public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
 
 	private String spreadsheetName;
-	
+
 	private String spreadsheetId;
-	
+
 	private String apiVersion = V_3;
-	
+
 	private String refreshToken;
-	
+
 	private String clientId;
 	private String clientSecret;
-	
+
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
 	    checkConfig();
-	    
+
 		return new BasicConnectionFactory<BasicConnection>() {
-		    
+
 		    //share the spreadsheet info among all connections
 		    private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
 		    private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
-		    
+
 			@Override
 			public BasicConnection getConnection() throws ResourceException {
 			    if (apiVersion.equals(V_3)) {
@@ -69,7 +69,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 			}
 		};
 	}
-	
+
    private void checkConfig() throws ResourceException {
 
         //SpreadsheetName should be set
@@ -77,15 +77,15 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
             throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.
                     getString("provide_spreadsheetname",SpreadsheetManagedConnectionFactory.SPREADSHEET_NAME));      //$NON-NLS-1$
         }
-        
+
         if (apiVersion == null || !(apiVersion.equals(V_3) || apiVersion.equals(V_4))) {
             throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("invalid_protocol"));   //$NON-NLS-1$
         }
-        
+
         if (getRefreshToken() == null || getRefreshToken().trim().equals("")){ //$NON-NLS-1$
             throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires"));   //$NON-NLS-1$
         }
-        
+
         if (apiVersion.equals(V_4)) {
             if (getClientId() == null || getClientSecret() == null) {
                 throw new InvalidPropertyException(SpreadsheetManagedConnectionFactory.UTIL.getString("oauth_requires"));   //$NON-NLS-1$
@@ -110,7 +110,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
                 + ((spreadsheetName == null) ? 0 : spreadsheetName.hashCode());
         return result;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -185,33 +185,33 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
     public String getClientId() {
         return clientId;
     }
-    
+
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
-    
+
     public String getClientSecret() {
         return clientSecret;
     }
-    
+
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }
-    
+
     public String getSpreadsheetId() {
         return spreadsheetId;
     }
-    
+
     public void setSpreadsheetId(String spreadsheetId) {
         this.spreadsheetId = spreadsheetId;
     }
-    
+
     public String getApiVersion() {
         return apiVersion;
     }
-    
+
     public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
     }
-    
+
 }

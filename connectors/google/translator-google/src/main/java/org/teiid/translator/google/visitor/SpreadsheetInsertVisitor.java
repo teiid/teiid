@@ -32,9 +32,9 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 
 /**
  * Translates SQL INSERT commands
- * 
+ *
  * @author felias
- * 
+ *
  */
 public class SpreadsheetInsertVisitor extends SQLStringVisitor {
 	private String worksheetKey;

@@ -34,50 +34,50 @@ import org.teiid.language.*;
 public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
 
 	private boolean visitSubcommands;
-	
+
 	public HierarchyVisitor() {
 		this(true);
 	}
-	
+
     public HierarchyVisitor(boolean visitSubcommands) {
     	this.visitSubcommands = visitSubcommands;
     }
-    
+
     public void visit(AggregateFunction obj) {
         visitNodes(obj.getParameters());
         visitNode(obj.getCondition());
         visitNode(obj.getOrderBy());
     }
-    
+
     public void visit(BatchedUpdates obj) {
         visitNodes(obj.getUpdateCommands());
     }
-    
+
     public void visit(Comparison obj) {
         visitNode(obj.getLeftExpression());
         visitNode(obj.getRightExpression());
     }
-    
+
     public void visit(AndOr obj) {
         visitNode(obj.getLeftCondition());
         visitNode(obj.getRightCondition());
     }
-    
+
     public void visit(Delete obj) {
         visitNode(obj.getTable());
         visitNode(obj.getWhere());
     }
-    
+
     public void visit(Call obj) {
         visitNodes(obj.getArguments());
     }
-    
+
     public void visit(Exists obj) {
         if (visitSubcommands) {
         	visitNode(obj.getSubquery());
         }
     }
-    
+
     public void visit(Function obj) {
         visitNodes(obj.getParameters());
     }
@@ -85,12 +85,12 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(GroupBy obj) {
         visitNodes(obj.getElements());
     }
-    
+
     public void visit(In obj) {
         visitNode(obj.getLeftExpression());
         visitNodes(obj.getRightExpressions());
     }
-    
+
     public void visit(Insert obj) {
         visitNode(obj.getTable());
         visitNodes(obj.getColumns());
@@ -98,22 +98,22 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     		visitNode(obj.getValueSource());
         }
     }
-    
+
     @Override
     public void visit(ExpressionValueSource obj) {
     	visitNodes(obj.getValues());
     }
-    
+
     public void visit(IsNull obj) {
         visitNode(obj.getExpression());
     }
-    
+
     public void visit(Join obj) {
         visitNode(obj.getLeftItem());
         visitNode(obj.getRightItem());
         visitNode(obj.getCondition());
     }
-    
+
     public void visit(Like obj) {
         visitNode(obj.getLeftExpression());
         visitNode(obj.getRightExpression());
@@ -122,11 +122,11 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(Not obj) {
         visitNode(obj.getCriteria());
     }
-    
+
     public void visit(OrderBy obj) {
         visitNodes(obj.getSortSpecifications());
     }
-    
+
     @Override
     public void visit(SortSpecification obj) {
         visitNode(obj.getExpression());
@@ -148,18 +148,18 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     		visitNode(obj.getSubquery());
     	}
     }
-    
+
     public void visit(SearchedCase obj) {
     	visitNodes(obj.getCases());
         visitNode(obj.getElseExpression());
     }
-    
+
     @Override
     public void visit(SearchedWhenClause obj) {
     	visitNode(obj.getCondition());
     	visitNode(obj.getResult());
     }
-    
+
     public void visit(DerivedColumn obj) {
         visitNode(obj.getExpression());
     }
@@ -172,12 +172,12 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(SubqueryIn obj) {
-        visitNode(obj.getLeftExpression());        
+        visitNode(obj.getLeftExpression());
         if (visitSubcommands) {
         	visitNode(obj.getSubquery());
         }
     }
-    
+
     public void visit(SetQuery obj) {
     	visitNode(obj.getWith());
     	if (visitSubcommands) {
@@ -187,38 +187,38 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
     }
-    
+
     public void visit(Update obj) {
         visitNode(obj.getTable());
         visitNodes(obj.getChanges());
         visitNode(obj.getWhere());
     }
-    
+
     @Override
     public void visit(DerivedTable obj) {
     	if (visitSubcommands) {
     		visitNode(obj.getQuery());
     	}
     }
-    
+
     @Override
     public void visit(NamedProcedureCall namedProcedureCall) {
     	if (visitSubcommands) {
     		visitNode(namedProcedureCall.getCall());
     	}
     }
-    
+
     @Override
     public void visit(SetClause obj) {
     	visitNode(obj.getSymbol());
     	visitNode(obj.getValue());
     }
-    
+
     @Override
     public void visit(With obj) {
     	visitNodes(obj.getItems());
     }
-    
+
     @Override
     public void visit(WithItem obj) {
     	visitNode(obj.getTable());
@@ -227,29 +227,29 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     		visitNode(obj.getSubquery());
     	}
     }
-    
+
     @Override
     public void visit(WindowFunction windowFunction) {
     	visitNode(windowFunction.getFunction());
     	visitNode(windowFunction.getWindowSpecification());
     }
-    
+
     @Override
     public void visit(WindowSpecification windowSpecification) {
     	visitNodes(windowSpecification.getPartition());
     	visitNode(windowSpecification.getOrderBy());
     	visitNode(windowSpecification.getWindowFrame());
     }
-    
+
     @Override
     public void visit(IsDistinct obj) {
         visitNode(obj.getLeftExpression());
         visitNode(obj.getRightExpression());
     }
-    
+
     @Override
     public void visit(Array array) {
         visitNodes(array.getExpressions());
     }
-    
+
 }

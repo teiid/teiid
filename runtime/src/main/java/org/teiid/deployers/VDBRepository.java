@@ -73,7 +73,7 @@ public class VDBRepository implements Serializable{
 	private static final long serialVersionUID = 312177538191772674L;
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getHierarchicalProperty("org.teiid.clientVdbLoadTimeoutMillis", 300000, Integer.class); //$NON-NLS-1$
 	private static final boolean ADD_PG_METADATA = PropertiesUtils.getHierarchicalProperty("org.teiid.addPGMetadata", true, Boolean.class); //$NON-NLS-1$
-	
+
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private NavigableMap<VDBKey, VDBMetaData> pendingDeployments = new ConcurrentSkipListMap<VDBKey, VDBMetaData>();
 
@@ -90,22 +90,22 @@ public class VDBRepository implements Serializable{
     private ObjectReplicator objectReplictor;
     private DatabaseStore databaseStore;
     private boolean allowEnv = true;
-	
+
     public void addVDB(VDBMetaData vdb, MetadataStore metadataStore,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr)
             throws VirtualDatabaseException {
-        
+
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
             throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40022,
                     RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
-		}	
-		
+		}
+
 		if (dataRolesRequired && vdb.getDataPolicyMap().isEmpty()) {
             throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40143,
                     RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40143, vdb));
 		}
-		
+
 		boolean pgMetadataEnabled = ADD_PG_METADATA;
 		String includePgMetadata = vdb.getPropertyValue("include-pg-metadata");
 		if (includePgMetadata != null) {
@@ -144,7 +144,7 @@ public class VDBRepository implements Serializable{
 		}
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}
-	
+
 	public void waitForFinished(VDBKey key, int timeOutMillis) throws ConnectionException {
 		CompositeVDB cvdb = null;
 		if (timeOutMillis < 0) {
@@ -155,10 +155,10 @@ public class VDBRepository implements Serializable{
 		try {
 			while ((cvdb = this.vdbRepo.get(key)) == null) {
 				if (timeOutNanos <= 0) {
-					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40096, timeOutMillis, key.getName(), key.getVersion())); 
+					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40096, timeOutMillis, key.getName(), key.getVersion()));
 				}
 				timeOutNanos = this.vdbAdded.awaitNanos(timeOutNanos);
-				
+
 			}
 		} catch (InterruptedException e) {
 			return;
@@ -171,7 +171,7 @@ public class VDBRepository implements Serializable{
 			while (vdb.getStatus() != Status.ACTIVE) {
 				long millis = timeOutNanos/1000000;
 				if (millis <= 0) {
-					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40097, timeOutMillis, key.getName(), key.getVersion(), vdb.getValidityErrors())); 
+					throw new ConnectionException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40097, timeOutMillis, key.getName(), key.getVersion(), vdb.getValidityErrors()));
 				}
 				try {
 					vdb.wait(millis);
@@ -186,7 +186,7 @@ public class VDBRepository implements Serializable{
 	public CompositeVDB getCompositeVDB(VDBKey key) {
 		return this.vdbRepo.get(key);
 	}
-	
+
 	/**
 	 * A live vdb may be loading or active
 	 * @param name
@@ -200,7 +200,7 @@ public class VDBRepository implements Serializable{
 		}
 		return null;
 	}
-	
+
 	public List<VDBMetaData> getVDBs(){
 		ArrayList<VDBMetaData> vdbs = new ArrayList<VDBMetaData>();
 		for(CompositeVDB cVDB:this.vdbRepo.values()) {
@@ -211,11 +211,11 @@ public class VDBRepository implements Serializable{
 		vdbs.addAll(pendingDeployments.values());
 		return vdbs;
 	}
-	
+
 	Collection<CompositeVDB> getCompositeVDBs() {
 		return vdbRepo.values();
 	}
-	
+
     /**
      * A live vdb may be loading or active
      * @param vdbName
@@ -244,25 +244,25 @@ public class VDBRepository implements Serializable{
         	case NONE:
         		if (result == null || result.getConnectionType() == ConnectionType.NONE) {
             		result = vdb;
-                }            	
+                }
                 break;
         	}
         }
         return result;
 	}
-	
+
 	public MetadataStore getSystemStore() {
 		return systemStore;
 	}
-	
+
 	public MetadataStore getODBCStore() {
 		return this.odbcStore;
-	}	
-	
+	}
+
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
 	}
-	
+
 	private MetadataStore getODBCMetadataStore() {
 		try {
 			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getRuntimeTypeMap());
@@ -278,7 +278,7 @@ public class VDBRepository implements Serializable{
 		}
 		return null;
 	}
-	
+
 	public VDBMetaData removeVDB(String vdbName, Object vdbVersion) {
         VDBKey key = new VDBKey(vdbName, vdbVersion);
         return removeVDB(key);
@@ -299,24 +299,24 @@ public class VDBRepository implements Serializable{
         }
 		notifyRemove(key.getName(), key.getVersion(), removed);
 		return removed.getVDB();
-	}	
-	
+	}
+
 	public Map<String, Datatype> getRuntimeTypeMap() {
 		return datatypeMap;
 	}
-	
+
 	// this is called by mc
 	public void start() {
 	    this.odbcStore = getODBCMetadataStore();
 	}
-	
+
 	public void finishDeployment(String name, String version) {
 		VDBKey key = new VDBKey(name, version);
 		CompositeVDB v = this.vdbRepo.get(key);
 		if (v == null) {
 			return;
 		}
-		VDBMetaData metadataAwareVDB = v.getVDB();			
+		VDBMetaData metadataAwareVDB = v.getVDB();
 		if (v.getOriginalVDB().getStatus() == Status.FAILED) {
 			if (v.getOriginalVDB() != metadataAwareVDB && metadataAwareVDB.getStatus() == Status.LOADING) {
 				metadataAwareVDB.setStatus(Status.FAILED);
@@ -341,7 +341,7 @@ public class VDBRepository implements Serializable{
 				}
 				MetadataStore store = metadataAwareVDB.removeAttachment(MetadataStore.class);
                 ValidatorReport report = new MetadataValidator(store.getDatatypes(), QueryParser.getQueryParser()).validate(metadataAwareVDB, store);
-	
+
 				if (report.hasItems()) {
 					LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version, report.getItems().iterator().next()));
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
@@ -349,18 +349,18 @@ public class VDBRepository implements Serializable{
 						notifyFinished(name, version, v);
 						return;
 					}
-				} 
+				}
 				validateDataSources(metadataAwareVDB);
 				metadataAwareVDB.setStatus(Status.ACTIVE);
-				
+
 				// for  replication of events, temp tables and mat views
                 GlobalTableStore gts = CompositeGlobalTableStore.createInstance(v, this.bufferManager, this.objectReplictor);
                 metadataAwareVDB.addAttchment(GlobalTableStore.class, gts);
-				
+
                 if (this.databaseStore != null) {
                 	metadataAwareVDB.addAttchment(DatabaseStore.class, this.databaseStore);
                 }
-                
+
 				notifyFinished(name, version, v);
 			} finally {
 				if (metadataAwareVDB.getStatus() != Status.ACTIVE && metadataAwareVDB.getStatus() != Status.FAILED) {
@@ -371,11 +371,11 @@ public class VDBRepository implements Serializable{
 			}
 		}
 	}
-	
+
 	/**
-	 * @param key 
+	 * @param key
 	 * @param report
-	 * @return if the deployment should finish  
+	 * @return if the deployment should finish
 	 */
 	protected boolean processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
 		return false;
@@ -383,7 +383,7 @@ public class VDBRepository implements Serializable{
 
 	void validateDataSources(VDBMetaData vdb) {
 		ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
-		
+
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 	    	if (model.isSource()) {
 		    	Collection<SourceMappingMetadata> mappings = model.getSourceMappings();
@@ -396,13 +396,13 @@ public class VDBRepository implements Serializable{
 							model.setMetadataStatus(Model.MetadataStatus.FAILED);
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 						}
-					}					
+					}
 				}
-	    	}			
+	    	}
 		}
 	}
-	
-	
+
+
 	private void notifyFinished(String name, String version, CompositeVDB v) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, v.getVDB().getStatus()));
 		VDBLifeCycleListener mm = null;
@@ -417,7 +417,7 @@ public class VDBRepository implements Serializable{
 			mm.finishedDeployment(name, v);
 		}
 	}
-	
+
 	public void addListener(VDBLifeCycleListener listener) {
 	    lock.lock();
 	    try {
@@ -425,38 +425,38 @@ public class VDBRepository implements Serializable{
 	    } finally {
 	        lock.unlock();
 	    }
-		
+
 	}
-	
+
 	public void removeListener(VDBLifeCycleListener listener) {
 		this.listeners.remove(listener);
 	}
-	
+
 	private void notifyAdd(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40118,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.added(name, vdb);
 		}
 	}
-	
+
 	private void notifyRemove(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40119,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.removed(name, vdb);
 		}
 	}
-	
+
 	private void notifyBeforeRemove(String name, String version, CompositeVDB vdb) {
 		LogManager.logInfo(LIFECYCLE_CONTEXT, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40120,name, version));
 		for(VDBLifeCycleListener l:this.listeners) {
 			l.beforeRemove(name, vdb);
 		}
 	}
-	
+
 	public SystemFunctionManager getSystemFunctionManager() {
 		return this.systemFunctionManager;
 	}
-	
+
 	public void setSystemFunctionManager(SystemFunctionManager mgr) {
 		this.systemFunctionManager = mgr;
 	}
@@ -474,12 +474,12 @@ public class VDBRepository implements Serializable{
 			return cvdb.getVDB();
 		}
 		return this.pendingDeployments.get(key);
-	}	
-	
+	}
+
 	public boolean isDataRolesRequired() {
 		return dataRolesRequired;
 	}
-	
+
 	public void setDataRolesRequired(boolean requireDataRoles) {
 		this.dataRolesRequired = requireDataRoles;
 	}
@@ -499,5 +499,5 @@ public class VDBRepository implements Serializable{
     public void setAllowEnvFunction(boolean allowEnv) {
         this.allowEnv = allowEnv;
     }
-	
+
 }

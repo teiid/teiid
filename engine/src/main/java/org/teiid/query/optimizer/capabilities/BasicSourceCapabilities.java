@@ -31,7 +31,7 @@ import org.teiid.translator.ExecutionFactory.Format;
 public class BasicSourceCapabilities implements SourceCapabilities, Serializable {
 
 	private static final long serialVersionUID = -1779069588746365579L;
-	
+
     private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
     private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
@@ -52,7 +52,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
         Boolean supports = functionMap.get(functionName);
         return (supports == null) ? false : supports.booleanValue();
     }
-    
+
     public void setCapabilitySupport(Capability capability, boolean supports) {
     	if (supports && capability == Capability.QUERY_AGGREGATES) {
     		capabilityMap.put(Capability.QUERY_GROUP_BY, true);
@@ -60,16 +60,16 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     	} else {
     		capabilityMap.put(capability, supports);
     	}
-    } 
+    }
 
-    public void setFunctionSupport(String function, boolean supports) {  
+    public void setFunctionSupport(String function, boolean supports) {
         functionMap.put(function, Boolean.valueOf(supports));
     }
 
     public String toString() {
-        return "BasicSourceCapabilities<caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        return "BasicSourceCapabilities<caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     /**
      * This method adds the Source Property to the Property Map
      * @param propertyName
@@ -80,14 +80,14 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
         this.propertyMap.put(propertyName, value);
     }
 
-    /** 
+    /**
      * @see org.teiid.query.optimizer.capabilities.SourceCapabilities#getSourceProperty(java.lang.String)
      * @since 4.2
      */
     public Object getSourceProperty(Capability propertyName) {
         return this.propertyMap.get(propertyName);
     }
-    
+
     @Override
     public boolean supportsConvert(int sourceType, int targetType) {
     	if (this.translator == null) {
@@ -95,16 +95,16 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     	}
     	return this.translator.supportsConvert(sourceType, targetType);
     }
-    
+
     public void setTranslator(ExecutionFactory<?, ?> translator) {
 		this.translator = translator;
 	}
-    
+
     public boolean supportsFormatLiteral(String literal, Format format) {
     	if (this.translator == null) {
     		return false;
     	}
 		return this.translator.supportsFormatLiteral(literal, format);
 	}
-    
+
 }

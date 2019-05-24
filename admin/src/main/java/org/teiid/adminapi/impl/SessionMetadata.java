@@ -32,9 +32,9 @@ import org.teiid.client.security.SessionToken;
 
 /**
  * Add and delete properties also in the Mapper class for correct wrapping for profile service.
- * 
+ *
  */
-/* TODO: it would probably be good to let ipAddress denote the connecting address 
+/* TODO: it would probably be good to let ipAddress denote the connecting address
  and add clientIpAdress as the client reported value */
 public class SessionMetadata extends AdminObjectImpl implements Session {
 
@@ -43,14 +43,14 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	private volatile long lastPingTime = System.currentTimeMillis();
     private long createdTime;
     private String ipAddress;
-    private String clientHostName;    
+    private String clientHostName;
     private String clientHardwareAddress;
     private String userName;
     private String vdbName;
     private String vdbVersion;
     private String sessionId;
     private String securityDomain;
-    
+
     //server session state
     private transient VDBMetaData vdb;
     private transient SessionToken sessionToken;
@@ -66,11 +66,11 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public String getApplicationName() {
 		return this.applicationName;
 	}
-	
+
     public void setApplicationName(String applicationName) {
 		this.applicationName = applicationName;
-	}	
-    
+	}
+
 	@Override
 	public long getCreatedTime() {
 		return this.createdTime;
@@ -147,11 +147,11 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public String getSecurityDomain() {
 		return this.securityDomain;
 	}
-	
+
 	public void setSecurityDomain(String domain) {
 		this.securityDomain = domain;
-	}	
-	
+	}
+
     @SuppressWarnings("nls")
 	public String toString() {
     	StringBuilder str = new StringBuilder();
@@ -164,7 +164,7 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
     	str.append("; clientHostName=").append(clientHostName);
     	str.append("; clientHardwareAddress=").append(clientHardwareAddress);
     	str.append("; IPAddress=").append(ipAddress);
-    	str.append("; securityDomain=").append(securityDomain); 
+    	str.append("; securityDomain=").append(securityDomain);
     	str.append("; lastPingTime=").append(new Date(lastPingTime));
     	return str.toString();
     }
@@ -195,12 +195,12 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 
 	public void setSecurityContext(Object securityContext) {
 		this.securityContext = securityContext;
-	}	
-	
+	}
+
 	public Subject getSubject() {
 		return this.subject;
 	}
-	
+
 	public void setEmbedded(boolean embedded) {
 		this.embedded = embedded;
 	}
@@ -208,16 +208,16 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public boolean isEmbedded() {
 		return embedded;
 	}
-	
+
 	@Override
 	public String getClientHardwareAddress() {
 		return this.clientHardwareAddress;
 	}
-	
+
 	public void setClientHardwareAddress(String clientHardwareAddress) {
 		this.clientHardwareAddress = clientHardwareAddress;
 	}
-	
+
 	public Map<String, Object> getSessionVariables() {
 		return sessionVariables;
 	}
@@ -225,25 +225,25 @@ public class SessionMetadata extends AdminObjectImpl implements Session {
 	public void setClosed() {
 		this.closed = true;
 	}
-	
+
 	public boolean isClosed() {
 		return closed;
 	}
-	
+
 	public long getBytesUsed() {
         return bytesUsed.get();
     }
-	
+
 	public long addAndGetBytesUsed(long bytes) {
         return this.bytesUsed.addAndGet(bytes);
     }
-	
+
 	public boolean isActive() {
 	    return active;
 	}
-	
+
 	public void setActive(boolean active) {
 	    this.active = active;
 	}
-	
+
 }

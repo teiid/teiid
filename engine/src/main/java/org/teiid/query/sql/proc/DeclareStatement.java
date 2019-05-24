@@ -28,14 +28,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * <p> This class represents a statement used to declare variables in the 
+ * <p> This class represents a statement used to declare variables in the
  * storedprocedure language.</p>
  */
 public class DeclareStatement extends AssignmentStatement {
 
 	// type of the variable
 	private String varType;
-	
+
 	/**
 	 * Constructor for DeclareStatement.
 	 */
@@ -52,7 +52,7 @@ public class DeclareStatement extends AssignmentStatement {
 		super(variable, (Expression)null);
         this.varType = varType;
 	}
-	
+
 	/**
 	 * Constructor for DeclareStatement.
 	 * @param variable The <code>ElementSymbol</code> object that is the variable
@@ -62,7 +62,7 @@ public class DeclareStatement extends AssignmentStatement {
         super(variable, value);
 		this.varType = varType;
 	}
-	
+
 	@Deprecated public DeclareStatement(ElementSymbol variable, String varType, Command value) {
         super(variable, value);
 		this.varType = varType;
@@ -75,15 +75,15 @@ public class DeclareStatement extends AssignmentStatement {
 	public String getVariableType() {
 		return varType;
 	}
-	
+
 	/**
 	 * Set the type of this variable declared in this statement.
 	 * @param varType A string giving the variable type
 	 */
 	public void setVariableType(String varType) {
 		this.varType = varType;
-	}	
-	
+	}
+
 	/**
 	 * Return the type for this statement, this is one of the types
 	 * defined on the statement object.
@@ -91,27 +91,27 @@ public class DeclareStatement extends AssignmentStatement {
 	 */
 	public int getType() {
 		return Statement.TYPE_DECLARE;
-	}	
-	
+	}
+
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
+
 	/**
 	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
-	public Object clone() {		
+	public Object clone() {
         if (getExpression() == null) {
             return new DeclareStatement(this.getVariable().clone(), this.varType);
         }
         return new DeclareStatement(this.getVariable().clone(), this.varType, (Expression)getExpression().clone());
 	}
-	
+
     /**
      * Compare two DeclareStatements for equality.  They will only evaluate to equal if
      * they are IDENTICAL: variable and the its type are equal.
@@ -124,16 +124,16 @@ public class DeclareStatement extends AssignmentStatement {
     		return true;
 		}
 
-		// Quick fail tests		
+		// Quick fail tests
     	if(obj == null || !(obj instanceof DeclareStatement) || !super.equals(obj)) {
     		return false;
 		}
 
 		DeclareStatement other = (DeclareStatement) obj;
-		
-        return 
+
+        return
             EquivalenceUtil.areEqual(getVariableType(), other.getVariableType());
-    } 
+    }
 
     /**
      * Get hashcode for TableAssignmentStatement.  WARNING: This hash code relies on the hash codes of the
@@ -146,10 +146,10 @@ public class DeclareStatement extends AssignmentStatement {
     	// This hash code relies on the variable and its value for this statement
     	// and criteria clauses, not on the from, order by, or option clauses
     	int myHash = super.hashCode();
-    	myHash = HashCodeUtil.hashCode(myHash, this.getVariableType());  
+    	myHash = HashCodeUtil.hashCode(myHash, this.getVariableType());
         return myHash;
 	}
-      
+
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object

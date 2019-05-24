@@ -30,7 +30,7 @@ import org.teiid.jdbc.JDBCPlugin;
 
 /**
  * Class defines the URL in the Teiid.
- * 
+ *
  * @since 4.2
  */
 public class TeiidURL {
@@ -53,11 +53,11 @@ public class TeiidURL {
 		 * @since 5.6
 		 */
 		public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
-		
+
 		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
 		/**
 		 * Non-secure Protocol.
-		 */        
+		 */
 		public static final String NON_SECURE_PROTOCOL = "mm"; //$NON-NLS-1$
 		/**
 		 * Secure Protocol.
@@ -69,16 +69,16 @@ public class TeiidURL {
 		public static final String USER_NAME = "user"; //$NON-NLS-1$
 		// constant for password part of url
 		public static final String PASSWORD = "password"; //$NON-NLS-1$
-		
+
 		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
-		
+
 		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
-		
+
 		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$;
-		
+
 		public static final String ENCRYPT_REQUESTS = "encryptRequests"; //$NON-NLS-1$;
 		public static final String LOGIN_TIMEOUT = "loginTimeout"; //$NON-NLS-1$
-		
+
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
@@ -101,17 +101,17 @@ public class TeiidURL {
     private List<HostInfo> hosts = new ArrayList<HostInfo>();
 
     private boolean usingSSL = false;
-    
+
     /**
      * Create an MMURL from the server URL.  For use by the server-side.
      * @param serverURL   Expected format: mm[s]://server1:port1[,server2:port2]
-     * @throws MalformedURLException 
+     * @throws MalformedURLException
      * @since 4.2
      */
     public TeiidURL(String serverURL) throws MalformedURLException {
         if (serverURL == null) {
             throw new MalformedURLException(INVALID_FORMAT_SERVER);
-        } 
+        }
         if (StringUtil.startsWithIgnoreCase(serverURL, SECURE_PROTOCOL)) {
         	usingSSL = true;
         } else if (!StringUtil.startsWithIgnoreCase(serverURL, DEFAULT_PROTOCOL)) {
@@ -121,7 +121,7 @@ public class TeiidURL {
         appServerURL = serverURL;
 		parseServerURL(serverURL.substring(usingSSL?SECURE_PROTOCOL.length():DEFAULT_PROTOCOL.length()), INVALID_FORMAT_SERVER);
     }
-    
+
     public TeiidURL(String host, int port, boolean secure) {
         usingSSL = secure;
         if(host.startsWith("[")) { //$NON-NLS-1$
@@ -129,7 +129,7 @@ public class TeiidURL {
         }
 		hosts.add(new HostInfo(host, port));
     }
-    
+
     /**
      * Validates that a server URL is in the correct format.
      * @param serverURL  Expected format: mm[s]://server1:port1[,server2:port2]
@@ -138,21 +138,21 @@ public class TeiidURL {
     public static boolean isValidServerURL(String serverURL) {
         boolean valid = true;
         try {
-            new TeiidURL(serverURL);            
+            new TeiidURL(serverURL);
         } catch (Exception e) {
             valid = false;
         }
-        
+
         return valid;
     }
 
     public List<HostInfo> getHostInfo() {
         return hosts;
     }
-    
+
     /**
      * Get a list of hosts
-     *  
+     *
      * @return string of host separated by commas
      * @since 4.2
      */
@@ -163,17 +163,17 @@ public class TeiidURL {
             while (iterator.hasNext()) {
                 HostInfo element = iterator.next();
                 hostList.append(element.getHostName());
-                if( iterator.hasNext()) { 
-                    hostList.append(COMMA_DELIMITER); 
+                if( iterator.hasNext()) {
+                    hostList.append(COMMA_DELIMITER);
                 }
             }
         }
         return hostList.toString();
     }
-    
+
     /**
-     * Get a list of ports  
-     * 
+     * Get a list of ports
+     *
      * @return string of ports seperated by commas
      * @since 4.2
      */
@@ -184,8 +184,8 @@ public class TeiidURL {
             while (iterator.hasNext()) {
                 HostInfo element = iterator.next();
                 portList.append(element.getPortNumber());
-                if( iterator.hasNext()) { 
-                    portList.append(COMMA_DELIMITER); 
+                if( iterator.hasNext()) {
+                    portList.append(COMMA_DELIMITER);
                 }
             }
         }
@@ -194,11 +194,11 @@ public class TeiidURL {
 
     /**
      * @param url
-     * @throws MalformedURLException 
+     * @throws MalformedURLException
      * @since 4.2
      */
     private void parseServerURL(String serverURL, String exceptionMessage) throws MalformedURLException {
-        StringTokenizer st = new StringTokenizer(serverURL, COMMA_DELIMITER); 
+        StringTokenizer st = new StringTokenizer(serverURL, COMMA_DELIMITER);
         if (!st.hasMoreTokens()) {
             throw new MalformedURLException(exceptionMessage);
         }
@@ -257,7 +257,7 @@ public class TeiidURL {
 
     /**
      * Get the Application Server URL
-     * 
+     *
      * @return String for connection to the Server
      * @since 4.2
      */
@@ -272,7 +272,7 @@ public class TeiidURL {
             Iterator<HostInfo> iter = hosts.iterator();
             while (iter.hasNext()) {
                 HostInfo host = iter.next();
-                
+
                 boolean ipv6HostName = host.getHostName().indexOf(':') != -1;
                 if (ipv6HostName) {
                 	sb.append('[');
@@ -280,8 +280,8 @@ public class TeiidURL {
                 sb.append(host.getHostName());
                 if (ipv6HostName) {
                 	sb.append(']');
-                }                
-                sb.append(COLON_DELIMITER); 
+                }
+                sb.append(COLON_DELIMITER);
                 sb.append(host.getPortNumber());
                 if (iter.hasNext()) {
                     sb.append(COMMA_DELIMITER);
@@ -297,25 +297,25 @@ public class TeiidURL {
      * @since 4.2
      */
     public String toString() {
-        return getAppServerURL(); 
+        return getAppServerURL();
     }
 
-    /** 
+    /**
      * @see java.lang.Object#equals(java.lang.Object)
      * @since 4.2
      */
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
-        } 
+        }
         if (!(obj instanceof TeiidURL)) {
             return false;
-        } 
+        }
         TeiidURL url = (TeiidURL)obj;
         return (appServerURL.equals(url.getAppServerURL()));
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#hashCode()
      * @since 4.2
      */

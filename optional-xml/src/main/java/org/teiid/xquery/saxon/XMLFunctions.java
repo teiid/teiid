@@ -40,23 +40,23 @@ import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 
 public class XMLFunctions {
-    
+
     private static final boolean USE_X_ESCAPE = PropertiesUtils.getHierarchicalProperty("org.teiid.useXMLxEscape", true, Boolean.class); //$NON-NLS-1$
-    
+
     public static String xpathValue(Object doc, String xpath) throws XPathException, TeiidProcessingException {
         Source s = null;
         try {
             s = XMLSystemFunctions.convertToSource(doc);
             XPathEvaluator eval = new XPathEvaluator();
-            // Wrap the string() function to force a string return             
+            // Wrap the string() function to force a string return
             XPathExpression expr = eval.createExpression(xpath);
             XPathDynamicContext context = expr.createDynamicContext(eval.getConfiguration().buildDocumentTree(s).getRootNode());
             Object o = expr.evaluateSingle(context);
-            
+
             if(o == null) {
                 return null;
             }
-            
+
             // Return string value of node type
             if(o instanceof Item) {
                 Item i = (Item)o;
@@ -64,24 +64,24 @@ public class XMLFunctions {
                     return null;
                 }
                 return i.getStringValue();
-            }  
-            
+            }
+
             // Return string representation of non-node value
             return o.toString();
         } finally {
             WSUtil.closeSource(s);
         }
     }
-    
+
     /**
      * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.
      * @param xpath An xpath expression, for example: a/b/c/getText()
      */
     public static void validateXpath(String xpath) throws TeiidProcessingException {
-        if(xpath == null) { 
+        if(xpath == null) {
             return;
         }
-        
+
         XPathEvaluator eval = new XPathEvaluator();
         try {
             eval.createExpression(xpath);
@@ -89,7 +89,7 @@ public class XMLFunctions {
             throw new TeiidProcessingException(e);
         }
     }
-    
+
     public static String[] validateQName(String name) throws TeiidProcessingException {
         try {
             return NameChecker.getQNameParts(name);
@@ -97,11 +97,11 @@ public class XMLFunctions {
             throw new TeiidProcessingException(e);
         }
     }
-    
-    public static boolean isValidNCName(String prefix) { 
+
+    public static boolean isValidNCName(String prefix) {
         return NameChecker.isValidNCName(prefix);
     }
-    
+
     public static boolean isNull(Item i) {
         if (i instanceof NodeInfo) {
             NodeInfo ni = (NodeInfo)i;
@@ -114,7 +114,7 @@ public class XMLFunctions {
         }
         return false;
     }
-    
+
     public static String escapeName(String name, boolean fully) {
         StringBuilder sb = new StringBuilder();
         char[] chars = name.toCharArray();
@@ -132,7 +132,7 @@ public class XMLFunctions {
                 if (fully || i == 0) {
                     escapeChar(sb, chr);
                     continue;
-                } 
+                }
                 break;
             case '_':
                 if (chars.length > i+1 && chars[i+1] == 'x') {

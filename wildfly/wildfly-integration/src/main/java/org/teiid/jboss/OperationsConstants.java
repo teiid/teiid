@@ -31,7 +31,7 @@ class OperationsConstants {
 	    .setAllowNull(false)
 	    .setAllowExpression(false)
 	    .setAllowedValues(Admin.Cache.PREPARED_PLAN_CACHE.name(), Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name())
-	    .build();	    
+	    .build();
 	public static final SimpleAttributeDefinition XID = new SimpleAttributeDefinition("xid", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition DATA_ROLE = new SimpleAttributeDefinition("data-role", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition MAPPED_ROLE = new SimpleAttributeDefinition("mapped-role", ModelType.STRING, false); //$NON-NLS-1$
@@ -54,18 +54,18 @@ class OperationsConstants {
 	public static final SimpleAttributeDefinition FORMAT = new SimpleAttributeDefinitionBuilder("format", ModelType.STRING) //$NON-NLS-1$
 	        .setAllowNull(true)
 	        .setAllowExpression(false)
-	        .build();   
+	        .build();
 	public static final SimpleAttributeDefinition INCLUDE_SOURCE = new SimpleAttributeDefinition("include-source", ModelType.BOOLEAN, true); //$NON-NLS-1$
-	
+
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_NAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition OPTIONAL_VDB_VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
-	
-	
+
+
 	public static final SimpleAttributeDefinition DBNAME = new SimpleAttributeDefinition("vdb-name", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition VERSION = new SimpleAttributeDefinition("vdb-version", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition SCHEMA = new SimpleAttributeDefinition("schema", ModelType.STRING, true); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition DDL = new SimpleAttributeDefinition("ddl", ModelType.STRING, false); //$NON-NLS-1$
 	public static final SimpleAttributeDefinition PERSIST = new SimpleAttributeDefinition("persist", ModelType.BOOLEAN, false); //$NON-NLS-1$
-	
-	public static final SimpleAttributeDefinition INCLUDE_SCHEMA = new SimpleAttributeDefinition("include-schema", ModelType.BOOLEAN, true); //$NON-NLS-1$	
+
+	public static final SimpleAttributeDefinition INCLUDE_SCHEMA = new SimpleAttributeDefinition("include-schema", ModelType.BOOLEAN, true); //$NON-NLS-1$
 }

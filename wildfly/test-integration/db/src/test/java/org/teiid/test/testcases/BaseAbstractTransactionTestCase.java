@@ -9,11 +9,11 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 
 public abstract class BaseAbstractTransactionTestCase {
- 
-        
+
+
     protected abstract TransactionContainer getTransactionContainter();
-    
-    
+
+
     @BeforeClass
     public static void beforeAll() throws Exception {
 	ConfigPropertyLoader.reset();
@@ -29,19 +29,19 @@ public abstract class BaseAbstractTransactionTestCase {
     public void afterEach() throws Exception {
 
     }
-    
+
     protected void addProperty(String key, String value) {
-	
+
 	ConfigPropertyLoader.getInstance().setProperty(key, value);
-	
+
     }
-    
+
     @AfterClass
-    public static void afterAll() {	
+    public static void afterAll() {
 	DataSourceMgr.getInstance().shutdown();
     }
-    
-    
+
+
 
 
 }

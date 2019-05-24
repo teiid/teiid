@@ -38,7 +38,7 @@ public class CrossJoinResult implements QueryResponse, ComplexResponse {
     private CrossJoinNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
     private String baseURL;
-    
+
     public CrossJoinResult(String baseURL, CrossJoinNode context) {
         this.baseURL = baseURL;
         this.documentNode = context;
@@ -48,25 +48,25 @@ public class CrossJoinResult implements QueryResponse, ComplexResponse {
     public void addRow(ResultSet rs) throws SQLException {
 
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
-        
+
         Entity entity = EntityCollectionResponse.createEntity(rs,
                 this.documentNode, this.baseURL, null);
-        
+
         row.add(new ComplexReturnType(this.documentNode.getName(),
                 this.documentNode.getEdmEntityType(), entity, this.documentNode
                         .hasExpand()));
-        
+
         for (DocumentNode node : this.documentNode.getSibilings()) {
             Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
                     this.baseURL, null);
-            
+
             row.add(new ComplexReturnType(node.getName(),
                     node.getEdmEntityType(), sibiling,
                     ((CrossJoinNode) node).hasExpand()));
         }
         this.out.add(row);
     }
-    
+
     public CrossJoinNode getResource() {
         return this.documentNode;
     }
@@ -93,7 +93,7 @@ public class CrossJoinResult implements QueryResponse, ComplexResponse {
     public String getNextToken() {
         return this.nextToken;
     }
-    
+
     @Override
     public void serialize(ODataResponse response,
             TeiidODataJsonSerializer serializer, ServiceMetadata metadata,

@@ -26,7 +26,7 @@ public class Server extends AbstractMetadataRecord {
     private String type;
     private String version;
     private String dataWrapperName;
-    
+
     public Server(String name) {
         super.setName(name);
     }
@@ -51,14 +51,14 @@ public class Server extends AbstractMetadataRecord {
         return dataWrapperName;
     }
 
-    public void setDataWrapper(String wrapperName) {     
+    public void setDataWrapper(String wrapperName) {
         this.dataWrapperName = wrapperName;
     }
-    
+
     public String getJndiName() {
         return getProperty("jndi-name", false);//$NON-NLS-1$
     }
-    
+
     public void setJndiName(String value) {
         setProperty("jndi-name", value); //$NON-NLS-1$
     }

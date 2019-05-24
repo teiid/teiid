@@ -39,11 +39,11 @@ import org.teiid.core.util.SqlUtil;
  * objects.
  */
 public class BlobImpl extends BaseLob implements Blob, StreamProvider {
-    
+
 	public BlobImpl() {
-		
+
 	}
-	
+
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
      * @param streamFactory reference to value chunk in data source.
@@ -77,7 +77,7 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
             return new byte[0];
         }
         pos = pos - 1;
-        
+
         if (length < 0) {
             Object[] params = new Object[] {length};
             throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.3", params)); //$NON-NLS-1$
@@ -120,14 +120,14 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         if (pattern == null) {
             return -1;
         }
-        
+
         return LobSearchUtil.position(new LobSearchUtil.StreamProvider() {
         	public InputStream getBinaryStream() throws SQLException {
         		return pattern.getBinaryStream();
         	}
         }, pattern.length(), this, this.length(), start, 1);
     }
-    
+
     /**
      * Determines the byte position at which the specified byte
      * <code>pattern</code> begins within the <code>BLOB</code>
@@ -147,7 +147,7 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
     	}
         return position(new SerialBlob(pattern), start);
     }
-        
+
 	public InputStream getBinaryStream(long arg0, long arg1)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();

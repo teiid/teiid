@@ -49,47 +49,47 @@ import org.teiid.query.QueryPlugin;
  * </ol>
  * <br/>
  * A non-fifo (lifo) {@link SynchronousQueue} based {@link ThreadPoolExecutor} satisfies 1 and 2, but not 3.
- * A bounded or unbound queue based {@link ThreadPoolExecutor} allows for 3, but will tend to create 
+ * A bounded or unbound queue based {@link ThreadPoolExecutor} allows for 3, but will tend to create
  * up to the maximum number of threads and makes no guarantee on thread scheduling.
  * <br/>
  * So the approach here is to use a virtual thread pool off of a {@link SynchronousQueue}
  * backed {@link ThreadPoolExecutor}.
  * <br/>
  * There is also only a single master scheduling thread with actual executions deferred.
- * 
- * TODO: there is a race condition between retiring threads and adding work, which may create extra threads.  
- * That is a flaw with attempting to reuse, rather than create threads.  
+ *
+ * TODO: there is a race condition between retiring threads and adding work, which may create extra threads.
+ * That is a flaw with attempting to reuse, rather than create threads.
  * TODO: bounded queuing - we never bothered bounding in the past with our worker pools, but reasonable
  * defaults would be a good idea.
- * 
+ *
  * TODO: a {@link ForkJoinPool} is a simple replacement, but we'd loose the prioritization queue.
  */
 public class ThreadReuseExecutor implements TeiidExecutor {
-	
+
 	public interface PrioritizedRunnable extends Runnable {
-		
+
 		final static int NO_WAIT_PRIORITY = 0;
-		
+
 		/**
 		 * The execution priority - higher is lower
 		 */
 		int getPriority();
-		
+
 		long getCreationTime();
-		
+
 		DQPWorkContext getDqpWorkContext();
-		
+
 	}
-	
+
 	private static AtomicLong ID_GEN = new AtomicLong();
-	
+
 	public static class RunnableWrapper implements PrioritizedRunnable, Comparable<RunnableWrapper> {
 		Runnable r;
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		long creationTime;
 		int priority;
 		long id = ID_GEN.getAndIncrement();
-		
+
 		public RunnableWrapper(Runnable r) {
 			if (r instanceof PrioritizedRunnable) {
 				PrioritizedRunnable pr = (PrioritizedRunnable)r;
@@ -104,7 +104,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			}
 			this.r = r;
 		}
-		
+
 		@Override
 		public long getCreationTime() {
 			return creationTime;
@@ -123,7 +123,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			}
 			workContext.runInContext(r);
 		}
-		
+
 		public DQPWorkContext getDqpWorkContext() {
 			return workContext;
 		}
@@ -139,9 +139,9 @@ public class ThreadReuseExecutor implements TeiidExecutor {
         }
 
 	}
-	
-	private final ThreadPoolExecutor tpe; 
-	
+
+	private final ThreadPoolExecutor tpe;
+
 	private volatile int activeCount;
 	private volatile int highestActiveCount;
 	private volatile int highestQueueSize;
@@ -151,30 +151,30 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 	private Object poolLock = new Object();
 	private AtomicInteger threadCounter = new AtomicInteger();
 	private Set<Thread> threads = Collections.newSetFromMap(new ConcurrentHashMap<Thread, Boolean>());
-	
+
 	private String poolName;
 	private int maximumPoolSize;
 	private Queue<RunnableWrapper> queue = new PriorityBlockingQueue<RunnableWrapper>(11);
-    
+
 	private long warnWaitTime = 500;
-	
+
 	public ThreadReuseExecutor(String name, int maximumPoolSize) {
 		this.maximumPoolSize = maximumPoolSize;
 		this.poolName = name;
-		
+
 		tpe = new ThreadPoolExecutor(0,
 				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
-				new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$ 
+				new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$
 			@Override
 			protected void afterExecute(Runnable r, Throwable t) {
 				if (t != null) {
 					LogManager.logError(LogConstants.CTX_RUNTIME, t, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30021));
 				}
 			}
-			
+
 		};
 	}
-	
+
 	public void execute(final Runnable command) {
 		executeDirect(new RunnableWrapper(command));
 	}
@@ -203,7 +203,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 				String name = t.getName();
 				t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
+					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$
 				}
 				PrioritizedRunnable r = command;
 				while (r != null) {
@@ -223,7 +223,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 								activeCount--;
 								if (activeCount == 0 && terminated) {
 									poolLock.notifyAll();
-								}		
+								}
 							}
 						}
 						if (success) {
@@ -240,7 +240,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 
 		});
 	}
-	
+
 	protected void logWaitMessage(long warnTime, int maximumPoolSize, String poolName, int highestQueueSize) {
         LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30009, maximumPoolSize, poolName, highestQueueSize, warnTime));
     }
@@ -250,35 +250,35 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			throw new RejectedExecutionException();
 		}
 	}
-	
+
 	public int getActiveCount() {
 		return activeCount;
 	}
-	
+
 	public long getSubmittedCount() {
 		return submittedCount;
 	}
-	
+
 	public long getCompletedCount() {
 		return completedCount;
 	}
-	
+
 	public boolean isTerminated() {
 		return terminated;
 	}
-	
+
 	public void shutdown() {
 		this.terminated = true;
 	}
-	
+
 	public int getLargestPoolSize() {
 		return this.highestActiveCount;
 	}
-	
+
 	public int getQueued() {
         return queue.size();
 	}
-	
+
 	public WorkerPoolStatisticsMetadata getStats() {
 		WorkerPoolStatisticsMetadata stats = new WorkerPoolStatisticsMetadata();
 		stats.setName(poolName);
@@ -291,7 +291,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 		stats.setTotalCompleted(getCompletedCount());
 		return stats;
 	}
-	
+
 	public List<Runnable> shutdownNow() {
 		this.shutdown();
 		synchronized (poolLock) {
@@ -304,7 +304,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			return result;
 		}
 	}
-	
+
 	public boolean awaitTermination(long timeout, TimeUnit unit)
 			throws InterruptedException {
 		long timeoutMillis = unit.toMillis(timeout);

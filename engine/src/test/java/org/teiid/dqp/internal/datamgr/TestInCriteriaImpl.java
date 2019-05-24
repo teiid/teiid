@@ -44,7 +44,7 @@ public class TestInCriteriaImpl {
         crit.setNegated(negated);
         return crit;
     }
-    
+
     public static In example(boolean negated) throws Exception {
         return (In)TstLanguageBridgeFactory.factory.translate(helpExample(negated));
     }
@@ -55,7 +55,7 @@ public class TestInCriteriaImpl {
         assertTrue(inCriteria.getLeftExpression() instanceof Literal);
         assertEquals(new Integer(300), ((Literal)inCriteria.getLeftExpression()).getValue());
     }
-    
+
     @Test public void testExpansion() throws Exception {
     	SetCriteria inCriteria = helpExample(false);
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());
@@ -66,7 +66,7 @@ public class TestInCriteriaImpl {
         AndOr and = (AndOr) lbf.translate(inCriteria);
         assertEquals(Operator.AND, and.getOperator());
     }
-    
+
     @Test public void testExpansion1() throws Exception {
     	SetCriteria inCriteria = helpExample(false);
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());

@@ -83,10 +83,10 @@ import org.teiid.query.util.CommandContext;
  * from the children nodes.  </p>
  */
 public final class RuleAssignOutputElements implements OptimizerRule {
-	
+
 	private boolean finalRun;
 	private boolean checkSymbols;
-	
+
 	public RuleAssignOutputElements(boolean finalRun) {
 		this.finalRun = finalRun;
 	}
@@ -141,10 +141,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
 	    int nodeType = root.getType();
-        
+
 		// Update this node's output columns based on parent's columns
 	    List<Expression> oldOutput = (List<Expression>) root.setProperty(NodeConstants.Info.OUTPUT_COLS, outputElements);
-        
+
 		if (root.getChildCount() == 0) {
 			//update temp access
 			if (root.getType() == NodeConstants.Types.SOURCE && root.getGroups().size() == 1) {
@@ -174,13 +174,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	if (plan != null && (command == null || !RelationalNodeUtil.isUpdate(command))) {
 	            		//nested with clauses are handled as sub plans, which have a fixed set of output symbols
 	            		root.setProperty(NodeConstants.Info.OUTPUT_COLS, ResolverUtil.resolveElementsInGroup(root.getGroups().iterator().next(), metadata));
-	            	} 
+	            	}
 	            	if (checkSymbols) {
 		            	Object modelId = RuleRaiseAccess.getModelIDFromAccess(root, metadata);
 		            	for (Expression symbol : outputElements) {
 		                    if(!RuleRaiseAccess.canPushSymbol(symbol, true, modelId, metadata, capFinder, analysisRecord)) {
 		                    	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30258, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30258, symbol, modelId));
-		                    } 
+		                    }
 						}
 	            	}
 	            	if (NodeEditor.findParent(root, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != null) {
@@ -247,13 +247,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		        break;
 		    case NodeConstants.Types.SOURCE: {
 		        outputElements = (List<Expression>)determineSourceOutput(root, outputElements, metadata, capFinder);
-		        if (!finalRun && root.getProperty(Info.PARTITION_INFO) != null 
+		        if (!finalRun && root.getProperty(Info.PARTITION_INFO) != null
 		                && NodeEditor.findParent(root, NodeConstants.Types.JOIN) != null) {
 		            GroupSymbol group = root.getGroups().iterator().next();
 		            Object modelId = RuleDecomposeJoin.getEffectiveModelId(metadata, group);
 		            String name = metadata.getExtensionProperty(modelId, RuleDecomposeJoin.IMPLICIT_PARTITION_COLUMN_NAME, true);
 		            if (name != null) {
-		                //keep projecting the implicit partitioning column through the source so that it can 
+		                //keep projecting the implicit partitioning column through the source so that it can
 		                //be used in the decomposition logic
 		                ElementSymbol es = new ElementSymbol(name, group);
 		                if (!outputElements.contains(es)) {
@@ -299,7 +299,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            		}
 	            	}
 		    	}
-	            
+
 	            List<Expression> requiredInput = collectRequiredInputSymbols(root, metadata, capFinder);
 	            //targeted optimization for unnecessary aggregation
 	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
@@ -314,7 +314,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
 	            	return;
             	}
-	            
+
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
 	                assignOutputElements(root.getLastChild(), requiredInput, metadata, capFinder, rules, analysisRecord, context);
@@ -345,7 +345,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 
 	private boolean addLimit(RuleStack rules, PlanNode parent, QueryMetadataInterface metadata, CapabilitiesFinder capabilitiesFinder) throws QueryMetadataException, TeiidComponentException {
 		PlanNode accessNode = NodeEditor.findParent(parent.getFirstChild(), NodeConstants.Types.ACCESS);
-		
+
 		if (accessNode != null) {
 			Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 			if (!CapabilitiesUtil.supports(Capability.ROW_LIMIT, mid, metadata, capabilitiesFinder)) {
@@ -355,20 +355,20 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				parent = accessNode;
 			}
 		}
-		
+
 		PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
 		limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
-		
+
 		if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
 			rules.push(RuleConstants.PUSH_LIMIT);
 		}
-		
+
 		if (parent.getParent() == null) {
 			if (parent.getType() == NodeConstants.Types.ACCESS) {
 				return false;
 			}
 			parent = parent.getFirstChild();
-		} 
+		}
 		parent.addAsParent(limit);
 		return true;
 	}
@@ -378,7 +378,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			throws QueryPlannerException {
 		PlanNode next = root.getFirstChild();
 		NodeEditor.removeChildNode(root.getParent(), root);
-		
+
 		SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
 		if (!symbolMap.asMap().isEmpty()) {
 			FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
@@ -409,24 +409,24 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         return filteredElements;
     }
 
-    /** 
+    /**
      * A special case to consider is when the virtual group is defined by a
-     * UNION (no ALL) or a SELECT DISTINCT.  In this case, the dup removal means 
+     * UNION (no ALL) or a SELECT DISTINCT.  In this case, the dup removal means
      * that all columns need to be used to determine duplicates.  So, filtering the
      * columns at all will alter the number of rows flowing through the frame.
      * So, in this case filtering should not occur.  In fact the output columns
      * that were set on root above are filtered, but we actually want all the
      * virtual elements - so just reset it and proceed as before
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
-     * @throws QueryPlannerException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
+     * @throws QueryPlannerException
      */
     static List<? extends Expression> determineSourceOutput(PlanNode root,
                                            List<Expression> outputElements,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         PlanNode virtualRoot = root.getLastChild();
-        
+
         if(hasDupRemoval(virtualRoot)) {
             // Reset the outputColumns for this source node to be all columns for the virtual group
             SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
@@ -435,7 +435,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30259, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30259, outputElements));
             }
             return symbolMap.getKeys();
-        } 
+        }
         PlanNode limit = NodeEditor.findNodePreOrder(root, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.PROJECT);
 		if (limit == null) {
 			return outputElements;
@@ -452,11 +452,11 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         }
         OrderBy sortOrder = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
         List<Expression> topCols = FrameUtil.findTopCols(sort);
-        
+
         SymbolMap symbolMap = (SymbolMap)root.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
+
         List<ElementSymbol> symbolOrder = symbolMap.getKeys();
-        
+
         for (OrderByItem item : sortOrder.getOrderByItems()) {
             final Expression expr = item.getSymbol();
             int index = topCols.indexOf(expr);
@@ -470,7 +470,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         }
         return outputElements;
     }
-    
+
     /**
      * <p>This method looks at a source node, which defines a virtual group, and filters the
      * virtual elements defined by the group down into just the output elements needed
@@ -485,7 +485,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * @param sourceNode Node to filter
      * @param metadata Metadata implementation
      * @return The filtered list of columns for this node (used in recursing tree)
-     * @throws QueryPlannerException 
+     * @throws QueryPlannerException
      */
 	static List<Expression> filterVirtualElements(PlanNode sourceNode, List<Expression> outputColumns, QueryMetadataInterface metadata) throws QueryPlannerException {
 
@@ -494,16 +494,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		// Update project cols - typically there is exactly one and that node can
 	    // just get the filteredCols determined above.  In the case of one or more
 	    // nested set operations (UNION, INTERSECT, EXCEPT) there will be 2 or more
-	    // projects.  
+	    // projects.
 	    List<PlanNode> allProjects = NodeEditor.findAllNodes(virtualRoot, NodeConstants.Types.PROJECT, NodeConstants.Types.PROJECT);
 
         int[] filteredIndex = new int[outputColumns.size()];
         Arrays.fill(filteredIndex, -1);
-        
+
         SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
+
         List<ElementSymbol> originalOrder = symbolMap.getKeys();
-        
+
         boolean updateGroups = outputColumns.size() != originalOrder.size();
         boolean[] seenIndex = new boolean[outputColumns.size()];
         boolean newSymbols = false;
@@ -522,7 +522,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             	seenIndex[filteredIndex[i]] = true;
             }
         }
-        
+
         if (!updateGroups) {
         	for (boolean b : seenIndex) {
 				if (!b) {
@@ -531,14 +531,14 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				}
 			}
         }
-        
+
         List<Expression> newCols = null;
         for(int i=allProjects.size()-1; i>=0; i--) {
             PlanNode projectNode = allProjects.get(i);
             List<Expression> projectCols = (List<Expression>) projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
 
             newCols = RelationalNode.projectTuple(filteredIndex, projectCols, true);
-            
+
             if (newSymbols) {
 				SymbolMap childMap = SymbolMap.createSymbolMap(symbolMap.getKeys(), projectCols);
             	for (int j = 0; j < filteredIndex.length; j++) {
@@ -553,7 +553,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					}
 				}
             }
-            
+
             projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, newCols);
             if (updateGroups) {
 	            projectNode.getGroups().clear();
@@ -561,7 +561,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            projectNode.addGroups(GroupsUsedByElementsVisitor.getGroups(projectNode.getCorrelatedReferenceElements()));
             }
         }
-        
+
         if (!updateGroups) {
         	for (int i : filteredIndex) {
 				if (i != filteredIndex[i]) {
@@ -570,7 +570,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				}
 			}
         }
-        
+
         if (updateGroups) {
         	SymbolMap newMap = new SymbolMap();
             List<Expression> originalExpressionOrder = symbolMap.getValues();
@@ -588,23 +588,23 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		return newCols;
 	}
 
-    /** 
+    /**
      * Check all branches for either a dup removal or a non all union.
      *
      * @param node Root of virtual group (node below source node)
      * @return True if the virtual group at this source node does dup removal
      */
 	static boolean hasDupRemoval(PlanNode node) {
-        
+
         List<PlanNode> nodes = NodeEditor.findAllNodes(node, NodeConstants.Types.DUP_REMOVE|NodeConstants.Types.SET_OP, NodeConstants.Types.DUP_REMOVE|NodeConstants.Types.PROJECT);
-        
+
         for (PlanNode planNode : nodes) {
             if (planNode.getType() == NodeConstants.Types.DUP_REMOVE
                 || (planNode.getType() == NodeConstants.Types.SET_OP && Boolean.FALSE.equals(planNode.getProperty(NodeConstants.Info.USE_ALL)))) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -613,16 +613,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * are any symbols that are required in the processing of this node,
      * for instance to create a new element symbol or sort on it, etc.
      * @param node Node to collect for
-     * @param metadata 
-     * @param capFinder 
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
+     * @param metadata
+     * @param capFinder
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
      */
 	private List<Expression> collectRequiredInputSymbols(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
 
         Set<Expression> requiredSymbols = new LinkedHashSet<Expression>();
         Set<Expression> createdSymbols = new HashSet<Expression>();
-        
+
         List<Expression> outputCols = (List<Expression>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 
 		switch(node.getType()) {
@@ -633,16 +633,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                 PlanNode accessNode = null;
                 if (accessParent == null) {
                 	//find the direct access node
-                	accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                	accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE
                 			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
                 }
                 for (Expression ss : projectCols) {
                     if(ss instanceof AliasSymbol) {
                         createdSymbols.add(ss);
-                        
+
                         ss = ((AliasSymbol)ss).getSymbol();
                     }
-                    
+
                     if (ss instanceof WindowFunction || ss instanceof ExpressionSymbol) {
                         createdSymbols.add(ss);
                     }
@@ -671,7 +671,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                 PlanNode accessNode = null;
                 if (accessParent == null) {
                 	//find the direct access node
-                	accessNode = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE 
+                	accessNode = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE
                 			| NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP);
                 }
 				if(groupCols != null) {
@@ -684,7 +684,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 				}
 				SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
 				Set<ElementSymbol> usedAggregates = new HashSet<ElementSymbol>();
-				
+
 				// Take credit for creating any aggregates that are needed above
 				for (Expression outputSymbol : outputCols) {
 					if (!(outputSymbol instanceof ElementSymbol)) {
@@ -699,7 +699,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                    	if (!pushProjection(node, metadata, capFinder,
 									requiredSymbols, accessParent, accessNode, expression)) {
 		                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
-		                    }	
+		                    }
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {
@@ -730,19 +730,19 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         		ElementCollectorVisitor.getElements(expr, requiredSymbols);
             }
         }
-        
+
 /*        Set<SingleElementSymbol> tempRequired = requiredSymbols;
         requiredSymbols = new LinkedHashSet<SingleElementSymbol>(outputCols);
         requiredSymbols.removeAll(createdSymbols);
         requiredSymbols.addAll(tempRequired);
-*/        
+*/
         // Add any columns to required that are in this node's output but were not created here
         for (Expression currentOutputSymbol : outputCols) {
 			if (!createdSymbols.contains(currentOutputSymbol) && (finalRun || node.getType() != NodeConstants.Types.PROJECT || currentOutputSymbol instanceof ElementSymbol)) {
                 requiredSymbols.add(currentOutputSymbol);
             }
         }
-        
+
         //further minimize the required symbols based upon underlying expression (accounts for aliasing)
         //TODO: this should depend upon whether the expressions are deterministic
         if (node.getType() == NodeConstants.Types.PROJECT) {
@@ -754,7 +754,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
                 }
             }
         }
-        
+
         return new ArrayList<Expression>(requiredSymbols);
 	}
 
@@ -794,11 +794,11 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 			        	mustPushSubexpression.add(function);
 						continue;
 					}
-					
+
 					if (findFunctionTarget(function, function.getFunctionDescriptor(), capFinder, metadata) != null) {
 					    continue;
 					}
-					
+
 					//assume we need the whole thing
 					requiredSymbols.add(ss);
 					checkSymbols = true;
@@ -811,7 +811,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		}
 		return false;
 	}
-	
+
 	/**
      * Find the first schema name against which this function can be executed, or null for no target
      * @param function
@@ -832,7 +832,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             }
             String name = metadata.getName(mid);
             SourceCapabilities caps = capabiltiesFinder.findCapabilities(name);
-            if (caps != null && caps.supportsCapability(Capability.SELECT_WITHOUT_FROM) 
+            if (caps != null && caps.supportsCapability(Capability.SELECT_WITHOUT_FROM)
                     && CapabilitiesUtil.supportsScalarFunction(mid, function, metadata, capabiltiesFinder)) {
                 return name;
             }

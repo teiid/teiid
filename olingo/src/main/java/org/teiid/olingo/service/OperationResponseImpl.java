@@ -33,16 +33,16 @@ public class OperationResponseImpl implements OperationResponse {
     private Property returnValue;
     private ProcedureReturn procedureReturn;
     private String nextToken;
-    
+
     public OperationResponseImpl(ProcedureReturn procedureReturn) {
         this.procedureReturn = procedureReturn;
     }
-    
+
     @Override
     public void addRow(ResultSet rs) throws SQLException {
         this.complexValues.add(getComplexProperty(rs));
     }
-    
+
     private ComplexValue getComplexProperty(ResultSet rs) throws SQLException {
         HashMap<Integer, Property> properties = new HashMap<Integer, Property>();
         for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
@@ -66,10 +66,10 @@ public class OperationResponseImpl implements OperationResponse {
         }
 
         // properties can contain more than what is requested in project to build links
-        // filter those columns out.        
+        // filter those columns out.
         return createComplex("result", properties.values());
     }
-    
+
     static ComplexValue createComplex(final String name, final Collection<Property> properties) {
         ComplexValue complexValue = new ComplexValue();
         for (final Property property : properties) {
@@ -81,8 +81,8 @@ public class OperationResponseImpl implements OperationResponse {
     static Property createComplexCollection(final String name,
             final String type, final List<ComplexValue> complexList) {
         return new Property(type, name, ValueType.COLLECTION_COMPLEX, complexList);
-    }    
-    
+    }
+
     @Override
     public long size() {
         return this.complexValues.size();
@@ -105,30 +105,30 @@ public class OperationResponseImpl implements OperationResponse {
     @Override
     public Object getResult() {
         if (this.procedureReturn.hasResultSet()) {
-            String type = this.procedureReturn.getReturnType().getType().getFullQualifiedName().getFullQualifiedNameAsString();        
+            String type = this.procedureReturn.getReturnType().getType().getFullQualifiedName().getFullQualifiedNameAsString();
             return createComplexCollection("result", type, this.complexValues);
         }
         return this.returnValue;
     }
-    
+
     @Override
     public void setReturnValue(Object returnValue) throws SQLException {
         try {
 			EdmReturnType returnType = this.procedureReturn.getReturnType();
             this.returnValue = EntityCollectionResponse.buildPropery("return", //$NON-NLS-1$
                     (SingletonPrimitiveType) returnType.getType(), returnType.getPrecision(), returnType.getScale(),
-                    returnType.isCollection(), returnValue); 
+                    returnType.isCollection(), returnValue);
 		} catch (TeiidProcessingException e) {
 		    throw new SQLException(e);
         } catch (IOException e) {
             throw new SQLException(e);
         }
     }
-    
+
     public ProcedureReturn getProcedureReturn() {
         return procedureReturn;
     }
-    
+
     @Override
     public void serialize(ODataResponse response,
             TeiidODataJsonSerializer serializer, ServiceMetadata metadata,

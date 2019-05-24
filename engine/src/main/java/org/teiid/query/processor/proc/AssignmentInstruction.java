@@ -43,15 +43,15 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * expected to result in 1 column, 1 row tuple.</p>
  */
 public class AssignmentInstruction extends ProgramInstruction {
-    	
+
 	// variable whose value is updated in the context
 	private ElementSymbol variable;
 	// expression to be processed
 	private Expression expression;
-	
+
 	public AssignmentInstruction() {
 	}
-	
+
     /**
 	 * <p> Updates the current variable context with a value for the Variable
 	 * defined using a DeclareInstruction, the variable value is obtained by either processing
@@ -74,7 +74,7 @@ public class AssignmentInstruction extends ProgramInstruction {
                             new Object[] {this.toString() + " The variable " //$NON-NLS-1$
                                           + getVariable() + " in the variablecontext is updated with the value :", value}); //$NON-NLS-1$
     }
-    
+
     public PlanNode getDescriptionProperties() {
         PlanNode props = new PlanNode("ASSIGNMENT"); //$NON-NLS-1$
         props.addProperty(PROP_VARIABLE, this.variable.toString());
@@ -83,40 +83,40 @@ public class AssignmentInstruction extends ProgramInstruction {
         }
         return props;
     }
-    
-    /** 
+
+    /**
      * @return Returns the expression.
      */
     public Expression getExpression() {
         return this.expression;
     }
-    
-    /** 
+
+    /**
      * @param expression The expression to set.
      */
     public void setExpression(Expression expression) {
         this.expression = expression;
     }
-    
-    /** 
+
+    /**
      * @return Returns the variable.
      */
     public ElementSymbol getVariable() {
         return this.variable;
     }
-    
-    /** 
+
+    /**
      * @param variable The variable to set.
      */
     public void setVariable(ElementSymbol variable) {
         this.variable = variable;
     }
-	
+
     public String toString() {
         return "ASSIGNMENT INSTRUCTION: " + variable; //$NON-NLS-1$
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
      */
     public AssignmentInstruction clone() {
@@ -125,7 +125,7 @@ public class AssignmentInstruction extends ProgramInstruction {
         clone.setExpression(this.expression);
         return clone;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         if (expression == null) {

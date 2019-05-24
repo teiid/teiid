@@ -62,7 +62,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private boolean auditModelFields = false;
 	private int maxInsertBatchSize = 2048;
 	private boolean supportsGroupBy = true;
-	
+
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
 	    // Salesforce supports ORDER BY, but not on all column types
@@ -72,12 +72,12 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setTransactionSupport(TransactionSupport.NONE);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
-	
+
 	@TranslatorProperty(display="Model Audit Fields", advanced=true)
 	public boolean isModelAuditFields() {
 		return this.auditModelFields;
 	}
-	
+
 	public void setModelAuditFields(boolean modelAuditFields) {
 		this.auditModelFields = modelAuditFields;
 	}
@@ -96,7 +96,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 			throws TranslatorException {
 		return new QueryExecutionImpl(command, connection, metadata, executionContext, this);
 	}
-	
+
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		UpdateExecution result = null;
@@ -110,7 +110,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		return result;
 
 	}
-	
+
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection)
 			throws TranslatorException {
@@ -125,26 +125,26 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		 return new DirectQueryExecution(arguments.subList(1, arguments.size()), command, connection, metadata, executionContext, (String)arguments.get(0).getArgumentValue().getValue(), true);
-	}	
-	
+	}
+
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
 	    if (metadataFactory.getModelProperties().getProperty("importer.modelAuditFields") == null) { //$NON-NLS-1$
 	        metadataFactory.getModelProperties().setProperty("importer.modelAuditFields", String.valueOf(this.auditModelFields)); //$NON-NLS-1$
 	    }
-	    super.getMetadata(metadataFactory, connection);	    
-	}	
-	
+	    super.getMetadata(metadataFactory, connection);
+	}
+
 	@Override
     public MetadataProcessor<SalesforceConnection> getMetadataProcessor(){
 	    return new SalesForceMetadataProcessor();
 	}
-	
+
     @Override
     public List<String> getSupportedFunctions() {
         return Arrays.asList(INCLUDES, EXCLUDES);
     }
-    
+
     @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
@@ -169,12 +169,12 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsAggregatesCountStar() {
         return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesCount() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesMax() {
     	return true;
@@ -189,18 +189,18 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsAggregatesSum() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesAvg() {
     	return true;
     }
-    
+
     @TranslatorProperty(display="Supports Group By", description="Defaults to true. Set to false to have Teiid process group by aggregations, such as those returning more than 2000 rows which error in SOQL", advanced=true)
     @Override
     public boolean supportsGroupBy() {
     	return this.supportsGroupBy ;
     }
-    
+
     @Override
     public boolean supportsOnlySingleTableGroupBy() {
     	return true;
@@ -220,62 +220,62 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsCompareCriteriaOrdered() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIsNullCriteria() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsOnlyLiteralComparison() {
     	return true;
     }
-    
-        
+
+
     @Override
     public boolean supportsHaving() {
     	return true;
     }
-    
+
     @Override
     public int getMaxFromGroups() {
     	return 2;
     }
-    
+
     @Override
     public boolean useAnsiJoin() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsBulkUpdate() {
     	return true;
-    }    
-    
+    }
+
     @TranslatorProperty(display="Max Bulk Insert Batch Size", description="The max size of a bulk insert batch.  Default 2048.", advanced=true)
     public int getMaxBulkInsertBatchSize() {
     	return maxInsertBatchSize;
     }
-    
+
     public void setMaxBulkInsertBatchSize(int maxInsertBatchSize) {
     	if (maxInsertBatchSize < 1) {
     		throw new AssertionError("Max bulk insert batch size must be greater than 0"); //$NON-NLS-1$
     	}
 		this.maxInsertBatchSize = maxInsertBatchSize;
 	}
-    
+
     public void setSupportsGroupBy(boolean supportsGroupBy) {
 		this.supportsGroupBy = supportsGroupBy;
 	}
-    
+
     public QueryResult buildQueryResult(SObject[] objects) {
         QueryResult result = new QueryResult();
-        result.setRecords(objects);         
+        result.setRecords(objects);
         result.setSize(objects.length);
         result.setDone(true);
         return result;
     }
-    
+
     @Override
     public boolean supportsUpsert() {
         return true;

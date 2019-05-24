@@ -42,7 +42,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 
 /**
- * <p>The AnalysisRecord holds all debug/analysis information for 
+ * <p>The AnalysisRecord holds all debug/analysis information for
  * a particular query as it is executed.  This includes:</p>
  * <UL>
  * <LI>Flags indicating what should be recorded</LI>
@@ -52,14 +52,14 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * </ul>
  */
 public class AnalysisRecord {
-	
+
     private static final int MAX_PLAN_LENGTH = PropertiesUtils.getHierarchicalProperty("org.teiid.maxPlanLength", 1<<25, Integer.class); //$NON-NLS-1$
 
-	// Common 
+	// Common
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
     public static final String PROP_ID = "Relational Node ID"; //$NON-NLS-1$
     public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
-    
+
     // Relational
     public static final String PROP_CRITERIA = "Criteria"; //$NON-NLS-1$
     public static final String PROP_SELECT_COLS = "Select Columns"; //$NON-NLS-1$
@@ -86,9 +86,9 @@ public class AnalysisRecord {
     public static final String PROP_WINDOW_FUNCTIONS = "Window Functions"; //$NON-NLS-1$
     //Table functions
 	public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
-	
+
 	public static final String PROP_STREAMING = "Streaming"; //$NON-NLS-1$
-	
+
     // Procedure
     public static final String PROP_EXPRESSION = "Expression"; //$NON-NLS-1$
     public static final String PROP_RESULT_SET = "Result Set"; //$NON-NLS-1$
@@ -102,32 +102,32 @@ public class AnalysisRecord {
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
     private boolean recordDebug;
-    
+
     // Annotations
     private Collection<Annotation> annotations;
-    
+
     // Debug trace log
     private StringWriter stringWriter;  // inner
     private PrintWriter debugWriter;    // public
-    
+
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
     	this.recordQueryPlan = recordQueryPlan || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
         this.recordDebug = recordDebug || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
-        
+
         if(this.recordQueryPlan) {
             this.annotations = new ArrayList<Annotation>();
         }
-        
+
         if(this.recordDebug) {
             this.stringWriter = new StringWriter();
-            this.debugWriter = new PrintWriter(this.stringWriter); 
+            this.debugWriter = new PrintWriter(this.stringWriter);
         }
     }
-    
+
     public static AnalysisRecord createNonRecordingRecord() {
         return new AnalysisRecord(false, false);
     }
-    
+
     /**
      * Determine whether query plan should be recorded
      * @return True to record
@@ -135,7 +135,7 @@ public class AnalysisRecord {
     public boolean recordQueryPlan() {
         return this.recordQueryPlan;
     }
-    
+
     /**
      * Determine whether annotations should be recorded
      * @return True to record
@@ -143,7 +143,7 @@ public class AnalysisRecord {
     public boolean recordAnnotations() {
         return this.recordQueryPlan;
     }
-    
+
     /**
      * Determine whether debug trace log should be recorded
      * @return True to record
@@ -151,11 +151,11 @@ public class AnalysisRecord {
     public boolean recordDebug() {
         return this.recordDebug;
     }
-    
+
     public void addAnnotation(String category, String annotation, String resolution, Priority priority) {
     	addAnnotation(new Annotation(category, annotation, resolution, priority));
     }
-    
+
     /**
      * Add an annotation.  This can only be used if {@link #recordAnnotations}
      * returns true.
@@ -167,15 +167,15 @@ public class AnalysisRecord {
         	this.println(annotation.toString());
         }
     }
-    
+
     /**
-     * Get annotations.  
+     * Get annotations.
      * @return
      */
     public Collection<Annotation> getAnnotations() {
         return this.annotations;
     }
-    
+
     /**
      * Add line to debug log  This can only be
      * used if {@link #recordDebug} returns true.
@@ -187,9 +187,9 @@ public class AnalysisRecord {
     	}
         this.debugWriter.println(debugLine);
     }
-    
+
     /**
-     * Get debug trace log recorded to writer.  Typically this is used 
+     * Get debug trace log recorded to writer.  Typically this is used
      * once at the end of query execution.
      * @return
      */
@@ -199,7 +199,7 @@ public class AnalysisRecord {
         }
         return null;
     }
-    
+
     public void stopDebugLog() {
     	this.stringWriter = null;
     	this.recordDebug = false;
@@ -210,7 +210,7 @@ public class AnalysisRecord {
 	 * output column strings with name and type.
 	 * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
 	 * @return List of output columns for sending to the client as part of the plan
-	 */                
+	 */
 	public static List<String> getOutputColumnProperties(List<? extends Expression> projectedSymbols) {
 	    if(projectedSymbols != null) {
 	        List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
@@ -222,7 +222,7 @@ public class AnalysisRecord {
 	    }
 	    return Collections.emptyList();
 	}
-	
+
 	public static void addLanaguageObjects(PlanNode node, String key, Collection<? extends LanguageObject> objects) {
 		List<String> values = new ArrayList<String>();
 		int index = 0;

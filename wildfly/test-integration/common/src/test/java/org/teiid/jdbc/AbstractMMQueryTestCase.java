@@ -26,32 +26,32 @@ import java.util.Stack;
 
 
 
-/** 
+/**
  * This class can be used as the base class to write Query based tests using
  * the Teiid Driver for integration testing. Just like the scripted one this one should provide all
  * those required flexibility in testing.
  */
 public class AbstractMMQueryTestCase extends AbstractQueryTest {
-	
+
 	static {
 		new TeiidDriver();
 	}
-	
+
     private Stack<java.sql.Connection> contexts = new Stack<java.sql.Connection>();
-    
+
     public void pushConnection() {
     	this.contexts.push(this.internalConnection);
     	this.internalConnection = null;
     }
-    
+
     public void popConnection() {
     	this.internalConnection = this.contexts.pop();
     }
-    
+
      public Connection getConnection(String vdb, String propsFile){
         return getConnection(vdb, propsFile, "");  //$NON-NLS-1$
     }
-    
+
     public Connection getConnection(String vdb, String propsFile, String addtionalStuff){
     	closeResultSet();
     	closeStatement();
@@ -60,20 +60,20 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
 			this.internalConnection = createConnection(vdb, propsFile, addtionalStuff);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
-		} 
+		}
         return this.internalConnection;
     }
-    
+
     public static Connection createConnection(String vdb, String propsFile, String addtionalStuff) throws SQLException {
         String url = "jdbc:teiid:"+vdb+"@" + propsFile+addtionalStuff; //$NON-NLS-1$ //$NON-NLS-2$
-        return DriverManager.getConnection(url); 
-    }    
-        
-      
+        return DriverManager.getConnection(url);
+    }
+
+
     protected void helpTest(String query, String[] expected, String vdb, String props, String urlProperties) throws SQLException {
         getConnection(vdb, props, urlProperties);
         executeAndAssertResults(query, expected);
         closeConnection();
     }
-    
+
 }

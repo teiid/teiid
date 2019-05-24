@@ -39,14 +39,14 @@ import org.teiid.translator.TypeFacility;
 
 @SuppressWarnings("nls")
 public class TranslationHelper {
-	
+
     public static final String PARTS_VDB = "/PartsSupplierJDBC.vdb"; //$NON-NLS-1$
     public static final String BQT_VDB = "/bqt.vdb"; //$NON-NLS-1$
 
     public static Command helpTranslate(String vdbFileName, String sql) {
     	return helpTranslate(vdbFileName, null, sql);
     }
-    
+
     public static TranslationUtility getTranslationUtility(String vdbFileName) {
     	TranslationUtility util = null;
     	if (PARTS_VDB.equals(vdbFileName)) {
@@ -60,25 +60,25 @@ public class TranslationHelper {
 				throw new RuntimeException(e);
 			}
     	}
-    	
+
     	return util;
     }
 
     public static Command helpTranslate(String vdbFileName, List<FunctionMethod> pushdowns, String sql) {
-    	TranslationUtility util =  getTranslationUtility(vdbFileName);   
-    	
+    	TranslationUtility util =  getTranslationUtility(vdbFileName);
+
     	if (pushdowns != null) {
     		util.addUDF(CoreConstants.SYSTEM_MODEL, pushdowns);
     	}
     	return util.parseCommand(sql);
-    }    
+    }
 
 	public static TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, JDBCExecutionFactory translator) throws TranslatorException {
 	    // Convert from sql to objects
 	    Command obj = helpTranslate(vdb, translator.getPushDownFunctions(), input);
-	    
+
 	    return helpTestVisitor(expectedOutput, translator, obj);
-	}	
+	}
 
 	public static TranslatedCommand helpTestVisitor(String expectedOutput, JDBCExecutionFactory translator, Command obj) throws TranslatorException {
 		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
@@ -86,7 +86,7 @@ public class TranslationHelper {
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
 	    return tc;
 	}
-	
+
 	public static String helpTestTempTable(JDBCExecutionFactory transaltor, boolean transactional) throws QueryMetadataException, TeiidComponentException {
 		List<ColumnReference> cols = new ArrayList<ColumnReference>();
 		cols.add(new ColumnReference(null, "COL1", RealMetadataFactory.exampleBQTCached().getElementID("BQT1.SMALLA.INTKEY"), TypeFacility.RUNTIME_TYPES.INTEGER));

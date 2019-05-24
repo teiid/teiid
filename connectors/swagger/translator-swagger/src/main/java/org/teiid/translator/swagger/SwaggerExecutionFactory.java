@@ -35,7 +35,7 @@ import org.teiid.translator.ws.WSConnection;
 
 @Translator(name="swagger", description="A translator for making swagger based data service call")
 public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
-	
+
 	public SwaggerExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		setSupportsOrderBy(false);
@@ -51,12 +51,12 @@ public class SwaggerExecutionFactory extends ExecutionFactory<ConnectionFactory,
             WSConnection connection) throws TranslatorException {
     	return new SwaggerProcedureExecution(command, this, executionContext, metadata, connection);
     }
-    
+
 	@Override
     public final List<String> getSupportedFunctions() {
         return Collections.emptyList();
     }
-	
+
 	@Override
     public MetadataProcessor<WSConnection> getMetadataProcessor() {
         return new SwaggerMetadataProcessor(this);

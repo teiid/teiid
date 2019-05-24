@@ -52,7 +52,7 @@ public class TestFailover {
 	private SocketServerConnectionFactory sscf;
 	private InetSocketAddress addr = new InetSocketAddress(0);
 	private int logonAttempts;
-	
+
 	@After public void tearDown() {
 		if (this.listener != null) {
 			this.listener.stop();
@@ -71,13 +71,13 @@ public class TestFailover {
 		TeiidURL teiidUrl = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure);
 		teiidUrl.getHostInfo().add(new HostInfo(addr.getHostName(), listener1.getPort()));
 		String url = teiidUrl.getAppServerURL();
-		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
+		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url);
 		p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
 			sscf.initialize(socketConfig);
 		}
-		
+
 		return sscf.getConnection(p);
 	}
 
@@ -96,24 +96,24 @@ public class TestFailover {
 				logonAttempts++;
 				return new LogonResult(new SessionToken("dummy"), "x", "z");
 			}
-			
+
 			@Override
 			public ResultsFuture<?> ping() throws InvalidSessionException,
 					TeiidComponentException {
 				return ResultsFuture.NULL_FUTURE;
 			}
-			
+
 			@Override
 			public void assertIdentity(SessionToken checkSession)
 					throws InvalidSessionException, TeiidComponentException {
 				throw new InvalidSessionException();
 			}
 
-		}, null); 
+		}, null);
 		server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
 		return new SocketListener(new InetSocketAddress(address.getAddress().getHostAddress(),address.getPort()), 0, 0, 2, config, server, BufferManagerFactory.getStandaloneBufferManager());
 	}
-	
+
 	@Test public void testFailover() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		Properties p = new Properties();
@@ -135,5 +135,5 @@ public class TestFailover {
 		assertEquals(3, logonAttempts);
 		conn.close();
 	}
-	
+
 }

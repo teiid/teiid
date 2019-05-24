@@ -29,9 +29,9 @@ enum Element {
     // VM wide elements
     ASYNC_THREAD_POOL_ELEMENT("async-thread-pool", "async-thread-pool"),
     THREAD_COUNT_ATTRIBUTE("max-thread-count", "async-thread-pool-max-thread-count"),
-    
+
     ALLOW_ENV_FUNCTION_ELEMENT("allow-env-function", "allow-env-function"),
-            	
+
 	MAX_THREADS_ELEMENT("max-threads", "max-threads"),
 	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans"),
 	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency"),
@@ -40,16 +40,16 @@ enum Element {
 	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb"),
 	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds"),
 	MAX_SOURCE_ROWS_ELEMENT("max-source-rows-allowed", "max-source-rows-allowed"),
-	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows"),	
+	EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT("exception-on-max-source-rows", "exception-on-max-source-rows"),
 	DETECTING_CHANGE_EVENTS_ELEMENT("detect-change-events", "detect-change-events"),
     QUERY_TIMEOUT("query-timeout", "query-timeout"),
     WORKMANAGER("workmanager", "workmanager"),
-    
+
     POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module"),
     DATA_ROLES_REQUIRED_ELEMENT("data-roles-required", "data-roles-required"),
     AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module"),
     PREPARSER_MODULE_ELEMENT("preparser-module", "preparser-module"),
-	
+
 	// buffer manager
     @Deprecated
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
@@ -77,7 +77,7 @@ enum Element {
 	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs"),
 	@Deprecated
 	ENCRYPT_FILES_ATTRIBUTE("encrypt-files", "buffer-service-encrypt-files"),
-	
+
 	BUFFER_MANAGER_ELEMENT("buffer-manager"),
 	BUFFER_MANAGER_PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-manager-processor-batch-size"),
 	BUFFER_MANAGER_INLINE_LOBS("inline-lobs", "buffer-manager-inline-lobs"),
@@ -91,24 +91,24 @@ enum Element {
 	BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE("disk-max-space-mb", "buffer-manager-disk-max-space-mb"),
 	BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE("disk-max-open-files", "buffer-manager-disk-max-open-files"),
 	BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE("disk-encrypt-files", "buffer-manager-disk-encrypt-files"),
-	
+
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
 	PPC_ENABLE_ATTRIBUTE("enable", "preparedplan-cache-enable"),
 	PPC_NAME_ATTRIBUTE("name", "preparedplan-cache-name"),
 	PPC_CONTAINER_NAME_ELEMENT("infinispan-container", "preparedplan-cache-infinispan-container"),
-	
+
 	// Object Replicator
 	DISTRIBUTED_CACHE("distributed-cache"),
 	DC_STACK_ATTRIBUTE("jgroups-stack", "distributed-cache-jgroups-stack"),
-	
-	// Result set cache	
+
+	// Result set cache
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),
 	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable"),
 	RSC_NAME_ATTRIBUTE("name", "resultset-cache-name"),
 	RSC_CONTAINER_NAME_ATTRIBUTE("infinispan-container", "resultset-cache-infinispan-container"),
 	RSC_MAX_STALENESS_ATTRIBUTE("max-staleness", "resultset-cache-max-staleness"),
-	
+
 	//transport
 	TRANSPORT_ELEMENT("transport"),
 	TRANSPORT_PROTOCOL_ATTRIBUTE("protocol", "protocol"),
@@ -117,17 +117,17 @@ enum Element {
 	TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE("max-socket-threads", "max-socket-threads"),
 	TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE("input-buffer-size", "input-buffer-size"),
 	TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE("output-buffer-size", "output-buffer-size"),
-	
+
 	AUTHENTICATION_ELEMENT("authentication"),
-	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain"),	
+	AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE("security-domain", "authentication-security-domain"),
 	AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE("max-sessions-allowed", "authentication-max-sessions-allowed"),
 	AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE("sessions-expiration-timelimit", "authentication-sessions-expiration-timelimit"),
 	AUTHENTICATION_TYPE_ATTRIBUTE("type", "authentication-type"),
 	AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE("trust-all-local", "authentication-trust-all-local"),
-	
+
 	PG_ELEMENT("pg"), //$NON-NLS-1$
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes"), //$NON-NLS-1$ //$NON-NLS-2$
-	
+
 	SSL_ELEMENT("ssl"),
 	SSL_MODE_ATTRIBUTE("mode", "ssl-mode"),
 	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode"),
@@ -142,7 +142,7 @@ enum Element {
 	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),
 	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name"),
-	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password"),	
+	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password"),
 	SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE("check-expired", "truststore-check-expired"),
 
 	// Translator
@@ -150,7 +150,7 @@ enum Element {
     TRANSLATOR_NAME_ATTRIBUTE("name", "name"),
     TRANSLATOR_MODULE_ATTRIBUTE("module", "module"),
     TRANSLATOR_SLOT_ATTRIBUTE("slot", "slot");
-    
+
     private final String xmlName;
     private final String modelName;
 
@@ -158,7 +158,7 @@ enum Element {
     	this.xmlName = xmlName;
     	this.modelName = xmlName;
     }
-    
+
     Element(final String xmlName, final String modelName) {
         this.xmlName = xmlName;
         this.modelName = modelName;
@@ -167,14 +167,14 @@ enum Element {
     public String getXMLName() {
         return xmlName;
     }
-    
+
     public String getLocalName() {
         return xmlName;
-    }    
+    }
     public String getModelName() {
     	return this.modelName;
     }
-    
+
     private static final Map<String, Element> elements;
 
     static {
@@ -191,10 +191,10 @@ enum Element {
         final Element element = elements.get(modelName);
         return element == null ? UNKNOWN : element;
     }
-    
+
     public static Element forName(String localName) {
         final Element element = elements.get(localName);
         return element == null ? UNKNOWN : element;
-    }    
+    }
 }
 

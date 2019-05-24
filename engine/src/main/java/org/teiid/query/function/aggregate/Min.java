@@ -38,7 +38,7 @@ public class Min extends SingleArgumentAggregateFunction {
     public void reset() {
         minValue = null;
     }
-    
+
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
     	this.outputType = inputType;
@@ -72,12 +72,12 @@ public class Min extends SingleArgumentAggregateFunction {
     public List<? extends Class<?>> getStateTypes() {
     	return Arrays.asList(outputType);
     }
-    
+
     @Override
     public void getState(List<Object> state) {
     	state.add(minValue);
     }
-    
+
     @Override
     public int setState(List<?> state, int index) {
     	this.minValue = state.get(index);

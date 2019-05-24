@@ -28,15 +28,15 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.util.CommandContext;
 
 public class NthValue extends AggregateFunction {
-    
+
     private Object value;
-    
+
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
             throws TeiidComponentException, TeiidProcessingException {
         throw new AssertionError();
     }
-    
+
     public void addInput(List<?> tuple, CommandContext commandContext, long startFrame, long endFrame, TupleBuffer frame)
             throws TeiidComponentException, TeiidProcessingException {
         Integer nthIndex = (Integer)tuple.get(argIndexes[1]);
@@ -47,7 +47,7 @@ public class NthValue extends AggregateFunction {
         }
         //TODO: the computation of the nth value should be done as needed, not over the whole input set
     }
-    
+
     @Override
     public boolean respectsNull() {
         return true;
@@ -64,5 +64,5 @@ public class NthValue extends AggregateFunction {
             TeiidComponentException, TeiidProcessingException {
         return value;
     }
-    
+
 }

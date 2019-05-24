@@ -30,10 +30,10 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToTimestampTransform extends Transform {
-	
+
 	private static boolean validate = true;
 	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"); //$NON-NLS-1$
-	
+
 	static {
 		try {
 			Timestamp.valueOf("2000-14-01 00:00:00"); //$NON-NLS-1$
@@ -97,7 +97,7 @@ public class StringToTimestampTransform extends Transform {
 	public Class<?> getTargetType() {
 		return Timestamp.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

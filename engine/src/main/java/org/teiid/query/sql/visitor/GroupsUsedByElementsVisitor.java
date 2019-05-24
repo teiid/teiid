@@ -39,7 +39,7 @@ public class GroupsUsedByElementsVisitor {
 
         for (ElementSymbol elementSymbol : elements) {
         	if (elementSymbol.getGroupSymbol() != null) {
-        		groups.add(elementSymbol.getGroupSymbol());  
+        		groups.add(elementSymbol.getGroupSymbol());
         	}
         }
     }
@@ -55,7 +55,7 @@ public class GroupsUsedByElementsVisitor {
         getGroups(obj, groups);
         return groups;
     }
-    
+
     public static Set<GroupSymbol> getGroups(Collection<? extends LanguageObject> objects) {
         Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
         getGroups(objects, groups);
@@ -63,7 +63,7 @@ public class GroupsUsedByElementsVisitor {
     }
 
     public static void getGroups(Collection<? extends LanguageObject> objects, Set<GroupSymbol> groups) {
-        // Get groups from elements     
+        // Get groups from elements
         for (LanguageObject languageObject : objects) {
             if (languageObject instanceof ElementSymbol) {
                 ElementSymbol elem = (ElementSymbol) languageObject;

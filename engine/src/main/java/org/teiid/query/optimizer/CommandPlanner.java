@@ -31,13 +31,13 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * <p>The common interface of all planners which take a user's command 
- * object and produce a 
- * {@link org.teiid.query.processor.ProcessorPlan ProcessorPlan} 
+ * <p>The common interface of all planners which take a user's command
+ * object and produce a
+ * {@link org.teiid.query.processor.ProcessorPlan ProcessorPlan}
  * object, which is a plan for executing the query.</p>
  */
 public interface CommandPlanner {
-	
+
 	/**
 	 * Allows the planner a chance to optimize the canonical plan(s) stored in
 	 * the CommandTreeNode tree.  This method should be called in a bottom-up
@@ -45,7 +45,7 @@ public interface CommandPlanner {
 	 * @param command TODO
 	 * @param metadata source of metadata
 	 * @param capFinder Class usable to find the connector capabilities for a particular model
-	 * @param context 
+	 * @param context
 	 * @param debug whether or not to generate verbose debug output during planning
 	 * @return ProcessorPlan implementation specific to the CommandPlanner
      * @throws QueryPlannerException indicating a problem in planning

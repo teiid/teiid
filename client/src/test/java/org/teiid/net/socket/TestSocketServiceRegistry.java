@@ -35,40 +35,40 @@ public class TestSocketServiceRegistry extends TestCase {
 	interface Foo{
 		void somemethod();
 	}
-	
+
 	public void testExceptionConversionNoException() throws Exception {
-				
+
 		Method m = Foo.class.getMethod("somemethod", new Class[] {});
-		
+
 		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
-		
+
 		assertTrue(t instanceof TeiidRuntimeException);
 	}
-	
+
 	public void testComponentExceptionConversion() throws Exception {
-		
+
 		Method m = DQP.class.getMethod("getMetadata", new Class[] {Long.TYPE});
-		
+
 		Throwable t = ExceptionUtil.convertException(m, new NullPointerException());
-		
+
 		assertTrue(t instanceof TeiidComponentException);
 	}
-	
+
 	public void testXATransactionExceptionConversion() throws Exception {
-		
+
 		Method m = DQP.class.getMethod("recover", new Class[] {Integer.TYPE});
-		
+
 		Throwable t = ExceptionUtil.convertException(m, new TeiidComponentException());
-		
+
 		assertTrue(t instanceof XATransactionException);
 	}
 
 	public void testSubclass() throws Exception {
-		
+
 		Method m = DQP.class.getMethod("getMetadata", new Class[] {Long.TYPE});
-		
+
 		Throwable t = ExceptionUtil.convertException(m, new InvalidSessionException());
-		
+
 		assertTrue(t instanceof InvalidSessionException);
 	}
 }

@@ -53,5 +53,5 @@ public class TestParameterImpl extends TestCase {
         assertEquals("x", example(0).getArgumentValue().getValue()); //$NON-NLS-1$
         assertEquals(new Integer(1), example(1).getArgumentValue().getValue());
     }
-    
+
 }

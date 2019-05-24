@@ -38,8 +38,8 @@ import org.teiid.core.crypto.SymmetricCryptor;
  * the bytes 1 block at a time with some special handling
  * for when not block aligned.
  * <br>
- * A great deal of the security comes from the encryption 
- * key only being used on a temporary basis.  We also xor 
+ * A great deal of the security comes from the encryption
+ * key only being used on a temporary basis.  We also xor
  * by the block to add a very simple CTR like mode so that
  * identical blocks don't result in the same storage bytes.
  * <br>
@@ -58,7 +58,7 @@ public class EncryptedStorageManager implements StorageManager {
 
 		private EncryptedFileStore(FileStore file, SecretKey key) throws GeneralSecurityException {
 			this.file = file;
-			decrypt = Cipher.getInstance( DEFAULT_ALGORITHM); 
+			decrypt = Cipher.getInstance( DEFAULT_ALGORITHM);
 			decrypt.init( Cipher.DECRYPT_MODE, key );
 			encrypt = Cipher.getInstance( DEFAULT_ALGORITHM);
 			blockSize = encrypt.getBlockSize();
@@ -79,7 +79,7 @@ public class EncryptedStorageManager implements StorageManager {
 		protected void removeDirect() {
 			file.remove();
 		}
-		
+
 		@Override
 		protected synchronized int readWrite(long fileOffset, byte[] b, int offSet, int length,
 				boolean write) throws IOException {
@@ -168,7 +168,7 @@ public class EncryptedStorageManager implements StorageManager {
 		public long getLength() {
 			return len;
 		}
-		
+
 		FileStore getFile() {
 			return file;
 		}
@@ -176,7 +176,7 @@ public class EncryptedStorageManager implements StorageManager {
 
 	private StorageManager manager;
 	private SecretKey key;
-	
+
 	public EncryptedStorageManager(StorageManager manager) {
 		this.manager = manager;
 	}
@@ -200,11 +200,11 @@ public class EncryptedStorageManager implements StorageManager {
 			throw new TeiidRuntimeException(e);
 		}
 	}
-	
+
 	@Override
 	public long getMaxStorageSpace() {
 	    return manager.getMaxStorageSpace();
 	}
-	
+
 }
 

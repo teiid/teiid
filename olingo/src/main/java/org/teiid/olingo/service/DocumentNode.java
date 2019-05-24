@@ -65,7 +65,7 @@ public class DocumentNode {
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
 	private DocumentNode iterator;
-        
+
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
             UniqueNameGenerator nameGenerator, boolean useAlias,
@@ -75,7 +75,7 @@ public class DocumentNode {
         return build(resource, type, keyPredicates, metadata, odata,
                 nameGenerator, useAlias, uriInfo, parseService);
     }
-    
+
     public static DocumentNode build(DocumentNode resource,
             EdmEntityType type, List<UriParameter> keyPredicates,
             MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
@@ -84,11 +84,11 @@ public class DocumentNode {
 
         Table table = findTable(type, metadata);
         GroupSymbol gs = null;
-        
+
         if (useAlias) {
-            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName()); 
+            gs = new GroupSymbol(nameGenerator.getNextGroup(), table.getFullName());
         } else {
-            gs = new GroupSymbol(table.getFullName()); 
+            gs = new GroupSymbol(table.getFullName());
         }
 
         resource.setTable(table);
@@ -96,32 +96,32 @@ public class DocumentNode {
         resource.setEdmEntityType(type);
         resource.setKeyPredicates(keyPredicates);
         resource.setFromClause(new UnaryFromClause(gs));
-        
+
         if (keyPredicates != null && !keyPredicates.isEmpty()) {
             Criteria criteria = DocumentNode.buildEntityKeyCriteria(resource,
                     uriInfo, metadata, odata, nameGenerator, parseService);
             resource.setCriteria(criteria);
-        }        
+        }
         return resource;
-    }    
-    
+    }
+
     static Table findTable(EdmEntityType entityType, MetadataStore store) {
         FullQualifiedName fqn = entityType.getFullQualifiedName();
         // remove the vdb name
         String withoutVDB = fqn.getNamespace().substring(fqn.getNamespace().lastIndexOf('.')+1);
         Schema schema = store.getSchema(withoutVDB);
         return schema.getTable(entityType.getName());
-    }    
-    
+    }
+
     static Table findTable(EdmEntitySet entitySet, MetadataStore store) {
         return findTable(entitySet.getEntityType(), store);
     }
 
     static Criteria buildEntityKeyCriteria(DocumentNode resource,
-            UriInfo uriInfo, MetadataStore store, OData odata, 
+            UriInfo uriInfo, MetadataStore store, OData odata,
             UniqueNameGenerator nameGenerator, URLParseService parseService)
             throws TeiidException {
-        
+
     	List<Column> pk = getPKColumns(resource.getTable());
         if (resource.getKeyPredicates().size() == 1) {
             if (pk.size() != 1) {
@@ -129,7 +129,7 @@ public class DocumentNode {
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16015, resource.getTable().getFullName()));
             }
             Column column = pk.get(0);
-            
+
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                     resource, false, uriInfo, store, odata, nameGenerator, null, parseService);
             UriParameter key = resource.getKeyPredicates().get(0);
@@ -151,44 +151,44 @@ public class DocumentNode {
             ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                     resource, false, uriInfo, store, odata, nameGenerator, null, parseService);
             org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = getKeyPredicateExpression(
-                    key, odata, column);            
-            critList.add(new CompareCriteria(new ElementSymbol(column.getName(), resource.getGroupSymbol()), 
+                    key, odata, column);
+            critList.add(new CompareCriteria(new ElementSymbol(column.getName(), resource.getGroupSymbol()),
                     CompareCriteria.EQ, visitor.getExpression(expr)));
         }
         return new CompoundCriteria(CompoundCriteria.AND, critList);
     }
 
     private static org.apache.olingo.server.api.uri.queryoption.expression.Expression getKeyPredicateExpression(
-            UriParameter key, OData odata, Column column) {        
+            UriParameter key, OData odata, Column column) {
         org.apache.olingo.server.api.uri.queryoption.expression.Expression expr = key.getExpression();
         if ( expr == null) {
-            EdmPrimitiveTypeKind primitiveTypeKind = ODataTypeManager.odataType(column); 
+            EdmPrimitiveTypeKind primitiveTypeKind = ODataTypeManager.odataType(column);
             expr = new LiteralImpl(key.getText(), odata.createPrimitiveTypeInstance(primitiveTypeKind));
         }
         return expr;
     }
-    
+
     static Column findColumn(Table table, String propertyName) {
         return table.getColumnByName(propertyName);
     }
-    
+
     public DocumentNode() {
     }
-    
+
     public DocumentNode(Table table, GroupSymbol gs, EdmEntityType type) {
         this.table = table;
         this.groupSymbol = gs;
-        this.edmEntityType = type;        
+        this.edmEntityType = type;
     }
-    
+
     private Table getTable() {
         return table;
     }
-        
+
     public String getName() {
         return table.getName();
     }
-    
+
     public Column getColumnByName(String name) {
         return this.table.getColumnByName(name);
     }
@@ -196,11 +196,11 @@ public class DocumentNode {
     public String getFullName() {
         return table.getFullName();
     }
-    
+
     public GroupSymbol getGroupSymbol() {
         return groupSymbol;
     }
-        
+
     public EdmEntityType getEdmEntityType() {
         return edmEntityType;
     }
@@ -232,7 +232,7 @@ public class DocumentNode {
     public void setEdmEntityType(EdmEntityType edmEntityType) {
         this.edmEntityType = edmEntityType;
     }
-    
+
     protected void addAllColumns(boolean onlyPK) {
         if (onlyPK) {
         	List<Column> columns = getPKColumns(getTable());
@@ -240,7 +240,7 @@ public class DocumentNode {
                 if (column.isSelectable()) {
                     addProjectedColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
                 }
-            }            
+            }
         }
         else {
             for (final Column column : getTable().getColumns()) {
@@ -280,7 +280,7 @@ public class DocumentNode {
         this.projectedColumns.put(expr, pc);
         return pc;
     }
-    
+
     OrderBy addDefaultOrderBy() {
         if (this.table == null) {
             return null;
@@ -312,8 +312,8 @@ public class DocumentNode {
         	columns.addAll(this.iterator.getAllProjectedColumns());
         }
         return columns;
-    }    
-    
+    }
+
     public List<UriParameter> getKeyPredicates() {
         return keyPredicates;
     }
@@ -321,15 +321,15 @@ public class DocumentNode {
     public List<String> getKeyColumnNames(){
         return this.edmEntityType.getKeyPredicateNames();
     }
-    
+
     public void setKeyPredicates(List<UriParameter> keyPredicates) {
         this.keyPredicates = keyPredicates;
     }
-    
+
     public void addSibiling(DocumentNode resource) {
         this.sibilings.add(resource);
     }
-    
+
     public List<DocumentNode> getSibilings(){
         return this.sibilings;
     }
@@ -337,13 +337,13 @@ public class DocumentNode {
     public void addExpand(ExpandDocumentNode resource) {
         this.expands.add(resource);
     }
-    
+
     public List<ExpandDocumentNode> getExpands(){
         return this.expands;
     }
-    
+
     public Query buildQuery() {
-        
+
         Select select = new Select();
         AtomicInteger ordinal = new AtomicInteger(1);
         addProjectedColumns(select, ordinal, sortColumns(getProjectedColumns().values()));
@@ -353,7 +353,7 @@ public class DocumentNode {
 
         Query query = new Query();
         From from = new From();
-        
+
         from.addClause(this.fromClause);
         for (DocumentNode sibiling:this.sibilings) {
             from.addClause(sibiling.getFromClause());
@@ -367,11 +367,11 @@ public class DocumentNode {
         	}
         	query.setGroupBy(groupBy);
         }
-        
+
         query.setSelect(select);
         query.setFrom(from);
         query.setCriteria(this.criteria);
-        
+
         return query;
     }
 
@@ -394,7 +394,7 @@ public class DocumentNode {
             column.setOrdinal(ordinal.getAndIncrement());
         }
     }
-    
+
     Criteria buildJoinCriteria(DocumentNode joinResource, EdmNavigationProperty property) throws TeiidException {
         KeyInfo keyInfo = joinFK(joinResource.getTable(), getTable(), property);
         if (keyInfo == null) {
@@ -403,16 +403,16 @@ public class DocumentNode {
                 throw new TeiidException("Fk not found");
             }
         }
-        
+
         return buildCriteria(keyInfo.reverse?joinResource:this, keyInfo.reverse?this:joinResource, keyInfo.fk);
     }
-    
+
     DocumentNode joinTable(DocumentNode joinResource, EdmNavigationProperty property, JoinType joinType) throws TeiidException {
         Criteria crit = null;
         if (!joinType.equals(JoinType.JOIN_CROSS)) {
-            crit = buildJoinCriteria(joinResource, property); 
+            crit = buildJoinCriteria(joinResource, property);
         }
-        
+
         FromClause fromClause;
         if (joinResource.getKeyPredicates() != null && joinResource.getKeyPredicates().size() > 0) {
             // here the previous entityset is verbose; need to be canonicalized
@@ -421,29 +421,29 @@ public class DocumentNode {
         else {
             fromClause = new JoinPredicate(this.getFromClause(), new UnaryFromClause(joinResource.getGroupSymbol()), joinType, crit);
         }
-        
-        joinResource.setFromClause(fromClause);        
+
+        joinResource.setFromClause(fromClause);
         return joinResource;
     }
-    
+
     static ForeignKey joinFK(DocumentNode current, DocumentNode reference, EdmNavigationProperty property) {
         Table currentTable = current.getTable();
         Table referenceTable = reference.getTable();
         if (currentTable ==  null || referenceTable == null) {
             return null;
         }
-        
+
         KeyInfo keyInfo = joinFK(currentTable, referenceTable, property);
         if (keyInfo != null) {
             return keyInfo.fk;
         }
         return null;
-    }    
-    
+    }
+
     private static class KeyInfo {
         boolean reverse;
         ForeignKey fk;
-        
+
         public KeyInfo(boolean reverse, ForeignKey fk) {
             this.reverse = reverse;
             this.fk = fk;
@@ -457,7 +457,7 @@ public class DocumentNode {
                 continue;
             }
             if (!property.isCollection() && property.getName().equals(fk.getName())) {
-                return new KeyInfo(false, fk); 
+                return new KeyInfo(false, fk);
             }
             if (property.getName().equals(currentTable.getName() + "_" + fk.getName())) { //$NON-NLS-1$
                 return new KeyInfo(true, fk);
@@ -465,13 +465,13 @@ public class DocumentNode {
         }
         return null;
     }
-    
+
     static Criteria buildJoinCriteria(DocumentNode from, DocumentNode to) {
         for (ForeignKey fk:from.getTable().getForeignKeys()) {
             if (fk.getReferenceKey().getParent().equals(to.getTable())) {
                 return buildCriteria(from, to, fk);
             }
-        } 
+        }
         return null;
     }
 
@@ -480,19 +480,19 @@ public class DocumentNode {
         List<String> fkColumns = DocumentNode.getColumnNames(fk.getColumns());
         if (fkColumns == null) {
             fkColumns = DocumentNode.getColumnNames(getPKColumns(from.getTable()));
-        }                   
-        
+        }
+
         List<String> pkColumns = DocumentNode.getColumnNames(fk.getReferenceKey().getColumns());
         Criteria criteria = DocumentNode.buildJoinCriteria(
                 from.getGroupSymbol(),
                 to.getGroupSymbol(), pkColumns, fkColumns);
         return criteria;
     }
-    
+
     static List<Column> getPKColumns(Table table){
         return ODataSchemaBuilder.getIdentifier(table).getColumns();
     }
-    
+
     static Criteria buildJoinCriteria(final GroupSymbol joinGroup,
             final GroupSymbol entityGroup, List<String> pkColumns,
             List<String> refColumns) {
@@ -513,7 +513,7 @@ public class DocumentNode {
         if (columns == null || columns.isEmpty()) {
             return null;
         }
-        
+
         ArrayList<String> columnNames = new ArrayList<String>();
         for (Column column:columns) {
             columnNames.add(column.getName());
@@ -532,7 +532,7 @@ public class DocumentNode {
         	this.criteria = Criteria.combineCriteria(this.criteria, crit);
         }
     }
-    
+
     public String toString() {
         return table.getFullName();
     }

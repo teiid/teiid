@@ -48,7 +48,7 @@ public class PlanNode {
 
     /** The type of node, as defined by NodeConstants.Types. */
     private int type;
-    
+
     private boolean modified;
 
     /** The parent of this node, null if root. */
@@ -56,9 +56,9 @@ public class PlanNode {
 
     /** Child nodes, usually just 1 or 2, but occasionally more */
     private LinkedList<PlanNode> children = new LinkedList<PlanNode>();
-    
+
     private List<PlanNode> childrenView = Collections.unmodifiableList(children);
-    
+
     /** Type-specific node properties, as defined in NodeConstants.Info. */
     private Map<NodeConstants.Info, Object> nodeProperties;
 
@@ -66,25 +66,25 @@ public class PlanNode {
 
     /** The set of groups that this node deals with. */
     private Set<GroupSymbol> groups = new LinkedHashSet<GroupSymbol>();
-        
+
     // =========================================================================
     //                         C O N S T R U C T O R S
     // =========================================================================
 
-    public PlanNode() {    
-    }    
-    
+    public PlanNode() {
+    }
+
     // =========================================================================
     //                     A C C E S S O R      M E T H O D S
     // =========================================================================
 
     public int getType() {
         return type;
-    }    
+    }
 
     public void setType(int type) {
         this.type = type;
-    }    
+    }
 
     public PlanNode getParent() {
         return parent;
@@ -101,7 +101,7 @@ public class PlanNode {
     public List<PlanNode> getChildren() {
         return this.childrenView;
     }
-    
+
     public List<PlanNode> removeAllChildren() {
     	ArrayList<PlanNode> childrenCopy = new ArrayList<PlanNode>(children);
     	for (Iterator<PlanNode> childIter = this.children.iterator(); childIter.hasNext();) {
@@ -112,43 +112,43 @@ public class PlanNode {
     	this.modified = true;
     	return childrenCopy;
     }
-    
+
     public int getChildCount() {
         return this.children.size();
     }
-        
+
     public PlanNode getFirstChild() {
         if ( getChildCount() > 0 ) {
             return this.children.getFirst();
         }
         return null;
     }
-    
+
     public PlanNode getLastChild() {
         if ( getChildCount() > 0 ) {
             return this.children.getLast();
         }
         return null;
     }
-        
+
     public void addFirstChild(PlanNode child) {
     	this.modified = true;
         this.children.addFirst(child);
         child.setParent(this);
     }
-    
+
     public void addLastChild(PlanNode child) {
     	this.modified = true;
         this.children.addLast(child);
         child.setParent(this);
     }
-    
+
     public void addChildren(Collection<PlanNode> otherChildren) {
         for (PlanNode planNode : otherChildren) {
 			this.addLastChild(planNode);
 		}
     }
-    
+
     public PlanNode removeFromParent() {
     	this.modified = true;
     	PlanNode result = this.parent;
@@ -157,16 +157,16 @@ public class PlanNode {
     	}
     	return result;
     }
-    
+
     public boolean removeChild(PlanNode child) {
         boolean result = this.children.remove(child);
         if (result) {
         	child.parent = null;
         	modified = true;
-        } 
+        }
         return result;
-    }    
-                        
+    }
+
     public Object getProperty(NodeConstants.Info propertyID) {
         if(nodeProperties == null) {
             return null;
@@ -181,7 +181,7 @@ public class PlanNode {
     public Object setProperty(NodeConstants.Info propertyID, Object value) {
         if(nodeProperties == null) {
             nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>();
-        }    
+        }
         modified = true;
         return nodeProperties.put(propertyID, value);
     }
@@ -189,11 +189,11 @@ public class PlanNode {
     public Object removeProperty(Object propertyID) {
         if(nodeProperties == null) {
             return null;
-        }   
+        }
         modified = true;
         return nodeProperties.remove(propertyID);
     }
-    
+
     /**
      * Indicates if there is a non-null value for the property
      * key or not
@@ -207,16 +207,16 @@ public class PlanNode {
     /**
      * Indicates if there is a non-null and non-empty Collection value for the property
      * key or not
-     * @param propertyID one of the properties from {@link NodeConstants} which is 
+     * @param propertyID one of the properties from {@link NodeConstants} which is
      * known to be a Collection object of some sort
-     * @return whether this node has a non-null and non-empty Collection 
+     * @return whether this node has a non-null and non-empty Collection
      * value for that property
      */
     public boolean hasCollectionProperty(NodeConstants.Info propertyID) {
         Collection<Object> value = (Collection<Object>)getProperty(propertyID);
         return (value != null && !value.isEmpty());
     }
-    
+
     public void addGroup(GroupSymbol groupID) {
     	modified = true;
         groups.add(groupID);
@@ -226,7 +226,7 @@ public class PlanNode {
     	modified = true;
         this.groups.addAll(newGroups);
     }
-        
+
     public Set<GroupSymbol> getGroups() {
         return groups;
     }
@@ -258,25 +258,25 @@ public class PlanNode {
     	}
         return str.toString();
     }
-    
+
     // Define a single tab
     private static final String TAB = "  "; //$NON-NLS-1$
-    
+
     private static void setTab(StringBuilder str, int tabStop) {
         for(int i=0; i<tabStop; i++) {
             str.append(TAB);
-        }            
+        }
     }
-    
+
     void getRecursiveString(StringBuilder str, int tabLevel, Boolean mod) {
         setTab(str, tabLevel);
         getNodeString(str, mod);
         str.append(")\n");  //$NON-NLS-1$
-        
+
         // Recursively add children at one greater tab level
         for (PlanNode child : children) {
             child.getRecursiveString(str, tabLevel+1, mod==null?null:child.modified);
-        }        
+        }
     }
 
     void getNodeString(StringBuilder str, Boolean mod) {
@@ -297,11 +297,11 @@ public class PlanNode {
 	        }
         }
     }
-    
+
     public boolean hasBooleanProperty(NodeConstants.Info propertyKey) {
         return Boolean.TRUE.equals(getProperty(propertyKey));
     }
-    
+
     public void replaceChild(PlanNode child, PlanNode replacement) {
     	modified = true;
     	int i = this.children.indexOf(child);
@@ -309,7 +309,7 @@ public class PlanNode {
     	child.setParent(null);
     	replacement.setParent(this);
     }
-    
+
     /**
      * Add the node as this node's parent.
      * @param node
@@ -322,7 +322,7 @@ public class PlanNode {
     	assert node.getChildCount() == 0;
 		node.addLastChild(this);
     }
-    
+
     public List<SymbolMap> getCorrelatedReferences() {
     	List<SubqueryContainer<?>> containers = getSubqueryContainers();
     	if (containers.isEmpty()) {
@@ -337,13 +337,13 @@ public class PlanNode {
 		}
     	return result;
     }
-    
+
     public List<SymbolMap> getAllReferences() {
     	List<SymbolMap> refMaps = new ArrayList<SymbolMap>(getCorrelatedReferences());
         refMaps.addAll(getExportedCorrelatedReferences());
         return refMaps;
     }
-    
+
     public List<SymbolMap> getExportedCorrelatedReferences() {
     	if (type != NodeConstants.Types.JOIN) {
     		return Collections.emptyList();
@@ -368,12 +368,12 @@ public class PlanNode {
 		}
         return result;
     }
-    
+
     public Set<ElementSymbol> getCorrelatedReferenceElements() {
         List<SymbolMap> maps = getCorrelatedReferences();
-        
+
         if(maps.isEmpty()) {
-            return Collections.emptySet();    
+            return Collections.emptySet();
         }
         HashSet<ElementSymbol> result = new HashSet<ElementSymbol>();
         for (SymbolMap symbolMap : maps) {
@@ -384,7 +384,7 @@ public class PlanNode {
         }
         return result;
     }
-    
+
 	public List<SubqueryContainer<?>> getSubqueryContainers() {
 		Collection<? extends LanguageObject> toSearch = Collections.emptyList();
 		switch (this.getType()) {
@@ -427,7 +427,7 @@ public class PlanNode {
 		}
 		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
 	}
-	
+
 	public float getCardinality() {
 		Float cardinality = (Float) this.getProperty(NodeConstants.Info.EST_CARDINALITY);
 		if (cardinality == null) {
@@ -435,7 +435,7 @@ public class PlanNode {
 		}
 		return cardinality;
 	}
-	
+
 	public void recordDebugAnnotation(String annotation, Object modelID, String resolution, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
 		if (record != null && record.recordAnnotations()) {
 			boolean current = this.modified;
@@ -444,7 +444,7 @@ public class PlanNode {
 			this.modified = current;
 		}
 	}
-	
+
 	@Override
 	public PlanNode clone() {
 		PlanNode node = new PlanNode();
@@ -455,5 +455,5 @@ public class PlanNode {
 		}
 		return node;
 	}
-        
+
 }

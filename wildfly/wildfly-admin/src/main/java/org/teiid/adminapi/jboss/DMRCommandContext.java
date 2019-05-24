@@ -37,7 +37,7 @@ import org.jboss.dmr.ModelNode;
 public class DMRCommandContext implements CommandContext {
 	private CommandContext delegate;
 	private ModelControllerClient mcc;
-	
+
 	public CliConfig getConfig() {
 		return delegate.getConfig();
 	}

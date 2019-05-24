@@ -30,7 +30,7 @@ public class ContextAwareHttpSerlvetRequest extends HttpServletRequestWrapper {
     public void setContextPath(String path) {
         this.contextPath = path;
     }
-    
+
     @Override
     public StringBuffer getRequestURL() {
         //Workaround for https://issues.apache.org/jira/browse/OLINGO-1324

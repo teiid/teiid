@@ -66,8 +66,8 @@ public class TestFileExecutionFactory {
 			count++;
 		}
 		assertEquals(2, count);
-		
-		
+
+
 		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
 		pe = fef.createProcedureExecution(call, null, null, fc);
 		Mockito.stub(fc.getFiles("*1*")).toReturn(JavaVirtualFile.getFiles("*1*", new File(UnitTestUtil.getTestDataPath(), "*1*")));
@@ -81,5 +81,5 @@ public class TestFileExecutionFactory {
 		}
 		assertEquals(1, count);
 	}
-	
+
 }

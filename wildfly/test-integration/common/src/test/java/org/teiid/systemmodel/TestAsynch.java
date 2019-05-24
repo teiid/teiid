@@ -53,12 +53,12 @@ import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestAsynch {
-	
+
 	private static FakeServer server;
 	private ConnectionImpl internalConnection;
 	private static HardCodedExecutionFactory ef;
 	private static List<String> partIds = Collections.synchronizedList(new ArrayList<String>());
-    
+
     @BeforeClass public static void oneTimeSetup() throws Exception {
     	server = new FakeServer(true);
     	ModelMetaData mmd = new ModelMetaData();
@@ -81,23 +81,23 @@ public class TestAsynch {
 		server.addTranslator("z", ef);
     	server.deployVDB("x", mmd);
     }
-    
+
     @After public void teardown() {
     	partIds.clear();
     }
-    
+
     @AfterClass public static void oneTimeTeardown() throws Exception {
     	server.stop();
     }
-    
+
     @Before public void setUp() throws Exception {
-    	this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$	
+    	this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$
    	}
-	
+
 	@Test public void testAsynch() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select * from sys.tables a, sys.tables b, sys.tables c", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -120,12 +120,12 @@ public class TestAsynch {
 					result.getResultsReceiver().exceptionOccurred(e);
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -133,29 +133,29 @@ public class TestAsynch {
 		}, new RequestOptions());
 		assertEquals(10000, result.get().intValue());
 	}
-	
+
 	@Test public void testAsynchContinuousEmpty() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select * from SYS.Schemas where 1 = 0", new ContinuousStatementCallback() {
-			
+
 			int execCount;
 			@Override
 			public void onRow(Statement s, ResultSet rs) throws SQLException {
 				fail();
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(execCount);
 			}
-			
+
 			@Override
 			public void beforeNextExecution(Statement s) throws SQLException {
 				execCount++;
@@ -167,30 +167,30 @@ public class TestAsynch {
 		}, new RequestOptions().continuous(true));
 		assertEquals(1024, result.get().intValue());
 	}
-	
+
 	@Test public void testAsynchContinuousNonEmpty() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select 1", new ContinuousStatementCallback() {
-			
+
 			int execCount;
 			@Override
 			public void onRow(Statement s, ResultSet rs) throws SQLException {
 				assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
 				s.close();
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(execCount);
 			}
-			
+
 			@Override
 			public void beforeNextExecution(Statement s) throws SQLException {
 				execCount++;
@@ -198,11 +198,11 @@ public class TestAsynch {
 		}, new RequestOptions().continuous(true));
 		assertEquals(0, result.get().intValue());
 	}
-	
+
 	@Test public void testAsynchContinuous() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select xmlelement(name x) from SYS.Schemas", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -212,12 +212,12 @@ public class TestAsynch {
 					s.close();
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -225,13 +225,13 @@ public class TestAsynch {
 		}, new RequestOptions().continuous(true));
 		assertEquals(1024, result.get().intValue());
 	}
-	
+
 	@Test public void testAsynchContinuousMergeBlock() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		stmt.execute("create temporary table t (c string, primary key (c))");
 		stmt.execute("set autoCommitTxn off");
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("begin merge into t select name from schemas limit 2; select rowcount; end", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -241,12 +241,12 @@ public class TestAsynch {
 					s.close();
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -258,11 +258,11 @@ public class TestAsynch {
 		rs.next();
 		assertEquals(2, rs.getInt(1));
 	}
-	
+
 	@Test public void testAsynchContinuousWithAlter() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select * from test", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -290,12 +290,12 @@ public class TestAsynch {
 					throw new RuntimeException(e);
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -303,12 +303,12 @@ public class TestAsynch {
 		}, new RequestOptions().continuous(true));
 		assertEquals(3, result.get().intValue());
 	}
-	
+
 	@Test public void testAsynchPlaning() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		ef.addData("SELECT someTable.col FROM someTable", Arrays.asList(Arrays.asList(1)));
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select * from someTable", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -323,12 +323,12 @@ public class TestAsynch {
 					throw new RuntimeException(e);
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -356,7 +356,7 @@ public class TestAsynch {
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		ef.addData("SELECT someTable.col FROM someTable", Collections.nCopies(1, Arrays.asList(1)));
 		ts.setExecutionProperty("autoCommitTxn", "off");
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute(query, new StatementCallback() {
 			int rowCount;
 			@Override
@@ -371,12 +371,12 @@ public class TestAsynch {
 					throw new RuntimeException(e);
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -384,38 +384,38 @@ public class TestAsynch {
 		}, new RequestOptions().continuous(true));
 		assertEquals(100000, result.get().intValue());
 	}
-	
+
 	@Test public void testTransactionCycle() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Void> result = new ResultsFuture<Void>(); 
+		final ResultsFuture<Void> result = new ResultsFuture<Void>();
 		ts.submitExecute("start transaction", new StatementCallback() {
 			@Override
 			public void onRow(Statement s, ResultSet rs) {
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				result.getResultsReceiver().receiveResults(null);
 			}
 		}, new RequestOptions());
 		result.get();
-		final ResultsFuture<Void> rollBackResult = new ResultsFuture<Void>(); 
+		final ResultsFuture<Void> rollBackResult = new ResultsFuture<Void>();
 		ts.submitExecute("rollback", new StatementCallback() {
 			@Override
 			public void onRow(Statement s, ResultSet rs) {
 			}
-			
+
 			@Override
 			public void onException(Statement s, Exception e) {
 				rollBackResult.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement s) {
 				rollBackResult.getResultsReceiver().receiveResults(null);
@@ -423,5 +423,5 @@ public class TestAsynch {
 		}, new RequestOptions());
 		rollBackResult.get();
 	}
-	
+
 }

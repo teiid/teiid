@@ -27,31 +27,31 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class TriggerAction extends Command {
-	
+
 	private GroupSymbol view;
 	private Block block;
-	
+
 	public TriggerAction(Block b) {
 		this.setBlock(b);
 	}
-	
+
 	public Block getBlock() {
 		return block;
 	}
-	
+
 	public void setBlock(Block block) {
 		block.setAtomic(true);
 		this.block = block;
 	}
-	
+
 	public GroupSymbol getView() {
 		return view;
 	}
-	
+
 	public void setView(GroupSymbol view) {
 		this.view = view;
 	}
-		
+
 	@Override
 	public int hashCode() {
 		return block.hashCode();
@@ -73,12 +73,12 @@ public class TriggerAction extends Command {
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public TriggerAction clone() {
 		TriggerAction clone = new TriggerAction(this.block.clone());

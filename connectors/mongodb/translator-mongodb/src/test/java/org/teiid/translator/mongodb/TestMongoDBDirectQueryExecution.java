@@ -56,7 +56,7 @@ public class TestMongoDBDirectQueryExecution {
     	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "sakila", "northwind");
     	this.utility = new TranslationUtility(metadata);
     }
-	
+
 	@Test
 	public void testDirect() throws Exception {
 		Command cmd = this.utility.parseCommand("SELECT * FROM Customers");
@@ -65,25 +65,25 @@ public class TestMongoDBDirectQueryExecution {
 		DBCollection dbCollection = Mockito.mock(DBCollection.class);
 		DB db = Mockito.mock(DB.class);
 		Mockito.stub(db.getCollection("MyTable")).toReturn(dbCollection);
-		
+
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
-		
+
 		Argument arg = new Argument(Direction.IN, null, String.class, null);
 		arg.setArgumentValue(new Literal("MyTable;{$match:{\"id\":\"$1\"}};{$project:{\"_m0\":\"$user\"}}", String.class));
 
 		Argument arg2 = new Argument(Direction.IN, null, String.class, null);
 		arg2.setArgumentValue(new Literal("foo", String.class));
-		
+
 		ResultSetExecution execution = this.translator.createDirectExecution(Arrays.asList(arg, arg2), cmd, context, this.utility.createRuntimeMetadata(), connection);
 		execution.execute();
-		
-        List<DBObject> pipeline = TestMongoDBQueryExecution.buildArray(new BasicDBObject("$match", new BasicDBObject("id", "foo")), 
-                new BasicDBObject("$project", new BasicDBObject("_m0", "$user")));        
+
+        List<DBObject> pipeline = TestMongoDBQueryExecution.buildArray(new BasicDBObject("$match", new BasicDBObject("id", "foo")),
+                new BasicDBObject("$project", new BasicDBObject("_m0", "$user")));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-		
+
 	}
-	
+
     @Test
     public void testShellDirect() throws Exception {
         Command cmd = this.utility.parseCommand("SELECT * FROM Customers");
@@ -92,15 +92,15 @@ public class TestMongoDBDirectQueryExecution {
         DBCollection dbCollection = Mockito.mock(DBCollection.class);
         DB db = Mockito.mock(DB.class);
         Mockito.stub(db.getCollection("MyTable")).toReturn(dbCollection);
-        
+
         Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
         Mockito.stub(connection.getDatabase()).toReturn(db);
-        
+
         Argument arg = new Argument(Direction.IN, null, String.class, null);
         arg.setArgumentValue(new Literal("$ShellCmd;MyTable;remove;{ qty: { $gt: 20 }}", String.class));
 
         ResultSetExecution execution = this.translator.createDirectExecution(Arrays.asList(arg), cmd, context, this.utility.createRuntimeMetadata(), connection);
         execution.execute();
         Mockito.verify(dbCollection).remove(QueryBuilder.start("qty").greaterThan(20).get());
-    }	
+    }
 }

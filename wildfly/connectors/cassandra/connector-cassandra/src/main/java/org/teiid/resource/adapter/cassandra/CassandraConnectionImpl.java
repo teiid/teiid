@@ -40,7 +40,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 	private Session session = null;
 	private Metadata metadata = null;
 	private VersionNumber version;
-	
+
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
 		this.config = config;
 		this.metadata = metadata;
@@ -48,23 +48,23 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 
 	public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
 		this.config = config;
-		
+
 		Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
-		
+
 		if (this.config.getUsername() != null) {
 		    builder.withCredentials(this.config.getUsername(), this.config.getPassword());
 		}
-		
+
 		if (this.config.getPort() != null) {
 		    builder.withPort(this.config.getPort());
 		}
-		
+
 		this.cluster = builder.build();
-		
+
 		this.metadata = cluster.getMetadata();
-		
+
 		this.session = cluster.connect(config.getKeyspace());
-		
+
 		Set<Host> allHosts = cluster.getMetadata().getAllHosts();
 		if (!allHosts.isEmpty()) {
             Host host = allHosts.iterator().next();
@@ -79,18 +79,18 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		}
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public boolean isAlive() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("alive")); //$NON-NLS-1$
 		return true;
 	}
-	
+
 	@Override
 	public ResultSetFuture executeQuery(String query){
 		return session.executeAsync(query);
 	}
-	
+
 	@Override
 	public ResultSetFuture executeBatch(List<String> updates){
 		BatchStatement bs = new BatchStatement();
@@ -99,7 +99,7 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		}
 		return session.executeAsync(bs);
 	}
-	
+
 	@Override
 	public ResultSetFuture executeBatch(String update, List<Object[]> values) {
 		PreparedStatement ps = session.prepare(update);
@@ -125,10 +125,10 @@ public class CassandraConnectionImpl extends BasicConnection implements Cassandr
 		}
 		return result;
 	}
-	
+
 	@Override
 	public VersionNumber getVersion() {
 		return version;
 	}
-	
+
 }

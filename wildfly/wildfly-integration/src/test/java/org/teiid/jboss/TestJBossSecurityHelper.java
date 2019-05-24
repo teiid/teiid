@@ -46,32 +46,32 @@ import junit.framework.TestCase;
 @SuppressWarnings("nls")
 public class TestJBossSecurityHelper extends TestCase {
 
-    private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc) 
+    private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc)
             throws Exception {
     	Principal p = Mockito.mock(Principal.class);
     	Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
     	HashSet<Principal> principals = new HashSet<Principal>();
     	principals.add(p);
-    	
+
     	@SuppressWarnings("serial")
         JBossSecurityHelper sh = new JBossSecurityHelper() {
-    	    
+
     	    @Override
             protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
     	        if (securityDomain.equals(domain)) {
     	            return sdc;
     	        }
     	        return null;
-    	    }    	
+    	    }
     	};
     	return sh;
     }
-       
+
     public void testAuthenticate() throws Exception {
     	Credentials credentials = new Credentials("pass1".toCharArray());
 
     	String domains = "testFile";
-        
+
         AuthenticationManager authManager = new AuthenticationManager() {
 			public String getSecurityDomain() {
 				return null;
@@ -95,23 +95,23 @@ public class TestJBossSecurityHelper extends TestCase {
             }
 		};
         final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
-        
+
     	JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
-        
-        Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$ 
+
+        Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$
         assertTrue(c instanceof JBossSecurityContext); //$NON-NLS-1$
         assertEquals(domains, ((JBossSecurityContext)c).getSecurityDomain());
     }
-    
+
 	public void validateSession(boolean securityEnabled) throws Exception {
 		final ArrayList<String> domains = new ArrayList<String>();
-		domains.add("somedomain");				
-	        
+		domains.add("somedomain");
+
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
         Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
-        
+
         final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
-        
+
         SessionServiceImpl jss = new SessionServiceImpl() {
         	@Override
         	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
@@ -121,47 +121,47 @@ public class TestJBossSecurityHelper extends TestCase {
         };
         jss.setSecurityHelper(buildSecurityHelper("somedomain", securityContext));
 		jss.setSecurityDomain("somedomain");
-		
+
 		try {
 			jss.validateSession(String.valueOf(1));
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (InvalidSessionException e) {
-			
+
 		}
-		
+
 		SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
 		if (securityEnabled) {
-			Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject()); 
+			Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject());
 		}
-		
+
 		String id1 = info.getSessionId();
 		jss.validateSession(id1);
-		
+
 		assertEquals(1, jss.getActiveSessionsCount());
-		assertEquals(0, jss.getSessionsLoggedInToVDB(new VDBKey("a", 1)).size()); //$NON-NLS-1$ 
-		
+		assertEquals(0, jss.getSessionsLoggedInToVDB(new VDBKey("a", 1)).size()); //$NON-NLS-1$
+
 		jss.closeSession(id1);
-		
+
 		try {
 			jss.validateSession(id1);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (InvalidSessionException e) {
-			
+
 		}
-		
+
 		try {
 			jss.closeSession(id1);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (InvalidSessionException e) {
-			
+
 		}
 	}
-	
+
 	@Test public void testvalidateSession() throws Exception{
 		validateSession(true);
 	}
 
 	@Test public void testvalidateSession2() throws Exception {
 		validateSession(false);
-	}    
+	}
 }

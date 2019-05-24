@@ -54,7 +54,7 @@ public class TestTransformationMetadata {
 			assertEquals("TEIID30358 Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
 		}
 	}
-	
+
 	@Test public void testProcVisibility() throws Exception {
 		TransformationMetadata tm = exampleTransformationMetadata();
 		VDBMetaData vdb = tm.getVdbMetaData();
@@ -74,33 +74,33 @@ public class TestTransformationMetadata {
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, dt);
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addProcedure("y"); //$NON-NLS-1$
-		
+
 		Table t = mf.addTable("foo");
 		mf.addColumn("col", DataTypeManager.DefaultDataTypes.STRING, t);
-		
+
 		MetadataFactory mf1 = new MetadataFactory(null, 1, "x1", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf1.addProcedure("y"); //$NON-NLS-1$
-		
+
 		Table table = mf1.addTable("doc");
 		table.setSchemaPaths(Arrays.asList("../../x.xsd"));
 		table.setResourcePath("/a/b/doc.xmi");
-		
+
 		HashMap<String, VDBResources.Resource> resources = new HashMap<String, VDBResources.Resource>();
 		resources.put("/x.xsd", new VDBResources.Resource(Mockito.mock(VirtualFile.class)));
-		
+
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
-		
+
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("vdb");
 		vdb.setVersion(1);
-		
+
 		vdb.addModel(buildModel("x"));
 		vdb.addModel(buildModel("x1"));
 		vdb.addModel(buildModel("y"));
-		
+
 		return new TransformationMetadata(vdb, cms, resources, RealMetadataFactory.SFM.getSystemFunctions(), null);
 	}
-	
+
 	ModelMetaData buildModel(String name) {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(name);
@@ -108,31 +108,31 @@ public class TestTransformationMetadata {
 		model.setVisible(true);
 		return model;
 	}
-	
+
 	@Test public void testAmbiguousTableWithPrivateModel() throws Exception {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
 		Datatype dt = new Datatype();
 		dt.setName(DataTypeManager.DefaultDataTypes.STRING);
 		dt.setJavaClassName(String.class.getCanonicalName());
-        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, dt);		
+        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, dt);
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addTable("y"); //$NON-NLS-1$
 		MetadataFactory mf1 = new MetadataFactory(null, 1, "x1", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf1.addTable("y"); //$NON-NLS-1$
 		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
-		
+
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("foo");
 		vdb.setVersion(1);
-		
+
 		ModelMetaData model = new ModelMetaData();
 		model.setName("x1");
 		vdb.addModel(model);
-		
+
 		ModelMetaData model2 = new ModelMetaData();
 		model2.setName("x");
 		model2.setVisible(true);
-		vdb.addModel(model2);		
+		vdb.addModel(model2);
 
 		TransformationMetadata tm = new TransformationMetadata(vdb, cms, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 		Collection result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
@@ -146,15 +146,15 @@ public class TestTransformationMetadata {
 		result = tm.getGroupsForPartialName("y"); //$NON-NLS-1$
 		assertEquals(1, result.size());
 	}
-	
+
 	@Test public void testElementId() throws Exception {
 		TransformationMetadata tm = exampleTransformationMetadata();
 		tm.getElementID("x.FoO.coL");
 	}
-	
+
 	@Test public void testTypeCorrection() throws Exception {
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); //$NON-NLS-1$
-		
+
 		Table t = mf.addTable("y"); //$NON-NLS-1$
 		mf.addColumn("test", "string", t);
 		mf.addColumn("array", "string[]", t);
@@ -163,19 +163,19 @@ public class TestTransformationMetadata {
 		Column col = mf.addColumn("arg", "string", t);
 		col.setDatatype(unknown, false, 0);
 		MetadataFactory mf1 = UnitTestUtil.helpSerialize(mf);
-		
+
 		Column column = mf1.getSchema().getTable("y").getColumns().get(0);
 		Datatype dt = column.getDatatype();
-		
+
 		assertNotSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
-		
+
 		assertEquals(1, mf1.getSchema().getTable("y").getColumns().get(1).getArrayDimensions());
-		
+
 		mf1.correctDatatypes(mf.getDataTypes());
-		
+
 		assertSame(mf.getDataTypes().get(dt.getName()), column.getDatatype());
-		
+
 		assertEquals(1, mf1.getSchema().getTable("y").getColumns().get(1).getArrayDimensions());
 	}
-	
+
 }

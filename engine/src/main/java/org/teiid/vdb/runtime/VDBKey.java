@@ -30,17 +30,17 @@ import org.teiid.query.QueryPlugin;
  * Encapsulates the name/versioning rules for VDBs
  */
 public class VDBKey implements Serializable, Comparable<VDBKey>{
-	
+
 	private static final long serialVersionUID = -7249750823144856081L;
-	
+
 	private String name;
 	private Integer[] versionParts = new Integer[3];
     private String version;
     private int hashCode;
     private boolean atMost;
-    
+
     public static Pattern NAME_PATTERN = Pattern.compile("(?:(0|(?:[1-9]\\d{0,8})))(?:\\.(0|(?:[1-9]\\d{0,8})))?(?:\\.(0|(?:[1-9]\\d{0,8})))?(\\.)?$"); //$NON-NLS-1$
-    
+
     public VDBKey(String name, Object version) {
         this.name = name;
         if (version == null) {
@@ -55,7 +55,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
         	}
         } else {
         	this.version = version.toString();
-        	
+
         	//double check that the vdb is not ambiguous
         	int index = name.indexOf("."); //$NON-NLS-1$
         	if (index > 0 && index < name.length() - 1) {
@@ -66,7 +66,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
     	        }
         	}
         }
-        
+
         if (this.version != null) {
 	        Matcher m  = NAME_PATTERN.matcher(this.version);
 	        if (!m.matches()) {
@@ -74,7 +74,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 	        		throw new TeiidRuntimeException(QueryPlugin.Event.TEIID31190, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31190, this.version));
 	        	}
 	        	//not a version
-	        	this.name = name; 
+	        	this.name = name;
 	        	this.version = null;
 	        	this.atMost = true;
 	        } else {
@@ -84,7 +84,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 	        	atMost = this.version.endsWith("."); //$NON-NLS-1$
 	        }
         }
-        
+
         //set the version string
         //TODO we may want to canonicalize to drop all .0
         if (this.versionParts[1] != null) {
@@ -99,12 +99,12 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 		if (val != null) {
 			versionParts[part] = Integer.parseInt(val);
 		}
-	}    
-    
+	}
+
     public String getName() {
 		return name;
 	}
-    
+
     /**
      * Get the version string - not including the at most designation.
      * <br/>
@@ -118,35 +118,35 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
     public String getVersion() {
 		return version;
 	}
-    
-    /** 
+
+    /**
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
     	if (hashCode == 0) {
-    		hashCode = HashCodeUtil.hashCode(HashCodeUtil.expHashCode(name.toLowerCase(), false), getSemanticVersion()); 
+    		hashCode = HashCodeUtil.hashCode(HashCodeUtil.expHashCode(name.toLowerCase(), false), getSemanticVersion());
     	}
         return hashCode;
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
         if (obj == this) {
             return true;
         }
-        
+
         if (!(obj instanceof VDBKey)) {
             return false;
         }
-        
+
         VDBKey other = (VDBKey)obj;
-        
-        return other.atMost == this.atMost 
+
+        return other.atMost == this.atMost
         		&& this.compareTo(other) == 0;
     }
-    
+
     public String toString() {
     	StringBuilder sb = new StringBuilder(name);
     	sb.append("."); //$NON-NLS-1$
@@ -175,14 +175,14 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 		}
 		return 0;
 	}
-	
+
 	/**
 	 * @return true if the semantic version ends in a .
 	 */
 	public boolean isAtMost() {
 		return atMost;
 	}
-	
+
 	/**
 	 * @param key
 	 * @return true if the key version >= the current version
@@ -201,7 +201,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Get the full three part semantic version
 	 * @return

@@ -60,13 +60,13 @@ public class FunctionTree {
     private Map<String, Set<FunctionMethod>> categories = new TreeMap<String, Set<FunctionMethod>>(String.CASE_INSENSITIVE_ORDER);
 
     private Map<String, List<FunctionMethod>> functionsByName = new TreeMap<String, List<FunctionMethod>>(String.CASE_INSENSITIVE_ORDER);
-    
+
     private Map<String, FunctionMethod> functionsByUuid = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-    
+
     private String schemaName;
-    
+
     private Set<FunctionMethod> allFunctions = new HashSet<FunctionMethod>();
-    
+
     private int idCount;
 
 	/**
@@ -74,7 +74,7 @@ public class FunctionTree {
 	 */
     private Map<String, Map<Object, Object>> treeRoot = new TreeMap<String, Map<Object, Object>>(String.CASE_INSENSITIVE_ORDER);
     private boolean validateClass;
-    
+
     /**
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
@@ -82,7 +82,7 @@ public class FunctionTree {
     public FunctionTree(String name, FunctionMetadataSource source) {
     	this(name, source, false);
     }
-    
+
     /**
      * Construct a new tree with the given source of function metadata.
      * @param source The metadata source
@@ -102,11 +102,11 @@ public class FunctionTree {
 			}
         }
     }
-    
+
     public String getSchemaName() {
 		return schemaName;
 	}
-    
+
     public Map<String, FunctionMethod> getFunctionsByUuid() {
 		return functionsByUuid;
 	}
@@ -134,7 +134,7 @@ public class FunctionTree {
     Collection<String> getCategories() {
         return categories.keySet();
     }
-    
+
     Set<FunctionMethod> getFunctionsInCategory(String name) {
     	Set<FunctionMethod> names = categories.get(name);
     	if (names == null) {
@@ -163,7 +163,7 @@ public class FunctionTree {
         }
 
         return allMatches;
-    }    
+    }
 
 	// ---------------------- FUNCTION INVOCATION USE METHODS ----------------------
 
@@ -185,7 +185,7 @@ public class FunctionTree {
             functions = new HashSet<FunctionMethod>();
             categories.put(categoryKey, functions);
         }
-        
+
         // Get method name
         String methodName = schema + AbstractMetadataRecord.NAME_DELIM_CHAR + method.getName();
 
@@ -203,7 +203,7 @@ public class FunctionTree {
         } else {
         	types = new Class<?>[0];
         }
-        
+
         setUuid(method.getOutputParameter());
 
         FunctionDescriptor descriptor = createFunctionDescriptor(source, method, types, system);
@@ -211,7 +211,7 @@ public class FunctionTree {
         // Store this path in the function tree
         // Look up function in function map
         functions.add(method);
-        functionsByUuid.put(method.getUUID(), method);        
+        functionsByUuid.put(method.getUUID(), method);
         while(true) {
 	        // Add method to list by function name
 	        List<FunctionMethod> knownMethods = functionsByName.get(methodName);
@@ -241,20 +241,20 @@ public class FunctionTree {
 	            }
 	            node = children;
 	        }
-	
+
 	        if (method.isVarArgs()) {
 	        	node.put(types[types.length - 1], node);
 	        }
 	        // Store the leaf descriptor in the tree
 	        node.put(DESCRIPTOR_KEY, descriptor);
-	        
+
 	        int index = methodName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	        if (index == -1) {
 	        	break;
 	        }
 	        methodName = methodName.substring(index+1);
         }
-        
+
         allFunctions.add(method);
         return descriptor;
     }
@@ -322,9 +322,9 @@ public class FunctionTree {
 	            	 throw new MetadataException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
 	            } catch (NoSuchMethodException e) {
 	            	 throw new MetadataException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
-	            } catch (Exception e) {                
+	            } catch (Exception e) {
 	                 throw new MetadataException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
-	            } 
+	            }
         	} else {
         		requiresContext = (invocationMethod.getParameterTypes().length > 0 && org.teiid.CommandContext.class.isAssignableFrom(invocationMethod.getParameterTypes()[0]));
         	}
@@ -349,7 +349,7 @@ public class FunctionTree {
         		} else if (method.getAggregateAttributes() != null) {
         			throw new MetadataException(QueryPlugin.Event.TEIID30600, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30600, method.getName(), invocationMethod));
         		}
-        		
+
         		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(invocationMethod.getDeclaringClass()))) {
     				throw new MetadataException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
@@ -376,7 +376,7 @@ public class FunctionTree {
         result.setHasWrappedArgs(hasWrappedArg);
         return result;
 	}
-    
+
     /**
      * Look up a function descriptor by signature in the tree.  If none is
      * found, null is returned.
@@ -412,7 +412,7 @@ public class FunctionTree {
         // No descriptor at this location in tree
         return null;
     }
-    
+
     public static FunctionTree getFunctionProcedures(Schema schema) {
 		UDFSource dummySource = new UDFSource(Collections.EMPTY_LIST);
 		FunctionTree ft = null;
@@ -428,7 +428,7 @@ public class FunctionTree {
 		}
 		return ft;
 	}
-    
+
     public boolean hasFunctionWithName(String name) {
         return functionsByName.containsKey(name);
     }

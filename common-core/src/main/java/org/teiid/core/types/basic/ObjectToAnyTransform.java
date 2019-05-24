@@ -29,15 +29,15 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
 public class ObjectToAnyTransform extends Transform {
-	
+
 	public static final ObjectToAnyTransform INSTANCE = new ObjectToAnyTransform(Object.class);
 
     private Class targetClass;
-    
+
     public ObjectToAnyTransform(Class targetClass) {
         this.targetClass = targetClass;
     }
-    
+
     /**
      * Type of the incoming value.
      * @return Source type
@@ -45,11 +45,11 @@ public class ObjectToAnyTransform extends Transform {
     public Class getSourceType() {
         return DataTypeManager.DefaultDataClasses.OBJECT;
     }
-    
+
     public Class getTargetType() {
         return targetClass;
     }
-    
+
     @Override
     public Object transform(Object value, Class<?> targetType)
     		throws TransformationException {
@@ -59,7 +59,7 @@ public class ObjectToAnyTransform extends Transform {
         if(targetType.isAssignableFrom(value.getClass())) {
             return value;
         }
-        
+
         Transform transform = DataTypeManager.getTransform(value.getClass(), targetType);
         boolean valid = true;
         if (transform instanceof ObjectToAnyTransform) {
@@ -88,16 +88,16 @@ public class ObjectToAnyTransform extends Transform {
 					} catch (SQLException e) {
 						throw new TransformationException(e);
 					}
-        		} 
+        		}
         		if (value.getClass().isArray()) {
-        		    if (value.getClass().getComponentType().isPrimitive() 
+        		    if (value.getClass().getComponentType().isPrimitive()
                             && targetType.getComponentType().isAssignableFrom(convertPrimitiveToObject(value.getClass().getComponentType()))) {
                         Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetType.getComponentType(), java.lang.reflect.Array.getLength(value));
                         for (int i = 0; i < result.length; i++) {
                             result[i] = java.lang.reflect.Array.get(value, i);
                         }
                         return new ArrayImpl(result);
-        		    } 
+        		    }
         		    Class<?> targetComponentType = targetType.getComponentType();
                     Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetComponentType, java.lang.reflect.Array.getLength(value));
     		        for (int i = 0; i < result.length; i++) {
@@ -120,33 +120,33 @@ public class ObjectToAnyTransform extends Transform {
         	}
         	valid = false;
         }
-        
+
         if (transform == null || !valid) {
             Object[] params = new Object[] { getSourceType(), targetType, value};
               throw new TransformationException(CorePlugin.Event.TEIID10076, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
         }
-        
+
         try {
-            return transform.transform(value, targetType);    
+            return transform.transform(value, targetType);
         } catch (TransformationException e) {
             Object[] params = new Object[] { getSourceType(), targetType, value};
               throw new TransformationException(CorePlugin.Event.TEIID10076, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
         }
     }
-    
+
     @Override
     protected Object transformDirect(Object value)
     		throws TransformationException {
     	return value;
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.core.types.Transform#isExplicit()
      */
     public boolean isExplicit() {
         return true;
     }
-    
+
 	/**
 	 * Convert a primitive class to the corresponding object class
 	 * @param clazz

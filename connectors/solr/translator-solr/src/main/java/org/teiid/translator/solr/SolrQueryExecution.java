@@ -53,7 +53,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 		if (command instanceof QueryExpression) {
 			this.expectedTypes = ((QueryExpression)command).getColumnTypes();
 		}
-		
+
 		this.visitor = new SolrSQLHierarchyVistor(metadata, this.executionFactory);
 		this.visitor.visitNode(command);
 	}
@@ -63,14 +63,14 @@ public class SolrQueryExecution implements ResultSetExecution {
 		LogManager.logDetail("Solr Source Query:", this.visitor.getSolrQuery()); //$NON-NLS-1$
 		nextBatch();
 	}
-	
+
 	public void nextBatch() throws TranslatorException {
 		SolrQuery query = this.visitor.getSolrQuery();
 		if (!this.visitor.isLimitInUse()) {
 			query.setStart(this.offset);
 			query.setRows(this.executionContext.getBatchSize());
 		}
-		
+
 		QueryResponse queryResponse = connection.query(this.visitor.getSolrQuery());
 		SolrDocumentList docList = queryResponse.getResults();
 		this.resultSize = docList.getNumFound();
@@ -80,7 +80,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 	/*
 	 * This iterates through the documents from Solr and maps their fields to
 	 * rows in the Teiid table
-	 * 
+	 *
 	 * @see org.teiid.translator.ResultSetExecution#next()
 	 */
 	@Override
@@ -93,7 +93,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 			this.resultsItr = null;
 			return row;
 		}
-		
+
 		// is there any solr docs
 		if (this.resultsItr != null && this.resultsItr.hasNext()) {
 			SolrDocument doc = this.resultsItr.next();
@@ -103,7 +103,7 @@ public class SolrQueryExecution implements ResultSetExecution {
 				row.add(this.executionFactory.convertFromSolrType(obj, this.expectedTypes[i]));
 			}
 			this.offset++;
-			
+
 			// if we are at the end of the current cursor set, then get next ones.
 			if (!this.resultsItr.hasNext() && !this.visitor.isLimitInUse()) {
 				nextBatch();
@@ -112,29 +112,29 @@ public class SolrQueryExecution implements ResultSetExecution {
 		}
 		return null;
 	}
-	
+
 	interface SolrDocumentCallback {
 		void walk(SolrDocument doc);
 	}
-	
+
 	public void walkDocuments(SolrDocumentCallback callback) throws TranslatorException {
 		while(this.resultsItr != null && this.resultsItr.hasNext()) {
 			SolrDocument doc = this.resultsItr.next();
 			callback.walk(doc);
 			this.offset++;
-			
+
 			// if we are at the end of the current cursor set, then get next ones.
 			if (!this.resultsItr.hasNext()) {
 				nextBatch();
 			}
-		}		
+		}
 	}
-	
+
 	@Override
 	public void close() {
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-	}	
+	}
 }

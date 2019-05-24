@@ -38,13 +38,13 @@ public class TestRelationalPlan extends TestCase {
     public TestRelationalPlan(String arg0) {
         super(arg0);
     }
-    
+
     public void testNoRowsFirstBatch() throws Exception {
         RelationalNode node = new FakeRelationalNode(0, new List[0]);
-        
+
         RelationalPlan plan = new RelationalPlan(node);
         TupleBatch batch = plan.nextBatch();
         assertTrue("Did not get terminator batch", batch.getTerminationFlag()); //$NON-NLS-1$
-    }   
-    
+    }
+
 }

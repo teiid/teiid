@@ -49,15 +49,15 @@ import org.teiid.adminapi.impl.VDBMetaData;
 class VDBDependencyDeployer implements DeploymentUnitProcessor {
 	public static final String LIB = "/lib"; //$NON-NLS-1$
 	private static final VirtualFileFilter DEFAULT_JAR_LIB_FILTER = new SuffixMatchFilter(".jar", VisitorAttributes.DEFAULT); //$NON-NLS-1$
-	
+
 	@Override
 	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 		DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
-		
-		
+
+
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		ServiceModuleLoader sml = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
 		deployment.addAttchment(ServiceModuleLoader.class, sml);
@@ -78,12 +78,12 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
     	        		sml.loadModule(moduleName);
     	        		userDependencies.add(new ModuleDependency(sml, ModuleIdentifier.create(moduleName), false, false, false, true));
     				} catch (ModuleLoadException e1) {
-    		        	throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e1));					
+    		        	throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e1));
     				}
     	        }
         	}
         }
-        
+
 		if (!TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
 			try {
 				final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
@@ -101,16 +101,16 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 							ModuleRootMarker.mark(jarArchiveRoot);
 							deploymentUnit.addToAttachmentList(Attachments.RESOURCE_ROOTS, jarArchiveRoot);
 						} catch (IOException e) {
-							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50018, archive), e); 
+							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50018, archive), e);
 						}
 					}
 				}
 			} catch(IOException e) {
 				throw new DeploymentUnitProcessingException(e);
-			}				
+			}
 		}
 
-		
+
 		// add translators as dependent modules to this VDB.
         try {
 			final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);

@@ -22,7 +22,7 @@ import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 /**
- * This exception is thrown when an error occurs while retrieving metadata 
+ * This exception is thrown when an error occurs while retrieving metadata
  * from a query component metadata facade.
  */
 public class QueryProcessingException extends TeiidProcessingException {
@@ -35,7 +35,7 @@ public class QueryProcessingException extends TeiidProcessingException {
     public QueryProcessingException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -44,10 +44,10 @@ public class QueryProcessingException extends TeiidProcessingException {
     public QueryProcessingException( String message ) {
         super( message );
     }
-    
+
     public QueryProcessingException(Throwable e) {
         super(e);
-    }    
+    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.
@@ -58,17 +58,17 @@ public class QueryProcessingException extends TeiidProcessingException {
     public QueryProcessingException(Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public QueryProcessingException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public QueryProcessingException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public QueryProcessingException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }    
-    
+    }
+
 }

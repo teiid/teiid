@@ -35,12 +35,12 @@ class MaterializationManagementService implements Service<MaterializationManager
 	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<NodeTracker> nodeTrackerInjector = new InjectedValue<NodeTracker>();
 	private JBossLifeCycleListener shutdownListener;
-	
+
 	public MaterializationManagementService(JBossLifeCycleListener shutdownListener, ScheduledExecutorService scheduler) {
 		this.shutdownListener = shutdownListener;
 		this.scheduler = scheduler;
 	}
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		manager = new MaterializationManager(shutdownListener) {
@@ -48,7 +48,7 @@ class MaterializationManagementService implements Service<MaterializationManager
 			public ScheduledExecutorService getScheduledExecutorService() {
 				return scheduler;
 			}
-			
+
 			@Override
 			public DQPCore getDQP() {
 				return dqpInjector.getValue();
@@ -59,9 +59,9 @@ class MaterializationManagementService implements Service<MaterializationManager
                 return vdbRepositoryInjector.getValue();
             }
 		};
-		
+
 		vdbRepositoryInjector.getValue().addListener(manager);
-		
+
 		if (nodeTrackerInjector.getValue() != null) {
 		    nodeTrackerInjector.getValue().addNodeListener(manager);
 		}
@@ -80,5 +80,5 @@ class MaterializationManagementService implements Service<MaterializationManager
 	@Override
 	public MaterializationManager getValue() throws IllegalStateException, IllegalArgumentException {
 		return this.manager;
-	}	
+	}
 }

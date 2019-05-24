@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 
 /**
- * An indexSummary is used when saving an index into a BlocksIndexOuput or 
- * reading it from a BlocksIndexInput. It contains basic informations about 
+ * An indexSummary is used when saving an index into a BlocksIndexOuput or
+ * reading it from a BlocksIndexInput. It contains basic informations about
  * an index: first files/words in each block, number of files/words.
  */
 
@@ -61,7 +61,7 @@ public class IndexSummary {
 	protected int firstWordBlockNum;
 	protected boolean firstWordAdded= true;
 	/**
-	 * Adds the given file as the first file for the given Block number. 
+	 * Adds the given file as the first file for the given Block number.
 	 */
 	public void addFirstFileInBlock(IndexedFile indexedFile, int blockNum) {
 		FirstFileInBlock entry= new FirstFileInBlock();
@@ -70,7 +70,7 @@ public class IndexSummary {
 		firstFilesInBlocks.add(entry);
 	}
 	/**
-	 * Adds the given word as the first word for the given Block number. 
+	 * Adds the given word as the first word for the given Block number.
 	 */
 	public void addFirstWordInBlock(char[] word, int blockNum) {
 		if (firstWordAdded) {
@@ -98,7 +98,7 @@ public class IndexSummary {
     	return ((FirstWordInBlock) firstWordsInBlocks.get(blockLocation)).blockNum;
     }
 	/**
-	 * Returns the number of the Block containing the file with the given number. 
+	 * Returns the number of the Block containing the file with the given number.
 	 */
 	public int getBlockNumForFileNum(int fileNum) {
 		int min= 0;
@@ -120,7 +120,7 @@ public class IndexSummary {
 		return entry.blockNum;
 	}
 	/**
-	 * Returns the number of the Block containing the given word. 
+	 * Returns the number of the Block containing the given word.
 	 */
 	public int getBlockNumForWord(char[] word) {
 		int min= 0;
@@ -141,7 +141,7 @@ public class IndexSummary {
 		FirstWordInBlock entry= (FirstWordInBlock) firstWordsInBlocks.get(max);
 		return entry.blockNum;
 	}
-    
+
     public int[] getBlockNumsForPrefix(char[] prefix) {
 		int min= 0;
 		int size= firstWordsInBlocks.size();
@@ -154,7 +154,7 @@ public class IndexSummary {
 			if (compare == 0) {
 				match= mid;
 				break;
-			}	
+			}
 			if (compare >= 0)
 				max= mid - 1;
 			else
@@ -162,10 +162,10 @@ public class IndexSummary {
 		}
 		if (max < 0)
 			return new int[0];
-			
+
 		if (match < 0)
 			match= max;
-		
+
 		int firstBlock= match - 1;
 		// Look if previous blocks are affected
 		for (; firstBlock >= 0; firstBlock--) {
@@ -174,8 +174,8 @@ public class IndexSummary {
 				break;
 		}
 		if (firstBlock < 0)
-			firstBlock= 0;	
-		
+			firstBlock= 0;
+
 		// Look if next blocks are affected
 		int firstNotIncludedBlock= match + 1;
 		for (; firstNotIncludedBlock < size; firstNotIncludedBlock++) {
@@ -183,7 +183,7 @@ public class IndexSummary {
 			if (!CharOperation.prefixEquals(prefix, entry.word, true))
 				break;
 		}
-		
+
 		int numberOfBlocks= firstNotIncludedBlock - firstBlock;
 		int[] result= new int[numberOfBlocks];
 		int pos= firstBlock;
@@ -215,7 +215,7 @@ public class IndexSummary {
     		}
     	}
     	if (max < 0) return -1;
-    
+
     	// no match at all, might be some matching entries inside max block
     	if (match < 0){
     		match = max;
@@ -230,7 +230,7 @@ public class IndexSummary {
     	}
     	return match;
     }
-    
+
     static final int compareWith(char[] array, char[] prefix, boolean caseSensitive) {
         int arrayLength = array.length;
         int prefixLength = prefix.length;
@@ -249,16 +249,16 @@ public class IndexSummary {
         }
         if (prefixLength == i)
             return 0;
-        return -1; // array is shorter than prefix (e.g. array:'ab' < prefix:'abc').  
+        return -1; // array is shorter than prefix (e.g. array:'ab' < prefix:'abc').
     }
-    
+
 	/**
 	 * Returns the number of the first IndexBlock (containing words).
 	 */
 	public int getFirstWordBlockNum() {
 		return firstWordBlockNum;
 	}
-    /** 
+    /**
      * Blocks are contiguous, so the next one is a potential candidate if its first word starts with
      * the given prefix
      */

@@ -51,27 +51,27 @@ public class TeiidSQLException extends SQLException {
     public TeiidSQLException() {
         super();
     }
-    
+
     public TeiidSQLException(String reason) {
         super(reason, SQLStates.DEFAULT);
     }
 
     public TeiidSQLException(String reason, String state) {
         super(reason, state);
-    }    
-    
+    }
+
     public static TeiidSQLException create(Throwable exception) {
         if (exception instanceof TeiidSQLException) {
             return (TeiidSQLException)exception;
         }
         return create(exception, exception.getMessage());
     }
-        
+
     public TeiidSQLException(Throwable ex, String reason, String sqlState, int errorCode) {
         super(reason, sqlState, errorCode); // passing the message to the super class constructor.
         initCause(ex);
     }
-    
+
     private TeiidSQLException(SQLException ex, String message, boolean addChildren) {
         super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode(), ex);
         if (addChildren) {
@@ -81,17 +81,17 @@ public class TeiidSQLException extends SQLException {
                 if (childException instanceof TeiidSQLException) {
                     super.setNextException(ex);
                     break;
-                } 
+                }
                 super.setNextException(new TeiidSQLException(childException, getMessage(childException, null),false));
                 childException = childException.getNextException();
             }
         }
-    }    
-    
+    }
+
     public static TeiidSQLException create(Throwable exception, String message) {
 		message = getMessage(exception, message);
 		Throwable origException = exception;
-		if (exception instanceof TeiidSQLException 
+		if (exception instanceof TeiidSQLException
 				&& message.equals(exception.getMessage())) {
 			return (TeiidSQLException) exception;
 		}
@@ -117,7 +117,7 @@ public class TeiidSQLException extends SQLException {
 				try {
 					errorCode = Integer.valueOf(intPart);
 				} catch (NumberFormatException e) {
-					
+
 				}
 			}
 		}
@@ -133,16 +133,16 @@ public class TeiidSQLException extends SQLException {
 		return tse;
 	}
 
-    /** 
+    /**
      * @param exception
      * @param sqlState
      * @return
      */
     private static String determineSQLState(Throwable exception,
                                             String sqlState) {
-        if (exception instanceof InvalidSessionException) { 
+        if (exception instanceof InvalidSessionException) {
 			sqlState = SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION;
-		} else if (exception instanceof LogonException) { 
+		} else if (exception instanceof LogonException) {
 			sqlState = SQLStates.INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS;
 		} else if (exception instanceof ProcedureErrorInstructionException) {
 			sqlState = SQLStates.VIRTUAL_PROCEDURE_ERROR;
@@ -163,11 +163,11 @@ public class TeiidSQLException extends SQLException {
             if (exception instanceof CommunicationException) {
                 sqlState = SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION;
             }
-            
+
             Throwable originalException = exception;
             exception = originalException.getCause();
             exception = findRootException(exception);
-            
+
             if (exception != null && exception != originalException) {
                 sqlState = determineSQLState(exception, sqlState);
             }
@@ -175,7 +175,7 @@ public class TeiidSQLException extends SQLException {
         return sqlState;
     }
 
-    /** 
+    /**
      * @param exception
      * @return
      */
@@ -201,8 +201,8 @@ public class TeiidSQLException extends SQLException {
         }
         return exception;
     }
-    
-    /** 
+
+    /**
      * @param exception
      * @param message
      * @return
@@ -218,8 +218,8 @@ public class TeiidSQLException extends SQLException {
         }
         return message;
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.jdbc.api.SQLException#isSystemErrorState()
      * @since 4.3
      */
@@ -227,14 +227,14 @@ public class TeiidSQLException extends SQLException {
         return SQLStates.isSystemErrorState(getSQLState());
     }
 
-    /** 
+    /**
      * @see org.teiid.jdbc.api.SQLException#isUsageErrorState()
      * @since 4.3
      */
     public boolean isUsageErrorState() {
         return SQLStates.isUsageErrorState(getSQLState());
     }
-    
+
     public String getTeiidCode() {
 		return teiidCode;
 	}

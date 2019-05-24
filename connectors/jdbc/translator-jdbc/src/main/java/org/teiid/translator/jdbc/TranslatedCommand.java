@@ -43,25 +43,25 @@ public class TranslatedCommand {
     private String sql;
     private boolean prepared;
     private List preparedValues;
-    
+
     private JDBCExecutionFactory executionFactory;
     private ExecutionContext context;
-    
+
     /**
-     * Constructor, takes a SQLConversionVisitor subclass 
-     * @param visitor a SQLConversionVisitor subclass 
+     * Constructor, takes a SQLConversionVisitor subclass
+     * @param visitor a SQLConversionVisitor subclass
      */
     public TranslatedCommand(ExecutionContext context, JDBCExecutionFactory executionFactory){
     	this.executionFactory = executionFactory;
     	this.context = context;
     }
-    
+
     /**
      * The method to cause this object to do it's thing.  This method should
      * be called right after the constructor; afterward, all of the getter methods
-     * can be called to retrieve results. 
+     * can be called to retrieve results.
      * @param command ICommand to be translated
-     * @throws TranslatorException 
+     * @throws TranslatorException
      */
     public void translateCommand(Command command) throws TranslatorException {
     	SQLConversionVisitor sqlConversionVisitor = executionFactory.getSQLConversionVisitor();
@@ -69,16 +69,16 @@ public class TranslatedCommand {
         if (executionFactory.usePreparedStatements() || hasBindValue(command)) {
         	sqlConversionVisitor.setPrepared(true);
         }
-        
+
 		sqlConversionVisitor.append(command);
 		this.sql = sqlConversionVisitor.toString();
         this.preparedValues = sqlConversionVisitor.getPreparedValues();
         this.prepared = command instanceof BulkCommand?sqlConversionVisitor.isUsingBinding():sqlConversionVisitor.isPrepared();
     }
-	
+
     /**
      * Simple check to see if any values in the command should be replaced with bind values
-     *  
+     *
      * @param command
      * @return
      */
@@ -94,7 +94,7 @@ public class TranslatedCommand {
         return false;
     }
 
-    /** 
+    /**
      * @param l
      * @return
      */
@@ -102,18 +102,18 @@ public class TranslatedCommand {
 		return DataTypeManager.isLOB(l.getType())
 				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
 	}
-    
+
     /**
-     * Return List of values to set on a prepared statement, if 
+     * Return List of values to set on a prepared statement, if
      * necessary.
      * @return List of values to be set on a prepared statement
      */
     public List getPreparedValues() {
         return preparedValues;
     }
-    
+
     /**
-     * Get String SQL of translated command. 
+     * Get String SQL of translated command.
      * @return SQL of translated command
      */
     public String getSql() {
@@ -127,7 +127,7 @@ public class TranslatedCommand {
     public boolean isPrepared() {
         return prepared;
     }
-    
+
     @Override
     public String toString() {
     	StringBuffer sb = new StringBuffer();

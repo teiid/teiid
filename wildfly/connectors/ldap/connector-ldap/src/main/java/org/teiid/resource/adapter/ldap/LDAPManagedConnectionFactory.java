@@ -23,7 +23,7 @@ import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory {
-	
+
 	private static final long serialVersionUID = -1832915223199053471L;
 
 	private String ldapAdminUserDN;
@@ -32,7 +32,7 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	private Long ldapTxnTimeoutInMillis;
 	private String ldapContextFactory = "com.sun.jndi.ldap.LdapCtxFactory"; //$NON-NLS-1$
 	private String ldapAuthType = "simple"; //$NON-NLS-1$
-	
+
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<LDAPConnectionImpl> createConnectionFactory() throws ResourceException {
@@ -43,46 +43,46 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 				try {
 					Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
 					return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
-				} 
+				}
 				finally {
 					Thread.currentThread().setContextClassLoader(contextClassLoader);
 				}
 			}
 		};
-	}	
-	
+	}
+
 	public String getLdapAdminUserDN() {
 		return ldapAdminUserDN;
 	}
-	
+
 	public void setLdapAdminUserDN(String ldapAdminUserDN) {
 		this.ldapAdminUserDN = ldapAdminUserDN;
 	}
-	
+
 	public String getLdapAdminUserPassword() {
 		return ldapAdminUserPassword;
 	}
-	
+
 	public void setLdapAdminUserPassword(String ldapAdminUserPassword) {
 		this.ldapAdminUserPassword = ldapAdminUserPassword;
 	}
-	
+
 	public Long getLdapTxnTimeoutInMillis() {
 		return ldapTxnTimeoutInMillis;
 	}
-	
+
 	public void setLdapTxnTimeoutInMillis(Long ldapTxnTimeoutInMillis) {
 		this.ldapTxnTimeoutInMillis = ldapTxnTimeoutInMillis.longValue();
 	}
-	
+
 	public String getLdapUrl() {
 		return ldapUrl;
 	}
-	
+
 	public void setLdapUrl(String ldapUrl) {
 		this.ldapUrl = ldapUrl;
 	}
-	
+
 	public String getLdapContextFactory() {
 		return ldapContextFactory;
 	}
@@ -135,10 +135,10 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 
     public String getLdapAuthType() {
         return ldapAuthType;
-    }	
-    
+    }
+
     public void setLdapAuthType(String ldapAuthType) {
         this.ldapAuthType = ldapAuthType;
     }
-	
+
 }

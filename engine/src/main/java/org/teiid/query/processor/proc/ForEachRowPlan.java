@@ -49,23 +49,23 @@ import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 
 public class ForEachRowPlan extends ProcessorPlan {
-	
+
 	private ProcessorPlan queryPlan;
 	private ProcedurePlan rowProcedure;
 	private Map<ElementSymbol, Expression> params;
 	private Map<Expression, Integer> lookupMap;
 	private boolean singleRow;
 	private boolean insert;
-	
+
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
-    
+
     private QueryProcessor queryProcessor;
     private TupleSource tupleSource;
     private QueryProcessor rowProcessor;
     private List<?> currentTuple;
     private long updateCount;
-    
+
     private TransactionContext planContext;
     private List<?> nextTuple;
     private boolean first = true;
@@ -201,7 +201,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 				this.rowProcessor = null;
 				this.currentTuple = null;
 				this.updateCount++;
-			} 
+			}
 		} finally {
 			if (planContext != null) {
 				this.getContext().getTransactionServer().suspend(planContext);
@@ -239,7 +239,7 @@ public class ForEachRowPlan extends ProcessorPlan {
             }
             GeneratedKeys generatedKeys = getContext().returnGeneratedKeys(names, types);
             generatedKeys.addKey(values);
-        }        
+        }
     }
 
     @Override
@@ -249,12 +249,12 @@ public class ForEachRowPlan extends ProcessorPlan {
     	        && !Boolean.FALSE.equals(queryPlan.requiresTransaction(false))) {
     		//start a transaction - if not each of the row plans will
     		//be executed in it's own transaction, which is bad for performance
-    		
+
     		//TODO: should probably allow non-atomic row plans
     		//the parser accepts a trigger block without atomic
     		//but the spec mandates it - and we treat it as atomic
     		//either way
-    		
+
     		//TODO: for non-transactional environments this will
     		//trigger an error
     		this.getContext().getTransactionServer().begin(tc);
@@ -265,23 +265,23 @@ public class ForEachRowPlan extends ProcessorPlan {
     		batchCollector = queryProcessor.createBatchCollector();
     	}
 	}
-	
+
 	public void setQueryPlan(ProcessorPlan queryPlan) {
 		this.queryPlan = queryPlan;
 	}
-	
+
 	public void setRowProcedure(ProcedurePlan rowProcedure) {
 		this.rowProcedure = rowProcedure;
 	}
-	
+
 	public void setParams(Map<ElementSymbol, Expression> params) {
 		this.params = params;
 	}
-	
+
 	public void setLookupMap(Map<Expression, Integer> symbolMap) {
 		this.lookupMap = symbolMap;
 	}
-	
+
 	@Override
 	public void reset() {
 		super.reset();
@@ -297,7 +297,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.nextTuple = null;
 		this.nextNull = false;
 	}
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		Boolean requiresTxn = queryPlan.requiresTransaction(transactionalReads);
@@ -316,22 +316,22 @@ public class ForEachRowPlan extends ProcessorPlan {
         }
 		return false;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder val = new StringBuilder("ForEach "); //$NON-NLS-1$
 		val.append(this.queryPlan).append("\n{\n"); //$NON-NLS-1$
 		val.append(this.rowProcedure);
         val.append("}\n"); //$NON-NLS-1$
-        return val.toString(); 
+        return val.toString();
 	}
-	
+
 	public void setTupleSource(TupleSource tupleSource) {
         this.tupleSource = tupleSource;
     }
-	
+
 	public void setSingleRow(boolean singleRow) {
         this.singleRow = singleRow;
     }
-	
+
 }

@@ -27,7 +27,7 @@ import java.util.Set;
  * SQL Constants for Teiid.
  */
 public class SQLConstants {
-	
+
 	public interface Tokens {
 		public static final String ALL_COLS = "*"; //$NON-NLS-1$
 		public static final String SPACE = " "; //$NON-NLS-1$
@@ -53,7 +53,7 @@ public class SQLConstants {
 		public static final String SLASH = "/"; //$NON-NLS-1$
 		public static final String CONCAT = "||"; //$NON-NLS-1$
 	}
-	
+
 	public interface NonReserved {
 		public static final String SQL_TSI_FRAC_SECOND = "SQL_TSI_FRAC_SECOND"; //$NON-NLS-1$
 		public static final String SQL_TSI_SECOND = "SQL_TSI_SECOND"; //$NON-NLS-1$
@@ -102,25 +102,25 @@ public class SQLConstants {
 		public static final String STDDEV_SAMP = "STDDEV_SAMP"; //$NON-NLS-1$
 		public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
 		public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
-		
+
 		public static final String NULLS = "NULLS"; //$NON-NLS-1$
 		public static final String FIRST = "FIRST"; //$NON-NLS-1$
 		public static final String LAST = "LAST"; //$NON-NLS-1$
-		
+
 		public static final String KEY = "KEY"; //$NON-NLS-1$
-		
+
 		public static final String SERIAL = "SERIAL"; //$NON-NLS-1$
-		
+
 		public static final String ENCODING = "ENCODING"; //$NON-NLS-1$
 		public static final String TEXTAGG = "TEXTAGG"; //$NON-NLS-1$
-		
+
 		public static final String ARRAYTABLE = "ARRAYTABLE"; //$NON-NLS-1$
-		
+
 		public static final String VIEW = "VIEW"; //$NON-NLS-1$
 		public static final String INSTEAD = "INSTEAD"; //$NON-NLS-1$
 		public static final String ENABLED = "ENABLED"; //$NON-NLS-1$
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
-		
+
 		public static final String TRIM = "TRIM"; //$NON-NLS-1$
 		public static final String POSITION = "POSITION"; //$NON-NLS-1$
 		public static final String RESULT = "RESULT"; //$NON-NLS-1$
@@ -137,11 +137,11 @@ public class SQLConstants {
 		public static final String JSONOBJECT = "JSONOBJECT"; //$NON-NLS-1$
 		public static final String JSONARRAY_AGG = "JSONARRAY_AGG"; //$NON-NLS-1$
 		public static final String JSON = "JSON"; //$NON-NLS-1$
-		
+
 		public static final String AUTO_INCREMENT = "AUTO_INCREMENT"; //$NON-NLS-1$
-		
+
 		public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
-		
+
 		public static final String GEOMETRY = "GEOMETRY"; //$NON-NLS-1$
 		public static final String GEOGRAPHY = "GEOGRAPHY"; //$NON-NLS-1$
 		public static final String UPSERT = "UPSERT"; //$NON-NLS-1$
@@ -178,12 +178,12 @@ public class SQLConstants {
         public static final String UNBOUNDED = "UNBOUNDED"; //$NON-NLS-1$
         public static final String PRECEDING = "PRECEDING"; //$NON-NLS-1$
         public static final String FOLLOWING = "FOLLOWING"; //$NON-NLS-1$
-        
+
         public static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
-        
+
         public static final String OBJECT = "OBJECT"; //$NON-NLS-1$
 	}
-	
+
 	public interface Reserved {
 		//Teiid specific
 		public static final String BIGDECIMAL = "BIGDECIMAL"; //$NON-NLS-1$
@@ -202,7 +202,7 @@ public class SQLConstants {
 		public static final String STRING = "STRING"; //$NON-NLS-1$
 	    public static final String VIRTUAL = "VIRTUAL"; //$NON-NLS-1$
 	    public static final String WHILE = "WHILE"; //$NON-NLS-1$
-	    
+
 	    //SQL2003 keywords
 	    public static final String ADD = "ADD"; //$NON-NLS-1$
 		public static final String ANY = "ANY"; //$NON-NLS-1$
@@ -436,12 +436,12 @@ public class SQLConstants {
 	    public static final String WITHIN = "WITHIN"; //$NON-NLS-1$
 	    public static final String WITHOUT = "WITHOUT"; //$NON-NLS-1$
 		public static final String YEAR = "YEAR"; //$NON-NLS-1$
-		
+
 		// SQL 2008 words
 		public static final String ARRAY_AGG= "ARRAY_AGG"; //$NON-NLS-1$
-	    
+
 		//SQL/XML
-		
+
 		public static final String XML = "XML"; //$NON-NLS-1$
 	    public static final String XMLAGG = "XMLAGG"; //$NON-NLS-1$
 	    public static final String XMLATTRIBUTES = "XMLATTRIBUTES"; //$NON-NLS-1$
@@ -462,7 +462,7 @@ public class SQLConstants {
 	    public static final String XMLTABLE = "XMLTABLE"; //$NON-NLS-1$
 	    public static final String XMLTEXT = "XMLTEXT"; //$NON-NLS-1$
 	    public static final String XMLVALIDATE = "XMLVALIDATE"; //$NON-NLS-1$
-	    
+
 	    //SQL/MED
 	    public static final String DATALINK = "DATALINK"; //$NON-NLS-1$
 	    public static final String DLNEWCOPY = "DLNEWCOPY"; //$NON-NLS-1$
@@ -478,7 +478,7 @@ public class SQLConstants {
 	    public static final String DLVALUE = "DLVALUE"; //$NON-NLS-1$
 	    public static final String IMPORT = "IMPORT"; //$NON-NLS-1$
 	}
-        
+
     /**
  	 * Set of CAPITALIZED reserved words for checking whether a string is a reserved word.
  	 */
@@ -503,33 +503,33 @@ public class SQLConstants {
  		}
  		return Collections.unmodifiableSet(result);
     }
-    
+
     /**
      * @return nonReservedWords
      */
     public static Set<String> getNonReservedWords() {
         return NON_RESERVED_WORDS;
     }
-    
+
     /**
      * @return reservedWords
      */
     public static Set<String> getReservedWords() {
         return RESERVED_WORDS;
     }
-    
+
  	/** Can't construct */
- 	private SQLConstants() {}   
+ 	private SQLConstants() {}
 
  	/**
- 	 * Check whether a string is a reserved word.  
+ 	 * Check whether a string is a reserved word.
  	 * @param str String to check
  	 * @return True if reserved word, false if not or null
  	 */
  	public static final boolean isReservedWord(String str) {
- 		if(str == null) { 
- 			return false;    
+ 		if(str == null) {
+ 			return false;
  		}
- 		return RESERVED_WORDS.contains(str.toUpperCase());    
+ 		return RESERVED_WORDS.contains(str.toUpperCase());
  	}
 }

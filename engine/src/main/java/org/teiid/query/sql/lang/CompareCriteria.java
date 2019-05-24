@@ -26,7 +26,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 /**
  * <p>A criteria which represents a simple operator relationship between two expressions.
- * There are 6 operator types.  Each side of the comparison may be an expression, which 
+ * There are 6 operator types.  Each side of the comparison may be an expression, which
  * could be an element, a constant, or a function.  </p>
  *
  * <p>Some examples are:</p>
@@ -38,26 +38,26 @@ import org.teiid.query.sql.symbol.Expression;
  * </UL>
  */
 public class CompareCriteria extends AbstractCompareCriteria implements BinaryComparison {
-    
+
     /** The right-hand expression. */
 	private Expression rightExpression;
-	
+
 	//null means existing, but implied
 	//true means completely derived
 	//false means required
 	private Boolean isOptional = Boolean.FALSE;
-    
+
     /**
      * Constructs a default instance of this class.
      */
     public CompareCriteria() {
         super();
     }
-    
+
     /**
      * Constructs an instance of this class for a specific "operand operator
      * operand" clause.
-     * 
+     *
      * @param identifier The variable being compared
      * @param value The value the variable is being compared to (literal or variable)
      * @param operator The operator representing how the variable and value are to
@@ -72,10 +72,10 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
 	 * Set right expression.
 	 * @param expression Right expression
 	 */
-	public void setRightExpression(Expression expression) { 
+	public void setRightExpression(Expression expression) {
 		this.rightExpression = expression;
 	}
-	
+
 	/**
 	 * Get right expression.
 	 * @return right expression
@@ -83,7 +83,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
 	public Expression getRightExpression() {
 		return this.rightExpression;
 	}
-	
+
     /**
      * Sets the operands and operator.  The clause is of the form: <variable> <operator> <value>.
      *
@@ -96,7 +96,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
         setOperator(operator);
         setRightExpression(rightExpression);
     }
-    
+
     /**
      * Set during planning to indicate that this criteria is no longer needed
      * to correctly process a join
@@ -108,7 +108,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
     	}
     	this.isOptional = isOptional;
 	}
-    
+
     /**
      * Returns true if the compare criteria is used as join criteria, but not needed
      * during processing.
@@ -117,7 +117,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
     public boolean isOptional() {
 		return isOptional == null || isOptional;
 	}
-    
+
     public Boolean getIsOptional() {
 		return isOptional;
 	}
@@ -151,7 +151,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
     	if(obj == this) {
 			return true;
 		}
-		
+
 		if(! (obj instanceof CompareCriteria)) {
     		return false;
 		}
@@ -163,26 +163,26 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
                EquivalenceUtil.areEqual(getRightExpression(), cc.getRightExpression())) || (getOperator() == EQ && EquivalenceUtil.areEqual(getLeftExpression(), cc.getRightExpression()) &&
                        EquivalenceUtil.areEqual(getRightExpression(), cc.getLeftExpression()));
 	}
-	
+
 	/**
 	 * Deep copy of object
 	 * @return Deep copy of object
 	 */
 	public Object clone() {
 	    Expression leftCopy = null;
-	    if(getLeftExpression() != null) { 
+	    if(getLeftExpression() != null) {
 	        leftCopy = (Expression) getLeftExpression().clone();
-	    }	
+	    }
 	    Expression rightCopy = null;
-	    if(getRightExpression() != null) { 
+	    if(getRightExpression() != null) {
 	        rightCopy = (Expression) getRightExpression().clone();
-	    }	
-	    
+	    }
+
 		CompareCriteria result = new CompareCriteria(leftCopy, getOperator(), rightCopy);
 		result.isOptional = isOptional;
 		return result;
 	}
-	
+
 	public int getReverseOperator() {
 	    int operator = getOperator();
         switch(operator) {
@@ -193,5 +193,5 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
 	    }
 	    return operator;
 	}
-	
+
 }  // END CLASS

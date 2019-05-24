@@ -32,17 +32,17 @@ import org.teiid.jdbc.FakeServer;
 
 @SuppressWarnings("nls")
 public class TestStats {
-	
+
     static Connection connection;
     private static FakeServer server;
     static final String VDB = "PartsSupplier";
-    
+
 	@BeforeClass public static void setUp() throws Exception {
     	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
+    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @AfterClass public static void tearDown() throws SQLException {
     	connection.close();
     	server.stop();
@@ -62,7 +62,7 @@ public class TestStats {
     	rs.next();
     	assertEquals(Integer.MAX_VALUE, rs.getInt(1));
     }
-    
+
     @Test public void testSetColumnStats() throws Exception {
     	Statement s = connection.createStatement();
     	ResultSet rs = s.executeQuery("select MinRange, MaxRange, DistinctCount, NullCount from sys.columns where name = 'PART_ID'");
@@ -79,7 +79,7 @@ public class TestStats {
     	assertEquals(-1, rs.getInt(3));
     	assertEquals(0, rs.getInt(4));
     }
-    
+
     @Test(expected=SQLException.class) public void testSetColumnStatsInvalidColumn() throws Exception {
     	Statement s = connection.createStatement();
     	s.execute("call setColumnStats(tableName=>'partssupplier.partssupplier.parts', columnName=>'foo', max=>32, nullcount=>0)");

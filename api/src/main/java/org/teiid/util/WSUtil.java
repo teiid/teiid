@@ -26,11 +26,11 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 public class WSUtil {
-	
+
 	public static String appendQueryString(String endpoint, String param) {
 		return endpoint + (endpoint.indexOf('?') >= 0?'&':'?') + param;
 	}
-	
+
     public static String httpURLEncode(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -43,7 +43,7 @@ public class WSUtil {
 		if (!(source instanceof StreamSource)) {
 			return;
 		}
-		
+
 		StreamSource stream = (StreamSource)source;
 		try {
 			if (stream.getInputStream() != null) {
@@ -58,5 +58,5 @@ public class WSUtil {
 		} catch (IOException e) {
 		}
 	}
-	
+
 }

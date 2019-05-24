@@ -27,14 +27,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.</p>
  */
 public abstract class Statement implements LanguageObject {
-	
+
 	public interface Labeled {
 		String getLabel();
 		void setLabel(String label);
 	}
 
-	/** 
-	 * Represents an unknown type of statement 
+	/**
+	 * Represents an unknown type of statement
 	 */
 	public static final int TYPE_UNKNOWN = 0;
 
@@ -72,29 +72,29 @@ public abstract class Statement implements LanguageObject {
      * Represents a WHILE statement
      */
     public static final int TYPE_WHILE = 7;
-    
+
     /**
      * Represents a CONTINUE statement
      */
     public static final int TYPE_CONTINUE = 8;
-    
+
     /**
      * Represents a BREAK statement
      */
     public static final int TYPE_BREAK = 9;
-    
+
     public static final int TYPE_UPDATE = 10;
-    
+
     public static final int TYPE_COMPOUND = 11;
-    
+
     public static final int TYPE_LEAVE = 12;
 
 	public static final int TYPE_RETURN = 13;
-    
+
 	/**
 	 * Return type of statement to make it easier to build switch statements by statement type.
 	 * @return Type from TYPE constants
-	 */	
+	 */
 	public abstract int getType();
 
     // =========================================================================
@@ -103,10 +103,10 @@ public abstract class Statement implements LanguageObject {
 
 	/**
 	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
 	public abstract Object clone();
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);

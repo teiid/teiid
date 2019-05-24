@@ -53,7 +53,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		
+
         convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
         convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
@@ -83,7 +83,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         supportedFunctons.add(SourceSystemFunctions.CONVERT);
         return supportedFunctons;
     }
-	
+
 	@Override
 	public boolean supportsConvert(int fromType, int toType) {
 		if (!super.supportsConvert(fromType, toType)) {
@@ -94,7 +94,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
     	}
     	return false;
 	}
-	
+
 	/**
      * Informix doesn't provide min/max(boolean)
      */
@@ -102,15 +102,15 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getParameters().size() == 1 
-    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX)) 
+    		if (agg.getParameters().size() == 1
+    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX))
     				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
         		return Arrays.asList("cast(", agg.getName(), "(cast(", agg.getParameters().get(0), " as char)) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
     	}
     	return super.translate(obj, context);
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
             Class<?> expectedType) throws SQLException {
@@ -119,14 +119,14 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
                 return results.getDate(parameterIndex);
             }
             return results.getDate(parameterIndex, getDatabaseCalendar());
-        } 
+        }
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
             Time time = results.getTime(parameterIndex);
             if (time == null || isDefaultTimeZone()) {
                 return time;
             }
             return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
-        } 
+        }
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
             if (isDefaultTimeZone()) {
                 return results.getTimestamp(parameterIndex);
@@ -135,7 +135,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         }
         return super.retrieveValue(results, parameterIndex, expectedType);
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
             Class<?> expectedType) throws SQLException {
@@ -144,14 +144,14 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
                 return results.getDate(columnIndex);
             }
             return results.getDate(columnIndex, getDatabaseCalendar());
-        } 
+        }
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
             Time time = results.getTime(columnIndex);
             if (time == null || isDefaultTimeZone()) {
                 return time;
             }
             return TimestampWithTimezone.createTime(time, TimeZone.getDefault(), getDatabaseCalendar());
-        } 
+        }
         if (expectedType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
             if (isDefaultTimeZone()) {
                 return results.getTimestamp(columnIndex);
@@ -160,7 +160,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         }
         return super.retrieveValue(results, columnIndex, expectedType);
     }
-    
+
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
             Class<?> paramType, int i) throws SQLException {
@@ -171,7 +171,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
                 stmt.setDate(i,(java.sql.Date)param, getDatabaseCalendar());
             }
             return;
-        } 
+        }
         if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
             if (isDefaultTimeZone()) {
                 stmt.setTime(i,(java.sql.Time)param);
@@ -179,7 +179,7 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
                 stmt.setTime(i,(java.sql.Time)param, getDatabaseCalendar());
             }
             return;
-        } 
+        }
         if (paramType.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
             if (isDefaultTimeZone()) {
                 stmt.setTimestamp(i,(java.sql.Timestamp)param);
@@ -190,11 +190,11 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         }
         super.bindValue(stmt, param, paramType, i);
     }
-    
+
     @Override
     public Calendar getDatabaseCalendar() {
         //informix will modify the calendar
         return (Calendar) super.getDatabaseCalendar().clone();
     }
-	
+
 }

@@ -36,22 +36,22 @@ import org.teiid.runtime.RuntimePlugin;
 
 public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private VDBRepository vdbRepo;
-    
+
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
-    
+
     public DeploymentBasedDatabaseStore(VDBRepository vdbRepo) {
     	this.vdbRepo = vdbRepo;
     }
-    
+
     @Override
     public Map<String, Datatype> getRuntimeTypes() {
         return vdbRepo.getSystemStore().getDatatypes();
-    } 
+    }
 
     protected boolean shouldValidateDatabaseBeforeDeploy() {
     	return false;
     }
-    
+
     public VDBMetaData getVDBMetadata(String contents) {
     	StringReader reader = new StringReader(contents);
     	try {
@@ -62,23 +62,23 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         	reader.close();
             stopEditing();
         }
-        
+
         Database database = getDatabases().get(0);
         VDBMetaData vdb = DatabaseUtil.convert(database);
-        
+
         for (ModelMetaData model : vdb.getModelMetaDatas().values()) {
             model.addSourceMetadata("DDL", null); //$NON-NLS-1$
-        }  
-        
+        }
+
         for (VDBImportMetadata vid : this.importedVDBs) {
         	vdb.getVDBImports().add(vid);
         }
-        
+
         vdb.addProperty(VDBMetaData.TEIID_DDL, contents);
-                
+
         return vdb;
     }
-    
+
 	@Override
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
@@ -89,7 +89,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
             return;
         }
 	}
-	
+
 	@Override
 	public void importDatabase(String dbName, String version, boolean importPolicies) {
 	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {

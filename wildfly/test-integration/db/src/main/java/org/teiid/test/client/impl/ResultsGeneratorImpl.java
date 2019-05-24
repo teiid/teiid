@@ -40,9 +40,9 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
     private String outputDir = "";
     private String generateDir = "";
-    
+
     private static final int MAX_COL_WIDTH = 65;
-	
+
 
     public ResultsGeneratorImpl( String testname, Properties props) {
 
@@ -53,11 +53,11 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
 	outputDir = outputDir + "/" + testname;
 
-	
+
 	generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
 	Assert.assertNotNull("Property " + PROP_GENERATE_DIR
 		+ " was not specified", this.generateDir);
-	
+
 
 	File d = new File(this.outputDir);
 	this.outputDir = d.getAbsolutePath();
@@ -82,7 +82,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	}
 
     }
-    
+
 
     @Override
     public String getGenerateDir() {
@@ -99,7 +99,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
     /**
      * Generate query results. These are actual results from the server and may
      * be used for comparing to results from a later test run.
-     * 
+     *
      * @param queryID
      * @param resultsFile
      * @param result
@@ -110,11 +110,11 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
     public void generateQueryResultFile(String querySetID, String queryID,
 	    String query, ResultSet result, Throwable ex, int testStatus)
 	    throws QueryTestFailedException {
-	
+
 	File fos = createNewResultsFile(queryID, querySetID,
 		getGenerateDir());
-	
-	
+
+
 	FileOutputStream actualOut = null;
 	try {
 	    actualOut = new FileOutputStream(fos);
@@ -139,7 +139,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 		}
 	    }
 	}
-        
+
     }
 
     public String generateErrorFile(final String querySetID,
@@ -154,18 +154,18 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    // configID, queryID, Integer.toString(clientID));
 	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
 	    File errorFile = new File(getOutputDir(), errorFileName);
-	    
+
 	    // the resultset will be passed in as null when
-	    // the error was due to a thrown exception, and not based comparison issues 
+	    // the error was due to a thrown exception, and not based comparison issues
 	    if (resultSet == null) {
 		FileOutputStream actualOut = null;
 		try {
 		    actualOut = new FileOutputStream(errorFile);
 		    PrintStream filePrintStream = new PrintStream(actualOut);
-		    
+
 
 		    TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
-		    
+
 		    filePrintStream.flush();
 
 		} catch (Exception e) {
@@ -220,7 +220,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 //		+ FILE_NAME_DATE_FORMATER.format(new Date(System
 //			.currentTimeMillis())) + ".txt"; //$NON-NLS-1$
 //	return errorFileName;
-	
+
 	return  queryID + ".txt";
 
     }
@@ -229,7 +229,7 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
      * Generate an error file for a query that failed comparison. File should
      * have the SQL, the actual results returned from the server and the results
      * that were expected.
-     * 
+     *
      * @param queryID
      * @param sql
      * @param resultsFile
@@ -242,12 +242,12 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 	    String sql, File resultsFile, ResultSet actualResult,
 	    List<String> results)
 	    throws QueryTestFailedException {
-	
+
 	FileOutputStream actualOut = null;
 	try {
 	    actualOut = new FileOutputStream(resultsFile);
 	    PrintStream filePrintStream = new PrintStream(actualOut);
-	    
+
 	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
 
 //	    if (results != null) {
@@ -256,10 +256,10 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 //        		filePrintStream.print(line);
 //        	    }
 //	    } else {
-//	    
+//
 //		ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
 //	    }
-	    	    
+
 
 	} catch (Exception e) {
 	    e.printStackTrace();

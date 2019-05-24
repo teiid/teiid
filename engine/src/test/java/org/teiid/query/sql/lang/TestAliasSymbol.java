@@ -32,12 +32,12 @@ public class TestAliasSymbol {
         AliasSymbol a1 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
         AliasSymbol a2 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(2))); //$NON-NLS-1$ //$NON-NLS-2$
         AliasSymbol a3 = new AliasSymbol("x", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         assertFalse(a1.equals(a3)); //just a different case for the alias
-        
-        assertFalse(a1.equals(a2)); //different express 
+
+        assertFalse(a1.equals(a2)); //different express
     }
-    
+
     @Test public void testClone() {
         AliasSymbol a1 = new AliasSymbol("X", new ExpressionSymbol("x", new Constant(1))); //$NON-NLS-1$ //$NON-NLS-2$
         a1.setOutputName("foo"); //$NON-NLS-1$
@@ -45,5 +45,5 @@ public class TestAliasSymbol {
         assertEquals(a1, clone);
         assertEquals(a1.getOutputName(), clone.getOutputName());
     }
-    
+
 }

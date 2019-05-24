@@ -24,7 +24,7 @@ public class RegisterRequestParameter {
 		public int id;
 		public int sharingCount = 1;
 	}
-	
+
 	public String connectorBindingId;
 	public int nodeID = 0;
 	public int limit = -1;

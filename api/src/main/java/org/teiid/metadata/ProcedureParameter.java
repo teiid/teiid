@@ -31,39 +31,39 @@ public class ProcedureParameter extends BaseColumn {
 		Out,
 		ReturnValue
 	}
-	
+
 	private Type type;
 	private boolean optional;
 	private Procedure procedure;
 	private boolean isVarArg;
-	
+
 	public void setType(Type type) {
 		this.type = type;
 	}
-	
+
 	public Type getType() {
 		return type;
 	}
-	
+
 	@Deprecated
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
-	
+
 	@Deprecated
 	public boolean isOptional() {
 		return optional;
 	}
-	
+
 	public void setProcedure(Procedure procedure) {
 		this.procedure = procedure;
 	}
-	
+
 	@Override
 	public Procedure getParent() {
 		return this.procedure;
 	}
-	
+
 	public void setVarArg(boolean isVarArg) {
 		this.isVarArg = isVarArg;
 	}
@@ -71,11 +71,11 @@ public class ProcedureParameter extends BaseColumn {
 	public boolean isVarArg() {
 		return isVarArg;
 	}
-	
-    public String toString() { 
+
+    public String toString() {
         return getType()+(isVarArg?"... ":" ")+" "+super.toString(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }	
-    
+    }
+
     @Override
     public String getNativeType() {
     	String nativeType = super.getNativeType();

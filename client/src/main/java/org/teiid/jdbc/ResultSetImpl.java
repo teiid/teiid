@@ -59,7 +59,7 @@ import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchFetcher {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	
+
 	private static final int BEFORE_FIRST_ROW = 0;
 
 	public static final String DISABLE_FETCH_SIZE = "disableResultSetFetchSize"; //$NON-NLS-1$
@@ -87,26 +87,26 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     private int maxFieldSize;
     private int fetchSize;
     private int maxRows;
-    
+
 	private Map<String, Integer> columnMap;
-	
+
 	//blocking operations that throw positioning errors are recoverable if we attempt to honor the
 	//results requested
 	private ResultsFuture<ResultsMessage> asynchResults;
     boolean asynch;
-    
+
     private ResultsFuture<ResultsMessage> prefetch;
     private boolean usePrefetch;
 
 	private int skipTo;
-	
+
 	private static boolean DISABLE_FETCH_SIZE_DEFAULT = PropertiesUtils.getHierarchicalProperty("org.teiid." + DISABLE_FETCH_SIZE, false, Boolean.class); //$NON-NLS-1$
-	
+
 	private Boolean disableFetchSize;
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param resultsMsg
 	 * @param statement
 	 * @throws SQLException
@@ -133,7 +133,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		}
         // Cache the column count and isLOB values since every call to getObject uses these.
 		this.columnCount = rmetadata.getColumnCount();
-		
+
 		this.resultColumns = columnCount - parameters;
 		if (this.parameters > 0) {
 			rmetadata = new FilteredResultsMetadata(rmetadata, resultColumns);
@@ -146,11 +146,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		this.maxRows = statement.getMaxRows();
 		this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
 	}
-	
+
 	public void setMaxFieldSize(int maxFieldSize) {
 		this.maxFieldSize = maxFieldSize;
 	}
-	
+
     public void close() throws SQLException{
     	if(!isClosed) {
             // close the the server's statement object (if necessary)
@@ -172,11 +172,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     		this.statement.close();
     	}
     }
-    
+
 	public boolean isClosed() throws SQLException {
 		return isClosed;
 	}
-    
+
     protected void checkClosed() throws SQLException {
     	if (isClosed) {
     		String msg = JDBCPlugin.Util
@@ -184,7 +184,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     		throw new TeiidSQLException(msg);
     	}
     }
-    
+
      /**
       * Return the value for output/return parameter given the index
       * of the parameter in the ResultSet
@@ -196,7 +196,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
          }
          // Mark the row we're on
          final int originalRow = getAbsoluteRowNumber();
-         
+
          this.batchResults.absolute(-1);
          try {
          	return getObjectDirect(index);
@@ -204,7 +204,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
          	this.batchResults.absolute(originalRow);
          }
      }
-     
+
      /**
       * <p>Get a java object based on the column index for the current row.</p>
       * @param The index of the column whose value needs to be fetched.
@@ -225,7 +225,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     public int getFetchSize() throws SQLException {
         return this.fetchSize;
     }
-    
+
     /**
      * Assumes forward only cursoring
      */
@@ -272,7 +272,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         return getAbsoluteRowNumber();
     }
-    
+
     public Object getRawCurrentValue() {
         return currentValue;
     }
@@ -289,14 +289,14 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("ResultsImpl.Invalid_col_index", column)); //$NON-NLS-1$
         }
         List<?> cursorRow = batchResults.getCurrentRow();
-        
+
         if (cursorRow == null) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("ResultsImpl.The_cursor_is_not_on_a_valid_row._1")); //$NON-NLS-1$
         }
 
         // defect 13539 - set the currentValue (defined in MMResultSet) so that wasNull() accurately returns whether this value was null
         currentValue = cursorRow.get(column-1);
-            
+
         if (currentValue instanceof Streamable<?>) {
     		Object reference = ((Streamable<?>)currentValue).getReference();
         	if (reference != null) {
@@ -315,8 +315,8 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
             	SQLXMLImpl impl = new SQLXMLImpl(createInputStreamFactory(val));
             	impl.setEncoding(val.getEncoding());
             	return impl;
-            } 
-        } 
+            }
+        }
         else if (currentValue instanceof java.util.Date) {
             return TimestampWithTimezone.create((java.util.Date)currentValue, serverTimeZone, getDefaultCalendar(), currentValue.getClass());
         }
@@ -330,7 +330,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         }
         return currentValue;
     }
-    
+
 	private InputStreamFactory createInputStreamFactory(Streamable<?> type) {
 		final StreamingLobChunckProducer.Factory factory = new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, type);
 		InputStreamFactory isf = new InputStreamFactory() {
@@ -363,11 +363,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         checkNotForwardOnly();
         return batchResults.absolute(row, getOffset());
     }
-    
+
     protected PlanNode getUpdatedPlanDescription() {
     	return updatedPlanDescription;
     }
-    
+
     public Batch requestBatch(int beginRow) throws SQLException{
     	checkClosed();
         try {
@@ -448,7 +448,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private Batch getCurrentBatch(ResultsMessage currentResultMsg) throws TeiidSQLException {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
-		if (usePrefetch && !asynch 
+		if (usePrefetch && !asynch
 				&& prefetch == null && currentResultMsg.getLastRow() != currentResultMsg.getFinalRow()) {
 			//fetch before processing the results
 			prefetch = submitRequestBatch(currentResultMsg.getLastRow() + 1);
@@ -497,7 +497,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		result.setLastRow(lastRow);
 		return result;
 	}
-    
+
 	protected int getFinalRowNumber() {
     	return Math.max(-1, batchResults.getFinalRowNumber() - getOffset());
 	}
@@ -505,14 +505,14 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	protected boolean hasNext() throws SQLException {
 		return batchResults.hasNext(getOffset() + 1, true);
 	}
-	
+
 	@Override
 	public int available() throws SQLException {
 		int current = batchResults.getCurrentRowNumber();
 		int highest = batchResults.getHighestRowNumber();
 		return highest - current - getOffset() - (batchResults.isTailLast()?1:0);
 	}
-	
+
 	protected int getOffset() {
 		return parameters > 0 ? 1 : 0;
 	}
@@ -548,7 +548,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		// object at the given index.
 		BigDecimal bigDecimalObject = DataTypeTransformer
 				.getBigDecimal(getObject(columnIndex));
-		
+
 		if (bigDecimalObject == null) {
 			return null;
 		}
@@ -573,7 +573,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		if (value instanceof Blob) {
 			return ((Blob) value).getBinaryStream();
 		}
-		
+
 		if (value instanceof SQLXML) {
 			return ((SQLXML)value).getBinaryStream();
 		}
@@ -624,7 +624,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * Get the concurrency type for this ResultSet object. The concurrency was
 	 * set by the Statement object. The possible concurrency types are
 	 * CONCUR_READ_ONLY and CONCUR_UPDATABLE.
-	 * 
+	 *
 	 * @return The resultSets are not updatable, this method returns
 	 * 	CONCUR_READ_ONLY.
 	 * @throws SQLException
@@ -650,7 +650,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * This method will return the value in the current row as a Date object.
 	 * This will use the timeZone info of the calendar object.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @param Calender
@@ -672,7 +672,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get the Date value for the given column.
-	 * 
+	 *
 	 * @param columnName
 	 * 		. The name of the column whose value needs to be fetched.
 	 * @param Calender
@@ -707,7 +707,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * Gets the direction suggested to the driver as the direction in which to
 	 * fetch rows.
-	 * 
+	 *
 	 * @return fetch direction for this ResultSet. This cannot be set and is
 	 * 	alwayd FETCH_FORWARD.
 	 * @throws SQLException
@@ -719,7 +719,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * This method will return the value in the current row as a float value.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a float value.
@@ -732,7 +732,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a float value based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column in the resultset whose value is to be fetched.
 	 * @return value of the column as a float.
@@ -745,7 +745,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * This method will return the value in the current row as a int value.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a int value.
@@ -758,7 +758,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get an integer based on the column index.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column in the resultset whose value is to be fetched.
 	 * @return value of the column as an int.
@@ -771,7 +771,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * This method will return the value in the current row as a long value.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a long value.
@@ -784,7 +784,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a long based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column in the resultset whose value is to be fetched.
 	 * @return value of the column as a long.
@@ -797,7 +797,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a java object based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column in the resultset whose value is to be fetched.
 	 * @return object which gives the column value.
@@ -810,7 +810,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a primitive short based on the column index.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a short value.
@@ -823,7 +823,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a short based on the column name.
-	 * 
+	 *
 	 * @param String
 	 * 		representing name of the column.
 	 * @return short value of the column.
@@ -837,7 +837,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a String based on the column index.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a string value.
@@ -865,7 +865,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * This method will return the value in the current row as a Time object.
 	 * This will use the timeZone info of the calendar object.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @param Calendar
@@ -887,7 +887,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a java.sql.Time based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column whose value is to be fetched as a timestamp
 	 * @param calender
@@ -904,7 +904,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * This method will return the value in the current row as a Timestamp
 	 * object. This will assume the default timeZone.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @return The value of the column as a Timestamp object.
@@ -917,7 +917,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a java.sql.Timestamp based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column whose value is to be fetched as a timestamp
 	 * @return value of the column as a Timestamp object
@@ -932,7 +932,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * This method will return the value in the current row as a Timestamp
 	 * object. This will use the timeZone info of the calendar object.
-	 * 
+	 *
 	 * @param The
 	 * 		index of the column whose value needs to be fetched.
 	 * @param Calendar
@@ -955,7 +955,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Get a java.sql.Timestamp based on the column name.
-	 * 
+	 *
 	 * @param name
 	 * 		of the column whose value is to be fetched as a timestamp
 	 * @param calender
@@ -983,12 +983,12 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * This will return a boolean value if the last column that was read had a
 	 * value equal to null. If the last column read was null return true, else
 	 * return false.
-	 * 
+	 *
 	 * @return A boolean value showing if the lastvalue read in was null or not.
 	 * @throws SQLException
 	 */
 	public boolean wasNull() throws SQLException {
-		
+
 		checkClosed(); // check to see if the ResultSet is closed
 
 		return currentValue == null;
@@ -1003,7 +1003,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * This method returns the meta data of the result set, such as the number,
 	 * types and properties of this resultSets columns.
 	 * </p>
-	 * 
+	 *
 	 * @return ResultSerMetaData object for these results.
 	 * @throws SQLException
 	 * 		if results access error occurs
@@ -1015,7 +1015,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * Retrieves the RequestID for the query that created this ResultSet.
-	 * 
+	 *
 	 * @return The requestID for the query that created these results
 	 * @throws SQLException
 	 */
@@ -1026,7 +1026,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	/**
 	 * <p>
 	 * Retrieves the Statement object that produced this ResultSet object.
-	 * 
+	 *
 	 * @return a Statement object.
 	 * 	</p>
 	 * @throws SQLException
@@ -1045,7 +1045,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * True if current record is the first in the result set.
-	 * 
+	 *
 	 * @return True if current row is first
 	 * @throws QueryResultsException
 	 * 		if this result set has an exception
@@ -1059,7 +1059,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	/**
 	 * True if current record is the last in the result set.
-	 * 
+	 *
 	 * @return True if current row is last
 	 * @throws QueryResultsException
 	 * 		if this result set has an exception
@@ -1070,14 +1070,14 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public boolean isLast() throws SQLException {
 		return !hasNext() && this.getAbsoluteRowNumber() > BEFORE_FIRST_ROW && this.getAbsoluteRowNumber() == getFinalRowNumber();
 	}
-	
+
 	/**
 	 * <p>
 	 * Determines whether the cursor is after the last row in this ResultSet
 	 * object. This method should be called only if the result set is
 	 * scrollable.
 	 * </p>
-	 * 
+	 *
 	 * @return true if the cursor is after the last row in the resultSet.
 	 * @throws SQLException
 	 */
@@ -1096,7 +1096,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * object. This method should be called only if the result set is
 	 * scrollable.
 	 * </p>
-	 * 
+	 *
 	 * @return true if the cursor is before the last row in the resultSet;false
 	 * 	if the cursor is at any other position or the result set contains no
 	 * 	rows.
@@ -1112,7 +1112,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * Moves the cursor a number of rows relative to the current row in this
 	 * ResultSet object. The number of rows may be positive or negative.
 	 * </p>
-	 * 
+	 *
 	 * @param number
 	 * 		of rows to move relative to the present row.
 	 * @return true if the cursor is on a valid row in the resultSet.
@@ -1127,16 +1127,16 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		}
 
 		checkNotForwardOnly();
-		
+
     	return this.absolute(Math.max(0, getAbsoluteRowNumber() + rows));
 	}
-	
+
 	/**
 	 * <p>
 	 * Moves the cursor to the last row in the in this ResultSet object. This
 	 * method should be called only if the result set is scrollable.
 	 * </p>
-	 * 
+	 *
 	 * @return true if the cursor is on a validRow, false otherwise or if no
 	 * 	rows exist.
 	 * @throws SQLException
@@ -1144,7 +1144,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 */
 	public boolean last() throws SQLException {
 		checkNotForwardOnly();
-		
+
     	return absolute(-1);
 	}
 
@@ -1161,7 +1161,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * Moves the cursor to the end of the result set, just after the last row.
 	 * Has no effect if the result set contains no rows.
 	 * </p>
-	 * 
+	 *
 	 * @throws SQLException
 	 * 		if a results access error occurs or the result set type is
 	 * 		TYPE_FORWARD_ONLY
@@ -1177,7 +1177,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	 * Moves the cursor to the front of the result set, just before the first
 	 * row. Has no effect if the result set contains no rows.
 	 * </p>
-	 * 
+	 *
 	 * @exception SQLException
 	 * 		if a results can not be accessed or the result set type is
 	 * 		TYPE_FORWARD_ONLY
@@ -1187,12 +1187,12 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     		previous();
     	}
 	}
-	
+
 	/**
 	 * <p>
 	 * Moves the cursor to the first row in this ResultSet object.
 	 * </p>
-	 * 
+	 *
 	 * @return true if the cursor is on valid row, false if there are no rows in
 	 * 	the resultset.
 	 * @throws SQLException
@@ -1226,13 +1226,13 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 				"MMResultsImpl.Col_doesnt_exist", columnName); //$NON-NLS-1$
 		throw new TeiidSQLException(msg);
 	}
-		
+
 	protected Calendar getDefaultCalendar() {
 		return statement.getDefaultCalendar();
 	}
 
 	public void deleteRow() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Array getArray(int columnIndex) throws SQLException {
@@ -1244,17 +1244,17 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public InputStream getAsciiStream(int columnIndex) throws SQLException {
-		return DataTypeTransformer.getAsciiStream(getObject(columnIndex)); 	
+		return DataTypeTransformer.getAsciiStream(getObject(columnIndex));
 	}
 
 	public InputStream getAsciiStream(String columnLabel) throws SQLException {
-		return getAsciiStream(findColumn(columnLabel));	
+		return getAsciiStream(findColumn(columnLabel));
 	}
 
 	public Clob getClob(int columnIndex) throws SQLException {
 		return DataTypeTransformer.getClob(getObject(columnIndex));
 	}
-	
+
 	public SQLXML getSQLXML(int columnIndex) throws SQLException {
 		return DataTypeTransformer.getSQLXML(getObject(columnIndex));
 	}
@@ -1262,7 +1262,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public Clob getClob(String columnLabel) throws SQLException {
 		return getClob(findColumn(columnLabel));
 	}
-	
+
 	public int getHoldability() throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
@@ -1282,7 +1282,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public NClob getNClob(String columnLabel) throws SQLException {
 		return getNClob(findColumn(columnLabel));
 	}
-	
+
 	public String getNString(int columnIndex) throws SQLException {
 		return getString(columnIndex);
 	}
@@ -1290,23 +1290,23 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public String getNString(String columnLabel) throws SQLException {
 		return getString(columnLabel);
 	}
-	
+
 	public Object getObject(int columnIndex, Map<String, Class<?>> map)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Object getObject(String columnLabel, Map<String, Class<?>> map)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Ref getRef(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Ref getRef(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public RowId getRowId(int columnIndex) throws SQLException {
@@ -1322,47 +1322,47 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public URL getURL(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public URL getURL(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void insertRow() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void moveToInsertRow() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void refreshRow() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public boolean rowDeleted() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public boolean rowInserted() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public boolean rowUpdated() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setFetchDirection(int direction) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setFetchSize(int rows) throws SQLException {
@@ -1384,23 +1384,23 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateArray(int columnIndex, Array x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateArray(String columnLabel, Array x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateAsciiStream(int columnIndex, InputStream x, int length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateAsciiStream(String columnLabel, InputStream x, int length)
 		throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateAsciiStream(int columnIndex, InputStream x, long length)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -1423,24 +1423,24 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	public void updateBigDecimal(int columnIndex, BigDecimal x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBigDecimal(String columnLabel, BigDecimal x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBinaryStream(int columnIndex, InputStream x, int length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateBinaryStream(String columnLabel, InputStream x, int length)
 		throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 
 	public void updateBinaryStream(int columnIndex, InputStream x, long length)
 			throws SQLException {
@@ -1463,11 +1463,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateBlob(int columnIndex, Blob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateBlob(String columnLabel, Blob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBlob(int columnIndex, InputStream inputStream, long length)
@@ -1479,52 +1479,52 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateBlob(String columnLabel, InputStream inputStream,
 			long length) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateBlob(String columnLabel, InputStream inputStream)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateBoolean(int columnIndex, boolean x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBoolean(String columnLabel, boolean x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateByte(int columnIndex, byte x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateByte(String columnLabel, byte x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBytes(int columnIndex, byte[] x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateBytes(String columnLabel, byte[] x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	
+
 	public void updateCharacterStream(int columnIndex, Reader x, int length)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateCharacterStream(String columnLabel, Reader reader,
 			int length) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
-	}	
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
 
 	public void updateCharacterStream(int columnIndex, Reader x, long length)
 			throws SQLException {
@@ -1547,13 +1547,13 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateClob(int columnIndex, Clob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateClob(String columnLabel, Clob x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public void updateClob(int columnIndex, Reader reader, long length)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
@@ -1574,55 +1574,55 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateDate(int columnIndex, Date x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateDate(String columnLabel, Date x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateDouble(int columnIndex, double x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateDouble(String columnLabel, double x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
-	}		
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
 
 	public void updateFloat(int columnIndex, float x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateFloat(String columnLabel, float x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateInt(int columnIndex, int x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateInt(String columnLabel, int x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateLong(int columnIndex, long x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateLong(String columnLabel, long x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateNCharacterStream(int columnIndex, Reader x, long length)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
-		
+
 	}
 
 	public void updateNCharacterStream(int columnIndex, Reader x)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
-		
+
 	}
 
 	public void updateNCharacterStream(String columnLabel, Reader reader,
@@ -1633,7 +1633,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public void updateNCharacterStream(String columnLabel, Reader reader)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
-		
+
 	}
 
 	public void updateNClob(int columnIndex, NClob clob) throws SQLException {
@@ -1674,41 +1674,41 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateNull(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateNull(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateObject(int columnIndex, Object x, int scaleOrLength)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateObject(int columnIndex, Object x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateObject(String columnLabel, Object x, int scaleOrLength)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateObject(String columnLabel, Object x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateRef(int columnIndex, Ref x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateRef(String columnLabel, Ref x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateRow() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateRowId(int columnIndex, RowId x) throws SQLException {
@@ -1720,11 +1720,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateShort(int columnIndex, short x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateShort(String columnLabel, short x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateSQLXML(int columnIndex, SQLXML xmlObject)
@@ -1738,29 +1738,29 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public void updateString(int columnIndex, String x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateString(String columnLabel, String x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateTime(int columnIndex, Time x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateTime(String columnLabel, Time x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateTimestamp(int columnIndex, Timestamp x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void updateTimestamp(String columnLabel, Timestamp x)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
@@ -1771,7 +1771,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 			throws SQLException {
 		return DataTypeTransformer.transform(getObject(columnLabel), type);
 	}
-	
+
 	ResultsFuture<ResultsMessage> getPrefetch() {
 		return prefetch;
 	}

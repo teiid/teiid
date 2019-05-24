@@ -39,11 +39,11 @@ public class SimpleDBDeleteVisitor extends HierarchyVisitor {
     public Table getTable(){
         return this.table;
     }
-    
+
     public String getCriteria() {
         return this.criteria;
     }
-    
+
     public void checkExceptions() throws TranslatorException {
         if (!this.exceptions.isEmpty()) {
             throw this.exceptions.get(0);
@@ -61,7 +61,7 @@ public class SimpleDBDeleteVisitor extends HierarchyVisitor {
         if (obj.getParameterValues() != null) {
             this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24007, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24007)));
         }
-        
+
         visitNode(obj.getTable());
         if (obj.getWhere() != null) {
             this.criteria = SimpleDBSQLVisitor.getSQLString(obj.getWhere());

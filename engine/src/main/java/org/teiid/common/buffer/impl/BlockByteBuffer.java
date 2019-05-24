@@ -25,11 +25,11 @@ import java.nio.ByteBuffer;
  * set of buffers.
  */
 public class BlockByteBuffer {
-	
+
 	private static class ByteBufferHolder {
 		int size;
 		volatile ByteBuffer buffer;
-		
+
 		public ByteBufferHolder(int size) {
 			this.size = size;
 		}
@@ -55,10 +55,10 @@ public class BlockByteBuffer {
 		boolean direct;
 		ByteBufferHolder[] origBuffers;
 	}
-	
+
 	private BlockByteBufferData data;
 	private ByteBuffer[] buffers;
-	
+
 	/**
 	 * Creates a new {@link BlockByteBuffer} where each buffer segment will be
 	 * 1 << segmentAddressBits (max of 30), and a total size of (1 << blockAddressBits)*blockCount.
@@ -91,13 +91,13 @@ public class BlockByteBuffer {
 			this.data.origBuffers[fullSegments] = new ByteBufferHolder(lastSegmentSize);
 		}
 	}
-	
+
 	public ByteBuffer[] getBuffers() {
 		return buffers;
 	}
-	
+
 	private BlockByteBuffer() {
-		
+
 	}
 
 	public static ByteBuffer allocate(int size, boolean direct) {
@@ -106,14 +106,14 @@ public class BlockByteBuffer {
 		}
 		return ByteBuffer.allocate(size);
 	}
-	
+
 	public BlockByteBuffer duplicate() {
 		BlockByteBuffer dup = new BlockByteBuffer();
 		dup.data = data;
 		dup.buffers = new ByteBuffer[buffers.length];
 		return dup;
 	}
-	
+
 	/**
 	 * Return a buffer positioned at the given start byte.
 	 * It is assumed that the caller will handle blocks in
@@ -130,12 +130,12 @@ public class BlockByteBuffer {
 		if (bb == null) {
 			bb = buffers[segment] = data.origBuffers[segment].duplicate(data.direct);
 		} else {
-			bb.rewind();	
+			bb.rewind();
 		}
 		int position = (block<<data.blockAddressBits)&(data.segmentSize-1);
 		bb.limit(position + data.blockSize);
 		bb.position(position);
 		return bb;
 	}
-		
+
 }

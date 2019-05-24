@@ -17,14 +17,14 @@ import java.util.TreeMap;
  * in comments and quotes.
  */
 public class ScriptReader {
-    
+
     private static TreeMap<String, String> FUNCTION_MAPPING = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     static {
         FUNCTION_MAPPING.put("textcat", "concat"); //$NON-NLS-1$ //$NON-NLS-2$
         FUNCTION_MAPPING.put("rtrunc", "right"); //$NON-NLS-1$ //$NON-NLS-2$
         FUNCTION_MAPPING.put("ltrunc", "left"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     private Reader reader;
     private StringBuilder builder;
     private boolean endOfFile;
@@ -33,7 +33,7 @@ public class ScriptReader {
     private boolean rewrite;
     private int expressionStart=-1;
     private int expressionEnd=-1;
-    
+
     /**
      * Create a new SQL script reader from the given reader
      *
@@ -43,12 +43,12 @@ public class ScriptReader {
         this.reader = reader;
         this.builder = new StringBuilder(1<<13);
     }
-    
+
     public ScriptReader(String string) {
     	this.reader = new StringReader(string);
         this.builder = new StringBuilder(string.length());
     }
-    
+
     /**
      * Close the underlying reader.
      */
@@ -72,7 +72,7 @@ public class ScriptReader {
         		return result;
         	}
         }
-        
+
     }
 
     private String readStatementLoop() throws IOException {
@@ -102,7 +102,7 @@ public class ScriptReader {
                         if (mappedFunction != null) {
                             builder.replace(functionStart + 1, start - 1, mappedFunction);
                         }
-                    } 
+                    }
                 }
                 c = read();
                 break;
@@ -229,14 +229,14 @@ public class ScriptReader {
                             		//special handling for regclass cast - it won't always work
                             		if ("regclass".equalsIgnoreCase(type)) { //$NON-NLS-1$
                             			builder.insert(expressionStart, "regclass("); //$NON-NLS-1$
-                            			builder.append(")"); //$NON-NLS-1$ 
+                            			builder.append(")"); //$NON-NLS-1$
                             		} else if ("regproc".equalsIgnoreCase(type)) { //$NON-NLS-1$
                             			String name = builder.substring(expressionStart);
-                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
+                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$
                             				name = name.substring(2, name.length()-2);
                             				name = '\''+ name + '\'';
                             			}
-                        				if (name.startsWith("'")) { //$NON-NLS-1$ 
+                        				if (name.startsWith("'")) { //$NON-NLS-1$
                         					builder.setLength(expressionStart);
                             				builder.append(name.toUpperCase());
                         				}

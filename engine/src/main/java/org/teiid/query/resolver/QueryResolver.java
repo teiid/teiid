@@ -84,14 +84,14 @@ public class QueryResolver {
     private static final CommandResolver TEMP_TABLE_RESOLVER = new TempTableResolver();
     private static final CommandResolver ALTER_RESOLVER = new AlterResolver();
     private static final CommandResolver DUMMY_RESOLVER = new CommandResolver() {
-        
+
         @Override
         public void resolveCommand(Command command, TempMetadataAdapter metadata,
                 boolean resolveNullLiterals) throws QueryMetadataException,
                 QueryResolverException, TeiidComponentException {
         }
     };
-    
+
     public static Command expandCommand(ProcedureContainer proc, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryResolverException, QueryMetadataException, TeiidComponentException {
     	ProcedureContainerResolver cr = (ProcedureContainerResolver)chooseResolver(proc, metadata);
     	Command command = cr.expandCommand(proc, metadata, analysisRecord);
@@ -105,13 +105,13 @@ public class QueryResolver {
 	/**
 	 * This implements an algorithm to resolve all the symbols created by the
 	 * parser into real metadata IDs
-	 * 
+	 *
 	 * @param command
 	 *            Command the SQL command we are running (Select, Update,
 	 *            Insert, Delete)
 	 * @param metadata
 	 *            QueryMetadataInterface the metadata
-	 * @return 
+	 * @return
 	 */
 	public static TempMetadataStore resolveCommand(Command command,
 			QueryMetadataInterface metadata) throws QueryResolverException,
@@ -141,7 +141,7 @@ public class QueryResolver {
         throws QueryResolverException, TeiidComponentException {
 
 		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving command", currentCommand}); //$NON-NLS-1$
-        
+
         TempMetadataAdapter resolverMetadata = null;
         try {
         	TempMetadataStore discoveredMetadata = currentCommand.getTemporaryMetadata();
@@ -149,9 +149,9 @@ public class QueryResolver {
             	discoveredMetadata = new TempMetadataStore();
                 currentCommand.setTemporaryMetadata(discoveredMetadata);
             }
-            
+
             resolverMetadata = new TempMetadataAdapter(metadata, discoveredMetadata);
-            
+
             // Resolve external groups for command
             Collection<GroupSymbol> externalGroups = currentCommand.getAllExternalGroups();
             for (GroupSymbol extGroup : externalGroups) {
@@ -175,7 +175,7 @@ public class QueryResolver {
             CommandResolver resolver = chooseResolver(currentCommand, resolverMetadata);
 
             // Resolve this command
-            resolver.resolveCommand(currentCommand, resolverMetadata, resolveNullLiterals);            
+            resolver.resolveCommand(currentCommand, resolverMetadata, resolveNullLiterals);
         } catch(QueryMetadataException e) {
              throw new QueryResolverException(e);
         }
@@ -207,10 +207,10 @@ public class QueryResolver {
             case Command.TYPE_DYNAMIC:              return DYNAMIC_COMMAND_RESOLVER;
             case Command.TYPE_CREATE:               return TEMP_TABLE_RESOLVER;
             case Command.TYPE_DROP:                 return TEMP_TABLE_RESOLVER;
-            case Command.TYPE_ALTER_PROC:           
-            case Command.TYPE_ALTER_TRIGGER:        
+            case Command.TYPE_ALTER_PROC:
+            case Command.TYPE_ALTER_TRIGGER:
             case Command.TYPE_ALTER_VIEW:           return ALTER_RESOLVER;
-            case Command.TYPE_SOURCE_EVENT:         return DUMMY_RESOLVER; 
+            case Command.TYPE_SOURCE_EVENT:         return DUMMY_RESOLVER;
             default:
                 throw new AssertionError("Unknown command type"); //$NON-NLS-1$
         }
@@ -230,10 +230,10 @@ public class QueryResolver {
     public static void setChildMetadata(Command subCommand, Command parent) {
     	TempMetadataStore childMetadata = parent.getTemporaryMetadata();
         GroupContext parentContext = parent.getExternalGroupContexts();
-        
+
         setChildMetadata(subCommand, childMetadata, parentContext);
     }
-    
+
     public static void setChildMetadata(Command subCommand, TempMetadataStore parentTempMetadata, GroupContext parentContext) {
     	TempMetadataStore tempMetadata = subCommand.getTemporaryMetadata();
         if(tempMetadata == null) {
@@ -241,21 +241,21 @@ public class QueryResolver {
         } else {
             tempMetadata.getData().putAll(parentTempMetadata.getData());
         }
-    
+
         subCommand.setExternalGroupContexts(parentContext);
     }
-    
+
     public static Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly, QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-        
+
         CommandResolver resolver = chooseResolver(command, metadata);
-        
+
         if (resolver instanceof VariableResolver) {
             return ((VariableResolver)resolver).getVariableValues(command, changingOnly, metadata);
         }
-        
+
         return Collections.emptyMap();
     }
-    
+
 	public static void resolveSubqueries(Command command,
 			TempMetadataAdapter metadata, Collection<GroupSymbol> externalGroups)
 			throws QueryResolverException, TeiidComponentException {
@@ -267,7 +267,7 @@ public class QueryResolver {
             QueryResolver.resolveCommand(container.getCommand(), metadata.getMetadata(), false);
         }
 	}
-	
+
 	public static QueryNode resolveView(GroupSymbol virtualGroup, QueryNode qnode,
 			String cacheString, QueryMetadataInterface qmi, boolean logValidation) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
@@ -283,17 +283,17 @@ public class QueryResolver {
                 } catch(QueryParserException e) {
                      throw new QueryResolverException(QueryPlugin.Event.TEIID30065, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30065, virtualGroup));
                 }
-                
+
             } else {
             	result = (Command) result.clone();
             }
         	QueryResolver.resolveCommand(result, qmi, false);
 	        Request.validateWithVisitor(new ValidationVisitor(), qmi, result);
-            
+
 	        validateProjectedSymbols(virtualGroup, qmi, result);
             cachedNode = new QueryNode(qnode.getQuery());
             cachedNode.setCommand(result);
-	        
+
 			if(isView(virtualGroup, qmi)) {
 		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());
 				String deletePlan = qmi.getDeletePlan(virtualGroup.getMetadataID());
@@ -352,9 +352,9 @@ public class QueryResolver {
 		}
 		for (int i = 0; i < projectedSymbols.size(); i++) {
 			Expression projectedSymbol = projectedSymbols.get(i);
-			
+
 			ResolverUtil.setTypeIfNull(projectedSymbol, symbols.get(i).getType());
-			
+
 			if (projectedSymbol.getType() != symbols.get(i).getType()) {
 				throw new QueryValidatorException(QueryPlugin.Util.getString("QueryResolver.wrong_view_symbol_type", virtualGroup, i+1,  //$NON-NLS-1$
 						DataTypeManager.getDataTypeName(symbols.get(i).getType()), DataTypeManager.getDataTypeName(projectedSymbol.getType())));
@@ -367,7 +367,7 @@ public class QueryResolver {
 			QueryMetadataException {
 		return !(virtualGroup.getMetadataID() instanceof TempMetadataID) && qmi.isVirtualGroup(virtualGroup.getMetadataID());// && qmi.isVirtualModel(qmi.getModelID(virtualGroup.getMetadataID()));
 	}
-	
+
 	private static UpdateType determineType(String plan) {
 		UpdateType type = UpdateType.INHERENT;
 		if (plan != null) {
@@ -375,5 +375,5 @@ public class QueryResolver {
 		}
 		return type;
 	}
-	
+
 }

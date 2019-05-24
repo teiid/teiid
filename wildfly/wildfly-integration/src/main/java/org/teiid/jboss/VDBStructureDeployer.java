@@ -31,24 +31,24 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 	private static final String VDB_EXTENSION = ".vdb"; //$NON-NLS-1$
 	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
 	private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
-	
+
 	@Override
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
-		
+
         DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-        
+
         String deploymentName = deploymentUnit.getName();
         VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
         if (file == null) {
         	return;
         }
-        
+
         if(deploymentName.toLowerCase().endsWith(VDB_EXTENSION)) {
 			VirtualFile metainf = file.getChild("META-INF"); //$NON-NLS-1$
 			if (metainf == null) {
 				return;
 			}
-			
+
 			if (metainf.getChild(VDBResources.DEPLOYMENT_FILE) == null) {
 				return;
 			}
@@ -56,14 +56,14 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 			TeiidAttachments.setAsVDBDeployment(deploymentUnit);
         }
         else if (deploymentName.toLowerCase().endsWith(DYNAMIC_VDB_STRUCTURE)) {
-	        TeiidAttachments.setAsVDBXMLDeployment(deploymentUnit);			        	
+	        TeiidAttachments.setAsVDBXMLDeployment(deploymentUnit);
         }
         else if (deploymentName.toLowerCase().endsWith(DDL_VDB_STRUCTURE)) {
-	        TeiidAttachments.setAsVDBDDLDeployment(deploymentUnit);			        	
-        }        
+	        TeiidAttachments.setAsVDBDDLDeployment(deploymentUnit);
+        }
 	}
-	
-	
+
+
 	@Override
 	public void undeploy(final DeploymentUnit context) {
 	}

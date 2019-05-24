@@ -30,7 +30,7 @@ import org.teiid.test.framework.transaction.TxnAutoTransaction;
 
 /**
  * @author vanhalbert
- * 
+ *
  */
 @SuppressWarnings("nls")
 public class OnWrapTransactionTests extends CommonTransactionTests {
@@ -163,12 +163,12 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 	test.execute("select * from g2 where e1 >= 100 and e1 < 110");
 	test.assertRowCount(0);
     }
-    
+
     @Ignore
     @Test
     @Override
     public void testMultipleSourceTimeout() throws Exception{
-	
+
     }
 
 }

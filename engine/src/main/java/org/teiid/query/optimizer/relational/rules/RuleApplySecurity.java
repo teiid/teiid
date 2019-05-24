@@ -55,7 +55,7 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * Applies row/column security to a non-update plan
- * 
+ *
  * Should be run after rule assign output elements
  */
 public class RuleApplySecurity implements OptimizerRule {
@@ -87,7 +87,7 @@ public class RuleApplySecurity implements OptimizerRule {
 				if (cols == null) {
 		        	cols = ResolverUtil.resolveElementsInGroup(group, metadata);
 				}
-				
+
 				//apply masks first
 		        List<? extends Expression> masked = ColumnMaskingHelper.maskColumns(cols, group, metadata, context);
 		        Map<ElementSymbol, Expression> mapping = null;
@@ -139,7 +139,7 @@ public class RuleApplySecurity implements OptimizerRule {
 	        			project.setProperty(Info.HAS_WINDOW_FUNCTIONS, true);
 	        		}
 		        }
-		        
+
 	            //logically filters are applied below masking
 		        Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, context, false);
 	            if (filter == null) {
@@ -185,7 +185,7 @@ public class RuleApplySecurity implements OptimizerRule {
 		Map<ElementSymbol, Expression> upperMapping = SymbolMap.createSymbolMap(cols, newCols).asMap();
 		FrameUtil.convertFrame(newSourceNode.getParent(), group, Collections.singleton(securityVeiw), upperMapping, metadata);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "ApplySecurity"; //$NON-NLS-1$

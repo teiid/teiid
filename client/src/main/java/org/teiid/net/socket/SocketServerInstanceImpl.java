@@ -60,7 +60,7 @@ import org.teiid.net.HostInfo;
  * That handshake will establish a {@link Cryptor} to be used for secure traffic.
  */
 public class SocketServerInstanceImpl implements SocketServerInstance {
-	
+
     private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 
 	private static AtomicInteger MESSAGE_ID = new AtomicInteger();
@@ -73,10 +73,10 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     private Cryptor cryptor;
     private String serverVersion;
     private HashMap<Class<?>, Object> serviceMap = new HashMap<Class<?>, Object>();
-    
+
     private boolean hasReader;
     private int soTimeout;
-    
+
     public SocketServerInstanceImpl(HostInfo info, long synchTimeout, int soTimeout) {
     	if (!info.isResolved()) {
     		throw new AssertionError("Expected HostInfo to be resolved"); //$NON-NLS-1$
@@ -85,7 +85,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         this.synchTimeout = synchTimeout;
         this.soTimeout = soTimeout;
     }
-    
+
     public synchronized void connect(ObjectChannelFactory channelFactory) throws CommunicationException, IOException {
         this.socketChannel = channelFactory.createObjectChannel(info);
         try {
@@ -98,12 +98,12 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         	throw e;
         }
     }
-    
+
     @Override
     public HostInfo getHostInfo() {
     	return info;
     }
-    
+
 	@Override
 	public InetAddress getLocalAddress() {
 		if (socketChannel != null) {
@@ -111,7 +111,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		}
 		return null;
 	}
-    
+
     private void doHandshake() throws IOException, CommunicationException {
     	Handshake handshake = null;
     	boolean sentInit = false;
@@ -122,7 +122,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     	for (int i = 0; i < handShakeRetries; i++) {
 	        try {
 				Object obj = this.socketChannel.read();
-				
+
 				if (!(obj instanceof Handshake)) {
 					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20009, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
 				}
@@ -154,10 +154,10 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             }*/
             serverVersion = handshake.getVersion();
             handshake.setVersion();
-            
+
             byte[] serverPublicKey = handshake.getPublicKey();
             byte[] serverPublicKeyLarge = handshake.getPublicKeyLarge();
-            
+
             if (serverPublicKey != null) {
             	DhKeyGenerator keyGen = new DhKeyGenerator();
             	boolean large = false;
@@ -182,13 +182,13 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             } else {
                 this.cryptor = new NullCryptor();
             }
-            
+
             this.socketChannel.write(handshake);
         } catch (CryptoException e) {
         	 throw new CommunicationException(JDBCPlugin.Event.TEIID20012, e, e.getMessage());
         }
     }
-    
+
     @Override
     public String getServerVersion() {
 		return serverVersion;
@@ -213,7 +213,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         	 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20013, e, e.getMessage());
 	    } finally {
 	    	if (!success) {
-	    		asynchronousListeners.remove(messageKey);	    		
+	    		asynchronousListeners.remove(messageKey);
 	    	}
 	    }
     }
@@ -225,16 +225,16 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 	private void exceptionOccurred(Throwable e) {
     	if (e instanceof CommunicationException) {
 	        if (e.getCause() instanceof InvalidClassException) {
-	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$ 
+	            log.log(Level.SEVERE, "Unknown class or incorrect class version:", e); //$NON-NLS-1$
 	        } else {
-	            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ 
+	            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$
 	        }
     	} else if (e instanceof EOFException) {
-            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$ 
+            log.log(Level.FINE, "Unable to read: socket was already closed.", e); //$NON-NLS-1$
     	} else {
-            log.log(Level.WARNING, "Unable to read: unexpected exception", e); //$NON-NLS-1$ 
+            log.log(Level.WARNING, "Unable to read: unexpected exception", e); //$NON-NLS-1$
     	}
-    			
+
         if (!(e instanceof SingleInstanceCommunicationException)) {
         	e = new SingleInstanceCommunicationException(e);
         }
@@ -248,7 +248,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
 
 	private void receivedMessage(Object packet) {
-		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$ 
+		log.log(Level.FINE, "reading packet"); //$NON-NLS-1$
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
         	Serializable messageKey = messagePacket.getMessageKey();
@@ -269,7 +269,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
                 	asynchronousListeners.clear();
                 	return;
                 }
-        	} 
+        	}
         	if (log.isLoggable(Level.FINE)) {
         		log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$
         	}
@@ -288,18 +288,18 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         	}
         }
     }
-    
+
     public void shutdown() {
     	socketChannel.close();
     }
 
-    /** 
+    /**
      * @return Returns the cryptor.
      */
     public Cryptor getCryptor() {
         return this.cryptor;
     }
-    
+
     public void read(long timeout, TimeUnit unit, ResultsFuture<?> future) throws TimeoutException, InterruptedException {
     	long timeoutMillis = (int)Math.min(unit.toMillis(timeout), Integer.MAX_VALUE);
 		long start = System.currentTimeMillis();
@@ -312,7 +312,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				} else if (!future.isDone()) {
 					this.wait(Math.max(1, timeoutMillis));
 				}
-			} 
+			}
 			if (reading) {
 			    Object message = null;
 				try {
@@ -343,7 +343,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			}
 		}
     }
-    
+
 	@Override
 	public synchronized <T> T getService(Class<T> iface) {
 		Object service = this.serviceMap.get(iface);
@@ -358,7 +358,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		}
 		return iface.cast(service);
 	}
-	
+
     public long getSynchTimeout() {
 		return synchTimeout;
 	}
@@ -367,7 +367,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 
 		private Class<?> targetClass;
 		private boolean secureOptional;
-		
+
 		public RemoteInvocationHandler(Class<?> targetClass, boolean secureOptional) {
 			this.targetClass = targetClass;
 			this.secureOptional = secureOptional;
@@ -402,19 +402,19 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 							throw new ExecutionException(e);
 						}
 					}
-					
+
 					@Override
 					public Object get() throws InterruptedException, ExecutionException {
 						try {
 							return this.get(instance.getSynchTimeout(), TimeUnit.MILLISECONDS);
 						} catch (TimeoutException e) {
 							throw new ExecutionException(e);
-						} 
+						}
 					}
-					
+
 					/**
 					 * get calls are overridden to provide a thread in which to perform
-					 * the actual reads. 
+					 * the actual reads.
 					 */
 					@Override
 					public Object get(long timeout, TimeUnit unit)
@@ -425,7 +425,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					}
 				};
 				final ResultsReceiver<Object> receiver = results.getResultsReceiver();
-	
+
 				instance.send(message, receiver, Integer.valueOf(MESSAGE_ID.getAndIncrement()));
 				if (ResultsFuture.class.isAssignableFrom(method.getReturnType())) {
 					return results;
@@ -440,7 +440,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			}
 			throw ExceptionUtil.convertException(method, t);
 		}
-		
+
 		protected abstract SocketServerInstance getInstance() throws CommunicationException;
 
 	}

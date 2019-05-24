@@ -35,11 +35,11 @@ import org.teiid.core.util.ExternalizeUtil;
 /**
  * Dataholder for the result of <code>ILogon.logon()</code>.
  * Contains a sessionID
- * 
+ *
  * Analogous to the server side SessionToken
  */
 public class LogonResult implements Externalizable {
-        
+
 	private static final long serialVersionUID = 4481443514871448269L;
 	private TimeZone timeZone = TimeZone.getDefault();
     private String clusterName;
@@ -50,7 +50,7 @@ public class LogonResult implements Externalizable {
 
 	public LogonResult() {
 	}
-    
+
     public LogonResult(SessionToken token, String vdbName, String clusterName) {
 		this.clusterName = clusterName;
 		this.sessionToken = token;
@@ -58,7 +58,7 @@ public class LogonResult implements Externalizable {
 	}
 
 	/**
-     * Get the sessionID. 
+     * Get the sessionID.
      * @return
      * @since 4.3
      */
@@ -69,7 +69,7 @@ public class LogonResult implements Externalizable {
 	public TimeZone getTimeZone() {
 		return timeZone;
 	}
-	
+
 
 	public String getUserName() {
 		return this.sessionToken.getUsername();
@@ -78,7 +78,7 @@ public class LogonResult implements Externalizable {
 	public String getClusterName() {
 		return clusterName;
 	}
-	
+
 	public SessionToken getSessionToken() {
 		return sessionToken;
 	}
@@ -90,7 +90,7 @@ public class LogonResult implements Externalizable {
 	public int getVdbVersion() {
 		return vdbVersion;
 	}
-	
+
     public Object getProperty(String key) {
 		if (this.addtionalProperties == null) {
 			return null;
@@ -103,8 +103,8 @@ public class LogonResult implements Externalizable {
 			this.addtionalProperties = new HashMap<Object, Object>();
 		}
 		this.addtionalProperties.put(key, value);
-	}	
-	
+	}
+
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -122,12 +122,12 @@ public class LogonResult implements Externalizable {
 			String tzId = in.readUTF(); //not sent until 8.12.3
 			timeZone = TimeZone.getTimeZone(tzId);
 		} catch (EOFException e) {
-			
+
 		} catch (OptionalDataException e) {
-			
+
 		}
 	}
-	
+
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(vdbName);
@@ -138,5 +138,5 @@ public class LogonResult implements Externalizable {
 		ExternalizeUtil.writeMap(out, addtionalProperties);
 		out.writeUTF(timeZone.getID());
 	}
-    
+
 }

@@ -28,5 +28,5 @@ public interface ObjectChannelFactory {
 	int getSoTimeout();
 
 	ObjectChannel createObjectChannel(HostInfo info) throws CommunicationException, IOException;
-	
+
 }

@@ -21,7 +21,7 @@ package org.teiid.resource.adapter.cassandra;
 import org.teiid.resource.spi.BasicResourceAdapter;
 
 public class CassandraResourceAdapter extends BasicResourceAdapter {
-	
+
 	@Override
 	public int hashCode() {
 		return super.hashCode();

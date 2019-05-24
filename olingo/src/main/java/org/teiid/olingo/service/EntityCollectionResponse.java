@@ -72,12 +72,12 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
-	
+
 	interface Row {
     	Object getObject(int column) throws SQLException;
 		Object[] getArray(int columnIndex) throws SQLException;
     }
-	
+
     private String nextToken;
     private DocumentNode documentNode;
     private String baseURL;
@@ -85,16 +85,16 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
     private EntityCollectionResponse() {
     }
-    
+
     public EntityCollectionResponse(String baseURL, DocumentNode resource) {
         this.baseURL = baseURL;
         this.documentNode = resource;
     }
-    
+
     @Override
     public void addRow(ResultSet rs) throws SQLException {
         Entity entity = createEntity(rs, this.documentNode, this.baseURL, this);
-        
+
     	processExpands(asRow(rs), entity, this.documentNode);
         getEntities().add(entity);
     }
@@ -112,7 +112,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             for (Object o : expandedVals) {
             	Object[] expandedVal = (Object[])o;
     			Entity expandEntity = createEntity(expandedVal, expandNode, this.baseURL, this);
-                
+
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
                     if (link.getInlineEntitySet() == null) {
@@ -129,12 +129,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 else {
                     link.setInlineEntity(expandEntity);
                 }
-                
+
                 processExpands(asRow(expandedVal), expandEntity, expandNode);
             }
         }
 	}
-    
+
     static Entity createEntity(final Object[] vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
     	return createEntity(asRow(vals), node, baseURL, response);
@@ -144,15 +144,15 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             throws SQLException {
     	return createEntity(asRow(vals), node, baseURL, response);
     }
-    
+
     static Entity createEntity(Row row, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
-    	
+
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
         EdmEntityType entityType = node.getEdmEntityType();
-        
+
         LinkedHashMap<String, Link> streamProperties = new LinkedHashMap<String, Link>();
-        
+
         Entity entity = new Entity();
         entity.setType(entityType.getFullQualifiedName().getFullQualifiedNameAsString());
         boolean allNulls = true;
@@ -162,7 +162,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             if (!column.isVisible()) {
                 continue;
             }*/
-            
+
             String propertyName = Symbol.getShortName(column.getExpression());
             Object value = row.getObject(column.getOrdinal());
             if (value != null) {
@@ -186,16 +186,16 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 throw new SQLException(e);
             }
         }
-        
+
         if (allNulls) {
             return null;
         }
-            
+
         // Build the navigation and Stream Links
         try {
             String id = EntityResponse.buildLocation(baseURL, entity, entityType.getName(), entityType);
             entity.setId(new URI(id));
-            
+
             // build stream properties
             for (String name:streamProperties.keySet()) {
                 Link link = streamProperties.get(name);
@@ -203,7 +203,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 entity.getMediaEditLinks().add(link);
                 entity.addProperty(createPrimitive(name, EdmStream.getInstance(), new URI(link.getHref())));
             }
-            
+
             // build navigations
             for (String name:entityType.getNavigationPropertyNames()) {
                 Link navLink = new Link();
@@ -211,7 +211,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 navLink.setHref(id+"/"+name);
                 navLink.setRel("http://docs.oasis-open.org/odata/ns/related/"+name);
                 entity.getNavigationLinks().add(navLink);
-                
+
                 Link assosiationLink = new Link();
                 assosiationLink.setTitle(name);
                 assosiationLink.setHref(id+"/"+name+"/$ref");
@@ -222,8 +222,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             throw new SQLException(e);
         } catch (EdmPrimitiveTypeException e) {
             throw new SQLException(e);
-        }            
-        
+        }
+
         return entity;
     }
 
@@ -243,7 +243,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 			}
 		};
 	}
-	
+
 	private static Row asRow(final Object[] vals) {
     	return new Row() {
 			@Override
@@ -255,15 +255,15 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 				return (Object[]) vals[columnIndex - 1];
 			}
 		};
-	}    
-    
+	}
+
     void setStream(String propertyName, Object value) {
     	if (this.streams == null) {
     		this.streams = new HashMap<String, Object>();
     	}
     	streams.put(propertyName, value);
 	}
-    
+
     public Object getStream(String propertyName) {
     	if (this.streams == null) {
     		return null;
@@ -274,7 +274,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     private static void buildStreamLink(LinkedHashMap<String, Link> streamProperties,
             Object value, String propName) {
         if (value != null) {
-            // read link 
+            // read link
             Link streamLink = new Link();
             streamLink.setTitle(propName);
             if (value instanceof SQLXML) {
@@ -287,7 +287,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 streamLink.setType("application/octet-stream");
             }
             streamLink.setRel("http://docs.oasis-open.org/odata/ns/mediaresource/"+propName);
-            streamProperties.put(propName, streamLink);            
+            streamProperties.put(propName, streamLink);
         }
     }
 
@@ -303,7 +303,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             for (int i = 0; i < length; i++) {
                 Object o = java.lang.reflect.Array.get(value, i);
                 if (o != null && o.getClass().isArray()) {
-                    throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029, 
+                    throw new TeiidNotImplementedException(ODataPlugin.Event.TEIID16029,
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16029, propName));
                 }
                 Object p = getPropertyValue(type, precision, scale, isArray,  o);
@@ -321,7 +321,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
     private static Property createPrimitive(final String name,
             EdmPrimitiveType type, final Object value) {
-        return new Property(type.getFullQualifiedName().getFullQualifiedNameAsString(), name, 
+        return new Property(type.getFullQualifiedName().getFullQualifiedNameAsString(), name,
                 (type instanceof AbstractGeospatialType?ValueType.GEOSPATIAL:ValueType.PRIMITIVE),
                 value);
     }
@@ -343,15 +343,15 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 		value = ODataTypeManager.rationalizePrecision(precision, scale, value);
     	return value;
     }
-    
+
     /**
-     * 
+     *
      * @param expectedType
      * @param isArray
      * @param value
      * @return
      * @see DocumentNode#addProjectedColumn(org.teiid.query.sql.symbol.Expression, org.apache.olingo.commons.api.edm.EdmType, org.apache.olingo.commons.api.edm.EdmProperty, boolean)
-     * for the convention around geometry representation, currently there are none but if we 
+     * for the convention around geometry representation, currently there are none but if we
      * need the srid it needs to be associated with the value via ewkb or passed in here based upon the property metadata.
      */
     private static Object getPropertyValueInternal(SingletonPrimitiveType expectedType, boolean isArray,
@@ -361,7 +361,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         if (sourceType.isAssignableFrom(expectedType.getDefaultType())) {
             return value;
         }
-        
+
         if (expectedType instanceof EdmDate && sourceType == Date.class) {
             return value;
         } else if (expectedType instanceof EdmDateTimeOffset && sourceType == Timestamp.class){
@@ -386,7 +386,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 oos.writeObject(value);
                 oos.close();
                 bos.close();
-                return bos.toByteArray(); 
+                return bos.toByteArray();
             }
         } else if (expectedType instanceof AbstractGeospatialType && sourceType == DefaultDataClasses.BLOB) {
             return ODataTypeManager.convertToODataValue(((Blob)value).getBinaryStream(), false);
@@ -398,7 +398,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             value = t != null ? t.transform(value, targetType) : value;
         }
         return value;
-    }    
+    }
 
     @Override
     public long size() {
@@ -414,29 +414,29 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     public void setNextToken(String token) {
         this.nextToken = token;
     }
-    
+
     @Override
     public String getNextToken() {
         return this.nextToken;
     }
-    
+
     private int skipped = 0;
     private int topCount = 0;
     private int collectionCount = 0;
-    
+
     private boolean processOptions(int skip, int top, Entity expandEntity) {
         this.collectionCount++;
-        
+
         if (skip > 0 && this.skipped < skip) {
             this.skipped++;
             return false;
         }
-        
+
         if (top > -1 ) {
             if (this.topCount < top) {
-                this.topCount++;                
+                this.topCount++;
                 return true;
-            } 
+            }
             return false;
         }
         return true;
@@ -445,5 +445,5 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     @Override
     public Integer getCount() {
         return this.collectionCount;
-    }    
+    }
 }

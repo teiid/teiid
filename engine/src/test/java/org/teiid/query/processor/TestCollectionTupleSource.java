@@ -36,18 +36,18 @@ public class TestCollectionTupleSource {
         List<Expression> elements = new ArrayList<Expression>();
         elements.add(new ElementSymbol("x")); //$NON-NLS-1$
         elements.add(new ElementSymbol("y")); //$NON-NLS-1$
-        CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource();   
-        
+        CollectionTupleSource nts = CollectionTupleSource.createNullTupleSource();
+
         // Walk it and get no data
         List tuple = nts.nextTuple();
         nts.closeSource();
 
         assertEquals("Didn't get termination tuple for first tuple", null, tuple);             //$NON-NLS-1$
     }
-    
+
     @Test public void testUpdateCountSource() {
-        CollectionTupleSource nts = CollectionTupleSource.createUpdateCountTupleSource(5);   
-        
+        CollectionTupleSource nts = CollectionTupleSource.createUpdateCountTupleSource(5);
+
         // Walk it and get no data
         List tuple = nts.nextTuple();
         nts.closeSource();

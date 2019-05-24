@@ -63,47 +63,47 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
                                                   TempMetadataAdapter metadata) throws QueryMetadataException,
                                                                           QueryResolverException,
                                                                           TeiidComponentException;
-    
+
     /**
      * Expand a command by finding and attaching all subcommands to the command.  If
-     * some initial resolution must be done for this to be accomplished, that is ok, 
+     * some initial resolution must be done for this to be accomplished, that is ok,
      * but it should be kept to a minimum.
      * @param command The command to expand
      * @param useMetadataCommands True if resolver should use metadata commands to completely resolve
      * @param metadata Metadata access
      * @param analysis The analysis record that will be filled in if doing annotation.
-     * 
+     *
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
      * @throws TeiidComponentException If there is an internal error
      */
     public Command expandCommand(ProcedureContainer procCommand, QueryMetadataInterface metadata, AnalysisRecord analysis)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-    	
+
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
 
         Command subCommand = null;
-        
+
         String plan = getPlan(metadata, procCommand);
-        
+
         if (plan == null) {
             return null;
         }
-        
+
         QueryParser parser = QueryParser.getQueryParser();
         try {
             subCommand = parser.parseProcedure(plan, !(procCommand instanceof StoredProcedure));
         } catch(QueryParserException e) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30060, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30060, group, procCommand.getClass().getSimpleName()));
         }
-        
+
         return subCommand;
     }
 
-    /** 
+    /**
      * For a given resolver, this returns the unparsed command.
-     * 
+     *
      * @param metadata
      * @param group
      * @return
@@ -113,7 +113,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     protected abstract String getPlan(QueryMetadataInterface metadata,
                            GroupSymbol group) throws TeiidComponentException,
                                              QueryMetadataException, QueryResolverException;
-        
+
 	public static void addChanging(TempMetadataStore discoveredMetadata,
 			GroupContext externalGroups, List<ElementSymbol> elements) {
 		List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
@@ -126,19 +126,19 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 
         addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements, false);
 	}
-        
-    /** 
+
+    /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
      */
-    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals) 
+    public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
-        
+
         ProcedureContainer procCommand = (ProcedureContainer)command;
-        
+
         resolveGroup(metadata, procCommand);
-        
+
         resolveProceduralCommand(procCommand, metadata);
-        
+
         //getPlan(metadata, procCommand);
     }
 
@@ -156,10 +156,10 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         }
 		return null;
 	}
-	
+
 	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type, boolean validate) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		UpdateInfo info = getUpdateInfo(group, metadata);
-		
+
 		if (info == null) {
 			return null;
 		}
@@ -201,8 +201,8 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 			 throw new QueryResolverException(e);
 		}
 	}
-	
-    /** 
+
+    /**
      * @param metadata
      * @param procCommand
      * @throws TeiidComponentException
@@ -222,7 +222,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {
     	return addScalarGroup(name, metadata, externalGroups, symbols, true);
     }
-    
+
 	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean updatable) {
 		boolean[] updateArray = new boolean[symbols.size()];
 		if (updatable) {
@@ -230,7 +230,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		}
 		return addScalarGroup(name, metadata, externalGroups, symbols, updateArray);
 	}
-	
+
 	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean[] updatable) {
 		GroupSymbol variables = new GroupSymbol(name);
 	    externalGroups.addGroup(variables);
@@ -244,11 +244,11 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	    variables.setMetadataID(tid);
 	    return variables;
 	}
-	
+
 	/**
 	 * Set the appropriate "external" metadata for the given command
-	 * @param inferProcedureResultSetColumns 
-	 * @throws QueryResolverException 
+	 * @param inferProcedureResultSetColumns
+	 * @throws QueryResolverException
 	 */
 	public static void findChildCommandMetadata(Command currentCommand,
 			GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns)
@@ -284,7 +284,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		        // Create temporary metadata that defines a group based on either the stored proc
 		        // name or the stored query name - this will be used later during planning
 		        String procName = info.getProcedureCallableName();
-		        
+
 		        // Look through parameters to find input elements - these become child metadata
 		        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());
 		        boolean[] updatable = new boolean[info.getParameters().size()];
@@ -294,7 +294,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
 		                ElementSymbol symbol = param.getParameterSymbol();
 		                tempElements.add(symbol);
-		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
+		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;
 		                if (param.getParameterType() == ParameterInfo.RETURN_VALUE) {
 		                	cupc.setReturnVariable(symbol);
 		                }
@@ -316,7 +316,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
     			cupc.setUpdateType(type);
 			}
 		}
-		
+
 	    QueryResolver.setChildMetadata(currentCommand, childMetadata, externalGroups);
 	}
 

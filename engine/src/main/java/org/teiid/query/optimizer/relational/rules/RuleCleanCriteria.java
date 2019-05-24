@@ -53,14 +53,14 @@ public final class RuleCleanCriteria implements OptimizerRule {
         throws QueryPlannerException, TeiidComponentException {
 
         boolean pushRaiseNull = false;
-        
+
         pushRaiseNull = clean(plan, !rules.contains(RuleConstants.COPY_CRITERIA));
-        
+
         if (pushRaiseNull) {
             rules.push(RuleConstants.RAISE_NULL);
         }
 
-        return plan;        
+        return plan;
     }
 
 	private boolean clean(PlanNode plan, boolean removeAllPhantom)
@@ -68,7 +68,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
 		boolean pushRaiseNull = false;
 		List<? extends Expression> outputCols = (List<? extends Expression>) plan.setProperty(Info.OUTPUT_COLS, null);
 		if (outputCols != null) {
-		    //save the approximate total 
+		    //save the approximate total
 		    plan.setProperty(Info.APPROXIMATE_OUTPUT_COLUMNS, outputCols.size());
 		}
         for (PlanNode node : plan.getChildren()) {
@@ -79,20 +79,20 @@ public final class RuleCleanCriteria implements OptimizerRule {
         }
 		return pushRaiseNull;
 	}
-    
+
     boolean cleanCriteria(PlanNode critNode, boolean removeAllPhantom) throws TeiidComponentException {
-        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_TEMPORARY) || (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM) 
+        if (critNode.hasBooleanProperty(NodeConstants.Info.IS_TEMPORARY) || (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)
         		&& (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED)))) {
 	        NodeEditor.removeChildNode(critNode.getParent(), critNode);
 	        return false;
         }
-        
+
         //TODO: remove dependent set criteria that has not been meaningfully pushed from its parent join
-        
+
         if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) || critNode.getGroups().size() != 0) {
             return false;
         }
-        
+
         Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         //if not evaluatable, just move on to the next criteria
         if (!EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
@@ -115,7 +115,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
         }
         return false;
     }
-    
+
     public String toString() {
         return "CleanCriteria"; //$NON-NLS-1$
     }

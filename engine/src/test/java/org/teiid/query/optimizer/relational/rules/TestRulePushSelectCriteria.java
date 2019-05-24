@@ -49,19 +49,19 @@ import org.teiid.query.util.CommandContext;
 
 
 public class TestRulePushSelectCriteria {
-    
+
     @Test public void testElementsInCritieria() throws Exception {
         String criteria = "e1 = '1' OR ((e1 = '2' OR e1 = '4') AND e2 = 3)"; //$NON-NLS-1$
         Set<ElementSymbol> expected = new HashSet<ElementSymbol>(Arrays.asList(new ElementSymbol("e1"))); //$NON-NLS-1$
         assertEquals(expected, RulePushSelectCriteria.getElementsIncriteria(QueryParser.getQueryParser().parseCriteria(criteria)));
     }
-    
+
     @Test public void testElementsInCritieria1() throws Exception {
         String criteria = "e1 = '1' and ((e1 = '2' OR e1 = '4') AND e2 = 3) or e2 is null"; //$NON-NLS-1$
         Set<ElementSymbol> expected = new HashSet<ElementSymbol>(Arrays.asList(new ElementSymbol("e2"))); //$NON-NLS-1$
         assertEquals(expected, RulePushSelectCriteria.getElementsIncriteria(QueryParser.getQueryParser().parseCriteria(criteria)));
     }
-    
+
     @Test public void testPushAcrossFrameWithAccessNode() throws Exception {
     	QueryMetadataInterface metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
     	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata); //$NON-NLS-1$
@@ -78,7 +78,7 @@ public class TestRulePushSelectCriteria {
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode.addGroups(child.getFirstChild().getGroups());
     	child.getFirstChild().addAsParent(accessNode);
-    	
+
     	new RulePushSelectCriteria().execute(root, metadata, new DefaultCapabilitiesFinder(), new RuleStack(), AnalysisRecord.createNonRecordingRecord(), cc);
     	// the select node should still be above the access node
     	accessNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.ACCESS);

@@ -50,8 +50,8 @@ public class TestSubquerySetCriteria extends TestCase {
         crit.setLeftExpression(new ElementSymbol("a")); //$NON-NLS-1$
         crit.setRightExpression(new Constant(new Integer(5)));
         crit.setOperator(CompareCriteria.EQ);
-        query.setCriteria(crit);                
-        
+        query.setCriteria(crit);
+
         return new SubquerySetCriteria(new ElementSymbol("temp"), query); //$NON-NLS-1$
     }
 
@@ -69,12 +69,12 @@ public class TestSubquerySetCriteria extends TestCase {
         crit.setRightExpression(new Constant(new Integer(5)));
         crit.setOperator(CompareCriteria.EQ);
         query.setCriteria(crit);
-        
+
         return new SubquerySetCriteria(new ElementSymbol("temp2"), query); //$NON-NLS-1$
     }
 
     // ################################## ACTUAL TESTS ################################
-    
+
     public void testEquals1() {
         SubquerySetCriteria c1 = example1();
         SubquerySetCriteria c2 = example1();
@@ -113,5 +113,5 @@ public class TestSubquerySetCriteria extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
-   
+
 }

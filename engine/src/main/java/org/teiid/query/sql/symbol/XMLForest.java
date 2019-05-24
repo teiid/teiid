@@ -31,19 +31,19 @@ public class XMLForest implements Expression {
 
 	private List<DerivedColumn> args;
 	private XMLNamespaces namespaces;
-	
+
 	public XMLForest(List<DerivedColumn> args) {
 		this.args = args;
 	}
-	
+
 	public XMLNamespaces getNamespaces() {
 		return namespaces;
 	}
-	
+
 	public void setNamespaces(XMLNamespaces namespaces) {
 		this.namespaces = namespaces;
 	}
-	
+
 	public List<DerivedColumn> getArgs() {
 		return args;
 	}
@@ -57,7 +57,7 @@ public class XMLForest implements Expression {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-		
+
 	@Override
 	public XMLForest clone() {
 		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
@@ -66,12 +66,12 @@ public class XMLForest implements Expression {
 		}
 		return clone;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(args.hashCode());
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -82,10 +82,10 @@ public class XMLForest implements Expression {
 		XMLForest other = (XMLForest)obj;
 		return args.equals(other.args) && EquivalenceUtil.areEqual(namespaces, other.namespaces);
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

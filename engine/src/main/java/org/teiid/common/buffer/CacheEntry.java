@@ -25,11 +25,11 @@ public class CacheEntry extends BaseCacheEntry {
 	private Object object;
 	private final int sizeEstimate;
 	private WeakReference<? extends Serializer<?>> serializer;
-	
+
 	public CacheEntry(Long oid) {
 		this(new CacheKey(oid, 0, 0), 0, null, null, false);
 	}
-	
+
 	public CacheEntry(CacheKey key, int sizeEstimate, Object object, WeakReference<? extends Serializer<?>> serializer, boolean persistent) {
 		super(key);
 		this.sizeEstimate = sizeEstimate;
@@ -37,15 +37,15 @@ public class CacheEntry extends BaseCacheEntry {
 		this.serializer = serializer;
 		this.persistent = persistent;
 	}
-	
+
 	public void setObject(Object object) {
 		this.object = object;
 	}
-	
+
 	public int getSizeEstimate() {
 		return sizeEstimate;
 	}
-	
+
 	public Object nullOut() {
 		Object result = getObject();
 		this.object = null;

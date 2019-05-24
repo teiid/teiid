@@ -27,7 +27,7 @@ import org.teiid.core.BundleUtil;
  * <p>
  * <li>The limit on the number of sessions for the user has been reached, and a new session for the user could not be established;</li>
  * <li>An account for the user does not exist, has been frozen or has been removed; and</li>
- * <li>The credentials that were supplied did not authenticate the user.</li> 
+ * <li>The credentials that were supplied did not authenticate the user.</li>
  */
 public class LogonException extends TeiidSecurityException {
 
@@ -49,10 +49,10 @@ public class LogonException extends TeiidSecurityException {
     public LogonException( BundleUtil.Event event, String message ) {
         super(event, message);
     }
-    
+
     public LogonException( BundleUtil.Event event, Throwable t, String message ) {
         super(event, t, message );
-    }    
+    }
 
     public LogonException(Throwable t) {
         super(t);

@@ -24,7 +24,7 @@ import org.teiid.language.Command;
  * Additional methods that may optionally be implemented for an {@link Execution}
  */
 public interface ReusableExecution<C> extends Execution {
-	
+
 	/**
 	 * Called to reinitialized the execution for use.
 	 * @param c
@@ -32,10 +32,10 @@ public interface ReusableExecution<C> extends Execution {
 	 * @param connection
 	 */
 	void reset(Command c, ExecutionContext executionContext, C connection);
-	
+
 	/**
 	 * Called when the execution is no longer used.
 	 */
 	void dispose();
-	
+
 }

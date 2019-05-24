@@ -23,13 +23,13 @@ import java.util.ResourceBundle;
 import org.teiid.core.BundleUtil;
 
 
-public class ODataPlugin { 
+public class ODataPlugin {
 
     public static final String PLUGIN_ID = "org.teiid.translator.odata" ; //$NON-NLS-1$
 
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID, PLUGIN_ID
-            + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$    
-    
+            + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
+
     public static enum Event implements BundleUtil.Event{
         TEIID17001,
         TEIID17002,
@@ -40,7 +40,7 @@ public class ODataPlugin {
         TEIID17007,
         TEIID17008,
         TEIID17009,
-        TEIID17010,    // ex    
+        TEIID17010,    // ex
         TEIID17011,
         TEIID17012,
         TEIID17013,
@@ -63,7 +63,7 @@ public class ODataPlugin {
         TEIID17030,
         TEIID17031,
         TEIID17032,
-        TEIID17033, 
+        TEIID17033,
         TEIID17034,
         TEIID17035
     }

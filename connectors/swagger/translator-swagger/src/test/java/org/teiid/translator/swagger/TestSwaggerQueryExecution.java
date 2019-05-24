@@ -67,7 +67,7 @@ public class TestSwaggerQueryExecution {
             final String resultJson, String expectedURL, int responseCode,
             boolean decode, String expectedMethod, String expectedInput,
             Map<String, Object> userHeaders) throws Exception {
-        
+
         userHeaders.put(MessageContext.HTTP_REQUEST_HEADERS,
                 new HashMap<String, List<String>>());
         userHeaders.put(WSConnection.STATUS_CODE, new Integer(responseCode));
@@ -151,46 +151,46 @@ public class TestSwaggerQueryExecution {
     public void testSimpleInputArray() throws Exception {
         String query = "exec findPetsByStatus(status=>('available',));";
         String expectedURL = "http://petstore.swagger.io/v2/pet/findByStatus?status=available";
-        String response = "[\n" 
+        String response = "[\n"
                 + "  {\n" + "\"id\": 7,\n"
-                + "    \"category\": {\n" 
+                + "    \"category\": {\n"
                 + "         \"id\": 4,\n"
-                + "         \"name\": \"Lions\"\n" 
+                + "         \"name\": \"Lions\"\n"
                 + "    },\n"
-                + "    \"name\": \"Lion 1\",\n" 
+                + "    \"name\": \"Lion 1\",\n"
                 + "    \"photoUrls\": [\n"
-                + "      \"url1\",\n" 
-                + "      \"url2\"\n" 
+                + "      \"url1\",\n"
+                + "      \"url2\"\n"
                 + "    ],\n"
-                + "    \"tags\": [\n" 
-                + "      {\n" 
-                + "        \"id\": 1,\n"
-                + "        \"name\": \"tag1\"\n" 
-                + "      },\n" 
-                + "      {\n"
-                + "        \"id\": 2,\n" 
-                + "        \"name\": \"tag2\"\n"
-                + "      }\n" 
-                + "    ],\n" 
-                + "    \"status\": \"available\"\n"
-                + "  },\n" 
-                + "  {\n" 
-                + "    \"id\": 10008,\n"
-                + "    \"category\": {\n" 
-                + "      \"id\": 0,\n"
-                + "      \"name\": \"string\"\n" 
-                + "    },\n"
-                + "    \"name\": \"doggie\",\n" 
-                + "    \"photoUrls\": [\n"
-                + "      \"string\"\n" 
-                + "    ],\n" 
                 + "    \"tags\": [\n"
-                + "      {\n" 
-                + "        \"id\": 0,\n"
-                + "        \"name\": \"string\"\n" 
-                + "      }\n" 
+                + "      {\n"
+                + "        \"id\": 1,\n"
+                + "        \"name\": \"tag1\"\n"
+                + "      },\n"
+                + "      {\n"
+                + "        \"id\": 2,\n"
+                + "        \"name\": \"tag2\"\n"
+                + "      }\n"
                 + "    ],\n"
-                + "    \"status\": \"available\"\n" 
+                + "    \"status\": \"available\"\n"
+                + "  },\n"
+                + "  {\n"
+                + "    \"id\": 10008,\n"
+                + "    \"category\": {\n"
+                + "      \"id\": 0,\n"
+                + "      \"name\": \"string\"\n"
+                + "    },\n"
+                + "    \"name\": \"doggie\",\n"
+                + "    \"photoUrls\": [\n"
+                + "      \"string\"\n"
+                + "    ],\n"
+                + "    \"tags\": [\n"
+                + "      {\n"
+                + "        \"id\": 0,\n"
+                + "        \"name\": \"string\"\n"
+                + "      }\n"
+                + "    ],\n"
+                + "    \"status\": \"available\"\n"
                 + "  }]";
 
         ProcedureExecution excution = helpProcedureExecute(query, response,
@@ -241,13 +241,13 @@ public class TestSwaggerQueryExecution {
     public void testMapReturn() throws Exception {
         String query = "exec getInventory();";
         String expectedURL = "http://petstore.swagger.io/v2/store/inventory";
-        String response = "{\n" 
-                + "  \"sold\": 6,\n" 
+        String response = "{\n"
+                + "  \"sold\": 6,\n"
                 + "  \"string\": 7,\n"
-                + "  \"pending\": 62,\n" 
+                + "  \"pending\": 62,\n"
                 + "  \"available\": 891,\n"
-                + "  \"Live\": 7,\n" 
-                + "  \"fulfilled\": 1\n" 
+                + "  \"Live\": 7,\n"
+                + "  \"fulfilled\": 1\n"
                 + "}";
 
         ProcedureExecution excution = helpProcedureExecute(query, response,
@@ -281,33 +281,33 @@ public class TestSwaggerQueryExecution {
                     excution.next().toArray(new Object[3]));
             assertNull(excution.next());
         } finally {
-            TimeZone.setDefault(tz);    
+            TimeZone.setDefault(tz);
         }
     }
-    
+
     @Test
     public void testParameterInPath() throws Exception {
         String query = "exec getPetById(petId=>687789);";
         String expectedURL = "http://petstore.swagger.io/v2/pet/687789";
-        String response = "{\n" + 
-                "  \"id\": 687789,\n" + 
-                "  \"category\": {\n" + 
-                "    \"id\": 0,\n" + 
-                "    \"name\": \"Lions\"\n" + 
-                "  },\n" + 
-                "  \"name\": \"nikky\",\n" + 
-                "  \"photoUrls\": [\n" + 
-                "    \"url1\"\n" + 
-                "  ],\n" + 
-                "  \"tags\": [\n" + 
-                "    {\n" + 
-                "      \"id\": 1,\n" + 
-                "      \"name\": \"tag1\"\n" + 
-                "    }\n" + 
-                "  ],\n" + 
-                "  \"status\": \"sold\"\n" + 
+        String response = "{\n" +
+                "  \"id\": 687789,\n" +
+                "  \"category\": {\n" +
+                "    \"id\": 0,\n" +
+                "    \"name\": \"Lions\"\n" +
+                "  },\n" +
+                "  \"name\": \"nikky\",\n" +
+                "  \"photoUrls\": [\n" +
+                "    \"url1\"\n" +
+                "  ],\n" +
+                "  \"tags\": [\n" +
+                "    {\n" +
+                "      \"id\": 1,\n" +
+                "      \"name\": \"tag1\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"status\": \"sold\"\n" +
                 "}";
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "GET", null, getHeaders());
         assertArrayEquals(new Object[] { 687789L, 0L, "Lions", "nikky",
@@ -315,13 +315,13 @@ public class TestSwaggerQueryExecution {
                 excution.next().toArray(new Object[8]));
         assertNull(excution.next());
     }
-    
+
     @Test(expected=TranslatorException.class)
     public void testErrorResponse() throws Exception {
         String query = "exec getPetById(petId=>687789);";
         String expectedURL = "http://petstore.swagger.io/v2/pet/687789";
         String response = "";
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 400, true, "GET", null, getHeaders());
         assertNull(excution.next());
@@ -332,43 +332,43 @@ public class TestSwaggerQueryExecution {
         String query = "exec logoutUser();";
         String expectedURL = "http://petstore.swagger.io/v2/user/logout";
         String response = "";
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "GET", null, getHeaders());
         assertNull(excution.next());
     }
-    
+
     @Test
     public void testScalarResponse() throws Exception {
         String query = "exec loginStatus('foo');";
         String expectedURL = "http://petstore.swagger.io/v2/user/loginStatus?username=foo";
         String response = "foo";
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "GET", null, getHeaders());
         assertEquals("foo", excution.getOutputParameterValues().get(0));
     }
-    
+
     @Test(expected=TeiidRuntimeException.class)
     public void testNullParameter() throws Exception {
         String query = "exec loginStatus(null);";
         String expectedURL = null;
         String response = null;
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "GET", null, getHeaders());
     }
-    
+
     @Test
     public void testOptionalParameter() throws Exception {
         String query = "exec updatePet(name=>'fido');";
         String expectedURL = "http://petstore.swagger.io/v2/pet";
         String response = "";
-        
+
         ProcedureExecution excution = helpProcedureExecute(query, response,
                 expectedURL, 200, true, "PUT", null, getHeaders());
     }
-    
+
     private Map<String, Object> getHeaders() {
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put(MessageContext.HTTP_REQUEST_HEADERS,
@@ -379,9 +379,9 @@ public class TestSwaggerQueryExecution {
         headers.put("X-Expires-After", "2016-04-08T10:14:23Z");
         return headers;
     }
-    
+
     @Test
-    public void testGetSerializer(){  
+    public void testGetSerializer(){
         assertTrue(SwaggerProcedureExecution.getSerializer("application/json") instanceof JsonSerializer);
         assertTrue(SwaggerProcedureExecution.getSerializer("application/json;charset=utf-8") instanceof JsonSerializer);
         assertTrue(SwaggerProcedureExecution.getSerializer("application/xml") instanceof XMLSerializer);

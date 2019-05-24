@@ -40,21 +40,21 @@ import org.teiid.util.Version;
 
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
-	
+
 	public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
-	
+
 	@Override
     public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
 		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new FunctionModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				Literal intervalType = (Literal)function.getParameters().get(0);
@@ -66,12 +66,12 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 				}
 				return null;
 			}
-		}); 
-		
+		});
+
 		addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() { 
-			
+
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+
 			@Override
 			public List<?> translate(Function function) {
 				Literal intervalType = (Literal)function.getParameters().get(0);
@@ -82,11 +82,11 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 				}
 				return null;
 			}
-		}); 
-		
+		});
+
 		registerFunctionModifier(SourceSystemFunctions.ST_SRID, new AliasModifier("SRID")); //$NON-NLS-1$
 	}
-	
+
 	@Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -108,32 +108,32 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.RAND);
         return supportedFunctions;
     }
-    
+
     @Override
     protected boolean usesDatabaseVersion() {
         return true;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
     	return true;
     }
-    
+
     @Override
     public String getLikeRegexString() {
     	return "REGEXP"; //$NON-NLS-1$
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
     		Class<?> expectedType) throws SQLException {
@@ -143,7 +143,7 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	}
     	return result;
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
     		Class<?> expectedType) throws SQLException {
@@ -153,32 +153,32 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	}
     	return result;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
     	return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean supportsGroupByRollup() {
     	return true;
     }
-    
+
     @Override
     public boolean useWithRollup() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsOrderByWithExtendedGrouping() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsAggregatesDistinct() {
 	    return true;
     }
-    
+
     @Override
     public int getTimestampNanoPrecision() {
         //the conversion routines won't error out even if additional
@@ -186,5 +186,5 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         //we'll just let mysql do the truncating or rounding
         return 9;
     }
-        
+
 }

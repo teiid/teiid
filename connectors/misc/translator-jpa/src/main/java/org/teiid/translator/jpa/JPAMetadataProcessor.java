@@ -51,13 +51,13 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 /**
- * TODO: 
+ * TODO:
  *  - support of abstract entities is an issue, should we represent base and extended types, just extended types?
- * 
+ *
  */
 @SuppressWarnings("nls")
 public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
-    
+
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Foreign Table Name", description="Applicable on Foreign Key columns")
 	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = MetadataFactory.JPA_URI+"assosiated_with_table";
 	@ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Relation Property", description="Applicable on Foreign Key columns")
@@ -67,7 +67,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Entity Class", description="Java Entity Class that represents this table", required=true)
 	public static final String ENTITYCLASS= MetadataFactory.JPA_URI+"entity_class";
-	
+
 	public void process(MetadataFactory mf, EntityManager entityManager) throws TranslatorException {
 		Metamodel model = entityManager.getMetamodel();
 
@@ -123,7 +123,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 
 	private Table addEntity(MetadataFactory mf, Metamodel model, EntityType<?> entity) throws TranslatorException {
 		Table table = mf.getSchema().getTable(entity.getName());
-		if (table == null) {			
+		if (table == null) {
 			table = mf.addTable(entity.getName());
 			table.setSupportsUpdate(true);
 			table.setProperty(ENTITYCLASS, entity.getJavaType().getCanonicalName());
@@ -132,7 +132,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		}
 		return table;
 	}
-	
+
 	private boolean columnExists(String name, Table table) {
 		return table.getColumnByName(name) != null;
 	}
@@ -145,7 +145,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 		}
 		return entityTable.getColumnByName(name);
 	}
-	
+
 	private void addForeignKey(MetadataFactory mf, String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
 		ForeignKey fk = mf.addForeignKey("FK_"+name, columnNames, referenceTable, table);
 		for (String column:columnNames) {
@@ -160,7 +160,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 			throws TranslatorException {
 	    List<Attribute<?,?>> attributes = new ArrayList<>(entity.getAttributes());
 	    Collections.sort(attributes, Comparator.comparing(Attribute::getName));
-	    
+
 		for (Attribute<?, ?> attr:attributes) {
 			if (!attr.isCollection()) {
 				List<String> attrPath = new LinkedList<>(path);
@@ -195,10 +195,10 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 							break;
 						}
 					}
-					
+
 					if (!classFound) {
 						// if the attribute is @Entity then add entity's PK as column on this
-						// table, then add that column as FK 
+						// table, then add that column as FK
 						for (EntityType et:model.getEntities()) {
 							if (et.getJavaType().equals(attr.getJavaType())) {
 								Table attributeTable = addEntity(mf, model, et);
@@ -225,7 +225,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 							}
 						}
 					}
-					
+
 					if (!classFound) {
 						throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14002, attr.getName()));
 					}
@@ -258,14 +258,14 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 					break;
 				}
 			}
-			
+
 			if (allKeysFound) {
 				fkExists = true;
 				break;
 			}
 		}
 		return fkExists;
-	}	
+	}
 
 	private void addPrimaryKey(MetadataFactory mf, Metamodel model, EntityType<?> entity, Table entityTable) throws TranslatorException {
 		// figure out the PK
@@ -292,7 +292,7 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 						mf.addPrimaryKey("PK_"+pkattr.getName(), keys, entityTable);
 						break;
 					}
-				}			
+				}
 			}
 		}
 		else {
@@ -307,9 +307,9 @@ public class JPAMetadataProcessor implements MetadataProcessor<EntityManager> {
 			mf.addPrimaryKey("PK_"+entity.getName(), keys, entityTable);
 		}
 	}
-	
+
 	private Class getJavaDataType(Class type) {
 		return TypeFacility.getRuntimeType(type);
 	}
-	
+
 }

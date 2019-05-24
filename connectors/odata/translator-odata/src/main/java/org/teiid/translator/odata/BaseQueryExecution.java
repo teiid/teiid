@@ -77,7 +77,7 @@ public class BaseQueryExecution {
 		this.translator = translator;
 		this.connection = connection;
 	}
-	
+
 	protected Feed parse(Blob blob, ODataVersion version, String entityTable, EdmDataServices edsMetadata) throws TranslatorException {
 		try {
 			// if parser is written to return raw objects; then we can avoid some un-necessary object creation
@@ -112,7 +112,7 @@ public class BaseQueryExecution {
 		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
 		for (Status status:expectedStatus) {
 			if (status.getStatusCode() == execution.getResponseCode()) {
-				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode() 
+				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()
 						&& execution.getResponseCode() != Status.NOT_FOUND.getStatusCode()) {
 					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 					ODataVersion version = getODataVersion(execution);
@@ -130,14 +130,14 @@ public class BaseQueryExecution {
 	ODataVersion getODataVersion(BinaryWSProcedureExecution execution) {
 		return getDataServiceVersion(getHeader(execution, ODataConstants.Headers.DATA_SERVICE_VERSION));
 	}
-	
+
 	String getHeader(BinaryWSProcedureExecution execution, String header) {
 		Object value = execution.getResponseHeader(header);
 		if (value instanceof List) {
 			return (String)((List)value).get(0);
 		}
 		return (String)value;
-	}	
+	}
 
 	protected ODataEntitiesResponse executeWithComplexReturn(String method, String uri, String payload, String complexTypeName, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
 		Map<String, List<String>> headers = getDefaultHeaders();
@@ -211,7 +211,7 @@ public class BaseQueryExecution {
 		parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
 		//the engine currently always associates out params at resolve time even if the values are not directly read by the call
 		parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
-		
+
 		Call call = this.translator.getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);

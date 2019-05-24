@@ -164,7 +164,7 @@ public class TestMongoDBUpdateExecution {
 		results.add(new BasicDBObject("_id", 100).append("address", address));
 
         DBObject match = new BasicDBObject("_id", 100);
-		
+
 		DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, results);
 
 		BasicDBObject details = new BasicDBObject("address", "");
@@ -251,7 +251,7 @@ public class TestMongoDBUpdateExecution {
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$pull", details), false, true, WriteConcern.ACKNOWLEDGED);
     }
-    
+
     @Test // one-2-one mapping update merge case;
     public void testMergeDeleteOne2ManyNonFK() throws Exception {
         // tests one-to-many situation
@@ -310,14 +310,14 @@ public class TestMongoDBUpdateExecution {
 		execution.execute();
 		return dbCollection;
 	}
-	
+
     private static class ResultsCursor implements Cursor {
         private Iterator<DBObject> rows;
-        
+
         ResultsCursor (ArrayList<DBObject> rows){
             this.rows = rows.iterator();
         }
-        
+
         @Override
         public void remove() {
             this.rows.remove();
@@ -404,7 +404,7 @@ public class TestMongoDBUpdateExecution {
 
 
 	@Test // one to many
-	@Ignore 
+	@Ignore
 	public void testMergeOne2ManyUpdateComplexKey() throws Exception {
 		String query = "UPDATE OrderDetails SET UnitPrice = 12.50 WHERE ProductID = 14 and odID = 1";
 
@@ -539,7 +539,7 @@ public class TestMongoDBUpdateExecution {
 		Mockito.verify(dbCollection, Mockito.never()).insert(customer_result, WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection).update(match, new BasicDBObject("$push", rentalresult), false, true, WriteConcern.ACKNOWLEDGED);
 	}
-	
+
     @Test
     public void testArrayInsert() throws Exception {
         String query = "insert into ArrayTest(id,column1) VALUES (1, ('jboss', 'teiid', 'Mr.Lizard'))";
@@ -577,7 +577,7 @@ public class TestMongoDBUpdateExecution {
 
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, details, false, true, WriteConcern.ACKNOWLEDGED);
-    }	
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
@@ -592,25 +592,25 @@ public class TestMongoDBUpdateExecution {
     @Test // one to many
     public void testMergeDelete_one_2_many_all() throws Exception {
         String query = "DELETE FROM N5";
-                
+
         BasicDBObject N5ROW1 = new BasicDBObject().append("e1", 3).append("e3", 3);
         BasicDBObject N5ROW2 = new BasicDBObject().append("e1", 3).append("e3", 3);
         BasicDBList N5Rows = new BasicDBList();
         N5Rows.add(N5ROW1);
         N5Rows.add(N5ROW2);
-                
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
-        N1ROWS.add(new BasicDBObject("_id", 1).append("N5", N5Rows));  
+        N1ROWS.add(new BasicDBObject("_id", 1).append("N5", N5Rows));
 
         DBObject match = QueryBuilder.start("N5").exists(true).get();
-        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);        
+        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);
 
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$pull", new BasicDBObject("N5", new BasicDBObject())),
                 false, true, WriteConcern.ACKNOWLEDGED);
-    }  
-    
-    @Test 
+    }
+
+    @Test
     public void testMergeDelete_one_2_many_usingFK() throws Exception {
         // tests one-to-many situation
         String query = "DELETE FROM N5 WHERE e2 = 100";
@@ -627,9 +627,9 @@ public class TestMongoDBUpdateExecution {
         BasicDBObject details = new BasicDBObject("N5", new BasicDBList());
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
-    }  
-    
-    @Test 
+    }
+
+    @Test
     public void testMergeDelete_one_2_many_usingFK2() throws Exception {
         // tests one-to-many situation
         String query = "DELETE FROM N5 WHERE e2 = 100 and e1=1";
@@ -648,37 +648,37 @@ public class TestMongoDBUpdateExecution {
         BasicDBObject details = new BasicDBObject("N5", expected);
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
-    }   
-    
-    @Test 
+    }
+
+    @Test
     public void testNestedMergeDelete_one_2_many_many() throws Exception {
         // tests one-to-many situation
         String query = "DELETE FROM N7 WHERE e2 = 5 and e1=7";
 
-        
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
         BasicDBList N5ROW = new BasicDBList();
         N5ROW.add(5);
         N5ROW.add(51);
-        
+
         BasicDBList N5ROW2 = new BasicDBList();
         N5ROW2.add(50);
-        N5ROW2.add(5);        
-        
+        N5ROW2.add(5);
+
         BasicDBList N5_N7ROW = new BasicDBList();
         N5_N7ROW.add(new BasicDBObject("_id", 7).append("e3", 7));
-        
+
         BasicDBList N5_N7ROW_ARRAY1 = new BasicDBList();
         N5_N7ROW_ARRAY1.add(N5_N7ROW);
-        
+
         BasicDBList N5_N7ROW2 = new BasicDBList();
         N5_N7ROW2.add(new BasicDBObject("_id", 5).append("e3", 7));
         N5_N7ROW2.add(new BasicDBObject("_id", 7).append("e3", 7));
-        
+
         BasicDBList N5_N7ROW_ARRAY2 = new BasicDBList();
         N5_N7ROW_ARRAY2.add(new BasicDBList());
         N5_N7ROW_ARRAY2.add(N5_N7ROW2);
-        
+
         N1ROWS.add(new BasicDBObject("_id", 1).append("N5", N5ROW).append("N5_N7", N5_N7ROW_ARRAY1));
         N1ROWS.add(new BasicDBObject("_id", 2).append("N5", N5ROW2).append("N5_N7", N5_N7ROW_ARRAY2));
 
@@ -687,29 +687,29 @@ public class TestMongoDBUpdateExecution {
 
         ArgumentCaptor<BasicDBObject> matchCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
         ArgumentCaptor<BasicDBObject> updateCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
-        
+
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection, Mockito.times(2)).update(matchCaptor.capture(), updateCaptor.capture(), Mockito.eq(false),
                 Mockito.eq(true), Mockito.eq(WriteConcern.ACKNOWLEDGED));
-        
+
         assertEquals(new BasicDBObject("_id", 1), matchCaptor.getAllValues().get(0));
         assertEquals(new BasicDBObject("_id", 2), matchCaptor.getAllValues().get(1));
 
         BasicDBList EXPECTED_N5_N7ROW2 = new BasicDBList();
         EXPECTED_N5_N7ROW2.add(new BasicDBObject("_id", 5).append("e3", 7));
-        
+
         BasicDBList EXPECTED_N5_N7ROW2_ARRAY = new BasicDBList();
         EXPECTED_N5_N7ROW2_ARRAY.add(EXPECTED_N5_N7ROW2);
-        
-        
-        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.0.N7", new BasicDBList())), 
-                updateCaptor.getAllValues().get(0));   
-        
-        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N7", EXPECTED_N5_N7ROW2)), 
-                updateCaptor.getAllValues().get(1));        
-    }    
-    
-    @Test 
+
+
+        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.0.N7", new BasicDBList())),
+                updateCaptor.getAllValues().get(0));
+
+        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N7", EXPECTED_N5_N7ROW2)),
+                updateCaptor.getAllValues().get(1));
+    }
+
+    @Test
     public void testMergeDelete_one_2_one_2_many() throws Exception {
         // tests one-to-many situation
         String query = "DELETE FROM N4 WHERE e2 = 100 and e1=1";
@@ -729,8 +729,8 @@ public class TestMongoDBUpdateExecution {
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
     }
-    
-    @Test 
+
+    @Test
     public void testMergeDelete_one_2_one_many_onFK() throws Exception {
         // tests one-to-many situation
         String query = "DELETE FROM N4 WHERE e2 = 100";
@@ -747,8 +747,8 @@ public class TestMongoDBUpdateExecution {
         BasicDBObject details = new BasicDBObject("N2.N4", new BasicDBList());
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", details), false, true, WriteConcern.ACKNOWLEDGED);
-    }      
-    
+    }
+
     @Test
     public void testUpdate() throws Exception {
         String query = "UPDATE N1 SET e2 = 2, e3 = 3 WHERE e1 = 1";
@@ -765,33 +765,33 @@ public class TestMongoDBUpdateExecution {
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, details, false, true, WriteConcern.ACKNOWLEDGED);
     }
-    
+
     @Test
     public void testMergeUpdate_one_2_one() throws Exception {
         String query = "UPDATE N2 SET e2 = 2 WHERE e2 = 3";
-        
+
         BasicDBObject N2ROW = new BasicDBObject().append("e2", 3).append("e3", 2);
-                
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
-        N1ROWS.add(new BasicDBObject("_id", 1).append("N2", N2ROW));        
+        N1ROWS.add(new BasicDBObject("_id", 1).append("N2", N2ROW));
 
         BasicDBObject match = new BasicDBObject("_id", 1);
-        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);        
+        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);
 
         BasicDBObject N2UPDATE = new BasicDBObject();
         N2UPDATE.append("N2", new BasicDBObject().append("e2", 2).append("e3", 2));
 
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", N2UPDATE), false, true, WriteConcern.ACKNOWLEDGED);
-    } 
-    
+    }
+
     @Test // one-2-many mapping update merge case;
     public void testMergeUpdate_one_2_many() throws Exception {
         // tests one-to-many situation
         String query = "UPDATE N5 SET e3 = 5 WHERE e1 = 1";
-        
+
         // { "$project" : { "N5" : "$N5" , "_id" : "$_id"}}
-        
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
         BasicDBList N5ROW = new BasicDBList();
         N5ROW.add(new BasicDBObject("_id", 1).append("e2", 1).append("e3", 1));
@@ -808,8 +808,8 @@ public class TestMongoDBUpdateExecution {
         BasicDBObject update = new BasicDBObject("N5", expected);
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", update), false, true, WriteConcern.ACKNOWLEDGED);
-    }    
-    
+    }
+
     @Test
     public void testNestedMergeInsert_one_2_one() throws Exception {
         DBObject n1_match = QueryBuilder.start().and( QueryBuilder.start("N2").exists(true).get(), new BasicDBObject("_id", 1)).get();
@@ -828,59 +828,59 @@ public class TestMongoDBUpdateExecution {
         Mockito.verify(dbCollection, Mockito.never()).insert(n1_match, WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(n1_match, new BasicDBObject("$set", result), false, true, WriteConcern.ACKNOWLEDGED);
     }
-        
+
     @Test
     public void testNestedMergeUpdate_one_2_one_2_one() throws Exception {
         String query = "UPDATE N3 SET e2 = 2 WHERE e1 = 1 and e2 = 3";
-        
+
         //{ "$project" : { "N2_N3" : "$N2.N3" , "N2" : "$N2._id" , "_id" : "$_id"}}
-        
+
         BasicDBObject N3ROW = new BasicDBObject().append("e2", 3).append("e3", 3);
-                
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
-        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N3", N3ROW));  
+        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N3", N3ROW));
 
         BasicDBObject match = new BasicDBObject("_id", 1);
-        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);        
+        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);
 
         BasicDBObject N3UPDATE = new BasicDBObject();
         N3UPDATE.append("N2.N3", new BasicDBObject().append("e2", 2).append("e3", 3));
 
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", N3UPDATE), false, true, WriteConcern.ACKNOWLEDGED);
-    } 
-    
+    }
+
     @Test
     public void testNestedMergeDelete_one_2_one_2_one() throws Exception {
         String query = "DELETE FROM N3 WHERE e1 = 1 and e2 = 3";
-        
+
         //{ "$project" : { "N2_N3" : "$N2.N3" , "N2" : "$N2._id" , "_id" : "$_id"}}
-        
+
         BasicDBObject N3ROW = new BasicDBObject().append("e2", 3).append("e3", 3);
-                
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
-        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N3", N3ROW));  
+        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N3", N3ROW));
 
         DBObject match = QueryBuilder.start().and(new BasicDBObject("_id", 1), new BasicDBObject("N2.N3.e2", 3)).get();
-        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);        
+        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);
 
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$unset", new BasicDBObject("N2.N3", "")), false, true, WriteConcern.ACKNOWLEDGED);
-    }    
-    
+    }
+
     @Test
     public void testNestedMergeUpdate_one_2_one_2_many() throws Exception {
         String query = "UPDATE N4 SET e3 = 5 WHERE e1 = 1";
-        
+
         BasicDBList N4ROW = new BasicDBList();
         N4ROW.add(new BasicDBObject("_id", 1).append("e3", 1));
         N4ROW.add(new BasicDBObject("_id", 2).append("e3", 2));
-        
+
         ArrayList<DBObject> N1ROWS = new ArrayList<DBObject>();
-        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N4", N4ROW));        
+        N1ROWS.add(new BasicDBObject("_id", 1).append("N2_N4", N4ROW));
 
         BasicDBObject match = new BasicDBObject("_id", 1);
-        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);        
+        DBCollection dbCollection = helpUpdate(query, new String[] { "N1" }, match, N1ROWS);
 
         BasicDBList expected = new BasicDBList();
         expected.add(new BasicDBObject("_id", 1).append("e3", 5));
@@ -891,11 +891,11 @@ public class TestMongoDBUpdateExecution {
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", N4UPDATE), false, true, WriteConcern.ACKNOWLEDGED);
     }
-    
+
     @Test
     public void testNestedMergeUpdate_one_2_many_2_one() throws Exception {
         String query = "UPDATE N6 SET e3 = 5 WHERE e1 = 5";
-        
+
         // { "$project" : { "N5_N6" : "$N5.N6" , "N5" : "$N5._id" , "_id" : "$_id"}}
         // { "_id" : 1, "N5" : [ 5, 51 ], "N5_N6" : [ { "e2" : 6, "e3" : 6 }, { "e2" : 0, "e3" : 6 } ] }
         // N5.e1 = N6.e1
@@ -904,19 +904,19 @@ public class TestMongoDBUpdateExecution {
         BasicDBList N5ROW = new BasicDBList();
         N5ROW.add(5);
         N5ROW.add(51);
-        
+
         BasicDBList N5ROW2 = new BasicDBList();
         N5ROW2.add(50);
-        N5ROW2.add(5);        
-        
+        N5ROW2.add(5);
+
         BasicDBList N5_N6ROW = new BasicDBList();
         N5_N6ROW.add(new BasicDBObject("e2", 6).append("e3", 6));
         N5_N6ROW.add(new BasicDBObject("e2", 0).append("e3", 6));
-        
+
         BasicDBList N5_N6ROW2 = new BasicDBList();
         N5_N6ROW2.add(new BasicDBObject("e2", 1).append("e3", 1));
         N5_N6ROW2.add(new BasicDBObject("e2", 2).append("e3", 2));
-        
+
         N1ROWS.add(new BasicDBObject("_id", 1).append("N5", N5ROW).append("N5_N6", N5_N6ROW));
         N1ROWS.add(new BasicDBObject("_id", 2).append("N5", N5ROW2).append("N5_N6", N5_N6ROW2));
 
@@ -929,24 +929,24 @@ public class TestMongoDBUpdateExecution {
 
         ArgumentCaptor<BasicDBObject> matchCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
         ArgumentCaptor<BasicDBObject> updateCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
-        
+
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection, Mockito.times(2)).update(matchCaptor.capture(), updateCaptor.capture(), Mockito.eq(false),
                 Mockito.eq(true), Mockito.eq(WriteConcern.ACKNOWLEDGED));
-        
+
         assertEquals(new BasicDBObject("_id", 1), matchCaptor.getAllValues().get(0));
         assertEquals(new BasicDBObject("_id", 2), matchCaptor.getAllValues().get(1));
-        
-        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.0.N6", expected1)), 
+
+        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.0.N6", expected1)),
                 updateCaptor.getAllValues().get(0));
-        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N6", expected2)), 
+        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N6", expected2)),
                 updateCaptor.getAllValues().get(1));
-    }     
+    }
 
     @Test
     public void testNestedMergeUpdate_one_2_many_2_many() throws Exception {
         String query = "UPDATE N7 SET e3 = 5 WHERE e1 = 5";
-        
+
         // { "$project" : { "N5_N7" : "$N5.N7" , "N5" : "$N5._id" , "_id" : "$_id"}}
         // { "_id" : 1, "N5" : [ 5, 51 ], "N5_N7" : [ [ { "e3" : 7, "_id" : 7 } ]] ] }
         // { "_id" : 1, "N5" : [ 50, 5 ], "N5_N7" : [ [ { "e3" : 7, "_id" : 7 } ], [ { "e3" : 7, "_id" : 5 }, { "e3" : 7, "_id" : 7 } ] ] }
@@ -956,25 +956,25 @@ public class TestMongoDBUpdateExecution {
         BasicDBList N5ROW = new BasicDBList();
         N5ROW.add(5);
         N5ROW.add(51);
-        
+
         BasicDBList N5ROW2 = new BasicDBList();
         N5ROW2.add(50);
-        N5ROW2.add(5);        
-        
+        N5ROW2.add(5);
+
         BasicDBList N5_N7ROW = new BasicDBList();
         N5_N7ROW.add(new BasicDBObject("_id", 7).append("e3", 7));
-        
+
         BasicDBList N5_N7ROW_ARRAY1 = new BasicDBList();
         N5_N7ROW_ARRAY1.add(N5_N7ROW);
-        
+
         BasicDBList N5_N7ROW2 = new BasicDBList();
         N5_N7ROW2.add(new BasicDBObject("_id", 5).append("e3", 7));
         N5_N7ROW2.add(new BasicDBObject("_id", 7).append("e3", 7));
-        
+
         BasicDBList N5_N7ROW_ARRAY2 = new BasicDBList();
         N5_N7ROW_ARRAY2.add(new BasicDBList());
         N5_N7ROW_ARRAY2.add(N5_N7ROW2);
-        
+
         N1ROWS.add(new BasicDBObject("_id", 1).append("N5", N5ROW).append("N5_N7", N5_N7ROW_ARRAY1));
         N1ROWS.add(new BasicDBObject("_id", 2).append("N5", N5ROW2).append("N5_N7", N5_N7ROW_ARRAY2));
 
@@ -983,29 +983,29 @@ public class TestMongoDBUpdateExecution {
 
         ArgumentCaptor<BasicDBObject> matchCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
         ArgumentCaptor<BasicDBObject> updateCaptor = ArgumentCaptor.forClass(BasicDBObject.class);
-        
+
         Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
         Mockito.verify(dbCollection, Mockito.times(1)).update(matchCaptor.capture(), updateCaptor.capture(), Mockito.eq(false),
                 Mockito.eq(true), Mockito.eq(WriteConcern.ACKNOWLEDGED));
-        
+
         assertEquals(new BasicDBObject("_id", 2), matchCaptor.getAllValues().get(0));
 
         BasicDBList EXPECTED_N5_N7ROW2 = new BasicDBList();
         EXPECTED_N5_N7ROW2.add(new BasicDBObject("_id", 5).append("e3", 5));
         EXPECTED_N5_N7ROW2.add(new BasicDBObject("_id", 7).append("e3", 7));
-        
+
         BasicDBList EXPECTED_N5_N7ROW2_ARRAY = new BasicDBList();
         EXPECTED_N5_N7ROW2_ARRAY.add(EXPECTED_N5_N7ROW2);
-        
-        
-        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N7", EXPECTED_N5_N7ROW2)), 
+
+
+        assertEquals(new BasicDBObject("$set", new BasicDBObject("N5.1.N7", EXPECTED_N5_N7ROW2)),
                 updateCaptor.getAllValues().get(0));
-    }     
-    
-    
+    }
+
+
     @Test
     public void testNestedMergeInsert_One_2_One_Many() throws Exception {
-        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N2").exists(true).get(), 
+        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N2").exists(true).get(),
                 new BasicDBObject("_id", 2)).get();
 
         BasicDBObject match = new BasicDBObject();
@@ -1025,7 +1025,7 @@ public class TestMongoDBUpdateExecution {
 
     @Test
     public void testNestedMergeInsert_One_2_Many_one() throws Exception {
-        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N5").exists(true).get(), 
+        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N5").exists(true).get(),
                 new BasicDBObject("N5._id", 1)).get();
 
         BasicDBObject match = new BasicDBObject();
@@ -1045,8 +1045,8 @@ public class TestMongoDBUpdateExecution {
 
     @Test
     public void testNestedMergeInsert_One_2_Many_Many() throws Exception {
-        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N5").exists(true).get(), 
-                new BasicDBObject("N5._id", 2)).get();        
+        DBObject n1_match = QueryBuilder.start().and(QueryBuilder.start("N5").exists(true).get(),
+                new BasicDBObject("N5._id", 2)).get();
 
         BasicDBObject match = new BasicDBObject();
         match.append("_id", 3);

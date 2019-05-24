@@ -42,7 +42,7 @@ public class TestLocalServerConnection {
         public Subject getSubjectInContext(Object context) {
             return null;
         }
-        
+
         @Override
         public Object getSecurityContext(String securityDomain) {
             return null;

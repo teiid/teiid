@@ -26,11 +26,11 @@ import org.teiid.translator.jdbc.sqlserver.SQLServerExecutionFactory.SQLServerMe
 
 @SuppressWarnings("nls")
 public class TestSQLServerImport {
-    
+
     @Test public void testProcedureName() throws TranslatorException {
         SQLServerExecutionFactory ssef = new SQLServerExecutionFactory();
         ssef.start();
-        
+
         SQLServerMetadataProcessor mp = (SQLServerMetadataProcessor) ssef.getMetadataProcessor();
         assertEquals("xyz", mp.modifyProcedureNameInSource("xyz;1"));
         assertEquals("xyz;1a", mp.modifyProcedureNameInSource("xyz;1a"));

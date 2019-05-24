@@ -28,10 +28,10 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToTimeTransform extends Transform {
-	
+
 	private static boolean validate = true;
 	private static Pattern pattern = Pattern.compile("\\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
-	
+
 	static {
 		try {
 			Time.valueOf("26:10:10"); //$NON-NLS-1$
@@ -80,7 +80,7 @@ public class StringToTimeTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.TIME;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

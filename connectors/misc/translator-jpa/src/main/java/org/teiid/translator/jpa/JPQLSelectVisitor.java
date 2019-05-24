@@ -43,7 +43,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 /**
- * This visitor converts the Teiid command into JPQL string 
+ * This visitor converts the Teiid command into JPQL string
  */
 public class JPQLSelectVisitor extends HierarchyVisitor {
 	protected JPA2ExecutionFactory executionFactory;
@@ -53,31 +53,31 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     protected LinkedHashMap<String, NamedTable> implicitGroups = new LinkedHashMap<String, NamedTable>();
     protected AtomicInteger aliasCounter = new AtomicInteger(0);
 	protected RuntimeMetadata metadata;
-    
+
     public JPQLSelectVisitor(JPA2ExecutionFactory executionFactory, RuntimeMetadata metadata) {
     	super(false);
     	this.executionFactory = executionFactory;
     	this.metadata = metadata;
     }
-    	
+
     public static String getJPQLString(Select obj, JPA2ExecutionFactory executionFactory, RuntimeMetadata metadata)  throws TranslatorException {
     	JPQLSelectVisitor visitor = new JPQLSelectVisitor(executionFactory, metadata);
-        
+
     	visitor.visitNode(obj);
-    	
+
     	if (!visitor.exceptions.isEmpty()) {
     		throw visitor.exceptions.get(0);
-    	}  
-    	
+    	}
+
         return visitor.convertToQuery(obj);
     }
-    
+
     private String convertToQuery(Select obj) {
     	JPQLSelectStringVisitor visitor = new JPQLSelectStringVisitor(this);
     	visitor.visitNode(obj);
     	return visitor.toString();
     }
-    
+
     @Override
     public void visit(Select obj) {
     	visitNodes(obj.getDerivedColumns());
@@ -86,13 +86,13 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
         visitNode(obj.getGroupBy());
         visitNode(obj.getHaving());
         visitNode(obj.getOrderBy());
-    }    
-    
+    }
+
     @Override
     public void visit(ColumnReference obj) {
 		AbstractMetadataRecord record = obj.getMetadataObject();
 		if (record != null) {
-			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false); 
+			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false);
 			if (name != null) {
 				try {
 					Table t = this.metadata.getTable(name);
@@ -110,7 +110,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 			}
 		}
     }
-    
+
     private boolean alreadyInJoin(NamedTable table) {
     	String[] splits = table.getName().split("\\.");
     	String correlationName = splits[0];
@@ -136,7 +136,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 	    	}
     	}
     }
-    
+
     @Override
     public void visit(Join obj) {
     	try {
@@ -151,7 +151,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 	    		else {
 	    			exceptions.add(new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14004, table.getName())));
 	    		}
-	    	}			
+	    	}
 		} catch (TranslatorException e) {
 			exceptions.add(e);
 		}
@@ -164,53 +164,53 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     				return jt.getParent();
     			}
     		}
-    		
+
     		if (jt.getChild() != null) {
     			if (isParentOf(jt.getChild(), child)) {
     				return jt.getChild();
-    			}    			
+    			}
     		}
     	}
     	return null;
     }
-    
+
 	private JoinTable handleJoin(Join obj)  throws TranslatorException {
 		TableReference left = obj.getLeftItem();
     	TableReference right = obj.getRightItem();
-    	
+
     	if ((left instanceof NamedTable) && (right instanceof NamedTable)) {
     		JoinTable join = handleJoin(obj.getJoinType(), left, right, obj.getCondition(), true);
     		this.joins.add(join);
     		return join;
-    	}    	
-    	
+    	}
+
     	JoinTable leftJoin = null;
     	if (left instanceof Join) {
     		leftJoin = handleJoin((Join)left);
     		if (right instanceof NamedTable) {
     			JoinTable join =  handleJoin(obj.getJoinType(), leftJoin, (NamedTable)right, obj.getCondition());
         		this.joins.add(join);
-        		return join;    			
+        		return join;
     		}
     	}
-    	
+
     	JoinTable rightJoin = null;
     	if (right instanceof Join) {
     		rightJoin = handleJoin((Join)right);
     		if (left instanceof NamedTable) {
     			JoinTable join = handleJoin(obj.getJoinType(), (NamedTable)left, rightJoin, obj.getCondition());
         		this.joins.add(join);
-        		return join;      			
+        		return join;
     		}
     	}
     	throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14005));
 	}
-	
+
 	private JoinTable handleJoin(Join.JoinType joinType, JoinTable left, NamedTable right, Condition condition) throws TranslatorException {
-		// first we need to find correct parent for the right 
+		// first we need to find correct parent for the right
 		JoinTable withParent = handleJoin(joinType, left.getParent(), right, condition, false);
 		JoinTable withChild = handleJoin(joinType, left.getChild(), right, condition, false);
-		
+
 		NamedTable parent = null;
 		if (withParent != null && withParent.getParent() != null) {
 			parent = withParent.getParent();
@@ -220,14 +220,14 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 		if (parent != null) {
 			return handleJoin(joinType, parent, right, condition, true);
 		}
-		throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14006)); 
+		throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14006));
 	}
-	
+
 	private JoinTable handleJoin(Join.JoinType joinType, NamedTable left, JoinTable right, Condition condition) throws TranslatorException {
-		// first we need to find correct parent for the left 
+		// first we need to find correct parent for the left
 		JoinTable withParent = handleJoin(joinType, left, right.getParent(), condition, false);
 		JoinTable withChild = handleJoin(joinType, left, right.getChild(), condition, false);
-		
+
 		NamedTable parent = null;
 		if (withParent != null && withParent.getParent() != null) {
 			parent = withParent.getParent();
@@ -238,7 +238,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 			return handleJoin(joinType, left, parent, condition, true);
 		}
 		throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14006));
-	}	
+	}
 
 	private JoinTable handleJoin(Join.JoinType joinType, TableReference left, TableReference right, Condition condition, boolean fixCorrelatedNames) {
 		// both sides are named tables
@@ -255,7 +255,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 		}
 
 		JoinTable joinTable = new JoinTable(leftTable, rightTable, joinType);
-		
+
 		if (fixCorrelatedNames) {
 			String groupName;
 
@@ -265,13 +265,13 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 			if (table != null) {
 				table.setCorrelationName(leftTable.getCorrelationName());
 			}
-			
+
 			// fix right table's correleated name
 			groupName = leftTable.getCorrelationName() + Tokens.DOT + rightTable.getName();
 			table = this.implicitGroups.get(groupName);
 			if (table != null) {
 				table.setCorrelationName(rightTable.getCorrelationName());
-			}   
+			}
 		}
 		return joinTable;
 	}
@@ -309,7 +309,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     	String childAttributeName;
     	String parentAttributeName;
     	JoinType joinType;
-    	
+
     	JoinTable(NamedTable left, NamedTable right, JoinType type) {
     		this.left = left;
     		this.right = right;
@@ -353,60 +353,60 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
 	    		}
     		}
     	}
-    	
+
     	NamedTable getParent() {
     		return this.parent;
     	}
-    	
+
     	NamedTable getChild() {
     		return this.child;
     	}
-    	
+
     	NamedTable getLeft() {
     		return this.left;
     	}
-    	
+
     	NamedTable getRight() {
     		return this.right;
-    	}    	
-    	
+    	}
+
     	String childAttributeName() {
     		return this.childAttributeName;
     	}
-    	
+
     	String parentAttributeName() {
     		return this.parentAttributeName;
     	}
-    	
+
     	public boolean isLeftParent() {
     		return this.left == this.parent;
     	}
     }
-    
-    
+
+
     static class JPQLSelectStringVisitor extends SQLStringVisitor {
     	private JPQLSelectVisitor visitor;
-    	
+
     	public JPQLSelectStringVisitor(JPQLSelectVisitor visitor) {
     		this.visitor = visitor;
     	}
-    	
+
     	@Override
     	public void visit(Select obj) {
 
     		buffer.append(SELECT).append(Tokens.SPACE);
-    		
+
             if (obj.isDistinct()) {
                 buffer.append(DISTINCT).append(Tokens.SPACE);
             }
-                   
+
             append(obj.getDerivedColumns());
-            
+
             if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
             	buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
             	append(obj.getFrom());
             }
-            
+
             if (obj.getWhere() != null) {
                 buffer.append(Tokens.SPACE)
                       .append(WHERE)
@@ -427,13 +427,13 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
                 buffer.append(Tokens.SPACE);
                 append(obj.getOrderBy());
             }
-        }    	
-    	
+        }
+
     	@Override
         public void visit(ColumnReference column) {
     		Column record = column.getMetadataObject();
     		if (record != null) {
-    			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false); 
+    			String name = record.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false);
     			if (name == null) {
 					buffer.append(column.getTable().getCorrelationName()).append(Tokens.DOT)
 							.append(record.getSourceName());
@@ -445,30 +445,30 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     				String correlationName = this.visitor.implicitGroups.get(groupName).getCorrelationName();
     				buffer.append(correlationName).append(Tokens.DOT).append(attrColumnName);
     			}
-    		}   
+    		}
     		else {
     			buffer.append(column.getName());
     		}
     	}
-    	
+
     	@Override
         public void visit(Join obj) {
     		addFromClause();
         }
-    	
+
     	@Override
         public void visit(Function func) {
         	if (visitor.executionFactory.getFunctionModifiers().containsKey(func.getName())) {
                 visitor.executionFactory.getFunctionModifiers().get(func.getName()).translate(func);
         	}
         	super.visit(func);
-        }    
-    	
+        }
+
     	@Override
         public void visit(NamedTable obj) {
     		addFromClause();
     	}
-    	
+
     	private void addFromClause() {
     		boolean first = true;
     		for (JoinTable joinTable:this.visitor.joins) {
@@ -479,7 +479,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     				buffer.append(joinTable.getParent().getName());
     		        buffer.append(Tokens.SPACE);
     		        buffer.append(AS).append(Tokens.SPACE);
-    		    	buffer.append(joinTable.getParent().getCorrelationName());    		    	
+    		    	buffer.append(joinTable.getParent().getCorrelationName());
     		    	first = false;
     			}
     			if (joinTable.getChild() != null) {
@@ -507,7 +507,7 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		                  .append(OUTER);
     		            break;
     		        default: buffer.append(UNDEFINED);
-    		        } 
+    		        }
     		        buffer.append(Tokens.SPACE).append(JOIN).append(Tokens.SPACE);
     				buffer.append(joinTable.getParent().getCorrelationName()).append(Tokens.DOT).append(joinTable.childAttributeName());
     		        buffer.append(Tokens.SPACE);
@@ -515,6 +515,6 @@ public class JPQLSelectVisitor extends HierarchyVisitor {
     		    	buffer.append(joinTable.getChild().getCorrelationName());
     			}
     		}
-    	}    	
+    	}
     }
 }

@@ -61,19 +61,19 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 public class DdlPlan extends ProcessorPlan {
-    
+
     public static final boolean ALLOW_ALTER = PropertiesUtils.getHierarchicalProperty("org.teiid.allowAlter", true, Boolean.class); //$NON-NLS-1$
-	
+
     class AlterProcessor extends LanguageVisitor {
         DQPWorkContext workContext = getContext().getDQPWorkContext();
         VDBMetaData vdb = getContext().getVdb();
         TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
-    	
+
     	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String schemaName) {
     		ModelMetaData model = vdb.getModel(schemaName);
     		return model.getAttachment(MetadataRepository.class);
     	}
-    	
+
     	@Override
     	public void visit(AlterView obj) {
     		Table t = (Table)obj.getTarget().getMetadataID();
@@ -139,7 +139,7 @@ public class DdlPlan extends ProcessorPlan {
 	public static void alterView(final VDBMetaData vdb, final Table t, final String sql, boolean updateStore) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
-		
+
 		try {
 			Command command = QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
 			QueryResolver.resolveCommand(command, metadata);
@@ -154,17 +154,17 @@ public class DdlPlan extends ProcessorPlan {
 		t.setLastModified(System.currentTimeMillis());
 		metadata.addToMetadataCache(t, "transformation/"+SQLConstants.Reserved.SELECT, null); //$NON-NLS-1$
 	}
-	
+
 	public static class SetPropertyProcessor {
 	    private MetadataRepository metadataRepository;
 	    private EventDistributor eventDistributor;
-	    
+
         public SetPropertyProcessor(MetadataRepository metadataRepository,
                 EventDistributor eventDistributor) {
             this.metadataRepository = metadataRepository;
             this.eventDistributor = eventDistributor;
         }
-	    
+
         public String setProperty(final VDBMetaData vdb, final AbstractMetadataRecord record, final String key, final String value) throws TeiidProcessingException {
             if (!ALLOW_ALTER) {
                 throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31296));
@@ -178,9 +178,9 @@ public class DdlPlan extends ProcessorPlan {
             }
             return result;
         }
-	    
+
 	}
-	
+
 	public static String setProperty(final VDBMetaData vdb, final AbstractMetadataRecord record, final String key, final String value) {
        TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
        String result = record.setProperty(key, value);
@@ -192,23 +192,23 @@ public class DdlPlan extends ProcessorPlan {
        }
        return result;
     }
-	
+
 	public static void setColumnStats(final VDBMetaData vdb, Column column, final ColumnStats columnStats) {
         column.setColumnStats(columnStats);
         if (column.getParent() instanceof Table) {
             ((Table)column.getParent()).setLastModified(System.currentTimeMillis());
         }
 	}
-	
+
 	public static void setTableStats(final VDBMetaData vdb, final Table table, final TableStats tableStats) {
         table.setTableStats(tableStats);
         table.setLastModified(System.currentTimeMillis());
 	}
-	
+
 	public static void alterProcedureDefinition(final VDBMetaData vdb, final Procedure p, final String sql, boolean updateStore) {
 		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 		DatabaseStore store = vdb.getAttachment(DatabaseStore.class);
-		
+
 		try {
 			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
 			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
@@ -253,7 +253,7 @@ public class DdlPlan extends ProcessorPlan {
 		indexMetadata.addToMetadataCache(t, "transformation/"+event, null); //$NON-NLS-1$
 		t.setLastModified(System.currentTimeMillis());
 	}
-	
+
 	private static String getPlanForEvent(Table t, TriggerEvent event) {
 		switch (event) {
 		case DELETE:
@@ -268,7 +268,7 @@ public class DdlPlan extends ProcessorPlan {
 
 	private Command command;
 	private ProcessorDataManager pdm;
-	
+
 	public DdlPlan(Command command) {
 		this.command = command;
 	}
@@ -293,7 +293,7 @@ public class DdlPlan extends ProcessorPlan {
 		this.setContext(context);
 		this.pdm = dataMgr;
 	}
-	
+
 	@Override
 	public TupleBatch nextBatch() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
@@ -317,17 +317,17 @@ public class DdlPlan extends ProcessorPlan {
 		    throw e;
 		}
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         return props;
 	}
-	
+
 	@Override
 	public String toString() {
         return command.toString();
 	}
-	
+
 }

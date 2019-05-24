@@ -53,46 +53,46 @@ import org.teiid.query.sql.util.SymbolMap;
  * updated.</p>
  */
 public class UpdateValidator {
-	
+
 	public enum UpdateType {
 		/**
 		 * The default handling should be used
 		 */
-		INHERENT, 
+		INHERENT,
 		/**
 		 * An instead of trigger (TriggerAction) has been defined
 		 */
 		INSTEAD_OF
 	}
-	
+
 	public static class UpdateMapping {
 		private GroupSymbol group;
 		private GroupSymbol correlatedName;
 		private Map<ElementSymbol, ElementSymbol> updatableViewSymbols = new HashMap<ElementSymbol, ElementSymbol>();
 		private boolean insertAllowed = false;
 		private boolean updateAllowed = false;
-		
+
 		public Map<ElementSymbol, ElementSymbol> getUpdatableViewSymbols() {
 			return updatableViewSymbols;
 		}
-		
+
 		public boolean isInsertAllowed() {
 			return insertAllowed;
 		}
-		
+
 		public boolean isUpdateAllowed() {
 			return updateAllowed;
 		}
-		
+
 		public GroupSymbol getGroup() {
 			return group;
 		}
-		
+
 		public GroupSymbol getCorrelatedName() {
 			return correlatedName;
 		}
 	}
-	
+
 	public static class UpdateInfo {
 		private Map<String, UpdateMapping> updatableGroups = new HashMap<String, UpdateMapping>();
 		private boolean isSimple = true;
@@ -106,39 +106,39 @@ public class UpdateValidator {
 		private Query view;
 		private Map<ElementSymbol, List<Set<Constant>>> partitionInfo;
 		private List<UpdateInfo> unionBranches = new LinkedList<UpdateInfo>();
-		
+
 		public Map<ElementSymbol, List<Set<Constant>>> getPartitionInfo() {
 			return partitionInfo;
 		}
-		 
+
 		public boolean isSimple() {
 			return isSimple;
 		}
-		
+
 		public UpdateMapping getDeleteTarget() {
 			return deleteTarget;
 		}
-		
+
 		public boolean isInherentDelete() {
 			return deleteType == UpdateType.INHERENT;
 		}
-		
+
 		public boolean isInherentInsert() {
 			return insertType == UpdateType.INHERENT;
 		}
-		
+
 		public boolean isInherentUpdate() {
 			return updateType == UpdateType.INHERENT;
 		}
-		
+
 		public UpdateType getUpdateType() {
 			return updateType;
 		}
-		
+
 		public UpdateType getDeleteType() {
 			return deleteType;
 		}
-		
+
 		public boolean hasValidUpdateMapping(Collection<ElementSymbol> updateCols) {
 			if (findUpdateMapping(updateCols, false) == null) {
 				return false;
@@ -150,7 +150,7 @@ public class UpdateValidator {
 			}
 			return true;
 		}
-		
+
 		public UpdateMapping findUpdateMapping(Collection<ElementSymbol> updateCols, boolean insert) {
 			if (updateCols.isEmpty() && this.updatableGroups.size() > 1) {
 				return null;
@@ -162,10 +162,10 @@ public class UpdateValidator {
 			}
 			return null;
 		}
-		
+
 		public UpdateMapping findInsertUpdateMapping(Insert insert, boolean rewrite) throws QueryValidatorException {
 			if (getUnionBranches().isEmpty()) {
-				return findUpdateMapping(insert.getVariables(), true);	
+				return findUpdateMapping(insert.getVariables(), true);
 			}
 			if (insert.getQueryExpression() != null) {
 				//TODO: this could be done in a loop, see about adding a validation
@@ -219,23 +219,23 @@ public class UpdateValidator {
 			}
 			return mapping;
 		}
-		
+
 		public Query getViewDefinition() {
 			return view;
 		}
-		
+
 		public String getDeleteValidationError() {
 			return deleteValidationError;
 		}
-		
+
 		public String getInsertValidationError() {
 			return insertValidationError;
 		}
-		
+
 		public String getUpdateValidationError() {
 			return updateValidationError;
 		}
-		
+
 		public List<UpdateInfo> getUnionBranches() {
 			return unionBranches;
 		}
@@ -257,44 +257,44 @@ public class UpdateValidator {
 				this.deleteValidationError = deleteValidationError;
 			}
 		}
-		
+
 	}
-	
+
 	private QueryMetadataInterface metadata;
 	private UpdateInfo updateInfo = new UpdateInfo();
-	
+
 	private ValidatorReport report = new ValidatorReport();
 	private ValidatorReport insertReport = new ValidatorReport();
 	private ValidatorReport updateReport = new ValidatorReport();
 	private ValidatorReport deleteReport = new ValidatorReport();
-	
+
 	public UpdateValidator(QueryMetadataInterface qmi, UpdateType insertType, UpdateType updateType, UpdateType deleteType) {
 		this.metadata = qmi;
 		this.updateInfo.deleteType = deleteType;
 		this.updateInfo.insertType = insertType;
 		this.updateInfo.updateType = updateType;
 	}
-		
+
 	public UpdateInfo getUpdateInfo() {
 		return updateInfo;
 	}
-	
+
 	public ValidatorReport getReport() {
 		return report;
 	}
-	
+
 	public ValidatorReport getDeleteReport() {
 		return deleteReport;
 	}
-	
+
 	public ValidatorReport getInsertReport() {
 		return insertReport;
 	}
-	
+
 	public ValidatorReport getUpdateReport() {
 		return updateReport;
 	}
-	
+
 	private void handleValidationError(String error, boolean update, boolean insert, boolean delete) {
 		if (update && insert && delete) {
 			report.handleValidationError(error);
@@ -316,7 +316,7 @@ public class UpdateValidator {
 			}
 		}
 	}
-	
+
     public void validate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
     	if (this.updateInfo.deleteType != UpdateType.INHERENT && this.updateInfo.updateType != UpdateType.INHERENT && this.updateInfo.insertType != UpdateType.INHERENT) {
     		return;
@@ -330,7 +330,7 @@ public class UpdateValidator {
     		LinkedList<Query> queries = new LinkedList<Query>();
     		if (!PartitionAnalyzer.extractQueries((SetQuery)command, queries)) {
     			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
-        		return;    			
+        		return;
     		}
         	Map<ElementSymbol, List<Set<Constant>>> partitions = PartitionAnalyzer.extractPartionInfo((SetQuery)command, viewSymbols);
         	this.updateInfo.partitionInfo = partitions;
@@ -380,24 +380,24 @@ public class UpdateValidator {
     		this.updateInfo.insertValidationError = null;
     	}
     }
-	
+
     private void internalValidate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
     	if (!(command instanceof Query)) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
     		return;
         }
-    	
+
     	Query query = (Query)command;
 
     	if (query.getFrom() == null || query.getInto() != null) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0001"), true, true, true); //$NON-NLS-1$
     		return;
     	}
-    	
+
     	if (query.getWith() != null) {
     		String warning = QueryPlugin.Util.getString("ERR.015.012.0002"); //$NON-NLS-1$
     		updateReport.handleValidationWarning(warning);
-    		deleteReport.handleValidationWarning(warning); 
+    		deleteReport.handleValidationWarning(warning);
     		updateInfo.isSimple = false;
     	}
 
@@ -405,25 +405,25 @@ public class UpdateValidator {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0006"), true, true, true); //$NON-NLS-1$
     		return;
     	}
-    	
+
     	if (query.getLimit() != null) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0013"), true, true, true); //$NON-NLS-1$
     		return;
     	}
-    	
+
     	if (query.getSelect().isDistinct()) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0008"), true, true, true); //$NON-NLS-1$
     		return;
-    	} 
-    	
+    	}
+
     	updateInfo.view = query;
-    	
+
     	List<Expression> projectedSymbols = query.getSelect().getProjectedSymbols();
-    	
+
     	for (int i = 0; i < projectedSymbols.size(); i++) {
             Expression symbol = projectedSymbols.get(i);
             Expression ex = SymbolMap.getExpression(symbol);
-            
+
             if (!metadata.elementSupports(viewSymbols.get(i).getMetadataID(), SupportConstants.Element.UPDATE)) {
             	continue;
             }
@@ -448,22 +448,22 @@ public class UpdateValidator {
             	info.updatableViewSymbols.put(viewSymbols.get(i), es);
             } else {
             	//TODO: look for reversable widening conversions
-            	
+
                 report.handleValidationWarning(QueryPlugin.Util.getString("ERR.015.012.0007", viewSymbols.get(i), symbol)); //$NON-NLS-1$
             }
     	}
-    	
+
     	if (query.getFrom().getClauses().size() > 1 || (!(query.getFrom().getClauses().get(0) instanceof UnaryFromClause))) {
     	    String warning = QueryPlugin.Util.getString("ERR.015.012.0009", query.getFrom()); //$NON-NLS-1$
-    		updateReport.handleValidationWarning(warning); 
+    		updateReport.handleValidationWarning(warning);
     		deleteReport.handleValidationWarning(warning);
     		updateInfo.isSimple = false;
     	}
     	List<GroupSymbol> allGroups = query.getFrom().getGroups();
     	HashSet<GroupSymbol> keyPreservingGroups = new HashSet<GroupSymbol>();
-    	
+
 		ResolverUtil.findKeyPreserved(query, keyPreservingGroups, metadata);
-    	
+
 		for (GroupSymbol groupSymbol : keyPreservingGroups) {
 			setUpdateFlags(groupSymbol);
 		}
@@ -500,7 +500,7 @@ public class UpdateValidator {
     	}
     	if ((this.updateInfo.insertType == UpdateType.INHERENT && !insertable)) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0015"), false, true, false); //$NON-NLS-1$
-    	} 
+    	}
     	if (this.updateInfo.updateType == UpdateType.INHERENT && !updatable) {
     		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0005"), true, false, false); //$NON-NLS-1$
     	}
@@ -514,9 +514,9 @@ public class UpdateValidator {
     	    }
     	    if (this.updateInfo.deleteTarget != null) {
     	        GroupSymbol group = this.updateInfo.deleteTarget.group;
-                if (!this.updateInfo.isSimple && metadata.getPrimaryKey(group.getMetadataID()) == null && 
+                if (!this.updateInfo.isSimple && metadata.getPrimaryKey(group.getMetadataID()) == null &&
     	                metadata.getUniqueKeysInGroup(group.getMetadataID()).isEmpty()) {
-                    handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31267, viewSymbols.iterator().next().getGroupSymbol(), group), false, false, true); 
+                    handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31267, viewSymbols.iterator().next().getGroupSymbol(), group), false, false, true);
     	        }
     	    }
     	}
@@ -547,13 +547,13 @@ public class UpdateValidator {
 	 * <p> This method validates an elements present in the group specified in the
 	 * FROM clause of the query but not specified in its SELECT clause</p>
 	 * @param element The <code>ElementSymbol</code> being validated
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	private boolean validateInsertElement(ElementSymbol element) throws QueryMetadataException, TeiidComponentException {
 		// checking if the elements not specified in the query are required.
-		if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.NULL) 
-			|| metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) 
+		if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.NULL)
+			|| metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE)
 			|| metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
 			return true;
 		}

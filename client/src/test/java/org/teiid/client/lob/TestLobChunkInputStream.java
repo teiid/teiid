@@ -34,22 +34,22 @@ public class TestLobChunkInputStream extends TestCase {
 
     public void testReadByteArray() throws Exception {
     	LobChunkProducer chunkProducer = new LobChunkProducer() {
-			
-    		Iterator<LobChunk> chuncks = Arrays.asList(new LobChunk("hello ".getBytes(), false), new LobChunk("world".getBytes(), true)).iterator(); //$NON-NLS-1$ //$NON-NLS-2$ 
-    		
+
+    		Iterator<LobChunk> chuncks = Arrays.asList(new LobChunk("hello ".getBytes(), false), new LobChunk("world".getBytes(), true)).iterator(); //$NON-NLS-1$ //$NON-NLS-2$
+
 			@Override
 			public LobChunk getNextChunk() throws IOException {
 				return chuncks.next();
 			}
-			
+
 			@Override
 			public void close() throws IOException {
-				
+
 			}
 		};
         LobChunkInputStream stream = new LobChunkInputStream(chunkProducer);
-        
+
         assertEquals("hello world", ObjectConverterUtil.convertToString(stream)); //$NON-NLS-1$
     }
-    
+
 }

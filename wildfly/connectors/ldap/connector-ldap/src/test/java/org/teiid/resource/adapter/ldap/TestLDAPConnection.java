@@ -32,7 +32,7 @@ import org.mockito.Mockito;
 
 @SuppressWarnings("nls")
 public class TestLDAPConnection {
-	
+
 	public static class FakeFactory implements InitialContextFactory {
 		@Override
 		public Context getInitialContext(Hashtable<?, ?> environment)
@@ -44,15 +44,15 @@ public class TestLDAPConnection {
 	}
 
 	@Test public void testInitialization() throws Exception {
-		
+
 		LDAPManagedConnectionFactory config = new LDAPManagedConnectionFactory();
 		config.setLdapUrl("ldap://foo");
 		config.setLdapAdminUserDN("admin");
 		config.setLdapAdminUserPassword("password");
 		config.setLdapContextFactory(FakeFactory.class.getName());
 		config.setLdapAuthType("other");
-        
+
 		new LDAPConnectionImpl(config);
 	}
-	
+
 }

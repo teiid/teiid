@@ -59,7 +59,7 @@ import org.teiid.query.function.FunctionMethods;
 public final class TeiidScriptEngine extends AbstractScriptEngine implements Compilable {
 	private static Reference<Map<Class<?>, Map<String, Method>>> properties;
 	private static Pattern splitter = Pattern.compile("\\."); //$NON-NLS-1$
-	
+
 	@Override
 	public Bindings createBindings() {
 		return new SimpleBindings();
@@ -83,12 +83,12 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 			}
 		}
 		return new CompiledScript() {
-			
+
 			@Override
 			public ScriptEngine getEngine() {
 				return TeiidScriptEngine.this;
 			}
-			
+
 			@Override
 			public Object eval(ScriptContext sc) throws ScriptException {
 				if (sc == null) {
@@ -142,10 +142,10 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 			}
 		};
 	}
-	
+
 	public Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
 		Map<Class<?>, Map<String, Method>> clazzMaps = null;
-		Map<String, Method> methodMap = null; 
+		Map<String, Method> methodMap = null;
 		if (properties != null) {
 			clazzMaps = properties.get();
 			if (clazzMaps != null) {
@@ -201,7 +201,7 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 			throw new ScriptException(e);
 		}
 	}
-	
+
 	@Override
 	public ScriptEngineFactory getFactory() {
 		throw new UnsupportedOperationException();

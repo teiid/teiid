@@ -29,10 +29,10 @@ public class TestTable {
 		assertEquals(-1, t.getCardinalityAsFloat(), 0);
 		t.setCardinality(1000);
 		assertEquals(1000, t.getCardinalityAsFloat(), 0);
-		t.setCardinality(100000111000111100l);
-		assertEquals(100000111000111100l/t.getCardinalityAsFloat(), 1, .01);
+		t.setCardinality(100000111000111100L);
+		assertEquals(100000111000111100L/t.getCardinalityAsFloat(), 1, .01);
 	}
-	
+
 	@Test public void testColumnPrecisionScale() {
 	    Column c = new Column();
 	    Datatype datatype = new Datatype();
@@ -43,5 +43,5 @@ public class TestTable {
 	    assertEquals(2, c.getScale());
 	    assertEquals(BaseColumn.DEFAULT_PRECISION, c.getPrecision());
     }
-	
+
 }

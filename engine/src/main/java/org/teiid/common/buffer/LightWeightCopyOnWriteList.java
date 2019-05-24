@@ -28,27 +28,27 @@ import org.teiid.client.ResizingArrayList;
 
 /**
  * Creates a copy of a reference list when modified.
- * 
+ *
  * @param <T>
  */
 public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements RandomAccess {
 
 	private List<T> list;
 	private boolean modified;
-	
+
 	public LightWeightCopyOnWriteList(List<T> list) {
 		this.list = list;
 	}
-	
+
 	@Override
 	public T get(int index) {
 		return list.get(index);
 	}
-	
+
 	public List<T> getList() {
 		return list;
 	}
-	
+
 	public void add(int index, T element) {
 		if (!modified) {
 			List<T> next = new ArrayList<T>(list.size() + 1);
@@ -58,7 +58,7 @@ public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements Ra
 		}
 		list.add(index, element);
 	}
-	
+
 	public T set(int index, T element) {
 		checkModified();
 		return list.set(index, element);
@@ -70,11 +70,11 @@ public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements Ra
 			modified = true;
 		}
 	}
-	
+
 	public boolean addAll(Collection<? extends T> c) {
 		return addAll(size(), c);
 	}
-	
+
 	@Override
 	public boolean addAll(int index, Collection<? extends T> c) {
 		checkModified();
@@ -86,16 +86,16 @@ public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements Ra
 		checkModified();
 		return list.remove(index);
 	}
-	
+
 	@Override
 	public Object[] toArray() {
 		return list.toArray();
 	}
-	
+
 	public <U extends Object> U[] toArray(U[] a) {
 		return list.toArray(a);
 	}
-	
+
 	@Override
 	public void clear() {
 		if (!modified) {

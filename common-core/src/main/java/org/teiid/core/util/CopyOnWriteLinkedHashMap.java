@@ -27,30 +27,30 @@ import java.util.Set;
 
 /**
  * Provides a mimimally concurrent (concurrent read/exclusive write) {@link LinkedHashMap} for use in read mostly situations.
- * 
+ *
  * Does not support modification through entry/value collections.
- * 
+ *
  * TODO: this may not be entirely thread safe as after the clone operations there's a chance that the referenced
  * array is replaced by rehashing.
- * 
+ *
  * @param <K>
  * @param <V>
  */
 public class CopyOnWriteLinkedHashMap<K, V> implements Map<K, V>, Serializable {
-	
+
 	private static final long serialVersionUID = -2690353315316696065L;
 
 	@SuppressWarnings("rawtypes")
 	private static final LinkedHashMap EMPTY = new LinkedHashMap(2);
-	
+
 	@SuppressWarnings("unchecked")
 	private volatile LinkedHashMap<K, V> map = EMPTY;
-	
+
 	@Override
 	public V get(Object arg0) {
 		return map.get(arg0);
 	}
-	
+
 	@Override
 	public boolean containsKey(Object key) {
 		return map.containsKey(key);
@@ -122,17 +122,17 @@ public class CopyOnWriteLinkedHashMap<K, V> implements Map<K, V>, Serializable {
 	public Collection<V> values() {
 		return Collections.unmodifiableCollection(map.values());
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return map.hashCode();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return map.equals(obj);
 	}
-	
+
 	@Override
 	public String toString() {
 		return map.toString();

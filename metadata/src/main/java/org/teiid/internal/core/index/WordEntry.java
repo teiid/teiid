@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -36,7 +36,7 @@ public class WordEntry implements Comparable<WordEntry> {
 		if (fNumRefs < fRefs.length) {
 			fRefs[fNumRefs++]= fileNum;
 			return 0;
-		} 
+		}
 
 		// For rt.jar, 73265 word entries are created. 51997 have 1 ref, then 9438, 3738, 1980, 1214, 779, 547, 429, 371 etc.
 		int newSize= fNumRefs < 4 ? 4 : fNumRefs * 2; // so will start @ 1, grow to 4, 8, 16, 32, 64 etc.

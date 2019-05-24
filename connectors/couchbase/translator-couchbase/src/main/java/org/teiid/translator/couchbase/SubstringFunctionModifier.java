@@ -34,42 +34,42 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 
 public class SubstringFunctionModifier extends AliasModifier {
-	
+
 	public SubstringFunctionModifier() {
 		super("substr"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public List<?> translate(Function function) {
 		this.modify(function);
-		
+
 		Expression from = function.getParameters().get(1);
         Boolean isFromNegative = isNegative(from);
-        
+
         Function length = new Function(
                 SourceSystemFunctions.LENGTH,
                 Arrays.asList(function.getParameters().get(0)),
                 TypeFacility.RUNTIME_TYPES.INTEGER);
-        
+
         if (function.getParameters().size() == 2 && (isFromNegative == null || isFromNegative)) {
             //couchbase does not handle default length with a negative from index
             function.getParameters().add(length);
         }
-		
+
 		if (function.getParameters().size() == 3) {
 		      //case when length > LENGTH(string) - start + 1 then LENGTH(string) - start + 1 case when length > 0 then length end
 	        Expression forLength = function.getParameters().get(2);
 	        List<SearchedWhenClause> clauses = new ArrayList<SearchedWhenClause>(2);
 	        Boolean isNegative = isNegative(forLength);
 
-	        Expression adjustedFrom = from; 
+	        Expression adjustedFrom = from;
 	        if (isFromNegative == null || isFromNegative) {
 	            adjustedFrom = new SearchedCase(Arrays.asList(new SearchedWhenClause(new Comparison(from,  new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.LT), new Function(
 	                SourceSystemFunctions.ADD_OP,
 	                Arrays.asList(
 	                        new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(length, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),TypeFacility.RUNTIME_TYPES.INTEGER),
 	                        from),
-	                TypeFacility.RUNTIME_TYPES.INTEGER))), 
+	                TypeFacility.RUNTIME_TYPES.INTEGER))),
 	                from, TypeFacility.RUNTIME_TYPES.INTEGER);
 	        }
 
@@ -93,22 +93,22 @@ public class SubstringFunctionModifier extends AliasModifier {
 	        } else {
 	            defaultExpr = forLength;
 	        }
-	        SearchedCase sc = new SearchedCase(clauses, 
+	        SearchedCase sc = new SearchedCase(clauses,
 	                defaultExpr, TypeFacility.RUNTIME_TYPES.INTEGER);
 	        function.getParameters().set(2, sc);
 		}
-		
+
 		Expression adjustedFrom = function.getParameters().get(1);
 		if (isFromNegative == null) {
 	        //case when start > 0 then start - 1 else start end
-		    SearchedCase sc = new SearchedCase(Arrays.asList(new SearchedWhenClause(new Comparison(adjustedFrom, new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.GT), 
-		            new Function(SourceSystemFunctions.SUBTRACT_OP, Arrays.asList(adjustedFrom, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),TypeFacility.RUNTIME_TYPES.INTEGER))), 
+		    SearchedCase sc = new SearchedCase(Arrays.asList(new SearchedWhenClause(new Comparison(adjustedFrom, new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.GT),
+		            new Function(SourceSystemFunctions.SUBTRACT_OP, Arrays.asList(adjustedFrom, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),TypeFacility.RUNTIME_TYPES.INTEGER))),
                     from, TypeFacility.RUNTIME_TYPES.INTEGER);
 	        function.getParameters().set(1, sc);
 		} else if (!isFromNegative){
 		    function.getParameters().set(1, new Function(SourceSystemFunctions.SUBTRACT_OP, Arrays.asList(adjustedFrom, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),TypeFacility.RUNTIME_TYPES.INTEGER));
         }
-		
+
 		return null;
 	}
 
@@ -121,5 +121,5 @@ public class SubstringFunctionModifier extends AliasModifier {
         }
         return isNegative;
     }
-	
+
 }

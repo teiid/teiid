@@ -58,7 +58,7 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
 		RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws
 			QueryPlannerException {
-        
+
         validateAccessPatterns(plan, metadata, capFinder);
 
 		return plan;
@@ -66,15 +66,15 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
 
     void validateAccessPatterns(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryPlannerException {
-     
+
         validateAccessPatterns(node);
-        
+
         for (PlanNode child : node.getChildren()) {
             validateAccessPatterns(child, metadata, capFinder);
 		}
     }
 
-    /** 
+    /**
      * @param node
      * @throws QueryPlannerException
      */
@@ -94,23 +94,23 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
                 criteria = ((Update)req).getCriteria();
             }
         }
-        
+
         List accessPatterns = (List)node.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
-        
+
         if (criteria != null) {
             for(Criteria crit : Criteria.separateCriteriaByAnd(criteria)) {
                 Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(crit, true);
-                
+
                 if (RulePushSelectCriteria.satisfyAccessPatterns(accessPatterns, elements)) {
                     return;
                 }
             }
         }
-        
+
         Object groups = node.getGroups();
          throw new QueryPlannerException(QueryPlugin.Event.TEIID30278, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30278, new Object[] {groups, accessPatterns}));
     }
-    
+
 	public String toString() {
 		return "AccessPatternValidation"; //$NON-NLS-1$
 	}

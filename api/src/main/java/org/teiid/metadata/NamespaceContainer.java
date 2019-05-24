@@ -30,7 +30,7 @@ import org.teiid.core.util.StringUtil;
  * Defines a base schema that is the holder for namespace and type information
  */
 public class NamespaceContainer implements Serializable {
-    
+
     static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
     private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
     private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
@@ -83,21 +83,21 @@ public class NamespaceContainer implements Serializable {
         map.put(TEIID_INFINISPAN, INFINISPAN_URI.substring(1, INFINISPAN_URI.length()-1));
         BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
     }
-    
+
     protected Map<String, String> namespaces;
-    
+
     public void addNamespace(String prefix, String uri) {
         if (uri == null || uri.indexOf('}') != -1) {
             throw new MetadataException(DataPlugin.Event.TEIID60018, DataPlugin.Util.gs(DataPlugin.Event.TEIID60018, uri));
         }
-        
+
         if (StringUtil.startsWithIgnoreCase(prefix, MetadataFactory.TEIID_RESERVED)) {
             String validURI = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
             if (validURI == null || !uri.equals(validURI)) {
                 throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
             }
         }
-        
+
         if (this.namespaces == null) {
              this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
         }
@@ -106,14 +106,14 @@ public class NamespaceContainer implements Serializable {
             throw new MetadataException(DataPlugin.Event.TEIID60037, DataPlugin.Util.gs(DataPlugin.Event.TEIID60037, prefix, old, uri));
         }
     }
-    
+
     public Map<String, String> getNamespaces() {
         if (this.namespaces == null) {
             return Collections.emptyMap();
         }
         return this.namespaces;
     }
-    
+
     public static String resolvePropertyKey(NamespaceContainer baseSchema, String key) {
         int index = key.indexOf(':');
         if (index > 0 && index < key.length() - 1) {
@@ -125,9 +125,9 @@ public class NamespaceContainer implements Serializable {
             if (uri != null) {
                 key = '{' +uri + '}' + key.substring(index + 1, key.length());
             }
-            //TODO warnings or errors if not resolvable 
+            //TODO warnings or errors if not resolvable
         }
         return key;
     }
-    
+
 }

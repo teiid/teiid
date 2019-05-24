@@ -29,9 +29,9 @@ import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
  * <p>This {@link ProgramInstruction} continue with the next loop when processed</p>.
  */
 public class BranchingInstruction extends ProgramInstruction {
-	
+
 	private BranchingStatement bs;
-	
+
     public BranchingInstruction(BranchingStatement bs) {
     	this.bs = bs;
 	}
@@ -42,7 +42,7 @@ public class BranchingInstruction extends ProgramInstruction {
 
     public void process(ProcedurePlan env) throws TeiidComponentException {
         Program parentProgram = env.peek();
-        
+
         //find the parent program that contains the loop/while instruction
         while(true){
         	if (bs.getMode() == BranchingMode.LEAVE && bs.getLabel().equalsIgnoreCase(parentProgram.getLabel())) {
@@ -58,17 +58,17 @@ public class BranchingInstruction extends ProgramInstruction {
             		break;
             	}
             }
-            env.pop(true); 
+            env.pop(true);
             parentProgram = env.peek();
-        } 
-        
+        }
+
         if (bs.getMode() != BranchingMode.CONTINUE) {
         	env.incrementProgramCounter();
         }
     }
-    
+
     public PlanNode getDescriptionProperties() {
         return new PlanNode(bs.toString());
     }
-    
+
 }

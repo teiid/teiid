@@ -42,45 +42,45 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
-/** 
- * Translator class for accessing the ModeShape JCR repository.  
+/**
+ * Translator class for accessing the ModeShape JCR repository.
  */
 @Translator(name="modeshape", description="A translator for the open source Modeshape JCR Repository")
 public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
-	
+
 	private static final String JCR = "JCR"; //$NON-NLS-1$
 	private static final String JCR_REFERENCE = "JCR_REFERENCE";//$NON-NLS-1$
 	private static final String JCR_CONTAINS = "JCR_CONTAINS";//$NON-NLS-1$
 	private static final String JCR_ISSAMENODE = "JCR_ISSAMENODE";//$NON-NLS-1$
 	private static final String JCR_ISDESCENDANTNODE = "JCR_ISDESCENDANTNODE";//$NON-NLS-1$
 	private static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
-	
+
 	public ModeShapeExecutionFactory() {
 		setUseBindVariables(false);
 	}
-	
+
     @Override
     public void start() throws TranslatorException {
         super.start();
-        
+
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE,new AliasModifier("LOWER")); //$NON-NLS-1$
-        
-		registerFunctionModifier(JCR_ISCHILDNODE, new IdentifierFunctionModifier()); 
-		registerFunctionModifier(JCR_ISDESCENDANTNODE, new IdentifierFunctionModifier()); 
-		registerFunctionModifier(JCR_ISSAMENODE, new IdentifierFunctionModifier()); 
-		registerFunctionModifier(JCR_REFERENCE, new IdentifierFunctionModifier()); 
+
+		registerFunctionModifier(JCR_ISCHILDNODE, new IdentifierFunctionModifier());
+		registerFunctionModifier(JCR_ISDESCENDANTNODE, new IdentifierFunctionModifier());
+		registerFunctionModifier(JCR_ISSAMENODE, new IdentifierFunctionModifier());
+		registerFunctionModifier(JCR_REFERENCE, new IdentifierFunctionModifier());
 		registerFunctionModifier(JCR_CONTAINS, new IdentifierFunctionModifier());
-		
+
 		addPushDownFunction(JCR, JCR_ISCHILDNODE, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_ISDESCENDANTNODE, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_ISSAMENODE, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_CONTAINS, BOOLEAN, STRING, STRING);
 		addPushDownFunction(JCR, JCR_REFERENCE, STRING, STRING);
-		
+
     	LogManager.logTrace(LogConstants.CTX_CONNECTOR, "ModeShape Translator Started"); //$NON-NLS-1$
-     }    
-    
+     }
+
     @Override
     public String translateLiteralDate(Date dateValue) {
     	return "CAST('" + formatDateValue(dateValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$
@@ -90,33 +90,33 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
     	return "CAST('" + formatDateValue(timeValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-    	return "CAST('" + formatDateValue(timestampValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$  
+    	return "CAST('" + formatDateValue(timestampValue) + "' AS DATE)"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
-    	return "CAST('" + booleanValue.toString() + "' AS BOOLEAN)"; //$NON-NLS-1$//$NON-NLS-2$ 
+    	return "CAST('" + booleanValue.toString() + "' AS BOOLEAN)"; //$NON-NLS-1$//$NON-NLS-2$
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
 		List<String> supportedFunctions = new ArrayList<String>();
 		supportedFunctions.addAll(super.getSupportedFunctions());
-		supportedFunctions.add(SourceSystemFunctions.UCASE); 
-		supportedFunctions.add(SourceSystemFunctions.LCASE); 
+		supportedFunctions.add(SourceSystemFunctions.UCASE);
+		supportedFunctions.add(SourceSystemFunctions.LCASE);
 		supportedFunctions.add(SourceSystemFunctions.LENGTH);
 		return supportedFunctions;
     }
-    
+
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof Comparison) {
     		Comparison compare = (Comparison)obj;
-    		if (compare.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN 
-    				&& compare.getLeftExpression() instanceof Function 
+    		if (compare.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN
+    				&& compare.getLeftExpression() instanceof Function
     				&& compare.getRightExpression() instanceof Literal) {
     			boolean isTrue = Boolean.TRUE.equals(((Literal)compare.getRightExpression()).getValue());
     			if ((isTrue && compare.getOperator() == Operator.EQ) || (!isTrue && compare.getOperator() == Operator.NE)) {
@@ -132,22 +132,22 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translate(obj, context);
     }
-        
+
     @Override
     public boolean useBindVariables() {
 		return false;
 	}
-    
+
     @Override
     public boolean supportsAggregatesAvg() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsAggregatesCountStar() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsAggregatesCount() {
     	return false;
@@ -167,98 +167,98 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsAggregatesMin() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsAggregatesSum() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsGroupBy() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsHaving() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsSelectExpression() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsCorrelatedSubqueries() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsExistsCriteria() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsInCriteriaSubquery() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsInlineViews() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsQuantifiedCompareCriteriaSome() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsScalarSubqueries() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsSearchedCaseExpressions() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsExcept() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsIntersect() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsSetQueryOrderBy() {
     	return false;
     }
-	
+
 	@Override
     @Deprecated
     protected JDBCMetadataProcessor createMetadataProcessor() {
         return (JDBCMetadataProcessor)getMetadataProcessor();
-    }    
-    
+    }
+
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new ModeShapeJDBCMetdataProcessor();
-    }	
-    
+    }
+
     /**
      * TEIID-3102 - ModeShape requires the use of JOIN, and not ',' when joining tables.
      * {@inheritDoc}
@@ -269,7 +269,7 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	public boolean useAnsiJoin() {
 		return true;
 	}
-	
+
 	public List<?> translateCommand(Command command, ExecutionContext context) {
 	    if (!(command instanceof Select)) {
 	        return null;

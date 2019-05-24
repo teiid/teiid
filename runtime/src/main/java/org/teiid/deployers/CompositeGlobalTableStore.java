@@ -54,7 +54,7 @@ public class CompositeGlobalTableStore implements GlobalTableStore {
 			} catch (Exception e) {
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, gts));
 			}
-		}	
+		}
 		if (vdb.getChildren() == null) {
 			return gts;
 		}
@@ -78,18 +78,18 @@ public class CompositeGlobalTableStore implements GlobalTableStore {
 			}
 		}
 	}
-	
+
 	private Map<String, GlobalTableStore> stores;
 	private GlobalTableStore primary;
 	private QueryMetadataInterface metadata;
-	
+
 	public CompositeGlobalTableStore(Map<String, GlobalTableStore> stores,
 			GlobalTableStore primary, QueryMetadataInterface metadata) {
 		this.stores = stores;
 		this.primary = primary;
 		this.metadata = metadata;
 	}
-	
+
 	@Override
 	public TempMetadataID getGlobalTempTableMetadataId(Object groupID)
 			throws TeiidComponentException, TeiidProcessingException {
@@ -153,7 +153,7 @@ public class CompositeGlobalTableStore implements GlobalTableStore {
 	public void loaded(String matTableName, TempTable table) {
 		getStoreForTable(matTableName).loaded(matTableName, table);
 	}
-	
+
 	GlobalTableStore getStoreForTable(String matTableName) {
 		String name = matTableName.substring(RelationalPlanner.MAT_PREFIX.length(), matTableName.length());
 		name = name.substring(0, name.indexOf('.'));
@@ -167,7 +167,7 @@ public class CompositeGlobalTableStore implements GlobalTableStore {
 		}
 		return store;
 	}
-	
+
 	GlobalTableStore getPrimary() {
 		return primary;
 	}

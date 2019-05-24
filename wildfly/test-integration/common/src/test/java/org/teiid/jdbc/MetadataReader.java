@@ -32,19 +32,19 @@ public class MetadataReader extends StringLineReader {
 
     boolean firsttime = true;
 	int currentColumn = 0;
-    
+
 	public MetadataReader(ResultSetMetaData metadata, String delimiter) {
 		this.source = metadata;
 		this.delimiter = delimiter;
 	}
-	
+
 	@Override
 	protected String nextLine() throws IOException {
 		if (firsttime) {
 			this.firsttime = false;
 			return firstLine();
 		}
-		
+
 		try {
 			int count = this.source.getColumnCount();
 			if (this.currentColumn < count) {
@@ -56,7 +56,7 @@ public class MetadataReader extends StringLineReader {
 		}
 		return null;
 	}
-	
+
     String firstLine() {
         StringBuffer sb = new StringBuffer();
         sb.append("ColumnName").append(delimiter); //$NON-NLS-1$
@@ -68,12 +68,12 @@ public class MetadataReader extends StringLineReader {
         sb.append("SchemaName").append(delimiter); //$NON-NLS-1$
         sb.append("CatalogName").append(delimiter); //$NON-NLS-1$
         sb.append("\n"); //$NON-NLS-1$
-        return sb.toString();        
-    }	
-	
+        return sb.toString();
+    }
+
 	String getNextRow() throws SQLException {
 		StringBuffer sb = new StringBuffer();
-		
+
 		sb.append(source.getColumnName(currentColumn)).append(delimiter);
 		sb.append(source.getColumnType(currentColumn)).append(delimiter);
 		sb.append(source.getColumnTypeName(currentColumn)).append(delimiter);
@@ -83,7 +83,7 @@ public class MetadataReader extends StringLineReader {
 		sb.append(source.getSchemaName(currentColumn)).append(delimiter);
 		sb.append(source.getCatalogName(currentColumn)).append(delimiter);
 		sb.append("\n"); //$NON-NLS-1$
-		
+
 		return sb.toString();
-	}	
+	}
 }

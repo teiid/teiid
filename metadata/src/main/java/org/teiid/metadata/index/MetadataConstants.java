@@ -19,7 +19,7 @@ import org.teiid.core.util.StringUtil;
  * method needs to subtract 1 from the argument.
  */
 public final class MetadataConstants {
-    
+
 	/** Definition of not defined long type. */
     public static final long NOT_DEFINED_LONG = Long.MIN_VALUE;
 	/**  Definition of not defined int type. */
@@ -28,7 +28,7 @@ public final class MetadataConstants {
     public static final short NOT_DEFINED_SHORT = Short.MIN_VALUE;
 
     public final static String BLANK = StringUtil.Constants.EMPTY_STRING;
-        
+
     //properties
     public static final String VERSION_DATE = "versionDate"; //$NON-NLS-1$
 
@@ -50,10 +50,10 @@ public final class MetadataConstants {
         return  MATCH_TYPES.TYPE_NAMES[type];
     }
 
-    
+
 	/**
-	 * These types indicate the type of KEY it is. 
-     * The values must be kept consistent with the values referenced in 
+	 * These types indicate the type of KEY it is.
+     * The values must be kept consistent with the values referenced in
      * KeyTypeEnumeration.properties in connector.metadata
 	 */
     public final static class KEY_TYPES {
@@ -75,8 +75,8 @@ public final class MetadataConstants {
     }
 
     /**
-     * These types indicate the type of COLUMN_SET it is. 
-     * The values must be kept consistent with the values referenced in 
+     * These types indicate the type of COLUMN_SET it is.
+     * The values must be kept consistent with the values referenced in
      * KeyTypeEnumeration.properties in connector.metadata
      */
     public final static class COLUMN_SET_TYPES {
@@ -98,8 +98,8 @@ public final class MetadataConstants {
     }
 
 	/**
-	 * These types indicate the type of PROCEDURE it is. 
-     * The values must be kept consistent with the values referenced in 
+	 * These types indicate the type of PROCEDURE it is.
+     * The values must be kept consistent with the values referenced in
      * ProcTypeEnumeration.properties in connector.metadata
 	 */
     public final static class PROCEDURE_TYPES {
@@ -115,7 +115,7 @@ public final class MetadataConstants {
     }
 
     /**
-     * These types indicate the type of TRANSFORMATION it it. 
+     * These types indicate the type of TRANSFORMATION it it.
      */
     public final static class SQL_TRANSFORMATION_TYPES {
         public final static short MAPPING_DEFN            = 0;
@@ -155,9 +155,9 @@ public final class MetadataConstants {
     public final static String getParameterTypeName(short type) {
         return PARAMETER_TYPES.TYPE_NAMES[type];
     }
-    
+
 	/**
-	 * These types are associated with the Element having valid search types. 
+	 * These types are associated with the Element having valid search types.
      * The values must be kept consistent with the SearchabilityType enumeration in the relational
      * metamodel and the values referenced in SearchTypeEnumeration.properties in connector.metadata
 	 */
@@ -177,7 +177,7 @@ public final class MetadataConstants {
 
 	/**
 	 * A DataType object will be identified as being of one of these types.
-     * The values must be kept consistent with the values referenced in 
+     * The values must be kept consistent with the values referenced in
      * DatatypeTypeEnumeration.properties in connector.metadata
 	 */
     public final static class DATATYPE_TYPES {
@@ -195,7 +195,7 @@ public final class MetadataConstants {
     /**
      * User defined DataType objects will be categorized by a variety
      * The values must be kept consistent with the XSDVariety enumeration in the xsd
-     * metamodel and the values referenced in DatatypeVarietyEnumeration.properties in 
+     * metamodel and the values referenced in DatatypeVarietyEnumeration.properties in
      * connector.metadata
      */
     public final static class DATATYPE_VARIETIES {
@@ -211,9 +211,9 @@ public final class MetadataConstants {
     public final static String getDataTypeVarietyName(short type) {
         return DATATYPE_VARIETIES.TYPE_NAMES[type];
     }
-    
+
 	/**
-	 * These types represent the type of table a Group is. 
+	 * These types represent the type of table a Group is.
 	 */
     public final static class TABLE_TYPES {
         public static final short TABLE_TYPE             = 0;
@@ -234,7 +234,7 @@ public final class MetadataConstants {
     }
 
 	/**
-	 * These types are associated with a DataType or an Element needing the indication of null types. 
+	 * These types are associated with a DataType or an Element needing the indication of null types.
      * The values must be kept consistent with the NullableType enumeration in the relational
      * metamodel and the values referenced in NullTypeEnumeration.properties in connector.metadata
 	 */
@@ -255,10 +255,10 @@ public final class MetadataConstants {
 	    public final static char CALLABLE            = 'E';
 	    public final static char CALLABLE_PARAMETER  = 'F';
 	    public final static char COLUMN              = 'G';
-	    public final static char ACCESS_PATTERN      = 'H';        
+	    public final static char ACCESS_PATTERN      = 'H';
 	    public final static char UNIQUE_KEY          = 'I';
 	    public final static char FOREIGN_KEY         = 'J';
-	    public final static char PRIMARY_KEY         = 'K';                
+	    public final static char PRIMARY_KEY         = 'K';
 	    public final static char INDEX               = 'L';
 	    public final static char DATATYPE            = 'M';
 	    //public final static char DATATYPE_ELEMENT    = 'N';

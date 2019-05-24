@@ -27,14 +27,14 @@ public class IntegrationPlugin {
     private static final String PLUGIN_ID = "org.teiid.jboss" ; //$NON-NLS-1$
     static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
-    
+
     public static ResourceBundle getResourceBundle(Locale locale) {
         if (locale == null) {
             locale = Locale.getDefault();
         }
         return ResourceBundle.getBundle(IntegrationPlugin.BUNDLE_NAME, locale);
     }
-    
+
     public static enum Event implements BundleUtil.Event {
     	TEIID50001,
     	TEIID50002,
@@ -82,7 +82,7 @@ public class IntegrationPlugin {
     	TEIID50075,
     	TEIID50077,
     	TEIID50088,
-    	TEIID50089, 
+    	TEIID50089,
     	TEIID50091, // rest different # of param count
     	TEIID50092, // rest procedure execution
     	TEIID50093,
@@ -90,22 +90,22 @@ public class IntegrationPlugin {
     	TEIID50095,
     	TEIID50096,
     	TEIID50097,
-    	TEIID50098, 
+    	TEIID50098,
     	TEIID50099,
     	TEIID50100,
-    	TEIID50101, 
+    	TEIID50101,
     	TEIID50102,
-    	TEIID50103, 
+    	TEIID50103,
     	TEIID50104,
-    	TEIID50105, 
-    	TEIID50106, 
+    	TEIID50105,
+    	TEIID50106,
     	TEIID50107,
     	TEIID50108,
     	TEIID50109,
     	TEIID50110,
     	TEIID50111,
     	TEIID50112,
-    	TEIID50114, 
+    	TEIID50114,
     	TEIID50115,
     	TEIID50116
     }

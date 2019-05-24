@@ -21,7 +21,7 @@ package org.teiid.query.metadata;
 public class SupportConstants {
 
 	private SupportConstants() {}
-	
+
 	public static class Model {
 		private Model() {}
 	}
@@ -29,12 +29,12 @@ public class SupportConstants {
 	public static class Group {
 		private Group() {}
 
-		public static final int UPDATE = 0;                 
+		public static final int UPDATE = 0;
 	}
 
 	public static class Element {
 		private Element() {}
-		
+
 		public static final int SELECT = 0;
 		public static final int SEARCHABLE_LIKE = 1;
 		public static final int SEARCHABLE_COMPARE = 2;

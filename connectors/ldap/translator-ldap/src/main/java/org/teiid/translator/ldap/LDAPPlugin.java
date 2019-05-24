@@ -25,7 +25,7 @@ import org.teiid.core.BundleUtil;
 /**
  * LDAPPlugin
  */
-public class LDAPPlugin { 
+public class LDAPPlugin {
 
     public static final String PLUGIN_ID = LDAPPlugin.class.getPackage().getName();
 
@@ -42,8 +42,8 @@ public class LDAPPlugin {
     	TEIID12009,
     	TEIID12010,
     	TEIID12011,
-    	TEIID12012, 
-    	TEIID12013, 
+    	TEIID12012,
+    	TEIID12013,
     	TEIID12014,
     }
 }

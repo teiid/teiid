@@ -38,10 +38,10 @@ public class TestODataTypeManager {
         assertEquals("GeometryMultiPolygon", ODataTypeManager.odataType(c).name());
         c.setProperty(BaseColumn.SPATIAL_TYPE, "LINESTRING"); //$NON-NLS-1$
         assertEquals("GeometryLineString", ODataTypeManager.odataType(c).name());
-        
+
         assertEquals("geometry", ODataTypeManager.teiidType(EdmGeometryPoint.getInstance(), false));
     }
-    
+
     @Test public void testGeographyTypes() {
         Column c = new Column();
         c.setDatatype(SystemMetadata.getInstance().getRuntimeTypeMap().get(DefaultDataTypes.GEOGRAPHY));
@@ -49,8 +49,8 @@ public class TestODataTypeManager {
         assertEquals("GeographyMultiLineString", ODataTypeManager.odataType(c).name());
         c.setProperty(BaseColumn.SPATIAL_TYPE, "POLYGON"); //$NON-NLS-1$
         assertEquals("GeographyPolygon", ODataTypeManager.odataType(c).name());
-        
+
         assertEquals("geography", ODataTypeManager.teiidType(EdmGeographyPoint.getInstance(), false));
     }
-    
+
 }

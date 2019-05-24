@@ -23,7 +23,7 @@ import java.util.List;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class WithItem extends BaseLanguageObject implements SubqueryContainer {
-	
+
 	private NamedTable table;
 	private List<ColumnReference> columns;
 	private QueryExpression queryExpression;
@@ -33,19 +33,19 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 	public NamedTable getTable() {
 		return table;
 	}
-	
+
 	public void setTable(NamedTable table) {
 		this.table = table;
 	}
-	
+
 	public List<ColumnReference> getColumns() {
 		return columns;
 	}
-	
+
 	public void setColumns(List<ColumnReference> columns) {
 		this.columns = columns;
 	}
-	
+
 	@Override
 	public QueryExpression getSubquery() {
 		return queryExpression;
@@ -64,17 +64,17 @@ public class WithItem extends BaseLanguageObject implements SubqueryContainer {
 	public void setDependentValues(List<? extends List<?>> tupleBufferList) {
 		this.dependentValues = tupleBufferList;
 	}
-	
+
 	public List<? extends List<?>> getDependentValues() {
 		return dependentValues;
 	}
-	
+
 	public boolean isRecusive() {
 		return recusive;
 	}
-	
+
 	public void setRecusive(boolean recusive) {
 		this.recusive = recusive;
 	}
-	
+
 }

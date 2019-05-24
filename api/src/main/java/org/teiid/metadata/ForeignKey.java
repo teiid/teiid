@@ -27,18 +27,18 @@ import java.util.List;
 public class ForeignKey extends KeyRecord {
 
 	private static final long serialVersionUID = -8835750783230001311L;
-	
+
 	private String uniqueKeyID;
     private KeyRecord primaryKey;
     private String referenceTableName;
     private List<String> referenceColumns;
 
 	public static final String ALLOW_JOIN = AbstractMetadataRecord.RELATIONAL_URI + "allow-join"; //$NON-NLS-1$
-    
+
     public ForeignKey() {
 		super(Type.Foreign);
 	}
-    
+
     public String getUniqueKeyID() {
         return uniqueKeyID;
     }
@@ -48,8 +48,8 @@ public class ForeignKey extends KeyRecord {
      */
     public void setUniqueKeyID(String keyID) {
         uniqueKeyID = keyID;
-    }    
-    
+    }
+
     /**
      * @return the primary key or unique key referenced by this foreign key
      * @deprecated
@@ -58,14 +58,14 @@ public class ForeignKey extends KeyRecord {
     public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
-    
+
     /**
      * @return the primary or unique key referenced by this foreign key
      */
     public KeyRecord getReferenceKey() {
     	return this.primaryKey;
     }
-    
+
     /**
      * Note: does not need to be directly called.  The engine can resolve the
      * referenced key if {@link #setReferenceColumns(List)} and {@link #setReferenceTableName(String)}
@@ -91,7 +91,7 @@ public class ForeignKey extends KeyRecord {
     }
 
     /**
-     * 
+     *
      * @param primaryKey the primary key or unique key referenced by this foreign key
      * @deprecated
      * @see #setReferenceKey(KeyRecord)

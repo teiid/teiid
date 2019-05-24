@@ -32,36 +32,36 @@ import org.teiid.jdbc.FakeServer;
 public class TestResultSetMetadata extends AbstractMMQueryTestCase {
 	FakeServer server;
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
-    
+
 	public TestResultSetMetadata() {
 		// this is needed because the result files are generated
 		// with another tool which uses tab as delimiter
 		super.DELIMITER = "\t"; //$NON-NLS-1$
 	}
-    
+
     @Before public void setUp() throws Exception {
     	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	    	
+    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @After public void tearDown() throws SQLException {
     	closeConnection();
     	server.stop();
     }
-    
+
     private void executeTest(String sql, String[] expected) throws Exception {
     	execute(sql);
     	java.sql.ResultSet rs = this.internalResultSet;
     	assertResultsSetMetadataEquals(rs.getMetaData(), expected);
     }
-    
+
     private void executePreparedTest(String sql, String[] expected) throws Exception {
     	execute(sql, new Object[] {});
     	java.sql.ResultSet rs = this.internalResultSet;
     	assertResultsSetMetadataEquals(rs.getMetaData(), expected);
     }
-    
+
     @Test public void testCount()  throws Exception {
     	String[] expected = {
     		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
@@ -82,7 +82,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     }
 
     @Test public void testTempGroupStar()  throws Exception {
-    	String[] expected = { 
+    	String[] expected = {
 		    "ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName",	 //$NON-NLS-1$
 		    "PART_ID	12	string	java.lang.String	0	foo	null	PartsSupplier", //$NON-NLS-1$
 		    "PART_NAME	12	string	java.lang.String	1	foo	null	PartsSupplier", //$NON-NLS-1$
@@ -108,7 +108,7 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
 	        "PART_NAME	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier", //$NON-NLS-1$
 	        "PART_COLOR	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier", //$NON-NLS-1$
 	        "PART_WEIGHT	12	string	java.lang.String	1	PARTSSUPPLIER.PARTS	PartsSupplier	PartsSupplier" //$NON-NLS-1$
-    	};    	
+    	};
     	executePreparedTest("select * from parts where 1=0", expected); //$NON-NLS-1$
     }
 

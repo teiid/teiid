@@ -29,10 +29,10 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 /**
- * This Metadata repository adds the "native" procedure to all the execution factories that support them. 
+ * This Metadata repository adds the "native" procedure to all the execution factories that support them.
  */
 public class DirectQueryMetadataRepository implements MetadataRepository {
-	
+
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 
@@ -48,8 +48,8 @@ public class DirectQueryMetadataRepository implements MetadataRepository {
 			param.setAnnotation("Any number of varaibles; usage will vary by translator"); //$NON-NLS-1$
 			param.setNullType(NullType.Nullable);
 			param.setVarArg(true);
-			
-			factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$		
+
+			factory.addProcedureResultSetColumn("tuple", DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(TypeFacility.RUNTIME_TYPES.OBJECT)), p); //$NON-NLS-1$
 		}
-	}	
+	}
 }

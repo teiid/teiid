@@ -100,9 +100,9 @@ public class IndexConstants {
         public final static char PROP_DELIMITER     = '\u2060';  // separator used to seperate prop-value pairs (ASCII word joiner)
 
         public final static char MATCH_CHAR        = '*';  // wild card that may match one or more characters
-        public final static char SINGLE_CHAR_MATCH = '?';  // match a single character    
+        public final static char SINGLE_CHAR_MATCH = '?';  // match a single character
         public final static String MATCH_CHAR_STRING        = (new Character(MATCH_CHAR)).toString();         // wild card that may match one or more characters
-        public final static String SINGLE_CHAR_MATCH_STRING = (new Character(SINGLE_CHAR_MATCH)).toString();  // match a single character    
+        public final static String SINGLE_CHAR_MATCH_STRING = (new Character(SINGLE_CHAR_MATCH)).toString();  // match a single character
 
         public final static char INDEX_VERSION_MARKER = '\u00A1';  // marker to indicate index version information (ASCII inverted exclamation mark)
     }

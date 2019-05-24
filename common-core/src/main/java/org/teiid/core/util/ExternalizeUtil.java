@@ -34,10 +34,10 @@ import java.util.Map;
  */
 
 public class ExternalizeUtil {
-    
+
     private ExternalizeUtil() {
     }
-    
+
     /**
      * Writes an array to the output.
      * @param out the output instance
@@ -55,7 +55,7 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     /**
      * Writes a Collection to the output using its Iterator.
      * @param out the output instance
@@ -75,11 +75,11 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     public static void writeList(ObjectOutput out, List<?> coll) throws IOException {
     	writeCollection(out, coll);
     }
-    
+
     /**
      * Writes the key-value pairs of the given map to the output.
      * @param out the output instance
@@ -97,7 +97,7 @@ public class ExternalizeUtil {
             }
         }
     }
-    
+
     /**
      * Reads an array of String that was written to the output by this utility class
      * @param in
@@ -114,11 +114,11 @@ public class ExternalizeUtil {
         }
         return result;
     }
-    
+
     public static String[] readStringArray(ObjectInput in) throws IOException, ClassNotFoundException {
     	return readArray(in, String.class);
     }
-    
+
     /**
      * Reads a List that was written by this utility class.
      * @param in
@@ -129,11 +129,11 @@ public class ExternalizeUtil {
     public static <T> List<T> readList(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
         return Arrays.asList(readArray(in, type));
     }
-    
+
     public static List<?> readList(ObjectInput in) throws IOException, ClassNotFoundException {
     	return readList(in, Object.class);
     }
-    
+
     /**
      * Reads a Map that was written by this utility class
      * @param in
@@ -150,7 +150,7 @@ public class ExternalizeUtil {
         }
         return map;
     }
-    
+
     public static void writeEnum(ObjectOutput out, Enum<?> value) throws IOException {
     	if (value == null) {
     		out.writeObject(null);
@@ -158,7 +158,7 @@ public class ExternalizeUtil {
     		out.writeUTF(value.name());
     	}
     }
-    
+
     public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz, T defaultVal) throws IOException {
     	String name = in.readUTF();
     	if (name == null) {
@@ -170,5 +170,5 @@ public class ExternalizeUtil {
     		return defaultVal;
     	}
     }
-    
+
 }

@@ -56,7 +56,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     // Saved state when blocked on evaluating a row - must be reset
     private TupleBatch currentBatch;
     private int currentRow = 1;
-    
+
     protected ProjectNode() {
     	super();
     }
@@ -85,19 +85,19 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 		elementMap = Collections.emptyMap();
 		this.projectionIndexes = new int[this.selectSymbols.size()];
     	Arrays.fill(this.projectionIndexes, -1);
-    	
+
     	this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
     	for (Expression ses : this.selectSymbols) {
 			this.expressions.add(SymbolMap.getExpression(ses));
 		}
 	}
-	
+
 	@Override
 	public void addChild(RelationalNode child) {
 		super.addChild(child);
 		init();
 	}
-	
+
 	void init() {
 		List<? extends Expression> childElements = getChildren()[0].getElements();
         // Create element lookup map for evaluating project expressions
@@ -110,7 +110,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         needsProject = childElements.size() != selectSymbols.size();
         for(int i=0; i<selectSymbols.size(); i++) {
             Expression symbol = selectSymbols.get(i);
-            
+
             if(symbol instanceof AliasSymbol) {
                 Integer index = elementMap.get(symbol);
                 if(index != null && index.intValue() == i) {
@@ -131,10 +131,10 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             }
         }
 	}
-	
+
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		
+
         if(currentBatch == null) {
             // There was no saved batch, so get a new one
             //in the case of select with no from, should return only
@@ -169,14 +169,14 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             addBatchRow(projectedTuple);
             currentRow++;
 		}
-        
+
         if (currentRow > currentBatch.getEndRow()) {
 	        if(currentBatch.getTerminationFlag()) {
 	            terminateBatches();
 	        }
 	        currentBatch = null;
         }
-        
+
     	return pullBatch();
 	}
 
@@ -186,7 +186,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         int index = this.projectionIndexes[projectionIndex];
         if(index != -1) {
 			tuple.add(values.get(index));
-        } else { 
+        } else {
 			tuple.add(getEvaluator(this.elementMap).evaluate(symbol, values));
 		}
 	}
@@ -216,21 +216,21 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     	AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);
         return props;
     }
-    
+
     @Override
     public Collection<? extends LanguageObject> getObjects() {
     	return this.selectSymbols;
     }
-    
+
     @Override
     public boolean hasBuffer() {
     	return !needsProject && this.getChildren()[0].hasBuffer();
     }
-    
+
     @Override
     public TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
     		TeiidComponentException, TeiidProcessingException {
     	return this.getChildren()[0].getBuffer(maxRows);
     }
-    
+
 }

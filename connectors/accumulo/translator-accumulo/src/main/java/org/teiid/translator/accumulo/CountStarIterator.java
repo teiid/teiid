@@ -36,7 +36,7 @@ public class CountStarIterator extends WrappingIterator {
 	private Key topKey;
 	private Value topValue;
 	private String alias;
-	
+
 	@Override
 	public void init(SortedKeyValueIterator<Key, Value> source,
 			Map<String, String> options, IteratorEnvironment env)
@@ -44,7 +44,7 @@ public class CountStarIterator extends WrappingIterator {
 		super.init(source, options, env);
 		this.alias = options.get(ALIAS);
 	}
-	
+
 	@Override
 	public SortedKeyValueIterator<Key, Value> deepCopy(IteratorEnvironment env) {
 		CountStarIterator newInstance;
@@ -59,17 +59,17 @@ public class CountStarIterator extends WrappingIterator {
 		newInstance.topValue = topValue;
 		return newInstance;
 	}
-	
+
 	@Override
 	public void seek(Range range, Collection<ByteSequence> columnFamilies,
 			boolean inclusive) throws IOException {
-		super.seek(range, columnFamilies, inclusive);	
-		
+		super.seek(range, columnFamilies, inclusive);
+
 		if (getSource().hasTop()) {
 			int count = 0;
-			ByteSequence prevRowId  = null; 
+			ByteSequence prevRowId  = null;
 			while (getSource().hasTop()) {
-				Key key = getSource().getTopKey();				
+				Key key = getSource().getTopKey();
 				ByteSequence rowId = key.getRowData();
 				if (prevRowId == null || !prevRowId.equals(rowId)) {
 					count++;
@@ -81,7 +81,7 @@ public class CountStarIterator extends WrappingIterator {
 			this.topValue = new Value(AccumuloDataTypeManager.serialize(count));
 		}
 	}
-	
+
 	@Override
 	public Value getTopValue() {
 		return topValue;

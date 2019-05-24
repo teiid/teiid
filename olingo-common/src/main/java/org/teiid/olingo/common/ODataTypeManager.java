@@ -117,16 +117,16 @@ public class ODataTypeManager {
         teiidTypes.put(DataTypeManager.DefaultDataTypes.XML, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.VARBINARY, "Edm.Binary"); //$NON-NLS-1$
         //will fail for most values
-        teiidTypes.put(DataTypeManager.DefaultDataTypes.OBJECT, "Edm.Binary"); //$NON-NLS-1$ 
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.OBJECT, "Edm.Binary"); //$NON-NLS-1$
         teiidTypes.put(DataTypeManager.DefaultDataTypes.GEOMETRY, "Edm.Stream"); //$NON-NLS-1$
         teiidTypes.put(DataTypeManager.DefaultDataTypes.GEOGRAPHY, "Edm.Stream"); //$NON-NLS-1$
     }
-    
+
     public static String teiidType(SingletonPrimitiveType odataType, boolean array) {
         String type =  odataType.getFullQualifiedName().getFullQualifiedNameAsString();
         return teiidType(type, array);
     }
-    
+
     public static String teiidType(String odataType, boolean array) {
         String type =  odataTypes.get(odataType);
         if (type == null) {
@@ -137,26 +137,26 @@ public class ODataTypeManager {
         }
         return type;
     }
-    
+
     public static EdmPrimitiveTypeKind odataType(Class<?> teiidRuntimeTypeClass) {
         String dataType = DataTypeManager.getDataTypeName(teiidRuntimeTypeClass);
         return odataType(dataType);
-    } 
-    
+    }
+
     public static EdmPrimitiveTypeKind odataType(BaseColumn c) {
         String runtimeType = c.getRuntimeType();
         //try to map to the specific type
-        if (c.getDatatype() != null 
+        if (c.getDatatype() != null
                 && (c.getDatatype().getName().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.GEOMETRY)
                     || c.getDatatype().getName().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.GEOGRAPHY))) {
             boolean geometry = c.getDatatype().getName().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.GEOMETRY);
             String type = c.getProperty(BaseColumn.SPATIAL_TYPE, false);
             if (type != null) {
                 try {
-                    return StringUtil.caseInsensitiveValueOf(EdmPrimitiveTypeKind.class, 
+                    return StringUtil.caseInsensitiveValueOf(EdmPrimitiveTypeKind.class,
                             (geometry?"Geometry":"Geography")+type); //$NON-NLS-1$ //$NON-NLS-2$
                 } catch (IllegalArgumentException e) {
-                    
+
                 }
             }
             //unknown or null case
@@ -167,7 +167,7 @@ public class ODataTypeManager {
         }
         return odataType(runtimeType);
     }
-    
+
     public static EdmPrimitiveTypeKind odataType(String teiidRuntimeType) {
         if (teiidRuntimeType.endsWith("[]")) {
             teiidRuntimeType = teiidRuntimeType.substring(0, teiidRuntimeType.length()-2);
@@ -178,10 +178,10 @@ public class ODataTypeManager {
             type = "Edm.String";
         }
         return EdmPrimitiveTypeKind.valueOfFQN(type);
-    }    
-    
+    }
+
     /**
-     * 
+     *
      * @param type
      * @param value
      * @param odataType type hint if the value could be a string containing a literal value of another type
@@ -208,7 +208,7 @@ public class ODataTypeManager {
             }
             return array;
         }
-        
+
         if (odataType != null && value instanceof String) {
             try {
 				value = ODataTypeManager.parseLiteral(odataType, (String)value);
@@ -216,11 +216,11 @@ public class ODataTypeManager {
 				throw new TranslatorException(e);
 			}
         }
-        
+
         if (value instanceof Geospatial) {
         	final Geospatial val = (Geospatial)value;
-        	
-        	//Due to https://issues.apache.org/jira/browse/OLINGO-1299 
+
+        	//Due to https://issues.apache.org/jira/browse/OLINGO-1299
         	//we cannot rely on the dimension of the value, so we
         	//pass in the type
         	return Olingo2Teiid.convert(val, type, srid);
@@ -232,18 +232,18 @@ public class ODataTypeManager {
                 calender.set(Calendar.MONTH, Calendar.JANUARY);
                 calender.set(Calendar.DAY_OF_MONTH, 1);
                 calender.set(Calendar.MILLISECOND, 0);
-                return new Time(calender.getTimeInMillis());                
+                return new Time(calender.getTimeInMillis());
             } else if (type.isAssignableFrom(java.sql.Date.class)) {
                 calender.set(Calendar.HOUR_OF_DAY, 0);
                 calender.set(Calendar.MINUTE, 0);
                 calender.set(Calendar.SECOND, 0);
                 calender.set(Calendar.MILLISECOND, 0);
-                return new java.sql.Date(calender.getTimeInMillis());                 
+                return new java.sql.Date(calender.getTimeInMillis());
             } else if (type.isAssignableFrom(java.sql.Timestamp.class)) {
-                return new Timestamp(calender.getTimeInMillis());   
+                return new Timestamp(calender.getTimeInMillis());
             }
-        }        
-        
+        }
+
         Transform transform = DataTypeManager.getTransform(value.getClass(), type);
         if (transform != null) {
             try {
@@ -251,117 +251,117 @@ public class ODataTypeManager {
             } catch (TransformationException e) {
                 throw new TeiidException(e);
             }
-        }        
+        }
         return value;
     }
-    
+
     public static Object convertByteArrayToTeiidRuntimeType(final Class<?> type, final byte[] contents,
             final String odataType, String srid) throws TeiidException {
         if (contents == null) {
             return null;
         }
         Object value = null;
-        if (DataTypeManager.isLOB(type)) {            
+        if (DataTypeManager.isLOB(type)) {
             InputStreamFactory isf = new InputStreamFactory() {
                 @Override
                 public InputStream getInputStream() throws IOException {
                     return new ByteArrayInputStream(contents);
                 }
-            };            
+            };
             if (type.isAssignableFrom(SQLXML.class)) {
-                value = new SQLXMLImpl(isf);    
+                value = new SQLXMLImpl(isf);
             } else if (type.isAssignableFrom(ClobType.class)) {
                 value = new ClobImpl(isf, -1);
             } else if (type.isAssignableFrom(BlobType.class)) {
                 value = new BlobImpl(isf);
-            }            
+            }
         } else if (DataTypeManager.DefaultDataClasses.VARBINARY.equals(type)) {
             value = contents;
         } else {
             value = convertToTeiidRuntimeType(type, new String(contents), odataType, srid);
         }
         return value;
-    }    
-    
+    }
+
     public static Object parseLiteral(EdmParameter edmParameter, Class<?> runtimeType, String value)
             throws TeiidProcessingException {
         EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
                 .valueOf(edmParameter.getType()
                         .getFullQualifiedName()
                         .getFullQualifiedNameAsString().substring(4)));
-        
+
         try {
         	if (EdmString.getInstance().equals(edmParameter.getType())) {
         		value = EdmString.getInstance().fromUriLiteral(value);
         	}
-            Object converted =  primitiveType.valueOfString(value, 
-                    edmParameter.isNullable(), 
-                    edmParameter.getMaxLength(), 
-                    edmParameter.getPrecision(), 
-                    edmParameter.getScale(), 
-                    true, 
-                    runtimeType);        
+            Object converted =  primitiveType.valueOfString(value,
+                    edmParameter.isNullable(),
+                    edmParameter.getMaxLength(),
+                    edmParameter.getPrecision(),
+                    edmParameter.getScale(),
+                    true,
+                    runtimeType);
             return converted;
         } catch (EdmPrimitiveTypeException e) {
             throw new TeiidProcessingException(e);
         }
     }
-    
+
     public static Object parseLiteral(EdmProperty edmProperty, Class<?> runtimeType, String value)
             throws TeiidException {
         EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
                 .valueOf(edmProperty.getType()
                         .getFullQualifiedName()
                         .getFullQualifiedNameAsString().substring(4)));
-        
+
         try {
         	if (EdmString.getInstance().equals(edmProperty.getType())) {
         		value = EdmString.getInstance().fromUriLiteral(value);
         	}
-            Object converted =  primitiveType.valueOfString(value, 
-                    edmProperty.isNullable(), 
-                    edmProperty.getMaxLength(), 
-                    edmProperty.getPrecision(), 
-                    edmProperty.getScale(), 
-                    true, 
-                    runtimeType);        
+            Object converted =  primitiveType.valueOfString(value,
+                    edmProperty.isNullable(),
+                    edmProperty.getMaxLength(),
+                    edmProperty.getPrecision(),
+                    edmProperty.getScale(),
+                    true,
+                    runtimeType);
             return converted;
         } catch (EdmPrimitiveTypeException e) {
             throw new TeiidException(e);
         }
     }
-    
+
     public static Object parseLiteral(String odataType, String value)
             throws TeiidException {
         EdmPrimitiveType primitiveType = EdmPrimitiveTypeFactory.getInstance(EdmPrimitiveTypeKind
                 .valueOf(odataType.substring(4)));
-        
+
         int maxLength = DataTypeManager.MAX_STRING_LENGTH;
         if (primitiveType instanceof EdmBinary ||primitiveType instanceof EdmStream) {
             maxLength = DataTypeManager.MAX_VARBINARY_BYTES;
         }
-        
+
         int precision = 4;
         int scale = 3;
         if (primitiveType instanceof EdmDecimal) {
             precision = 38;
             scale = 9;
         }
-        
+
         Class<?> expectedClass = primitiveType.getDefaultType();
-        
+
         try {
         	if (EdmString.getInstance().equals(primitiveType)) {
         		value = EdmString.getInstance().fromUriLiteral(value);
         	}
             Object converted =  primitiveType.valueOfString(value,
                     false,
-                    maxLength, 
-                    precision, 
-                    scale, 
-                    true, 
+                    maxLength,
+                    precision,
+                    scale,
+                    true,
                     expectedClass);
-            
+
             if (primitiveType instanceof EdmTimeOfDay) {
                 Calendar ts =  (Calendar)converted;
                 return new Time(ts.getTimeInMillis());
@@ -373,8 +373,8 @@ public class ODataTypeManager {
         } catch (EdmPrimitiveTypeException e) {
             throw new TeiidException(e);
         }
-    }    
-    
+    }
+
     public static Object rationalizePrecision(Integer precision, Integer scale, Object value) {
         if (precision == null || !(value instanceof BigDecimal)) {
             return value;
@@ -384,7 +384,7 @@ public class ODataTypeManager {
         final int digits = bigDecimalValue.scale() >= 0
                   ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
                       : bigDecimalValue.precision() - bigDecimalValue.scale();
-        
+
         if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
             BigDecimal newBigDecimal = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
             //only allow for trimming trailing zeros
@@ -395,14 +395,14 @@ public class ODataTypeManager {
 
         return bigDecimalValue;
     }
-    
-    public static Geospatial convertToODataValue(InputStream wkb, boolean includesSrid) 
+
+    public static Geospatial convertToODataValue(InputStream wkb, boolean includesSrid)
             throws FunctionExecutionException {
         Geometry g = GeometryUtils.getGeometry(wkb, null, includesSrid);
         JTS2OlingoBridge bridge = new JTS2OlingoBridge(Dimension.GEOMETRY, includesSrid?SRID.valueOf(String.valueOf(g.getSRID())):null);
         return bridge.convert(g);
     }
-    
+
     public static String convertToODataURIValue(Object val, String odataType) throws EdmPrimitiveTypeException {
         if (val == null) {
             return "null"; // is this correct? //$NON-NLS-1$
@@ -441,6 +441,6 @@ public class ODataTypeManager {
         }
         sw.write("'"); //$NON-NLS-1$
         return sw.toString();
-    }   
+    }
 
 }

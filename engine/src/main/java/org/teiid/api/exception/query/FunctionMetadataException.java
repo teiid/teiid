@@ -33,7 +33,7 @@ public class FunctionMetadataException extends QueryProcessingException {
     public FunctionMetadataException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -42,7 +42,7 @@ public class FunctionMetadataException extends QueryProcessingException {
     public FunctionMetadataException( String message ) {
         super( message );
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -52,16 +52,16 @@ public class FunctionMetadataException extends QueryProcessingException {
     public FunctionMetadataException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public FunctionMetadataException(BundleUtil.Event event, Throwable e) {
         super( event, e);
-    }    
-    
+    }
+
     public FunctionMetadataException(BundleUtil.Event event, Throwable e, String msg) {
         super(event, e, msg);
     }
-    
+
     public FunctionMetadataException(BundleUtil.Event event, String msg) {
         super(event, msg);
-    }      
+    }
 }

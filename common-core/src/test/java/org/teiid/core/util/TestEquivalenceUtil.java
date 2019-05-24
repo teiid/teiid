@@ -64,12 +64,12 @@ public class TestEquivalenceUtil extends TestCase {
         assertTrue(EquivalenceUtil.areEquivalent(array1, array1));
         Object[] array2 = new Integer[0];
         assertTrue(EquivalenceUtil.areEquivalent(array1, array2));
-        
+
         // Different arrays same length
         array1 = new Integer[] {new Integer(1), new Integer(2), new Integer(3)};
         array2 = new Object[] {new Integer(1), new Integer(2), new Integer(3)};
         assertTrue(EquivalenceUtil.areEquivalent(array1, array2));
-        
+
         // Different arrays, differing lengths
         array2 = new Object[] {new Integer(1), new Integer(2), new Integer(3), null};
         assertFalse(EquivalenceUtil.areEquivalent(array1, array2));
@@ -83,11 +83,11 @@ public class TestEquivalenceUtil extends TestCase {
         assertFalse(EquivalenceUtil.areStrictlyEquivalent((Object)null, (Object)null));
         Object obj1 = new Integer(1000);
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(obj1, obj1));
-        
+
         // unequal with null, symmetric
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(obj1, null));
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(null, obj1));
-        
+
         // Equivalent, symmetric
         Object obj2 = new Integer(1000);
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(obj1, obj2));
@@ -102,30 +102,30 @@ public class TestEquivalenceUtil extends TestCase {
         assertFalse(EquivalenceUtil.areStrictlyEquivalent((Object[])null, (Object[])null));
         Object[] array1 = new Object[0];
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array1, array1));
-        
+
         // Different references
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(array1, null));
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(null, array1));
         Object[] array2 = new String[2];
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array2, null));
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(null, array2));
-        
+
         array2 = new Integer[0];
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(array1, array2));
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(array2, array1));
-        
+
         // Different lengths
         array1 = new Integer[] {new Integer(1), new Integer(2), new Integer(3)};
         array2 = new Object[] {new Integer(1), new Integer(2), new Integer(3), null};
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array1, array2));
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array2, array1));
-        
+
         // Different arrays containing the same references
         array2 = new Object[array1.length];
         System.arraycopy(array1, 0, array2, 0, array1.length);
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array1, array2));
         assertFalse(EquivalenceUtil.areStrictlyEquivalent(array2, array1));
-        
+
         // Different arrays containing different references
         array2 = new Object[] {new Integer(1), new Integer(2), new Integer(3)};
         assertTrue(EquivalenceUtil.areStrictlyEquivalent(array1, array2));

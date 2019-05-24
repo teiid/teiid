@@ -25,7 +25,7 @@ package org.teiid.test.util;
 public final class StringUtil {
 
 
-    
+
     public static String removeChars(final String value, final char[] chars) {
         final StringBuffer result = new StringBuffer();
         if (value != null && chars != null && chars.length > 0) {

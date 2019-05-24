@@ -49,16 +49,16 @@ import org.teiid.translator.ws.WSConnection;
 
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
-    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Link Tables", description="Used to define navigation relationship in many to many case")    
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Link Tables", description="Used to define navigation relationship in many to many case")
 	public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method", description="Http method used for procedure invocation", required=true)
     public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
-    
-    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Join Column", description="On Link tables this property defines the join column")    
+
+    @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Join Column", description="On Link tables this property defines the join column")
 	public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
-    
-    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="Entity Type Name", description="Name of the Entity Type in EDM", required=true)    
+
+    @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="Entity Type Name", description="Name of the Entity Type in EDM", required=true)
 	public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Complex Type Name", description="Name of the Complex Type in EDM")
@@ -74,7 +74,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 	public void setExecutionfactory(ODataExecutionFactory ef) {
         this.ef = ef;
     }
-	
+
     private EdmDataServices getEds(WSConnection conn) throws TranslatorException {
         try {
             BaseQueryExecution execution = new BaseQueryExecution(ef, null, null, conn);
@@ -93,14 +93,14 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             throw new TranslatorException(e);
         }
 	}
-    
+
 	public void process(MetadataFactory mf, WSConnection conn) throws TranslatorException {
 	    EdmDataServices eds = getEds(conn);
 	    getMetadata(mf, eds);
 	}
-	
-	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {	    
-	    
+
+	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {
+
 		for (EdmSchema schema:eds.getSchemas()) {
 
 			if (this.schemaNamespace != null && !this.schemaNamespace.equalsIgnoreCase(schema.getNamespace())) {
@@ -142,8 +142,8 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
 		// add columns
 		for (EdmProperty ep:entitySet.getType().getProperties().toList()) {
-			if (ep.getType().isSimple() 
-			        || (ep.getType() instanceof EdmCollectionType 
+			if (ep.getType().isSimple()
+			        || (ep.getType() instanceof EdmCollectionType
 			        && ((EdmCollectionType)ep.getType()).getItemType().isSimple())) {
 				addPropertyAsColumn(mf, table, ep, entitySet);
 			}
@@ -155,7 +155,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 				EdmComplexType embedded = (EdmComplexType)ep.getType();
 				for (EdmProperty property:embedded.getProperties().toList()) {
 					if (property.getType().isSimple()
-					        || (property.getType() instanceof EdmCollectionType 
+					        || (property.getType() instanceof EdmCollectionType
 		                    && ((EdmCollectionType)property.getType()).getItemType().isSimple())) {
 						Column column = addPropertyAsColumn(mf, table, property, entitySet, ep.getName());
 						column.setProperty(COMPLEX_TYPE, embedded.getFullyQualifiedTypeName()); // complex type
@@ -370,7 +370,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 		if (ep.getMaxLength() != null) {
 			c.setLength(ep.getMaxLength());
 		}
-		
+
 		return c;
 	}
 

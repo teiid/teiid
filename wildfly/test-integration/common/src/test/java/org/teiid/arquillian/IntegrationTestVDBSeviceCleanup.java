@@ -40,39 +40,39 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
-	
+
 	@Test
     public void testServiceCleanup() throws Exception {
 		admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
-		
+
 		createDS("ServiceDS");
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
-		
+
 		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
-		
+
 		admin.undeploy("service-vdb.xml");
-		
+
 		admin.deleteDataSource("ServiceDS");
 
 		/*
 		admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
-		
+
 		createDS("ServiceDS");
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
-		
+
 		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
 		*/
     }

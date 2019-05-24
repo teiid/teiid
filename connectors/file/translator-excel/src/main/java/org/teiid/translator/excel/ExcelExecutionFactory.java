@@ -38,12 +38,12 @@ import org.teiid.translator.TranslatorProperty;
 public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, VirtualFileConnection> {
 
     private boolean formatStrings;
-    
+
 	public ExcelExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		setTransactionSupport(TransactionSupport.NONE);
 	}
-	
+
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, VirtualFileConnection connection)
     		throws TranslatorException {
@@ -53,7 +53,7 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
     	}
     	return ex;
     }
-    
+
     @Override
     public ExcelUpdateExecution createUpdateExecution(Command command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -64,47 +64,47 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
         }
         return ex;
     }
-    	
+
     @Override
     public MetadataProcessor<VirtualFileConnection> getMetadataProcessor(){
         return new ExcelMetadataProcessor();
     }
-	
+
 	@Override
 	public boolean supportsCompareCriteriaEquals() {
 		return true; // only on ROW_ID
 	}
-	
+
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
 		return true; //Only on ROW_ID
 	}
-	
+
 	@Override
 	public boolean supportsRowLimit() {
-		return true; 
+		return true;
 	}
-	
+
 	@Override
 	public boolean supportsRowOffset() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsInCriteria() {
 		return true;
 	}
-	
+
 	@TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
 	public boolean isFormatStrings() {
         return formatStrings;
     }
-	
+
 	public void setFormatStrings(boolean formatStrings) {
         this.formatStrings = formatStrings;
     }

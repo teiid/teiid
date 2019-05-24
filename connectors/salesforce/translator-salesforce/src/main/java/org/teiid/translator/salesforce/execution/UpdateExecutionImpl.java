@@ -50,7 +50,7 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
 		visitor.visit((Update)command);
 		execute(((Update)command).getWhere(), visitor);
 	}
-	
+
 	@Override
 	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
 	        throws TranslatorException {

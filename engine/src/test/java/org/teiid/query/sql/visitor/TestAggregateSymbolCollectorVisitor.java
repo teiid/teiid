@@ -39,23 +39,23 @@ public class TestAggregateSymbolCollectorVisitor extends TestCase {
     public void helpTestCollectAggregates(String sql, String[] aggs, String[] elems) throws QueryParserException {
         // Parse command
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-        
+
         // Find aggregates
         List<Expression> foundAggs = new ArrayList<Expression>();
         List<Expression> foundElements = new ArrayList<Expression>();
         AggregateSymbolCollectorVisitor.getAggregates(command, foundAggs, foundElements, null, null, null);
-        
+
         // Compare
         assertEquals("Incorrect number of aggregates: " + foundAggs, aggs.length, foundAggs.size()); //$NON-NLS-1$
         for(int i=0; i<aggs.length; i++) {
             assertEquals("Incorrect agg match at " + i, aggs[i], foundAggs.get(i).toString()); //$NON-NLS-1$
-        }            
+        }
 
         assertEquals("Incorrect number of elements: " + foundElements, elems.length, foundElements.size()); //$NON-NLS-1$
         for(int i=0; i<elems.length; i++) {
             assertEquals("Incorrect agg match at " + i, elems[i], foundElements.get(i).toString()); //$NON-NLS-1$
-        }            
-                    
+        }
+
     }
 
     public void testCollectAggs1() throws QueryParserException {
@@ -72,7 +72,7 @@ public class TestAggregateSymbolCollectorVisitor extends TestCase {
         helpTestCollectAggregates(
             "SELECT COUNT(e1), MAX(DISTINCT e1) FROM pm1.g1 GROUP BY e1 HAVING MAX(e2) > 0 AND NOT MIN(e2) < 100",  //$NON-NLS-1$
             new String[] { "COUNT(e1)", "MAX(DISTINCT e1)", "MAX(e2)", "MIN(e2)"},  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            new String[] { "e1"}); //$NON-NLS-1$ 
+            new String[] { "e1"}); //$NON-NLS-1$
     }
 
     public void testCollectAggs4() throws QueryParserException {

@@ -34,28 +34,28 @@ import org.teiid.translator.ExecutionFactory.NullOrder;
  * <h3>Example</h3>
  * <pre>
  *    Records...
- *      { "a1", "b1", "c1" } 
+ *      { "a1", "b1", "c1" }
  *      { "a1", "b1", "c2" }
  *      { "a1", "b2", "c1" }
  *      { "a1", "b2", "c2" }
- *      { "a2", "b1", "c1" } 
- *      { "a2", "b1", "c2" } 
- *      { "a2", "b2", "c1" } 
+ *      { "a2", "b1", "c1" }
+ *      { "a2", "b1", "c2" }
+ *      { "a2", "b2", "c1" }
  *      { "a2", "b2", "c2" }
  *
  *    Records sorted in ascending order on columns 0, 2...
- *      { "a1", "b1", "c1" } 
+ *      { "a1", "b1", "c1" }
  *      { "a1", "b2", "c1" }
  *      { "a1", "b2", "c2" }
  *      { "a1", "b1", "c2" }
- *      { "a2", "b1", "c1" } 
- *      { "a2", "b2", "c1" } 
- *      { "a2", "b1", "c2" } 
- *      { "a2", "b2", "c2" } 
+ *      { "a2", "b1", "c1" }
+ *      { "a2", "b2", "c1" }
+ *      { "a2", "b1", "c2" }
+ *      { "a2", "b2", "c2" }
  * </pre>
  */
 public class ListNestedSortComparator<T extends Comparable<? super T>> implements java.util.Comparator<List<T>> {
-	
+
     /**
      * Specifies which fields to sort on.
      */
@@ -71,15 +71,15 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
      * List of booleans indicating the order in which each column should be sorted
      */
     private List<Boolean> orderTypes = null;
-    
+
     private boolean isDistinct = true;
     private int distinctIndex;
-    
+
     private List<NullOrdering> nullOrdering;
-    
+
     private boolean init;
     private int nullValue = -1;
-    
+
     private NullOrder defaultNullOrder = NullOrder.LOW;
 
     /**
@@ -110,20 +110,20 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
         this.sortParameters = sortParameters;
         this.orderTypes = orderTypes;
     }
-    
+
     public ListNestedSortComparator<T> defaultNullOrder(NullOrder order) {
     	this.defaultNullOrder = order;
     	return this;
     }
-    
+
     public boolean isDistinct() {
 		return isDistinct;
 	}
-    
+
     public void setDistinctIndex(int distinctIndex) {
 		this.distinctIndex = distinctIndex;
 	}
-    
+
     public void setNullOrdering(List<NullOrdering> nullOrdering) {
 		this.nullOrdering = nullOrdering;
 	}
@@ -143,7 +143,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
      * @param o1 The first object being compared
      * @param o2 The second object being compared
      */
-    
+
     public int compare(java.util.List<T> list1, java.util.List<T> list2) {
     	if (!init) {
     		if (nullOrdering == null) {
@@ -184,7 +184,7 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 					NullOrdering no = getNullOrdering(k);
 					if (no == NullOrdering.FIRST) {
 						return -1;
-					} 
+					}
 					if (no == NullOrdering.LAST) {
 						return 1;
 					}
@@ -195,13 +195,13 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 				NullOrdering no = getNullOrdering(k);
 				if (no == NullOrdering.FIRST) {
 					return 1;
-				} 
+				}
 				if (no == NullOrdering.LAST) {
 					return -1;
 				}
             } else  {
                 compare = Constant.COMPARATOR.compare(param1, param2);
-            } 
+            }
             if (compare != 0) {
             	boolean asc = orderTypes != null?orderTypes.get(k):this.ascendingOrder;
                 return asc ? compare : -compare;
@@ -211,26 +211,26 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
         }
     	return 0;
     }
-    
+
     private NullOrdering getNullOrdering(int index) {
 		return nullOrdering.get(index);
     }
-    
+
     public int[] getSortParameters() {
 		return sortParameters;
 	}
-    
+
     public void setSortParameters(int[] sortParameters) {
 		this.sortParameters = sortParameters;
 	}
-    
+
     public List<Boolean> getOrderTypes() {
 		return orderTypes;
 	}
-    
+
     public void setOrderTypes(List<Boolean> orderTypes) {
 		this.orderTypes = orderTypes;
 	}
-    
-} // END CLASS    
+
+} // END CLASS
 

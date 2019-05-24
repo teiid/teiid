@@ -28,7 +28,7 @@ import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
 
 /**
- * Represents a procedural execution (such as a stored procedure).  
+ * Represents a procedural execution (such as a stored procedure).
  */
 public class Call extends BaseLanguageObject implements Command, MetadataReference<Procedure>, TableReference {
 
@@ -37,13 +37,13 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
     private Procedure metadataObject;
     private Class<?> returnType;
     private boolean tableReference;
-    
+
     public Call(String name, List<Argument> parameters, Procedure metadataObject) {
         this.name = name;
         this.arguments = parameters;
         this.metadataObject = metadataObject;
     }
-    
+
     /**
      * Get the return type
      * @return the return parameter type or null if not expecting a return value
@@ -51,11 +51,11 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
     public Class<?> getReturnType() {
 		return returnType;
 	}
-    
+
     public void setReturnType(Class<?> returnType) {
 		this.returnType = returnType;
 	}
-    
+
     public String getProcedureName() {
         return this.name;
     }
@@ -80,7 +80,7 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
     public Procedure getMetadataObject() {
     	return this.metadataObject;
     }
-    
+
     public ProcedureParameter getReturnParameter() {
     	for (ProcedureParameter param : this.metadataObject.getParameters()) {
     		if (param.getType() == Type.ReturnValue) {
@@ -106,11 +106,11 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
         }
         return coulmnDTs;
     }
-    
+
     public boolean isTableReference() {
 		return tableReference;
 	}
-    
+
     public void setTableReference(boolean tableReference) {
 		this.tableReference = tableReference;
 	}

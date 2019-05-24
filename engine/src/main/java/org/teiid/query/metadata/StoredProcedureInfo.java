@@ -35,7 +35,7 @@ public class StoredProcedureInfo implements Serializable {
 
     /** Constant identifying an IN parameter */
     public static final int IN = ParameterInfo.IN;
-    
+
     /** Constant identifying an OUT parameter */
     public static final int OUT = ParameterInfo.OUT;
 
@@ -79,11 +79,11 @@ public class StoredProcedureInfo implements Serializable {
     public void setParameters(List<SPParameter> parameters){
         this.parameters = parameters;
     }
-    
+
     public void addParameter(SPParameter parameter){
         this.parameters.add(parameter);
     }
-           
+
     public QueryNode getQueryPlan(){
         return this.query;
     }
@@ -108,7 +108,7 @@ public class StoredProcedureInfo implements Serializable {
 		}
 		return false;
 	}
-	
+
     public int getUpdateCount() {
 		return updateCount;
 	}
@@ -117,4 +117,4 @@ public class StoredProcedureInfo implements Serializable {
 		this.updateCount = updateCount;
 	}
 
-} 
+}

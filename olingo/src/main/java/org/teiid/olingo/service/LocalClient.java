@@ -82,7 +82,7 @@ public class LocalClient implements Client {
     protected ConnectionImpl connection;
     private Properties properties;
     private Map<Object, Future<Boolean>> loading;
-    
+
     private Object loadingKey;
     private ResultSet toCache;
     private CompletableFuture<Boolean> loadingFinished;
@@ -93,11 +93,11 @@ public class LocalClient implements Client {
         this.properties = properties;
         this.loading = loading;
     }
-        
+
     private long getCacheTime() {
-        return PropertiesUtils.getLongProperty(this.properties, Client.SKIPTOKEN_TIME, 300000L);        
+        return PropertiesUtils.getLongProperty(this.properties, Client.SKIPTOKEN_TIME, 300000L);
     }
-    
+
     @Override
     public Connection open() throws SQLException, TeiidProcessingException {
         this.connection = buildConnection(TeiidDriver.getInstance(), this.vdbName, this.vdbVersion, this.properties);
@@ -123,33 +123,33 @@ public class LocalClient implements Client {
                 this.connection.close();
             }
         }
-    }    
-    
+    }
+
     public ConnectionImpl getConnection() {
         return this.connection;
     }
-    
+
     public static ConnectionImpl buildConnection(TeiidDriver driver, String vdbName, String version, Properties props) throws SQLException {
         StringBuilder sb = new StringBuilder();
-        sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$ 
+        sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$
         if (version != null) {
         	sb.append(".").append(version); //$NON-NLS-1$
         }
-        sb.append(";"); //$NON-NLS-1$ 
-        
+        sb.append(";"); //$NON-NLS-1$
+
         if (props.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION) == null) {
-            props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$    
+            props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
         }
         if (props.getProperty(LocalProfile.TRANSPORT_NAME) == null) {
-            props.setProperty(LocalProfile.TRANSPORT_NAME, "odata");    
-        }        
+            props.setProperty(LocalProfile.TRANSPORT_NAME, "odata");
+        }
         if (props.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
             props.setProperty(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
-        }        
+        }
         ConnectionImpl connection = driver.connect(sb.toString(), props);
         return connection;
-    }    
-    
+    }
+
     @Override
     public VDBMetaData getVDB() {
         try {
@@ -179,9 +179,9 @@ public class LocalClient implements Client {
 	}
 
     @Override
-    public void executeCall(String sql, List<SQLParameter> parameters, ProcedureReturnType returnType, 
+    public void executeCall(String sql, List<SQLParameter> parameters, ProcedureReturnType returnType,
             OperationResponse response) throws SQLException {
-        
+
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
         final CallableStatement stmt = getConnection().prepareCall(sql);
 
@@ -219,21 +219,21 @@ public class LocalClient implements Client {
     public void executeSQL(Query query, List<SQLParameter> parameters,
             boolean calculateTotalSize, Integer skipOption, Integer topOption,
             String nextOption, int pageSize, final QueryResponse response)  throws SQLException {
-        boolean cache = pageSize > 0; 
-        
-        boolean getCount = false; 
+        boolean cache = pageSize > 0;
+
+        boolean getCount = false;
         getCount = calculateTotalSize;
         boolean skipAndTopApplied = false;
         if (!getCount && (topOption != null || skipOption != null)) {
-            query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null, 
+            query.setLimit(new Limit(skipOption!=null?new Constant(skipOption):null,
                     topOption!=null?new Constant(topOption):null));
             skipAndTopApplied=true;
         }
 
         ConnectionImpl conn = getConnection();
         String sessionId = conn.getServerConnection().getLogonResult().getSessionID();
-        
-        Integer toSkip = null; 
+
+        Integer toSkip = null;
         Integer savedEntityCount = null;
         if (nextOption != null) {
             if (cache) {
@@ -255,10 +255,10 @@ public class LocalClient implements Client {
             }
             getCount = false; // the URL might have $count=true, but ignore it.
         }
-        
+
         int count = 0;
         int expectedEnd = 0;
-        
+
         if (!getCount && cache) {
             int offsetParam = 0;
             int limitParam = 0;
@@ -267,14 +267,14 @@ public class LocalClient implements Client {
             pageSize = Math.min(pageSize, 2<<24);
             int resultWindow = pageSize<<6;
             int windows = 0;
-            
+
             if (toSkip != null) {
                 windows = toSkip/resultWindow;
                 toSkip = toSkip%resultWindow;
                 count = windows*resultWindow;
             }
             expectedEnd = count + resultWindow;
-            
+
             //TODO: apply limit/offset in a prepared statement
             if (query.getLimit() != null) {
                 offsetParam = count + (skipOption!=null?skipOption:0);
@@ -292,21 +292,21 @@ public class LocalClient implements Client {
             parameters.add(new SQLParameter(offsetParam, Types.INTEGER));
             parameters.add(new SQLParameter(limitParam, Types.INTEGER));
         }
-        
+
         if (cache) {
             CacheHint hint = new CacheHint();
             hint.setTtl(getCacheTime());
             hint.setScope(CacheDirective.Scope.USER);
             query.setCacheHint(hint);
         }
-        
+
         String sql = query.toString();
         if (cache && !Boolean.valueOf(conn.getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE))) {
             //TODO: this means that prepared plan entries are not reused
             sql += " /* "+ sessionId +" */"; //$NON-NLS-1$ //$NON-NLS-2$
         }
         LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
-        
+
         if (cache) {
             this.loadingKey = Arrays.asList(sql, parameters);
             Future<?> future = loading.get(this.loadingKey);
@@ -326,9 +326,9 @@ public class LocalClient implements Client {
                 }
             }
         }
-        
-        final PreparedStatement stmt = conn.prepareStatement(sql, 
-                cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY, 
+
+        final PreparedStatement stmt = conn.prepareStatement(sql,
+                cache?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY,
                 ResultSet.CONCUR_READ_ONLY);
         if (parameters!= null && !parameters.isEmpty()) {
             List<Reference> references = ReferenceCollectorVisitor.getReferences(query);
@@ -339,25 +339,25 @@ public class LocalClient implements Client {
         }
 
         final ResultSet rs = stmt.executeQuery();
-                    
+
         //skip to the initial position
         int entityCount = 0;
         int skipSize = 0;
-        
+
         //skip based upon the skip value
-        if (toSkip == null) {            
-            if (skipOption != null && skipOption > 0 && !skipAndTopApplied) {                
+        if (toSkip == null) {
+            if (skipOption != null && skipOption > 0 && !skipAndTopApplied) {
                 int s = skipEntities(rs, skipOption);
                 count += s;
                 entityCount = s;
                 skipSize = count;
-            }                        
+            }
         } else {
         //skip based upon the skipToken
             skipSize += toSkip;
             if (skipSize > 0) {
                 count += skip(cache, rs, skipSize);
-            }            
+            }
         }
 
         //determine the number of records to return
@@ -365,18 +365,18 @@ public class LocalClient implements Client {
         int top = Integer.MAX_VALUE;
         if (getCount && topOption != null) {
             top = topOption;
-            size = top; 
+            size = top;
             if (pageSize > 0) {
                 size = Math.min(pageSize, size);
             }
         } else if (size < 1) {
             size = Integer.MAX_VALUE;
         }
-        
+
         //build the results
         int i = 0;
         int nextCount = count;
-        while(rs.next()) {            
+        while(rs.next()) {
             count++;
             i++;
             entityCount++;
@@ -386,7 +386,7 @@ public class LocalClient implements Client {
             nextCount++;
             response.addRow(rs);
         }
-        
+
         //set the count
         if (getCount) {
             while (rs.next()) {
@@ -399,7 +399,7 @@ public class LocalClient implements Client {
         } else {
             response.setCount(entityCount);
         }
-        
+
         //set the skipToken if needed
         if (cache && response.size() == pageSize) {
             long end = nextCount;
@@ -415,7 +415,7 @@ public class LocalClient implements Client {
             }
         }
     }
-    
+
     private String nextToken(boolean cache, String sessionid, long skip, Integer entityCount) {
         if (cache) {
             String token = sessionid+DELIMITER+String.valueOf(skip);
@@ -426,7 +426,7 @@ public class LocalClient implements Client {
         }
         return String.valueOf(skip);
     }
-    
+
     private int skip(boolean cache, final ResultSet rs, int skipSize)
             throws SQLException {
         int skipped = 0;
@@ -443,7 +443,7 @@ public class LocalClient implements Client {
         }
         return skipped;
     }
-    
+
     private int skipEntities(final ResultSet rs, int skipEntities)
             throws SQLException {
         int skipped = 0;
@@ -454,7 +454,7 @@ public class LocalClient implements Client {
             }
         }
         return skipped;
-    }    
+    }
 
     @Override
     public CountResponse executeCount(Query query, List<SQLParameter> parameters)  throws SQLException {

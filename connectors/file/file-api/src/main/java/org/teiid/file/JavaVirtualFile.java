@@ -35,23 +35,23 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.FileInputStreamFactory;
 
 public class JavaVirtualFile implements VirtualFile {
-    
+
     private final File f;
-    
+
     public JavaVirtualFile(File f) {
         this.f = f;
     }
-    
+
     @Override
     public String getName() {
         return f.getName();
     }
-    
+
     @Override
     public long getLastModified() {
         return f.lastModified();
     }
-    
+
     @Override
     public long getCreationTime() {
         try {
@@ -61,12 +61,12 @@ public class JavaVirtualFile implements VirtualFile {
         }
         return f.lastModified();
     }
-    
+
     @Override
     public long getSize() {
         return f.length();
     }
-    
+
     @Override
     public InputStream openInputStream(boolean lock) throws IOException {
         FileInputStream fis = new FileInputStream(f);
@@ -75,7 +75,7 @@ public class JavaVirtualFile implements VirtualFile {
         }
         return fis;
     }
-    
+
     @Override
     public OutputStream openOutputStream(boolean lock) throws IOException {
         FileOutputStream fos = new FileOutputStream(f);
@@ -84,39 +84,39 @@ public class JavaVirtualFile implements VirtualFile {
         }
         return fos;
     }
-    
+
     @Override
     public InputStreamFactory createInputStreamFactory() {
         return new FileInputStreamFactory(f);
     }
-    
+
     public static VirtualFile[] getFiles(String location, File datafile) {
         if (datafile.isDirectory()) {
             return convert(datafile.listFiles());
         }
-        
+
         if (datafile.exists()) {
             return new VirtualFile[] {new JavaVirtualFile(datafile)};
         }
-        
+
         File parentDir = datafile.getParentFile();
-        
+
         if (parentDir == null || !parentDir.exists()) {
             return null;
         }
-        
+
         if (location.contains("*")) { //$NON-NLS-1$
             //for backwards compatibility support any wildcard, but no escapes or other glob searches
-            location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$ 
+            location = location.replaceAll("\\\\", "\\\\\\\\"); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\?", "\\\\?"); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\[", "\\\\["); //$NON-NLS-1$ //$NON-NLS-2$
             location = location.replaceAll("\\{", "\\\\{"); //$NON-NLS-1$ //$NON-NLS-2$
-            
+
             final PathMatcher matcher =
                     FileSystems.getDefault().getPathMatcher("glob:" + location); //$NON-NLS-1$
 
             FileFilter fileFilter = new FileFilter() {
-                
+
                 @Override
                 public boolean accept(File pathname) {
                     return pathname.isFile() && matcher.matches(FileSystems.getDefault().getPath(pathname.getName()));
@@ -125,10 +125,10 @@ public class JavaVirtualFile implements VirtualFile {
 
             return convert(parentDir.listFiles(fileFilter));
         }
-        
+
         return null;
     }
-    
+
     public static VirtualFile[] convert(File[] files) {
         VirtualFile[] result = new VirtualFile[files.length];
         for (int i = 0; i < files.length; i++) {

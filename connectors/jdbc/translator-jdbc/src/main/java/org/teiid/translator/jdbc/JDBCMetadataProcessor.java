@@ -50,13 +50,13 @@ import org.teiid.util.FullyQualifiedName;
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
 public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
-    
+
     @ExtensionMetadataProperty(applicable= {FunctionMethod.class}, datatype=String.class, display="Sequence Used By This Function")
     static final String SEQUENCE = AbstractMetadataRecord.RELATIONAL_URI+"sequence"; //$NON-NLS-1$
-    
+
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="type of object")
     static final String TYPE = SOURCE_PREFIX+"type"; //$NON-NLS-1$
-	
+
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
 	 */
@@ -66,7 +66,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		private String name;
 		private Table table;
 		private String type;
-		
+
 		public TableInfo(String catalog, String schema, String name, Table table) {
 			this.catalog = catalog;
 			this.schema = schema;
@@ -74,7 +74,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			this.table = table;
 		}
 	}
-	
+
 	private boolean importProcedures;
 	private boolean importKeys = true;
 	private boolean importForeignKeys = true;
@@ -82,12 +82,12 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private boolean importSequences;
 	private String procedureNamePattern;
 	private String sequenceNamePattern;
-	protected boolean useFullSchemaName = true;	
+	protected boolean useFullSchemaName = true;
 	private boolean useFullSchemaNameSet;
 	private String[] tableTypes;
 	private String tableNamePattern;
 	private String catalog;
-	private String schemaPattern;	
+	private String schemaPattern;
 	private String schemaName;
 	private boolean importApproximateIndexes = true;
 	private boolean widenUnsingedTypes = true;
@@ -97,18 +97,18 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private String catalogSeparator = String.valueOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
 	private boolean autoCreateUniqueConstraints = true;
 	private boolean useQualifiedName = true;
-	
+
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String startQuoteString;
 	private String endQuoteString;
-	
+
 	private Pattern excludeTables;
 	private Pattern excludeProcedures;
 	private Pattern excludeSequences;
-	
+
 	private boolean useAnyIndexCardinality;
 	private boolean importStatistics;
-	
+
 	private String columnNamePattern;
 
 	//type options
@@ -117,7 +117,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private boolean useIntegralTypes;
 
     Map<String, Integer> typeMapping = new TreeMap<>();
-	
+
 	public void process(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
     	try {
     	    getConnectorMetadata(conn, metadataFactory);
@@ -125,7 +125,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
         }
 	}
-	
+
 	private String getDefaultQuoteStr(DatabaseMetaData metadata, String quoteString) {
         if (quoteString == null) {
             try {
@@ -139,19 +139,19 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         }
         return quoteString;
 	}
-	
+
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException {
-	    
+
 	    if (this.useFullSchemaName && !useFullSchemaNameSet) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11028));
         }
-	    
+
 		DatabaseMetaData metadata = conn.getMetaData();
-		
+
 		this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
 		this.endQuoteString = getDefaultQuoteStr(metadata, endQuoteString);
-		
+
 		ResultSet rs = null;
         try {
             rs = metadata.getTypeInfo();
@@ -173,14 +173,14 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
                 rs.close();
             }
         }
-		
+
 		if (useCatalogName) {
 			String separator = metadata.getCatalogSeparator();
 			if (separator != null && !separator.isEmpty()) {
 				this.catalogSeparator = separator;
 			}
 		}
-		
+
 		if (this.schemaName != null) {
 			String escapeStr = metadata.getSearchStringEscape();
 			String escapedSchemaName = this.schemaName;
@@ -191,10 +191,10 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			}
 			this.schemaPattern = escapedSchemaName;
 		}
-		
+
 		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
 		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
-		
+
         if (tables.stream().map((t) -> {
             return Arrays.asList(t.catalog, t.schema);
         }).distinct().count() > 1) {
@@ -203,7 +203,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         } else if (this.schemaPattern == null && this.schemaName == null) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
         }
-		
+
 		if (importKeys) {
 			getPrimaryKeys(metadataFactory, metadata, tables);
 			getIndexes(metadataFactory, metadata, tables, !importIndexes);
@@ -213,7 +213,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		} else if (importIndexes) {
 			getIndexes(metadataFactory, metadata, tables, false);
 		}
-		
+
 		if (importStatistics) {
 			for (TableInfo tableInfo : tables) {
 				if (tableInfo.table.getCardinality() == Table.UNKNOWN_CARDINALITY) {
@@ -221,17 +221,17 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 				}
 			}
 		}
-		
+
 		if (importProcedures) {
 			getProcedures(metadataFactory, metadata);
 		}
-		
+
 		if (importSequences) {
 		    getSequences(metadataFactory, conn);
 		}
-		
+
 	}
-	
+
 	/**
 	 * Determine if the type name represents an unsigned type
 	 * @param name
@@ -242,16 +242,16 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	}
 
 	/**
-	 * 
+	 *
 	 * @param conn
 	 * @param catalog
 	 * @param schema
 	 * @param name
 	 * @param table
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 	protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
-		
+
 	}
 
 	private void getProcedures(MetadataFactory metadataFactory,
@@ -280,7 +280,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			ResultSet columns = metadata.getProcedureColumns(procedureCatalog, procedureSchema, procedureName, null);
 			int rsProcColumns = procedures.getMetaData().getColumnCount();
 			while (columns.next()) {
-				String columnName = columns.getString(4);				
+				String columnName = columns.getString(4);
 				short columnType = 0;
                 try {
                     columnType = columns.getShort(5);
@@ -374,7 +374,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		return sqlType;
 	}
-    
+
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Connection conn) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
@@ -396,23 +396,23 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			}
 			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
 			ti.type = tables.getString(4);
-			table.setProperty(TYPE, ti.type); 
+			table.setProperty(TYPE, ti.type);
 			tableMap.put(fullName, ti);
 			tableMap.put(tableName, ti);
 		}
 		tables.close();
-		
+
 		getColumns(metadataFactory, metadata, tableMap, conn);
 		return tableMap;
 	}
-	
-	
+
+
 	protected boolean shouldExclude(String fullName) {
 		return excludeTables != null && excludeTables.matcher(fullName).matches();
 	}
 
 	/**
-	 * @throws SQLException  
+	 * @throws SQLException
 	 */
 	protected Table addTable(MetadataFactory metadataFactory,
 			String tableCatalog, String tableSchema, String tableName,
@@ -420,21 +420,21 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		return addTable(metadataFactory, tableCatalog, tableSchema, tableName,
 				remarks, fullName);
 	}
-	
+
 	protected String getCatalogTerm() {
 	    return "catalog"; //$NON-NLS-1$
 	}
-	
+
 	protected String getSchemaTerm() {
 	    return "schema"; //$NON-NLS-1$
 	}
-	
+
 	protected String getTableTerm() {
 	    return "table"; //$NON-NLS-1$
 	}
 
 	/**
-	 * 
+	 *
 	 * @param metadataFactory
 	 * @param tableCatalog
 	 * @param tableSchema
@@ -456,7 +456,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		if (tableSchema != null && !tableSchema.isEmpty()) {
 		    fqn.append(getSchemaTerm(), tableSchema);
 		}
-		fqn.append(getTableTerm(), tableName); 
+		fqn.append(getTableTerm(), tableName);
 		table.setProperty(FQN, fqn.toString());
 		table.setSupportsUpdate(true);
 		table.setAnnotation(remarks);
@@ -501,7 +501,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		columns.close();
 	}
-	
+
 	/**
 	 * Add a column to the given table based upon the current row of the columns resultset
 	 * @param columns
@@ -556,7 +556,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		return column;
 	}
-	
+
 	protected String getRuntimeType(int type, String typeName, int precision, int scale) {
 	    if (useIntegralTypes && scale == 0 && (type == Types.NUMERIC || type == Types.DECIMAL)) {
             if (precision <= 2) {
@@ -599,7 +599,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     }
 
     /**
-     * Extract the native component type from the typeName, 
+     * Extract the native component type from the typeName,
      * or return null if that is not possible.
      * @param typeName
      * @return
@@ -630,7 +630,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         }
         return result;
 	}
-	
+
 	protected String quoteName(String name) {
 		if (quoteNameInSource && startQuoteString != null && endQuoteString != null) {
 		    String str = StringUtil.replaceAll(name, startQuoteString, startQuoteString + startQuoteString);
@@ -689,14 +689,14 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		return val;
 	}
-	
+
 	private class FKInfo {
 		TableInfo pkTable;
 		TreeMap<Short, String> keyColumns = new TreeMap<Short, String>();
 		TreeMap<Short, String> referencedKeyColumns = new TreeMap<Short, String>();
 		boolean valid = true;
 	}
-	
+
 	private void getForeignKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
@@ -720,14 +720,14 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 				String columnName = fks.getString(8);
 				short seqNum = safeGetShort(fks, 9);
 				String pkColumnName = fks.getString(4);
-				
+
 				String fkName = fks.getString(12);
 				if (fkName == null) {
 					fkName = "FK_" + tableInfo.table.getName().toUpperCase(); //$NON-NLS-1$
 				}
-				
+
 				FKInfo fkInfo = allKeys.get(fkName);
-				
+
 				if (fkInfo == null) {
 					fkInfo = new FKInfo();
 					allKeys.put(fkName, fkInfo);
@@ -743,24 +743,24 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 						continue;
 					}
 				}
-				
+
 				if (!fkInfo.valid) {
 					continue;
 				}
-				
+
 				if (fkInfo.keyColumns.put(seqNum, columnName) != null) {
 					//We can't gracefully handle two unnamed fks
 					fkInfo.valid = false;
 				}
 				fkInfo.referencedKeyColumns.put(seqNum, pkColumnName);
 			}
-			
+
 			for (Map.Entry<String, FKInfo> entry : allKeys.entrySet()) {
 				FKInfo info = entry.getValue();
 				if (!info.valid) {
 					continue;
 				}
-				
+
 				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, entry.getKey(), info.referencedKeyColumns, info.pkTable.table);
 				ForeignKey fk = metadataFactory.addForeignKey(entry.getKey(), new ArrayList<String>(info.keyColumns.values()), new ArrayList<String>(info.referencedKeyColumns.values()), info.pkTable.table.getName(), tableInfo.table);
 				if (record != null) {
@@ -770,13 +770,13 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			fks.close();
 		}
 	}
-	
+
 	/**
 	 * Override to control or disable the default foreign key logic
      * @param catalogName
      * @param schemaName
      * @param tableName
-     * @param tableType 
+     * @param tableType
      * @return true if the default logic should still be used, or false if the default foreign key logic should not run
      */
 	private boolean getForeignKeysForTable(String catalogName, String schemaName,
@@ -788,7 +788,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		if (referencedKeyColumns != null && pkTable.getPrimaryKey() == null && pkTable.getUniqueKeys().isEmpty()) {
 			factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
-		
+
 		KeyRecord uniqueKey = null;
 		if (referencedKeyColumns == null) {
 			uniqueKey = pkTable.getPrimaryKey();
@@ -808,7 +808,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		return uniqueKey;
 	}
-	
+
 	private boolean keyMatches(List<String> names, KeyRecord record) {
 		if (names.size() != record.getColumns().size()) {
 			return false;
@@ -819,7 +819,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 			}
 		}
 		return true;
-	}	
+	}
 
 	void getIndexes(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
@@ -848,7 +848,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 					tableInfo.table.setCardinality(Math.max(cardinality, (long)tableInfo.table.getCardinalityAsFloat()));
 				}
 				if (ordinalPosition <= savedOrdinalPosition) {
-					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique) 
+					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)
 							&& (indexName == null || nonUnique || tableInfo.table.getPrimaryKey() == null || !indexName.equals(tableInfo.table.getPrimaryKey().getName()))) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 					}
@@ -889,7 +889,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		long result = Table.UNKNOWN_CARDINALITY;
 		try {
 			result = indexInfo.getLong(11);
-			
+
 		} catch (SQLException e) {
 			//can't get as long, try int
 			result = indexInfo.getInt(11);
@@ -899,7 +899,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 		}
 		return result;
 	}
-	
+
     public void getSequences(MetadataFactory metadataFactory, Connection conn) throws SQLException {
         ResultSet sequences = executeSequenceQuery(conn); //TODO: may need version information
         if (sequences == null) {
@@ -923,7 +923,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
                 String fullyQualifiedName = getFullyQualifiedName(sequenceCatalog, sequenceSchema, sequenceName, true);
                 String sequenceNext = getSequenceNextSQL(fullyQualifiedName);
                 FunctionMethod method = metadataFactory.addFunction((useFullSchemaName?sequenceTeiidName:sequenceName) + "_nextval", TypeFacility.RUNTIME_NAMES.LONG); //$NON-NLS-1$
-                method.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, sequenceNext); 
+                method.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, sequenceNext);
                 method.setProperty(SEQUENCE, fullyQualifiedName);
                 method.setDeterminism(Determinism.NONDETERMINISTIC);
             }
@@ -931,13 +931,13 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             sequences.close();
         }
     }
-    
+
     /**
      * Return a result set with three columns - sequence_catalog, sequence_schema, and sequence_name
      * or null if sequences are not supported
      * @param conn
      * @return
-     * @throws SQLException 
+     * @throws SQLException
      */
     protected ResultSet executeSequenceQuery(Connection conn) throws SQLException {
         return null;
@@ -951,7 +951,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     protected String getSequenceNextSQL(String fullyQualifiedName) {
         return null;
     }
-    
+
 	/**
 	 * Override to control or disable the default index logic
 	 * @param catalogName
@@ -959,10 +959,10 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	 * @param tableName
 	 * @param uniqueOnly
 	 * @param approximateIndexes
-	 * @param tableType 
+	 * @param tableType
 	 * @return true if the default logic should still be used, or false if the default index logic should not run
 	 */
-	protected boolean getIndexInfoForTable(String catalogName, String schemaName, String tableName, boolean uniqueOnly, 
+	protected boolean getIndexInfoForTable(String catalogName, String schemaName, String tableName, boolean uniqueOnly,
 			boolean approximateIndexes, String tableType) {
 		return true;
 	}
@@ -970,7 +970,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName) {
 		return getFullyQualifiedName(catalogName, schemaName, objectName, false);
 	}
-	
+
 	protected String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
 		String fullName = (quoted?quoteName(objectName):objectName);
 		if (useQualifiedName) {
@@ -991,7 +991,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	public void setTableTypes(String[] tableTypes) {
 		this.tableTypes = tableTypes;
 	}
-	
+
 	@TranslatorProperty (display="Table Types", category=PropertyType.IMPORT, description="Comma separated list - without spaces - of imported table types. null returns all types")
 	public String[] getTableTypes() {
 		return tableTypes;
@@ -1005,19 +1005,19 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	public void setProcedureNamePattern(String procedureNamePattern) {
 		this.procedureNamePattern = procedureNamePattern;
 	}
-	
+
 	public void setImportIndexes(boolean importIndexes) {
 		this.importIndexes = importIndexes;
 	}
-	
+
 	public void setImportKeys(boolean importKeys) {
 		this.importKeys = importKeys;
 	}
-	
+
 	public void setImportProcedures(boolean importProcedures) {
 		this.importProcedures = importProcedures;
 	}
-	
+
 	public void setImportApproximateIndexes(boolean importApproximateIndexes) {
 		this.importApproximateIndexes = importApproximateIndexes;
 	}
@@ -1030,11 +1030,11 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     public void setWidenUnsingedTypes(boolean widenUnsingedTypes) {
 		this.widenUnsingedTypes = widenUnsingedTypes;
 	}
-	
+
 	public void setWidenUnsignedTypes(boolean widenUnsignedTypes) {
 		this.widenUnsingedTypes = widenUnsignedTypes;
-	}	
-	
+	}
+
 	public void setQuoteNameInSource(boolean quoteIdentifiers) {
 		this.quoteNameInSource = quoteIdentifiers;
 	}
@@ -1047,48 +1047,48 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 	public void setSchemaPattern(String schema) {
 		this.schemaPattern = schema;
 	}
-	
+
 	public void setSchemaName(String schema) {
 		this.schemaName = schema;
 	}
-	
+
 	public void setUseProcedureSpecificName(boolean useProcedureSpecificName) {
 		this.useProcedureSpecificName = useProcedureSpecificName;
 	}
-	
+
 	public void setUseCatalogName(boolean useCatalog) {
 		this.useCatalogName = useCatalog;
 	}
-	
+
 	public void setAutoCreateUniqueConstraints(
 			boolean autoCreateUniqueConstraints) {
 		this.autoCreateUniqueConstraints = autoCreateUniqueConstraints;
 	}
-	
+
 	public void setExcludeProcedures(String excludeProcedures) {
 		this.excludeProcedures = Pattern.compile(excludeProcedures, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	}
-	
+
 	public void setExcludeTables(String excludeTables) {
 		this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 	}
-	
+
 	public void setUseQualifiedName(boolean useQualifiedName) {
 		this.useQualifiedName = useQualifiedName;
 	}
-	
+
 	public void setUseAnyIndexCardinality(boolean useAnyIndexCardinality) {
 		this.useAnyIndexCardinality = useAnyIndexCardinality;
 	}
-	
+
 	public void setImportStatistics(boolean importStatistics) {
 		this.importStatistics = importStatistics;
 	}
-	
+
 	public void setImportForeignKeys(boolean importForeignKeys) {
 		this.importForeignKeys = importForeignKeys;
 	}
-	
+
 	public void setColumnNamePattern(String columnNamePattern) {
 		this.columnNamePattern = columnNamePattern;
 	}
@@ -1141,8 +1141,8 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     @TranslatorProperty(display="Schema Name", category=PropertyType.IMPORT, description="an exact schema name; must match the schema name as it is stored in the database; Takes precedence over schemaPatten if supplied.")
     public String getSchemaName() {
         return schemaName;
-    }    
-    
+    }
+
     @TranslatorProperty(display="Import Approximate Indexes", category=PropertyType.IMPORT, description="true to import approximate index information. when true, result is allowed to reflect approximate or out of data values; when false, results are requested to be accurate")
     public boolean isImportApproximateIndexes() {
         return importApproximateIndexes;
@@ -1187,12 +1187,12 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     public boolean isImportStatistics() {
         return importStatistics;
     }
-    
+
     @TranslatorProperty(display="Column Name Pattern", category=PropertyType.IMPORT, description="a column name pattern; must match the column name as it is stored in the database. Used to import columns of tables.  Leave unset to import all columns.", advanced=true)
     public String getColumnNamePattern() {
         return columnNamePattern;
     }
-    
+
     @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
     public String getExcludeTables() {
     	if (this.excludeTables == null) {
@@ -1200,51 +1200,51 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     	}
         return this.excludeTables.pattern();
     }
-    
+
     @TranslatorProperty(display="Exclude Procedures", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid procedure name will exclude it from import.  Applied after procedure names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter")
     public String getExcludeProcedures() {
     	if (this.excludeProcedures == null) {
     		return null;
     	}
         return this.excludeProcedures.pattern();
-    }    
-    
+    }
+
     public void setQuoteString(String quoteString) {
 		this.startQuoteString = quoteString;
 		this.endQuoteString = quoteString;
 	}
-    
+
     public void setStartQuoteString(String quoteString) {
         this.startQuoteString = quoteString;
-    }    
-    
+    }
+
     public void setEndQuoteString(String quoteString) {
         this.endQuoteString = quoteString;
-    } 
-    
+    }
+
     @TranslatorProperty(display="Import RowId as binary", category=PropertyType.IMPORT, description="Import RowId values as varbinary rather than object.")
     public boolean isImportRowIdAsBinary() {
     	return this.importRowIdAsBinary;
     }
-    
+
     public void setImportRowIdAsBinary(boolean importRowIdAsBinary) {
 		this.importRowIdAsBinary = importRowIdAsBinary;
 	}
-    
+
     @TranslatorProperty(display="Import Large as LOB", category=PropertyType.IMPORT, description="Import character and binary types larger than the Teiid max as clob or blob respectively.")
     public boolean isImportLargeAsLob() {
         return importLargeAsLob;
     }
-    
+
     public void setImportLargeAsLob(boolean importLargeAsLob) {
         this.importLargeAsLob = importLargeAsLob;
     }
-   
+
     @TranslatorProperty(display="Import Sequences", category=PropertyType.IMPORT, description="true to import sequences")
     public boolean isImportSequences() {
         return importSequences;
     }
-    
+
     public void setImportSequences(boolean importSequences) {
         this.importSequences = importSequences;
     }
@@ -1256,29 +1256,29 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         }
         return excludeSequences.pattern();
     }
-    
+
     public void setExcludeSequences(String excludeSequences) {
         this.excludeSequences = Pattern.compile(excludeSequences, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     }
-    
+
     @TranslatorProperty(display="Sequence Name Pattern", category=PropertyType.IMPORT, description="a sequence name pattern; must match the sequence name as it is stored in the database")
     public String getSequenceNamePattern() {
         return sequenceNamePattern;
     }
-    
+
     public void setSequenceNamePattern(String sequenceNamePattern) {
         this.sequenceNamePattern = sequenceNamePattern;
     }
-    
+
     @TranslatorProperty (display="Use Integral Types", category=PropertyType.IMPORT, description="Use integral types rather than decimal when the scale is 0.")
     public boolean isUseIntegralTypes() {
         return useIntegralTypes;
     }
-    
+
     public void setUseIntegralTypes(boolean useIntegralTypes) {
         this.useIntegralTypes = useIntegralTypes;
     }
-    
+
     /**
      * If the schema is hidden regardless of the specified schema pattern
      * @param catalog
@@ -1288,7 +1288,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     protected boolean isHiddenSchema(String catalog, String schema) {
         return false;
     }
-    
+
     /**
      * Get the geospatial metadata for the column, including srid, type, and dimensionality
      * @param c
@@ -1304,7 +1304,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         getGeospatialMetadata(c, conn, tableCatalog, tableSchema, tableName,
                 columnName, GeometryType.class);
     }
-    
+
     /**
      * Get the geospatial metadata for the column, including srid, type, and dimensionality
      * @param c
@@ -1312,7 +1312,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
      * @param tableCatalog
      * @param tableSchema
      * @param tableName
-     * @param columnName 
+     * @param columnName
      */
     protected void getGeographyMetadata(Column c, Connection conn,
             String tableCatalog, String tableSchema, String tableName,
@@ -1320,7 +1320,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         getGeospatialMetadata(c, conn, tableCatalog, tableSchema, tableName,
                 columnName, GeographyType.class);
     }
-    
+
     protected void getGeospatialMetadata(Column c, Connection conn,
             String tableCatalog, String tableSchema, String tableName,
             String columnName, Class<? extends AbstractGeospatialType> clazz) {
@@ -1363,7 +1363,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             }
         }
     }
-    
+
     /**
      * Return the name of the metadata table or view for geography metadata
      * that conforms to the simple features specification or null if none exists
@@ -1372,7 +1372,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     protected String getGeographyMetadataTableName() {
         return null;
     }
-    
+
     /**
      * Return the name of the metadata table or view for geometry metadata
      * that conforms to the simple features specification or null if none exists
@@ -1381,5 +1381,5 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     protected String getGeometryMetadataTableName() {
         return null;
     }
-       
+
 }

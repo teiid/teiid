@@ -60,7 +60,7 @@ import org.teiid.util.StAXSQLXML;
 import org.teiid.util.WSUtil;
 
 /**
- * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
+ * A soap call executor - handles all styles doc/literal, rpc/encoded etc.
  */
 public class WSProcedureExecution implements ProcedureExecution {
 
@@ -70,8 +70,8 @@ public class WSProcedureExecution implements ProcedureExecution {
     private Source returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
-    
-    /** 
+
+    /**
      * @param env
      */
     public WSProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
@@ -81,11 +81,11 @@ public class WSProcedureExecution implements ProcedureExecution {
         this.conn = conn;
         this.executionFactory = executionFactory;
     }
-    
+
     @SuppressWarnings("unchecked")
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
-        
+
         String style = (String)arguments.get(0).getArgumentValue().getValue();
         String action = (String)arguments.get(1).getArgumentValue().getValue();
         XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
@@ -95,10 +95,10 @@ public class WSProcedureExecution implements ProcedureExecution {
             if (executionFactory.getDefaultServiceMode() == Mode.MESSAGE) {
                 type = DOMSource.class;
             }
-    	    
+
 	        source = convertToSource(type, docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
-	        
+
 	        if (style == null) {
 	        	style = executionFactory.getDefaultBinding().getBindingId();
 	        } else {
@@ -108,9 +108,9 @@ public class WSProcedureExecution implements ProcedureExecution {
 	        		throw new TranslatorException(WSExecutionFactory.UTIL.getString("invalid_invocation", Arrays.toString(Binding.values()))); //$NON-NLS-1$
 	        	}
 	        }
-	        
-	        Dispatch dispatch = conn.createDispatch(style, endpoint, type, executionFactory.getDefaultServiceMode()); 
-	
+
+	        Dispatch dispatch = conn.createDispatch(style, endpoint, type, executionFactory.getDefaultServiceMode());
+
 			if (Binding.HTTP.getBindingId().equals(style)) {
 				if (action == null) {
 					action = "POST"; //$NON-NLS-1$
@@ -123,7 +123,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 					try {
 						Transformer t = TransformerFactory.newInstance().newTransformer();
 						StringWriter writer = new StringWriter();
-						//TODO: prevent this from being too large 
+						//TODO: prevent this from being too large
 				        t.transform(source, new StreamResult(writer));
 						String param = WSUtil.httpURLEncode(this.executionFactory.getXMLParamName())+"="+WSUtil.httpURLEncode(writer.toString()); //$NON-NLS-1$
 						endpoint = WSUtil.appendQueryString(endpoint, param);
@@ -137,7 +137,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 					dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, action);
 				}
 			}
-			
+
 			if (source == null) {
 				// JBoss Native DispatchImpl throws exception when the source is null
 				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
@@ -160,12 +160,12 @@ public class WSProcedureExecution implements ProcedureExecution {
         }
         return xml.getSource(T);
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
     	return null;
-    }  
-    
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
@@ -197,13 +197,13 @@ public class WSProcedureExecution implements ProcedureExecution {
             result = xml;
         }
         return Arrays.asList(result);
-    }    
-    
+    }
+
     public void close() {
-    	
+
     }
 
     public void cancel() throws TranslatorException {
         // no-op
-    }    
+    }
 }

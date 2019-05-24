@@ -26,17 +26,17 @@ import org.junit.Test;
 public class TestFormatFunctionModifier {
 
 	OracleFormatFunctionModifier offm = new OracleFormatFunctionModifier("TO_CHAR(", false);
-    
+
     public void helpTest(String expected, String format) {
     	assertTrue(offm.supportsLiteral(format));
         assertEquals(expected, offm.translateFormat(format));
     }
-    
+
     @Test public void testQuoting() {
     	helpTest("'\"a\"\"123\"'", "'a'123");
     	helpTest("'\"a''\"\"123\"'", "'a'''123");
     }
-    
+
     @Test public void testParseHour() {
     	OracleFormatFunctionModifier offmFormat = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true);
     	String format = "hh:mm:ss";
@@ -44,31 +44,31 @@ public class TestFormatFunctionModifier {
     	assertTrue(offmFormat.supportsLiteral(format));
         assertEquals(expected, offmFormat.translateFormat(format));
     }
-    
+
     @Test public void testDay() {
     	helpTest("'DD DDD'", "dd DD");
     }
-    
+
     @Test public void testYear() {
     	helpTest("'YYYY YY YYYY YYYY'", "y yy yyy yyyy");
     }
-    
+
     @Test public void testMonth() {
     	helpTest("'MM Mon Month'", "MM MMM MMMM");
     }
-    
+
     @Test public void testEra() {
     	helpTest("'AD'", "GG");
     }
-    
+
     @Test public void testAmPm() {
     	helpTest("'AM'", "aa");
     }
-    
+
     @Test public void testISO() {
     	helpTest("'YYYY-MM-DD\"T\"HH24:MI:SS.FF3'", "yyyy-MM-dd'T'HH:mm:ss.SSS");
     }
-    
+
     @Test public void testSupports() {
     	assertTrue(offm.supportsLiteral("MMM"));
     	assertFalse(offm.supportsLiteral("yyyyy"));
@@ -83,5 +83,5 @@ public class TestFormatFunctionModifier {
     	assertFalse(offm.supportsLiteral("F MMM-dd-yyyy G"));
     	assertFalse(offm.supportsLiteral("MMM-dd-yyyy G u "));
     }
-    
+
 }

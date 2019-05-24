@@ -26,19 +26,19 @@ import java.util.Map;
 import java.util.Stack;
 
 public class SimpleContentHandler implements ContentHandler {
-	
+
 	private Stack<Object> stack = new Stack<Object>();
 	private Stack<String> nameStack = new Stack<String>();
 	private Object result;
 
 	@Override
 	public void startJSON() throws ParseException, IOException {
-		
+
 	}
 
 	@Override
 	public void endJSON() throws ParseException, IOException {
-		
+
 	}
 
 	@Override
@@ -94,9 +94,9 @@ public class SimpleContentHandler implements ContentHandler {
 		end(value);
 		return true;
 	}
-	
+
 	public Object getResult() {
 		return result;
 	}
-	
+
 }

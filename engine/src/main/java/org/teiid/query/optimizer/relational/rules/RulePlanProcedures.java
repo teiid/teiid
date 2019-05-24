@@ -56,7 +56,7 @@ import org.teiid.query.util.CommandContext;
 
 public class RulePlanProcedures implements OptimizerRule {
 
-    /** 
+    /**
      * @see org.teiid.query.optimizer.relational.OptimizerRule#execute(org.teiid.query.optimizer.relational.plantree.PlanNode, org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.optimizer.capabilities.CapabilitiesFinder, org.teiid.query.optimizer.relational.RuleStack, org.teiid.query.analysis.AnalysisRecord, org.teiid.query.util.CommandContext)
      */
     public PlanNode execute(PlanNode plan,
@@ -67,27 +67,27 @@ public class RulePlanProcedures implements OptimizerRule {
                             CommandContext context) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-        
+
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
             if (!FrameUtil.isProcedure(node.getFirstChild())) {
                 continue;
             }
-            
+
             StoredProcedure proc = (StoredProcedure)node.getProperty(NodeConstants.Info.NESTED_COMMAND);
-            
+
             if (!proc.isProcedureRelational()) {
                 continue;
             }
 
             HashSet<ElementSymbol> inputSymbols = new HashSet<ElementSymbol>();
             List<Reference> inputReferences = new LinkedList<Reference>();
-            
+
             PlanNode critNode = node.getParent();
-            
+
             List<Criteria> conjuncts = new LinkedList<Criteria>();
             HashSet<ElementSymbol> coveredParams = new HashSet<ElementSymbol>();
             //List preExecNodes = new LinkedList();
-                        
+
             for (Iterator<SPParameter> params = proc.getInputParameters().iterator(); params.hasNext();) {
                 SPParameter param = params.next();
                 ElementSymbol symbol = param.getParameterSymbol();
@@ -95,29 +95,29 @@ public class RulePlanProcedures implements OptimizerRule {
                 inputReferences.add((Reference)input);
                 inputSymbols.add(symbol);
             }
-            
+
             findInputNodes(inputSymbols, critNode, conjuncts, coveredParams);
-            
+
             List<Expression> defaults = new LinkedList<Expression>();
-            
+
             for (Reference ref : inputReferences) {
                 ElementSymbol symbol = ref.getExpression();
-                
+
                 Expression defaultValue = null;
-                
+
                 /*try {
                     defaultValue = ResolverUtil.getDefault(symbol, metadata);
                 } catch (QueryResolverException qre) {
                     //Just ignore
                 }*/
-                
+
                 defaults.add(defaultValue);
-                
+
                 if (defaultValue == null && !coveredParams.contains(symbol)) {
                      throw new QueryPlannerException(QueryPlugin.Event.TEIID30270, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30270, symbol));
                 }
             }
-            
+
             /*if (conjuncts.isEmpty()) {
                 for (int j = 0; j < inputReferences.size(); j++) {
                     Reference ref = (Reference)inputReferences.get(j);
@@ -125,11 +125,11 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
                 continue;
             }*/
-            
+
             PlanNode accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS);
-            
+
             Criteria crit = Criteria.combineCriteria(conjuncts);
-            
+
             if (crit != null) {
 	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_CRITERIA, crit);
 	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_INPUTS, inputReferences);
@@ -137,50 +137,50 @@ public class RulePlanProcedures implements OptimizerRule {
 	            accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
             }
         }
-        
+
         return plan;
     }
 
     private void findInputNodes(final HashSet<ElementSymbol> inputs,
                                PlanNode critNode,
                                final List<Criteria> conjuncts, final Set<ElementSymbol> params) {
-        
+
         while (critNode.getType() == NodeConstants.Types.SELECT) {
             final PlanNode currentNode = critNode;
-            
+
             final Criteria crit = (Criteria)currentNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            
+
             critNode = currentNode.getParent();
-            
+
             if (!currentNode.getGroups().isEmpty()) {
                 continue;
             }
-            
-            LanguageVisitor visitor = new LanguageVisitor() {      
+
+            LanguageVisitor visitor = new LanguageVisitor() {
                 public void visit(CompareCriteria compCrit){
                     if (compCrit.getOperator() == CompareCriteria.EQ && checkForInput(compCrit.getLeftExpression()) && !checkForAnyInput(compCrit.getRightExpression())) {
                         addInputNode((Reference)compCrit.getLeftExpression());
                     }
                 }
-                
+
                 private void addInputNode(Reference param) {
                     params.add(param.getExpression());
                     conjuncts.add(crit);
                     NodeEditor.removeChildNode(currentNode.getParent(), currentNode);
                 }
-                
+
                 public void visit(IsNullCriteria isNull){
                     if (!isNull.isNegated() && checkForInput(isNull.getExpression())) {
                         addInputNode((Reference)isNull.getExpression());
                     }
                 }
-                
+
                 public void visit(SetCriteria obj) {
                     if (!obj.isNegated() && checkForInput(obj.getExpression()) && !checkForAnyInput(obj.getValues())) {
                         addInputNode((Reference)obj.getExpression());
                     }
                 }
-                
+
                 public void visit(DependentSetCriteria obj) {
                     if (obj.isNegated()) {
                     	return; //just a sanity check
@@ -200,7 +200,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 		addInputNode((Reference)obj.getExpression());
                 	}
                 }
-                
+
                 boolean checkForInput(Expression expr) {
                     if (!(expr instanceof Reference)) {
                         return false;
@@ -209,7 +209,7 @@ public class RulePlanProcedures implements OptimizerRule {
                     Reference ref = (Reference)expr;
                     return inputs.contains(ref.getExpression());
                 }
-                
+
 				boolean checkForAnyInput(LanguageObject expr) {
                 	for (Reference ref : ReferenceCollectorVisitor.getReferences(expr)) {
                         if (checkForInput(ref)) {
@@ -218,7 +218,7 @@ public class RulePlanProcedures implements OptimizerRule {
                     }
                     return false;
                 }
-                
+
                 boolean checkForAnyInput(Collection<Expression> expressions) {
                 	for (Expression expr : expressions) {
                         if (checkForAnyInput(expr)) {
@@ -227,19 +227,19 @@ public class RulePlanProcedures implements OptimizerRule {
                     }
                     return false;
                 }
-                
+
             };
             for (Criteria conjunct : Criteria.separateCriteriaByAnd(crit)) {
                 conjunct.acceptVisitor(visitor);
             }
         }
     }
-    
-    /** 
+
+    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
         return "PlanProcedures"; //$NON-NLS-1$
     }
-    
+
 }

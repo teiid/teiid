@@ -30,12 +30,12 @@ import org.teiid.jdbc.FakeServer;
 @SuppressWarnings("nls")
 public class TestPGMetadata extends AbstractMMQueryTestCase {
     static FakeServer server = null;
-    
+
     @BeforeClass
     public static void setup() {
         server = new FakeServer(true);
     }
-    
+
     @AfterClass
     public static void teardown() {
             server.stop();
@@ -43,7 +43,7 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
 
     private static VDBMetaData buildVDB(String name) {
         VDBMetaData vdb = new VDBMetaData();
-        vdb.setName(name);        
+        vdb.setName(name);
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("x");
         mmd.addSourceMetadata("DDL", "create view v as select 1");
@@ -51,8 +51,8 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
         vdb.addModel(mmd);
         return vdb;
     }
-    
-    @Test 
+
+    @Test
     public void test_PG_MetadataOFF() throws Exception {
         VDBMetaData vdb = buildVDB("x");
         vdb.addProperty("include-pg-metadata", "false");
@@ -64,37 +64,37 @@ public class TestPGMetadata extends AbstractMMQueryTestCase {
         } catch (Exception e) {
         }
     }
-    @Test 
+    @Test
     public void test_PG_Metadata_ON() throws Exception {
         VDBMetaData vdb = buildVDB("y");
         vdb.addProperty("include-pg-metadata", "true");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:y"); //$NON-NLS-1$ //$NON-NLS-2$
-        execute("select * FROM pg_am"); //$NON-NLS-1$          
+        execute("select * FROM pg_am"); //$NON-NLS-1$
     }
-    @Test 
+    @Test
     public void test_PG_Metadata_DEFAULT() throws Exception {
         VDBMetaData vdb = buildVDB("z");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:z"); //$NON-NLS-1$ //$NON-NLS-2$
-        execute("select * FROM pg_am"); //$NON-NLS-1$          
-    }    
-    
+        execute("select * FROM pg_am"); //$NON-NLS-1$
+    }
+
     @Test public void testTypes() throws Exception {
         VDBMetaData vdb = buildVDB("t");
         server.deployVDB(vdb);
         this.internalConnection = server.createConnection("jdbc:teiid:t"); //$NON-NLS-1$ //$NON-NLS-2$
         execute("select format_type((select oid from pg_type where typname = '_int2'), 0)"); //$NON-NLS-1$
         assertResults(new String[] {"expr1[string]", "smallint[]"});
-        
+
         execute("select format_type((select oid from pg_type where typname = 'float4'), 0)"); //$NON-NLS-1$
         assertResults(new String[] {"expr1[string]", "real"});
-        
+
         execute("select format_type((select oid from pg_type where typname = 'numeric'), 100)"); //$NON-NLS-1$
         assertResults(new String[] {"expr1[string]", "numeric(0,96)"});
-        
+
         execute("select format_type((select oid from pg_type where typname = 'bpchar'), 100)"); //$NON-NLS-1$
         assertResults(new String[] {"expr1[string]", "character(96)"});
     }
-    
+
 }

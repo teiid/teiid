@@ -24,12 +24,12 @@ import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 
 /**
- * A policy decider that reports authorization decisions for further action.  
+ * A policy decider that reports authorization decisions for further action.
  * A decider may be called many times for a single user command.  Typically there will be 1 call for every
  * command/subquery/temp table access/function call.
  */
 public interface PolicyDecider {
-	
+
 	/**
 	 * Called by the system hasRole function to determine role membership.
 	 * @param roleName
@@ -43,8 +43,8 @@ public interface PolicyDecider {
 	 * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
 	 * @param action if context is METADATA, then action execute means a procedure or function, and read some other resource
 	 * @param resources
-	 * @param context in which the action is performed.  
-	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.   
+	 * @param context in which the action is performed.
+	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
 	 * @param commandContext
 	 * @return the set of inaccessible resources, never null
 	 */
@@ -57,14 +57,14 @@ public interface PolicyDecider {
 	 * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
 	 * @param action
 	 * @param resource
-	 * @param context in which the action is performed.  
-	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.   
+	 * @param context in which the action is performed.
+	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
 	 * @param commandContext
 	 * @return true if the access is allowed, otherwise false
 	 */
 	boolean isTempAccessible(PermissionType action, String resource,
 			Context context, CommandContext commandContext);
-	
+
 	/**
 	 * Determines if an authorization check should proceed
 	 * @param commandContext

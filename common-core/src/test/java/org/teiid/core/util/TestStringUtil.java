@@ -191,36 +191,36 @@ public class TestStringUtil {
     	assertEquals("bar", StringUtil.getFirstToken(StringUtil.getLastToken("/foo/bar.vdb", "/"), "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     	assertEquals("vdb", StringUtil.getLastToken("/foo/bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
-    
+
     public enum EnumTest {
     	HELLO,
     	WORLD
     }
-    
+
     @Test public void testValueOf() throws Exception {
     	assertEquals(Integer.valueOf(21), StringUtil.valueOf("21", Integer.class)); //$NON-NLS-1$
-    	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$    	
+    	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$
     	assertEquals("Foo", StringUtil.valueOf("Foo", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(Float.valueOf(10.12f), StringUtil.valueOf("10.12", Float.class)); //$NON-NLS-1$
     	assertEquals(Double.valueOf(121.123), StringUtil.valueOf("121.123", Double.class)); //$NON-NLS-1$
     	assertEquals(Long.valueOf(12334567L), StringUtil.valueOf("12334567", Long.class)); //$NON-NLS-1$
     	assertEquals(Short.valueOf((short)21), StringUtil.valueOf("21", Short.class)); //$NON-NLS-1$
-    	
+
     	List list = StringUtil.valueOf("foo,bar,x,y,z", List.class); //$NON-NLS-1$
     	assertEquals(5, list.size());
     	assertTrue(list.contains("foo")); //$NON-NLS-1$
     	assertTrue(list.contains("x")); //$NON-NLS-1$
-    	
+
     	int[] values = StringUtil.valueOf("1,2,3,4,5", new int[0].getClass()); //$NON-NLS-1$
     	assertEquals(5, values.length);
     	assertEquals(5, values[4]);
-    	
+
     	Map m = StringUtil.valueOf("foo=bar,x=,y=z", Map.class); //$NON-NLS-1$
     	assertEquals(3, m.size());
     	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(m.get("x"), ""); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertEquals(EnumTest.HELLO, StringUtil.valueOf("HELLO", EnumTest.class)); //$NON-NLS-1$ 
-    	
+    	assertEquals(EnumTest.HELLO, StringUtil.valueOf("HELLO", EnumTest.class)); //$NON-NLS-1$
+
     	assertEquals(new URL("http://teiid.org"), StringUtil.valueOf("http://teiid.org", URL.class)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 }

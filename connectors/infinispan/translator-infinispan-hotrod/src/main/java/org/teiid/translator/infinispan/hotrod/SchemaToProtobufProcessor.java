@@ -54,9 +54,9 @@ public class SchemaToProtobufProcessor {
 
         String defaultCacheName = "default";
         if (connection != null) {
-            defaultCacheName = connection.getCache().getName();            
+            defaultCacheName = connection.getCache().getName();
         }
-    	
+
         this.schema = metadataFactory.getSchema();
         buffer.append("package ").append(schema.getName()).append(";");
         buffer.append(NL);
@@ -133,10 +133,10 @@ public class SchemaToProtobufProcessor {
 
     private void visitColumn(Column column) {
         addTab();
-        
+
         boolean array = column.getJavaType().isArray();
         String type = getType(column, array);
-        
+
         if (column.getAnnotation() != null) {
             buffer.append("/* ").append(column.getAnnotation().replace('\n', ' ')).append(" */").append(NL);
             addTab();
@@ -147,11 +147,11 @@ public class SchemaToProtobufProcessor {
         	if (needId || needType) {
 	        	buffer.append("/* ");
 	            if (needId) {
-	                buffer.append("@Id ");                
+	                buffer.append("@Id ");
 	            }
 	            if (needType) {
 	            	buffer.append("@Teiid(type=").append(column.getRuntimeType());
-					if (column.getLength() != 0 && 
+					if (column.getLength() != 0 &&
 							(column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.STRING)
 							|| column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.CHAR))) {
 						buffer.append(", length=").append(column.getLength());
@@ -177,7 +177,7 @@ public class SchemaToProtobufProcessor {
         } else {
             buffer.append("optional ");
         }
-        
+
         buffer.append(type).append(SPACE);
 
         if (column.getNameInSource() != null) {
@@ -202,7 +202,7 @@ public class SchemaToProtobufProcessor {
             if (array) {
                 clazz = clazz.getComponentType();
             }
-            return ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();                       
+            return ProtobufDataManager.getCompatibleProtobufType(clazz).toString().toLowerCase();
         }
 	}
 

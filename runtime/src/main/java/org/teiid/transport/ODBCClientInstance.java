@@ -44,7 +44,7 @@ public class ODBCClientInstance implements ChannelListener{
 	private ODBCServerRemoteImpl server;
 	private ReflectionHelper serverProxy = new ReflectionHelper(ODBCServerRemote.class);
 	private ConcurrentLinkedQueue<PGRequest> messageQueue = new ConcurrentLinkedQueue<PGRequest>();
-	
+
 	public ODBCClientInstance(final ObjectChannel channel, TeiidDriver driver, LogonImpl logonService) {
 		this.client = (ODBCClientRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCClientRemote.class}, new InvocationHandler() {
 			@Override
@@ -73,11 +73,11 @@ public class ODBCClientInstance implements ChannelListener{
 			}
 		};
 	}
-	
+
 	public ODBCClientRemote getClient() {
 		return client;
 	}
-	
+
 	@Override
 	public void disconnected() {
 		server.terminate();
@@ -89,7 +89,7 @@ public class ODBCClientInstance implements ChannelListener{
 		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage()));
 		server.terminate();
 	}
-	
+
 	@Override
 	public void onConnection() throws CommunicationException {
 	}
@@ -123,7 +123,7 @@ public class ODBCClientInstance implements ChannelListener{
 				m.invoke(this.server, serviceStruct.args);
 			} catch (InvocationTargetException e) {
 				throw e.getCause();
-			}		
+			}
 		} catch (Throwable e) {
 			this.server.errorOccurred(e);
 		}

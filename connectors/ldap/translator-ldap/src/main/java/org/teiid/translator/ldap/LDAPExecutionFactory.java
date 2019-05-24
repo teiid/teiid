@@ -40,8 +40,8 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.UpdateExecution;
 
 
-/** 
- * LDAP translator.  This is responsible for initializing 
+/**
+ * LDAP translator.  This is responsible for initializing
  * a connection factory, and obtaining connections to LDAP.
  */
 @Translator(name="ldap", description="A translator for LDAP directory")
@@ -50,19 +50,19 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public static final String DN_PREFIX = MetadataFactory.LDAP_URI + "dn_prefix"; //$NON-NLS-1$
 	public static final String RDN_TYPE = MetadataFactory.LDAP_URI + "rdn_type"; //$NON-NLS-1$
 	public static final String UNWRAP = MetadataFactory.LDAP_URI + "unwrap"; //$NON-NLS-1$
-	
+
 	public enum SearchDefaultScope {
 		SUBTREE_SCOPE,
 		OBJECT_SCOPE,
 		ONELEVEL_SCOPE
 	}
-	
+
 	private String searchDefaultBaseDN;
 	private boolean restrictToObjectClass;
 	private SearchDefaultScope searchDefaultScope = SearchDefaultScope.ONELEVEL_SCOPE;
 	private boolean usePagination;
 	private boolean exceptionOnSizeLimitExceeded;
-	
+
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
 		this.setMaxDependentInPredicates(25); //no spec limit on query size, AD is 10MB for the query
@@ -70,21 +70,21 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 		this.setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 		setTransactionSupport(TransactionSupport.NONE);
 	}
-	
+
     @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
 	public String getSearchDefaultBaseDN() {
 		return searchDefaultBaseDN;
 	}
-	
+
 	public void setSearchDefaultBaseDN(String searchDefaultBaseDN) {
 		this.searchDefaultBaseDN = searchDefaultBaseDN;
 	}
-	
+
 	@TranslatorProperty(display="Restrict Searches To Named Object Class", description="Restrict Searches to objectClass named in the Name field for a table", advanced=true)
 	public boolean isRestrictToObjectClass() {
 		return restrictToObjectClass;
 	}
-	
+
 	public void setRestrictToObjectClass(boolean restrictToObjectClass) {
 		this.restrictToObjectClass = restrictToObjectClass;
 	}
@@ -93,23 +93,23 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public SearchDefaultScope getSearchDefaultScope() {
 		return searchDefaultScope;
 	}
-	
+
 	public void setSearchDefaultScope(SearchDefaultScope searchDefaultScope) {
 		this.searchDefaultScope = searchDefaultScope;
-	}    
-	
+	}
+
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
 		return new LDAPSyncQueryExecution((Select)command, this, executionContext, context);
 	}
-	
+
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
 		return new LDAPUpdateExecution(command, context);
-	}	
-	
+	}
+
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,Command command, ExecutionContext executionContext,RuntimeMetadata metadata, LdapContext context) throws TranslatorException {
 		String query = (String) arguments.get(0).getArgumentValue().getValue();
@@ -117,8 +117,8 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 			return new LDAPDirectSearchQueryExecution(arguments.subList(1, arguments.size()), this, executionContext, context, query, true);
 		}
 		return new LDAPDirectCreateUpdateDeleteQueryExecution(arguments.subList(1, arguments.size()), this, executionContext, context, query, true);
-	}	
-	
+	}
+
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -132,7 +132,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
     	}
     	throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
 	}
-	
+
 	@Override
     public boolean supportsCompareCriteriaEquals() {
 		return true;
@@ -168,12 +168,12 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 		// won't do it alone.
 		return false;
 	}
-	
+
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsNotCriteria() {
 		return true;
@@ -182,27 +182,27 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	@TranslatorProperty(display="Use Pagination", description="Use a PagedResultsControl to page through large results.  This is not supported by all directory servers.")
 	public boolean usePagination() {
 		return usePagination;
-	}	
-	
+	}
+
 	public void setUsePagination(boolean usePagination) {
 		this.usePagination = usePagination;
 	}
-	
+
 	@TranslatorProperty(display="Exception on Size Limit Exceeded", description="Set to true to throw an exception when a SizeLimitExceededException is received and a LIMIT is not properly enforced.")
 	public boolean isExceptionOnSizeLimitExceeded() {
 		return exceptionOnSizeLimitExceeded;
 	}
-	
+
 	public void setExceptionOnSizeLimitExceeded(
 			boolean exceptionOnSizeLimitExceeded) {
 		this.exceptionOnSizeLimitExceeded = exceptionOnSizeLimitExceeded;
 	}
-	
+
 	@Override
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsLikeCriteriaEscapeCharacter() {
 		return true;
@@ -212,15 +212,15 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public int getMaxFromGroups() {
 		return 2;
 	}
-	
+
 	@Override
 	public boolean useAnsiJoin() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsPartialFiltering() {
 		return true;
 	}
-	
+
 }

@@ -38,14 +38,14 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class TextLine implements Expression {
 	public static final String nl = System.getProperty("line.separator"); //$NON-NLS-1$
 	public static final char NO_QUOTE_CHAR = 0;
-	
+
 	private Character delimiter;
 	private Character quote;
 	private boolean includeHeader;
 	private List<DerivedColumn> expressions;
 	private String encoding;
 	private String lineEnding = nl;
-	
+
 	public Character getDelimiter() {
 		return delimiter;
 	}
@@ -53,11 +53,11 @@ public class TextLine implements Expression {
 	public void setDelimiter(Character delimiter) {
 		this.delimiter = delimiter;
 	}
-	
+
 	public String getEncoding() {
 		return encoding;
 	}
-	
+
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
@@ -84,16 +84,16 @@ public class TextLine implements Expression {
 
 	public void setExpressions(List<DerivedColumn> expressions) {
 		this.expressions = expressions;
-	}	
-	
+	}
+
 	public String getLineEnding() {
 		return lineEnding;
 	}
-	
+
 	public void setLineEnding(String lineEnding) {
 		this.lineEnding = lineEnding;
 	}
-	
+
 	@Override
 	public Class<?> getType() {
 		return String[].class;
@@ -103,7 +103,7 @@ public class TextLine implements Expression {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public TextLine clone() {
 		TextLine clone = new TextLine();
@@ -134,17 +134,17 @@ public class TextLine implements Expression {
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.expHashCode(0, this.expressions);
-	}	
-	
+	}
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
-	}	
-	
+	}
+
 	public static interface ValueExtractor<T> {
 		Object getValue(T t);
 	}
-	
+
 	public static <T> String[] evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TeiidProcessingException {
 		Character delimeter = textLine.getDelimiter();
 		if (delimeter == null) {
@@ -152,7 +152,7 @@ public class TextLine implements Expression {
 		}
 		String delim = String.valueOf(delimeter.charValue());
 		Character quote = textLine.getQuote();
-		String quoteStr = null;		
+		String quoteStr = null;
 		if (quote == null) {
 			quoteStr = "\""; //$NON-NLS-1$
 		} else if (quote.charValue() != NO_QUOTE_CHAR) {
@@ -180,10 +180,10 @@ public class TextLine implements Expression {
 			}
 			if (iterator.hasNext()) {
 				result.add(delim);
-			}			
+			}
 		}
 		result.add(textLine.getLineEnding());
 		return result.toArray(new String[result.size()]);
 	}
-	
+
 }

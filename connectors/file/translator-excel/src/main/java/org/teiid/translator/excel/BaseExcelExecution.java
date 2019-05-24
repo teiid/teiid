@@ -61,11 +61,11 @@ import org.teiid.translator.TranslatorException;
 
 public class BaseExcelExecution implements Execution {
 	@SuppressWarnings("unused")
-	protected ExecutionContext executionContext; 
+	protected ExecutionContext executionContext;
 	@SuppressWarnings("unused")
-	protected RuntimeMetadata metadata; 
+	protected RuntimeMetadata metadata;
 	protected VirtualFileConnection connection;
-    
+
     // Execution state
 	protected Iterator<Row> rowIterator;
 	private Row currentRow;
@@ -82,15 +82,15 @@ public class BaseExcelExecution implements Execution {
         this.metadata = metadata;
         this.connection = connection;
     }
-	
+
 	public void visit(LanguageObject command) throws TranslatorException {
 	    this.visitor.visitNode(command);
-        
+
         if (!visitor.exceptions.isEmpty()) {
             throw visitor.exceptions.get(0);
         }
 	}
-    
+
     @Override
     public void execute() throws TranslatorException {
 		this.xlsFiles = VirtualFileConnection.Util.getFiles(this.visitor.getXlsPath(), this.connection, true);
@@ -112,7 +112,7 @@ public class BaseExcelExecution implements Execution {
 			Sheet sheet = workbook.getSheet(this.visitor.getSheetName());
 			this.evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 			Iterator<Row> rowIter = sheet.iterator();
-            
+
 			// skip up to the first data row
 			if (this.visitor.getFirstDataRowNumber() > 0 && rowIter != null) {
 				while(rowIter.hasNext()) {
@@ -135,19 +135,19 @@ public class BaseExcelExecution implements Execution {
         	if (row == null) {
         	    return null;
         	}
-        	
+
         	// when the first cell number is -1, then it is empty row, skip it
         	if (row.getFirstCellNum() == -1) {
         		continue;
         	}
-        	
+
         	if (!this.visitor.allows(row.getRowNum())) {
         		continue;
         	}
         	return row;
         }
     }
-    
+
     private Row nextRowInternal() throws TranslatorException {
         Row row = null;
         if (this.currentRow != null) {
@@ -155,12 +155,12 @@ public class BaseExcelExecution implements Execution {
             this.currentRow = null;
             return row;
         }
-    	
+
     	boolean hasNext = false;
     	if (this.rowIterator != null) {
     		hasNext = this.rowIterator.hasNext();
     	}
-    	
+
     	while (!hasNext) {
     		this.rowIterator = null;
     		VirtualFile nextXlsFile = getNextXLSFile();
@@ -175,9 +175,9 @@ public class BaseExcelExecution implements Execution {
         }
         return row;
     }
-    
+
     /**
-     * @throws TranslatorException  
+     * @throws TranslatorException
      */
     protected VirtualFile getNextXLSFile() throws TranslatorException {
     	if (this.xlsFiles.length > this.fileCount.get()) {
@@ -185,26 +185,26 @@ public class BaseExcelExecution implements Execution {
     	}
     	return null;
     }
-    
+
     protected VirtualFile getCurrentXLSFile() {
         if (this.xlsFiles.length >= this.fileCount.get()) {
             return this.xlsFiles[this.fileCount.get()-1];
         }
         return null;
     }
-    
+
     Object convertFromExcelType(final boolean value, final Class<?> expectedType) throws TranslatorException {
         if (expectedType.isAssignableFrom(Boolean.class)) {
             return value;
         }
-        
+
         try {
             return DataTypeManager.transformValue(value, expectedType);
         } catch (TransformationException e) {
             throw new TranslatorException(e);
         }
     }
-    
+
     Object convertFromExcelType(final Double value, Cell cell, final Class<?> expectedType) throws TranslatorException {
 		if (value == null) {
 			return null;
@@ -225,25 +225,25 @@ public class BaseExcelExecution implements Execution {
 			Date date = cell.getDateCellValue();
 			return TimestampWithTimezone.createTime(date);
 		}
-		
+
 		if (expectedType == String.class && dataFormatter != null) {
 		    return dataFormatter.formatCellValue(cell);
 		}
-		
+
 		Object val = value;
-		
+
 		if (DateUtil.isCellDateFormatted(cell)) {
 		    Date date = cell.getDateCellValue();
             val = new java.sql.Timestamp(date.getTime());
 		}
-		
+
 		try {
 			return DataTypeManager.transformValue(val, expectedType);
 		} catch (TransformationException e) {
 			throw new TranslatorException(e);
 		}
     }
-    
+
     static Object convertFromExcelType(final String value, final Class<?> expectedType) throws TranslatorException {
 		if (value == null) {
 			return null;
@@ -274,8 +274,8 @@ public class BaseExcelExecution implements Execution {
 		} else {
 			throw new TranslatorException(ExcelPlugin.Event.TEIID23003, ExcelPlugin.Util.gs(ExcelPlugin.Event.TEIID23003, expectedType.getName()));
 		}
-	}    
-    
+	}
+
     @Override
     public void close() {
     }
@@ -284,7 +284,7 @@ public class BaseExcelExecution implements Execution {
     public void cancel() throws TranslatorException {
 
     }
-    
+
     public void setDataFormatter(DataFormatter dataFormatter) {
         this.dataFormatter = dataFormatter;
     }

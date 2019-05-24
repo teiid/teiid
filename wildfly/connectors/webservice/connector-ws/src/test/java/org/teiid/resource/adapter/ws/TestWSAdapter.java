@@ -27,17 +27,17 @@ import javax.xml.ws.http.HTTPBinding;
 import org.junit.Test;
 
 public class TestWSAdapter {
-	
+
 	@Test(expected=WebServiceException.class) public void testMissingEndpoint() throws ResourceException {
 		WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
-		
+
 		WSConnectionImpl conn = (WSConnectionImpl)wsmcf.createConnectionFactory().getConnection();
 		conn.createDispatch(HTTPBinding.HTTP_BINDING, null, StreamSource.class, Mode.PAYLOAD);
 	}
-	
+
 	@Test(expected=WebServiceException.class) public void testMissingEndpoint1() throws ResourceException {
 		WSManagedConnectionFactory wsmcf = new WSManagedConnectionFactory();
-		
+
 		WSConnectionImpl conn = (WSConnectionImpl)wsmcf.createConnectionFactory().getConnection();
 		conn.createDispatch(HTTPBinding.HTTP_BINDING, "/x", StreamSource.class, Mode.PAYLOAD); //$NON-NLS-1$
 	}

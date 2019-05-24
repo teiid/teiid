@@ -22,14 +22,14 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToShortTransform extends NumberToNumberTransform {
-	
+
 	private boolean isNarrowing;
-	
+
 	public NumberToShortTransform(Class<?> sourceType, boolean isNarrowing) {
 		super(Short.MIN_VALUE, Short.MAX_VALUE, sourceType);
 		this.isNarrowing = isNarrowing;
 	}
-	
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -52,10 +52,10 @@ public class NumberToShortTransform extends NumberToNumberTransform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.SHORT;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return isNarrowing;
 	}
-	
+
 }

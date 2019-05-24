@@ -43,7 +43,7 @@ public class DeleteExecutionImpl extends AbstractUpdateExecution {
 		dVisitor.visitNode(command);
 		execute(((Delete)command).getWhere(), dVisitor);
 	}
-	
+
 	@Override
 	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
 	        throws TranslatorException {

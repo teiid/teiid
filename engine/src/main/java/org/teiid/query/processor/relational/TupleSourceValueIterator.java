@@ -31,19 +31,19 @@ import org.teiid.query.sql.util.ValueIterator;
  * results of a subquery ProcessorPlan.  The plan will
  * always have only one result column.  Constant Object values will
  * be returned, not Expressions.
- * 
+ *
  * This implementation is resettable.
  */
 class TupleSourceValueIterator implements ValueIterator{
 
     private IndexedTupleSource tupleSourceIterator;
     private int columnIndex;
-    
+
     TupleSourceValueIterator(IndexedTupleSource tupleSource, int columnIndex){
         this.tupleSourceIterator = tupleSource;
         this.columnIndex = columnIndex;
 	}
-    
+
 	/**
 	 * @see java.util.Iterator#hasNext()
 	 */
@@ -70,11 +70,11 @@ class TupleSourceValueIterator implements ValueIterator{
              throw new TeiidComponentException(e);
         }
 	}
-	
+
 	public void close() {
 		this.tupleSourceIterator.closeSource();
 	}
-    
+
 	/**
 	 * Flags a reset as being needed
 	 * @see org.teiid.query.sql.util.ValueIterator#reset()

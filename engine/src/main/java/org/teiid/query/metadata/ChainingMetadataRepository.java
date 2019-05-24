@@ -42,7 +42,7 @@ public class ChainingMetadataRepository implements MetadataRepository<Object, Ob
 	public ChainingMetadataRepository(List<? extends MetadataRepository> repos) {
 		this.repositories = new ArrayList<MetadataRepository<Object,Object>>((Collection<? extends MetadataRepository<Object, Object>>)repos);
 	}
-	
+
 	@Override
 	public void loadMetadata(MetadataFactory factory,
 			ExecutionFactory<Object, Object> executionFactory,
@@ -65,7 +65,7 @@ public class ChainingMetadataRepository implements MetadataRepository<Object, Ob
 			Table table, TriggerEvent triggerOperation, String triggerDefinition) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setInsteadOfTriggerDefinition(vdbName, vdbVersion, table, triggerOperation, triggerDefinition);
-		}		
+		}
 	}
 
 	@Override
@@ -97,7 +97,7 @@ public class ChainingMetadataRepository implements MetadataRepository<Object, Ob
 			TableStats tableStats) {
 		for (MetadataRepository<Object, Object> repo : repositories) {
 			repo.setTableStats(vdbName, vdbVersion, table, tableStats);
-		}	
+		}
 	}
 
 	@Override
@@ -107,5 +107,5 @@ public class ChainingMetadataRepository implements MetadataRepository<Object, Ob
 			repo.setViewDefinition(vdbName, vdbVersion, table, viewDefinition);
 		}
 	}
-	
+
 }

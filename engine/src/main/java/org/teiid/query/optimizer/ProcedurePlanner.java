@@ -54,7 +54,7 @@ import org.teiid.query.util.CommandContext;
  * </p>
  */
 public final class ProcedurePlanner implements CommandPlanner {
-	
+
 	/**
 	 * <p>Produce a ProcessorPlan for the CreateUpdateProcedureCommand on the current node
 	 * of the CommandTreeNode, the procedure plan construction involves using the child
@@ -80,7 +80,7 @@ public final class ProcedurePlanner implements CommandPlanner {
         if(debug) {
             analysisRecord.println("OPTIMIZING SUB-COMMANDS: "); //$NON-NLS-1$
         }
-        
+
         for (Command command : CommandCollectorVisitor.getCommands(procCommand)) {
         	if (!(command instanceof DynamicCommand)) {
         		command.setProcessorPlan(QueryOptimizer.optimizePlan(command, metadata, idGenerator, capFinder, analysisRecord, context));
@@ -94,12 +94,12 @@ public final class ProcedurePlanner implements CommandPlanner {
         if(debug) {
             analysisRecord.println("\n####################################################"); //$NON-NLS-1$
         }
-                
+
         // create plan from program and initialized environment
         ProcedurePlan plan = new ProcedurePlan(programBlock);
         plan.setMetadata(metadata);
         plan.setOutputElements(cupc.getProjectedSymbols());
-        
+
         if(debug) {
             analysisRecord.println("####################################################"); //$NON-NLS-1$
             analysisRecord.println("PROCEDURE PLAN :"+plan); //$NON-NLS-1$
@@ -134,7 +134,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 		// plan each statement in the block
         planStatements(parentProcCommand, block.getStatements(), metadata, debug, idGenerator,
 				capFinder, analysisRecord, context, programBlock);
-        
+
         if (block.getExceptionGroup() != null) {
         	programBlock.setExceptionGroup(block.getExceptionGroup());
         	if (block.getExceptionStatements() != null) {
@@ -198,15 +198,15 @@ public final class ProcedurePlanner implements CommandPlanner {
             case Statement.TYPE_RETURN:
             {
             	AssignmentStatement assignStmt = (AssignmentStatement)statement;
-            	
+
             	if (stmtType == Statement.TYPE_RETURN && assignStmt.getVariable() == null) {
                 	return new ReturnInstruction();
                 }
                 AssignmentInstruction assignInstr = new AssignmentInstruction();
                 instruction = assignInstr;
-                
+
                 assignInstr.setVariable(assignStmt.getVariable());
-                
+
 				Expression asigExpr = assignStmt.getExpression();
                 assignInstr.setExpression(asigExpr);
                 if(debug) {
@@ -223,12 +223,12 @@ public final class ProcedurePlanner implements CommandPlanner {
             	ErrorInstruction error = new ErrorInstruction();
             	instruction = error;
             	RaiseStatement res = (RaiseStatement)statement;
-                
+
 				Expression asigExpr = res.getExpression();
 				error.setExpression(asigExpr);
 				error.setWarning(res.isWarning());
                 if(debug) {
-                	analysisRecord.println("\tRAISE STATEMENT:\n" + statement); //$NON-NLS-1$ 
+                	analysisRecord.println("\tRAISE STATEMENT:\n" + statement); //$NON-NLS-1$
                 }
             	break;
             }
@@ -236,8 +236,8 @@ public final class ProcedurePlanner implements CommandPlanner {
             {
 				CommandStatement cmdStmt = (CommandStatement) statement;
                 Command command = cmdStmt.getCommand();
-				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();                
-                
+				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();
+
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, ((DynamicCommand)command).getIntoGroup() == null && cmdStmt.isReturnable() && parentProcCommand.returnsResultSet());
 				}else{
@@ -249,7 +249,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 								break;
 							}
 						}
-						
+
 					}
 					instruction = cursor;
 					//handle stored procedure calls
@@ -258,7 +258,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 						if (sp.isCallableStatement()) {
 							Map<ElementSymbol, ElementSymbol> assignments = new LinkedHashMap<ElementSymbol, ElementSymbol>();
 							for (SPParameter param : sp.getParameters()) {
-								if (param.getParameterType() == SPParameter.RESULT_SET 
+								if (param.getParameterType() == SPParameter.RESULT_SET
 										|| param.getParameterType() == SPParameter.IN) {
 									continue;
 								}
@@ -268,7 +268,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 								}
 								ElementSymbol symbol = null;
 								if (expr instanceof ElementSymbol) {
-									symbol = (ElementSymbol)expr; 
+									symbol = (ElementSymbol)expr;
 								}
 								assignments.put(param.getParameterSymbol(), symbol);
 							}
@@ -276,7 +276,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 						}
 					}
 				}
-                
+
 				if(debug) {
 					analysisRecord.println("\tCOMMAND STATEMENT:\n " + statement); //$NON-NLS-1$
 					analysisRecord.println("\t\tSTATEMENT COMMAND PROCESS PLAN:\n " + commandPlan); //$NON-NLS-1$
@@ -346,7 +346,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 
 	private Mode getMode(CreateProcedureCommand parentProcCommand,
 			CommandStatement cmdStmt, Command command) {
-		if (!command.returnsResultSet()&&!(command instanceof StoredProcedure)) { 
+		if (!command.returnsResultSet()&&!(command instanceof StoredProcedure)) {
 			return Mode.UPDATE;
 		}
 		if (parentProcCommand.returnsResultSet()&&cmdStmt.isReturnable()&&cmdStmt.getCommand().returnsResultSet()) {
@@ -354,5 +354,5 @@ public final class ProcedurePlanner implements CommandPlanner {
 		}
 		return Mode.NOHOLD;
 	}
-        
+
 } // END CLASS

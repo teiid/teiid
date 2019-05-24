@@ -64,7 +64,7 @@ public class ResolverUtil {
 		private GroupSymbol group;
 		private ElementSymbol keyElement;
 		private ElementSymbol returnElement;
-		
+
 		void setGroup(GroupSymbol group) {
 			this.group = group;
 		}
@@ -164,7 +164,7 @@ public class ResolverUtil {
     	commonConversions.remove(DefaultDataTypes.STRING);
         commonConversions.remove(DefaultDataTypes.OBJECT);
         if (!commonConversions.isEmpty()) {
-            return commonConversions.iterator().next(); 
+            return commonConversions.iterator().next();
         }
         return null;
     }
@@ -189,7 +189,7 @@ public class ResolverUtil {
      * @param sourceExpression
      * @param targetTypeName
      * @return
-     * @throws QueryResolverException 
+     * @throws QueryResolverException
      */
     public static Expression convertExpression(Expression sourceExpression, String targetTypeName, QueryMetadataInterface metadata) throws QueryResolverException {
         return convertExpression(sourceExpression,
@@ -206,18 +206,18 @@ public class ResolverUtil {
      * @param targetTypeName
      * @param forComparison if the conversion is for a comparison
      * @return
-     * @throws QueryResolverException 
+     * @throws QueryResolverException
      */
     public static Expression convertExpression(Expression sourceExpression, String sourceTypeName, String targetTypeName, QueryMetadataInterface metadata, boolean forComparison) throws QueryResolverException {
         if (sourceTypeName.equals(targetTypeName)) {
             return sourceExpression;
         }
-        
+
         //can't implicit convert from char in comparisons as it looses the notion of fixed comparison
         if(!(forComparison && !metadata.widenComparisonToString() && sourceTypeName.equals(DataTypeManager.DefaultDataTypes.CHAR)) && canImplicitlyConvert(sourceTypeName, targetTypeName)) {
             return getConversion(sourceExpression, sourceTypeName, targetTypeName, true, metadata.getFunctionLibrary());
         }
-        
+
         if (sourceExpression instanceof Constant) {
         	Expression result = convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression);
         	if (result != null) {
@@ -243,7 +243,7 @@ public class ResolverUtil {
         try {
 	        //try to get the converted constant, if this fails then it is not in a valid format
 	        Constant result = getProperlyTypedConstant(constant.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
-	        
+
 	        if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
 	        	if (DataTypeManager.DefaultDataTypes.CHAR.equals(targetTypeName)) {
 	        		String value = (String)constant.getValue();
@@ -253,7 +253,7 @@ public class ResolverUtil {
 	        	}
 	        	return result;
 	        }
-	        
+
 	        //for non-strings, ensure that the conversion is consistent
 	        if (!DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
 	        	return null;
@@ -268,16 +268,16 @@ public class ResolverUtil {
 	        if (!(constant.getValue() instanceof Comparable)) {
 	        	return null; //this is the case for xml constants
 	        }
-	        
+
 	        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
-	        
+
 	        if (((Comparable)constant.getValue()).compareTo(reverse.getValue()) == 0) {
 	            return result;
 	        }
         } catch (QueryResolverException e) {
-        	
+
         }
-            
+
         return null;
     }
 
@@ -295,13 +295,13 @@ public class ResolverUtil {
                                             String targetTypeName,
                                             boolean implicit, FunctionLibrary library) {
         Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
-        
+
         Class<?> targetType = DataTypeManager.getDataTypeClass(targetTypeName);
-        
+
     	try {
 			setDesiredType(sourceExpression, targetType, sourceExpression);
 		} catch (QueryResolverException e) {
-		} 
+		}
 
         FunctionDescriptor fd = library.findTypedConversionFunction(srcType, DataTypeManager.getDataTypeClass(targetTypeName));
 
@@ -318,7 +318,7 @@ public class ResolverUtil {
     public static void setDesiredType(List<DerivedColumn> passing, LanguageObject obj) throws QueryResolverException {
     	setDesiredType(passing, obj, DataTypeManager.DefaultDataClasses.XML);
     }
-    
+
     public static void setDesiredType(List<DerivedColumn> passing, LanguageObject obj, Class<?> type) throws QueryResolverException {
 		for (DerivedColumn dc : passing) {
 	    	ResolverUtil.setDesiredType(dc.getExpression(), type, obj);
@@ -347,11 +347,11 @@ public class ResolverUtil {
         	}
         }
     }
-    
+
 	/**
 	 * Attempt to resolve the order by throws QueryResolverException if the
 	 * symbol is not of SingleElementSymbol type
-	 * 
+	 *
 	 * @param orderBy
 	 * @param fromClauseGroups
 	 *            groups of the FROM clause of the query (for resolving
@@ -367,7 +367,7 @@ public class ResolverUtil {
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
 
     	List<Expression> knownElements = command.getProjectedQuery().getSelect().getProjectedSymbols();
-    	
+
     	boolean isSimpleQuery = false;
     	List<GroupSymbol> fromClauseGroups = Collections.emptyList();
         GroupBy groupBy = null;
@@ -381,7 +381,7 @@ public class ResolverUtil {
         		groupBy = query.getGroupBy();
         	}
         }
-    	
+
         // Cached state, if needed
         String[] knownShortNames = new String[knownElements.size()];
         List<Expression> expressions = new ArrayList<Expression>(knownElements.size());
@@ -391,7 +391,7 @@ public class ResolverUtil {
             expressions.add(SymbolMap.getExpression(knownSymbol));
             if (knownSymbol instanceof ElementSymbol || knownSymbol instanceof AliasSymbol) {
                 String name = ((Symbol)knownSymbol).getShortName();
-                
+
                 knownShortNames[i] = name;
             }
         }
@@ -445,31 +445,31 @@ public class ResolverUtil {
     		    orderBy.setExpressionPosition(i, elementOrder - 1);
     		    continue;
         	}
-        	//handle order by expressions        	
+        	//handle order by expressions
         	if (command instanceof SetQuery) {
     			 throw new QueryResolverException(QueryPlugin.Event.TEIID30086, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30086, sortKey));
     		}
-        	
+
         	//resolve subqueries
         	for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(sortKey)) {
             	Command c = container.getCommand();
-                
+
                 QueryResolver.setChildMetadata(c, command);
                 c.pushNewResolvingContext(fromClauseGroups);
-                
+
                 QueryResolver.resolveCommand(c, metadata.getMetadata(), false);
         	}
-            
+
         	for (ElementSymbol symbol : ElementCollectorVisitor.getElements(sortKey, false)) {
         		try {
         	    	ResolverVisitor.resolveLanguageObject(symbol, fromClauseGroups, command.getExternalGroupContexts(), metadata);
         	    } catch(QueryResolverException e) {
         	    	 throw new QueryResolverException(QueryPlugin.Event.TEIID30087, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30087, symbol.getName()) );
-        	    } 
+        	    }
 			}
-        	
+
         	ResolverVisitor.resolveLanguageObject(sortKey, metadata);
-        	
+
             int index = expressions.indexOf(SymbolMap.getExpression(sortKey));
             //if unrelated and not a simple query - that is more than just a grouping, throw an exception
             if (index == -1 && !isSimpleQuery && groupBy == null) {
@@ -478,12 +478,12 @@ public class ResolverUtil {
         	orderBy.setExpressionPosition(i, index);
         }
     }
-    
-    /** 
+
+    /**
      * Get the default value for the parameter, which could be null
      * if the parameter is set to NULLABLE.  If no default is available,
      * a QueryResolverException will be thrown.
-     * 
+     *
      * @param symbol ElementSymbol retrieved from metadata, fully-resolved
      * @param metadata QueryMetadataInterface
      * @return expr param (if it is non-null) or default value (if there is one)
@@ -492,19 +492,19 @@ public class ResolverUtil {
      * default value is defined
      * @throws QueryMetadataException for error retrieving metadata
      * @throws TeiidComponentException
-     * @throws QueryParserException 
+     * @throws QueryParserException
      * @since 4.3
      */
 	public static Expression getDefault(ElementSymbol symbol, QueryMetadataInterface metadata) throws TeiidComponentException, QueryMetadataException, QueryResolverException {
         //Check if there is a default value, if so use it
 		Object mid = symbol.getMetadataID();
     	Class<?> type = symbol.getType();
-		
+
         String defaultValue = metadata.getDefaultValue(mid);
-        
+
         boolean omit = false;
         String extensionProperty = metadata.getExtensionProperty(mid,  BaseColumn.DEFAULT_HANDLING, false);
-        if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(extensionProperty)) { 
+        if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(extensionProperty)) {
         	Expression ex = null;
         	try {
         		ex = QueryParser.getQueryParser().parseExpression(defaultValue);
@@ -525,21 +525,21 @@ public class ResolverUtil {
                 defaultValue = null; //for physical procedures we just need a dummy value
             }
         }
-        
+
         if (!omit && defaultValue == null && !metadata.elementSupports(mid, SupportConstants.Element.NULL)) {
             throw new QueryResolverException(QueryPlugin.Event.TEIID30089, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30089, symbol.getOutputName()));
         }
-        
+
         return getProperlyTypedConstant(defaultValue, type);
-	}    
-	
+	}
+
 	public static boolean hasDefault(Object mid, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         Object defaultValue = metadata.getDefaultValue(mid);
-        
+
         return defaultValue != null || metadata.elementSupports(mid, SupportConstants.Element.NULL);
 	}
-    
-    /** 
+
+    /**
      * Construct a Constant with proper type, given the String default
      * value for the parameter and the parameter type.  Throw a
      * QueryResolverException if the String can't be transformed.
@@ -565,7 +565,7 @@ public class ResolverUtil {
 				} catch (TransformationException e1) {
 				}
         	}
-        	if (parameterType == DataTypeManager.DefaultDataClasses.TIMESTAMP 
+        	if (parameterType == DataTypeManager.DefaultDataClasses.TIMESTAMP
         	        || (parameterType == DataTypeManager.DefaultDataClasses.DATE && defaultValue.toString().endsWith("00:00"))) { //$NON-NLS-1$
         	    //see if the seconds were omitted
         	    String val = defaultValue.toString() + ":00"; //$NON-NLS-1$
@@ -585,30 +585,30 @@ public class ResolverUtil {
     /**
      * Returns the resolved elements in the given group.  This method has the side effect of caching the resolved elements on the group object.
      * The resolved elements may not contain non-selectable columns depending on the metadata first used for resolving.
-     * 
+     *
      */
     public static List<ElementSymbol> resolveElementsInGroup(GroupSymbol group, QueryMetadataInterface metadata)
     throws QueryMetadataException, TeiidComponentException {
         return new ArrayList<ElementSymbol>(getGroupInfo(group, metadata).getSymbolList());
     }
-    
+
     public static void clearGroupInfo(GroupSymbol group, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
     	metadata.addToMetadataCache(group.getMetadataID(), GroupInfo.CACHE_PREFIX + group.getName(), null);
     }
-    
+
 	static GroupInfo getGroupInfo(GroupSymbol group,
 			QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
 		String key = GroupInfo.CACHE_PREFIX + group.getName();
 		GroupInfo groupInfo = (GroupInfo)metadata.getFromMetadataCache(group.getMetadataID(), key);
-    	
+
         if (groupInfo == null) {
         	group = group.clone();
             // get all elements from the metadata
             List elementIDs = metadata.getElementIDsInGroupID(group.getMetadataID());
 
     		LinkedHashMap<Object, ElementSymbol> symbols = new LinkedHashMap<Object, ElementSymbol>(elementIDs.size());
-            
+
             for (Object elementID : elementIDs) {
             	String elementName = metadata.getName(elementID);
                 // Form an element symbol from the ID
@@ -623,11 +623,11 @@ public class ResolverUtil {
         }
 		return groupInfo;
 	}
-    
+
     /**
      * When access patterns are flattened, they are an approximation the user
      * may need to enter as criteria.
-     *  
+     *
      * @param metadata
      * @param groups
      * @param flatten
@@ -639,9 +639,9 @@ public class ResolverUtil {
 		List accessPatterns = null;
 		Iterator i = groups.iterator();
 		while (i.hasNext()){
-		    
+
 		    GroupSymbol group = (GroupSymbol)i.next();
-		    
+
 		    //Check this group for access pattern(s).
 		    Collection accessPatternIDs = metadata.getAccessPatternsInGroup(group.getMetadataID());
 		    if (accessPatternIDs != null && accessPatternIDs.size() > 0){
@@ -667,7 +667,7 @@ public class ResolverUtil {
 		        }
 		    }
 		}
-                
+
 		return accessPatterns;
 	}
 
@@ -677,10 +677,10 @@ public class ResolverUtil {
         }
         setDesiredType(limit.getRowLimit(), DataTypeManager.DefaultDataClasses.INTEGER, limit);
     }
-    
-    public static void resolveImplicitTempGroup(TempMetadataAdapter metadata, GroupSymbol symbol, List symbols) 
+
+    public static void resolveImplicitTempGroup(TempMetadataAdapter metadata, GroupSymbol symbol, List symbols)
         throws TeiidComponentException, QueryResolverException {
-        
+
         if (symbol.isImplicitTempGroupSymbol()) {
             if (metadata.getMetadataStore().getTempElementElementIDs(symbol.getName())==null) {
                 addTempGroup(metadata, symbol, symbols, true);
@@ -698,32 +698,32 @@ public class ResolverUtil {
                  throw new QueryResolverException(QueryPlugin.Event.TEIID30091, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30091, symbol, Symbol.getShortName(ses)));
             }
         }
-        
+
         if (tempTable) {
             resolveNullLiterals(symbols);
         }
         TempMetadataStore store = metadata.getMetadataStore();
         return store.addTempGroup(symbol.getName(), symbols, !tempTable, tempTable);
     }
-    
+
     public static TempMetadataID addTempTable(TempMetadataAdapter metadata,
                                      GroupSymbol symbol,
                                      List<? extends Expression> symbols) throws QueryResolverException {
         return addTempGroup(metadata, symbol, symbols, true);
     }
 
-    /** 
-     * Look for a null literal in the SELECT clause and set it's type to STRING.  This ensures that 
+    /**
+     * Look for a null literal in the SELECT clause and set it's type to STRING.  This ensures that
      * the result set metadata retrieved for this query will be properly set to something other than
      * the internal NullType.  Added for defect 15437.
-     * 
+     *
      * @param select The select clause
      * @since 4.2
      */
     public static void resolveNullLiterals(List symbols) {
         for (int i = 0; i < symbols.size(); i++) {
             Expression selectSymbol = (Expression) symbols.get(i);
-            
+
             setTypeIfNull(selectSymbol, DataTypeManager.DefaultDataClasses.STRING);
         }
     }
@@ -734,12 +734,12 @@ public class ResolverUtil {
             return;
         }
 		symbol = SymbolMap.getExpression(symbol);
-	    if(symbol instanceof Constant) {                	
+	    if(symbol instanceof Constant) {
 	    	((Constant)symbol).setType(replacement);
 	    } else if (symbol instanceof AbstractCaseExpression) {
 	        ((AbstractCaseExpression)symbol).setType(replacement);
 	    } else if (symbol instanceof ScalarSubquery) {
-	        ((ScalarSubquery)symbol).setType(replacement);                                        
+	        ((ScalarSubquery)symbol).setType(replacement);
 	    } else if(symbol instanceof ElementSymbol) {
 		    ElementSymbol elementSymbol = (ElementSymbol)symbol;
 	        elementSymbol.setType(replacement);
@@ -749,11 +749,11 @@ public class ResolverUtil {
 			} catch (QueryResolverException e) {
 				//cannot happen
 			}
-		}  
+		}
 	}
-    
+
     /**
-     *  
+     *
      * @param groupContext
      * @param groups
      * @param metadata
@@ -804,7 +804,7 @@ public class ResolverUtil {
         return matchedGroups;
     }
 
-    
+
     public static boolean nameMatchesGroup(String groupContext,
                                             String fullName) {
         //if there is a name match, make sure that it is the full name or a proper qualifier
@@ -816,7 +816,7 @@ public class ResolverUtil {
         }
         return false;
     }
-    
+
     private static boolean nameMatchesGroup(String groupContext,
                                             LinkedList<GroupSymbol> matchedGroups,
                                             GroupSymbol group,
@@ -840,12 +840,12 @@ public class ResolverUtil {
 	 * @return implicit conversion Function, or null if none is necessary
 	 * @throws QueryResolverException if a conversion is necessary but none can
 	 * be found
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
 	 */
 	static Expression resolveSubqueryPredicateCriteria(Expression expression, SubqueryContainer crit, QueryMetadataInterface metadata)
 		throws QueryResolverException, QueryMetadataException, TeiidComponentException {
-	
+
 		List<Expression> projectedSymbols = crit.getCommand().getProjectedSymbols();
 		int size = projectedSymbols.size();
         if (size != 1){
@@ -863,7 +863,7 @@ public class ResolverUtil {
 	        throw new QueryResolverException(QueryPlugin.Event.TEIID30093, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30093, crit.getCommand()));
 		}
 		Class<?> subqueryType = projectedSymbols.iterator().next().getType();
-		
+
         return resolveComparision(expression, crit, metadata,
                 subqueryType);
 	}
@@ -910,9 +910,9 @@ public class ResolverUtil {
 			 throw new QueryResolverException(QueryPlugin.Event.TEIID30097, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30097, ((Constant)args[0]).getValue()));
 		}
 		result.setGroup(groupSym);
-		
+
 		List<GroupSymbol> groups = Arrays.asList(groupSym);
-		
+
 		String returnElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[1]).getValue(); //$NON-NLS-1$
 		ElementSymbol returnElement = new ElementSymbol(returnElementName);
         try {
@@ -921,7 +921,7 @@ public class ResolverUtil {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30098, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30098, returnElementName));
         }
 		result.setReturnElement(returnElement);
-        
+
         String keyElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[2]).getValue(); //$NON-NLS-1$
         ElementSymbol keyElement = new ElementSymbol(keyElementName);
         try {
@@ -943,25 +943,25 @@ public class ResolverUtil {
 
 	public static void resolveGroup(GroupSymbol symbol, QueryMetadataInterface metadata)
 	    throws TeiidComponentException, QueryResolverException {
-	
+
 	    if (symbol.getMetadataID() != null){
 	        return;
 	    }
-	
+
 	    // determine the "metadataID" part of the symbol to look up
 	    String potentialID = symbol.getNonCorrelationName();
-	    
+
 	    String name = symbol.getName();
 	    String definition = symbol.getDefinition();
-	
+
 	    Object groupID = null;
 	    try {
 	        // get valid GroupID for possibleID - this may throw exceptions if group is invalid
 	        groupID = metadata.getGroupID(potentialID);
 	    } catch(QueryMetadataException e) {
 	        // didn't find this group ID
-	    } 
-	
+	    }
+
 	    // If that didn't work, try to strip a vdb name from potentialID
 	    if(groupID == null) {
 	    	String[] parts = potentialID.split("\\.", 2); //$NON-NLS-1$
@@ -970,13 +970,13 @@ public class ResolverUtil {
 	                groupID = metadata.getGroupID(parts[1]);
 	            } catch(QueryMetadataException e) {
 	                // ignore - just didn't find it
-	            } 
+	            }
 	            if(groupID != null) {
 	            	potentialID = parts[1];
 	            }
 	        }
 	    }
-	
+
 	    // the group could be partially qualified,  verify that this group exists
 	    // and there is only one group that matches the given partial name
 	    if(groupID == null) {
@@ -985,8 +985,8 @@ public class ResolverUtil {
 	        	groupNames = metadata.getGroupsForPartialName(potentialID);
 	        } catch(QueryMetadataException e) {
 	            // ignore - just didn't find it
-	        } 
-	
+	        }
+
 	        if(groupNames != null) {
 	            int matches = groupNames.size();
 	            if(matches == 1) {
@@ -996,13 +996,13 @@ public class ResolverUtil {
 			            groupID = metadata.getGroupID(potentialID);
 			        } catch(QueryMetadataException e) {
 			            // didn't find this group ID
-			        } 
+			        }
 	            } else if(matches > 1) {
 	                throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0055")); //$NON-NLS-1$
 	            }
 	        }
 	    }
-	    
+
 	    if (groupID == null || metadata.isProcedure(groupID)) {
 		    //try procedure relational resolving
 	        try {
@@ -1011,9 +1011,9 @@ public class ResolverUtil {
 	            groupID = storedProcedureInfo.getProcedureID();
 	        } catch(QueryMetadataException e) {
 	            // just ignore
-	        } 
+	        }
 	    }
-	    
+
 	    if(groupID == null) {
 	        throw handleUnresolvedGroup(symbol, QueryPlugin.Util.getString("ERR.015.008.0056")); //$NON-NLS-1$
 	    }
@@ -1031,14 +1031,14 @@ public class ResolverUtil {
 	        }
 	    } catch(QueryMetadataException e) {
 	        // should not come here
-	    } 
-	    
+	    }
+
 	    if (metadata.useOutputName()) {
 	    	symbol.setOutputDefinition(definition);
 	    	symbol.setOutputName(name);
 	    }
 	}
-	
+
 	public static void findKeyPreserved(Query query, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
 	throws TeiidComponentException, QueryMetadataException {
 		if (query.getFrom() == null) {
@@ -1104,16 +1104,16 @@ public class ResolverUtil {
 			}
 		}
 	}
-		
+
 	public static void findKeyPreserved(FromClause clause, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)
 	throws TeiidComponentException, QueryMetadataException {
 		if (clause instanceof UnaryFromClause) {
 			UnaryFromClause ufc = (UnaryFromClause)clause;
-		    
+
 			if (!metadata.getUniqueKeysInGroup(ufc.getGroup().getMetadataID()).isEmpty()) {
 				keyPreservingGroups.add(ufc.getGroup());
 			}
-		} 
+		}
 		if (clause instanceof JoinPredicate) {
 			JoinPredicate jp = (JoinPredicate)clause;
 			if (jp.getJoinType() == JoinType.JOIN_CROSS || jp.getJoinType() == JoinType.JOIN_FULL_OUTER) {
@@ -1123,24 +1123,24 @@ public class ResolverUtil {
 			findKeyPreserved(jp.getLeftClause(), leftPk, metadata);
 			HashSet<GroupSymbol> rightPk = new HashSet<GroupSymbol>();
 			findKeyPreserved(jp.getRightClause(), rightPk, metadata);
-			
+
 			if (leftPk.isEmpty() && rightPk.isEmpty()) {
 				return;
 			}
-			
+
 			HashSet<GroupSymbol> leftGroups = new HashSet<GroupSymbol>();
 			HashSet<GroupSymbol> rightGroups = new HashSet<GroupSymbol>();
 			jp.getLeftClause().collectGroups(leftGroups);
 			jp.getRightClause().collectGroups(rightGroups);
-			
+
 			LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
 			LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
 			RuleChooseJoinStrategy.separateCriteria(leftGroups, rightGroups, leftExpressions, rightExpressions, jp.getJoinCriteria(), new LinkedList<Criteria>());
-		    
+
 			HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = createGroupMap(leftExpressions, rightExpressions);
 			if (!leftPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_LEFT_OUTER)) {
 				findKeyPreserved(keyPreservingGroups, leftPk, crits, true, metadata, rightPk);
-			} 
+			}
 			if (!rightPk.isEmpty() && (jp.getJoinType() == JoinType.JOIN_INNER || jp.getJoinType() == JoinType.JOIN_RIGHT_OUTER)) {
 				findKeyPreserved(keyPreservingGroups, rightPk, crits, false, metadata, leftPk);
 			}
@@ -1151,7 +1151,7 @@ public class ResolverUtil {
 			LinkedList<Expression> leftExpressions,
 			LinkedList<Expression> rightExpressions) {
 		HashMap<List<GroupSymbol>, List<HashSet<Object>>> crits = new HashMap<List<GroupSymbol>, List<HashSet<Object>>>();
-		
+
 		for (int i = 0; i < leftExpressions.size(); i++) {
 			Expression lexpr = leftExpressions.get(i);
 			Expression rexpr = rightExpressions.get(i);
@@ -1201,5 +1201,5 @@ public class ResolverUtil {
 	        element.setDisplayFullyQualified(true);
 	    }
 	}
-    
+
 }

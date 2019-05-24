@@ -46,14 +46,14 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 
 	private static Admin admin;
-	
+
 	@BeforeClass
 	public static void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
 		admin.deploy("txn-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("txn-vdb.xml")));
         assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1));
 	}
-	
+
 	@AfterClass
 	public static void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
@@ -73,36 +73,36 @@ public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 		execute("rollback");
 		execute("select * from temp");
 		assertRowCount(0);
-		
+
 		execute("select rand(1)"); //TODO - I think our rand function doesn't make sense
 		this.internalConnection.setAutoCommit(false);
-		
+
 		execute("/*+ cache */ select rand()");
 		internalResultSet.next();
 		double d = internalResultSet.getDouble(1);
-		
-		execute("select rand(2)"); 
+
+		execute("select rand(2)");
 		execute("/*+ cache */ select rand()");
 		internalResultSet.next();
 		double d1 = internalResultSet.getDouble(1);
 		assertEquals("Expected same in the txn", d, d1, 0);
-		
-		this.internalConnection.rollback(); 
+
+		this.internalConnection.rollback();
 		this.internalConnection.setAutoCommit(true);
-		
-		execute("select rand(3)"); 
+
+		execute("select rand(3)");
 		execute("/*+ cache */ select rand()");
 		internalResultSet.next();
 		double d2 = internalResultSet.getDouble(1);
 		assertTrue("Expected different after rollback", d != d2);
-		
-		execute("select rand(4)"); 
+
+		execute("select rand(4)");
 		execute("/*+ cache */ select rand()");
 		internalResultSet.next();
 		d = internalResultSet.getDouble(1);
 		assertEquals("Expected same after autoCommit", d, d2, 0);
     }
-	
+
 	@Test public void testXa() throws Exception {
 	    this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
 	    TeiidDataSource tds = new TeiidDataSource();
@@ -118,17 +118,17 @@ public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
         r.nextBytes(gid);
         r.nextBytes(bid);
         XidImpl xidImpl = new XidImpl(0, gid, bid);
-        
+
         //sequence should succeed
         xar.start(xidImpl, XAResource.TMNOFLAGS);
         xar.end(xidImpl, XAResource.TMFAIL);
         xar.rollback(xidImpl);
-        
+
         try {
             xar.start(new XidImpl(), XAResource.TMNOFLAGS);
             fail("invalid xid should fail");
         } catch (XAException e) {
-            
+
         }
 	}
 

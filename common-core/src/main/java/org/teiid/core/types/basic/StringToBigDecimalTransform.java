@@ -59,10 +59,10 @@ public class StringToBigDecimalTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DefaultDataClasses.BIG_DECIMAL;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;
 	}
-	
+
 }

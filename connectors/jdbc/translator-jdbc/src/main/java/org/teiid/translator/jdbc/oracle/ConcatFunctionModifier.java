@@ -39,24 +39,24 @@ import org.teiid.translator.jdbc.FunctionModifier;
  * This Function modifier used to support ANSI concat on Oracle 9i.
  * <code>
  * CONCAT(a, b) ==> CASE WHEN (a is NULL OR b is NULL) THEN NULL ELSE CONCAT(a, b)
- * </code>   
+ * </code>
  */
 public class ConcatFunctionModifier extends FunctionModifier {
     private LanguageFactory langFactory;
-    
-    /** 
+
+    /**
      * @param langFactory
      */
     public ConcatFunctionModifier(LanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
-    
+
     @Override
     public List<?> translate(Function function) {
         Expression a = function.getParameters().get(0);
         Expression b = function.getParameters().get(1);
         List<Condition> crits = new ArrayList<Condition>();
-        
+
         Literal nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
         if (isNull(a)) {
         	return Arrays.asList(nullValue);
@@ -68,9 +68,9 @@ public class ConcatFunctionModifier extends FunctionModifier {
         } else if (!isNotNull(b)) {
         	crits.add(langFactory.createIsNullCriteria(b, false));
         }
-        
+
         Condition crit = null;
-        
+
         if (crits.isEmpty()) {
         	return null;
         } else if (crits.size() == 1) {
@@ -81,7 +81,7 @@ public class ConcatFunctionModifier extends FunctionModifier {
         List<SearchedWhenClause> cases = Arrays.asList(langFactory.createSearchedWhenCondition(crit, nullValue));
         return Arrays.asList(langFactory.createSearchedCaseExpression(cases, function, TypeFacility.RUNTIME_TYPES.STRING));
     }
-    
+
     public static boolean isNotNull(Expression expr) {
     	if (expr instanceof Literal) {
     		Literal literal = (Literal)expr;
@@ -95,7 +95,7 @@ public class ConcatFunctionModifier extends FunctionModifier {
     	}
     	return false;
     }
-    
+
     private boolean isNull(Expression expr) {
     	if (expr instanceof Literal) {
     		Literal literal = (Literal)expr;
@@ -103,5 +103,5 @@ public class ConcatFunctionModifier extends FunctionModifier {
     	}
     	return false;
     }
-        
+
 }

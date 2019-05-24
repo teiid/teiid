@@ -41,7 +41,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 public class TeiidODataJsonSerializer extends ODataJsonSerializer {
-    
+
     private boolean isODataMetadataFull;
     private boolean isODataMetadataNone;
 
@@ -69,27 +69,27 @@ public class TeiidODataJsonSerializer extends ODataJsonSerializer {
                 for (final ComplexReturnType type : ct) {
                   if (!type.isExpand()) {
                     json.writeStringField(type.getName()+Constants.JSON_NAVIGATION_LINK, type.getEntity().getId().toASCIIString());
-                  } 
+                  }
                   else {
-                    json.writeFieldName(type.getName());                      
+                    json.writeFieldName(type.getName());
                     writeEntity(metadata, type.getEdmEntityType(), type.getEntity(), null, null, null, null, false, null, type.getName(), json);
                   }
                 }
                 json.writeEndObject();
             }
             json.writeEndArray();
-            
+
             if (nextLink != null) {
                 json.writeStringField(Constants.JSON_NEXT_LINK, nextLink.toASCIIString());
             }
-            
+
             json.close();
         } catch (final IOException | DecoderException e) {
             throw new SerializerException("An I/O exception occurred.", e, SerializerException.MessageKeys.IO_EXCEPTION);
         }
         return SerializerResultImpl.with().content(buffer.getInputStream()).build();
-    }    
-    
+    }
+
     public SerializerResult complexCollection(final ServiceMetadata metadata,
             final EdmComplexType type,
             final Property result,
@@ -106,16 +106,16 @@ public class TeiidODataJsonSerializer extends ODataJsonSerializer {
             json.writeStartArray();
             for (Object value:result.asCollection()) {
                 json.writeStartObject();
-                writeComplexValue(metadata, type, ((ComplexValue) value).getValue(), 
+                writeComplexValue(metadata, type, ((ComplexValue) value).getValue(),
                         null, json, null, (ComplexValue) value, null, result.getName());
                 json.writeEndObject();
             }
             json.writeEndArray();
-            
+
             if (nextLink != null) {
                 json.writeStringField(Constants.JSON_NEXT_LINK, nextLink.toASCIIString());
             }
-            
+
             json.close();
         } catch (final IOException e) {
             throw new SerializerException("An I/O exception occurred.", e, SerializerException.MessageKeys.IO_EXCEPTION);

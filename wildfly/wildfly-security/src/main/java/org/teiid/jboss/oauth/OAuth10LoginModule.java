@@ -35,7 +35,7 @@ import org.teiid.OAuthCredential;
 /**
  * Login module to capture OAuth 1.0a profile credential for web service resource-adapter.
  * Users either need to provide all the options or extend this login module to provide
- * all necessary options at runtime.  
+ * all necessary options at runtime.
  */
 public class OAuth10LoginModule extends AbstractPasswordCredentialLoginModule {
     private String consumerKey;
@@ -45,25 +45,25 @@ public class OAuth10LoginModule extends AbstractPasswordCredentialLoginModule {
     protected OAuthCredential credential;
     protected Subject callerSubject;
     protected Principal callerPrincipal;
-    
+
     @Override
     public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
        super.initialize(subject, handler, sharedState, options);
-       
+
        this.consumerKey = (String) options.get("consumer-key"); //$NON-NLS-1$
        this.consumerSecret = (String) options.get("consumer-secret"); //$NON-NLS-1$
-       
+
        this.accessKey = (String) options.get("access-key"); //$NON-NLS-1$
        this.accessSecret = (String) options.get("access-secret"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean login() throws LoginException {
         this.callerSubject = getSubject();
         this.callerPrincipal = getPrincipal();
-        
+
         if (getCredential() == null) {
-            if (getConsumerKey() == null || getConsumerSecret() == null || 
+            if (getConsumerKey() == null || getConsumerSecret() == null ||
                     getAccessKey() == null || getAccessSecret() == null) {
                 super.loginOk = false;
                 return false;
@@ -76,11 +76,11 @@ public class OAuth10LoginModule extends AbstractPasswordCredentialLoginModule {
             cred.setAccessSecret(getAccessSecret());
             setCredential(cred);
         }
-        
+
         super.loginOk = true;
         return true;
    }
-    
+
     @Override
     protected Principal getIdentity() {
         if (this.callerPrincipal != null) {
@@ -93,51 +93,51 @@ public class OAuth10LoginModule extends AbstractPasswordCredentialLoginModule {
     protected Group[] getRoleSets() throws LoginException {
         return new Group[]{};
     }
-    
+
     @Override
     public boolean commit() throws LoginException {
        subject.getPrincipals().add(getIdentity());
        addPrivateCredential(this.subject, getCredential());
        return true;
-    }    
+    }
 
     static void addPrivateCredential(final Subject subject, final Object obj) {
         if (System.getSecurityManager() == null) {
             subject.getPrivateCredentials().add(obj);
         }
         else {
-        AccessController.doPrivileged(new PrivilegedAction<Object>() { 
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {
                 subject.getPrivateCredentials().add(obj);
                 return null;
             }
-        });   
+        });
         }
     }
-    
+
     static Principal getPrincipal() {
         if (System.getSecurityManager() == null) {
             return SecurityContextAssociation.getPrincipal();
         }
-        
-        return AccessController.doPrivileged(new PrivilegedAction<Principal>() { 
+
+        return AccessController.doPrivileged(new PrivilegedAction<Principal>() {
             public Principal run() {
                 return SecurityContextAssociation.getPrincipal();
             }
-        });        
-    } 
-    
+        });
+    }
+
     static Subject getSubject() {
         if (System.getSecurityManager() == null) {
             return SecurityContextAssociation.getSubject();
         }
-        
-        return AccessController.doPrivileged(new PrivilegedAction<Subject>() { 
+
+        return AccessController.doPrivileged(new PrivilegedAction<Subject>() {
             public Subject run() {
                 return SecurityContextAssociation.getSubject();
             }
-        });        
-    }     
+        });
+    }
 
     public String getConsumerKey() {
         return consumerKey;

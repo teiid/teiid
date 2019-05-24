@@ -70,7 +70,7 @@ import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
 public class RowBasedSecurityHelper {
-	
+
 	static class RecontextVisitor extends
 			ExpressionMappingVisitor {
 		private final GroupSymbol group;
@@ -112,7 +112,7 @@ public class RowBasedSecurityHelper {
 		}
 		return false;
 	}
-	
+
 	public static Criteria getRowBasedFilters(QueryMetadataInterface metadata,
 			final GroupSymbol group, CommandContext cc, boolean constraintsOnly)
 			throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
@@ -156,7 +156,7 @@ public class RowBasedSecurityHelper {
 		} else {
 			result = new CompoundCriteria(CompoundCriteria.OR, crits);
 		}
-		
+
 		if (group.getDefinition() != null) {
 			ExpressionMappingVisitor emv = new RecontextVisitor(group);
 	        PreOrPostOrderNavigator.doVisit(result, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
@@ -258,10 +258,10 @@ public class RowBasedSecurityHelper {
 
 			if (insert.getQueryExpression() == null) {
 				values = new HashMap<ElementSymbol, Expression>();
-				
+
     			Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(insert.getGroup(), planner.metadata);
     			Collection<ElementSymbol> elems = null;
-    			
+
     			for (ElementSymbol elementSymbol : insertElmnts) {
     				Expression value = null;
     				int index = insert.getVariables().indexOf(elementSymbol);
@@ -297,7 +297,7 @@ public class RowBasedSecurityHelper {
 			if (filter != QueryRewriter.TRUE_CRITERIA) {
 				if (filter == QueryRewriter.FALSE_CRITERIA || filter == QueryRewriter.UNKNOWN_CRITERIA) {
 					throw new TeiidProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, container));
-				} 
+				}
 				if (container instanceof Update) {
 					Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(filter, true);
 					Update update = (Update)container;
@@ -317,11 +317,11 @@ public class RowBasedSecurityHelper {
 					validateAndPlanSubqueries(filter, container.getGroup(), planner);
 					((Insert)container).setConstraint(filter);
 				}
-			} 
+			}
 		}
 		return procedure;
 	}
-	
+
 	/**
 	 * because of the way constraints are enforced, we cannot allow correlated references
 	 * the issues are:
@@ -329,11 +329,11 @@ public class RowBasedSecurityHelper {
 	 *   - to know the full update row, we have to use row processing
 	 * @param object
 	 * @param gs
-	 * @param planner 
-	 * @throws QueryValidatorException 
-	 * @throws TeiidComponentException 
-	 * @throws QueryMetadataException 
-	 * @throws QueryPlannerException 
+	 * @param planner
+	 * @throws QueryValidatorException
+	 * @throws TeiidComponentException
+	 * @throws QueryMetadataException
+	 * @throws QueryPlannerException
 	 */
 	private static void validateAndPlanSubqueries(LanguageObject object, GroupSymbol gs, RelationalPlanner planner) throws QueryValidatorException, QueryPlannerException, QueryMetadataException, TeiidComponentException {
 		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(object);
@@ -360,7 +360,7 @@ public class RowBasedSecurityHelper {
     		}
     	}
 	}
-	
+
 	public static void checkConstraints(Command atomicCommand, Evaluator eval)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, QueryProcessingException {

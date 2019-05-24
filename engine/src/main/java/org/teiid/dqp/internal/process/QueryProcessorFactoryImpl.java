@@ -51,7 +51,7 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	private IDGenerator idGenerator;
 	private BufferManager bufferMgr;
 	private ProcessorDataManager dataMgr;
-	
+
 	public QueryProcessorFactoryImpl(BufferManager bufferMgr,
 			ProcessorDataManager dataMgr, CapabilitiesFinder finder,
 			IDGenerator idGenerator, QueryMetadataInterface metadata) {
@@ -79,7 +79,7 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 
 	@Override
 	public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-			CommandContext commandContext, QueryMetadataInterface metadata) throws 
+			CommandContext commandContext, QueryMetadataInterface metadata) throws
 			TeiidComponentException, TeiidProcessingException {
 		if (recursionGroup != null) {
 			commandContext.pushCall(recursionGroup);
@@ -88,10 +88,10 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 		if (pp == null) {
 			ParseInfo parseInfo = new ParseInfo();
 			Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
-	        QueryResolver.resolveCommand(newCommand, metadata);            
-	        
+	        QueryResolver.resolveCommand(newCommand, metadata);
+
 	        List<Reference> references = ReferenceCollectorVisitor.getReferences(newCommand);
-	        
+
 	        AbstractValidationVisitor visitor = new ValidationVisitor();
 	        Request.validateWithVisitor(visitor, metadata, newCommand);
 	        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
@@ -106,10 +106,10 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 		}
 		return pp;
 	}
-	
+
 	@Override
 	public CapabilitiesFinder getCapabiltiesFinder() {
 		return finder;
 	}
-	
+
 }

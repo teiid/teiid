@@ -90,9 +90,9 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
-	
+
 	final static int MAX_EXPAND_LEVEL = 3;
-	
+
     private final MetadataStore metadata;
     private boolean prepared = true;
     private final ArrayList<SQLParameter> params = new ArrayList<SQLParameter>();
@@ -115,12 +115,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     private OData odata;
     private boolean navigation = false;
     private OperationParameterValueProvider parameters;
-        
+
     class URLParseService {
         public Query parse(String rawPath, String baseUri) throws TeiidException {
             try {
                 rawPath = rawPath.replace("$root", "");
-                UriInfo uriInfo = new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, null, null, baseUri);                
+                UriInfo uriInfo = new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, null, null, baseUri);
                 ODataSQLBuilder visitor = new ODataSQLBuilder(odata, metadata,
                         prepared, aliasedGroups, baseURI, serviceMetadata) {
                     public void visit(OrderByOption option) {
@@ -133,9 +133,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             } catch (ODataApplicationException|ODataLibraryException e) {
                 throw new TeiidException(e);
             }
-        }    
-    }    
-    
+        }
+    }
+
     public ODataSQLBuilder(OData odata, MetadataStore metadata, boolean prepared,
             boolean aliasedGroups, String baseURI,
             ServiceMetadata serviceMetadata) {
@@ -169,13 +169,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         return topOption.getValue();
     }
-    
+
     public boolean hasNavigation() {
         return this.navigation;
     }
 
     public Query selectQuery() throws TeiidException, ODataLibraryException, ODataApplicationException {
-        
+
     	if (!this.exceptions.isEmpty()) {
             Exception e = this.exceptions.get(0);
             if (e instanceof ODataLibraryException) {
@@ -203,14 +203,14 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         		query.setOrderBy(this.orderBy);
         	}
         }
-        
+
         if (this.expandOption != null) {
             processExpandOption(this.expandOption, this.context, query, 1, null);
         }
-        
+
         return query;
     }
-    
+
     private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery, int expandLevel, Integer cyclicLevel) throws TeiidException {
         checkExpandLevel(expandLevel);
     	int starLevels = 0;
@@ -219,10 +219,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             if (ei.getSearchOption() != null) {
                 throw new TeiidNotImplementedException(
                         ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035));
-            }  
-        
+            }
+
             Integer levels = null;
-            
+
             if (cyclicLevel != null) {
                 levels = cyclicLevel - 1;
             } else if (ei.getLevelsOption() != null) {
@@ -233,7 +233,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             		checkExpandLevel(expandLevel + levels - 1);
             	}
             }
-            
+
         	ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
             EdmNavigationProperty property = esb.getNavigationProperty();
             if (property == null) {
@@ -263,13 +263,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     getUriInfo(), this.parseService, this.context);
 
             node.addExpand(expandResource);
-            
+
             // process $filter
             if (ei.getFilterOption() != null) {
                 Expression expandCriteria = processFilterOption(ei.getFilterOption(), expandResource);
                 expandResource.addCriteria(expandCriteria);
             }
-            
+
             if (ei.getApplyOption() != null) {
                 throw new TeiidNotImplementedException("Apply Not Implemented");
             }
@@ -281,21 +281,21 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             } else {
             	expandOrder = expandResource.addDefaultOrderBy();
             }
-            
+
             // process $select
             processSelectOption(ei.getSelectOption(), expandResource, this.reference);
-            
+
             //TODO: if not the count option, then we can process the skip/top inline
             //but it's messier - select array_agg(cols) from (select ... where ... order by .. limit) x
-            
+
             if (ei.getSkipOption() != null) {
         		expandResource.setSkip(ei.getSkipOption().getValue());
             }
-            
+
             if (ei.getTopOption() != null) {
             	expandResource.setTop(ei.getTopOption().getValue());
             }
-            
+
             Query query = expandResource.buildQuery();
 
             if (ei.getExpandOption() != null) {
@@ -305,7 +305,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             	if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
             		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
             	}
-            	
+
             	if (levels > 1) {
                 	ExpandOptionImpl eoi = new ExpandOptionImpl();
                 	eoi.addExpandItem(ei);
@@ -316,7 +316,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             buildAggregateQuery(node, outerQuery, expandResource,
 					expandOrder, query, property);
     	}
-    	
+
     	if (starLevels > 0) {
     		List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
     		EdmEntityType edmEntityType = node.getEdmEntityType();
@@ -359,13 +359,13 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 		AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, array);
 		select.addSymbol(symbol);
 		symbol.setOrderBy(expandOrder);
-		            
+
 		Criteria crit = node.buildJoinCriteria(expandResource, navigationProperty);
-		
+
 		if (crit != null) {
 			query.setCriteria(Criteria.combineCriteria(crit, query.getCriteria()));
 		} // else assertion error?
-		
+
 		expandResource.setColumnIndex(outerQuery.getSelect().getCount() + 1);
 		ScalarSubquery agg = new ScalarSubquery(query);
 		SubqueryHint subqueryHint = new SubqueryHint();
@@ -377,7 +377,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     private Expression processFilterOption(FilterOption option, DocumentNode resource) throws TeiidException {
         ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
-                resource, this.prepared, getUriInfo(), this.metadata, this.odata, 
+                resource, this.prepared, getUriInfo(), this.metadata, this.odata,
                 this.nameGenerator, this.params, this.parseService);
         return visitor.getExpression(option.getExpression());
     }
@@ -389,7 +389,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     @Override
     public void visit(UriResourceEntitySet info) {
         try {
-            this.context = DocumentNode.build(info.getEntitySet().getEntityType(), 
+            this.context = DocumentNode.build(info.getEntitySet().getEntityType(),
                     info.getKeyPredicates(), this.metadata,
                     this.odata, this.nameGenerator, this.aliasedGroups,
                     getUriInfo(), this.parseService);
@@ -458,7 +458,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
 
     @Override
-    public void visit(OrderByOption option) {        
+    public void visit(OrderByOption option) {
         if (option == null || option.getOrders().isEmpty()) {
             this.orderBy = this.context.addDefaultOrderBy();
         }
@@ -487,17 +487,17 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             else {
                 //there is a validation that the order by clause cannot contain unrelated correlated subquery
                 //so we have to add them to the projection as well
-                
-                //TODO: this will not work with apply unless we add even more logic to determine 
-                //the output columns.  an alternative is to use a join and aggregation 
-                
+
+                //TODO: this will not work with apply unless we add even more logic to determine
+                //the output columns.  an alternative is to use a join and aggregation
+
                 String baseName = "_orderByAlias_"; //$NON-NLS-1$
                 String name = baseName + i++;
                 while (resource.getColumnByName(name) != null) {
                     name = baseName + i++;
                 }
                 AliasSymbol alias = new AliasSymbol(name, expr);
-                
+
                 item = orderBy.addVariable(alias, !obitem.isDescending());
                 //TODO: the type is not correct, but we shouldn't be selecting this so it's
                 //not a big issue
@@ -517,19 +517,19 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
                 this.context, this.prepared, getUriInfo(), this.metadata, this.odata,
                 this.nameGenerator, this.params, this.parseService);
-        
+
         Expression filter = null;
         try {
         	filter = visitor.getExpression(info.getExpression());
         } catch (TeiidException e) {
             this.exceptions.add(e);
         }
-        
+
         // Here Lambda operation may have joined a table and changed the context.
         this.context = visitor.getEntityResource();
         this.context.addCriteria(filter);
     }
-    
+
     @Override
     public void visit(UriResourceNavigation info) {
         EdmNavigationProperty property = info.getProperty();
@@ -539,7 +539,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     true, getUriInfo(), parseService);
 
             this.context.joinTable(joinResource, property, JoinType.JOIN_INNER);
-            // In the context of canonical queries if key predicates are available then do not set the criteria 
+            // In the context of canonical queries if key predicates are available then do not set the criteria
             if (joinResource.getCriteria() == null) {
                 joinResource.addCriteria(this.context.getCriteria());
             }
@@ -557,29 +557,29 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         this.context.addProjectedColumn(propertyName, es);
         this.selectionComplete = true;
     }
-    
+
     public String getNextToken() {
         return nextToken;
     }
-    
+
     @Override
     public void visit(SkipTokenOption option) {
         if (option != null) {
             this.nextToken = option.getValue();
         }
     }
-    
+
     @Override
     public void visit(SearchOption option) {
         this.exceptions.add(new TeiidNotImplementedException(
                 ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035)));
     }
-    
+
     public Insert insert(EdmEntityType entityType, Entity entity,
             List<UriParameter> keys, boolean prepared) throws TeiidException {
         Table entityTable = findTable(entityType.getName(), this.metadata);
         DocumentNode resource = new DocumentNode(entityTable, new GroupSymbol(entityTable.getFullName()), entityType);
-        
+
         List<Reference> referenceValues = new ArrayList<Reference>();
         List<Constant> constantValues = new ArrayList<Constant>();
         Insert insert = new Insert();
@@ -590,11 +590,11 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 	            Column column = entityTable.getColumnByName(edmProperty.getName());
 	            Object propertyValue = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), key.getText());
 	            Property existing = entity.getProperty(edmProperty.getName());
-	            if (existing == null || 
-	                    (existing.getValue() == null && propertyValue != null) || 
-	                    (existing.getValue() != null && propertyValue == null) || 
+	            if (existing == null ||
+	                    (existing.getValue() == null && propertyValue != null) ||
+	                    (existing.getValue() != null && propertyValue == null) ||
 	                    (existing.getValue() != null && !existing.getValue().equals(propertyValue))) {
-	            	throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16048, 
+	            	throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16048,
 	            	        edmProperty.getName()));
 	            }
 	        }
@@ -604,7 +604,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             EdmProperty edmProp = (EdmProperty)entityType.getProperty(prop.getName());
             Column column = entityTable.getColumnByName(edmProp.getName());
             insert.addVariable(new ElementSymbol(column.getName(), resource.getGroupSymbol()));
-            
+
             if (prepared) {
                 referenceValues.add(new Reference(i++));
                 this.params.add(asParam(edmProp, prop.getValue()));
@@ -613,7 +613,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 constantValues.add(new Constant(asParam(edmProp, prop.getValue()).getValue()));
             }
         }
-        
+
         if (prepared) {
             insert.setValues(referenceValues);
         }
@@ -624,29 +624,29 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
     static SQLParameter asParam(EdmProperty edmProp, Object value) throws TeiidException {
         return asParam(edmProp, value, false);
-    }    
-    
+    }
+
     static SQLParameter asParam(EdmProperty edmProp, Object value, boolean rawValue) throws TeiidException {
         String teiidType = ODataTypeManager.teiidType((SingletonPrimitiveType)edmProp.getType(), edmProp.isCollection());
         int sqlType = JDBCSQLTypeInfo.getSQLType(teiidType);
         if (value == null) {
             return new SQLParameter(null, sqlType);
         }
-        
+
         if (rawValue) {
             return new SQLParameter(ODataTypeManager.convertByteArrayToTeiidRuntimeType(
-                    DataTypeManager.getDataTypeClass(teiidType), (byte[])value, 
-                    ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(), 
-                    edmProp.getSrid() != null?edmProp.getSrid().toString():null), 
-                    sqlType);            
-        }        
+                    DataTypeManager.getDataTypeClass(teiidType), (byte[])value,
+                    ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(),
+                    edmProp.getSrid() != null?edmProp.getSrid().toString():null),
+                    sqlType);
+        }
         return new SQLParameter(ODataTypeManager.convertToTeiidRuntimeType(
-                DataTypeManager.getDataTypeClass(teiidType), value, 
-                ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(), 
-                edmProp.getSrid() != null?edmProp.getSrid().toString():null), 
+                DataTypeManager.getDataTypeClass(teiidType), value,
+                ((SingletonPrimitiveType)edmProp.getType()).getFullQualifiedName().getFullQualifiedNameAsString(),
+                edmProp.getSrid() != null?edmProp.getSrid().toString():null),
                 sqlType);
-    }    
-    
+    }
+
     private Table findTable(String tableName, MetadataStore store) {
         int idx = tableName.indexOf('.');
         if (idx > 0) {
@@ -663,7 +663,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             if (t != null) {
                 return t;
             }
-        }        
+        }
         return null;
     }
     //TODO: allow the generated key building.
@@ -678,7 +678,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         Query query = this.context.buildQuery();
 
         processExpand(expand, resource, query, 1);
-        
+
         Criteria criteria = null;
 
         KeyRecord pk = ODataSchemaBuilder.getIdentifier(table);
@@ -717,24 +717,24 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
             		expandNode.navigationProperty, this.metadata, this.odata, this.nameGenerator,
                     this.aliasedGroups, getUriInfo(), this.parseService, this.context);
-                    
+
             OrderBy expandOrder = expandResource.addDefaultOrderBy();
 
             expandResource.addAllColumns(false);
             resource.addExpand(expandResource);
-            
+
             Query query = expandResource.buildQuery();
 
             processExpand(expandNode.children, expandResource, query, expandLevel + 1);
-            
+
             buildAggregateQuery(resource, outerQuery, expandResource, expandOrder, query, expandNode.navigationProperty);
         }
 	}
-    
+
     public Update update(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
-        
+
         int i = 0;
         for (Property property : entity.getProperties()) {
             EdmProperty edmProperty = (EdmProperty)entityType.getProperty(property.getName());
@@ -760,7 +760,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         update.setCriteria(this.context.getCriteria());
         return update;
     }
-    
+
     public Update updateProperty(EdmProperty edmProperty, Property property,
             boolean prepared, boolean rawValue) throws TeiidException {
         Update update = new Update();
@@ -768,7 +768,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
         Column column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
-        
+
         if (prepared) {
             update.addChange(symbol, new Reference(0));
             this.params.add(asParam(edmProperty, property.getValue(), rawValue));
@@ -776,18 +776,18 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         else {
             update.addChange(symbol, new Constant(asParam(edmProperty, property.getValue()).getValue()));
         }
-        
+
         update.setCriteria(this.context.getCriteria());
         return update;
     }
-    
+
     public Update updateStreamProperty(EdmProperty edmProperty, final InputStream content) throws TeiidException {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
         Column column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
-        
+
         update.addChange(symbol, new Reference(0));
         Class<?> lobType = DataTypeManager.getDataTypeClass(column.getRuntimeType());
         int sqlType = JDBCSQLTypeInfo.getSQLType(column.getRuntimeType());
@@ -801,9 +801,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     return content;
                 }
             };
-            
+
             if (lobType.isAssignableFrom(SQLXML.class)) {
-                value = new SQLXMLImpl(isf);    
+                value = new SQLXMLImpl(isf);
             } else if (lobType.isAssignableFrom(ClobType.class)) {
                 value = new ClobImpl(isf, -1);
             } else if (lobType.isAssignableFrom(BlobType.class)) {
@@ -816,14 +816,14 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         update.setCriteria(this.context.getCriteria());
         return update;
     }
-    
+
     public Delete delete() {
         Delete delete = new Delete();
         delete.setGroup(this.context.getGroupSymbol());
         delete.setCriteria(this.context.getCriteria());
         return delete;
-    }    
-    
+    }
+
     @Override
     public void visit(UriInfoService info) {
         this.exceptions.add(new TeiidNotImplementedException("UriInfoService Not Implemented"));
@@ -851,10 +851,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                         this.metadata, this.odata, this.nameGenerator, this.aliasedGroups,
                         getUriInfo(), this.parseService, hasExpand);
                 resource.addAllColumns(!hasExpand);
-                
+
                 if (this.context == null) {
-                    this.context = resource;                    
-                    this.orderBy = this.context.addDefaultOrderBy();                    
+                    this.context = resource;
+                    this.orderBy = this.context.addDefaultOrderBy();
                 }
                 else {
                     this.context.addSibiling(resource);
@@ -870,10 +870,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         }
         super.visit(info);
 
-        // the expand behavior is handled above with selection of the columns 
+        // the expand behavior is handled above with selection of the columns
         this.expandOption = null;
     }
-    
+
     private boolean hasExpand(String name, ExpandOption expandOption) {
         if (expandOption == null) {
             return false;
@@ -900,7 +900,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     @Override
     public void visit(FormatOption info) {
     }
-    
+
     @Override
     public void visit(UriInfoResource info) {
         super.visit(info);
@@ -909,20 +909,20 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             visit(apply);
         }
     }
-    
+
     public void visit(ApplyOption apply) {
         this.exceptions.add(new TeiidNotImplementedException("Apply Not Implemented"));
     }
 
     @Override
     public void visit(UriInfoEntityId info) {
-        
+
         try {
             visit(buildUriInfo(new URI(info.getIdOption().getValue()), this.baseURI, this.serviceMetadata, this.odata));
         } catch (ODataLibraryException|URISyntaxException e) {
             this.exceptions.add(e);
         }
-        
+
         visit(info.getSelectOption());
 
         if (info.getExpandOption() != null) {
@@ -935,10 +935,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     static UriInfo buildUriInfo(URI uri, String baseUri,
             ServiceMetadata serviceMetadata, OData odata) throws URISyntaxException,
-            UriParserException, UriValidationException {        
+            UriParserException, UriValidationException {
         URI servicePath = new URI(baseUri);
         String path = servicePath.getPath();
-        
+
         String rawPath = uri.getPath();
         int e = rawPath.indexOf(path);
         if (-1 == e) {
@@ -946,9 +946,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         } else {
           rawPath = rawPath.substring(e+path.length());
         }
-        return new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, uri.getQuery(), null, baseUri);           
+        return new Parser(serviceMetadata.getEdm(), odata).parseUri(rawPath, uri.getQuery(), null, baseUri);
     }
-    
+
     @Override
     public void visit(UriResourceCount option) {
         if (option!= null) {
@@ -972,16 +972,16 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     @Override
     public void visit(UriResourceAction info) {
-        visitOperation(info.getAction());      
+        visitOperation(info.getAction());
     }
 
     @Override
     public void visit(UriResourceFunction info) {
-        visitOperation(info.getFunction());                
+        visitOperation(info.getFunction());
     }
 
     private void visitOperation(EdmOperation operation) {
-        try {            
+        try {
             ProcedureSQLBuilder builder = new ProcedureSQLBuilder(
                     this.metadata, operation, this.parameters,
                     this.params);
@@ -1005,7 +1005,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             throw new ODataRuntimeException(e);
         }
     }
-    
+
     @Override
     public void visit(UriResourceIt info) {
         this.exceptions.add(new TeiidNotImplementedException("UriResourceIt Not Implemented"));

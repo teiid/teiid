@@ -45,7 +45,7 @@ public class SortNode extends RelationalNode {
     private TupleBuffer output;
     private TupleSource outputTs;
     private boolean usingOutput;
-    
+
     private int rowLimit = -1;
 
     private static final int SORT = 2;
@@ -68,11 +68,11 @@ public class SortNode extends RelationalNode {
 	public void setSortElements(List<OrderByItem> items) {
 		this.items = items;
 	}
-	
+
 	public List<OrderByItem> getSortElements() {
 		return this.items;
 	}
-	
+
 	public Mode getMode() {
 		return mode;
 	}
@@ -172,19 +172,19 @@ public class SortNode extends RelationalNode {
 
 		return clonedNode;
 	}
-    
+
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
-        
+
         if(this.items != null) {
             props.addProperty(PROP_SORT_COLS, this.items.toString());
         }
-        
+
         props.addProperty(PROP_SORT_MODE, this.mode.toString());
-        
+
         return props;
     }
-    
+
     @Override
     public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.isClosed()) {
@@ -202,7 +202,7 @@ public class SortNode extends RelationalNode {
     	}
     	return result;
     }
-    
+
     @Override
     public boolean hasBuffer() {
     	if (this.getElements().size() == this.getChildren()[0].getElements().size()) {
@@ -210,9 +210,9 @@ public class SortNode extends RelationalNode {
     	}
     	return false;
     }
-    
+
     public void setRowLimit(int rowLimit) {
 		this.rowLimit = rowLimit;
 	}
-    
+
 }

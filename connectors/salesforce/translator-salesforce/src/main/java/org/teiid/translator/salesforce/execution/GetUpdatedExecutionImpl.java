@@ -31,13 +31,13 @@ import org.teiid.language.Call;
 import org.teiid.translator.TranslatorException;
 
 /**
- * 
+ *
  * The structure of the getUpdated procedure is:
  * Salesforce object type: String: IN param
  * startDate: datatime: IN param
  * enddate: datetime: IN param
  * latestDateCovered: datetime: OUT param
- * getUpdatedResult: resultset: OUT param 
+ * getUpdatedResult: resultset: OUT param
  *
  */
 
@@ -72,20 +72,20 @@ public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 	public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
 		Call command = parent.getCommand();
 		List<Argument> params = command.getArguments();
-		
+
 		Argument object = params.get(OBJECT);
 		String objectName = (String) object.getArgumentValue().getValue();
-		
+
 		Argument start = params.get(STARTDATE);
 		Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
 		GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
 		startCalendar.setTime(startTime);
-		
+
 		Argument end = params.get(ENDDATE);
 		Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
 		GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
 		endCalendar.setTime(endTime);
-		
+
 		updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
 	}
 

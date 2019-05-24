@@ -21,34 +21,34 @@ package org.teiid.adminapi;
 import java.util.List;
 
 
-/** 
+/**
  * Represents a metadata model in the Teiid system.
- * 
+ *
  * @since 4.3
  */
 public interface Model extends AdminObject {
-	
+
 	enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
 	enum MetadataStatus {LOADING, LOADED, FAILED, RETRYING};
-	
+
 	/**
 	 * Description about the model
 	 * @return
 	 */
 	String getDescription();
-	
+
     /**
      * Determine if this model is a Source model.
-     * 
+     *
      * @return <code>true</code> if it contains physical group(s).
      */
     boolean isSource();
 
     /**
      * Determine whether this model is exposed for querying.
-     * 
+     *
      * <br>Note: for imported models, this may be overriden.  See {@link VDB#isVisible(String)}
-     * 
+     *
      * @return <code>true</code> if the model is visible
      * for querying.
      */
@@ -60,26 +60,26 @@ public interface Model extends AdminObject {
      */
     Type getModelType();
 
-    /** 
+    /**
      * Determine whether this model can support more than one source.
-     * 
+     *
      * @return <code>true</code> if this model supports multiple sources
      */
     boolean isSupportsMultiSourceBindings();
-    
+
     /**
      * Associated Source Names for the Models
      * @return String
      */
     List<String> getSourceNames();
-    
+
     /**
      * Get the configured JNDI name for the given source name.
      * @param sourceName - name of the source
      * @return null if none configured.
      */
     String getSourceConnectionJndiName(String sourceName);
-    
+
 
     /**
      * Get the configured translator name for the given source
@@ -87,16 +87,16 @@ public interface Model extends AdminObject {
      * @return
      */
     String getSourceTranslatorName(String sourceName);
-    
+
     /**
      * Shows any validity errors present in the model
      * @return
      */
     List<String> getValidityErrors();
-    
+
     /**
      * Metadata Load status of the model.
      * @return
      */
-    MetadataStatus getMetadataStatus();    
+    MetadataStatus getMetadataStatus();
 }

@@ -33,7 +33,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class AddDiffModifier extends FunctionModifier {
 
 	private static Map<String, String> INTERVAL_MAP = new HashMap<String, String>();
-	
+
 	static {
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
@@ -42,7 +42,7 @@ public class AddDiffModifier extends FunctionModifier {
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
 	}
-	
+
 	private boolean add;
 	private boolean supportsQuarter;
 	private boolean literalPart = true;
@@ -50,17 +50,17 @@ public class AddDiffModifier extends FunctionModifier {
 	public AddDiffModifier(boolean add, LanguageFactory factory) {
 		this.add = add;
 	}
-	
+
 	public AddDiffModifier supportsQuarter(boolean b) {
 		this.supportsQuarter = b;
 		return this;
 	}
-	
+
 	public AddDiffModifier literalPart(boolean b) {
         this.literalPart = b;
         return this;
     }
-	
+
 	@Override
 	public List<?> translate(Function function) {
 	    ArrayList<Object> result = new ArrayList<Object>();
@@ -99,7 +99,7 @@ public class AddDiffModifier extends FunctionModifier {
 			result.add(" * 1000000"); //$NON-NLS-1$
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 			intervalType.setValue(ExtractFunctionModifier.MONTH);
-			result.add(" / 3"); //$NON-NLS-1$  
+			result.add(" / 3"); //$NON-NLS-1$
 		} else {
     		intervalType.setValue(ExtractFunctionModifier.DAY);
     		result.add(" / 7"); //$NON-NLS-1$
@@ -109,5 +109,5 @@ public class AddDiffModifier extends FunctionModifier {
 		}
 		return result;
 	}
-	
+
 }

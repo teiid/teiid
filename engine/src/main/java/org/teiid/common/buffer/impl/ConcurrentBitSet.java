@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.common.buffer.impl;
 
 import java.util.BitSet;
@@ -28,11 +28,11 @@ import org.teiid.core.util.Assertion;
  * and faster finding of clear bits.
  */
 public class ConcurrentBitSet {
-	
+
 	private static final int CONCURRENT_MODIFICATION = -2;
 	private static final int ADDRESS_BITS_PER_TOP_VALUE = 18;
 	private static final int MAX_TOP_VALUE = 1 << ADDRESS_BITS_PER_TOP_VALUE;
-	
+
 	private static class Segment {
 		int offset;
 		int maxBits;
@@ -41,7 +41,7 @@ public class ConcurrentBitSet {
 		int bitsSet;
 		int[] topVals;
 		final BitSet bitSet;
-		
+
 		public Segment(int bitCount) {
 			bitSet = new BitSet();
 			maxBits = bitCount;
@@ -55,7 +55,7 @@ public class ConcurrentBitSet {
 	private AtomicInteger bitsSet = new AtomicInteger();
 	private Segment[] segments;
 	private boolean compact;
-	
+
 	/**
 	 * @param maxBits
 	 * @param concurrencyLevel - should be a power of 2
@@ -79,7 +79,7 @@ public class ConcurrentBitSet {
 		}
 		this.totalBits = maxBits;
 	}
-	
+
 	public void clear(int bitIndex) {
 		checkIndex(bitIndex);
 		Segment s = segments[bitIndex/bitsPerSegment];
@@ -97,7 +97,7 @@ public class ConcurrentBitSet {
 		}
 		bitsSet.decrementAndGet();
 	}
-	
+
 	/**
 	 * Makes a best effort to atomically find the next clear bit and set it
 	 * @return the next bit index or -1 if no clear bits are found
@@ -105,11 +105,11 @@ public class ConcurrentBitSet {
 	public int getAndSetNextClearBit() {
 		return getAndSetNextClearBit(counter.getAndIncrement());
 	}
-	
+
 	public int getNextSegment() {
 		return counter.getAndIncrement();
 	}
-	
+
 	/**
 	 * return an estimate of the number of bits set
 	 * @param segment
@@ -119,7 +119,7 @@ public class ConcurrentBitSet {
 		Segment s = segments[segment&(segments.length-1)];
 		return s.bitsSet;
 	}
-	
+
 	/**
 	 * return an estimate of the highest bit (relative index) that has been set
 	 * @param segment
@@ -127,9 +127,9 @@ public class ConcurrentBitSet {
 	 */
 	public int getHighestBitSet(int segment) {
 		Segment s = segments[segment&(segments.length-1)];
-		return s.highestBitSet;	
+		return s.highestBitSet;
 	}
-	
+
 	/**
 	 * @param segment
 	 * @return the next clear bit index as an absolute index - not relative to a segment
@@ -187,25 +187,25 @@ public class ConcurrentBitSet {
 		}
 		return nextBit;
 	}
-	
+
 	private void checkIndex(int bitIndex) {
 		if (bitIndex >= totalBits) {
 			throw new ArrayIndexOutOfBoundsException(bitIndex);
 		}
 	}
-	
+
 	public int getTotalBits() {
 		return totalBits;
 	}
-	
+
 	public int getBitsSet() {
 		return bitsSet.get();
 	}
-	
+
 	public int getBitsPerSegment() {
 		return bitsPerSegment;
 	}
-	
+
 	/**
 	 * Set to always allocate against the first available block in a segment.
 	 * @param compact
@@ -213,8 +213,8 @@ public class ConcurrentBitSet {
 	public void setCompact(boolean compact) {
 		this.compact = compact;
 	}
-	
-	
+
+
 	public int compactHighestBitSet(int segment) {
 		Segment s = segments[segment&(segments.length-1)];
 		//first do an unlocked compact
@@ -290,10 +290,10 @@ public class ConcurrentBitSet {
 				s.highestBitSet = index + offset;
 				return s.highestBitSet;
 			}
-		}			
+		}
 		return -1;
 	}
-	
+
 	@Override
 	public String toString() {
 	    StringBuilder sb = new StringBuilder();
@@ -303,5 +303,5 @@ public class ConcurrentBitSet {
 	    }
 	    return sb.toString();
 	}
-	
+
 }

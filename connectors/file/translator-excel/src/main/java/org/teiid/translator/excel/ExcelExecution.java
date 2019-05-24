@@ -34,7 +34,7 @@ import org.teiid.translator.TranslatorException;
 
 
 public class ExcelExecution extends BaseExcelExecution implements ResultSetExecution {
-    
+
     private Class<?>[] expectedColumnTypes;
 
 	public ExcelExecution(Select query, ExecutionContext executionContext,
@@ -44,7 +44,7 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
         this.expectedColumnTypes = query.getColumnTypes();
 	    visit(query);
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         Row row = nextRow();
@@ -53,26 +53,26 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
         }
     	return projectRow(row);
     }
-    
+
     /**
      * @param row
      * @param neededColumns
      */
     List<Object> projectRow(Row row) throws TranslatorException {
         ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());
-        
+
         int id = row.getRowNum()+1;
-        
+
         int i = -1;
         for (int index:this.visitor.getProjectedColumns()) {
-        	
+
         	i++;
         	// check if the row is ROW_ID
         	if (index == -1) {
         		output.add(id);
         		continue;
         	}
-        	
+
         	Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
         	if (cell == null) {
         		output.add(null);
@@ -91,10 +91,10 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
                 default:
                 	output.add(null);
                     break;
-            }   
+            }
         }
-        
-        return output;    
+
+        return output;
     }
 
 }

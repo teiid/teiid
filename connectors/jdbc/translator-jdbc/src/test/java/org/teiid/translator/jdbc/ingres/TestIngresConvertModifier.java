@@ -41,21 +41,21 @@ public class TestIngresConvertModifier {
     public String helpGetString(Expression expr) throws Exception {
         IngresExecutionFactory trans = new IngresExecutionFactory();
         trans.start();
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
-        
-        return sqlVisitor.toString();        
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(expr);
+
+        return sqlVisitor.toString();
     }
 
     public void helpTest(Expression srcExpression, String tgtType, String expectedExpression) throws Exception {
         Function func = LANG_FACTORY.createFunction("convert",  //$NON-NLS-1$
-            Arrays.asList( 
+            Arrays.asList(
                 srcExpression,
                 LANG_FACTORY.createLiteral(tgtType, String.class)),
             TypeFacility.getDataTypeClass(tgtType));
-        
-        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
-            expectedExpression, helpGetString(func)); 
+
+        assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$
+            expectedExpression, helpGetString(func));
     }
 
     // Source = STRING
@@ -66,9 +66,9 @@ public class TestIngresConvertModifier {
     @Test public void testBooleanToBigDecimal() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     // Source = BYTE
-    
+
     @Test public void testByteToString() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "string", "cast(1 AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -88,13 +88,13 @@ public class TestIngresConvertModifier {
     }
 
     // Source = DOUBLE
-    
+
     @Test public void testDoubleToShort() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "short", "cast(1.2 AS smallint)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BIGDECIMAL
-    
+
     @Test public void testBigDecimalToByte() throws Exception {
         helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "byte", "cast(1.0 AS tinyint)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -113,9 +113,9 @@ public class TestIngresConvertModifier {
 
 
     // Source = TIMESTAMP
-    
+
     @Test public void testTimestampToString() throws Exception {
-        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
+        Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);
         helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "string", "cast(TIMESTAMP '2003-11-01 12:05:02.0' AS varchar(4000))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 

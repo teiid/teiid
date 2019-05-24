@@ -46,7 +46,7 @@ public class SortingFilter extends AggregateFunction {
     // Derived and static - can be reused
     private List<ElementSymbol> elements;
     private List<OrderByItem> sortItems;
-    
+
     // Temporary state - should be reset
     private TupleBuffer collectionBuffer;
     private SortUtility sortUtility;
@@ -62,19 +62,19 @@ public class SortingFilter extends AggregateFunction {
         this.groupName = groupName;
         this.removeDuplicates = removeDuplicates;
     }
-    
+
     public List<ElementSymbol> getElements() {
 		return elements;
 	}
-    
+
 	public void setElements(List<ElementSymbol> elements) {
 		this.elements = elements;
 	}
-    
+
     public void setSortItems(List<OrderByItem> sortItems) {
 		this.sortItems = sortItems;
 	}
-    
+
     @Override
     public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
     	this.proxy.initialize(dataType, inputTypes);
@@ -95,7 +95,7 @@ public class SortingFilter extends AggregateFunction {
 	        this.sortUtility = null;
 		}
 	}
-	
+
 	@Override
 	public void addInputDirect(List<?> tuple, CommandContext commandContext)
 			throws TeiidComponentException, TeiidProcessingException {
@@ -111,9 +111,9 @@ public class SortingFilter extends AggregateFunction {
             this.collectionBuffer.addTuple(row);
         }
 	}
-	
+
     /**
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext)
@@ -144,14 +144,14 @@ public class SortingFilter extends AggregateFunction {
             } finally {
             	sorted.remove();
             }
-            
+
             close();
         }
 
         // Return
         return this.proxy.getResult(commandContext);
     }
-    
+
     public boolean respectsNull() {
     	return true;
     }

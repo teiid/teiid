@@ -31,12 +31,12 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	private transient EmbeddedCacheManager cacheStore;
 	private volatile boolean destroyed = false;
 	private ClassLoader classLoader;
-	
+
 	public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
 		this.cacheStore = cm;
 		this.classLoader = classLoader;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <K, V> Cache<K, V> get(String cacheName) {
@@ -49,14 +49,14 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 		}
 		throw new TeiidRuntimeException("Cache system has been shutdown");
 	}
-	
+
 	public void destroy() {
-		this.destroyed = true;		
+		this.destroyed = true;
 		this.cacheStore.stop();
-	}	
-	
+	}
+
 	public void stop() {
 		destroy();
 	}
-	
+
 }

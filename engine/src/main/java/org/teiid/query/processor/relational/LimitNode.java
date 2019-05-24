@@ -37,7 +37,7 @@ import org.teiid.query.validator.ValidationVisitor;
 
 
 public class LimitNode extends RelationalNode {
-    
+
     private final Expression limitExpr;
     private final Expression offsetExpr;
     private int limit;
@@ -45,31 +45,31 @@ public class LimitNode extends RelationalNode {
     private int rowCounter;
     private boolean offsetPhase = true;
     private boolean implicit;
-    
+
     public LimitNode(int nodeID, Expression limitExpr, Expression offsetExpr) {
         super(nodeID);
         this.limitExpr = limitExpr;
         this.offsetExpr = offsetExpr;
     }
-    
+
     public void setImplicit(boolean implicit) {
 		this.implicit = implicit;
 	}
-    
+
     public boolean isImplicit() {
 		return implicit;
 	}
-    
+
     protected TupleBatch nextBatchDirect() throws BlockedException,
                                           TeiidComponentException,
                                           TeiidProcessingException {
         TupleBatch batch = null; // Can throw BlockedException
-        
+
         if (limit == 0) {
         	this.terminateBatches();
         	return pullBatch();
         }
-        
+
         // If we haven't reached the offset, then skip rows/batches
         if (offsetPhase) {
             while (rowCounter <= offset) {
@@ -79,9 +79,9 @@ public class LimitNode extends RelationalNode {
                     break;
                 }
             }
-            
+
             List<List<?>> tuples = null;
-            
+
             if (rowCounter > offset) {
                 List<List<?>> originalTuples = batch.getTuples();
                 int rowsToKeep = rowCounter - offset;
@@ -97,9 +97,9 @@ public class LimitNode extends RelationalNode {
         } else {
             batch = getChildren()[0].nextBatch(); // Can throw BlockedException
         }
-        
+
         List<List<?>> tuples = null;
-        
+
         if (limit < 0 || rowCounter + batch.getRowCount() <= limit) {
             // Passthrough
            tuples = batch.getTuples();
@@ -108,16 +108,16 @@ public class LimitNode extends RelationalNode {
             List<List<?>> originalTuples = batch.getTuples();
             tuples = new ArrayList<List<?>>(originalTuples.subList(0, limit - rowCounter));
         }
-        
+
         TupleBatch resultBatch = new TupleBatch(rowCounter+1, tuples);
-        
+
         rowCounter += resultBatch.getRowCount();
         if (rowCounter == limit || batch.getTerminationFlag()) {
             resultBatch.setTerminationFlag(true);
-        }        
+        }
         return resultBatch;
     }
-    
+
     public void open() throws TeiidComponentException, TeiidProcessingException {
     	limit = -1;
     	if (limitExpr != null) {
@@ -147,16 +147,16 @@ public class LimitNode extends RelationalNode {
         rowCounter = 0;
         offsetPhase = true;
     }
-    
+
     protected void getNodeString(StringBuffer buf) {
         super.getNodeString(buf);
         if (limitExpr != null) {
             buf.append("limit "); //$NON-NLS-1$
-            buf.append(limitExpr); 
+            buf.append(limitExpr);
         }
         if (offsetExpr != null) {
             buf.append(" offset "); //$NON-NLS-1$
-            buf.append(offsetExpr); 
+            buf.append(offsetExpr);
         }
     }
 
@@ -166,7 +166,7 @@ public class LimitNode extends RelationalNode {
         props.addProperty(PROP_ROW_LIMIT, String.valueOf(limitExpr));
         return props;
     }
-    
+
     public Object clone() {
         LimitNode node = new LimitNode(getID(), limitExpr, offsetExpr);
         node.implicit = this.implicit;
@@ -182,21 +182,21 @@ public class LimitNode extends RelationalNode {
 	public Expression getOffsetExpr() {
 		return offsetExpr;
 	}
-	
+
 	public int getLimit() {
 		return limit;
 	}
-	
+
 	public int getOffset() {
 		return offset;
 	}
-	
+
 	@Override
 	public boolean hasBuffer() {
 		//TODO: support offset
 		return offsetExpr == null && this.getChildren()[0].hasBuffer();
 	}
-	
+
 	@Override
 	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {

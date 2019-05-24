@@ -28,8 +28,8 @@ import org.teiid.translator.google.api.result.UpdateResult;
 
 
 /**
- * Connection to GoogleSpreadsheet API. 
- * 
+ * Connection to GoogleSpreadsheet API.
+ *
  */
 public interface GoogleSpreadsheetConnection extends Connection {
 	public RowsResult executeQuery(String worksheetTitle, String query, Integer offset, Integer limit, int batchSize);

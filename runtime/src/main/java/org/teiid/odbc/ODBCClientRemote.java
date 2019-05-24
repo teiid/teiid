@@ -25,7 +25,7 @@ import org.teiid.jdbc.ResultSetImpl;
 import org.teiid.odbc.PGUtil.PgColInfo;
 
 public interface ODBCClientRemote {
-	
+
 	enum CursorDirection {
 		FORWARD,
 		FIRST,
@@ -33,36 +33,36 @@ public interface ODBCClientRemote {
 		RELATIVE,
 		LAST
 	}
-	
+
 	void initialized(Properties props);
-	
+
 	void setEncoding(String value, boolean init);
-	
+
 	//	AuthenticationCleartextPassword (B)
 	void useClearTextAuthentication();
 
 	// AuthenticationGSS (B)
 	void useAuthenticationGSS();
-	
+
 	// AuthenticationGSSContinue (B)
 	void authenticationGSSContinue(byte[] serviceToken);
-	
+
 	//	AuthenticationOk (B)
 	//	BackendKeyData (B)
 	//	ParameterStatus (B)
 	void authenticationSucess(int processId, int screctKey);
-	
+
 	//	ParseComplete (B)
 	void prepareCompleted(String preparedName);
-	
+
 	//	ErrorResponse (B)
 	void errorOccurred(String msg);
-	
-	//	ErrorResponse (B)	
+
+	//	ErrorResponse (B)
 	void errorOccurred(Throwable e);
-	
+
 	void terminated();
-	
+
 	//	ParameterDescription (B)
 	void sendParameterDescription(int[] paramType);
 
@@ -72,12 +72,12 @@ public interface ODBCClientRemote {
 	//	RowDescription (B)
 	//	NoData (B)
 	void sendResultSetDescription(List<PgColInfo> cols, short[] resultColumnFormat);
-	
+
 	//	DataRow (B)
 	//	CommandComplete (B)
 	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows, short[] resultColumnFormat);
-	
-	void sendCommandComplete(String sql, Integer... count);	
+
+	void sendCommandComplete(String sql, Integer... count);
 
 	//	ReadyForQuery (B)
 	void ready(boolean inTransaction, boolean failedTransaction);
@@ -88,29 +88,29 @@ public interface ODBCClientRemote {
 	void emptyQueryReceived();
 
 	void flush();
-	
+
 	// FunctionCallResponse (B)
 	void functionCallResponse(Object data, boolean binary);
-	
+
 	void sendSslResponse();
-	
+
 	// unimplemented backend messages
-	
+
 	//	AuthenticationKerberosV5 (B)
 	//	AuthenticationMD5Password (B)
 	//	AuthenticationSCMCredential (B)
 	//	AuthenticationSSPI (B)
-	
+
 	//	CloseComplete (B)
 
 	//	CopyData (F & B)
 	//	CopyDone (F & B)
 	//	CopyInResponse (B)
 	//	CopyOutResponse (B)
-	
+
 	//	NoticeResponse (B)
 	//	NotificationResponse (B)
-	
+
 	void sendPortalSuspended();
 
     void sendParameterStatus(String param, String value);

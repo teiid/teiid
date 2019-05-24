@@ -34,8 +34,8 @@ import org.teiid.olingo.common.ODataTypeManager;
 import org.teiid.translator.TranslatorException;
 
 public class ODataUpdateVisitor extends HierarchyVisitor {
-    protected enum OperationType {INSERT, UPDATE, DELETE}; 
-    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();    
+    protected enum OperationType {INSERT, UPDATE, DELETE};
+    protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
     private ODataUpdateQuery odataQuery;
     private RuntimeMetadata metadata;
     private OperationType operationType;
@@ -44,11 +44,11 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         this.odataQuery = new ODataUpdateQuery(ef, metadata);
         this.metadata = metadata;
     }
-    
+
     public OperationType getOperationType() {
         return this.operationType;
     }
-    
+
     public ODataUpdateQuery getODataQuery() {
         return this.odataQuery;
     }
@@ -57,7 +57,7 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
     public void visit(Insert obj) {
         this.operationType = OperationType.INSERT;
         visitNode(obj.getTable());
-    
+
         try {
             // read the properties
             int elementCount = obj.getColumns().size();
@@ -72,7 +72,7 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
             this.exceptions.add(e);
         }
     }
-    
+
     private Object resolveExpressionValue(Expression expr) throws TranslatorException {
         Object value = null;
         if (expr instanceof Literal) {
@@ -97,19 +97,19 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
         }
         return value;
     }
-    
-    
+
+
     @Override
     public void visit(Update obj) {
         this.operationType = OperationType.UPDATE;
         visitNode(obj.getTable());
         this.odataQuery.setCondition(obj.getWhere());
-        
+
         try {
             // read the properties
             int elementCount = obj.getChanges().size();
             for (int i = 0; i < elementCount; i++) {
-                Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();            
+                Column column = obj.getChanges().get(i).getSymbol().getMetadataObject();
                 String type = ODataTypeManager.odataType(column)
                         .getFullQualifiedName().getFullQualifiedNameAsString();
                 Expression expr = obj.getChanges().get(i).getValue();
@@ -118,9 +118,9 @@ public class ODataUpdateVisitor extends HierarchyVisitor {
             }
         } catch (TranslatorException e) {
             this.exceptions.add(e);
-        }            
+        }
     }
-    
+
     @Override
     public void visit(Delete obj) {
         this.operationType = OperationType.DELETE;

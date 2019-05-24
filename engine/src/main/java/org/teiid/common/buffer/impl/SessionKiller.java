@@ -19,9 +19,9 @@
 package org.teiid.common.buffer.impl;
 
 public interface SessionKiller {
-    
+
     /**
-     * 
+     *
      * @return true if a session was successfully killed
      */
     boolean killLargestConsumer();

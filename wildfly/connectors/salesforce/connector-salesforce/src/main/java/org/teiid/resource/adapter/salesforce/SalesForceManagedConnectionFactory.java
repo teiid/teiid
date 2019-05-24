@@ -33,17 +33,17 @@ import com.sforce.soap.partner.Connector;
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private static final long serialVersionUID = 5298591275313314698L;
-	
+
 	private String username;
 	private String password;
 	private String url; //sf url
 	private Long requestTimeout;
 	private Long connectTimeout;
-	
+
 	private String proxyUsername;
 	private String proxyPassword;
 	private String proxyUrl;
-	
+
 	private String configProperties;
 	private String configFile; // path to the "jbossws-cxf.xml" file
 
@@ -63,19 +63,19 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
 	public String getURL() {
 		return this.url;
 	}
-	
+
 	public void setURL(String uRL) {
 		this.url = uRL;
 	}
-	
+
 	public Long getConnectTimeout() {
 		return connectTimeout;
 	}
-	
+
 	public void setConnectTimeout(Long connectTimeout) {
 		this.connectTimeout = connectTimeout;
 	}
@@ -83,11 +83,11 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	public Long getRequestTimeout() {
 		return requestTimeout;
 	}
-	
+
 	public void setRequestTimeout(Long requestTimeout) {
 		this.requestTimeout = requestTimeout;
 	}
-	
+
 	@Override
 	public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
 		checkVersion();
@@ -95,52 +95,52 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 			private static final long serialVersionUID = 5028356110047329135L;
 
 			@Override
-			public SalesforceConnectionImpl getConnection() throws ResourceException {				
+			public SalesforceConnectionImpl getConnection() throws ResourceException {
 				return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
 			}
 		};
 	}
-	
+
 	public String getProxyUsername() {
 		return proxyUsername;
 	}
-	
+
 	public void setProxyUsername(String proxyUsername) {
 		this.proxyUsername = proxyUsername;
 	}
-	
+
 	public String getProxyPassword() {
 		return proxyPassword;
 	}
-	
+
 	public void setProxyPassword(String proxyPassword) {
 		this.proxyPassword = proxyPassword;
 	}
-	
+
 	public String getProxyURL() {
 		return proxyUrl;
 	}
-	
+
 	public void setProxyURL(String proxyUrl) {
 		this.proxyUrl = proxyUrl;
 	}
-	
+
 	public String getConfigProperties() {
 		return configProperties;
 	}
-	
+
 	public void setConfigProperties(String configProperties) {
 		this.configProperties = configProperties;
 	}
-	
+
     public String getConfigFile() {
         return this.configFile;
     }
 
     public void setConfigFile(String config) {
         this.configFile = config;
-    }	
-	
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -227,7 +227,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
             return false;
         return true;
     }
-    
+
     public void checkVersion() {
         try {
             String apiVersion = url.substring(url.lastIndexOf('/') + 1, url.length());
@@ -241,8 +241,8 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
                 }
             }
         } catch (Exception e) {
-            
+
         }
     }
-	
+
 }

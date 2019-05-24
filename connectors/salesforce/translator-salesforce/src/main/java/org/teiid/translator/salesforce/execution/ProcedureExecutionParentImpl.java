@@ -39,7 +39,7 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 	private RuntimeMetadata metadata;
 	private SalesforceProcedureExecution execution;
 	private SalesforceConnection connection;
-	
+
 	public ProcedureExecutionParentImpl(Call command,
 			SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext executionContext) {
 		this.setCommand(command);
@@ -91,7 +91,7 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 	public Call getCommand() {
 		return command;
 	}
-	
+
 	private void setConnection(SalesforceConnection connection) {
 		this.connection = connection;
 	}

@@ -40,13 +40,13 @@ public class XMLGenerateResults implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
     private static final int MAX_COL_WIDTH = 65;
-    
+
     private String outputDir = "";
     private String generateDir = "";
-    
+
 
     public XMLGenerateResults( String testname, Properties props) {
-	
+
 	outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
 
 	Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
@@ -96,7 +96,7 @@ public class XMLGenerateResults implements ResultsGenerator {
     /**
      * Generate query results. These are actual results from the server and may
      * be used for comparing to results from a later test run.
-     * 
+     *
      * @param queryID
      * @param resultsFile
      * @param result
@@ -189,10 +189,10 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    }
 	}
     }
-    
+
 //  Begin New from Impl
-    
-    
+
+
     public String generateErrorFile_keep(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
 	    final Throwable queryError, final Object results)
@@ -205,18 +205,18 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    // configID, queryID, Integer.toString(clientID));
 	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
 	    File errorFile = new File(getOutputDir(), errorFileName);
-	    
+
 	    // the resultset will be passed in as null when
-	    // the error was due to a thrown exception, and not based comparison issues 
+	    // the error was due to a thrown exception, and not based comparison issues
 	    if (resultSet == null) {
 		FileOutputStream actualOut = null;
 		try {
 		    actualOut = new FileOutputStream(errorFile);
 		    PrintStream filePrintStream = new PrintStream(actualOut);
-		    
+
 
 		    TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
-		    
+
 		    filePrintStream.flush();
 
 		} catch (Exception e) {
@@ -250,12 +250,12 @@ public class XMLGenerateResults implements ResultsGenerator {
 	return errorFileName;
     }
 
-    
+
     /**
      * Generate an error file for a query that failed comparison. File should
      * have the SQL, the actual results returned from the server and the results
      * that were expected.
-     * 
+     *
      * @param queryID
      * @param sql
      * @param resultsFile
@@ -268,14 +268,14 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    String sql, File resultsFile, ResultSet actualResult,
 	    File results)
 	    throws QueryTestFailedException {
-	
+
 	FileOutputStream actualOut = null;
 	try {
 	    actualOut = new FileOutputStream(resultsFile);
 	    PrintStream filePrintStream = new PrintStream(actualOut);
-	    
+
 	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
-    	    
+
 
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -291,8 +291,8 @@ public class XMLGenerateResults implements ResultsGenerator {
 	    }
 	}
     }
-//  End of copy from impl 
-   
+//  End of copy from impl
+
     public String generateErrorFile(final String querySetID,
 	    final String queryID, final String sql, final ResultSet resultSet,
 	    final Throwable queryError, final Object expectedResultsFile)
@@ -331,14 +331,14 @@ public class XMLGenerateResults implements ResultsGenerator {
 	return new File(targetDir, resultFileName);
     }
 
-    //    
+    //
     // private String generateErrorFileName(String queryID,
     // String querySetID,
     // String outputdir) {
-    //    	
+    //
     // File resultsFile = createNewResultsFile(queryID, querySetID,
     // this.outputDir);
-    //    	
+    //
     // // String queryFileName = queryFile.getName();
     // String name =
     // FileUtils.getFilenameWithoutExtension(resultsFile.getName());
@@ -346,7 +346,7 @@ public class XMLGenerateResults implements ResultsGenerator {
     //                                   + name + "_" //$NON-NLS-1$
     //                                   + FILE_NAME_DATE_FORMATER.format(new Date(System.currentTimeMillis())) + ".xml"; //$NON-NLS-1$
     // return errorFileName;
-    //  	
+    //
     // }
 
     private String generateErrorFileName(String queryID, String querySetID) {
@@ -358,7 +358,7 @@ public class XMLGenerateResults implements ResultsGenerator {
 //		+ FILE_NAME_DATE_FORMATER.format(new Date(System
 //			.currentTimeMillis())) + ".xml"; //$NON-NLS-1$
 //	return errorFileName;
-	
+
 	return  queryID + ".err";
     }
 
@@ -366,7 +366,7 @@ public class XMLGenerateResults implements ResultsGenerator {
      * Generate an error file for a query that failed comparison. File should
      * have the SQL, the actual results returned from the server and the results
      * that were expected.
-     * 
+     *
      * @param queryID
      * @param sql
      * @param resultsFile

@@ -38,9 +38,9 @@ import org.teiid.net.TeiidURL;
 
 
 /**
- * JDBC Driver class for Teiid Embedded and Teiid Server. This class automatically registers with the 
+ * JDBC Driver class for Teiid Embedded and Teiid Server. This class automatically registers with the
  * {@link DriverManager}
- * 
+ *
  *  The accepted URL format for the connection
  *  <ul>
  *  	<li> Server/socket connection:<b> jdbc:teiid:&lt;vdb-name&gt;@mm[s]://&lt;server-name&gt;:&lt;port&gt;;[user=&lt;user-name&gt;][password=&lt;user-password&gt;][other-properties]*</b>
@@ -51,12 +51,12 @@ import org.teiid.net.TeiidURL;
  */
 
 public class TeiidDriver implements Driver {
-	
+
 	static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$
-	
+
     private static TeiidDriver INSTANCE = new TeiidDriver();
-        
+
     static {
         try {
             DriverManager.registerDriver(INSTANCE);
@@ -66,14 +66,14 @@ public class TeiidDriver implements Driver {
             logger.log(Level.SEVERE, logMsg);
         }
     }
-    
+
     private ConnectionProfile socketProfile = new SocketProfile();
     private ConnectionProfile localProfile;
 
     public static TeiidDriver getInstance() {
         return INSTANCE;
     }
-    
+
     public ConnectionImpl connect(String url, Properties info) throws SQLException {
     	ConnectionType conn = JDBCURL.acceptsUrl(url);
     	if (conn == null) {
@@ -87,7 +87,7 @@ public class TeiidDriver implements Driver {
             info = PropertiesUtils.clone(info);
         }
         parseURL(url, info);
-        
+
         ConnectionImpl myConnection = null;
 
         ConnectionProfile cp = socketProfile;
@@ -113,23 +113,23 @@ public class TeiidDriver implements Driver {
         // logging
         String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
         logger.fine(logMsg);
-        
+
 		return myConnection;
     }
-    
+
     public void setLocalProfile(ConnectionProfile embeddedProfile) {
 		this.localProfile = embeddedProfile;
 	}
-    
+
     public void setSocketProfile(ConnectionProfile socketProfile) {
 		this.socketProfile = socketProfile;
 	}
-    
+
     /**
      * Returns true if the driver thinks that it can open a connection to the given URL.
      * Expected URL format for server mode is
      * jdbc:teiid::VDB@mm://server:port;version=1;user=username;password=password
-     * 
+     *
      * @param The URL used to establish a connection.
      * @return A boolean value indicating whether the driver understands the subprotocol.
      * @throws SQLException, should never occur
@@ -149,7 +149,7 @@ public class TeiidDriver implements Driver {
     public String getDriverName() {
         return DRIVER_NAME;
     }
-    
+
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
         if(info == null) {
             info = new Properties();
@@ -173,14 +173,14 @@ public class TeiidDriver implements Driver {
         	}
         	driverProps.add(dpi);
         }
-        
+
         // create an array of DriverPropertyInfo objects
         DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
 
         // copy the elements from the list to the array
         return driverProps.toArray(propInfo);
-    }    
-    
+    }
+
     /**
      * This method parses the URL and adds properties to the the properties object.
      * These include required and any optional properties specified in the URL.
@@ -220,9 +220,9 @@ public class TeiidDriver implements Driver {
 
         } catch(IllegalArgumentException iae) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
-        }  
+        }
     }
-    
+
     /**
      * This method returns true if the driver passes jdbc compliance tests.
      * @return true if the driver is jdbc complaint, else false.

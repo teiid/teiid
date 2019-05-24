@@ -25,9 +25,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a property that can be externally configured.  
+ * Annotates a property that can be externally configured.
  * The property name will be inferred from the method.
- * Keep in mind that TranslatorProprties name are treated as case-insensitive 
+ * Keep in mind that TranslatorProprties name are treated as case-insensitive
  * - do not annotate two methods in the same ExecutionFactory with the same case-insensitive name.
  */
 @Target({ElementType.METHOD})
@@ -50,9 +50,9 @@ public @interface TranslatorProperty {
         /*
          * Extension metadata properties that are defined for this translator
          */
-        EXTENSION_METADATA        
+        EXTENSION_METADATA
     }
-    
+
 	/**
 	 * Description to be shown in tools
 	 * @return
@@ -70,7 +70,7 @@ public @interface TranslatorProperty {
 	 * @return
 	 */
 	boolean required() default false;
-	
+
 	/**
 	 * True if the property has no setter
 	 * @return
@@ -82,13 +82,13 @@ public @interface TranslatorProperty {
 	 * @return
 	 */
 	boolean advanced() default false;
-	
+
 	/**
 	 * True if this is property should be masked when displayed - this has no effect on how the value is persisted.
 	 * @return
 	 */
 	boolean masked() default false;
-	
+
 	/**
 	 * Defines the type of the translator property.
 	 * @return

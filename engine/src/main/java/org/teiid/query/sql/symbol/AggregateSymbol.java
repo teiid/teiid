@@ -42,7 +42,7 @@ import org.teiid.query.sql.lang.OrderBy;
  * type of their contained expression.</p>
  */
 public class AggregateSymbol extends Function implements DerivedExpression {
-	
+
 	private static final Expression[] EMPTY_ARGS = new Expression[0];
 
 	public enum Type {
@@ -76,7 +76,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		NTILE(true),
 		NTH_VALUE(true),
 		USER_DEFINED;
-	    
+
 	    boolean analytical;
 	    Type(){}
 	    Type(boolean analytical) {
@@ -86,9 +86,9 @@ public class AggregateSymbol extends Function implements DerivedExpression {
             return analytical;
         }
 	}
-	
+
 	private static final Map<String, Type> nameMap = new TreeMap<String, Type>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	static {
 		for (Type t : Type.values()) {
 			if (t == Type.USER_DEFINED) {
@@ -107,7 +107,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	private static final Class<Integer> COUNT_TYPE = DataTypeManager.DefaultDataClasses.INTEGER;
 	private static final Map<Class<?>, Class<?>> SUM_TYPES;
     private static final Map<Class<?>, Class<?>> AVG_TYPES;
-    
+
     public static final boolean LONG_RANKS = PropertiesUtils.getHierarchicalProperty("org.teiid.longRanks", true, Boolean.class); //$NON-NLS-1$
 
 	static {
@@ -120,7 +120,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.FLOAT, DataTypeManager.DefaultDataClasses.DOUBLE);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.DOUBLE, DataTypeManager.DefaultDataClasses.DOUBLE);
 		SUM_TYPES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
-        
+
         AVG_TYPES = new HashMap<Class<?>, Class<?>>();
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.BYTE, SQLParserUtil.DECIMAL_AS_DOUBLE?DataTypeManager.DefaultDataClasses.DOUBLE:DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.SHORT, SQLParserUtil.DECIMAL_AS_DOUBLE?DataTypeManager.DefaultDataClasses.DOUBLE:DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
@@ -129,11 +129,11 @@ public class AggregateSymbol extends Function implements DerivedExpression {
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.BIG_INTEGER, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.FLOAT, DataTypeManager.DefaultDataClasses.DOUBLE);
         AVG_TYPES.put(DataTypeManager.DefaultDataClasses.DOUBLE, DataTypeManager.DefaultDataClasses.DOUBLE);
-        AVG_TYPES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);        
+        AVG_TYPES.put(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 	}
 
     /**
-     * Constructor used for cloning 
+     * Constructor used for cloning
      * @param name
      * @param canonicalName
      * @since 4.3
@@ -143,7 +143,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
         this.aggregate = aggregateFunction;
         this.distinct = isDistinct;
     }
-    
+
 	/**
 	 * Construct an aggregate symbol with all given data.
 	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLConstants.NonReserved#COUNT}, etc)
@@ -153,7 +153,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression expression) {
 		this(aggregateFunction, isDistinct, expression == null?EMPTY_ARGS:new Expression[] {expression}, null);
 	}
-    
+
 	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression[] args, OrderBy orderBy) {
 		super(aggregateFunction, args);
 		this.aggregate = nameMap.get(aggregateFunction);
@@ -163,7 +163,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		this.distinct = isDistinct;
 		this.orderBy = orderBy;
 	}
-	
+
 	/**
 	 * Set the aggregate function.  If the aggregate function is an invalid value, an
 	 * IllegalArgumentException is thrown.
@@ -186,7 +186,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	public Type getAggregateFunction() {
 		return this.aggregate;
 	}
-	
+
 	public boolean isRowValueFunction() {
 	    switch (aggregate) {
 	    case NTILE:
@@ -207,7 +207,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	public boolean isDistinct() {
 		return this.distinct;
 	}
-	
+
 	public void setDistinct(boolean distinct) {
 		this.distinct = distinct;
 	}
@@ -270,7 +270,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		    return false;
 		}
 	}
-	
+
 	public boolean isCount() {
         switch (this.aggregate) {
         case COUNT:
@@ -280,19 +280,19 @@ public class AggregateSymbol extends Function implements DerivedExpression {
             return false;
         }
     }
-	
+
     public boolean isAnalytical() {
         return this.aggregate.analytical;
     }
 
 	public boolean isBoolean() {
-		return this.aggregate == Type.EVERY 
-				|| this.aggregate == Type.SOME 
+		return this.aggregate == Type.EVERY
+				|| this.aggregate == Type.SOME
 				|| this.aggregate == Type.ANY;
 	}
-	
+
 	public boolean isEnhancedNumeric() {
-		return this.aggregate == Type.STDDEV_POP 
+		return this.aggregate == Type.STDDEV_POP
 		|| this.aggregate == Type.STDDEV_SAMP
 		|| this.aggregate == Type.VAR_SAMP
 		|| this.aggregate == Type.VAR_POP;
@@ -301,11 +301,11 @@ public class AggregateSymbol extends Function implements DerivedExpression {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public OrderBy getOrderBy() {
 		return orderBy;
 	}
-    
+
     public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
@@ -326,25 +326,25 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		copy.setFunctionDescriptor(getFunctionDescriptor());
 		return copy;
 	}
-    
-    /** 
+
+    /**
      * @see org.teiid.query.sql.symbol.ExpressionSymbol#hashCode()
      */
     public int hashCode() {
         int hasCode = HashCodeUtil.hashCode(aggregate.hashCode(), distinct);
         return HashCodeUtil.hashCode(hasCode, super.hashCode());
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.sql.symbol.ExpressionSymbol#equals(java.lang.Object)
      */
     public boolean equals(Object obj) {
         if (!(obj instanceof AggregateSymbol)) {
             return false;
         }
-        
+
         AggregateSymbol other = (AggregateSymbol)obj;
-        
+
         return super.equals(obj)
                && this.aggregate.equals(other.aggregate)
                && this.distinct == other.distinct
@@ -352,7 +352,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
                && EquivalenceUtil.areEqual(this.condition, other.condition)
         	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
     }
-    
+
     public boolean isCardinalityDependent() {
     	if (isDistinct()) {
     		return false;
@@ -369,11 +369,11 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		}
 		return true;
     }
-    
+
     public Expression getCondition() {
 		return condition;
 	}
-    
+
     public void setCondition(Expression condition) {
 		this.condition = condition;
 	}
@@ -386,7 +386,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		}
 		return false;
 	}
-	
+
 	public boolean respectsNulls() {
 		switch (this.aggregate) {
 		case TEXTAGG:
@@ -396,7 +396,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		}
 		return false;
 	}
-	
+
 	public boolean canStage() {
 		if (orderBy != null) {
 			return false;
@@ -412,13 +412,13 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		}
 		return true;
 	}
-	
+
 	public boolean isWindowed() {
 		return isWindowed;
 	}
-	
+
 	public void setWindowed(boolean isWindowed) {
 		this.isWindowed = isWindowed;
 	}
-	
+
 }

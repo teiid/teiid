@@ -69,7 +69,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 
 		@Override
 		public void visit(AggregateFunction obj) {
-			//the documentation implies only sum, count are not allowed, but in testing all are 
+			//the documentation implies only sum, count are not allowed, but in testing all are
 			//if (obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.COUNT) || obj.getName().equalsIgnoreCase(SQLConstants.NonReserved.SUM)) {
 				bulkEligible = false;
 			//} else {
@@ -98,21 +98,21 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				super.visit(obj);
 			}
 		}
-		
+
 		@Override
 		public void visit(NamedTable obj) {
 			//since this is hint driven we'll assume that it is used selectively
-			if (!allowed.contains(obj.getMetadataObject().getSourceName()) 
+			if (!allowed.contains(obj.getMetadataObject().getSourceName())
 					&& !Boolean.valueOf(obj.getMetadataObject().getProperty(SalesForceMetadataProcessor.TABLE_CUSTOM, false))) {
 				usePkChunking = false;
 			}
 		}
-		
+
 		@Override
 		public void visit(OrderBy obj) {
 		    usePkChunking = false;
 		}
-		
+
 		@Override
 		public void visit(Select obj) {
 		    if (obj.getHaving() != null) {
@@ -120,11 +120,11 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		    }
 		    super.visit(obj);
 		}
-		
+
 		public boolean isBulkEligible() {
 			return bulkEligible;
 		}
-		
+
 		public boolean usePkChunking() {
             return usePkChunking && bulkEligible;
         }
@@ -135,19 +135,19 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	private static final String AGGREGATE_RESULT = "AggregateResult"; //$NON-NLS-1$
 
 	private static final Pattern dateTimePattern = Pattern.compile("^(?:(\\d{4}-\\d{2}-\\d{2})T)?(\\d{2}:\\d{2}:\\d{2}(?:.\\d+)?)(.*)"); //$NON-NLS-1$
-	
+
 	private SalesForceExecutionFactory executionFactory;
-	
+
 	private SalesforceConnection connection;
 
 	private RuntimeMetadata metadata;
 
 	private ExecutionContext context;
-	
+
 	private SelectVisitor visitor;
-	
+
 	private QueryResult results;
-	
+
 	private List<List<Object>> resultBatch;
 
 	// Identifying values
@@ -160,21 +160,21 @@ public class QueryExecutionImpl implements ResultSetExecution {
 	private String partIdentifier;
 
 	private String logPreamble;
-	
+
 	private QueryExpression query;
-	
+
 	Map<String, Map<String,Integer>> sObjectToResponseField = new HashMap<String, Map<String,Integer>>();
-	
+
 	private int topResultIndex = 0;
-	
+
 	private Calendar cal;
-	
+
 	//bulk support
 	private JobInfo activeJob;
 	private BatchResultInfo batchInfo;
 	private BulkBatchResult batchResults;
-	
-	
+
+
 	public QueryExecutionImpl(QueryExpression command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context, SalesForceExecutionFactory salesForceExecutionFactory) {
 		this.connection = connection;
 		this.metadata = metadata;
@@ -194,7 +194,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			this.connection.cancelBulkJob(activeJob);
 		}
 	}
-	
+
 	public void close() {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.close")); //$NON-NLS-1$
 		if (activeJob != null) {
@@ -232,8 +232,8 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			//redundant
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Executing Query:", finalQuery); //$NON-NLS-1$
 			context.logCommand(finalQuery);
-			
-			if (!join && !visitor.getQueryAll() 
+
+			if (!join && !visitor.getQueryAll()
 					&& (context.getSourceHints() != null && context.getSourceHints().contains("bulk"))) { //$NON-NLS-1$
 				BulkValidator bulkValidator = new BulkValidator();
 				query.acceptVisitor(bulkValidator);
@@ -245,11 +245,11 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				}
                 LogManager.logDetail(LogConstants.CTX_CONNECTOR,  getLogPreamble(), "Ingoring bulk hint as the query is not bulk eligible"); //$NON-NLS-1$
 			}
-			
+
 			results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 		}
 	}
-	
+
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (activeJob != null) {
@@ -306,7 +306,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 					loadBatch();
 				}
 			}
-			
+
 		}
 		return row;
 	}
@@ -347,7 +347,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 
 		private void extactJoinResults(XmlObject node, List<Object[]> result) throws TranslatorException {
-			Object val = node.getField(TYPE); 
+			Object val = node.getField(TYPE);
 			if(val instanceof String) {
 				extractValuesFromElement(node, result, (String)val);
 			} else if (node.hasChildren()) {
@@ -358,7 +358,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				}
 			}
 		}
-		
+
 		//TODO: this looks inefficient as getChild is linear
 		private List<Object[]> extractValuesFromElement(XmlObject sObject,
 				List<Object[]> result, String sObjectName) throws TranslatorException {
@@ -396,7 +396,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 				}
 			} else if (ex instanceof AggregateFunction) {
 				String name = SelectVisitor.AGG_PREFIX + (aggCount++);
-				Integer index = fieldToIndexMap.get(name); 
+				Integer index = fieldToIndexMap.get(name);
 				if (null == index) {
 					throw new TranslatorException(SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.missing.field")+ ex); //$NON-NLS-1$
 				}
@@ -406,7 +406,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		}
 		return result;
 	}
-		
+
 	private void setElementValueInColumn(int columnIndex, Object value, Object[] row) {
 		if(value instanceof XmlObject) {
 			XmlObject element = (XmlObject)value;
@@ -429,13 +429,13 @@ public class QueryExecutionImpl implements ResultSetExecution {
 		while (iter.hasNext()) {
 			Object[] row = iter.next();
 			row[columnIndex] = value;
-		}	
+		}
 	}
-	
+
 	/**
 	 * Load the map of response field names to index.
 	 * @param fields
-	 * @throws TranslatorException 
+	 * @throws TranslatorException
 	 */
 	private void logAndMapFields(String sObjectName,
 			List<XmlObject> fields) throws TranslatorException {
@@ -460,7 +460,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			XmlObject element = fields.get(i);
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Field # " + i + " is " + element.getName().getLocalPart()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		
+
 	}
 
 	/**
@@ -521,7 +521,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 						tz = TimeZone.getTimeZone("GMT" + timeZone); //$NON-NLS-1$
 					} else {
 						//this is probably an exceptional case
-						tz = TimeZone.getTimeZone(timeZone); 
+						tz = TimeZone.getTimeZone(timeZone);
 					}
 					cal.setTimeZone(tz);
 				} else {
@@ -534,7 +534,7 @@ public class QueryExecutionImpl implements ResultSetExecution {
 			throw new TranslatorException(e, SalesForcePlugin.Util.getString("SalesforceQueryExecutionImpl.datatime.parse") + value); //$NON-NLS-1$
 		}
 	}
-	
+
 	private String getLogPreamble() {
 		if (null == logPreamble) {
 			StringBuffer preamble = new StringBuffer();

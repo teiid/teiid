@@ -57,7 +57,7 @@ import org.teiid.net.TeiidURL;
  * Implements a sticky random selection policy.
  */
 public class SocketServerConnection implements ServerConnection {
-	
+
 	private static final int FAILOVER_PING_INTERVAL = 1000;
 	private SocketServerInstanceFactory connectionFactory;
     private UrlServerDiscovery serverDiscovery;
@@ -65,7 +65,7 @@ public class SocketServerConnection implements ServerConnection {
 
 	private boolean secure;
     private Properties connProps;
-	
+
 	private SocketServerInstance serverInstance;
     private LogonResult logonResult;
     private ILogon logon;
@@ -74,7 +74,7 @@ public class SocketServerConnection implements ServerConnection {
 	private long lastPing = System.currentTimeMillis();
 	private int pingFailOverInterval = FAILOVER_PING_INTERVAL;
 	private String serverVersion;
-    
+
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
 			UrlServerDiscovery serverDiscovery, Properties connProps) throws CommunicationException, ConnectionException {
@@ -87,12 +87,12 @@ public class SocketServerConnection implements ServerConnection {
 		this.failOver = Boolean.valueOf(connProps.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
 		this.serverVersion = selectServerInstance().getServerVersion();
 	}
-	
+
 	/**
 	 * Implements a sticky random selection policy
 	 * TODO: make this customizable
 	 * TODO: put more information on hostinfo as to process response time, last successful connect, etc.
-	 * @throws ConnectionException 
+	 * @throws ConnectionException
 	 */
 	public synchronized SocketServerInstance selectServerInstance()
 			throws CommunicationException, ConnectionException {
@@ -124,9 +124,9 @@ public class SocketServerConnection implements ServerConnection {
 				return this.serverInstance;
 			} catch (IOException e) {
 				ex = e;
-			} catch (SingleInstanceCommunicationException e) { 
+			} catch (SingleInstanceCommunicationException e) {
 				ex = e;
-			} 	
+			}
 			if (knownHosts == 1) { //just a single host, use the exception
 				if (ex instanceof UnknownHostException) {
 					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20019, ex, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20019, hostInfo.getHostName()));
@@ -141,7 +141,7 @@ public class SocketServerConnection implements ServerConnection {
 	private void logon(ILogon newLogon) throws LogonException, TeiidComponentException, CommunicationException {
 
 		SocketServerInstance instance = this.serverInstance;
-		
+
         updateConnectionProperties(connProps, instance.getLocalAddress(), true, this.connectionFactory);
 
 		LogonResult newResult = null;
@@ -154,7 +154,7 @@ public class SocketServerConnection implements ServerConnection {
 		}
 
 		AuthenticationType type = (AuthenticationType) newResult.getProperty(ILogon.AUTH_TYPE);
-		
+
 		if (type != null) {
 			//server has issued an additional challenge
 			if (type == AuthenticationType.GSS) {
@@ -163,12 +163,12 @@ public class SocketServerConnection implements ServerConnection {
 				throw new LogonException(JDBCPlugin.Event.TEIID20034, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20034, type));
 			}
 		}
-		
+
 		logoff();
-		
+
 		this.logonResult = newResult;
 	}
-	
+
 	public static void updateConnectionProperties(Properties connectionProperties, InetAddress addr, boolean setMac, HostnameResolver resolver) {
 		if (addr == null) {
 			return;
@@ -203,7 +203,7 @@ public class SocketServerConnection implements ServerConnection {
 			}
 		}
 	}
-	
+
 	private ILogon connectSession() throws CommunicationException, ConnectionException {
 		ILogon newLogon = this.serverInstance.getService(ILogon.class);
 		if (this.logonResult != null) {
@@ -226,11 +226,11 @@ public class SocketServerConnection implements ServerConnection {
                     throw (CommunicationException)e.getCause();
                 }
                  throw new CommunicationException(JDBCPlugin.Event.TEIID20018, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20018));
-            } 
+            }
         }
 		return newLogon;
 	}
-	
+
 	public <T> T getService(Class<T> iface) {
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new SocketServerInstanceImpl.RemoteInvocationHandler(iface, PropertiesUtils.getBooleanProperty(connProps, TeiidURL.CONNECTION.ENCRYPT_REQUESTS, false)) {
 			@Override
@@ -257,7 +257,7 @@ public class SocketServerConnection implements ServerConnection {
 					 throw new CommunicationException(e);
 				}
 			}
-			
+
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args)
 					throws Throwable {
@@ -270,20 +270,20 @@ public class SocketServerConnection implements ServerConnection {
 					throw e;
 				}
 			}
-			
+
 		}));
 	}
-	
+
 	public synchronized void close() {
 		if (this.closed) {
 			return;
 		}
-		
+
 		if (this.serverInstance != null) {
 			logoff();
             closeServerInstance();
 		}
-		
+
 		this.closed = true;
 	}
 
@@ -306,14 +306,14 @@ public class SocketServerConnection implements ServerConnection {
 	private void disconnect() {
 		this.logonResult = null;
 	}
-	
+
 	private synchronized ResultsFuture<?> isOpen() throws CommunicationException, InvalidSessionException, TeiidComponentException {
 		if (this.closed) {
 			 throw new CommunicationException(JDBCPlugin.Event.TEIID20023, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20023));
 		}
 		return logon.ping();
 	}
-	
+
 	public boolean isOpen(long msToTest) {
 		try {
 			ResultsFuture<?> future = isOpen();
@@ -321,20 +321,20 @@ public class SocketServerConnection implements ServerConnection {
 			return true;
 		} catch (Throwable th) {
 			return false;
-		} 
+		}
 	}
 
 	public LogonResult getLogonResult() {
 		return logonResult;
 	}
-	
+
 	synchronized void closeServerInstance() {
 		if (this.serverInstance != null) {
 			this.serverInstance.shutdown();
 			this.serverInstance = null;
 		}
 	}
-	
+
 	public boolean isSameInstance(ServerConnection otherService) throws CommunicationException {
 		if (!(otherService instanceof SocketServerConnection)) {
 			return false;
@@ -345,15 +345,15 @@ public class SocketServerConnection implements ServerConnection {
 			 throw new CommunicationException(e);
 		}
 	}
-	
+
 	public void setFailOver(boolean failOver) {
 		this.failOver = failOver;
 	}
-	
+
 	public void setFailOverPingInterval(int pingFailOverInterval) {
 		this.pingFailOverInterval = pingFailOverInterval;
 	}
-	
+
 	@Override
 	public void authenticate() throws ConnectionException,
 			CommunicationException {
@@ -370,17 +370,17 @@ public class SocketServerConnection implements ServerConnection {
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean supportsContinuous() {
 		return false;
 	}
-	
+
 	@Override
 	public boolean isLocal() {
 		return false;
 	}
-	
+
 	@Override
 	public String getServerVersion() {
 		return this.serverVersion;

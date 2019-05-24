@@ -68,44 +68,44 @@ public class FunctionLibrary {
     public static final String SYS_PROP = "sys_prop"; //$NON-NLS-1$
     public static final String ENV_VAR = "env_var"; //$NON-NLS-1$
     public static final String SESSION_ID = "session_id"; //$NON-NLS-1$
-    
+
     // Misc.
     public static final String DECODESTRING = "decodestring"; //$NON-NLS-1$
     public static final String DECODEINTEGER = "decodeinteger"; //$NON-NLS-1$
     public static final String COMMAND_PAYLOAD = "commandpayload"; //$NON-NLS-1$
-    
+
     public static final String CONCAT = "CONCAT"; //$NON-NLS-1$
     public static final String CONCAT2 = "CONCAT2"; //$NON-NLS-1$
     public static final String CONCAT_OPERATOR = "||"; //$NON-NLS-1$
     public static final String SUBSTRING = "substring"; //$NON-NLS-1$
     public static final String NVL = "NVL"; //$NON-NLS-1$
     public static final String IFNULL = "IFNULL"; //$NON-NLS-1$
-    
+
     public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
     public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$
-    
+
     public static final String PARSETIME = "parsetime"; //$NON-NLS-1$
     public static final String PARSEDATE = "parsedate"; //$NON-NLS-1$
     public static final String FORMATTIME = "formattime"; //$NON-NLS-1$
     public static final String FORMATDATE = "formatdate"; //$NON-NLS-1$
-    
+
     public static final String NULLIF = "nullif"; //$NON-NLS-1$
     public static final String COALESCE = "coalesce"; //$NON-NLS-1$
 
     public static final String SPACE = "space"; //$NON-NLS-1$
 	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
 	public static final String JSONARRAY = "jsonarray"; //$NON-NLS-1$
-	
+
 	public static final String MVSTATUS = "mvstatus"; //$NON-NLS-1$
-	
+
 	public static final Set<String> INTERNAL_SCHEMAS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	static {
 		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_MODEL);
 		INTERNAL_SCHEMAS.add(CoreConstants.SYSTEM_ADMIN_MODEL);
 		INTERNAL_SCHEMAS.add(CoreConstants.ODBC_MODEL);
 	}
-	
+
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
 
@@ -120,11 +120,11 @@ public class FunctionLibrary {
         systemFunctions = systemFuncs;
        	userFunctions = userFuncs;
 	}
-	
+
 	public FunctionTree[] getUserFunctions() {
 		return userFunctions;
 	}
-	
+
 	public FunctionTree getSystemFunctions() {
 		return systemFunctions;
 	}
@@ -209,7 +209,7 @@ public class FunctionLibrary {
 
         return descriptor;
 	}
-	
+
 	/**
 	 * Find a function descriptor given a name and the types of the arguments.
 	 * This method matches based on case-insensitive function name and
@@ -228,7 +228,7 @@ public class FunctionLibrary {
         	for (FunctionTree tree: this.userFunctions) {
         		descriptor = tree.getFunction(name, types);
         		if (descriptor != null) {
-        			//pushdown function takes presedence 
+        			//pushdown function takes presedence
         			//TODO: there may be multiple translators contributing functions with the same name / types
         			//need "conformed" logic so that the right pushdown can occur
         			if (CoreConstants.SYSTEM_MODEL.equals(descriptor.getSchema())) {
@@ -244,7 +244,7 @@ public class FunctionLibrary {
         }
         return Collections.emptyList();
 	}
-	
+
 	public static class ConversionResult {
 		public ConversionResult(FunctionMethod method) {
 			this.method = method;
@@ -261,10 +261,10 @@ public class FunctionLibrary {
 	 * executing the function.
      * @param name Name of function
 	 * @param returnType
-	 * @param args 
+	 * @param args
 	 * @param types Existing types passed to the function
-	 * @throws InvalidFunctionException 
-	 * @throws QueryResolverException 
+	 * @throws InvalidFunctionException
+	 * @throws QueryResolverException
 	 */
 	public ConversionResult determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
         //First find existing functions with same name and same number of parameters
@@ -275,8 +275,8 @@ public class FunctionLibrary {
 	        	functionMethods.addAll( tree.findFunctionMethods(name, types.length) );
 	        }
         }
-        
-        //Score each match, reject any where types can not be converted implicitly       
+
+        //Score each match, reject any where types can not be converted implicitly
         //Score of current method (lower score means better match with less converts
         //Current best score (lower score is best.  Higher score results in more implicit conversions
         int bestScore = Integer.MAX_VALUE;
@@ -284,13 +284,13 @@ public class FunctionLibrary {
         FunctionMethod result = null;
         boolean isSystem = false;
         boolean narrowing = false;
-                
+
         outer: for (FunctionMethod nextMethod : functionMethods) {
-            int currentScore = 0; 
+            int currentScore = 0;
             boolean nextNarrowing = false;
             final List<FunctionParameter> methodTypes = nextMethod.getInputParameters();
             //Holder for current signature with converts where required
-            
+
             //Iterate over the parameters adding conversions where required or failing when
             //no implicit conversion is possible
             for(int i = 0; i < types.length; i++) {
@@ -305,7 +305,7 @@ public class FunctionLibrary {
                 if (sourceType.isArray()&& targetType.isArray()
                         && sourceType.getComponentType().equals(targetType.getComponentType())) {
                     currentScore++;
-                    continue;                    
+                    continue;
                 }
                 if (sourceType.isArray()) {
                     if (isVarArgArrayParam(nextMethod, types, i, targetType)) {
@@ -332,12 +332,12 @@ public class FunctionLibrary {
 					continue outer;
 				}
             }
-            
+
             //If the method is valid match and it is the current best score, capture those values as current best match
             if (currentScore > bestScore) {
                 continue;
             }
-            
+
             if (hasUnknownType) {
             	if (returnType != null) {
             		try {
@@ -357,17 +357,17 @@ public class FunctionLibrary {
 					}
             	}
             }
-            
+
             if (nextNarrowing && result != null && !narrowing) {
             	continue;
             }
 
             boolean useNext = false;
-            
+
             if (!nextNarrowing && narrowing) {
             	useNext = true;
             }
-            
+
         	boolean isSystemNext = nextMethod.getParent() == null || INTERNAL_SCHEMAS.contains(nextMethod.getParent().getName());
         	if ((isSystem && isSystemNext) || (!isSystem && !isSystemNext && result != null)) {
     			int partCount = partCount(result.getName());
@@ -375,7 +375,7 @@ public class FunctionLibrary {
     			if (partCount < nextPartCount) {
     				//the current is more specific
     				//this makes us more consistent with the table resolving logic
-    				continue outer; 
+    				continue outer;
     			}
     			if (nextPartCount < partCount) {
     				useNext = true;
@@ -383,7 +383,7 @@ public class FunctionLibrary {
         	} else if (isSystemNext) {
         		useNext = true;
         	}
-        	
+
             if (currentScore == bestScore && !useNext) {
             	ambiguous = true;
             	boolean useCurrent = false;
@@ -391,17 +391,17 @@ public class FunctionLibrary {
 				for (int j = 0; j < types.length; j++) {
             		String t1 = bestParams.get(Math.min(j, bestParams.size() - 1)).getRuntimeType();
             		String t2 = methodTypes.get((Math.min(j, methodTypes.size() - 1))).getRuntimeType();
-            		
+
             		if (types[j] == null || t1.equals(t2)) {
             			continue;
             		}
-            		
+
             		String commonType = ResolverUtil.getCommonRuntimeType(new String[] {t1, t2});
-            		
+
             		if (commonType == null) {
             			continue outer; //still ambiguous
             		}
-            		
+
             		if (commonType.equals(t1)) {
             			if (!useCurrent) {
             				useNext = true;
@@ -424,31 +424,31 @@ public class FunctionLibrary {
 					}
 				}
             }
-            
+
             if (currentScore < bestScore || useNext) {
             	ambiguous = false;
                 if (currentScore == 0 && isSystemNext) {
                     return new ConversionResult(nextMethod);
-                }    
-                
+                }
+
                 bestScore = currentScore;
                 result = nextMethod;
                 isSystem = isSystemNext;
                 narrowing = nextNarrowing;
-            }            
+            }
         }
-        
+
         if (ambiguous) {
         	throw GENERIC_EXCEPTION;
         }
-        
+
         ConversionResult cr = new ConversionResult(result);
         if (result != null) {
         	cr.needsConverion = (bestScore != 0);
         }
         return cr;
 	}
-	
+
 	private int partCount(String name) {
 		int result = 0;
 		int index = 0;
@@ -487,12 +487,12 @@ public class FunctionLibrary {
 
 	public boolean isVarArgArrayParam(FunctionMethod method, Class<?>[] types,
 			int i, Class<?> targetType) {
-		return i == types.length - 1 && method.isVarArgs() && i == method.getInputParameterCount() - 1 
+		return i == types.length - 1 && method.isVarArgs() && i == method.getInputParameterCount() - 1
 				&& types[i].isArray() && targetType.isAssignableFrom(types[i].getComponentType());
 	}
-	
-	private static final InvalidFunctionException GENERIC_EXCEPTION = new InvalidFunctionException(QueryPlugin.Event.TEIID30419); 
-	
+
+	private static final InvalidFunctionException GENERIC_EXCEPTION = new InvalidFunctionException(QueryPlugin.Event.TEIID30419);
+
 	private Transform getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
         //If exact match no conversion necessary
         if(sourceType.equals(targetType)) {
@@ -507,13 +507,13 @@ public class FunctionLibrary {
 	}
 
     /**
-     * Find conversion function and set return type to proper type.   
+     * Find conversion function and set return type to proper type.
      * @param sourceType The source type class
      * @param targetType The target type class
      * @return A CONVERT function descriptor or null if not possible
      */
     public FunctionDescriptor findTypedConversionFunction(Class<?> sourceType, Class<?> targetType) {
-    	//TODO: should array to string be prohibited?    	
+    	//TODO: should array to string be prohibited?
         FunctionDescriptor fd = findFunction(CONVERT, new Class[] {sourceType, DataTypeManager.DefaultDataClasses.STRING});
         if (fd != null) {
             return copyFunctionChangeReturnType(fd, targetType);
@@ -536,19 +536,19 @@ public class FunctionLibrary {
         }
         return fd;
     }
-    
+
     public static boolean isConvert(Function function) {
         Expression[] args = function.getArgs();
         String funcName = function.getName();
-        
+
         return args.length == 2 && (funcName.equalsIgnoreCase(FunctionLibrary.CONVERT) || funcName.equalsIgnoreCase(FunctionLibrary.CAST));
     }
-    
+
     /**
      * Return a list of the most general forms of built-in aggregate functions.
      * <br/>count(*) - is not included
      * <br/>textagg - is not included due to its non standard syntax
-     * 
+     *
      * @param includeAnalytic - true to include analytic functions that must be windowed
      * @return
      */

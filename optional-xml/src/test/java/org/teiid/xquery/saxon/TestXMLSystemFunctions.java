@@ -57,12 +57,12 @@ import net.sf.saxon.trans.XPathException;
 
 @SuppressWarnings("nls")
 public class TestXMLSystemFunctions {
-	
+
     public String getContentOfTestFile( final String testFilePath ) throws IOException {
         final File file = UnitTestUtil.getTestDataFile(testFilePath);
         return ObjectConverterUtil.convertFileToString(file);
     }
-    
+
     public String helpTestXpathValue(final String xmlFilePath, final String xpath, final String expected) throws XPathException, TeiidProcessingException, IOException {
         final String actual = helpGetNode(xmlFilePath,xpath);
         assertEquals(expected,actual);
@@ -116,16 +116,16 @@ public class TestXMLSystemFunctions {
         String value = XMLFunctions.xpathValue(doc, xpath);
         assertNull(value);
     }
-    
+
     @Test(expected=XPathException.class) public void testBadXPath() throws Exception {
         String doc = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>"; //$NON-NLS-1$
         String xpath = ":BOGUS:"; //$NON-NLS-1$
         XMLFunctions.xpathValue(doc, xpath);
     }
-    
+
     @Test(expected=TeiidProcessingException.class) public void testValidateXpath_Defect15088() throws Exception {
         // Mismatched tick and quote
-        final String xpath = "//*[local-name()='bookName\"]"; //$NON-NLS-1$       
+        final String xpath = "//*[local-name()='bookName\"]"; //$NON-NLS-1$
         XMLFunctions.validateXpath(xpath);
     }
 
@@ -163,7 +163,7 @@ public class TestXMLSystemFunctions {
         final String xpath = "//*[local-name()=\"ReadOnly\"]"; //$NON-NLS-1$
         helpTestXpathValue(xmlFilePath,xpath, "false"); //$NON-NLS-1$
     }
-    
+
     /**
      * * is no longer valid to match the namespace
      */
@@ -172,11 +172,11 @@ public class TestXMLSystemFunctions {
         final String xpath = "//*:ReadOnly"; //$NON-NLS-1$
         helpTestXpathValue(xmlFilePath,xpath, "false"); //$NON-NLS-1$
     }
-    
+
 	@Test public void testAtomicValueTimestamp() throws Exception {
 		assertEquals("1910-04-01T07:01:02.000055Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createTimestamp(10, 3, 1, 1, 1, 2, 55001)).getStringValue());
     }
-	
+
 	@Test public void testAtomicValueTime() throws Exception {
 		assertEquals("16:03:01Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createTime(10, 3, 1)).getStringValue());
     }
@@ -184,26 +184,26 @@ public class TestXMLSystemFunctions {
 	@Test public void testAtomicValueDate() throws Exception {
 		assertEquals("1920-03-03Z", XQueryEvaluator.convertToAtomicValue(TimestampUtil.createDate(20, 2, 3)).getStringValue());
     }
-	
+
 	@Test public void testNameEscaping() throws Exception {
 		assertEquals("_x003A_b", XMLFunctions.escapeName(":b", true));
     }
-	
+
 	@Test public void testNameEscaping1() throws Exception {
 		assertEquals("a_x005F_x", XMLFunctions.escapeName("a_x", true));
 		assertEquals("_", XMLFunctions.escapeName("_", true));
         assertEquals("_a", XMLFunctions.escapeName("_a", true));
     }
-	
+
 	@Test public void testNameEscaping2() throws Exception {
 		assertEquals("_x000A_", XMLFunctions.escapeName(new String(new char[] {10}), true));
     }
-	
+
 	@Test public void testNameEscaping3() throws Exception {
         assertEquals("𐀀", XMLFunctions.escapeName("𐀀", true));
         assertEquals("_x0F1000_", XMLFunctions.escapeName(new String(Character.toChars(0xF1000)), true));
     }
-	
+
 	@Test public void testJsonToXml() throws Exception {
 		String json = "[0,{\"1\":{\"2\":{\"3\":{\"4\":[5,{\"6\":7}]}}}}]";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Array xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Array xsi:type=\"decimal\">0</Array><Array><_x0031_><_x0032_><_x0033_><_x0034_ xsi:type=\"decimal\">5</_x0034_><_x0034_><_x0036_ xsi:type=\"decimal\">7</_x0036_></_x0034_></_x0033_></_x0032_></_x0031_></Array></Array>";
@@ -222,34 +222,34 @@ public class TestXMLSystemFunctions {
 		xml = XMLSystemFunctions.jsonToXml(cc, rootName, new SerialBlob(json.getBytes(Charset.forName("UTF-32BE"))));
 		assertEquals(expected, xml.getString());
 	}
-	
+
 	@Test public void testJsonToXml1() throws Exception {
 		String json = "{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
-		         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }"; 
+		         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><firstName>John</firstName><lastName>Smith</lastName><age xsi:type=\"decimal\">25</age><address><streetAddress>21 2nd Street</streetAddress><city>New York</city><state>NY</state><postalCode>10021</postalCode></address><phoneNumber><type>home</type><number>212 555-1234</number></phoneNumber><phoneNumber><type>fax</type><number>646 555-4567</number></phoneNumber></Person>";
 		helpTestJson(json, "Person", expected);
 	}
-	
+
 	@Test public void testJsonToXml2() throws Exception {
-		String json = "{ \"firstName\": null }"; 
+		String json = "{ \"firstName\": null }";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><firstName xsi:nil=\"true\"></firstName></Person>";
 		helpTestJson(json, "Person", expected);
 	}
-	
+
 	@Test public void testJsonToXml3() throws Exception {
-		String json = "{ \"kids\":[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]}"; 
+		String json = "{ \"kids\":[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]}";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></Person>";
 		helpTestJson(json, "Person", expected);
 	}
-	
+
 	@Test public void testJsonToXml4() throws Exception {
-		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]]}"; 
+		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }, { \"firstName\" : \"Jerry\" }]]}";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><kids><firstName>George</firstName></kids><kids><firstName>Jerry</firstName></kids></kids></Person>";
 		helpTestJson(json, "Person", expected);
 	}
-	
+
 	@Test public void testJsonToXml4a() throws Exception {
-		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }], [{ \"firstName\" : \"Jerry\" }]]}"; 
+		String json = "{ \"kids\":[[{ \"firstName\" : \"George\" }], [{ \"firstName\" : \"Jerry\" }]]}";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><kids><kids><firstName>George</firstName></kids></kids><kids><kids><firstName>Jerry</firstName></kids></kids></Person>";
 		helpTestJson(json, "Person", expected);
 	}
@@ -259,11 +259,11 @@ public class TestXMLSystemFunctions {
 	 * @throws Exception
 	 */
 	@Test public void testJsonToXml5() throws Exception {
-		String json = "[[],{\"x\": 1},[]]"; 
+		String json = "[[],{\"x\": 1},[]]";
 		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Person xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><Person></Person><Person><x xsi:type=\"decimal\">1</x></Person><Person></Person></Person>";
 		helpTestJson(json, "Person", expected);
 	}
-	
+
 	@Test public void testRepairingNamespaces() throws Exception {
 		XMLOutputFactory factory = XMLSystemFunctions.getOutputFactory(true);
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -271,7 +271,7 @@ public class TestXMLSystemFunctions {
 		XMLEventReader reader = XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a xmlns:x=\"http://foo\"><b x:y=\"1\"/></a>"));
 		reader.nextTag();
 		reader = XMLType.getXmlInputFactory().createFilteredReader(reader, new EventFilter() {
-			
+
 			@Override
 			public boolean accept(XMLEvent arg0) {
 				if (arg0.isStartDocument() || arg0.isEndDocument()) {
@@ -287,11 +287,11 @@ public class TestXMLSystemFunctions {
 		writer.close();
 		assertEquals("<b xmlns=\"\" xmlns:x=\"http://foo\" x:y=\"1\"></b>", new String(baos.toByteArray(), "UTF-8"));
 	}
-	
+
 	@BeforeClass static public void setUpOnce() {
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-6:00"));
 	}
-	
+
 	@AfterClass static public void tearDownOnce() {
 		TimeZone.setDefault(null);
 	}

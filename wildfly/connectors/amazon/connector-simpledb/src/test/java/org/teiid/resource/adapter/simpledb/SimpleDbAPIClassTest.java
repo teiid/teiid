@@ -59,7 +59,7 @@ public class SimpleDbAPIClassTest {
         assertEquals(resultList, simpleDbApi.getDomains());
     }
 
-    @Test 
+    @Test
     public void getAttributeNamesTest() throws Exception {
 
         DomainMetadataResult metadataResult = mock(DomainMetadataResult.class);
@@ -80,8 +80,8 @@ public class SimpleDbAPIClassTest {
 
         assertEquals("c", simpleDbApi.getAttributeNames("x").iterator().next().getName());
     }
-    
-    @Test 
+
+    @Test
     public void testAddNullAttribute() throws Exception {
     	ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
     	simpleDbApi.addAttribute("x", null, attributes);

@@ -21,7 +21,7 @@ package org.teiid.transport;
 import java.io.Serializable;
 
 
-/** 
+/**
  * Data holder for statistics about the server-side SocketListener.
  * @since 4.3
  */
@@ -29,7 +29,7 @@ public class SocketListenerStats implements Serializable {
 
     public long objectsRead = 0;
     public long objectsWritten = 0;
-    
+
     public int sockets = 0;
     public int maxSockets = 0;
 }

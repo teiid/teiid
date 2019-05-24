@@ -26,18 +26,18 @@ import org.teiid.core.types.GeometryType;
 import org.teiid.query.function.GeometryHelper;
 
 public class GeometryHelperImpl extends GeometryHelper {
-    
+
     @Override
     public Geometry transform(CommandContext ctx, Geometry jtsGeomSrc, int srid) throws FunctionExecutionException {
         return GeometryTransformUtils.transform(ctx, jtsGeomSrc, srid);
     }
-    
+
     @Override
-    public boolean isLatLong(CommandContext ctx, int srid) 
+    public boolean isLatLong(CommandContext ctx, int srid)
             throws FunctionExecutionException {
         return GeometryTransformUtils.isLatLong(ctx, srid);
     }
-    
+
     @Override
     public ClobType geometryToGeoJson(GeometryType object) throws FunctionExecutionException {
         return GeometryJsonUtils.geometryToGeoJson(object);

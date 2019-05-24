@@ -33,5 +33,5 @@ public class TestEqualityOnly {
 		TestOptimizer.helpPlan("select x from t where x > 'b'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
 		TestOptimizer.helpPlan("select x from t where x like 'c%'", tm, new String[] {"SELECT g_0.x FROM y.t AS g_0"});
 	}
-	
+
 }

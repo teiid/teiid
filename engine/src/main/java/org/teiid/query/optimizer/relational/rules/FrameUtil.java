@@ -61,11 +61,11 @@ import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 
 public class FrameUtil {
 
-    public static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata) 
+    public static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata)
         throws QueryPlannerException {
 
         PlanNode current = startNode;
-        
+
         //correct the partition info keys
         if (oldGroup != null && newGroups != null && newGroups.size() == 1 && startNode.getType() == NodeConstants.Types.SOURCE) {
             Map<ElementSymbol, List<Set<Constant>>> partitionInfo = (Map<ElementSymbol, List<Set<Constant>>>)startNode.getProperty(Info.PARTITION_INFO);
@@ -73,9 +73,9 @@ public class FrameUtil {
                 startNode.setProperty(Info.PARTITION_INFO, RelationalPlanner.remapPartitionInfo(newGroups.iterator().next(), partitionInfo));
             }
         }
-        
+
         PlanNode endNode = NodeEditor.findParent(startNode.getType()==NodeConstants.Types.SOURCE?startNode.getParent():startNode, NodeConstants.Types.SOURCE);
-        
+
         boolean rewrite = false;
         if (newGroups != null && newGroups.size() == 1) {
         	for (Expression expression : (Collection<Expression>)symbolMap.values()) {
@@ -87,14 +87,14 @@ public class FrameUtil {
         } else {
         	rewrite = true;
         }
-        
-        while(current != endNode) { 
-            
+
+        while(current != endNode) {
+
             // Make translations as defined in node in each current node
             convertNode(current, oldGroup, newGroups, symbolMap, metadata, rewrite);
-            
-            PlanNode parent = current.getParent(); 
-            
+
+            PlanNode parent = current.getParent();
+
             //check if this is not the first set op branch
             if (parent != null && parent.getType() == NodeConstants.Types.SET_OP && parent.getFirstChild() != current) {
                 return;
@@ -103,7 +103,7 @@ public class FrameUtil {
             // Move up the tree
             current = parent;
         }
-                
+
         if(endNode == null) {
             return;
         }
@@ -111,17 +111,17 @@ public class FrameUtil {
     }
 
 	static void correctSymbolMap(Map symbolMap, PlanNode endNode) {
-		// Top of a frame - fix symbol mappings on endNode      
+		// Top of a frame - fix symbol mappings on endNode
         SymbolMap parentSymbolMap = (SymbolMap) endNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
         if(parentSymbolMap == null) {
             return;
         }
-        
+
         for (Map.Entry<ElementSymbol, Expression> entry : parentSymbolMap.asUpdatableMap().entrySet()) {
 			entry.setValue(convertExpression(entry.getValue(), symbolMap));
 		}
 	}
-    
+
     static boolean canConvertAccessPatterns(PlanNode sourceNode) {
         List<AccessPattern> accessPatterns = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         if (accessPatterns == null) {
@@ -141,7 +141,7 @@ public class FrameUtil {
         return true;
     }
 
-    /** 
+    /**
      * @param symbolMap
      * @param node
      * @throws QueryPlannerException
@@ -169,22 +169,22 @@ public class FrameUtil {
             Collections.sort(accessPatterns);
         }
     }
-        
-    // If newGroup == null, this will be performing a straight symbol swap - that is, 
-    // an oldGroup is undergoing a name change and that is the only difference in the 
-    // symbols.  In that case, some additional work can be done because we can assume 
-    // that an oldElement isn't being replaced by an expression using elements from 
-    // multiple new groups.  
+
+    // If newGroup == null, this will be performing a straight symbol swap - that is,
+    // an oldGroup is undergoing a name change and that is the only difference in the
+    // symbols.  In that case, some additional work can be done because we can assume
+    // that an oldElement isn't being replaced by an expression using elements from
+    // multiple new groups.
     static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata, boolean rewrite)
         throws QueryPlannerException {
-    	
+
     	if (node.getType() == NodeConstants.Types.GROUP) {
     		correctSymbolMap(symbolMap, node);
     	}
 
         // Convert expressions from correlated subquery references;
         List<SymbolMap> refMaps = node.getAllReferences();
-        LinkedList<Expression> correlatedExpression = new LinkedList<Expression>(); 
+        LinkedList<Expression> correlatedExpression = new LinkedList<Expression>();
         for (SymbolMap refs : refMaps) {
         	for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
 	            Expression expr = ref.getValue();
@@ -194,15 +194,15 @@ public class FrameUtil {
 	        }
         }
 
-        // Update groups for current node   
-        Set<GroupSymbol> groups = node.getGroups();  
-        
+        // Update groups for current node
+        Set<GroupSymbol> groups = node.getGroups();
+
         boolean hasOld = groups.remove(oldGroup);
 
         int type = node.getType();
-        
+
         boolean singleMapping = newGroups != null && newGroups.size() == 1;
-        
+
         if(singleMapping) {
             if (!hasOld) {
                 return;
@@ -215,19 +215,19 @@ public class FrameUtil {
         } else {
         	groups.clear();
         }
-        
+
     	groups.addAll(GroupsUsedByElementsVisitor.getGroups(correlatedExpression));
-        
-        if(type == NodeConstants.Types.SELECT) { 
+
+        if(type == NodeConstants.Types.SELECT) {
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             crit = convertCriteria(crit, symbolMap, metadata, rewrite);
             node.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
-            
+
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(crit, groups);
             }
-                            
-        } else if(type == NodeConstants.Types.PROJECT) {                    
+
+        } else if(type == NodeConstants.Types.PROJECT) {
             List<Expression> projectedSymbols = (List<Expression>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
             Select select = new Select(projectedSymbols);
             ExpressionMappingVisitor.mapExpressions(select, symbolMap);
@@ -240,7 +240,7 @@ public class FrameUtil {
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(select, groups);
             }
-        } else if(type == NodeConstants.Types.JOIN) { 
+        } else if(type == NodeConstants.Types.JOIN) {
             // Convert join criteria property
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
             if(joinCrits != null && !joinCrits.isEmpty()) {
@@ -254,10 +254,10 @@ public class FrameUtil {
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCrits);
             	}
             }
-            
+
             convertAccessPatterns(symbolMap, node);
-        
-        } else if(type == NodeConstants.Types.SORT) { 
+
+        } else if(type == NodeConstants.Types.SORT) {
         	OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
             ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap);
             if (rewrite) {
@@ -268,7 +268,7 @@ public class FrameUtil {
             if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }
-        } else if(type == NodeConstants.Types.GROUP) {  
+        } else if(type == NodeConstants.Types.GROUP) {
         	List<Expression> groupCols = (List<Expression>)node.getProperty(NodeConstants.Info.GROUP_COLS);
             if (groupCols != null) {
                 GroupBy groupBy= new GroupBy(groupCols);
@@ -277,7 +277,7 @@ public class FrameUtil {
                 if (!singleMapping) {
                     GroupsUsedByElementsVisitor.getGroups(groupBy, groups);
                 }
-            }               
+            }
             if (!singleMapping) {
                 //add back the anon group
                 SymbolMap property = (SymbolMap)node.getProperty(Info.SYMBOL_MAP);
@@ -295,7 +295,7 @@ public class FrameUtil {
 		try {
 			if (ses instanceof AliasSymbol) {
 				ses = ((AliasSymbol)ses).getSymbol();
-			} 
+			}
 			if (ses instanceof ExpressionSymbol) {
 				ExpressionSymbol es = (ExpressionSymbol)ses;
 				if (es.getExpression() != null) {
@@ -308,14 +308,14 @@ public class FrameUtil {
 			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30263, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30263, ses));
 		}
 	}
-    
+
     private static Expression convertExpression(Expression expression, Map symbolMap) {
-        
+
         if (expression == null || expression instanceof Constant) {
             return expression;
         }
-        
-        if(expression instanceof Expression) { 
+
+        if(expression instanceof Expression) {
             Expression mappedSymbol = (Expression) symbolMap.get(expression);
             if (mappedSymbol != null) {
                 return mappedSymbol;
@@ -324,17 +324,17 @@ public class FrameUtil {
             	return expression;
             }
         }
-                
+
         ExpressionMappingVisitor.mapExpressions(expression, symbolMap);
-        
+
         return expression;
-    }   
-        
+    }
+
     static Criteria convertCriteria(Criteria criteria, final Map symbolMap, QueryMetadataInterface metadata, boolean rewrite)
         throws QueryPlannerException {
 
         ExpressionMappingVisitor.mapExpressions(criteria, symbolMap);
-        
+
         if (!rewrite) {
         	return criteria;
         }
@@ -350,9 +350,9 @@ public class FrameUtil {
 
     /**
      * creates a symbol map of elements in oldGroup mapped to corresponding elements in newGroup
-     * 
+     *
      * if newGroup is null, then a mapping of oldGroup elements to null constants will be returned
-     *  
+     *
      * @param oldGroup
      * @param newGroup
      * @param metadata
@@ -360,14 +360,14 @@ public class FrameUtil {
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
-    public static LinkedHashMap<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata) 
+    public static LinkedHashMap<ElementSymbol, Expression> buildSymbolMap(GroupSymbol oldGroup, GroupSymbol newGroup, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
 
-    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();    
+    	LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
 
         // Get elements of old group
         List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(oldGroup, metadata);
-        
+
         for (ElementSymbol oldElementSymbol : elements) {
             Expression symbol = null;
             if (newGroup != null) {
@@ -377,21 +377,21 @@ public class FrameUtil {
             } else {
                 symbol = new Constant(null, oldElementSymbol.getType());
             }
-            
+
             // Update map
-            map.put(oldElementSymbol, symbol);                
+            map.put(oldElementSymbol, symbol);
         }
-        
+
         return map;
     }
-    
+
     /**
      * Find the SOURCE, SET_OP, JOIN, or NULL node that originates the given groups (typically from a criteria node).
      * In the case of join nodes the best fit will be found rather than just the first
-     * join node that contains all the groups. 
+     * join node that contains all the groups.
      *
      * Returns null if the originating node cannot be found.
-     * 
+     *
      * @param root
      * @param groups
      * @return
@@ -399,14 +399,14 @@ public class FrameUtil {
     static PlanNode findOriginatingNode(PlanNode root, Set<GroupSymbol> groups) {
         return findOriginatingNode(root, groups, false);
     }
-    
+
     /**
-     * 
+     *
      * Find the ACCESS, SOURCE, SET_OP, JOIN, or NULL node that originates the given groups, but will stop at the
      * first join node rather than searching for the best fit.
-     * 
+     *
      * Returns null if the originating node cannot be found.
-     * 
+     *
      * @param root
      * @param groups
      * @return
@@ -414,33 +414,33 @@ public class FrameUtil {
     public static PlanNode findJoinSourceNode(PlanNode root) {
         return findOriginatingNode(root, root.getGroups(), true);
     }
-    
+
     private static PlanNode findOriginatingNode(PlanNode root, Set<GroupSymbol> groups, boolean joinSource) {
         boolean containsGroups = false;
-        
+
     	if((root.getType() & (NodeConstants.Types.NULL | NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP | NodeConstants.Types.GROUP)) == root.getType() ||
                         (joinSource && root.getType() == NodeConstants.Types.ACCESS)) {
-    	    
+
             //if there are no groups then the first possible match is the one we want
             if(groups.isEmpty()) {
                return root;
             }
-            
+
             containsGroups = root.getGroups().containsAll(groups);
-            
+
             if (containsGroups) {
                 //if this is a group, source, or set op we're done, else if join make sure the groups match
                 if (root.getType() != NodeConstants.Types.JOIN || joinSource || root.getGroups().size() == groups.size()) {
                     return root;
                 }
             }
-            
+
             //check to see if a recursion is not necessary
             if (root.getType() != NodeConstants.Types.JOIN || joinSource || !containsGroups) {
                 return null;
             }
         }
-    
+
     	// Check children, left to right
     	for (PlanNode child : root.getChildren()) {
     		PlanNode found = findOriginatingNode(child, groups, joinSource);
@@ -448,20 +448,20 @@ public class FrameUtil {
     			return found;
     		}
     	}
-        
+
         //look for best fit instead after visiting children
         if(root.getType() == NodeConstants.Types.JOIN && containsGroups) {
             return root;
         }
-        
+
     	// Not here
     	return null;
     }
-    
+
     /**
      * Replaces the given node with a NULL node.  This will also preserve
-     * the groups that originate under the node on the NULL node 
-     *  
+     * the groups that originate under the node on the NULL node
+     *
      * @param node
      */
     static void replaceWithNullNode(PlanNode node) {
@@ -476,7 +476,7 @@ public class FrameUtil {
     /**
      * Look for SOURCE node either one or two steps below the access node.  Typically
      * these options look like ACCESS-SOURCE or ACCESS-PROJECT-SOURCE.
-     * 
+     *
      * @param accessNode
      * @return
      */
@@ -486,7 +486,7 @@ public class FrameUtil {
     	if (plan != null) {
     		return plan;
     	}
-        PlanNode sourceNode = accessNode.getFirstChild(); 
+        PlanNode sourceNode = accessNode.getFirstChild();
         if (sourceNode == null) {
         	return null;
         }
@@ -496,7 +496,7 @@ public class FrameUtil {
         if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE) {
             return (ProcessorPlan) sourceNode.getProperty(NodeConstants.Info.PROCESSOR_PLAN);
         }
-        return null;            
+        return null;
     }
 
     /**
@@ -513,16 +513,16 @@ public class FrameUtil {
         }
         if(sourceNode.getType() != NodeConstants.Types.SOURCE) {
             sourceNode = sourceNode.getFirstChild();
-        } 
+        }
         if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0) {
             Command command = (Command) sourceNode.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
             if(! (command instanceof QueryCommand)) {
                 return command;
-            }                
+            }
         }
         return null;
     }
-    
+
     static boolean isProcedure(PlanNode projectNode) {
         if(projectNode != null && projectNode.getType() == NodeConstants.Types.PROJECT && projectNode.getChildCount() > 0) {
             PlanNode accessNode = projectNode.getFirstChild();
@@ -531,7 +531,7 @@ public class FrameUtil {
         }
         return false;
     }
-    
+
     /**
      * Finds the closest project columns in the current frame
      */
@@ -546,7 +546,7 @@ public class FrameUtil {
         Assertion.failed("no top cols in frame"); //$NON-NLS-1$
         return null;
     }
-    
+
     public static boolean isOrderedOrStrictLimit(PlanNode node) {
     	return node.getType() == NodeConstants.Types.TUPLE_LIMIT && (NodeEditor.findNodePreOrder(node, NodeConstants.Types.SORT, NodeConstants.Types.PROJECT | NodeConstants.Types.SET_OP) != null || !node.hasBooleanProperty(Info.IS_NON_STRICT));
     }

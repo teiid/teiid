@@ -22,11 +22,11 @@ import org.teiid.metadata.AbstractMetadataRecord;
 
 
 /**
- * This interface is used to mark language objects as having a 
- * reference to a MetadataID.  
+ * This interface is used to mark language objects as having a
+ * reference to a MetadataID.
  */
 public interface MetadataReference<T extends AbstractMetadataRecord> {
 
     T getMetadataObject();
-    
+
 }

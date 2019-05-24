@@ -32,23 +32,23 @@ public class OAuth20CredentialImpl implements OAuthCredential {
     private String accessTokenURI;
     private String accessTokenString;
     private ClientAccessToken accessToken;
-    
+
     @Override
     public String getAuthorizationHeader(String resourceURI, String httpMethod) {
         if (this.accessToken == null || expired(this.accessToken)) {
-            this.accessToken = getAccessToken();            
+            this.accessToken = getAccessToken();
         }
         return "Bearer "+this.accessToken.getTokenKey(); //$NON-NLS-1$
     }
-    
+
     @Override
     public String getAuthrorizationProperty(String key) {
         if (this.accessToken == null || expired(this.accessToken)) {
-            this.accessToken = getAccessToken();            
+            this.accessToken = getAccessToken();
         }
         return this.accessToken.getParameters().get(key);
-    }    
-    
+    }
+
     private boolean expired(ClientAccessToken token) {
         if (token.getExpiresIn() != -1) {
             return (((token.getIssuedAt()+token.getExpiresIn())-System.currentTimeMillis()) < 0);

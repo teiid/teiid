@@ -42,18 +42,18 @@ import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.util.CommandContext;
 
 class SchemaRecordTable extends RecordTable<Schema> {
-	
+
 	public SchemaRecordTable(int pkColumnIndex, List<ElementSymbol> columns) {
 		super(new int[] {0}, columns.subList(pkColumnIndex, pkColumnIndex + 1));
 	}
-	
+
 	protected boolean isValid(Schema s, VDBMetaData vdb, List<Object> rowBuffer, Criteria condition, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 		if (s == null || !vdb.isVisible(s.getName())) {
 			return false;
 		}
 		return super.isValid(s, vdb, rowBuffer, condition, commandContext);
 	}
-	
+
 	@Override
 	public SimpleIterator<Schema> processQuery(
 			VDBMetaData vdb, CompositeMetadataStore metadataStore,
@@ -64,14 +64,14 @@ class SchemaRecordTable extends RecordTable<Schema> {
 }
 
 abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends RecordTable<T> {
-	
+
 	private SchemaRecordTable schemaTable;
-	
+
 	public SchemaChildRecordTable(int schemaPkColumnIndex, int tablePkColumnIndex, List<ElementSymbol> columns) {
 		super(new int[] {0}, columns.subList(tablePkColumnIndex, tablePkColumnIndex + 1));
 		this.schemaTable = new SchemaRecordTable(schemaPkColumnIndex, columns);
 	}
-	
+
 	@Override
 	public SimpleIterator<T> processQuery(
 			final VDBMetaData vdb, final CompositeMetadataStore metadataStore,
@@ -85,7 +85,7 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 			}
 		};
 	}
-	
+
 	@Override
 	public BaseIndexInfo<RecordTable<?>> planQuery(Query query,
 			Criteria condition, CommandContext context) {
@@ -93,14 +93,14 @@ abstract class SchemaChildRecordTable<T extends AbstractMetadataRecord> extends 
 		ii.next = super.planQuery(query, ii.getNonCoveredCriteria(), context);
 		return ii;
 	}
-	
+
 	@Override
 	protected void fillRow(T s, List<Object> rowBuffer) {
 		rowBuffer.add(s.getName());
 	}
-	
+
 	protected abstract NavigableMap<String, T> getChildren(Schema s, TransformationMetadata metadata);
-	
+
 }
 
 class ProcedureSystemTable extends SchemaChildRecordTable<Procedure> {

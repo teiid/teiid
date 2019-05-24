@@ -26,11 +26,11 @@ public class ParseException extends MetadataException {
 	public ParseException(Event event, Throwable cause) {
 		super(event, cause);
 	}
-	
+
 	public ParseException(Event event, String message) {
 		super(event, message);
 	}
-	
+
 	public ParseException(String message) {
 		super(message);
 	}

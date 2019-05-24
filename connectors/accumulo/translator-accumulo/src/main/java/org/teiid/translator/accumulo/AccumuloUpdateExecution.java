@@ -59,7 +59,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	private AccumuloExecutionFactory aef;
 	private int updateCount = 0;
 	private ExecutionContext executionContext;
-	
+
 	public AccumuloUpdateExecution(AccumuloExecutionFactory aef, Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			AccumuloConnection connection) {
@@ -94,10 +94,10 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 	private void performInsert(Insert insert) throws TranslatorException, TableNotFoundException, MutationsRejectedException {
 		Table table = insert.getTable().getMetadataObject();
 		this.updateCount = 0;
-		
+
 		Connector connector = this.connection.getInstance();
-		BatchWriter writer = createBatchWriter(table, connector);	        	
-		
+		BatchWriter writer = createBatchWriter(table, connector);
+
 		List<ColumnReference> columns = insert.getColumns();
 		if (insert.getParameterValues() == null) {
 			List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
@@ -106,13 +106,13 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		}
 		else {
 			int batchSize = this.executionContext.getBatchSize();
-			// bulk insert; should help 
+			// bulk insert; should help
 			Iterator<? extends List<Expression>> args = (Iterator<? extends List<Expression>>) insert.getParameterValues();
 			while (args.hasNext()) {
 				List<Expression> values = args.next();
 				writeMutation(writer, columns, values);
 				this.updateCount++;
-				
+
 				if ((this.updateCount%batchSize) == 0) {
 					writer.close();
 					writer = createBatchWriter(table, connector);
@@ -123,12 +123,12 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		writer.close();
 	}
 
-	private void writeMutation(BatchWriter writer, List<ColumnReference> columns, List<Expression> values) 
+	private void writeMutation(BatchWriter writer, List<ColumnReference> columns, List<Expression> values)
 	        throws MutationsRejectedException, TranslatorException {
 		byte[] rowId = getRowId(columns, values);
 		Mutation mutation = new Mutation(rowId);
 		for (int i = 0; i < columns.size(); i++) {
-			Column column = columns.get(i).getMetadataObject();			
+			Column column = columns.get(i).getMetadataObject();
 			if (SQLStringVisitor.getRecordName(column).equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
 				continue;
 			}
@@ -142,16 +142,16 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		}
 		writer.addMutation(mutation);
 	}
-	
+
     private void performUpdate(Update update) throws TranslatorException,
             TableNotFoundException, MutationsRejectedException {
 		Table table = update.getTable().getMetadataObject();
 
 		if (update.getParameterValues() != null) {
-			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005, 
-			        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));			
+			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005,
+			        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));
 		}
-		
+
 		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.aef);
 		visitor.visitNode(update.getWhere());
 		if (!visitor.exceptions.isEmpty()) {
@@ -159,14 +159,14 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		}
 
 		Connector connector = this.connection.getInstance();
-		BatchWriter writer = createBatchWriter(table, connector);	        	
-		
+		BatchWriter writer = createBatchWriter(table, connector);
+
 		Text prevRow = null;
         Iterator<Entry<Key, Value>> results = AccumuloQueryExecution.runQuery(
                 this.aef, this.connection.getInstance(),
                 this.connection.getAuthorizations(), visitor.getRanges(),
                 table, visitor.scanIterators());
-        
+
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
@@ -180,7 +180,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 					if (SQLStringVisitor.getRecordName(column).equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
                         throw new TranslatorException(
                                 AccumuloPlugin.Event.TEIID19002,
-                                AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19002,table.getName())); 
+                                AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19002,table.getName()));
 					}
 					Expression value = clause.getValue();
 					if (value instanceof Literal) {
@@ -218,29 +218,29 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		}
 		return writer;
 	}
-	
+
 	private void performDelete(Delete delete) throws TableNotFoundException, MutationsRejectedException, TranslatorException {
-		
+
 		if (delete.getParameterValues() != null) {
-			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));			
+			throw new TranslatorException(AccumuloPlugin.Event.TEIID19005, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19005));
 		}
-		
+
 		Table table = delete.getTable().getMetadataObject();
 		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor(this.aef);
 		visitor.visitNode(delete.getWhere());
 		if (!visitor.exceptions.isEmpty()) {
 			throw visitor.exceptions.get(0);
 		}
-		
+
 		/*
 		// To get the update count I am taking longer route..
 		Connector connector = this.connection.getInstance();
-		BatchDeleter deleter = connector.createBatchDeleter(SQLStringVisitor.getRecordName(table), auths, this.aef.getQueryThreadsCount(), new BatchWriterConfig());	        	
+		BatchDeleter deleter = connector.createBatchDeleter(SQLStringVisitor.getRecordName(table), auths, this.aef.getQueryThreadsCount(), new BatchWriterConfig());
 		deleter.setRanges(visitor.getRanges());
 		deleter.delete();
 		deleter.close();
 		*/
-		
+
 		Text prevRow = null;
 		Connector connector = this.connection.getInstance();
 		BatchWriter writer = createBatchWriter(table, connector);
@@ -258,8 +258,8 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			writer.addMutation(mutation);
 		}
 		writer.close();
-	}	
-	
+	}
+
 	private byte[] getRowId(List<ColumnReference> columns, List<Expression> values) throws TranslatorException{
 		for (int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
@@ -269,13 +269,13 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 				if (value instanceof Literal) {
 					return AccumuloDataTypeManager.serialize(((Literal)value).getValue());
 				}
-				throw new TranslatorException(AccumuloPlugin.Event.TEIID19006, 
+				throw new TranslatorException(AccumuloPlugin.Event.TEIID19006,
 				        AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19006));
 			}
-		}		
+		}
 		return null;
 	}
-	
+
 	private void buildMutation(Mutation mutation, Column column, Object value) {
 		String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
 		String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
@@ -283,11 +283,11 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		if (valuePattern == null) {
 			valuePattern = AccumuloMetadataProcessor.DEFAULT_VALUE_PATTERN;
 		}
-		
+
 		byte[] columnFamily = CF.getBytes();
 		byte[] columnQualifier = (CQ == null)?AccumuloDataTypeManager.EMPTY_BYTES:CQ.getBytes();
 		byte[] columnValue = AccumuloDataTypeManager.EMPTY_BYTES;
-		
+
 		valuePattern = valuePattern.substring(1, valuePattern.length()-1); // remove the curleys
 		if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
 			columnValue = AccumuloDataTypeManager.serialize(value);
@@ -296,7 +296,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			columnQualifier = AccumuloDataTypeManager.serialize(value);
 		}
 		mutation.put(columnFamily, columnQualifier, columnValue);
-	}	
+	}
 
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {

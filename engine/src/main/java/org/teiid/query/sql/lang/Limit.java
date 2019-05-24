@@ -28,51 +28,51 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class Limit implements LanguageObject {
-	
+
 	public static String NON_STRICT = "NON_STRICT"; //$NON-NLS-1$
-    
+
     private Expression offset;
     private Expression rowLimit;
     private boolean implicit;
     private boolean strict = true;
-    
+
     public Limit(Expression offset, Expression rowLimit) {
         this.offset = offset;
         this.rowLimit = rowLimit;
     }
-    
+
     private Limit() {
-    	
+
     }
-    
+
     public void setStrict(boolean strict) {
 		this.strict = strict;
 	}
-    
+
     public boolean isStrict() {
 		return strict;
 	}
-    
+
     public boolean isImplicit() {
 		return implicit;
 	}
-    
+
     public void setImplicit(boolean implicit) {
 		this.implicit = implicit;
 	}
-    
+
     public Expression getOffset() {
         return offset;
     }
-    
+
     public void setOffset(Expression offset) {
         this.offset = offset;
     }
-    
+
     public Expression getRowLimit() {
         return rowLimit;
     }
-    
+
     public void setRowLimit(Expression rowLimit ) {
         this.rowLimit = rowLimit;
     }
@@ -80,7 +80,7 @@ public class Limit implements LanguageObject {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public int hashCode() {
         int h = HashCodeUtil.hashCode(0, offset);
         return HashCodeUtil.hashCode(h, rowLimit);
@@ -99,7 +99,7 @@ public class Limit implements LanguageObject {
         }
         return EquivalenceUtil.areEqual(this.rowLimit, other.rowLimit);
     }
-    
+
     public Limit clone() {
         Limit clone = new Limit();
         clone.implicit = this.implicit;
@@ -112,7 +112,7 @@ public class Limit implements LanguageObject {
         }
         return clone;
     }
-    
+
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }

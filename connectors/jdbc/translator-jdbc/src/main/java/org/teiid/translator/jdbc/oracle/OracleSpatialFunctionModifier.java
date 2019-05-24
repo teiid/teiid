@@ -49,15 +49,15 @@ public class OracleSpatialFunctionModifier extends FunctionModifier {
         objs.add(")"); //$NON-NLS-1$
         return objs;
     }
-	
+
 	protected void addParamWithConversion(List<Object> objs,
                                           Expression expression) {
-		if ((expression instanceof Literal) 
+		if ((expression instanceof Literal)
 				&& (((Literal) expression).getValue() instanceof String)) {
 			objs.add(((Literal) expression).getValue());
 		} else {
 			objs.add(expression);
 		}
     }
-    
+
 }

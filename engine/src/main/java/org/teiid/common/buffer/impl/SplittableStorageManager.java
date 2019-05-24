@@ -29,45 +29,45 @@ import org.teiid.core.TeiidComponentException;
 /**
  * A storage manager that combines smaller files into a larger
  * logical file.
- * 
+ *
  * The buffer methods assume that buffers cannot go beyond single
  * file boundaries.
  */
 public class SplittableStorageManager implements StorageManager {
-	
-	public static final long DEFAULT_MAX_FILESIZE = 2 * 1024l;
-    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024l * 1024l; // 2GB
+
+	public static final long DEFAULT_MAX_FILESIZE = 2 * 1024L;
+    private long maxFileSize = DEFAULT_MAX_FILESIZE * 1024L * 1024L; // 2GB
 	private StorageManager storageManager;
-	
+
 	public SplittableStorageManager(StorageManager storageManager) {
 		this.storageManager = storageManager;
 	}
-	
+
 	@Override
 	public FileStore createFileStore(String name) {
 		return new SplittableFileStore(name);
 	}
-	
+
 	@Override
 	public void initialize() throws TeiidComponentException {
 		storageManager.initialize();
 	}
-	
+
 	public class SplittableFileStore extends FileStore {
 	    private String name;
 		private List<FileStore> storageFiles = new ArrayList<FileStore>();
-		
+
 		private volatile long len;
-	    
+
 	    public SplittableFileStore(String name) {
 			this.name = name;
 		}
-	    
+
 	    @Override
 	    public long getLength() {
 	    	return len;
 	    }
-	    
+
 	    @Override
 	    protected int readWrite(long fileOffset, byte[] b, int offSet,
 	    		int length, boolean write) throws IOException {
@@ -112,7 +112,7 @@ public class SplittableStorageManager implements StorageManager {
 			}
 			len = length;
 		}
-		
+
 	    @Override
 	    public synchronized void setLength(long length) throws IOException {
 			if (length > len) {
@@ -134,31 +134,31 @@ public class SplittableStorageManager implements StorageManager {
 			}
 			len = length;
 	    }
-	    
+
 		public synchronized void removeDirect() {
 			for (int i = storageFiles.size() - 1; i >= 0; i--) {
 				this.storageFiles.remove(i).remove();
 			}
 		}
-		
+
 	}
-	
+
     public long getMaxFileSize() {
 		return maxFileSize;
 	}
-	
+
     public void setMaxFileSize(long maxFileSize) {
-    	this.maxFileSize = maxFileSize * 1024l * 1024l;
+    	this.maxFileSize = maxFileSize * 1024L * 1024L;
 	}
-    
+
     public void setMaxFileSizeDirect(long maxFileSize) {
     	this.maxFileSize = maxFileSize;
     }
-    
+
     public StorageManager getStorageManager() {
 		return storageManager;
 	}
-    
+
     @Override
     public long getMaxStorageSpace() {
         return storageManager.getMaxStorageSpace();

@@ -21,7 +21,7 @@ package org.teiid.translator;
 import org.teiid.language.BatchedUpdates;
 
 /**
- * An exception the connector writer can return in case of an 
+ * An exception the connector writer can return in case of an
  * error while executing {@link BatchedUpdates}
  */
 public class TranslatorBatchException extends TranslatorException {
@@ -35,12 +35,12 @@ public class TranslatorBatchException extends TranslatorException {
     public TranslatorBatchException() {
         super();
     }
-    
+
     public TranslatorBatchException( Throwable e, int[] updateCounts ) {
         super(e);
         this.updateCounts = updateCounts;
-    }  
-    
+    }
+
     public int[] getUpdateCounts() {
 		return updateCounts;
 	}

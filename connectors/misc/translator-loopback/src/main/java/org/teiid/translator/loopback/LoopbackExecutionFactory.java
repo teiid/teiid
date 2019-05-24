@@ -42,13 +42,13 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 	private long pollIntervalInMilli = -1;
 	private boolean incrementRows = false;
 	private int charValueSize = 10;
-	
+
 	public LoopbackExecutionFactory() {
 		TeiidExecutionFactory tef = new TeiidExecutionFactory();
 		tef.setDatabaseVersion(ApplicationInfo.getInstance().getReleaseNumber());
 		this.setDelegate(tef);
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		if (this.getDelegateName() == null && this.getDelegate() != null) {
@@ -56,68 +56,68 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 		}
 		super.start();
 	}
-	
+
 	@TranslatorProperty(display="Size of values for CLOB, VARCHAR, etc.", advanced=true)
 	public int getCharacterValuesSize() {
 		return charValueSize;
 	}
-	
+
 	public void setCharacterValuesSize(int charValSize){
 		this.charValueSize = charValSize;
 	}
-	
+
 	@TranslatorProperty(display="If set to true each value in each column is being incremented with each row", advanced=true)
 	public boolean getIncrementRows() {
 		return incrementRows;
-	}	
-	
+	}
+
 	public void setIncrementRows(boolean incrementRows) {
 		this.incrementRows = incrementRows;
-	}	
-	
+	}
+
 	@Override
 	public Object getConnection(Object factory) throws TranslatorException {
 		return null;
 	}
-	
+
 	@Override
 	public Object getConnection(Object factory,
 			ExecutionContext executionContext) throws TranslatorException {
 		return null;
 	}
-	
+
 	@TranslatorProperty(display="Max Random Wait Time", advanced=true)
 	public int getWaitTime() {
 		return waitTime;
 	}
-	
+
 	public void setWaitTime(int waitTime) {
 		this.waitTime = waitTime;
 	}
-	
+
 	@TranslatorProperty(display="Rows Per Query", advanced=true)
 	public int getRowCount() {
 		return rowCount;
 	}
-	
+
 	public void setRowCount(int rowCount) {
 		this.rowCount = rowCount;
 	}
-	
+
 	@TranslatorProperty(display="Always Throw Error")
 	public boolean isThrowError() {
 		return this.throwError;
 	}
-	
+
 	public void setThrowError(boolean error) {
 		this.throwError = error;
 	}
-	
+
 	@TranslatorProperty(display="Poll interval if using a Asynchronous Connector")
 	public long getPollIntervalInMilli() {
 		return this.pollIntervalInMilli;
 	}
-	
+
 	public void setPollIntervalInMilli(long intervel) {
 		this.pollIntervalInMilli = intervel;
 	}
@@ -126,30 +126,30 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
         return new LoopbackExecution(command, this, executionContext);
-    }   
-    
+    }
+
 	@Override
 	public boolean isSourceRequired() {
 		return false;
-	}   
-	
+	}
+
 	@Override
 	public boolean isSourceRequiredForMetadata() {
 		return false;
 	}
-	
+
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Object conn)
 			throws TranslatorException {
 	}
-	
+
 	//override to set as non required
 	@Override
 	@TranslatorProperty(display = "Delegate name", required = false)
 	public String getDelegateName() {
 		return super.getDelegateName();
 	}
-	
+
 	@Override
 	public boolean returnsSingleUpdateCount() {
 		return true;

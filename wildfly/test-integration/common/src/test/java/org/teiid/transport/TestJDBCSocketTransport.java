@@ -80,20 +80,20 @@ public class TestJDBCSocketTransport {
 	static SocketListener jdbcTransport;
 	static FakeServer server;
 	static int delay;
-	
+
 	@BeforeClass public static void oneTimeSetup() throws Exception {
 		SocketConfiguration config = new SocketConfiguration();
 		config.setSSLConfiguration(new SSLConfiguration());
 		addr = new InetSocketAddress(0);
 		config.setBindAddress(addr.getHostName());
 		config.setPortNumber(0);
-		
+
 		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
 		dqpConfig.setMaxActivePlans(2);
 		server = new FakeServer(false);
 		server.start(dqpConfig, false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-		
+
 		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
 			@Override
 			protected SSLAwareChannelHandler createChannelHandler() {
@@ -106,23 +106,23 @@ public class TestJDBCSocketTransport {
                         super.messageReceived(ctx, msg);
                     }
 			    };
-                return result;			    
+                return result;
 		    }
 		};
 		jdbcTransport.setMaxMessageSize(MAX_MESSAGE);
 		jdbcTransport.setMaxLobSize(MAX_LOB);
 
 	}
-	
+
 	@AfterClass public static void oneTimeTearDown() throws Exception {
 		if (jdbcTransport != null) {
 			jdbcTransport.stop();
 		}
 		server.stop();
 	}
-	
+
 	Connection conn;
-	
+
 	@Before public void setUp() throws Exception {
 		toggleInline(true);
 		Properties p = new Properties();
@@ -134,19 +134,19 @@ public class TestJDBCSocketTransport {
 	private void toggleInline(boolean inline) {
 		((BufferManagerImpl)server.getDqp().getBufferManager()).setInlineLobs(inline);
 	}
-	
+
 	@After public void tearDown() throws Exception {
 		if (conn != null) {
 			conn.close();
 		}
 	}
-	
+
 	@Test public void testSelect() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select * from sys.tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet(s.getResultSet());
 	}
-	
+
 	@Test public void testLobStreaming() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select xmlelement(name \"root\") from sys.tables"));
@@ -157,7 +157,7 @@ public class TestJDBCSocketTransport {
 		s.getResultSet().next();
 		assertEquals("<root></root>", s.getResultSet().getString(1));
 	}
-	
+
 	@Test public void testLobStreaming1() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select cast('' as clob) from sys.tables"));
@@ -168,7 +168,7 @@ public class TestJDBCSocketTransport {
 		s.getResultSet().next();
 		assertEquals("", s.getResultSet().getString(1));
 	}
-	
+
 	@Test public void testJsonStreaming() throws Exception {
         Statement s = conn.createStatement();
         assertTrue(s.execute("select jsonParse('5', true) from sys.tables"));
@@ -179,7 +179,7 @@ public class TestJDBCSocketTransport {
         s.getResultSet().next();
         assertEquals("5", s.getResultSet().getString(1));
     }
-	
+
 	@Test public void testVarbinary() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select X'aab1'"));
@@ -188,7 +188,7 @@ public class TestJDBCSocketTransport {
 		assertArrayEquals(new byte[] {(byte)0xaa, (byte)0xb1}, bytes);
 		assertArrayEquals(bytes, s.getResultSet().getBlob(1).getBytes(1, 2));
 	}
-	
+
 	@Test public void testVarbinaryPrepared() throws Exception {
 		PreparedStatement s = conn.prepareStatement("select cast(? as varbinary)");
 		s.setBytes(1, "hello".getBytes());
@@ -197,7 +197,7 @@ public class TestJDBCSocketTransport {
 		byte[] bytes = s.getResultSet().getBytes(1);
 		assertEquals("hello", new String(bytes));
 	}
-	
+
 	@Test public void testLargeVarbinaryPrepared() throws Exception {
 		PreparedStatement s = conn.prepareStatement("select cast(? as varbinary)");
 		s.setBytes(1, new byte[1 << 16]);
@@ -206,7 +206,7 @@ public class TestJDBCSocketTransport {
 		byte[] bytes = s.getResultSet().getBytes(1);
 		assertArrayEquals(new byte[1 << 16], bytes);
 	}
-	
+
 	@Test public void testXmlTableScrollable() throws Exception {
 		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from (select t.* from sys.tables as t, sys.columns as t1 limit 7000) as t) columns \"Name\" string) as x"));
@@ -222,7 +222,7 @@ public class TestJDBCSocketTransport {
 		}
 		assertEquals(0, count);
 	}
-	
+
 	@Test public void testGeneratedKeys() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set showplan debug");
@@ -232,7 +232,7 @@ public class TestJDBCSocketTransport {
 		rs.next();
 		assertEquals(1, rs.getInt(1));
 	}
-	
+
 	/**
 	 * Ensures if you start more than the maxActivePlans
 	 * where all the plans take up more than output buffer limit
@@ -245,7 +245,7 @@ public class TestJDBCSocketTransport {
 			assertTrue(s.execute("select * from sys.columns c1, sys.columns c2"));
 		}
 	}
-	
+
 	/**
 	 * Tests to ensure that a SynchronousTtl/synchTimeout does
 	 * not cause a cancel.
@@ -255,7 +255,7 @@ public class TestJDBCSocketTransport {
 	@Test public void testSyncTimeout() throws Exception {
 		TeiidDriver td = new TeiidDriver();
 		td.setSocketProfile(new ConnectionProfile() {
-			
+
 			@Override
 			public ConnectionImpl connect(String url, Properties info)
 					throws TeiidSQLException {
@@ -291,7 +291,7 @@ public class TestJDBCSocketTransport {
 			server.setConnectorManagerRepository(cmr);
 		}
 	}
-	
+
 	@Test public void testProtocolException() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set showplan debug");
@@ -307,30 +307,30 @@ public class TestJDBCSocketTransport {
 		rs.next();
 		assertEquals(1, rs.getInt(1));
 	}
-	
+
 	@Test public void testStreamingLob() throws Exception {
 		HardCodedExecutionFactory ef = new HardCodedExecutionFactory();
 		ef.addData("SELECT helloworld.x FROM helloworld", Arrays.asList(Arrays.asList(new BlobType(new BinaryWSProcedureExecution.StreamingBlob(new ByteArrayInputStream(new byte[100]))))));
 		server.addTranslator("custom", ef);
 		server.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\"><source name=\"test\" translator-name=\"custom\"/><metadata type=\"DDL\"><![CDATA[CREATE foreign table helloworld (x blob);]]> </metadata></model></vdb>".getBytes("UTF-8")));
 		conn = TeiidDriver.getInstance().connect("jdbc:teiid:test@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), null);
-		
+
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("select to_chars(x, 'UTF-8') from helloworld");
 		rs.next();
 		//TODO: if we use getString streaming will still fail because the string logic gets the length first
 		assertEquals(100, ObjectConverterUtil.convertToCharArray(rs.getCharacterStream(1), -1).length);
 	}
-	
+
     @Test public void testDynamicStatementNoResultset() throws Exception {
         Statement s = conn.createStatement();
-        s.execute("BEGIN\n" + 
-                "       declare clob sql_query = 'select 1';\n" + 
-                "       execute immediate sql_query;\n" + 
+        s.execute("BEGIN\n" +
+                "       declare clob sql_query = 'select 1';\n" +
+                "       execute immediate sql_query;\n" +
                 "END ;");
         assertNull(s.getResultSet());
     }
-	
+
 	@Test public void testArray() throws Exception {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("SELECT (1, (1,2))");
@@ -340,7 +340,7 @@ public class TestJDBCSocketTransport {
 		assertEquals(Types.ARRAY, rs.getMetaData().getColumnType(1));
 		assertEquals("object[]", rs.getMetaData().getColumnTypeName(1));
 	}
-	
+
 	@Test public void testLargeMessage() throws Exception {
 		Statement s = conn.createStatement();
 		StringBuilder sb = new StringBuilder();
@@ -353,13 +353,13 @@ public class TestJDBCSocketTransport {
 			s.executeQuery(sb.toString());
 			fail();
 		} catch (SQLException e) {
-			
+
 		}
 		ResultSet rs = s.executeQuery("select 1");
 		rs.next();
 		assertEquals(1, rs.getInt(1));
 	}
-	
+
 	@Test(expected=TeiidSQLException.class) public void testLoginTimeout() throws SQLException {
 		Properties p = new Properties();
 		p.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, "1");
@@ -370,20 +370,20 @@ public class TestJDBCSocketTransport {
 			delay = 0;
 		}
 	}
-	
+
 	@Test(expected=TeiidSQLException.class) public void testLargeLob() throws Exception {
 		PreparedStatement s = conn.prepareStatement("select to_bytes(?, 'ascii')");
 		s.setCharacterStream(1, new StringReader(new String(new char[200000])));
 		s.execute();
 	}
-	
+
     @Test public void testLobCase() throws Exception {
         Statement s = conn.createStatement();
         s.execute("select ucase(cast('abc' as clob))");
         s.getResultSet().next();
         assertEquals("ABC", s.getResultSet().getString(1));
     }
-	
+
 	@Test public void testGeometryStreaming() throws Exception {
 		StringBuilder geomString = new StringBuilder();
 		for (int i = 0; i < 600; i++) {
@@ -394,7 +394,7 @@ public class TestJDBCSocketTransport {
 		long length = geo.length();
 		PreparedStatement s = conn.prepareStatement("select st_geomfrombinary(?)");
 		s.setBlob(1, new BlobImpl(new InputStreamFactory() {
-			
+
 			@Override
 			public InputStream getInputStream() throws IOException {
 				try {
@@ -409,7 +409,7 @@ public class TestJDBCSocketTransport {
 		Blob b = rs.getBlob(1);
 		assertEquals(length, b.length());
 		b.getBytes(1, (int) b.length());
-		
+
 		toggleInline(false);
 		rs = s.executeQuery();
 		rs.next();
@@ -417,7 +417,7 @@ public class TestJDBCSocketTransport {
 		assertEquals(length, b.length());
 		b.getBytes(1, (int) b.length());
 	}
-	
+
     @Test public void testBatchedUpdateException() throws Exception {
         Statement s = conn.createStatement();
         s.execute("create local temporary table x (y integer, primary key (y))");
@@ -429,7 +429,7 @@ public class TestJDBCSocketTransport {
         } catch (BatchUpdateException e) {
             assertEquals(1, e.getUpdateCounts()[0]);
         }
-        
+
         PreparedStatement ps = conn.prepareStatement("insert into x values (?)");
         ps.setInt(1, 2);
         ps.addBatch();
@@ -441,7 +441,7 @@ public class TestJDBCSocketTransport {
         } catch (BatchUpdateException e) {
             assertEquals(1, e.getUpdateCounts()[0]);
         }
-        
+
         //make sure no update counts are reported when there's an issue on the first item
         ps = conn.prepareStatement("insert into x values (?)");
         ps.setInt(1, 2);
@@ -455,7 +455,7 @@ public class TestJDBCSocketTransport {
             assertEquals(0, e.getUpdateCounts().length);
         }
     }
-    
+
     @Test(expected=TeiidSQLException.class) public void testSessionKilling() throws Exception {
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery("select session_id()");
@@ -464,7 +464,7 @@ public class TestJDBCSocketTransport {
         server.getAdmin().terminateSession(session);
         s.execute("select 1");
     }
-    
+
     /**
      * Not strictly a jdbc test, but simple to test here
      * @throws Exception
@@ -482,5 +482,5 @@ public class TestJDBCSocketTransport {
             assertTrue(((BufferManagerImpl)server.getDqp().getBufferManager()).getCache().getCacheGroupCount() < 5);
         }
     }
-	
+
 }

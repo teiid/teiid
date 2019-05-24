@@ -51,7 +51,7 @@ public class RelationalPlan extends ProcessorPlan {
 	private RelationalNode root;
 	private List<? extends Expression> outputCols;
 	private List<WithQueryCommand> with;
-	
+
 	private TempTableStore tempTableStore;
 
     /**
@@ -64,15 +64,15 @@ public class RelationalPlan extends ProcessorPlan {
     public RelationalNode getRootNode() {
         return this.root;
     }
-    
+
     public void setRootNode(RelationalNode root) {
         this.root = root;
     }
-    
+
     public void setWith(List<WithQueryCommand> with) {
 		this.with = with;
 	}
-    
+
     /**
      * @see ProcessorPlan#connectDataManager(ProcessorDataManager)
      */
@@ -82,26 +82,26 @@ public class RelationalPlan extends ProcessorPlan {
     		tempTableStore = new TempTableStore(context.getConnectionId(), TransactionMode.NONE);
             tempTableStore.setParentTempTableStore(context.getTempTableStore());
             context.setTempTableStore(tempTableStore);
-        } 
+        }
     	setContext(context);
-        connectExternal(this.root, context, dataMgr, bufferMgr);	
-    }        
+        connectExternal(this.root, context, dataMgr, bufferMgr);
+    }
 
-	static void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {		
-                                    
+	static void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+
         node.initialize(context, bufferMgr, dataMgr);
 
         RelationalNode[] children = node.getChildren();
         int childCount = node.getChildCount();
         for(int i=0; i<childCount; i++) {
             if(children[i] != null) {
-                connectExternal(children[i], context, dataMgr, bufferMgr);                
+                connectExternal(children[i], context, dataMgr, bufferMgr);
             } else {
                 break;
             }
         }
     }
-    
+
     /**
      * Get list of resolved elements describing output columns for this plan.
      * @return List of SingleElementSymbol
@@ -125,7 +125,7 @@ public class RelationalPlan extends ProcessorPlan {
 					continue;
 				}
 				ProcessorPlan plan = withCommand.getCommand().getProcessorPlan();
-				QueryProcessor withProcessor = new QueryProcessor(plan, getContext().clone(), root.getBufferManager(), root.getDataManager()); 
+				QueryProcessor withProcessor = new QueryProcessor(plan, getContext().clone(), root.getBufferManager(), root.getDataManager());
 				processors.put(withCommand.getGroupSymbol().getName(), new TableProcessor(withProcessor, withCommand.getColumns()));
 			}
     	}
@@ -160,7 +160,7 @@ public class RelationalPlan extends ProcessorPlan {
      */
     public void reset() {
         super.reset();
-        
+
         this.root.reset();
         if (this.with != null) {
         	for (WithQueryCommand withCommand : this.with) {
@@ -195,7 +195,7 @@ public class RelationalPlan extends ProcessorPlan {
 		sb.append(this.root.toString());
 		return sb.toString();
 	}
-    
+
 	public RelationalPlan clone(){
 		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
 		plan.setOutputElements(outputCols);
@@ -214,7 +214,7 @@ public class RelationalPlan extends ProcessorPlan {
 		}
 		return plan;
 	}
-	
+
     public PlanNode getDescriptionProperties() {
     	PlanNode node = this.root.getDescriptionProperties();
     	if (this.with != null) {
@@ -222,14 +222,14 @@ public class RelationalPlan extends ProcessorPlan {
         }
     	return node;
     }
-    
-    /** 
+
+    /**
      * @param outputCols The outputCols to set.
      */
     public void setOutputElements(List<? extends Expression> outputCols) {
         this.outputCols = outputCols;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
 		if (this.with != null) {
@@ -237,7 +237,7 @@ public class RelationalPlan extends ProcessorPlan {
     			if (withCommand.isRecursive()) {
     				SetQuery setQuery = (SetQuery)withCommand.getCommand();
     				Boolean leftRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
-    				Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads); 
+    				Boolean rightRequires = setQuery.getLeftQuery().getProcessorPlan().requiresTransaction(transactionalReads);
     				if (!Boolean.FALSE.equals(leftRequires) || !Boolean.FALSE.equals(rightRequires)) {
     					return true;
     				}
@@ -251,7 +251,7 @@ public class RelationalPlan extends ProcessorPlan {
     	}
     	return requiresTransaction(transactionalReads, root);
     }
-    
+
     static Boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
     	Boolean requiresTxn = node.requiresTransaction(transactionalReads);
     	if (Boolean.TRUE.equals(requiresTxn)) {
@@ -281,15 +281,15 @@ public class RelationalPlan extends ProcessorPlan {
 		}
 		return requiresTxn;
     }
-    
+
     @Override
     public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	return root.getBuffer(maxRows);
     }
-    
+
     @Override
     public boolean hasBuffer() {
     	return root.hasBuffer();
     }
-	
+
 }

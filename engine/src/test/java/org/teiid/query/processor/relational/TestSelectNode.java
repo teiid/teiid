@@ -56,7 +56,7 @@ public class TestSelectNode {
     public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) throws TeiidComponentException, TeiidProcessingException {
     	helpTestSelect(elements, criteria, childElements, dataMgr, expected, new FakeRelationalNode(2, data));
     }
-    
+
     public void helpTestSelect(List elements, Criteria criteria, List childElements, ProcessorDataManager dataMgr, List[] expected, RelationalNode child) throws TeiidComponentException, TeiidProcessingException {
         SelectNode selectNode = new SelectNode(1);
         helpTestSelect(elements, criteria, childElements, dataMgr, expected, child, selectNode);
@@ -69,18 +69,18 @@ public class TestSelectNode {
 			TeiidProcessingException {
 		BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         child.setElements(childElements);
         child.initialize(context, mgr, dataMgr);
 		selectNode.setCriteria(criteria);
         selectNode.setElements(elements);
         selectNode.addChild(child);
         selectNode.initialize(context, mgr, dataMgr);
-        
+
         selectNode.open();
-        
+
         BatchIterator iterator = new BatchIterator(selectNode);
-        
+
         for (int i = 0; i < expected.length; i++) {
         	while (true) {
 	        	try {
@@ -90,10 +90,10 @@ public class TestSelectNode {
 	        		continue;
 	        	}
         	}
-		}  
+		}
         assertFalse(iterator.hasNext());
 	}
-    
+
     /**
      * Ensures that a final empty batch is reindexed so that the batch iterator works correctly
      */
@@ -103,15 +103,15 @@ public class TestSelectNode {
 
         List elements = new ArrayList();
         elements.add(es1);
-        
+
         CompareCriteria crit = new CompareCriteria(new Constant(0), CompareCriteria.EQ, new Constant(new Integer(1)));
-        
+
         List childElements = new ArrayList();
         childElements.add(es1);
-        
+
     	RelationalNode child = new RelationalNode(0) {
     		int i = 0;
-    		
+
 			@Override
 			public Object clone() {
 				return null;
@@ -127,33 +127,33 @@ public class TestSelectNode {
 				batch.setTerminationFlag(true);
 				return batch;
 			}
-    		
+
     	};
-    	
+
     	helpTestSelect(elements, crit, childElements, null, new List[0], child);
     }
-    
+
     @Test public void testTimeslicing() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
         List elements = new ArrayList();
         elements.add(es1);
-        
+
         CompareCriteria crit = new CompareCriteria(es1, CompareCriteria.EQ, new Constant(new Integer(1)));
-        
+
         List[] data = new List[] {
         	Arrays.asList(1),
         	Arrays.asList(1),
         	Arrays.asList(1)
         };
-        
+
         List childElements = new ArrayList();
         childElements.add(es1);
-        
+
         helpTestSelect(elements, crit, childElements, null, data, new FakeRelationalNode(2, data), new SelectNode(3) {
         	int i = 0;
-        	
+
         	@Override
         	protected Evaluator getEvaluator(Map elementMap) {
         		return new Evaluator(elementMap, getDataManager(), getContext()) {
@@ -163,35 +163,35 @@ public class TestSelectNode {
         					BlockedException, TeiidComponentException {
         				if (i++ == 1) {
                 			throw new QueryProcessor.ExpiredTimeSliceException();
-                		}		
+                		}
         				return super.evaluateTVL(criteria, tuple);
         			}
         		};
         	}
-        	
+
         });
     }
-    
+
     @Test public void testNoRows() throws TeiidComponentException, TeiidProcessingException {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.STRING);
-        
+
         List elements = new ArrayList();
         elements.add(es1);
-        
+
         List[] data = new List[0];
-        
+
         CompareCriteria crit = new CompareCriteria(es1, CompareCriteria.EQ, new Constant(new Integer(1)));
-        
+
         List childElements = new ArrayList();
         childElements.add(es1);
         childElements.add(es2);
-        
+
         helpTestSelect(elements, crit, data, childElements, null, data);
-        
+
     }
 
     @Test public void testSimpleSelect() throws TeiidComponentException, TeiidProcessingException {
@@ -200,31 +200,31 @@ public class TestSelectNode {
 
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.STRING);
-        
+
         List elements = new ArrayList();
         elements.add(es1);
-        
+
         CompareCriteria crit = new CompareCriteria(es1, CompareCriteria.EQ, new Constant(new Integer(1)));
-        
+
         List[] data = new List[20];
-        for(int i=0; i<20; i++) { 
+        for(int i=0; i<20; i++) {
             data[i] = new ArrayList();
             data[i].add(new Integer((i*51) % 11));
-            
+
             String str = "" + (i*3); //$NON-NLS-1$
             str = str.substring(0,1);
-            data[i].add(str);              
+            data[i].add(str);
         }
-        
+
         List childElements = new ArrayList();
         childElements.add(es1);
         childElements.add(es2);
 
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(1) }),            
-            Arrays.asList(new Object[] { new Integer(1) })                      
+            Arrays.asList(new Object[] { new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(1) })
         };
-        
+
         helpTestSelect(elements, crit, data, childElements, null, expected);
 
     }
@@ -235,7 +235,7 @@ public class TestSelectNode {
 
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.STRING);
-        
+
         List elements = new ArrayList();
         elements.add(es1);
 
@@ -243,27 +243,27 @@ public class TestSelectNode {
         FunctionDescriptor desc = RealMetadataFactory.SFM.getSystemFunctionLibrary().findFunction("lookup", new Class[] { String.class, String.class, String.class, Integer.class } ); //$NON-NLS-1$
         func.setFunctionDescriptor(desc);
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        CompareCriteria crit = new CompareCriteria(func, CompareCriteria.EQ, new Constant(new Integer(1))); 
-        
+        CompareCriteria crit = new CompareCriteria(func, CompareCriteria.EQ, new Constant(new Integer(1)));
+
         List[] data = new List[20];
-        for(int i=0; i<20; i++) { 
+        for(int i=0; i<20; i++) {
             data[i] = new ArrayList();
             data[i].add(new Integer((i*51) % 11));
-            
+
             String str = "" + (i*3); //$NON-NLS-1$
             str = str.substring(0,1);
-            data[i].add(str);              
+            data[i].add(str);
         }
-        
+
         List childElements = new ArrayList();
         childElements.add(es1);
         childElements.add(es2);
 
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(0) }),            
-            Arrays.asList(new Object[] { new Integer(0) })                      
+            Arrays.asList(new Object[] { new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(0) })
         };
-        
+
         FakeDataManager dataMgr = new FakeDataManager();
         dataMgr.setThrowBlocked(true);
         Map valueMap = new HashMap();
@@ -273,5 +273,5 @@ public class TestSelectNode {
 
         helpTestSelect(elements, crit, data, childElements, dataMgr, expected);
 
-    }    
+    }
 }

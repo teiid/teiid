@@ -55,7 +55,7 @@ public class StringToLongTransform extends Transform {
 	public Class getTargetType() {
 		return Long.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

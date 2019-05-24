@@ -95,24 +95,24 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private Command processingCommand;
     private boolean shouldExecute = true;
     private boolean open;
-    
+
     private Object[] projection;
     private List<Expression> originalSelect;
-	
+
 	private List<String> sourceNames;
-	
+
 	public RegisterRequestParameter.SharedAccessInfo info;
 	private Map<GroupSymbol, RelationalPlan> subPlans;
 	private Map<GroupSymbol, SubqueryState> evaluatedPlans;
-    
+
     protected AccessNode() {
 		super();
 	}
-    
+
 	public AccessNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
@@ -142,11 +142,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     public Command getCommand() {
         return this.command;
     }
-    
+
     public void setModelId(Object id) {
     	this.modelId = id;
     }
-    
+
     public Object getModelId() {
     	return this.modelId;
     }
@@ -167,7 +167,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     	}
         this.shouldEvaluate = shouldEvaluate;
     }
-    
+
     @Override
     public void open() throws TeiidComponentException, TeiidProcessingException {
     	try {
@@ -180,7 +180,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	private void openInternal()
 		throws TeiidComponentException, TeiidProcessingException {
-		
+
 		//TODO: support a partitioning concept with multi-source and full dependent join pushdown
 		if (subPlans != null) {
 			if (this.evaluatedPlans == null) {
@@ -206,9 +206,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				throw be;
 			}
 		}
-		
+
 		/*
-		 * Check to see if we need a multi-source expansion.  If the connectorBindingExpression != null, then 
+		 * Check to see if we need a multi-source expansion.  If the connectorBindingExpression != null, then
 		 * the logic below will handle that case
 		 */
 		if (multiSource && connectorBindingExpression == null) {
@@ -238,7 +238,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	        isUpdate = RelationalNodeUtil.isUpdate(command);
 		}
         boolean needProcessing = true;
-        
+
         if (this.connectorBindingExpression != null && connectorBindingId == null) {
         	this.connectorBindingId = (String) getEvaluator(Collections.emptyMap()).evaluate(this.connectorBindingExpression, null);
         	VDBMetaData vdb = getContext().getVdb();
@@ -254,13 +254,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 	}
                 }
             	return;
-            } 
+            }
             if (!(command instanceof StoredProcedure || command instanceof Insert)) {
             	processingCommand = (Command) command.clone();
             	MultiSourceElementReplacementVisitor.visit(replacement, getContext().getMetadata(), processingCommand);
         	}
         }
-        
+
         do {
 			Command atomicCommand = nextCommand();
         	if(shouldEvaluate) {
@@ -275,7 +275,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			//We use an upper limit here to the currency because these commands have potentially large in-memory value sets
         } while (!processCommandsIndividually() && hasNextCommand() && this.tupleSources.size() < Math.max(Math.min(MAX_CONCURRENT, this.getContext().getUserRequestSourceConcurrency()), this.getContext().getUserRequestSourceConcurrency()/2));
 	}
-	
+
 	public boolean isShouldEvaluate() {
 		return shouldEvaluate;
 	}
@@ -332,11 +332,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			}
 		}
 	}
-	
+
 	public List<Expression> getOriginalSelect() {
 		return originalSelect;
 	}
-	
+
 	public Object[] getProjection() {
 		return projection;
 	}
@@ -352,13 +352,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30174, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30174, atomicCommand));
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
 		//it's important to save the next command
 		//to ensure that the subquery ids remain stable
 		if (nextCommand == null) {
-			nextCommand = (Command) processingCommand.clone(); 
+			nextCommand = (Command) processingCommand.clone();
 			if (evaluatedPlans != null) {
 				for (WithQueryCommand with : ((QueryCommand)nextCommand).getWith()) {
 					TupleBuffer tb = evaluatedPlans.get(with.getGroupSymbol()).collector.getTupleBuffer();
@@ -366,7 +366,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				}
 			}
 		}
-		return nextCommand; 
+		return nextCommand;
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws TeiidComponentException, TeiidProcessingException {
@@ -376,28 +376,28 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		
+
 		if (!open) {
 			openInternal(); //-- blocked during actual open
 			open = true;
 		}
-		
+
 		if (multiSource && connectorBindingExpression == null) {
 			return this.getChildren()[0].nextBatch();
 		}
-        
+
         while (shouldExecute && (!tupleSources.isEmpty() || hasNextCommand())) {
-        	
+
         	if (tupleSources.isEmpty() && processCommandsIndividually()) {
         		registerNext();
         	}
-        	
+
         	//drain the tuple source(s)
         	for (int i = 0; i < this.tupleSources.size(); i++) {
         		TupleSource tupleSource = tupleSources.get(i);
         		try {
 	        		List<?> tuple = null;
-	        		
+
 	        		while ((tuple = tupleSource.nextTuple()) != null) {
 	                    returnedRows = true;
 	                    if (this.projection != null && this.projection.length > 0) {
@@ -412,12 +412,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	                    	tuple = newTuple;
 	                    }
 	                    addBatchRow(tuple);
-	                    
+
 	                    if (isBatchFull()) {
 	                    	return pullBatch();
 	                    }
 	        		}
-	        		
+
                 	//end of source
                     tupleSource.closeSource();
                     tupleSources.remove(i--);
@@ -446,7 +446,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         		}
         		continue;
         	}
-        	
+
         	if (!this.tupleSources.isEmpty()) {
         		if (hasPendingRows()) {
         			return pullBatch();
@@ -454,7 +454,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         		throw BlockedException.block(getContext().getRequestId(), "Blocking on source request(s)."); //$NON-NLS-1$
         	}
         }
-        
+
         if(isUpdate && !returnedRows) {
 			List<Integer> tuple = new ArrayList<Integer>(1);
 			tuple.add(Integer.valueOf(0));
@@ -464,7 +464,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         terminateBatches();
         return pullBatch();
 	}
-	
+
 	@Override
 	protected void addBatchRow(List<?> row) {
 		if (this.getOutputElements().isEmpty()) {
@@ -509,15 +509,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         	reserved += getBufferManager().reserveBuffers(schemaSize, BufferReserveMode.FORCE);
 		}
 	}
-	
+
 	protected boolean processCommandsIndividually() {
 		return false;
 	}
-    
+
     protected boolean hasNextCommand() {
         return false;
     }
-    
+
 	public void closeDirect() {
 		if (reserved > 0) {
 	    	getBufferManager().releaseBuffers(reserved);
@@ -530,12 +530,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			this.evaluatedPlans = null;
 		}
 		super.closeDirect();
-        closeSources();            
+        closeSources();
 	}
 
     private void closeSources() {
     	for (TupleSource ts : this.tupleSources) {
-    		ts.closeSource();			
+    		ts.closeSource();
 		}
     	this.tupleSources.clear();
 	}
@@ -617,16 +617,16 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	public void setConnectorBindingId(String connectorBindingId) {
 		this.connectorBindingId = connectorBindingId;
 	}
-	
+
 	public Expression getConnectorBindingExpression() {
 		return connectorBindingExpression;
 	}
-	
+
 	public void setConnectorBindingExpression(
 			Expression connectorBindingExpression) {
 		this.connectorBindingExpression = connectorBindingExpression;
 	}
-	
+
 	@Override
 	public Collection<? extends SubqueryContainer<?>> getObjects() {
 		ArrayList<SubqueryContainer<?>> list = new ArrayList<SubqueryContainer<?>>();
@@ -646,7 +646,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         	}
         }
     }
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		int subqueryTxn = 0;
@@ -660,7 +660,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				if (txn != null) {
 					if (txn) {
 						return true;
-					} 
+					}
 				} else {
 					subqueryTxn++;
 				}
@@ -686,10 +686,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		return false;
 	}
-	
+
 	private static RelationalNode multiSourceModify(AccessNode accessNode, Expression ex, QueryMetadataInterface metadata, List<String> sourceNames) throws TeiidComponentException, TeiidProcessingException {
         List<AccessNode> accessNodes = new ArrayList<AccessNode>();
-        
+
         boolean hasOutParams = RelationalNodeUtil.hasOutputParams(accessNode.getCommand());
         if (!Constant.NULL_CONSTANT.equals(ex)) {
             for(String sourceName:sourceNames) {
@@ -702,13 +702,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
             			continue;
                     }
             	}
-                
+
                 // Create a new cloned version of the access node and set it's model name to be the bindingUUID
                 AccessNode instanceNode = (AccessNode) accessNode.clone();
                 instanceNode.setMultiSource(false);
                 instanceNode.setCommand(command);
                 accessNodes.add(instanceNode);
-                
+
                 if (accessNodes.size() > 1 && command instanceof Insert) {
                 	throw new AssertionError("Multi-source insert must target a single source.  Should have been caught in validation"); //$NON-NLS-1$
                 }
@@ -716,13 +716,13 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 instanceNode.setConnectorBindingId(sourceName);
             }
         }
-        
+
         if (hasOutParams && accessNodes.size() != 1) {
         	throw new QueryProcessingException(QueryPlugin.Event.TEIID30561, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30561, accessNode.getCommand()));
         }
-        
+
         switch(accessNodes.size()) {
-            case 0: 
+            case 0:
             {
                 if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
                 	//should return a 0 update count
@@ -732,9 +732,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 }
                 // Replace existing access node with a NullNode
                 NullNode nullNode = new NullNode(accessNode.getID());
-                return nullNode;         
+                return nullNode;
             }
-            case 1: 
+            case 1:
             {
                 // Replace existing access node with new access node (simplified command)
                 return accessNodes.get(0);
@@ -746,25 +746,25 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                 for (AccessNode newNode : accessNodes) {
                 	unionNode.addChild(newNode);
                 }
-            	
+
             	RelationalNode parent = unionNode;
-            	
+
                 // More than 1 access node - replace with a union
             	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
             		GroupingNode groupNode = new GroupingNode(accessNode.getID());
-            		AggregateSymbol sumCount = new AggregateSymbol(NonReserved.SUM, false, accessNode.getElements().get(0));          		
+            		AggregateSymbol sumCount = new AggregateSymbol(NonReserved.SUM, false, accessNode.getElements().get(0));
             		groupNode.setElements(Arrays.asList(sumCount));
             		groupNode.addChild(unionNode);
-            		
+
             		ProjectNode projectNode = new ProjectNode(accessNode.getID());
-            		
+
             		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
-            		
-            		List<Expression> outputElements = Arrays.asList(intSum);             		
+
+            		List<Expression> outputElements = Arrays.asList(intSum);
             		projectNode.setElements(outputElements);
             		projectNode.setSelectSymbols(outputElements);
             		projectNode.addChild(groupNode);
-            		
+
             		parent = projectNode;
             	}
                 return parent;
@@ -779,21 +779,21 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	public void setSubPlans(Map<GroupSymbol, RelationalPlan> plans) {
 		this.subPlans = plans;
 	}
-	
+
 	public Map<GroupSymbol, RelationalPlan> getSubPlans() {
 		return subPlans;
 	}
-	
+
 	public Set<Object> getConformedTo() {
 		return conformedTo;
 	}
-	
+
 	public void setConformedTo(Set<Object> conformedTo) {
 		this.conformedTo = conformedTo;
 	}
-	
+
 	public void setTransactionSupport(TransactionSupport transactionSupport) {
 		this.transactionSupport = transactionSupport;
 	}
-	
+
 }

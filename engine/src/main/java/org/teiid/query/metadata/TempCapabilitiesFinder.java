@@ -52,14 +52,14 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 		tempCaps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
 		return tempCaps;
 	}
-	
+
 	private final CapabilitiesFinder delegate;
 	private BasicSourceCapabilities tempCaps = cachedTempCaps;
-	
+
 	public TempCapabilitiesFinder(CapabilitiesFinder delegate) {
 		this(delegate, NullOrder.LOW);
 	}
-	
+
 	public TempCapabilitiesFinder(CapabilitiesFinder delegate, NullOrder nullOrder) {
 		this.delegate = delegate;
 		if (nullOrder != NullOrder.LOW) {
@@ -76,7 +76,7 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
     	}
 		return delegate.findCapabilities(modelName);
 	}
-	
+
 	@Override
 	public boolean isValid(String modelName) {
 		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {

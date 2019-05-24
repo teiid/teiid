@@ -41,21 +41,21 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 
 
 /**
- * This class is a proxy to QueryMetadataInterface. 
+ * This class is a proxy to QueryMetadataInterface.
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
-	
+
 	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
 	public static final String MULTISOURCE_PARTITIONED_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "multisource.partitioned"; //$NON-NLS-1$
-	
+
 	private static class MultiSourceGroup {
 		Object multiSourceElement;
 		List<?> columns;
 	}
-	
+
 	private Map<String, String> multiSourceModels;
 	private Map<Object, MultiSourceGroup> groups = new ConcurrentHashMap<Object, MultiSourceGroup>();
-	
+
     public static Map<String, String> getMultiSourceModels(VDBMetaData vdb) {
     	HashMap<String, String> result = new HashMap<String, String>();
     	for (ModelMetaData mmd : vdb.getModelMetaDatas().values()) {
@@ -64,7 +64,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     		}
     		String columnName = mmd.getPropertyValue(MULTISOURCE_COLUMN_NAME);
     		if (columnName == null) {
-    			columnName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME; 
+    			columnName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
     		}
     		result.put(mmd.getName(), columnName);
     	}
@@ -74,8 +74,8 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
     public MultiSourceMetadataWrapper(final QueryMetadataInterface actualMetadata, Map<String, String> multiSourceModels){
     	super(actualMetadata);
         this.multiSourceModels = multiSourceModels;
-    }	
-    
+    }
+
     public MultiSourceMetadataWrapper(QueryMetadataInterface metadata,
     		Set<String> multiSourceModels) {
     	this(metadata, new HashMap<String, String>());
@@ -83,7 +83,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 			this.multiSourceModels.put(string, MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME);
 		}
 	}
-    
+
 	@Override
 	public List<?> getElementIDsInGroupID(Object groupID)
 			throws TeiidComponentException, QueryMetadataException {
@@ -120,9 +120,9 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
             	mse = elemID;
             }
         }
-        
+
         if (mse == null) {
-        	List<Object> result = new ArrayList<Object>(elements);	        	
+        	List<Object> result = new ArrayList<Object>(elements);
     		MultiSourceElement e = new MultiSourceElement();
             e.setName(multiSourceElementName);
             e.setParent((Table)groupID);
@@ -147,7 +147,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 		e.setUpdatable(true);
 		e.setLength(255);
 	}
-	
+
 	@Override
 	public Object getElementID(String elementName)
 			throws TeiidComponentException, QueryMetadataException {
@@ -168,12 +168,12 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 			throw e;
 		}
 	}
-	
+
 	@Override
 	public boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException {
 		return multiSourceModels.containsKey(getFullName(modelId));
 	}
-	
+
 	@Override
 	public boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException {
 		if (elementId instanceof MultiSourceElement) {
@@ -189,14 +189,14 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
         if(multiSourceColumnName == null) {
         	return false;
         }
-		return multiSourceColumnName.equalsIgnoreCase(getName(elementId));        
+		return multiSourceColumnName.equalsIgnoreCase(getName(elementId));
 	}
-	
+
 	@Override
 	protected QueryMetadataInterface createDesignTimeMetadata() {
 		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels);
 	}
-	
+
 	@Override
 	public boolean isPseudo(Object elementId) {
 		if (elementId instanceof MultiSourceElement) {

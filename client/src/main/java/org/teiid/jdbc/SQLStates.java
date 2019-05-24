@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-/** 
+/**
  * Utility class containing 1) SQL state constants used to represent JDBC error state code, and
  * 2) utility methods to check whether a SQL state belongs to a particular class of exception states.
  * @since 4.3
@@ -78,7 +78,7 @@ public class SQLStates {
 	 * conforms to the subclass DataDirect uses for SocketExceptions.
 	 */
 	public static final String CONNECTION_EXCEPTION_STALE_CONNECTION = "08S01"; //$NON-NLS-1$
-	
+
 	public static final String QUERY_CANCELED = "57014"; //$NON-NLS-1$
 
 	// Class 28 - invalid authorization specification
@@ -93,12 +93,12 @@ public class SQLStates {
 	 * Invalid authorization specification with no subclass (SQL-99 28000)
 	 */
 	public static final String INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS = "28000"; //$NON-NLS-1$
-	
-	
+
+
 	// Class 38 - External Routine Exception (as defined by SQL spec):
     /** External routine exception. This is the default unknown code */
     public static final String DEFAULT = "38000"; //$NON-NLS-1$
-    
+
     public static final String SUCESS = "00000"; //$NON-NLS-1$
 
     // Class 50 - Query execution errors
@@ -107,7 +107,7 @@ public class SQLStates {
     public static final String USAGE_ERROR = "50000"; //$NON-NLS-1$
     /** Error raised by ERROR instruction in virtual procedure.*/
     public static final String VIRTUAL_PROCEDURE_ERROR = "50001"; //$NON-NLS-1$
-    
+
     private static final SQLStateClass[] stateClasses = {CLASS_USAGE_ERROR};
     static {
         CLASS_USAGE_ERROR.stateCodes.add(USAGE_ERROR);
@@ -117,15 +117,15 @@ public class SQLStates {
     public static boolean isSystemErrorState(String sqlStateCode) {
         return !isUsageErrorState(sqlStateCode);
     }
-    
+
     public static boolean isUsageErrorState(String sqlStateCode) {
         return belongsToClass(sqlStateCode, CLASS_USAGE_ERROR);
     }
-    
+
     public static boolean belongsToClass(String sqlStateCode, SQLStateClass sqlStateClass) {
         return sqlStateCode.startsWith(sqlStateClass.codeBeginsWith);
     }
-    
+
     public static SQLStateClass getClass(String sqlStateCode) {
         for (int i = 0; i < stateClasses.length; i++) {
             if (stateClasses[i].containsSQLState(sqlStateCode)) {
@@ -134,14 +134,14 @@ public class SQLStates {
         }
         return null;
     }
-    
+
     public static final class SQLStateClass {
         private String codeBeginsWith;
         private Set stateCodes = new HashSet();
         private SQLStateClass(String beginsWith) {
             this.codeBeginsWith = beginsWith;
         }
-        
+
         public boolean containsSQLState(String sqlState) {
             return stateCodes.contains(sqlState);
         }

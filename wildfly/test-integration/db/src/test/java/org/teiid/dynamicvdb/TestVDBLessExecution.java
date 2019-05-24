@@ -45,8 +45,8 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 
     	});
     	closeConnection();
-    }    
-    
+    }
+
     @Test public void testIntegrationExecution() throws Exception {
     	getConnection(VDB, DQP_PROP_FILE);
     	executeAndAssertResults("select * from Example, Smalla where notional = intkey", new String[] { //$NON-NLS-1$
@@ -56,7 +56,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     /**
      * We have no results to assert here since derby does not provide procedure resultset columns in their metadata.
      */
@@ -65,7 +65,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	execute("exec Derby.SQLUDTS(null, null, null, null, null)"); //$NON-NLS-1$
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataTables() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -76,7 +76,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     /**
      * Ensures that system tables are still visible
      */
@@ -91,7 +91,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataColumns() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -103,7 +103,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataColumns1() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -130,7 +130,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataPrimaryKeys() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -147,7 +147,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataExportedKeys() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -159,7 +159,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataImportedKeys() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -177,7 +177,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataIndexInfo() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -241,7 +241,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataProcedures() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -254,7 +254,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-    
+
     @Test public void testDatabaseMetaDataProcedureColumns() throws Exception {
     	Connection conn = getConnection(VDB, DQP_PROP_FILE);
     	DatabaseMetaData metadata = conn.getMetaData();
@@ -269,5 +269,5 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	});
     	closeConnection();
     }
-        
+
 }

@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 import org.junit.Test;
 
 public class TestExtensibleBufferedInputStream {
-	
+
 	@Test public void testReset() throws IOException {
 		InputStream is = new ExtensibleBufferedInputStream() {
 			boolean returned = false;

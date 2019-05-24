@@ -80,11 +80,11 @@ public class ActivityReport<R extends ReportItem> implements Serializable {
 	public boolean hasItems() {
 	    return (this.items.size() > 0);
 	}
-	
+
 	public Collection<R> getItems() {
 		return items;
 	}
-	
+
 	@Override
 	public String toString() {
 		return reportType + " " + getItems(); //$NON-NLS-1$

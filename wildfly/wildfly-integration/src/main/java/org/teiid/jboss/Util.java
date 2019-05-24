@@ -28,7 +28,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Common login module utility methods
- * 
+ *
  * @author Scott.Stark@jboss.org
  * @version $Revision: 68749 $
  */
@@ -41,7 +41,7 @@ public class Util {
 	 * URLClassLoader the findResource(String) method is first tried. If this
 	 * fails or the TCL is not a URLClassLoader getResource(String) is tried. If
 	 * not, an absolute path is tried.
-	 * 
+	 *
 	 * @param propertiesName
 	 *            - the name of the properties file resource
 	 * @param log

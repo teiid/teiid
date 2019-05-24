@@ -27,8 +27,8 @@ final class BlockOutputStream extends
 	int blockNum = -1;
 	private final int maxBlocks;
 	private final boolean allocate;
-	
-	static final IOException exceededMax = new IOException();  
+
+	static final IOException exceededMax = new IOException();
 
 	/**
 	 * @param blockManager
@@ -39,7 +39,7 @@ final class BlockOutputStream extends
 		this.allocate = maxBlocks != -1;
 		this.maxBlocks = maxBlocks - 2; //convert to an index
 	}
-	
+
 	@Override
 	protected ByteBuffer newBuffer() throws IOException {
 		if (!allocate) {
@@ -50,7 +50,7 @@ final class BlockOutputStream extends
 		}
 		return blockManager.allocateBlock(++blockNum);
 	}
-	
+
 	@Override
 	protected int flushDirect(int i) throws IOException {
 		return i;

@@ -96,15 +96,15 @@ public final class RuleMergeVirtual implements
         if (virtualGroup.isProcedure()) {
             return root;
         }
-        
+
         List<PlanNode> sources = NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
-        
+
         SymbolMap references = (SymbolMap)frame.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
         if (references != null) {
             if (!sources.isEmpty()) {
                 return root; //correlated nested table commands should not be merged
             }
-            
+
             //this is ok only if all of the references go above the correlating join
             //currently this check is simplistic - just look at the parent join more nested scenarios won't work
             PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP);
@@ -130,11 +130,11 @@ public final class RuleMergeVirtual implements
         if (FrameUtil.isProcedure(projectNode)) {
             return root;
         }
-        
+
         SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
+
         PlanNode sortNode = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-        
+
         if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
         	OrderBy sortOrder = (OrderBy)sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
         	boolean unrelated = false;
@@ -167,9 +167,9 @@ public final class RuleMergeVirtual implements
             || NodeEditor.findNodePreOrder(frame.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE
                                                                                              | NodeConstants.Types.JOIN) != null
             || sources.isEmpty()) {
-        	
+
             PlanNode parentSource = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
-            if (beforeDecomposeJoin && parentSource != null && parentSource.hasProperty(Info.PARTITION_INFO) 
+            if (beforeDecomposeJoin && parentSource != null && parentSource.hasProperty(Info.PARTITION_INFO)
             		&& !NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE).isEmpty()) {
             	return root; //don't bother to merge until after
             }
@@ -203,7 +203,7 @@ public final class RuleMergeVirtual implements
         if (!checkJoinCriteria(frame.getFirstChild(), virtualGroup, parentJoin)) {
             return root;
         }
-        
+
         //we don't have to check for null dependent with no source without criteria since there must be a row
         if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata, sources, !sources.isEmpty() || frame.getParent() != parentJoin, parentProject)) {
         	//TODO: propagate constants if just inhibited by subquery/non-deterministic expressions
@@ -232,7 +232,7 @@ public final class RuleMergeVirtual implements
 
         PlanNode parentBottom = frame.getParent();
         prepareFrame(frame);
-        
+
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
             parentProject.setProperty(Info.HAS_WINDOW_FUNCTIONS, true);
         }
@@ -275,7 +275,7 @@ public final class RuleMergeVirtual implements
 	        NodeEditor.removeChildNode(parentBottom, frame);
 	        NodeEditor.removeChildNode(parentBottom, projectNode);
         }
-        
+
         return root;
     }
 
@@ -298,10 +298,10 @@ public final class RuleMergeVirtual implements
 
     /**
      * Removes source layers that only do a simple projection of the elements below.
-     * @param capFinder 
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
-     * @throws QueryPlannerException 
+     * @param capFinder
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
+     * @throws QueryPlannerException
      */
     private static PlanNode checkForSimpleProjection(PlanNode frame,
                                                      PlanNode root,
@@ -316,25 +316,25 @@ public final class RuleMergeVirtual implements
             }
             nodeToCheck = nodeToCheck.getFirstChild();
         }
-        
+
         if (frame.getFirstChild().getType() == NodeConstants.Types.TUPLE_LIMIT
             && NodeEditor.findParent(parentProject,
                                      NodeConstants.Types.SORT | NodeConstants.Types.DUP_REMOVE,
                                      NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP) != null) {
             return root;
         }
-        
+
         List<? extends Expression> requiredElements = RuleAssignOutputElements.determineSourceOutput(frame, new ArrayList<Expression>(), metadata, null);
         List<Expression> selectSymbols = (List<Expression>)parentProject.getProperty(NodeConstants.Info.PROJECT_COLS);
 
         // check that it only performs simple projection and that all required symbols are projected
-        LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries  
+        LinkedHashSet<Expression> symbols = new LinkedHashSet<Expression>(); //ensuring there are no duplicates prevents problems with subqueries
         for (Expression symbol : selectSymbols) {
             Expression expr = SymbolMap.getExpression(symbol);
             if (expr instanceof Constant) {
             	if (!symbols.add(new ExpressionSymbol("const" + symbols.size(), expr))) { //$NON-NLS-1$
                     return root;
-                }	
+                }
             	continue;
             }
             if (!(expr instanceof ElementSymbol)) {
@@ -348,12 +348,12 @@ public final class RuleMergeVirtual implements
         if (!requiredElements.isEmpty()) {
             return root;
         }
-        
+
 		PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
 		if (sort != null && sort.hasBooleanProperty(Info.UNRELATED_SORT)) {
 			return root;
 		}
-		
+
         // re-order the lower projects
         RuleAssignOutputElements.filterVirtualElements(frame, new ArrayList<Expression>(symbols), metadata);
 
@@ -364,7 +364,7 @@ public final class RuleMergeVirtual implements
             nodeToCheck = nodeToCheck.getFirstChild();
             NodeEditor.removeChildNode(current.getParent(), current);
         }
-        
+
         if (NodeEditor.findParent(parentProject, NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) != null) {
             PlanNode lowerDup = NodeEditor.findNodePreOrder(frame.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.PROJECT);
             if (lowerDup != null) {
@@ -386,12 +386,12 @@ public final class RuleMergeVirtual implements
 
     	correctOrderBy(frame, sort, selectSymbols, parentProject);
 
-        PlanNode parentSource = NodeEditor.findParent(frame, NodeConstants.Types.SOURCE);        
-  
+        PlanNode parentSource = NodeEditor.findParent(frame, NodeConstants.Types.SOURCE);
+
         if (parentSource != null && NodeEditor.findNodePreOrder(parentSource, NodeConstants.Types.PROJECT) == parentProject) {
         	FrameUtil.correctSymbolMap(((SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), parentSource);
         }
-        
+
         prepareFrame(frame);
         //remove the parent project and the source node
         NodeEditor.removeChildNode(parentProject, frame);
@@ -399,9 +399,9 @@ public final class RuleMergeVirtual implements
             root = parentProject.getFirstChild();
             parentProject.removeChild(root);
             return root;
-        } 
+        }
         NodeEditor.removeChildNode(parentProject.getParent(), parentProject);
-                 
+
         return root;
     }
     /**
@@ -420,25 +420,25 @@ public final class RuleMergeVirtual implements
 	    sort.getGroups().clear();
 	    sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
 	}
-    
+
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
-     * @param parentProject2 
+     * @param parentProject2
      */
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
                                                  QueryMetadataInterface metadata, List<PlanNode> sources, boolean checkForNullDependent, PlanNode parentProject) {
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)
-                && (parentProject.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS) 
-                        || NodeEditor.findParent(projectNode, NodeConstants.Types.PROJECT, 
+                && (parentProject.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)
+                        || NodeEditor.findParent(projectNode, NodeConstants.Types.PROJECT,
                                 NodeConstants.Types.SORT | NodeConstants.Types.GROUP | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN) == null)) {
             //if there something above using the window function symbols, then we can move the projection
             return false;
         }
 
         List<Expression> selectSymbols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
-        
+
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>();
         for (PlanNode sourceNode : sources) {
             groups.addAll(sourceNode.getGroups());
@@ -516,18 +516,18 @@ public final class RuleMergeVirtual implements
         }
         return true;
     }
-    
+
 	static void distributeDupRemove(QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, PlanNode unionNode)
 			throws QueryMetadataException, TeiidComponentException {
 		PlanNode unionParentSource = NodeEditor.findParent(unionNode, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
-		if (unionNode.hasBooleanProperty(Info.USE_ALL) 
-				|| unionParentSource == null 
-				|| unionParentSource.getType() != NodeConstants.Types.SOURCE 
+		if (unionNode.hasBooleanProperty(Info.USE_ALL)
+				|| unionParentSource == null
+				|| unionParentSource.getType() != NodeConstants.Types.SOURCE
 				|| !unionParentSource.hasProperty(Info.PARTITION_INFO)) {
 			return;
 		}
-		
+
 		PlanNode accessNode = NodeEditor.findParent(unionNode, NodeConstants.Types.ACCESS);
 		if (accessNode != null) {
 			Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
@@ -535,7 +535,7 @@ public final class RuleMergeVirtual implements
 				return;
 			}
 		}
-		
+
 		//distribute dup remove
 		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
 		RulePushAggregates.findUnionChildren(unionChildren, false, unionNode);

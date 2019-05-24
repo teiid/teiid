@@ -40,7 +40,7 @@ public class GeographyFunctionMethods {
          throws FunctionExecutionException {
         return GeometryUtils.geometryToClob(geometry, true);
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.ST_ASBINARY,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true,
@@ -49,7 +49,7 @@ public class GeographyFunctionMethods {
         Blob b = geometry.getReference();
         return new BlobType(b);
     }
-    
+
     //postgis does not provide geography as ewkb
     /*@TeiidFunction(name=SourceSystemFunctions.ST_ASEWKB,
             category=FunctionCategoryConstants.GEOGRAPHY,
@@ -63,19 +63,19 @@ public class GeographyFunctionMethods {
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOGFROMTEXT,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true)
-    public static GeographyType geogFromText(CommandContext ctx, ClobType wkt) 
+    public static GeographyType geogFromText(CommandContext ctx, ClobType wkt)
          throws FunctionExecutionException {
         return GeometryUtils.getGeographyType(GeometryUtils.geometryFromClob(wkt, null, true), ctx);
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOGFROMWKB,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true)
-    public static GeographyType geogFromBlob(CommandContext context, BlobType wkb) 
+    public static GeographyType geogFromBlob(CommandContext context, BlobType wkb)
          throws FunctionExecutionException, SQLException {
         return GeometryUtils.geographyFromEwkb(context, wkb.getBinaryStream());
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.ST_SETSRID,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true,
@@ -86,7 +86,7 @@ public class GeographyFunctionMethods {
         gt.setSrid(srid);
         return gt;
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.ST_SRID,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true,
@@ -94,12 +94,12 @@ public class GeographyFunctionMethods {
     public static int getSrid(GeographyType geog) {
         return geog.getSrid();
     }
-    
+
     /*
      * Not yet supported, need a geodetic library
      */
-    
-   
+
+
     @TeiidFunction(name=SourceSystemFunctions.ST_INTERSECTS,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true,
@@ -115,14 +115,14 @@ public class GeographyFunctionMethods {
     public static Double distance(GeographyType geog1, GeographyType geog2) throws FunctionExecutionException {
         throw new UnsupportedOperationException();
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.ST_LENGTH,
             category=FunctionCategoryConstants.GEOGRAPHY,
             nullOnNull=true,
             pushdown=PushDown.MUST_PUSHDOWN)
-    public static Double length(GeographyType geog) 
+    public static Double length(GeographyType geog)
          throws FunctionExecutionException {
         throw new UnsupportedOperationException();
     }
-    
+
 }

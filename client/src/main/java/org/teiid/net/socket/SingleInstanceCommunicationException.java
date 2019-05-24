@@ -23,8 +23,8 @@ import org.teiid.net.CommunicationException;
 
 
 /**
- * An error occurred in communication between client and server.  This 
- * error may or may not be recoverable.  Generally the communication 
+ * An error occurred in communication between client and server.  This
+ * error may or may not be recoverable.  Generally the communication
  * transport should be able to tell the difference and recover if possible.
  */
 public class SingleInstanceCommunicationException extends CommunicationException {
@@ -57,8 +57,8 @@ public class SingleInstanceCommunicationException extends CommunicationException
     public SingleInstanceCommunicationException(Throwable e, String message) {
         super(e, message);
     }
-    
+
     public SingleInstanceCommunicationException(BundleUtil.Event event, Throwable e, String message) {
         super(event, e, message);
-    }    
+    }
 }

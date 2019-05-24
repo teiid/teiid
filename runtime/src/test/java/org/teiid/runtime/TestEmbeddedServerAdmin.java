@@ -49,29 +49,29 @@ import org.teiid.translator.file.FileExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServerAdmin {
-	
+
 	private static Admin admin;
 	private static EmbeddedServer server;
-	
+
 	@BeforeClass
 	public static void init() throws Exception {
 		server = new EmbeddedServer();
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		server.start(config);
-		
+
 		FileExecutionFactory executionFactory = new FileExecutionFactory();
 		executionFactory.start();
 		server.addTranslator("file", executionFactory);
-		
+
 		server.deployVDB(new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
 //		admin = server.getAdmin();
 		admin = EmbeddedAdminFactory.getInstance().createAdmin(server);
 	}
-	
+
 	private Connection newSession() throws SQLException {
 		return server.getDriver().connect("jdbc:teiid:AdminAPITestVDB", new Properties());
 	}
-	
+
 	@Test
 	public void testGetVdbs() throws AdminException {
 		for(VDB vdb : admin.getVDBs()) {
@@ -81,18 +81,18 @@ public class TestEmbeddedServerAdmin {
 			assertEquals(vdb.getModels().size(), 1);
 		}
 	}
-	
+
 	@Test
 	public void testGetVDB() throws AdminException{
 		VDB vdb = admin.getVDB("AdminAPITestVDB", 1);
 		assertEquals(vdb.getDescription(), "The adminapi test VDB");
 		assertEquals(vdb.getModels().size(), 1);
 	}
-	
+
 	@Test
 	public void testSource() throws AdminException {
-		admin.addSource("AdminAPITestVDB", 1, "TestModel", "text-connector-test", "file", "java:/test-file");	
-		
+		admin.addSource("AdminAPITestVDB", 1, "TestModel", "text-connector-test", "file", "java:/test-file");
+
 		for(VDB vdb : admin.getVDBs()){
 			VDBMetaData vdbMetaData = (VDBMetaData) vdb;
 			for (ModelMetaData m : vdbMetaData.getModelMetaDatas().values()) {
@@ -103,9 +103,9 @@ public class TestEmbeddedServerAdmin {
 				}
 			}
 		}
-		
+
 		admin.updateSource("AdminAPITestVDB", 1, "text-connector-test", "mysql", "java:/test-jdbc");
-		
+
 		for(VDB vdb : admin.getVDBs()){
 			VDBMetaData vdbMetaData = (VDBMetaData) vdb;
 			for (ModelMetaData m : vdbMetaData.getModelMetaDatas().values()) {
@@ -116,10 +116,10 @@ public class TestEmbeddedServerAdmin {
 				}
 			}
 		}
-		
+
 		admin.removeSource("AdminAPITestVDB", 1, "TestModel", "text-connector-test");
 	}
-	
+
 	@Test
 	public void testChangeVDBConnectionType() throws AdminException {
 		ConnectionType previous = admin.getVDB("AdminAPITestVDB", 1).getConnectionType();
@@ -127,7 +127,7 @@ public class TestEmbeddedServerAdmin {
 		assertEquals(ConnectionType.ANY, admin.getVDB("AdminAPITestVDB", 1).getConnectionType());
 		admin.changeVDBConnectionType("AdminAPITestVDB", 1, previous);
 	}
-	
+
 	@Test
 	public void testDeployUndeploy() throws AdminException, FileNotFoundException {
 		admin.undeploy("AdminAPITestVDB");
@@ -135,27 +135,27 @@ public class TestEmbeddedServerAdmin {
 		admin.deploy("AdminAPITestVDB-vdb.xml", new FileInputStream(new File("src/test/resources/adminapi-test-vdb.xml")));
 		assertNotNull(admin.getVDB("AdminAPITestVDB", 1));
 	}
-	
+
 	@Test
 	public void testRestartVDB() throws AdminException{
 		admin.restartVDB("AdminAPITestVDB", 1, "TestModel");
 		assertNotNull(admin.getVDB("AdminAPITestVDB", 1));
 	}
-	
+
 	@Test
 	public void testGetTranslator() throws AdminException {
-		
+
 		for(Translator translator : admin.getTranslators()){
 			assertEquals("file", translator.getName());
 			assertEquals("File Translator, reads contents of files or writes to them", translator.getDescription());
 			assertEquals("false", translator.getProperties().getProperty("supportsOuterJoins"));
 		}
-		
+
 		Translator translator = admin.getTranslator("file");
 		assertEquals("File Translator, reads contents of files or writes to them", translator.getDescription());
 		assertEquals("false", translator.getProperties().getProperty("supportsOuterJoins"));
 	}
-	
+
 	@Test
 	public void testGetWorkerPoolStats() throws AdminException{
 		for(WorkerPoolStatistics pool : admin.getWorkerPoolStats()){
@@ -163,14 +163,14 @@ public class TestEmbeddedServerAdmin {
 			assertEquals(64, pool.getMaxThreads());
 		}
 	}
-	
+
 	@Test
 	public void testGetCacheTypes() throws AdminException{
 		Set<String> cacheTypes = (Set<String>) admin.getCacheTypes();
 		assertTrue(cacheTypes.contains("PREPARED_PLAN_CACHE"));
 		assertTrue(cacheTypes.contains("QUERY_SERVICE_RESULT_SET_CACHE"));
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetSessions() throws AdminException, SQLException {
@@ -183,7 +183,7 @@ public class TestEmbeddedServerAdmin {
 		assertNotNull(sessions.get(0).getSessionId());
 		conn.close();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetRequests() throws AdminException, SQLException {
@@ -194,12 +194,12 @@ public class TestEmbeddedServerAdmin {
 		List<RequestMetadata> requests = (List<RequestMetadata>) admin.getRequests();
 		assertEquals(1, requests.size());
 		assertEquals(command, requests.get(0).getCommand());
-		assertNotNull(requests.get(0).getSessionId());		
+		assertNotNull(requests.get(0).getSessionId());
 		rs.close();
 		stmt.close();
 		conn.close();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetRequest() throws AdminException, SQLException {
@@ -217,39 +217,39 @@ public class TestEmbeddedServerAdmin {
 		stmt.close();
 		conn.close();
 	}
-	
+
 	@Test(expected = AdminProcessingException.class)
 	public void testGetTemplatePropertyDefinitions() throws AdminException {
 		admin.getTemplatePropertyDefinitions("file");
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetTranslatorPropertyDefinitions() throws AdminException {
 		List<PropertyDefinition> list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.OVERRIDE);
 		assertEquals(21, list.size());
-		
+
 		list = (List<PropertyDefinition>) admin.getTranslatorPropertyDefinitions("file", TranlatorPropertyType.ALL);
-        assertEquals(21, list.size());		
+        assertEquals(21, list.size());
 	}
-	
+
 	@Test
 	public void testGetTransactions() throws AdminException, SQLException {
 
 		Connection conn = newSession();
 		conn.setAutoCommit(false);
 		assertEquals(0, admin.getTransactions().size());
-		conn.commit();		
+		conn.commit();
 		conn.close();
 	}
-	
+
 	public void testClearCache() throws AdminException{
 		admin.clearCache("PREPARED_PLAN_CACHE");
 		admin.clearCache("QUERY_SERVICE_RESULT_SET_CACHE");
 		admin.clearCache("PREPARED_PLAN_CACHE", "AdminAPITestVDB", 1);
 		admin.clearCache("QUERY_SERVICE_RESULT_SET_CACHE", "AdminAPITestVDB", 1);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetCacheStats() throws AdminException {
@@ -258,7 +258,7 @@ public class TestEmbeddedServerAdmin {
 		list = (List<CacheStatistics>) admin.getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE");
 		assertEquals(list.get(0).getName(), Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name());
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetEngineStats() throws AdminException, SQLException {
@@ -269,7 +269,7 @@ public class TestEmbeddedServerAdmin {
 		conn1.close();
 		conn2.close();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testTerminateSession() throws AdminException, SQLException {
@@ -280,7 +280,7 @@ public class TestEmbeddedServerAdmin {
 		assertEquals(0, admin.getSessions().size());
 		conn.close();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testCancelRequest() throws AdminException, SQLException {
@@ -299,44 +299,44 @@ public class TestEmbeddedServerAdmin {
 		stmt.close();
 		conn.close();
 	}
-	
+
 	@Ignore("This test need enable DataRole Configuration in 'adminapi-test-vdb.xml'")
 	@Test
 	public void testDataRoleMapping() throws AdminException {
-		
+
 		String vdbName = "AdminAPITestVDB";
 		int vdbVersion = 1;
 		String policyName = "TestDataRole";
 		DataPolicyMetadata policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
 		assertEquals(1, policy.getMappedRoleNames().size());
-		
+
 		admin.addDataRoleMapping(vdbName, vdbVersion, policyName, "test-role-name");
 		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
 		assertEquals(2, policy.getMappedRoleNames().size());
-		
+
 		admin.removeDataRoleMapping(vdbName, vdbVersion, policyName, "test-role-name");
 		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
 		assertEquals(1, policy.getMappedRoleNames().size());
-		
-		
+
+
 		boolean previous = policy.isAnyAuthenticated();
 		admin.setAnyAuthenticatedForDataRole(vdbName, vdbVersion, policyName, !previous);
 		policy = getPolicy(admin.getVDB(vdbName, vdbVersion), policyName);
 		assertEquals(!previous, policy.isAnyAuthenticated());
 		admin.setAnyAuthenticatedForDataRole(vdbName, vdbVersion, policyName, previous);
 	}
-	
+
 	private DataPolicyMetadata getPolicy(VDB vdb, String policyName) {
 		VDBMetaData vdbMetaData = (VDBMetaData) vdb;
 		return vdbMetaData.getDataPolicyMap().get(policyName);
-	}	
-	
+	}
+
 	@Test
 	public void testTerminateTransaction() throws AdminException {
 		// need enhance
 		admin.terminateTransaction("xid");
 	}
-	
+
 	@Test(expected = AdminProcessingException.class)
 	public void testDataSources() throws AdminException{
 		admin.createDataSource("", "", new Properties());
@@ -346,16 +346,16 @@ public class TestEmbeddedServerAdmin {
 		admin.getDataSourceTemplateNames();
 		admin.markDataSourceAvailable("");
 	}
-	
+
 	@Test
     public void testDataSources_1() throws AdminException{
 	    Collection<String> names = admin.getDataSourceNames();
         assertEquals(0, names.size());
     }
-	
+
 	@Test
 	public void testGetSchema() throws AdminException {
-		String expected = "CREATE VIEW helloworld (\n" + 
+		String expected = "CREATE VIEW helloworld (\n" +
 						  "	expr1 string(11)\n" +
 						  ")\n"  +
 						  "AS\n" +
@@ -366,11 +366,11 @@ public class TestEmbeddedServerAdmin {
 		schema = admin.getSchema("AdminAPITestVDB", 1, "TestModel",  null, null);
 		assertEquals(expected, schema);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testGetQueryPlan() throws SQLException, AdminException {
-				
+
 		Connection conn = newSession();
 		Statement stmt = conn.createStatement();
 		stmt.execute("set showplan on");
@@ -386,7 +386,7 @@ public class TestEmbeddedServerAdmin {
 		stmt.close();
 		conn.close();
 	}
-	
+
 	@AfterClass
 	public static void destory() throws SQLException {
 		admin.close();

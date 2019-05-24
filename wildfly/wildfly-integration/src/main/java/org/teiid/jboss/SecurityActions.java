@@ -32,38 +32,38 @@ class SecurityActions {
 	   static void setSecurityContext(final SecurityContext sc)
 	   {
 	      AccessController.doPrivileged(new PrivilegedAction<Object>()
-	      { 
+	      {
 	         public Object run()
 	         {
-	            SecurityContextAssociation.setSecurityContext(sc); 
+	            SecurityContextAssociation.setSecurityContext(sc);
 	            return null;
 	         }
 	      });
 	   }
-	   
+
 	   static SecurityContext getSecurityContext()
 	   {
 	      return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
-	      { 
+	      {
 	         public SecurityContext run()
 	         {
-	            return SecurityContextAssociation.getSecurityContext(); 
+	            return SecurityContextAssociation.getSecurityContext();
 	         }
 	      });
 	   }
-	   
+
 	   static SecurityContext clearSecurityContext()
 	   {
 	      return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
-	      { 
+	      {
 	         public SecurityContext run()
 	         {
 	            SecurityContextAssociation.clearSecurityContext();
 	            return null;
 	         }
 	      });
-	   }	 
-	   
+	   }
+
 	   static SecurityContext createSecurityContext(final Principal p, final Object cred, final Subject subject, final String securityDomain)
 	   {
 			return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>() {
@@ -77,8 +77,8 @@ class SecurityActions {
 					return sc;
 				}
 			});
-	   }	   
-	   
+	   }
+
 	   static class AddCredentialsAction implements PrivilegedAction
 	   {
 	      Subject subject;
@@ -99,5 +99,5 @@ class SecurityActions {
 	   {
 	      AddCredentialsAction action = new AddCredentialsAction(subject, cred);
 	      AccessController.doPrivileged(action);
-	   }	   
+	   }
 }

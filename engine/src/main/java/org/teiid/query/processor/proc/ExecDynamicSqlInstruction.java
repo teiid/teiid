@@ -84,8 +84,8 @@ import org.teiid.query.validator.ValidationVisitor;
  * </p>
  */
 public class ExecDynamicSqlInstruction extends ProgramInstruction {
-    
-	private static final int MAX_SQL_LENGTH = 1 << 18; //based roughly on what could be the default max over JDBC 
+
+	private static final int MAX_SQL_LENGTH = 1 << 18; //based roughly on what could be the default max over JDBC
 
 	// the DynamicCommand
 	private DynamicCommand dynamicCommand;
@@ -102,7 +102,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 	// The parent command
 	CreateProcedureCommand parentProcCommand;
-    
+
     private Program dynamicProgram;
 
 	public ExecDynamicSqlInstruction(
@@ -127,7 +127,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	 * removed from the buffer manager immediately after execution. The program
 	 * counter is incremented after execution of the plan.
 	 * </p>
-	 * 
+	 *
 	 * @throws BlockedException
 	 *             if this processing the plan throws a currentVarContext
 	 */
@@ -137,44 +137,44 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		VariableContext localContext = procEnv.getCurrentVariableContext();
 
 		String query = null;
-		
+
 		try {
 			Clob value = (Clob)procEnv.evaluateExpression(dynamicCommand.getSql());
-			
+
 			if (value == null) {
 				throw new QueryProcessingException(QueryPlugin.Util
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
-			
+
 			if (value.length() > MAX_SQL_LENGTH) {
 				throw new QueryProcessingException(QueryPlugin.Util
 						.gs(QueryPlugin.Event.TEIID31204, MAX_SQL_LENGTH));
 			}
-			
+
 			query = value.getSubString(1, MAX_SQL_LENGTH);
 
 			LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", query }); //$NON-NLS-1$
-			
-			
+
+
 			Command command = QueryParser.getQueryParser().parseCommand(query);
-			
+
 			//special handling for dynamic anon blocks
 			if (command instanceof CreateProcedureCommand) {
 			    if (dynamicCommand.getIntoGroup() != null || returnable) {
-    			    //won't work unless we use a different approach than the insert into ... 
+    			    //won't work unless we use a different approach than the insert into ...
 			        //and the creation of an inline view
 			        throw new QueryProcessingException(QueryPlugin.Event.TEIID31250, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31250));
 			    }
 			    ((CreateProcedureCommand)command).setResultSetColumns(Collections.EMPTY_LIST);
 			}
-			
+
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
 			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata().clone());
 			updateContextWithUsingValues(procEnv, localContext);
-			
+
 			TempMetadataStore metadataStore = command.getTemporaryMetadata();
-            
+
             if (dynamicCommand.getUsing() != null
                             && !dynamicCommand.getUsing().isEmpty()) {
                 metadataStore.addTempGroup(Reserved.USING, new LinkedList<ElementSymbol>(dynamicCommand.getUsing().getClauseMap().keySet()));
@@ -186,7 +186,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 using.setMetadataID(metadataStore.getTempGroupID(ProcedureReservedWords.DVARS));
                 command.addExternalGroupToContext(using);
             }
-            
+
 			QueryResolver.resolveCommand(command, metadata.getDesignTimeMetadata());
 
 			validateDynamicCommand(procEnv, command, value.toString());
@@ -214,20 +214,20 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					insertInto = true;
 				}
 			}
-            
+
             //if this is an update procedure, it could reassign variables
 			command = QueryRewriter.rewrite(command, metadata, procEnv.getContext(),
-					command instanceof CreateProcedureCommand?Collections.EMPTY_MAP:nameValueMap); 
+					command instanceof CreateProcedureCommand?Collections.EMPTY_MAP:nameValueMap);
 
             ProcessorPlan commandPlan = QueryOptimizer.optimizePlan(command, metadata,
 					idGenerator, capFinder, AnalysisRecord
 							.createNonRecordingRecord(), procEnv
 							.getContext());
-            
+
             if (command instanceof CreateProcedureCommand && commandPlan instanceof ProcedurePlan) {
             	((ProcedurePlan)commandPlan).setValidateAccess(procEnv.isValidateAccess());
             }
-            
+
 			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, (insertInto||updateCommand)?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
 				public void process(ProcedurePlan procEnv)
@@ -280,7 +280,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 	ts.closeSource();
                 }
             }
-            
+
             // do a recursion check
     		// Add group to recursion stack
     		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
@@ -298,7 +298,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		} catch (TeiidProcessingException e) {
 			Object[] params = {dynamicCommand, query == null?dynamicCommand.getSql():query, e.getMessage()};
 			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30168, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30168, params));
-		} 
+		}
 	}
 
 	/**
@@ -306,7 +306,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	 * @param localContext
 	 * @throws TeiidComponentException
 	 * @throws TeiidComponentException
-	 * @throws TeiidProcessingException 
+	 * @throws TeiidProcessingException
 	 */
 	private void updateContextWithUsingValues(ProcedurePlan procEnv,
 			VariableContext localContext) throws TeiidComponentException, TeiidProcessingException {
@@ -325,7 +325,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			}
 		}
 	}
-    
+
 	/**
 	 * @param localContext
 	 * @return
@@ -394,9 +394,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 				}
 			}
 		}
-		
+
 		CommandContext context = procEnv.getContext();
-		
+
 		if (procEnv.isValidateAccess() && !context.getDQPWorkContext().isAdmin() && context.getAuthorizationValidator() != null) {
 			context.getAuthorizationValidator().validate(new String[] {commandString}, command, metadata, context, CommandType.USER);
 		}
@@ -417,18 +417,18 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = new PlanNode("ExecDynamicSqlInstruction"); //$NON-NLS-1$
-		props.addProperty(PROP_SQL, dynamicCommand.toString()); 
+		props.addProperty(PROP_SQL, dynamicCommand.toString());
 		return props;
 	}
-	
+
 	public boolean isReturnable() {
 		return returnable;
 	}
-	
+
 	public void setReturnable(boolean returnable) {
 		this.returnable = returnable;
 	}
-	
+
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 	    Boolean expressionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(dynamicCommand.getSql()));

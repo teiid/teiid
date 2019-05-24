@@ -36,7 +36,7 @@ import org.teiid.translator.simpledb.api.SimpleDBConnection.SimpleDBAttribute;
 public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConnection> {
     public static final String ITEM_NAME = SimpleDBConnection.ITEM_NAME;
     private static final String DISPLAY_ITEM_NAME = "ItemName"; //$NON-NLS-1$
-    
+
     /**
      * As SimpleDB does not provide any way to obtain all attribute names for
      * given domain (one can query only attribute names for single item) and
@@ -53,13 +53,13 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
         for (String domain : domains) {
             Table table = metadataFactory.addTable(domain);
             table.setSupportsUpdate(true);
-            
+
             Column itemName = metadataFactory.addColumn(DISPLAY_ITEM_NAME, TypeFacility.RUNTIME_NAMES.STRING, table);
             itemName.setUpdatable(true);
             itemName.setNameInSource(ITEM_NAME);
             itemName.setNullType(NullType.No_Nulls);
             metadataFactory.addPrimaryKey("PK0", Arrays.asList(DISPLAY_ITEM_NAME), table); //$NON-NLS-1$
-            
+
             for (SimpleDBAttribute attribute : connection.getAttributeNames(domain)) {
                 Column column = null;
                 if (attribute.hasMultipleValues()) {
@@ -71,17 +71,17 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
                 column.setUpdatable(true);
                 column.setNullType(NullType.Nullable);
             }
-        }        
+        }
     }
 
     private static String quote(String name) {
         return '`' + StringUtil.replaceAll(name, "`", "``") + '`'; //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     public static String getName(AbstractMetadataRecord record) {
         return SQLStringVisitor.getRecordName(record);
     }
-    
+
     public static String getQuotedName(AbstractMetadataRecord record) {
         //don't quote itemname()
         String name = getName(record);
@@ -90,11 +90,11 @@ public class SimpleDBMetadataProcessor implements MetadataProcessor<SimpleDBConn
         }
         return quote(name);
     }
-    
+
     public static boolean isItemName(Column column) {
-        return isItemName(SimpleDBMetadataProcessor.getName(column));        
+        return isItemName(SimpleDBMetadataProcessor.getName(column));
     }
     public static boolean isItemName(String name) {
-        return name.equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);        
-    }    
+        return name.equalsIgnoreCase(SimpleDBMetadataProcessor.ITEM_NAME);
+    }
 }

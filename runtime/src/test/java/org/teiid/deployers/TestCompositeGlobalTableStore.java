@@ -39,7 +39,7 @@ public class TestCompositeGlobalTableStore {
 		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(new MetadataStore(), "foo");
 		GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
 		assertTrue(gts instanceof GlobalTableStoreImpl);
-		
+
 		vdb.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		MetadataStore ms = new MetadataStore();
 		Schema s = new Schema();
@@ -49,10 +49,10 @@ public class TestCompositeGlobalTableStore {
 		GlobalTableStore gts1 = Mockito.mock(GlobalTableStore.class);
 		imported.getVDB().addAttchment(GlobalTableStore.class, gts1);
 		vdb.getChildren().put(new VDBKey("foo1", 1), imported);
-		
+
 		CompositeGlobalTableStore cgts = (CompositeGlobalTableStore)CompositeGlobalTableStore.createInstance(vdb, BufferManagerFactory.getStandaloneBufferManager(), null);
 		assertEquals(gts1, cgts.getStoreForTable(RelationalPlanner.MAT_PREFIX + "X.Y"));
 		assertEquals(cgts.getPrimary(), cgts.getStore("Z"));
 	}
-	
+
 }

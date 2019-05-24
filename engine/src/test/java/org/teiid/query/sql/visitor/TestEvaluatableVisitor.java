@@ -32,5 +32,5 @@ public class TestEvaluatableVisitor {
 		Query command = (Query)TestResolver.helpResolve("select * from pm1.g1 where e1 in (select e1 from pm1.g2 where e2 = ?)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
 		assertTrue(EvaluatableVisitor.needsProcessingEvaluation(command));
 	}
-	
+
 }

@@ -35,7 +35,7 @@ import org.teiid.query.sql.util.SymbolMap;
  * Variation of a nested loop join that handles nested tables
  */
 public class NestedTableJoinStrategy extends JoinStrategy {
-	
+
 	private SymbolMap rightMap;
 	private Evaluator eval;
 	private boolean outerMatched;
@@ -46,17 +46,17 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 		clone.rightMap = rightMap;
 		return clone;
 	}
-	
+
 	@Override
 	public void initialize(JoinNode joinNode) {
 		super.initialize(joinNode);
 		this.eval = new Evaluator(null, joinNode.getDataManager(), joinNode.getContext());
 	}
-	
+
 	public void setRightMap(SymbolMap rightMap) {
 		this.rightMap = rightMap;
 	}
-	
+
 	@Override
 	protected void openRight() throws TeiidComponentException,
 			TeiidProcessingException {
@@ -65,21 +65,21 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 			this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
 		}
 	}
-	
+
 	@Override
 	protected void process() throws TeiidComponentException,
 			TeiidProcessingException {
-		
+
 		IndexedTupleSource its = leftSource.getIterator();
-		
+
 		while (its.hasNext() || leftSource.getCurrentTuple() != null) {
-			
+
 			List<?> leftTuple = leftSource.getCurrentTuple();
 			if (leftTuple == null) {
 				leftTuple = leftSource.saveNext();
 			}
 			updateContext(leftTuple, leftSource.getSource().getElements());
-			
+
 			if (rightMap != null && !rightSource.open) {
 				for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
 					joinNode.getContext().getVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
@@ -87,20 +87,20 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 				rightSource.getSource().reset();
 				super.openRight();
 			}
-			
+
 			IndexedTupleSource right = rightSource.getIterator();
-			
+
 			while (right.hasNext() || rightSource.getCurrentTuple() != null) {
-				
+
 				List<?> rightTuple = rightSource.getCurrentTuple();
 				if (rightTuple == null) {
 					rightTuple = rightSource.saveNext();
 				}
-				
+
 				List<?> outputTuple = outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getCurrentTuple());
-                
+
                 boolean matches = this.joinNode.matchesCriteria(outputTuple);
-                
+
                 rightSource.saveNext();
 
                 if (matches) {
@@ -108,13 +108,13 @@ public class NestedTableJoinStrategy extends JoinStrategy {
                 	joinNode.addBatchRow(outputTuple);
                 }
 			}
-			
+
 			if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
             	joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
             }
-			
+
 			outerMatched = false;
-			
+
 			if (rightMap == null) {
 				rightSource.getIterator().setPosition(1);
 			} else {
@@ -123,11 +123,11 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 					joinNode.getContext().getVariableContext().remove(entry.getKey());
 				}
 			}
-			
+
 			leftSource.saveNext();
 			updateContext(null, leftSource.getSource().getElements());
 		}
-		
+
 	}
 
 	private void updateContext(List<?> tuple,
@@ -143,7 +143,7 @@ public class NestedTableJoinStrategy extends JoinStrategy {
 			}
 		}
 	}
-	
+
     public String toString() {
         return "NESTED TABLE JOIN"; //$NON-NLS-1$
     }

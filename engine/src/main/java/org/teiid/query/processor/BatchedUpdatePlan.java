@@ -43,16 +43,16 @@ import org.teiid.translator.TranslatorBatchException;
 
 
 
-/** 
+/**
  * Plan for execution for a batched update command. The plan executes the child plans of the
  * individual commands in order.
- * 
+ *
  * If variableContexts are provided, then this is a bulk update where all plans are the same object.
- * 
+ *
  * @since 4.2
  */
 public class BatchedUpdatePlan extends ProcessorPlan {
-    
+
     /** Array that holds the child update plans */
     private ProcessorPlan[] updatePlans;
     /** */
@@ -65,13 +65,13 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     private int planIndex = 0;
     /** The position of the command for which the update count is being retrieved */
     private int commandIndex = 0;
-    
+
     private List<VariableContext> contexts; //only set for bulk updates
-    
+
     private boolean singleResult;
-    
+
     /**
-     *  
+     *
      * @param childPlans the child update plans for this batch
      * @param commandsInBatch The total number of commands in this batch. This does not always equal the number of plans if some
      * commands have been batched together.
@@ -88,17 +88,17 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         this.singleResult = singleResult;
     }
 
-    /** 
+    /**
      * @see java.lang.Object#clone()
      * @since 4.2
      */
     public BatchedUpdatePlan clone() {
         List<ProcessorPlan> clonedPlans = new ArrayList<ProcessorPlan>(updatePlans.length);
-        
+
         clonedPlans.add(updatePlans[0].clone());
         for (int i = 1; i <updatePlans.length; i++) {
         	if (contexts == null) {
-                clonedPlans.add(updatePlans[1].clone());        		
+                clonedPlans.add(updatePlans[1].clone());
         	} else {
         		clonedPlans.add(clonedPlans.get(0));
         	}
@@ -107,7 +107,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         return clone;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#initialize(org.teiid.query.util.CommandContext, org.teiid.query.processor.ProcessorDataManager, org.teiid.common.buffer.BufferManager)
      * @since 4.2
      */
@@ -120,8 +120,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
             updatePlans[i].initialize(context, dataMgr, bufferMgr);
         }
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#getOutputElements()
      * @since 4.2
      */
@@ -129,7 +129,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         return Command.getUpdateCommandSymbol();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#open()
      * @since 4.2
      */
@@ -157,7 +157,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 		}
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#nextBatch()
      * @since 4.2
      */
@@ -178,16 +178,16 @@ public class BatchedUpdatePlan extends ProcessorPlan {
                     this.getContext().getTransactionServer().resume(this.planContexts[planIndex]);
                 }
 	            // Execute nextBatch() on each plan in sequence
-	            
+
 	            TupleBatch nextBatch = null;
 	            do {
 	        		nextBatch = updatePlans[planIndex].nextBatch(); // Can throw BlockedException
-					List<List<?>> currentBatch = nextBatch.getTuples(); 
+					List<List<?>> currentBatch = nextBatch.getTuples();
 		            for (int i = 0; i < currentBatch.size(); i++, commandIndex++) {
 		                updateCounts[commandIndex] = currentBatch.get(i);
 		            }
 	            } while (!nextBatch.getTerminationFlag());
-	            
+
 	            // since we are done with the plan explicitly close it.
 	            updatePlans[planIndex].close();
 	            if (this.planContexts[planIndex] != null) {
@@ -225,7 +225,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         			//this should not happen, but is possible should a translator return
         			//the batch results rather than throwing an exception
         			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31199, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198));
-        		} 
+        		}
         		if (value > 0) {
         			result += value;
         		}
@@ -254,7 +254,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 			}
 			vc.clear();
 			VariableContext currentValues = this.contexts.get(planIndex);
-			vc.putAll(currentValues); 
+			vc.putAll(currentValues);
 		}
 		TransactionContext tc = this.getContext().getTransactionContext();
         if (startTxn[planIndex] && tc != null && tc.getTransactionType() == Scope.NONE) {
@@ -265,7 +265,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 		planOpened[planIndex] = true;
 	}
 
-    /** 
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#close()
      * @since 4.2
      */
@@ -290,8 +290,8 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         }
     }
 
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.ProcessorPlan#reset()
      * @since 4.2
      */
@@ -314,7 +314,7 @@ public class BatchedUpdatePlan extends ProcessorPlan {
         }
         return props;
     }
-    
+
     public String toString() {
         StringBuffer val = new StringBuffer("BatchedUpdatePlan {\n"); //$NON-NLS-1$
         for (int i = 0; i < getPlanCount(); i++) {
@@ -330,14 +330,14 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 	}
 
     /**
-     * Returns the child plans for this batch. Used primarily for unit tests. 
+     * Returns the child plans for this batch. Used primarily for unit tests.
      * @return
      * @since 4.2
      */
     public List getUpdatePlans() {
         return Arrays.asList(updatePlans);
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
     	if (!singleResult) {
@@ -369,9 +369,9 @@ public class BatchedUpdatePlan extends ProcessorPlan {
     	}
     	return false;
     }
-    
+
     public void setSingleResult(boolean singleResult) {
 		this.singleResult = singleResult;
 	}
-    
+
 }

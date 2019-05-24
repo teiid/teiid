@@ -33,14 +33,14 @@ public interface ILogon {
 	static final String KRB5TOKEN = "KRB5TOKEN"; //$NON-NLS-1$
 	static final String KRB5_ESTABLISHED = "KRB5_CONTEXT_ESTABLISHED"; //$NON-NLS-1$
 	public static final String AUTH_TYPE = "authType"; //$NON-NLS-1$
-	
+
 	@Secure
     LogonResult logon(Properties connectionProperties)
     throws LogonException, TeiidComponentException, CommunicationException;
 
 	@Secure
     LogonResult neogitiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
-    
+
    /**
     * Ping the server to see if the client-server connection is alive.
     * @throws InvalidSessionException if the sessionID is invalid
@@ -48,18 +48,18 @@ public interface ILogon {
     */
    ResultsFuture<?> ping()
        throws InvalidSessionException, TeiidComponentException, CommunicationException;
-   
+
    @Deprecated
    ResultsFuture<?> ping(Collection<String> sessions)
    		throws TeiidComponentException, CommunicationException;
-   
+
    /**
     * Log off the specified session.
     * @throws InvalidSessionException If session has expired or doesn't exist
     * @throws ComponentNotFoundException If couldn't find needed service component
     */
    ResultsFuture<?> logoff() throws InvalidSessionException, TeiidComponentException;
-   
+
    @Secure
    void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException, CommunicationException;
 }

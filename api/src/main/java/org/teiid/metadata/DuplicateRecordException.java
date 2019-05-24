@@ -27,5 +27,5 @@ public class DuplicateRecordException extends MetadataException {
 	public DuplicateRecordException(Event e, String msg) {
 		super(e, msg);
 	}
-	
+
 }

@@ -51,9 +51,9 @@ public class StringAgg extends AggregateFunction {
 
     private FileStoreInputStreamFactory result;
     private boolean binary;
-    
+
     public StringAgg(boolean binary) {
-    	this.binary = binary;    	    	
+    	this.binary = binary;
 	}
 
 	private FileStoreInputStreamFactory buildResult(CommandContext context) {
@@ -65,7 +65,7 @@ public class StringAgg extends AggregateFunction {
     public void reset() {
     	this.result = null;
     }
-    
+
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
     		throws TeiidComponentException, TeiidProcessingException {
@@ -123,12 +123,12 @@ public class StringAgg extends AggregateFunction {
     	if (this.result == null) {
     		return null;
     	}
-    	
+
     	try {
     		this.result.getWriter().close();
     		FileStoreOutputStream fs = this.result.getOuputStream();
 			fs.close();
-		
+
 			if (binary) {
 				if (fs.bytesWritten()) {
 					return new BlobType(new BlobImpl(result));

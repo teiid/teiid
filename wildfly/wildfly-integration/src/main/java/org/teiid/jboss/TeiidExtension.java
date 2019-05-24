@@ -28,22 +28,22 @@ import org.teiid.logging.LogManager;
 import org.teiid.runtime.JBossLogger;
 
 public class TeiidExtension implements Extension {
-		
+
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
 	public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 2);
-	
+
     public static ResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
         return new StandardResourceDescriptionResolver(keyPrefix,
                 IntegrationPlugin.BUNDLE_NAME,
                 TeiidExtension.class.getClassLoader(), true, false);
     }
-    
+
 	@Override
 	public void initialize(ExtensionContext context) {
 		final SubsystemRegistration subsystem = context.registerSubsystem(TEIID_SUBSYSTEM, TEIID_VERSION);
-		
+
 		LogManager.setLogListener(new JBossLogger());
-		
+
 		subsystem.registerXMLElementWriter(TeiidSubsystemParser.INSTANCE);
 
 		// Main Teiid system, with children query engine and translators, register only if this is a server

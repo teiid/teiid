@@ -33,10 +33,10 @@ import org.teiid.logging.LogManager;
 public class InfinispanCache<K, V> implements Cache<K, V> {
 
 	protected org.infinispan.AdvancedCache<K, V> cacheStore;
-	private final String name; 
+	private final String name;
 	private ClassLoader classloader;
 	private boolean transactional;
-	
+
 	public InfinispanCache(org.infinispan.Cache<K, V> cacheStore, String cacheName, ClassLoader classloader) {
 		assert(cacheStore != null);
 		this.cacheStore = cacheStore.getAdvancedCache();
@@ -46,21 +46,21 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 		this.name = cacheName;
 		this.classloader = classloader;
 	}
-	
+
 	@Override
 	public boolean isTransactional() {
 		return transactional;
 	}
-	
+
 	@Override
 	public V get(K key) {
 		return this.cacheStore.with(this.classloader).get(key);
 	}
-	
+
 	public V put(K key, V value) {
 		return this.cacheStore.with(this.classloader).put(key, value);
 	}
-	
+
 	@Override
 	public V put(K key, V value, Long ttl) {
 		if (ttl != null) {
@@ -73,17 +73,17 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 	public V remove(K key) {
 		return this.cacheStore.with(this.classloader).remove(key);
 	}
-	
+
 	@Override
 	public int size() {
 		return this.cacheStore.with(this.classloader).size();
 	}
-	
+
 	@Override
 	public void clear() {
 		this.cacheStore.with(this.classloader).clear();
 	}
-	
+
 	@Override
 	public String getName() {
 		return this.name;

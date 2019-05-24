@@ -55,7 +55,7 @@ public class StringToShortTransform extends Transform {
 	public Class getTargetType() {
 		return Short.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

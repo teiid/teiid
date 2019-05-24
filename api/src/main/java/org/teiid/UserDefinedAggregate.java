@@ -28,7 +28,7 @@ public interface UserDefinedAggregate<T> {
 	 */
 	void reset();
 	/**
-	 * Called to get the current value.  May be called multiple times in the same 
+	 * Called to get the current value.  May be called multiple times in the same
 	 * partition for windowed aggregates.
 	 * @param commandContext
 	 * @return

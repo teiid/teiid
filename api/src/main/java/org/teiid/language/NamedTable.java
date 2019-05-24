@@ -22,15 +22,15 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 import org.teiid.metadata.Table;
 
 /**
- * Represents a table in the language objects.  An example would 
+ * Represents a table in the language objects.  An example would
  * be a table reference in the FROM clause.
  */
 public class NamedTable extends BaseLanguageObject implements MetadataReference<Table>, TableReference {
 
     private String correlationName;
-    private String name;    
+    private String name;
     private Table metadataObject;
-    
+
     public NamedTable(String name, String correlationName, Table group) {
         this.name = name;
         this.correlationName = correlationName;
@@ -53,7 +53,7 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
     public Table getMetadataObject() {
     	return this.metadataObject;
     }
-    
+
     public void setMetadataObject(Table metadataObject) {
 		this.metadataObject = metadataObject;
 	}
@@ -69,5 +69,5 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
     public void setCorrelationName(String context) {
         this.correlationName = context;
     }
-    
+
 }

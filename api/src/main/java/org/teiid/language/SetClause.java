@@ -24,7 +24,7 @@ public class SetClause extends BaseLanguageObject {
 
 	private ColumnReference symbol;
 	private Expression value;
-	
+
 	public SetClause(ColumnReference symbol, Expression value) {
 		this.symbol = symbol;
 		this.value = value;

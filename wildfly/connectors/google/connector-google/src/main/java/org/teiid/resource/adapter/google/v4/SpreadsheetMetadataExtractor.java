@@ -33,7 +33,7 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
 
 /**
  * Creates metadata by using SheetsAPI.
- * 
+ *
  * We retrieve worksheet names and possibly headers
  *
  */
@@ -45,7 +45,7 @@ public class SpreadsheetMetadataExtractor {
 	    this.sheetsAPI = api;
 	    this.dataProtocolAPI = dataProtocolAPI;
     }
-	
+
 	public SpreadsheetInfo extractMetadata(String spreadsheetId){
 		try {
 		    Spreadsheet spreadsheet = sheetsAPI.getSpreadsheet(spreadsheetId);

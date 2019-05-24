@@ -28,12 +28,12 @@ import org.teiid.core.types.StandardXMLTranslator;
 import junit.framework.TestCase;
 
 
-/** 
+/**
  * XML StreamSource Translator.
  */
 public class TestXMLStreamSourceTranslator extends TestCase {
 
-    private static final String sourceXML = 
+    private static final String sourceXML =
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +  //$NON-NLS-1$
         "<Books:bookCollection xmlns:Books=\"http://www.metamatrix.com/XMLSchema/DataSets/Books\">\r\n" +  //$NON-NLS-1$
         "   <book isbn=\"0-7356-0877-6\">\r\n" +  //$NON-NLS-1$
@@ -73,12 +73,12 @@ public class TestXMLStreamSourceTranslator extends TestCase {
         "      </publishingInformation>\r\n" +  //$NON-NLS-1$
         "   </book>\r\n" + //$NON-NLS-1$
         "</Books:bookCollection>"; //$NON-NLS-1$
-   
+
     public void testStreamSourceWithStream() throws Exception {
         StandardXMLTranslator translator = new StandardXMLTranslator(new StreamSource(new StringReader(sourceXML)));
         compareDocuments(sourceXML, translator.getString());
-    }    
-    
+    }
+
     private void compareDocuments(String expectedDoc, String actualDoc) {
         StringTokenizer tokens1 = new StringTokenizer(expectedDoc, "\r\n"); //$NON-NLS-1$
         StringTokenizer tokens2 = new StringTokenizer(actualDoc, "\n");//$NON-NLS-1$
@@ -93,5 +93,5 @@ public class TestXMLStreamSourceTranslator extends TestCase {
         if(tokens2.hasMoreTokens()){
             fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
         }
-    }    
+    }
 }

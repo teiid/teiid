@@ -49,7 +49,7 @@ public class OrderBy implements LanguageObject {
 
     /** if the ordering can affect user results */
     private boolean userOrdering = true;
-    
+
     /**
      * Constructs a default instance of this class.
      */
@@ -65,7 +65,7 @@ public class OrderBy implements LanguageObject {
 			orderByItems.add(new OrderByItem(singleElementSymbol, ASC));
 		}
     }
-    
+
     /**
      * Constructs an instance of this class from an ordered set of elements.
      * @param parameters The ordered list of SingleElementSymbol
@@ -88,7 +88,7 @@ public class OrderBy implements LanguageObject {
     public int getVariableCount() {
         return orderByItems.size();
     }
-    
+
     public List<OrderByItem> getOrderByItems() {
     	return this.orderByItems;
     }
@@ -133,7 +133,7 @@ public class OrderBy implements LanguageObject {
         }
     	return null;
     }
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -189,15 +189,15 @@ public class OrderBy implements LanguageObject {
     public void setExpressionPosition(int orderIndex, int selectIndex) {
     	this.orderByItems.get(orderIndex).setExpressionPosition(selectIndex);
     }
-    
+
     public int getExpressionPosition(int orderIndex) {
     	return this.orderByItems.get(orderIndex).getExpressionPosition();
 	}
-    
+
     public void removeOrderByItem(int index) {
         this.orderByItems.remove(index);
     }
-    
+
     public boolean hasUnrelated() {
     	for (OrderByItem item : orderByItems) {
 			if (item.isUnrelated()) {
@@ -206,7 +206,7 @@ public class OrderBy implements LanguageObject {
 		}
     	return false;
     }
-    
+
     /**
      * Get the list or sort key symbols.  Modifications to this list will not add or remove {@link OrderByItem}s.
      * @return
@@ -218,7 +218,7 @@ public class OrderBy implements LanguageObject {
 		}
     	return result;
     }
-    
+
     public List<Boolean> getTypes() {
     	ArrayList<Boolean> result = new ArrayList<Boolean>(orderByItems.size());
     	for (OrderByItem item : orderByItems) {
@@ -230,9 +230,9 @@ public class OrderBy implements LanguageObject {
     public void setUserOrdering(boolean userOrdering) {
         this.userOrdering = userOrdering;;
     }
-    
+
     public boolean isUserOrdering() {
         return userOrdering;
     }
-    
+
 }

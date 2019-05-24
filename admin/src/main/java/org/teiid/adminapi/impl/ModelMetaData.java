@@ -33,16 +33,16 @@ import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
-	
+
 	private static final int DEFAULT_ERROR_HISTORY = 10;
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
-		
-	protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();	
+
+	protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();
 	protected String modelType = Type.PHYSICAL.name();
-	protected String description;	
-	protected String path; 
+	protected String description;
+	protected String path;
     protected boolean visible = true;
     protected List<Message> messages;
     protected transient List<Message> runtimeMessages;
@@ -57,8 +57,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 	public void setDescription(String description) {
 		this.description = description;
-	}	
-	
+	}
+
 	@Override
     public boolean isSource() {
 		return getModelType() == Model.Type.PHYSICAL;
@@ -77,21 +77,21 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			return Type.OTHER;
 		}
 	}
-	
+
     public String getPath() {
 		return path;
 	}
 
 	public void setPath(String path) {
 		this.path = path;
-	}	
+	}
 
 	@Override
     public boolean isSupportsMultiSourceBindings() {
-		return this.isSource() && 
+		return this.isSource() &&
 				(this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD)));
-    }    
-	
+    }
+
     public void setSupportsMultiSourceBindings(boolean supports) {
         addProperty(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY, Boolean.toString(supports));
     }
@@ -99,15 +99,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     public void setModelType(Model.Type modelType) {
         this.modelType = modelType.name();
     }
-    
+
     public void setModelType(String modelType) {
     	if (modelType != null) {
     		this.modelType = modelType.toUpperCase();
     	} else {
     		this.modelType = null;
     	}
-    }    
-    
+    }
+
 	@Override
 	public MetadataStatus getMetadataStatus() {
 		return metadataStatus;
@@ -116,45 +116,45 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     public void setMetadataStatus(Model.MetadataStatus status) {
         this.metadataStatus = status;
     }
-    
+
     public void setMetadataStatus(String status) {
     	if (status != null) {
     		this.metadataStatus = Model.MetadataStatus.valueOf(status);
     	}
     }
-    
+
     public String toString() {
 		return getName() + this.sources;
     }
-    
+
     public void setVisible(boolean value) {
     	this.visible = value;
-    }    
+    }
 
 	public Collection<SourceMappingMetadata> getSourceMappings(){
 		return this.sources.values();
 	}
-	
+
 	public Map<String, SourceMappingMetadata> getSources() {
 		return sources;
 	}
-	
+
 	public SourceMappingMetadata getSourceMapping(String sourceName){
 		return this.sources.get(sourceName);
-	}	
-    
+	}
+
 	public void setSourceMappings(List<SourceMappingMetadata> sources){
 		this.sources.clear();
 		for (SourceMappingMetadata source: sources) {
 			addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 		}
-	}      
-    
+	}
+
     @Override
     public List<String> getSourceNames() {
     	return new ArrayList<String>(this.sources.keySet());
 	}
-    
+
     @Override
     public String getSourceConnectionJndiName(String sourceName) {
     	SourceMappingMetadata s = this.sources.get(sourceName);
@@ -163,7 +163,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	}
     	return s.getConnectionJndiName();
 	}
-    
+
     @Override
     public String getSourceTranslatorName(String sourceName) {
     	SourceMappingMetadata s = this.sources.get(sourceName);
@@ -171,16 +171,16 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     		return null;
     	}
     	return s.getTranslatorName();
-	}    
-    
+	}
+
 	public SourceMappingMetadata addSourceMapping(String name, String translatorName, String connJndiName) {
 		return this.sources.put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
 	}
-	
+
 	public void addSourceMapping(SourceMappingMetadata source) {
 		this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 	}
-	
+
 	public synchronized boolean hasErrors() {
 		if (this.messages != null) {
 			for (Message error : this.messages) {
@@ -196,13 +196,13 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 				}
 			}
 		}
-		return false;	
+		return false;
 	}
-	
+
 	public synchronized List<Message> getMessages(){
 		return getMessages(true);
-	}	
-	
+	}
+
 	public synchronized List<Message> getMessages(boolean includeRuntime){
 		if (this.messages == null && this.runtimeMessages == null) {
 			return Collections.emptyList();
@@ -216,21 +216,21 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 		return list;
 	}
-	
+
     public Message addMessage(String severity, String message) {
         Message ve = new Message(Severity.valueOf(severity), message);
         addMessage(ve);
         return ve;
     }
-    
+
 	public synchronized boolean hasRuntimeMessages(){
 		return this.runtimeMessages != null && !this.runtimeMessages.isEmpty();
-	}    
-    
+	}
+
     public synchronized Message addRuntimeError(String message) {
     	return addRuntimeMessage(Severity.ERROR, message);
-    }    
-    
+    }
+
     public synchronized Message addRuntimeMessage(Severity severity, String message) {
         Message ve = new Message(severity, message);
         if (this.runtimeMessages == null) {
@@ -241,8 +241,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         	this.runtimeMessages.remove(0);
         }
         return ve;
-    } 
-    
+    }
+
     public synchronized Message addMessage(Message ve) {
         if (this.messages == null) {
             this.messages = new LinkedList<Message>();
@@ -250,33 +250,33 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         this.messages.add(ve);
         return ve;
     }
-    
+
     public synchronized void clearRuntimeMessages() {
 		runtimeMessages = null;
-    }  
-    
+    }
+
     public synchronized void clearMessages() {
     	clearRuntimeMessages();
     	this.messages = null;
-    } 
-	
+    }
+
     public static class Message implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
 
 		public enum Severity {ERROR, WARNING, INFO};
-    	
+
         protected String value;
         protected Severity severity;
         protected String path;
-        
+
 		public Message() {};
-        
+
         public Message(Severity severity, String msg) {
         	this.severity = severity;
         	Assertion.isNotNull(msg);
         	this.value = msg;
         }
-    	
+
         public String getValue() {
 			return value;
 		}
@@ -292,15 +292,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 		public void setSeverity(Severity severity) {
 			this.severity = severity;
-		}       
-		
+		}
+
         public String getPath() {
 			return path;
 		}
 
 		public void setPath(String path) {
 			this.path = path;
-		}		
+		}
 
 		@Override
 		public boolean equals(Object obj) {
@@ -322,9 +322,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			} else if (!value.equals(other.value))
 				return false;
 			return true;
-		}		
+		}
     }
-    
+
     public void addSourceMetadata(String type, String text) {
     	this.sourceMetadataType.add(type);
     	this.sourceMetadataText.add(text);
@@ -375,15 +375,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			sourceMetadataText.add(schemaText);
 		}
 	}
-    
+
     public List<String> getSourceMetadataType() {
 		return sourceMetadataType;
 	}
-    
+
     public List<String> getSourceMetadataText() {
 		return sourceMetadataText;
 	}
-	
+
 	@Override
 	public List<String> getValidityErrors() {
 		List<String> allErrors = new ArrayList<String>();
@@ -397,7 +397,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 		return allErrors;
 	}
-	
-	
-	
+
+
+
 }

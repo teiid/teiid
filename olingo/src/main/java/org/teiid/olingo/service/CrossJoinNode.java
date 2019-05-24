@@ -41,7 +41,7 @@ public class CrossJoinNode extends DocumentNode {
         resource.setExpand(expand);
         return resource;
     }
-    
+
     public boolean hasExpand() {
         return expand;
     }

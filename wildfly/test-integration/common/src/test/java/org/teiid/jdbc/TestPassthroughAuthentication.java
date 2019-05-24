@@ -35,22 +35,22 @@ import org.teiid.security.SecurityHelper;
 public class TestPassthroughAuthentication {
 
 	static FakeServer server = new FakeServer(false);
-	static TestableSecurityHelper securityHelper = new TestableSecurityHelper(); 
-	
+	static TestableSecurityHelper securityHelper = new TestableSecurityHelper();
+
 	@AfterClass public static void oneTimeTearDown() {
 		server.stop();
 	}
-	
+
 	@BeforeClass public static void oneTimeSetup() throws Exception {
     	server.setUseCallingThread(true);
     	server.start(new EmbeddedConfiguration() {
     		@Override
             public SecurityHelper getSecurityHelper() {
     			return securityHelper;
-    		}  		
+    		}
     	}, false);
 	}
-	
+
 	@Test
 	public void test() throws Exception {
 		try {
@@ -64,13 +64,13 @@ public class TestPassthroughAuthentication {
 
 			server.getSessionService().setTrustAllLocal(true);
 			server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
-			
+
 			securityHelper.associateSecurityContext("testSC");
 			try {
 				server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
 			} catch (Exception e) {
 				fail();
-			}			
+			}
 		} finally {
 			server.undeployVDB("not_there");
 		}
@@ -101,7 +101,7 @@ public class TestPassthroughAuthentication {
 			}
 			return null;
 		}
-		
+
 		@Override
 		public Object authenticate(String securityDomain, String baseUserName,
 				Credentials credentials, String applicationName) throws LoginException {

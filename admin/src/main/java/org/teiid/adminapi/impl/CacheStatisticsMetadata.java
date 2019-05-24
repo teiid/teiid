@@ -22,11 +22,11 @@ import org.teiid.adminapi.CacheStatistics;
 public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheStatistics{
 
 	private static final long serialVersionUID = -3514505497661004560L;
-	
+
 	private double hitRatio;
 	private int totalEntries;
 	private int requestCount;
-	
+
 	@Override
 	public int getRequestCount() {
 		return requestCount;
@@ -52,8 +52,8 @@ public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheSta
 
 	public void setTotalEntries(int value) {
 		this.totalEntries = value;
-	}	
-	
+	}
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("hitRatio=").append(hitRatio);//$NON-NLS-1$

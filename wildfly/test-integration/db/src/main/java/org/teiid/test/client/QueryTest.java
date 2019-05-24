@@ -18,20 +18,20 @@
 package org.teiid.test.client;
 
 /**
- * The QueryTest represents a test to be executed.  This test can consist of 
- * one or more {@link QuerySQL SQL} queries required to perform the test.  
- * 
+ * The QueryTest represents a test to be executed.  This test can consist of
+ * one or more {@link QuerySQL SQL} queries required to perform the test.
+ *
  * @author vanhalbert
  *
  */
 public class QueryTest  {
-    
+
     private QuerySQL[] queries;
     private String querySetID;
     private String queryID;
     private boolean isException=false;
     private String queryScenarioID;
-    
+
     public QueryTest(String queryScenarioID, String queryID, String querySetID, QuerySQL[] queries, boolean isException) {
 	this.queryID = queryID;
 	this.queries = queries;
@@ -51,11 +51,11 @@ public class QueryTest  {
     public boolean isException() {
 	return this.isException;
     }
-    
+
     public String geQuerySetID() {
 	return this.querySetID;
     }
-    
+
     public String getQueryScenarioID() {
 	return this.queryScenarioID;
     }

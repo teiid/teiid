@@ -48,9 +48,9 @@ public class TestEncryptDecrypt {
 
     /** String to encrypt and decrypt. */
     private static final String CLEARTEXT = ALPHA_U + ALPHA_L + NUMBERS + MISC_CHAR;
-    
+
     private static Cryptor cryptor;
-    
+
     @BeforeClass public static void oneTimeSetup() throws CryptoException, IOException {
     	cryptor = SymmetricCryptor.getSymmectricCryptor(TestEncryptDecrypt.class.getResource("/teiid.keystore")); //$NON-NLS-1$
     }
@@ -76,7 +76,7 @@ public class TestEncryptDecrypt {
 
     /**
      * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
+     * @throws CryptoException
      */
     @Test public void testPos_EncryptDecryptLongString() throws CryptoException {
         helpTestEncryptDecrypt( CLEARTEXT );
@@ -84,7 +84,7 @@ public class TestEncryptDecrypt {
 
     /**
      * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
+     * @throws CryptoException
      */
     @Test public void testPos_EncryptDecryptHalfLongString() throws CryptoException {
         helpTestEncryptDecrypt( CLEARTEXT.substring(0,CLEARTEXT.length()/2) );
@@ -92,7 +92,7 @@ public class TestEncryptDecrypt {
 
     /**
      * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
+     * @throws CryptoException
      */
     @Test public void testPos_EncryptDecryptStringsOfVariousLengths() throws CryptoException {
         for ( int k = 1; k < CLEARTEXT.length()/4; k++ ) {
@@ -104,7 +104,7 @@ public class TestEncryptDecrypt {
 
     /**
      * Test the {@link Cryptor#encrypt} method.
-     * @throws CryptoException 
+     * @throws CryptoException
      */
     @Test public void testPos_EncryptDecryptStringsOfBlanks() throws CryptoException {
         String BLANKS = "          "; //$NON-NLS-1$
@@ -125,40 +125,40 @@ public class TestEncryptDecrypt {
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
             //expected
-        } 
+        }
     }
 
     @Test public void testLongEncryption() throws Exception {
         helpTestEncryptDecrypt(CLEARTEXT + CLEARTEXT + CLEARTEXT);
     }
-    
+
     @Test public void testSymmetricEncryptionWithRandomKey() throws Exception {
-        
+
         SymmetricCryptor randomSymCryptor = SymmetricCryptor.getSymmectricCryptor(true);
-        
+
         ArrayList test = new ArrayList(Arrays.asList(new String[] {ALPHA_L, ALPHA_U, CLEARTEXT, NUMBERS}));
-        
+
         Object result = randomSymCryptor.sealObject(test);
 
         //ensure that we can serialize
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ObjectOutputStream oos = new ObjectOutputStream(baos);
         oos.writeObject(result);
-        
+
         ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
         ObjectInputStream ois = new ObjectInputStream(bais);
         result = ois.readObject();
-        
+
         ArrayList clearObject = (ArrayList)randomSymCryptor.unsealObject(result);
-        
+
         assertEquals(test, clearObject);
-        
+
         SymmetricCryptor cryptor1 = SymmetricCryptor.getSymmectricCryptor(randomSymCryptor.getEncodedKey(), true);
-        
+
         clearObject = (ArrayList)cryptor1.unsealObject(result);
-        
+
         assertEquals(test, clearObject);
     }
-    
-} 
+
+}
 

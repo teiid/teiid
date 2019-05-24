@@ -33,7 +33,7 @@ public class DataSourceConnection extends ConnectionStrategy {
     // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE
     // driver class
     public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
-    
+
     public static final String DS_DATASOURCE = "datasource"; //$NON-NLS-1$
 
 
@@ -82,7 +82,7 @@ public class DataSourceConnection extends ConnectionStrategy {
         	    throw new TransactionRuntimeException("Property " + DS_DATASOURCE
         		    + " was null");
         	}
-	    
+
 	} else {
         	this.driver = this.getEnvironment().getProperty(DS_DRIVER);
         	if (this.driver == null || this.driver.length() == 0) {
@@ -90,7 +90,7 @@ public class DataSourceConnection extends ConnectionStrategy {
         		    + " was not specified");
         	}
 	}
-	
+
 	this.url = this.getEnvironment().getProperty(DS_URL);
 
 	this.username = this.getEnvironment().getProperty(DS_USER);
@@ -104,7 +104,7 @@ public class DataSourceConnection extends ConnectionStrategy {
     @Override
     public Connection getConnection() throws QueryTestFailedException {
 	try {
-		return getXAConnection().getConnection();		
+		return getXAConnection().getConnection();
 	} catch (QueryTestFailedException qtf) {
 	    throw qtf;
 	} catch (Exception e) {
@@ -128,7 +128,7 @@ public class DataSourceConnection extends ConnectionStrategy {
     }
 
 	private XAConnection createConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-		
+
 		TestLogger.log("Creating Datasource Connection: \"" + this.serverName + " - " + this.databaseName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 
 		DataSource ds = (DataSource) Class.forName(this.driver).newInstance();
@@ -152,7 +152,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 
 			return ((XADataSource) dataSource).getXAConnection(this.username,
 					this.pwd);
-		} 
+		}
 		Properties props = new Properties();
 		props.setProperty(DS_DATABASENAME, this.databaseName);
 		props.setProperty(DS_SERVERPORT, this.portNumber);

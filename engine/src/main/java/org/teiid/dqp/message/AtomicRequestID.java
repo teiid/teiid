@@ -28,7 +28,7 @@ import org.teiid.core.util.HashCodeUtil;
 
 
 /**
- * This class uniquely identifies a AtomicRequestMessage 
+ * This class uniquely identifies a AtomicRequestMessage
  */
 public class AtomicRequestID implements Externalizable {
     private static final String SEPARATOR = "."; //$NON-NLS-1$
@@ -40,17 +40,17 @@ public class AtomicRequestID implements Externalizable {
     public AtomicRequestID() {
         // This is only to honor the externalizable interface..
     }
-           
+
     public AtomicRequestID(RequestID requestId, int nodeId, int execId) {
         this.requestId = requestId;
         this.nodeId = nodeId;
         this.executionId = execId;
     }
-    
+
     public RequestID getRequestID() {
         return requestId;
     }
-    
+
     public int getNodeID() {
         return nodeId;
     }
@@ -62,7 +62,7 @@ public class AtomicRequestID implements Externalizable {
     /**
      * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
      */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {        
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.requestId = (RequestID)in.readObject();
         this.nodeId = in.readInt();
         this.executionId = in.readInt();
@@ -75,15 +75,15 @@ public class AtomicRequestID implements Externalizable {
         out.writeObject(this.requestId);
         out.writeInt(this.nodeId);
         out.writeInt(this.executionId);
-    }    
-    
+    }
+
     public boolean equals(Object o) {
         if (this == o) return true;
-        
+
         if (!(o instanceof AtomicRequestID)) return false;
 
         final AtomicRequestID c = (AtomicRequestID) o;
-        
+
         return (c.requestId.equals(this.requestId) && c.nodeId == this.nodeId && c.executionId == this.executionId);
     }
 
@@ -93,7 +93,7 @@ public class AtomicRequestID implements Externalizable {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(this.requestId).append(SEPARATOR).append(this.nodeId).append(SEPARATOR).append(this.executionId); 
-        return sb.toString(); 
+        sb.append(this.requestId).append(SEPARATOR).append(this.nodeId).append(SEPARATOR).append(this.executionId);
+        return sb.toString();
     }
 }

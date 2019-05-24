@@ -36,16 +36,16 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestCrossSourceStarJoin {
-	
+
     @Test public void testCrossSourceStarJoin() throws Exception {
         String sql = "select p.Description, sum(AMOUNT) from s3 p, s2 c, s1 b, o1 f " +
         		"where p.PRODUCTID = f.PRODUCT and c.CurrencyCode = f.CURRENCY and b.BOOKID = f.BOOK and b.Name = 'xyz' and c.Name = 'abc' Group by p.Description";
-        
+
         MetadataStore metadataStore = new MetadataStore();
-    	
+
         Schema oracle = createPhysicalModel("oracle", metadataStore); //$NON-NLS-1$
         Schema sybase = createPhysicalModel("sybase", metadataStore); //$NON-NLS-1$
-        
+
         // Create physical groups
         Table f = createPhysicalGroup("o1", oracle); //$NON-NLS-1$
         f.setCardinality(5276965);
@@ -55,7 +55,7 @@ public class TestCrossSourceStarJoin {
         c.setCardinality(228);
         Table p = createPhysicalGroup("s3", sybase); //$NON-NLS-1$
         p.setCardinality(200);
-        
+
         List<Column> f_cols = createElements(f,
                 new String[] { "PRODUCT", "CURRENCY", "BOOK", "AMOUNT"}, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BIG_DECIMAL});
@@ -66,27 +66,27 @@ public class TestCrossSourceStarJoin {
         createKey(KeyRecord.Type.Index, "idx_p", f, f_cols.subList(0, 1));
         createKey(KeyRecord.Type.Index, "idx_c", f, f_cols.subList(1, 2));
         createKey(KeyRecord.Type.Index, "idx_b", f, f_cols.subList(2, 3));
-        
+
         List<Column> b_cols = createElements(b,
                 new String[] { "BOOKID", "Name"}, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        
+
         createKey(KeyRecord.Type.Primary, "pk", b, b_cols.subList(0, 1));
         b_cols.get(1).setDistinctValues(70000);
-        
+
         //createKey(KeyRecord.Type.Unique, "uk", b, b_cols.subList(1, 2));
 
         List<Column> c_cols = createElements(c,
                 new String[] { "Name", "CurrencyCode"}, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
-        
+
         createKey(KeyRecord.Type.Primary, "pk", c, c_cols.subList(1, 2));
         //createKey(KeyRecord.Type.Unique, "uk", c, c_cols.subList(0, 1));
 
         List<Column> p_cols = createElements(p,
                 new String[] { "PRODUCTID", "Description"}, //$NON-NLS-1$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        
+
         createKey(KeyRecord.Type.Primary, "pk", p, p_cols.subList(0, 1));
 
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
@@ -94,22 +94,22 @@ public class TestCrossSourceStarJoin {
         finder.addCapabilities("sybase", TestTPCR.sqlServerCapabilities()); //$NON-NLS-1$
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "star");
-        
+
         TestOptimizer.helpPlan(sql, metadata, new String[] {
-        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
-        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0", 
-        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
+        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
+        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0",
+        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
         		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, SUM(g_0.AMOUNT) FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
-        
+
         //test that aggregate will not be staged
         f.setCardinality(527696);
         TestOptimizer.helpPlan(sql, metadata, new String[] {
-        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0", 
-        		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>))", 
-        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0", 
+        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
+        		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>))",
+        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
         		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
-    } 
+    }
 
 }

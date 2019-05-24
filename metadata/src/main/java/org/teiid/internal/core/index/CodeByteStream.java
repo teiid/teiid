@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -89,7 +89,7 @@ public class CodeByteStream {
 
 		// no need to rebuild byte value from bit sequences
 		if (bitOffset == 0) return bytes[byteOffset++] & 255;
-	
+
 		int value= 0;
 		int numBits = 8;
 		while (numBits > 0) {
@@ -262,7 +262,7 @@ public class CodeByteStream {
 	}
 	/**
 	 * Writes the given value using Gamma coding, in which positive integer x
-	 * is represented by coding floor(log2(x) in unary followed by the value 
+	 * is represented by coding floor(log2(x) in unary followed by the value
 	 * of x - 2**floor(log2(x)) in binary.
 	 * The value must be >= 1.
 	 */

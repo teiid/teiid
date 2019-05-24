@@ -18,7 +18,7 @@
 package org.teiid.adminapi;
 
 /**
- * The admin objects that implement this interface have domain information on them when 
+ * The admin objects that implement this interface have domain information on them when
  * Teiid is running in the domain mode.
  */
 public interface DomainAware {
@@ -28,15 +28,15 @@ public interface DomainAware {
 	 * @return
 	 */
 	String getServerGroup();
-	
-	/** 
+
+	/**
 	 * Name of the Server that this admin object belongs to
 	 * @return
 	 */
 	String getServerName();
-	
-	
-	/** 
+
+
+	/**
 	 * getHostName of the Server this admin object belongs to
 	 * @return
 	 */

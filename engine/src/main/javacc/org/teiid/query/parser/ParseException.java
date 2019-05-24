@@ -30,7 +30,7 @@ public class ParseException extends Exception {
                         int[][] expectedTokenSequencesVal,
                         String[] tokenImageVal
                        )
-  { 
+  {
     currentToken = currentTokenVal;
     expectedTokenSequences = expectedTokenSequencesVal;
     tokenImage = tokenImageVal;
@@ -76,7 +76,7 @@ public class ParseException extends Exception {
    * defined in the generated ...Constants interface.
    */
   public String[] tokenImage;
-  
+
   @Override
 	public String getMessage() {
 	  	if (super.getMessage() == null && currentToken != null && expectedTokenSequences != null) {
@@ -84,5 +84,5 @@ public class ParseException extends Exception {
 		}
 		return super.getMessage();
 	}
-  
+
 }

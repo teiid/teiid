@@ -29,37 +29,37 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestXMLOptimization {
-    
+
     @Test public void testRewriteXmlElement() throws Exception {
         String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }
-    
+
     @Test public void testRewriteXmlElement1() throws Exception {
         String original = "xmlelement(name a, xmlattributes(1+1 as c), BQT1.SmallA.timevalue)"; //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         helpTestRewriteExpression(original, "XMLELEMENT(NAME a, XMLATTRIBUTES(2 AS c), BQT1.SmallA.timevalue)", metadata);
     }
-    
+
     @Test public void testRewriteXmlSerialize() throws Exception {
         String original = "xmlserialize(document xmlelement(name a, xmlattributes('b' as c)) as string)"; //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         helpTestRewriteExpression(original, "'<a c=\"b\"></a>'", metadata);
     }
-    
+
     @Test public void testRewriteXmlTable() throws Exception {
         String original = "select * from xmltable('/' passing 1 + 1 as a columns x string default curdate()) as x"; //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
         helpTestRewriteCommand(original, "SELECT x.x FROM XMLTABLE('/' PASSING 2 AS a COLUMNS x string DEFAULT convert(curdate(), string)) AS x", metadata);
     }
-    
+
     @Test public void testCountXMLAgg() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
-        
+
         ProcessorPlan plan = TestOptimizer.helpPlan("select count(X.e1), xmlagg(xmlelement(name e1, x.e1) order by x.e2) FROM pm1.g1 as X, pm2.g2 as Y group by X.e2", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT 1 FROM pm2.g2 AS g_0", "SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0"}, true); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -77,7 +77,7 @@ public class TestXMLOptimization {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        }); 
+        });
     }
 
 }

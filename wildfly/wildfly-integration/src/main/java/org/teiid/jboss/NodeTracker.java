@@ -37,35 +37,35 @@ import org.teiid.runtime.RuntimePlugin;
 import org.teiid.runtime.RuntimePlugin.Event;
 
 public abstract class NodeTracker extends ReceiverAdapter{
-    
-    public abstract ScheduledExecutorService getScheduledExecutorService();    
+
+    public abstract ScheduledExecutorService getScheduledExecutorService();
     private Map<Address, String> nodes = new HashMap<>();
     private JChannel channel;
     private String nodeName;
     private Set<NodeListener> nodeListeners = Collections.synchronizedSet(new HashSet<NodeListener>());
-    
+
     public NodeTracker(JChannel channel, String nodeName) throws Exception {
         this.nodeName = nodeName;
         this.channel = channel;
         this.channel.setReceiver(this);
         this.channel.connect("teiid-node-tracker");
     }
-    
-    public void addNodeListener(NodeListener nodeListener) {        
+
+    public void addNodeListener(NodeListener nodeListener) {
         this.nodeListeners.add(nodeListener);
     }
-    
-    public void removeNodeListener(NodeListener nodeListener) {        
+
+    public void removeNodeListener(NodeListener nodeListener) {
         this.nodeListeners.remove(nodeListener);
     }
-    
+
     public boolean isNodeAlive(String nodeName) {
         if (this.nodeName.equalsIgnoreCase(nodeName)) {
             return true;
-        }        
+        }
         return nodes.values().contains(nodeName);
     }
-    
+
     @Override
     public void viewAccepted(View view) {
         Map<Address, String> newMembers = new HashMap<>();
@@ -92,8 +92,8 @@ public abstract class NodeTracker extends ReceiverAdapter{
                     }
                 }
             }
-        }      
-        
+        }
+
         getScheduledExecutorService().schedule(
         new Runnable() {
             public void run() {
@@ -102,7 +102,7 @@ public abstract class NodeTracker extends ReceiverAdapter{
                     channel.send(msg);
                 } catch (Exception e) {
                     LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40165));
-                }        
+                }
             }
         }, 2000, TimeUnit.MILLISECONDS);
     }
@@ -110,7 +110,7 @@ public abstract class NodeTracker extends ReceiverAdapter{
     @Override
     public void receive(Message msg) {
         synchronized (this.nodes) {
-            String prevNode = this.nodes.put(msg.getSrc(), (String)msg.getObject());    
+            String prevNode = this.nodes.put(msg.getSrc(), (String)msg.getObject());
             // node added
             if (prevNode == null) {
                 for (NodeListener nl : this.nodeListeners) {
@@ -118,5 +118,5 @@ public abstract class NodeTracker extends ReceiverAdapter{
                 }
             }
         }
-    }    
+    }
 }

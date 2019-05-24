@@ -51,7 +51,7 @@ public class ModFunctionModifier extends AliasModifier {
     		this.supportedTypes.addAll(supportedTypes);
     	}
     }
-    
+
     @Override
     public List<?> translate(Function function) {
     	List<Expression> expressions = function.getParameters();
@@ -61,20 +61,20 @@ public class ModFunctionModifier extends AliasModifier {
 			return null;
 		}
 		//x % y => x - sign(x) * floor(abs(x / y)) * y
-		Function divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<Expression>(expressions), type); 
+		Function divide = langFactory.createFunction(SourceSystemFunctions.DIVIDE_OP, new ArrayList<Expression>(expressions), type);
 
 		Function abs = langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(divide), type);
-		
-		Function floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type); 
-		
+
+		Function floor = langFactory.createFunction(SourceSystemFunctions.FLOOR, Arrays.asList(abs), type);
+
 		Function sign = langFactory.createFunction(SourceSystemFunctions.SIGN, Arrays.asList(expressions.get(0)), type);
-		
+
 		List<? extends Expression> multArgs = Arrays.asList(sign, floor, langFactory.createFunction(SourceSystemFunctions.ABS, Arrays.asList(expressions.get(1)), type));
-		Function mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type); 
+		Function mult = langFactory.createFunction(SourceSystemFunctions.MULTIPLY_OP, multArgs, type);
 
 		List<Expression> minusArgs = Arrays.asList(expressions.get(0), mult);
-		
-		return Arrays.asList(langFactory.createFunction(SourceSystemFunctions.SUBTRACT_OP, minusArgs, type)); 
+
+		return Arrays.asList(langFactory.createFunction(SourceSystemFunctions.SUBTRACT_OP, minusArgs, type));
 	}
-	
+
 }

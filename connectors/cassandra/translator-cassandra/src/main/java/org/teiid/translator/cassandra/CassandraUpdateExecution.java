@@ -40,14 +40,14 @@ import com.datastax.driver.core.GuavaCompatibility;
 import com.datastax.driver.core.ResultSetFuture;
 
 public class CassandraUpdateExecution implements UpdateExecution {
-	
+
 	private CassandraConnection connection;
 	private ExecutionContext executionContext;
 	private RuntimeMetadata metadata;
 	private Command command;
 	private int updateCount = 1;
 	private ResultSetFuture resultSetFuture;
-	
+
 	public CassandraUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			CassandraConnection connection) {

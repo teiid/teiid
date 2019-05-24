@@ -42,12 +42,12 @@ public class Ntile extends SingleArgumentAggregateFunction {
         count = 0;
         tiles = 0;
     }
-    
+
     @Override
     public Object getResult(CommandContext commandContext) {
         return new ArrayImpl(count, tiles);
     }
-    
+
     @Override
     public void addInputDirect(Object input, List<?> tuple,
             CommandContext commandContext)
@@ -61,10 +61,10 @@ public class Ntile extends SingleArgumentAggregateFunction {
             throw new TeiidProcessingException(QueryPlugin.Event.TEIID31279, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31279));
         }
     }
-    
+
     @Override
     public Class<?> getOutputType(AggregateSymbol function) {
         return DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.INTEGER);
     }
-    
+
 }

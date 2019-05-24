@@ -60,17 +60,17 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 	private Iterator<? extends List<?>> rowIter;
 	private String objectName;
 	private List<Integer> counts;
-	
+
 	public InsertExecutionImpl(SalesForceExecutionFactory ef, Command command,
 			SalesforceConnection salesforceConnection,
 			RuntimeMetadata metadata, ExecutionContext context) throws TranslatorException {
 		super(ef, command, salesforceConnection, metadata, context);
-		
+
 		Insert insert = (Insert)command;
 		if (insert.getParameterValues() != null) {
 			this.rowIter = insert.getParameterValues();
 		}
-		InsertVisitor visitor = new InsertVisitor(getMetadata());	
+		InsertVisitor visitor = new InsertVisitor(getMetadata());
 		visitor.visit(insert);
 		this.objectName = visitor.getTableName();
 	}
@@ -83,7 +83,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			data.setType(this.objectName);
 			buildSingleRowInsertPayload(insert, data);
 			if (insert.isUpsert()) {
-			    result = getConnection().upsert(data); 
+			    result = getConnection().upsert(data);
 			} else {
 			    result = getConnection().create(data);
 			}
@@ -94,13 +94,13 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 				counts = new ArrayList<Integer>();
 			}
 			if (this.activeJob.getState() == JobStateEnum.Open) {
-				while (this.rowIter.hasNext()) {			
+				while (this.rowIter.hasNext()) {
 					List<SObject> rows = buildBulkRowPayload(insert, this.rowIter, this.executionFactory.getMaxBulkInsertBatchSize());
 					batches.add(getConnection().addBatch(rows, activeJob));
 				}
 				this.activeJob = getConnection().closeJob(this.activeJob.getId());
 			}
-			
+
 			BatchResult[] batchResult = getConnection().getBulkResults(this.activeJob, batches);
 			for(BatchResult br:batchResult) {
 				for (Result r : br.getResult()) {
@@ -120,7 +120,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 	}
 
 	private void buildSingleRowInsertPayload(Insert insert, DataPayload data) throws TranslatorException {
-		
+
 		List<ColumnReference> columns = insert.getColumns();
 		List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
 		if(columns.size() != values.size()) {
@@ -130,11 +130,11 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 		for(int i = 0; i < columns.size(); i++) {
 			Column column = columns.get(i).getMetadataObject();
 			Object value = values.get(i);
-			
+
 			if(!(value instanceof Literal)) {
 				throw new TranslatorException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13007));
 			}
-			
+
 			Literal literalValue = (Literal)values.get(i);
 			Object val = literalValue.getValue();
 			if (val instanceof Timestamp) {
@@ -154,8 +154,8 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			return sdf.format(val);
 		}
 		return val.toString();
-	}	
-	
+	}
+
 	protected List<com.sforce.async.SObject> buildBulkRowPayload(Insert insert, Iterator<? extends List<?>> it, int rowCount) throws TranslatorException {
 		List<com.sforce.async.SObject> rows = new ArrayList<com.sforce.async.SObject>();
 		List<ColumnReference> columns = insert.getColumns();
@@ -186,8 +186,8 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 			rows.add(sobj);
 		}
 		return rows;
-	}	
-	
+	}
+
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
 		if (counts != null) {
@@ -199,7 +199,7 @@ public class InsertExecutionImpl extends AbstractUpdateExecution {
 		}
 		return new int[] { result };
 	}
-	
+
 	@Override
 	public void cancel() throws TranslatorException {
 		if (this.activeJob != null) {

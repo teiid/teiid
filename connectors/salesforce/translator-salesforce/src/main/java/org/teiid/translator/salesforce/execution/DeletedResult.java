@@ -47,7 +47,7 @@ public class DeletedResult {
 	public void setResultRecords(List<DeletedObject> resultRecords) {
 		this.resultRecords = resultRecords;
 	}
-	
+
 	public List<DeletedObject> getResultRecords() {
 		return resultRecords;
 	}

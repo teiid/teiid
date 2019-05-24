@@ -25,7 +25,7 @@ import com.sforce.ws.MessageHandler;
 public class SalesforceConnectorConfig extends ConnectorConfig {
     private String cxfConfigFile;
     private HashMap<String, Object> credentialMap = new HashMap<String, Object>();
-    
+
     public String getCxfConfigFile() {
         return cxfConfigFile;
     }
@@ -37,11 +37,11 @@ public class SalesforceConnectorConfig extends ConnectorConfig {
     public Object getCredential(String name) {
         return this.credentialMap.get(name);
     }
-    
+
     public void setCredential(String name, Object credential) {
         this.credentialMap.put(name, credential);
     }
-    
+
     @Override
     public void addMessageHandler(MessageHandler handler) {
         throw new UnsupportedOperationException();

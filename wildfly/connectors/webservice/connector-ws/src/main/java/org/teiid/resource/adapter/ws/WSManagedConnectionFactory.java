@@ -226,11 +226,11 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	public List<? extends Interceptor> getOutInterceptors() {
 		return this.outInterceptors;
 	}
-	
+
 	public Long getConnectTimeout() {
 		return connectTimeout;
 	}
-	
+
 	public void setConnectTimeout(Long connectTimeout) {
 		this.connectTimeout = connectTimeout;
 	}

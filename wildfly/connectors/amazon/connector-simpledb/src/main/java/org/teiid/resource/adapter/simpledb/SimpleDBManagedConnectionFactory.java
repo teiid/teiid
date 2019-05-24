@@ -26,7 +26,7 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private static final long serialVersionUID = -1346340853914009086L;
-	
+
 	private String accessKey;
 	private String secretAccessKey;
 
@@ -41,15 +41,15 @@ public class SimpleDBManagedConnectionFactory extends BasicManagedConnectionFact
 					throws ResourceException {
 				return new SimpleDBConnectionImpl(accessKey, secretAccessKey);
 			}
-			
+
 		};
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return super.equals(obj);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return super.hashCode();

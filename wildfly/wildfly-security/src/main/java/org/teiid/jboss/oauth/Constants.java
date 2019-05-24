@@ -19,18 +19,18 @@
 package org.teiid.jboss.oauth;
 
 /**
- * Remove after moving to CXF 3.0.4 or greater 
+ * Remove after moving to CXF 3.0.4 or greater
  */
 public final class Constants {
     public static final String JWT_BEARER_GRANT = "urn:ietf:params:oauth:grant-type:jwt-bearer";
     public static final String CLIENT_GRANT_ASSERTION_PARAM = "assertion";
-    
+
     public static final String CLIENT_AUTH_ASSERTION_PARAM = "client_assertion";
     public static final String CLIENT_AUTH_ASSERTION_TYPE = "client_assertion_type";
     public static final String CLIENT_AUTH_JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
-   
-    
+
+
     private Constants() {
-        
+
     }
 }

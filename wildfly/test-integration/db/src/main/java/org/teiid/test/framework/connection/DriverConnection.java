@@ -121,7 +121,7 @@ public class DriverConnection extends ConnectionStrategy {
 	    } else {
 		conn = DriverManager.getConnection(url);
 	    }
-	     
+
 	} catch (Throwable t) {
 	    t.printStackTrace();
 	    throw new QueryTestFailedException(t.getMessage());

@@ -24,20 +24,20 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.Assertion;
 
 /**
- * This class can do a simple null to anything.  
- * Incoming value must be null and outgoing value is the same.  
+ * This class can do a simple null to anything.
+ * Incoming value must be null and outgoing value is the same.
  * This is purely for type purposes.
  */
 public class NullToAnyTransform extends Transform {
-	
+
 	public static final NullToAnyTransform INSTANCE = new NullToAnyTransform(Object.class);
 
 	private Class<?> targetType;
-	
+
 	public NullToAnyTransform(Class<?> targetType) {
 		this.targetType = targetType;
 	}
-	
+
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
@@ -45,7 +45,7 @@ public class NullToAnyTransform extends Transform {
 	public Class getSourceType() {
         return NullType.class;
     }
-    
+
     /**
      * Type of the outgoing value.
      * @return Target type
@@ -66,5 +66,5 @@ public class NullToAnyTransform extends Transform {
 		Assertion.isNull(value);
 		return null;
 	}
-	
+
 }

@@ -33,19 +33,19 @@ import org.teiid.core.util.ExecutorUtils;
  * Will only hold a thread while there are pending tasks.
  */
 public class EnhancedTimer {
-	
+
 	private static final Logger LOGGER = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	private static AtomicLong id = new AtomicLong();
-	
+
 	public class Task extends FutureTask<Void> implements Comparable<Task> {
 		final long endTime;
 		final long seqId = id.getAndIncrement();
-		
+
 		public Task(Runnable task, long delay) {
 			super(task, null);
 			this.endTime = System.currentTimeMillis() + delay;
 		}
-		
+
 		@Override
 		public int compareTo(Task o) {
 			int result = Long.signum(this.endTime - o.endTime);
@@ -54,26 +54,26 @@ public class EnhancedTimer {
 			}
 			return result;
 		}
-		
+
 		@Override
 		public boolean cancel(boolean mayInterruptIfRunning) {
 			if (!isDone()) {
-				queue.remove(this);	
+				queue.remove(this);
 			}
 			return super.cancel(mayInterruptIfRunning);
 		}
-		
+
 		public void cancel() {
 			cancel(false);
 		}
 
 	}
-	
+
 	private final ConcurrentSkipListSet<Task> queue = new ConcurrentSkipListSet<Task>();
 	private final Executor taskExecutor;
 	private final Executor bossExecutor;
 	private boolean running;
-	
+
 	/**
 	 * Constructs a new Timer that directly executes tasks off of a single-thread thread pool.
 	 * @param name
@@ -82,7 +82,7 @@ public class EnhancedTimer {
 		this.taskExecutor = ExecutorUtils.getDirectExecutor();
 		this.bossExecutor = ExecutorUtils.newFixedThreadPool(1, name);
 	}
-	
+
 	public EnhancedTimer(Executor bossExecutor, Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 		this.bossExecutor = bossExecutor;
@@ -90,7 +90,7 @@ public class EnhancedTimer {
 
 	private void start() {
 		bossExecutor.execute(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				try {
@@ -102,7 +102,7 @@ public class EnhancedTimer {
 		});
 		running = true;
 	}
-	
+
 	private boolean doTasks() throws InterruptedException {
 		Task task = null;
 		try {
@@ -114,7 +114,7 @@ public class EnhancedTimer {
 					return false;
 				}
 				return true;
-			}			
+			}
 		}
 		long toWait = task.endTime - System.currentTimeMillis();
 		if (toWait > 0) {
@@ -134,7 +134,7 @@ public class EnhancedTimer {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Add a delayed task
 	 * @param task
@@ -144,7 +144,7 @@ public class EnhancedTimer {
 	public Task add(Runnable task, long delay) {
 		Task result = new Task(task, delay);
 		try {
-			if (this.queue.add(result) 
+			if (this.queue.add(result)
 					&& this.queue.first() == result) {
 				//only need to synchronize when this is the first task
 				synchronized (this) {
@@ -159,7 +159,7 @@ public class EnhancedTimer {
 		}
 		return result;
 	}
-	
+
 	public int getQueueSize() {
 		return queue.size();
 	}

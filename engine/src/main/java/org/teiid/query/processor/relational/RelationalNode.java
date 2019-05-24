@@ -46,7 +46,7 @@ import org.teiid.query.util.CommandContext;
 
 
 public abstract class RelationalNode implements Cloneable, BatchProducer {
-	
+
 	static class NodeData {
 		int nodeID;
 		List<? extends Expression> elements;
@@ -67,7 +67,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		List batchRows;
 		boolean lastBatch;
 		boolean closed;
-		
+
 		void reset() {
 			this.beginBatch = 1;
 			this.batchRows = null;
@@ -84,24 +84,24 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
 	protected int childCount;
-	
+
 	protected RelationalNode() {
-		
+
 	}
-	
+
 	public RelationalNode(int nodeID) {
 		this.data = new NodeData();
 		this.data.nodeID = nodeID;
 	}
-	
+
 	public int getChildCount() {
 		return childCount;
 	}
-	
+
 	public boolean isLastBatch() {
 		return getProcessingState().lastBatch;
 	}
-	
+
 	public void setContext(CommandContext context) {
 		this.getProcessingState().context = context;
 	}
@@ -110,7 +110,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         this.getProcessingState().context = context;
         this.getProcessingState().bufferManager = bufferManager;
         this.getProcessingState().dataMgr = dataMgr;
-        
+
         if(context.getCollectNodeStatistics()) {
             this.getProcessingState().nodeStatistics = new RelationalNodeStatistics();
         }
@@ -129,7 +129,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public int getID() {
 		return this.data.nodeID;
 	}
-    
+
     public void setID(int nodeID) {
     	NodeData newData = new NodeData();
     	newData.nodeID = nodeID;
@@ -169,7 +169,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public void setElements(List<? extends Expression> elements) {
 		this.data.elements = elements;
 	}
-	
+
 	@Override
 	public List<? extends Expression> getOutputElements() {
 		return getElements();
@@ -178,7 +178,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public List<? extends Expression> getElements() {
 		return this.data.elements;
 	}
-    	
+
     public RelationalNode getParent() {
 		return parent;
 	}
@@ -218,7 +218,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     protected boolean isBatchFull() {
         return (this.getProcessingState().batchRows != null) && (this.getProcessingState().batchRows.size() >= this.getProcessingState().batchSize);
     }
-    
+
     protected boolean hasPendingRows() {
     	return this.getProcessingState().batchRows != null;
     }
@@ -253,10 +253,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             }
         }
     }
-    
+
     /**
      * Wrapper for nextBatchDirect that does performance timing - callers
-     * should always call this rather than nextBatchDirect(). 
+     * should always call this rather than nextBatchDirect().
      * @return
      * @throws BlockedException
      * @throws TeiidComponentException
@@ -286,7 +286,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                     this.recordBatch(batch);
                     recordStats = false;
                 }
-                //24663: only return non-zero batches. 
+                //24663: only return non-zero batches.
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
                 //this processing style however against the spirit of batch processing (but was already utilized by Sort and Grouping nodes)
                 if (batch.getRowCount() != 0 || batch.getTerminationFlag()) {
@@ -312,7 +312,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     }
 
     /**
-     * Template method for subclasses to implement. 
+     * Template method for subclasses to implement.
      * @return
      * @throws BlockedException
      * @throws TeiidComponentException
@@ -337,9 +337,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             this.getProcessingState().closed = true;
         }
     }
-	
+
 	public void closeDirect() {
-		
+
 	}
 
     /**
@@ -349,7 +349,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     public boolean isClosed() {
         return this.getProcessingState().closed;
     }
-    
+
 	/**
 	 * Helper method for all the node that will filter the elements needed for the next node.
 	 */
@@ -381,7 +381,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 				projectedTuple.add(tupleValues.get(index));
 			}
 		}
-	
+
 		return projectedTuple;
 	}
 
@@ -420,7 +420,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
         // Print batch contents
         for (long row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
-        	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, str.toString());
     }
@@ -502,7 +502,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 	protected void copyTo(RelationalNode target){
 		target.data = this.data;
-        
+
         target.children = new RelationalNode[this.children.length];
         for(int i=0; i<this.children.length; i++) {
             if(this.children[i] != null) {
@@ -514,7 +514,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
         target.childCount = this.childCount;
 	}
-    
+
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
         PlanNode result = new PlanNode(getClassName());
@@ -535,34 +535,34 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return result;
     }
 
-    /** 
+    /**
      * @return Returns the nodeStatistics.
      * @since 4.2
      */
     public RelationalNodeStatistics getNodeStatistics() {
         return this.getProcessingState().nodeStatistics;
     }
-    
+
     public void setEstimateNodeCardinality(Number estimateNodeCardinality) {
         this.data.estimateNodeCardinality = estimateNodeCardinality;
     }
-    
+
     public void setEstimateNodeSetSize(Number setSizeEstimate) {
         this.data.setSizeEstimate = setSizeEstimate;
     }
-    
+
     public void setEstimateDepAccessCardinality(Number depAccessEstimate) {
         this.data.depAccessEstimate = depAccessEstimate;
     }
-    
+
     public void setEstimateDepJoinCost(Number estimateDepJoinCost){
         this.data.estimateDepJoinCost = estimateDepJoinCost;
     }
-    
+
     public void setEstimateJoinCost(Number estimateJoinCost){
         this.data.estimateJoinCost = estimateJoinCost;
     }
-    
+
     private List<String> getCostEstimates() {
         List<String> costEstimates = new ArrayList<String>();
         if(this.data.estimateNodeCardinality != null) {
@@ -585,8 +585,8 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
         return costEstimates;
     }
-    
-    /** 
+
+    /**
      * @return Returns the estimateNodeCardinality.
      */
     public Number getEstimateNodeCardinality() {
@@ -600,20 +600,20 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		}
 		return processingState;
 	}
-	
+
 	/**
 	 * Return true if the node provides a final buffer via getBuffer
 	 */
 	public boolean hasBuffer() {
 		return false;
 	}
-	
+
 	/**
      * return the final tuple buffer or null if not available
      * @return
-	 * @throws TeiidProcessingException 
-	 * @throws TeiidComponentException 
-	 * @throws BlockedException 
+	 * @throws TeiidProcessingException
+	 * @throws TeiidComponentException
+	 * @throws BlockedException
      */
 	public final TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		CommandContext context = this.getContext();
@@ -657,7 +657,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             }
         }
 	}
-	
+
 	/**
 	 * For subclasses to override if they wish to return a buffer rather than batches.
 	 * @param maxRows
@@ -669,7 +669,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
 	}
-	
+
 	public static void unwrapException(TeiidRuntimeException e)
 	throws TeiidComponentException, TeiidProcessingException {
 		if (e == null) {
@@ -683,13 +683,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		}
 		throw e;
 	}
-	
+
 	/**
-	 * @param transactionalReads  
+	 * @param transactionalReads
 	 * @return true if required, false if not required, and null if a single source command is issued and a transaction may be needed.
 	 */
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		return false;
 	}
-	
+
 }

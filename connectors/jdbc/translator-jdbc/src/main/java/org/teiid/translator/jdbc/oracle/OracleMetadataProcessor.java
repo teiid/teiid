@@ -40,7 +40,7 @@ public class OracleMetadataProcessor extends
 		JDBCMetadataProcessor {
 
 	private boolean useGeometryType;
-	
+
 	@Override
 	protected String getRuntimeType(int type, String typeName, int precision,
 			int scale) {
@@ -69,7 +69,7 @@ public class OracleMetadataProcessor extends
 	        		table.setCardinality(cardinality);
 	        	}
 	        }
-	    } finally { 
+	    } finally {
 	        if(rs != null) {
 	            rs.close();
 	        }
@@ -89,16 +89,16 @@ public class OracleMetadataProcessor extends
 		}
 		return true;
 	}
-	
+
 	@TranslatorProperty (display="Use Geometry Type", category=PropertyType.IMPORT, description="Use Teiid Geometry Type rather than an Object/Struct for SDO_GEOMETRY")
 	public boolean isUseGeometryType() {
 		return useGeometryType;
 	}
-	
+
 	public void setUseGeometryType(boolean useGeometryType) {
 		this.useGeometryType = useGeometryType;
 	}
-	
+
 	@Override
 	protected void getGeometryMetadata(Column c, Connection conn,
 			String tableCatalog, String tableSchema, String tableName,
@@ -132,7 +132,7 @@ public class OracleMetadataProcessor extends
     		}
     	}
     }
-	
+
 	@Override
 	protected String getFullyQualifiedName(String catalogName,
 			String schemaName, String objectName, boolean quoted) {
@@ -150,7 +150,7 @@ public class OracleMetadataProcessor extends
 		}
 		return super.getFullyQualifiedName(catalogName, schemaName, objectName, quoted);
 	}
-	
+
 	@Override
 	protected ResultSet executeSequenceQuery(Connection conn)
 	        throws SQLException {
@@ -161,12 +161,12 @@ public class OracleMetadataProcessor extends
         ps.setString(2, getSequenceNamePattern()==null?"%":getSequenceNamePattern()); //$NON-NLS-1$
         return ps.executeQuery();
 	}
-	
+
     @Override
     protected String getSequenceNextSQL(String fullyQualifiedName) {
         return fullyQualifiedName + ".nextval"; //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean isHiddenSchema(String catalog, String schema) {
         return "SYS".equalsIgnoreCase(schema); //$NON-NLS-1$

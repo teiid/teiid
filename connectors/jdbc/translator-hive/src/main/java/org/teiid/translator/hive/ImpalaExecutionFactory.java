@@ -168,7 +168,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
         addPushDownFunction(IMPALA, "initcap", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "instr", INTEGER, STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(IMPALA, "find_in_set", INTEGER, STRING, STRING); //$NON-NLS-1$
-        
+
         //standard function form of several predicates
         addPushDownFunction(IMPALA, "ilike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 ilike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
         addPushDownFunction(IMPALA, "rlike", BOOLEAN, STRING, STRING).setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "($1 rlike $2)"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -270,9 +270,9 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean supportsHaving() {
         /*
          * From Cloudera DOC, different from Hive
-         * Performs a filter operation on a SELECT query, by examining the results of 
-         * aggregation functions rather than testing each individual table row. Thus 
-         * always used in conjunction with a function such as COUNT(), SUM(), AVG(), 
+         * Performs a filter operation on a SELECT query, by examining the results of
+         * aggregation functions rather than testing each individual table row. Thus
+         * always used in conjunction with a function such as COUNT(), SUM(), AVG(),
          * MIN(), or MAX(), and typically with the GROUP BY clause also.
          */
         return true;
@@ -281,7 +281,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     @Override
     public boolean supportsRowLimit() {
         /*
-         * In Impala 1.2.1 and higher, you can combine a LIMIT clause with an OFFSET clause 
+         * In Impala 1.2.1 and higher, you can combine a LIMIT clause with an OFFSET clause
          * to produce a small result set that is different from a top-N query
          */
         return true;
@@ -311,7 +311,7 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean requiresLeftLinearJoin() {
         return true;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
         return getVersion().compareTo(ONE_3_1) >= 0;
@@ -425,20 +425,20 @@ public class ImpalaExecutionFactory extends BaseHiveExecutionFactory {
     public boolean supportsGroupByMultipleDistinctAggregates() {
         return false;
     }
-    
+
     @Override
     public boolean supportsStringAgg() {
         return true;
     }
-    
+
     @Override
     public boolean supportsIsDistinctCriteria() {
         return true;
     }
-    
+
     @Override
     public boolean rewriteBooleanFunctions() {
         return true;
     }
-    
+
 }

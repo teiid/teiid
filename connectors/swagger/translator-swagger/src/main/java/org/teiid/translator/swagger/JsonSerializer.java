@@ -48,7 +48,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 
 public class JsonSerializer implements SwaggerSerializer {
-    
+
     @Override
     public List<Document> deserialize(InputStream stream)
             throws TranslatorException {
@@ -59,7 +59,7 @@ public class JsonSerializer implements SwaggerSerializer {
             Stack<String> fieldName = new Stack<String>();
             int arrayLevel = 0;
             int objectLevel = 0;
-            
+
             while (parser.nextToken() != null) {
                 switch (parser.getCurrentToken()) {
                 case START_OBJECT:
@@ -111,7 +111,7 @@ public class JsonSerializer implements SwaggerSerializer {
                     if ((list != null && arrayLevel > objectLevel)
                             || (list == null && arrayLevel >= objectLevel)) {
                         current.addArrayProperty(fieldName.peek(), parser.getValueAsLong());
-                    } else {                    
+                    } else {
                     current.addProperty(fieldName.pop(), parser.getValueAsLong());
                     }
                     break;
@@ -128,14 +128,14 @@ public class JsonSerializer implements SwaggerSerializer {
                             || (list == null && arrayLevel >= objectLevel)) {
                         current.addArrayProperty(fieldName.peek(), parser.getValueAsBoolean());
                     } else {
-                        current.addProperty(fieldName.pop(), parser.getValueAsBoolean()); 
+                        current.addProperty(fieldName.pop(), parser.getValueAsBoolean());
                     }
                     break;
                 case VALUE_FALSE:
                     if ((list != null && arrayLevel > objectLevel)
                             || (list == null && arrayLevel >= objectLevel)) {
                         current.addArrayProperty(fieldName.peek(), parser.getValueAsBoolean());
-                    } else {                    
+                    } else {
                         current.addProperty(fieldName.pop(), parser.getValueAsBoolean());
                     }
                     break;
@@ -143,7 +143,7 @@ public class JsonSerializer implements SwaggerSerializer {
                     if ((list != null && arrayLevel > objectLevel)
                             || (list == null && arrayLevel >= objectLevel)) {
                         current.addArrayProperty(fieldName.peek(), null);
-                    } else {                    
+                    } else {
                         current.addProperty(fieldName.pop(), null);
                     }
                     break;
@@ -161,7 +161,7 @@ public class JsonSerializer implements SwaggerSerializer {
                     SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28007, e));
         }
     }
-    
+
     @Override
     public InputStream serialize(Document doc) throws TranslatorException {
         ByteArrayOutputStream outputStream = null;
@@ -189,21 +189,21 @@ public class JsonSerializer implements SwaggerSerializer {
         if (doc.getProperties().isEmpty() && doc.getChildren().isEmpty()) {
             return;
         }
-        
+
         if (writeName) {
             json.writeObjectFieldStart(name);
         } else {
-            json.writeStartObject();            
+            json.writeStartObject();
         }
-        
+
         for (Map.Entry<String, Object> entry:doc.getProperties().entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
-            
+
             if (key.startsWith(name+"/")) {
                 key = key.substring(name.length()+1);
             }
-            
+
             if (value instanceof org.teiid.language.Array) {
                 json.writeArrayFieldStart(key);
                 org.teiid.language.Array array = (org.teiid.language.Array)value;
@@ -233,7 +233,7 @@ public class JsonSerializer implements SwaggerSerializer {
         }
         json.writeEndObject();
     }
-    
+
     private void writeProperty(JsonGenerator json, Object value)
             throws IOException, SQLException {
         if (value instanceof Integer) {
@@ -255,17 +255,17 @@ public class JsonSerializer implements SwaggerSerializer {
         } else if (value instanceof ClobType)  {
             // no LOB types in swagger spec ???
             json.writeString(ClobType.getString((Clob) value));
-        } else if (value instanceof BlobType) { 
+        } else if (value instanceof BlobType) {
             json.writeString(Base64.encodeBytes(
                     ObjectConverterUtil.convertToByteArray(((Blob) value).getBinaryStream())));
-        } else if (value instanceof SQLXML) { 
+        } else if (value instanceof SQLXML) {
             json.writeString(ObjectConverterUtil.convertToString(((SQLXML) value).getCharacterStream()));
         } else if (value instanceof byte[] ) {
             json.writeString(Base64.encodeBytes((byte[])value));
         } else {
             json.writeString(value.toString());
         }
-    }    
+    }
 
     private void writeProperty(JsonGenerator json, String key, Object value)
             throws IOException, SQLException {
@@ -288,11 +288,11 @@ public class JsonSerializer implements SwaggerSerializer {
         } else if (value instanceof ClobType)  {
             // no LOB types in swagger spec ???
             json.writeStringField(key, ClobType.getString((Clob) value));
-        } else if (value instanceof BlobType) { 
+        } else if (value instanceof BlobType) {
             json.writeStringField(key, Base64.encodeBytes(
                     ObjectConverterUtil.convertToByteArray(((Blob) value).getBinaryStream())));
-        } else if (value instanceof SQLXML) { 
-            json.writeStringField(key, 
+        } else if (value instanceof SQLXML) {
+            json.writeStringField(key,
                     ObjectConverterUtil.convertToString(((SQLXML) value).getCharacterStream()));
         } else if (value instanceof byte[] ) {
             json.writeStringField(key, Base64.encodeBytes((byte[])value));

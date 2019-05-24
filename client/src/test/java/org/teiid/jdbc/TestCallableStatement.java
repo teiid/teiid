@@ -43,10 +43,10 @@ import org.teiid.net.ServerConnection;
 
 @SuppressWarnings("nls")
 public class TestCallableStatement {
-	
+
 	@Test public void testWasNull() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
-		
+
 		Map<Integer, Integer> params = new HashMap<Integer, Integer>();
 		mmcs.outParamIndexMap = params;
 		params.put(Integer.valueOf(1), Integer.valueOf(1));
@@ -60,17 +60,17 @@ public class TestCallableStatement {
 		assertTrue(mmcs.getBoolean(2));
 		assertFalse(mmcs.wasNull());
 	}
-	
+
 	@Test public void testGetOutputParameter() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
-		
+
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(1);
 		ResultsMessage resultsMsg = new ResultsMessage();
 		List<?>[] results = new List[] {Arrays.asList(null, null, null), Arrays.asList(null, 1, 2)};
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntNum", "Out1", "Out2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER });
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
@@ -81,12 +81,12 @@ public class TestCallableStatement {
 		assertEquals(1, mmcs.getInt("Out1"));
 		assertEquals(2, mmcs.getInt("Out2"));
 	}
-	
+
 	@Test public void testUnknownIndex() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
-		
+
 		mmcs.outParamIndexMap = new HashMap<Integer, Integer>();
-		
+
 		try {
 			mmcs.getBoolean(0);
 			fail("expected exception"); //$NON-NLS-1$
@@ -94,19 +94,19 @@ public class TestCallableStatement {
 			assertEquals("Parameter 0 was not found.", e.getMessage());
 		}
 	}
-	
+
 	@Test public void testSetLobs() throws Exception {
 		CallableStatementImpl mmcs = getCallableStatement();
 		mmcs.paramsByName = new TreeMap<String, Integer>();
 		mmcs.paramsByName.put("foo", 2);
 		mmcs.paramsByName.put("bar", 4);
-		
+
 		mmcs.setBlob(1, Mockito.mock(InputStream.class));
 		mmcs.setBlob("foo", Mockito.mock(InputStream.class));
 		mmcs.setNClob(3, Mockito.mock(Reader.class));
 		mmcs.setBlob("bar", Mockito.mock(InputStream.class), 1);
 		mmcs.setClob(5, Mockito.mock(Reader.class));
-		
+
 		List<Object> params = mmcs.getParameterValues();
 		assertTrue(params.get(0) instanceof Blob);
 		assertTrue(params.get(1) instanceof Blob);
@@ -118,10 +118,10 @@ public class TestCallableStatement {
 	private CallableStatementImpl getCallableStatement() throws SQLException {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		ServerConnection sc = Mockito.mock(ServerConnection.class);
-		
+
 		Mockito.stub(sc.getLogonResult()).toReturn(new LogonResult());
 		Mockito.stub(conn.getServerConnection()).toReturn(sc);
-		
+
 		CallableStatementImpl mmcs = new CallableStatementImpl(conn, "{?=call x(?)}", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		return mmcs;
 	}

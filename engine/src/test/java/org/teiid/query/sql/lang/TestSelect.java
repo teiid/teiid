@@ -33,14 +33,14 @@ import junit.framework.TestCase;
 public class TestSelect extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestSelect(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
 
-	public static final Select sample1() { 
+	public TestSelect(String name) {
+		super(name);
+	}
+
+	// ################################## TEST HELPERS ################################
+
+	public static final Select sample1() {
 		List symbols = new ArrayList();
 		symbols.add(new ElementSymbol("a")); //$NON-NLS-1$
 		symbols.add(new ElementSymbol("b")); //$NON-NLS-1$
@@ -49,29 +49,29 @@ public class TestSelect extends TestCase {
 	    MultipleElementSymbol all = new MultipleElementSymbol();
 	    all.setElementSymbols(symbols);
 	    select.addSymbol(all);
-	    return select;	
+	    return select;
 	}
 
-	public static final Select sample2() { 
+	public static final Select sample2() {
 	    Select select = new Select();
 	    select.addSymbol(new ElementSymbol("a"));	 //$NON-NLS-1$
 	    select.addSymbol(new ElementSymbol("b"));	 //$NON-NLS-1$
 	    select.addSymbol(new ElementSymbol("c")); //$NON-NLS-1$
 	    select.addSymbol(new AliasSymbol("Z", new ElementSymbol("ZZ 9 Plural Z Alpha"))); //$NON-NLS-1$ //$NON-NLS-2$
-	    return select;	
+	    return select;
 	}
-			
+
 	// ################################## ACTUAL TESTS ################################
-	
-	public void testGetProjectedNoElements() {    
+
+	public void testGetProjectedNoElements() {
 	    Select select = new Select();
 	    select.addSymbol(new MultipleElementSymbol());
-	    
+
 	    List projectedSymbols = select.getProjectedSymbols();
 	    assertEquals("Did not get empty list for select * with no elements: ", new ArrayList(), projectedSymbols); //$NON-NLS-1$
 	}
 
-	public void testGetProjectedWithStar() {    
+	public void testGetProjectedWithStar() {
 		List symbols = new ArrayList();
 		symbols.add(new ElementSymbol("a")); //$NON-NLS-1$
 		symbols.add(new ElementSymbol("b")); //$NON-NLS-1$
@@ -80,7 +80,7 @@ public class TestSelect extends TestCase {
 	    MultipleElementSymbol all = new MultipleElementSymbol();
 	    all.setElementSymbols(symbols);
 	    select.addSymbol(all);
-	    
+
 	    List projectedSymbols = select.getProjectedSymbols();
 	    assertEquals("Did not get correct list for select *: ", symbols, projectedSymbols); //$NON-NLS-1$
 	}
@@ -97,7 +97,7 @@ public class TestSelect extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
 	public void testNonEquivalence(){
 		Select s1 = sample1();
 		Select s2 = sample2();

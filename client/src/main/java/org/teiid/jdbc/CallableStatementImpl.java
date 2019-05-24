@@ -50,13 +50,13 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         super(connection, procedureCall, resultSetType, resultSetConcurrency);
         this.prepareSql = procedureCall;
     }
-    
+
     @Override
     protected void resetExecutionState() throws SQLException {
     	super.resetExecutionState();
     	parameterValue = null;
     }
-    
+
     @Override
     protected RequestMessage createRequestMessage(String[] commands,
     		boolean isBatchedCommand, ResultsMode resultsMode) {
@@ -64,7 +64,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
     	message.setStatementType(StatementType.CALLABLE);
     	return message;
     }
-    
+
     public void close() throws SQLException {
         this.prepareSql = null;
         super.close();
@@ -76,7 +76,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         // set scale on the param value
         return bigDecimalParam.setScale(scale);
     }
-    
+
     public java.math.BigDecimal getBigDecimal(int parameterIndex) throws SQLException {
         return DataTypeTransformer.getBigDecimal(getObject(parameterIndex));
     }
@@ -112,11 +112,11 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         if (value == null) {
             return null;
         }
-        
+
         if (cal != null) {
             value = TimestampWithTimezone.createDate(value, getDefaultCalendar().getTimeZone(), cal);
         }
-        
+
         return value;
 	}
 
@@ -139,13 +139,13 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
     public Object getObject(int parameterIndex) throws SQLException {
     	return getObject(Integer.valueOf(parameterIndex));
     }
-    
+
     Object getObject(Object parameterIndex) throws SQLException {
     	Integer indexInResults = null;
     	if (parameterIndex instanceof String) {
     		indexInResults = this.outParamByName.get(parameterIndex);
     	} else {
-    		indexInResults = this.outParamIndexMap.get(parameterIndex);    		
+    		indexInResults = this.outParamIndexMap.get(parameterIndex);
     	}
         if(indexInResults == null){
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMCallableStatement.Param_not_found", parameterIndex)); //$NON-NLS-1$
@@ -179,11 +179,11 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         if (value == null) {
             return null;
         }
-        
+
         if (cal != null) {
             value = TimestampWithTimezone.createTime(value, getDefaultCalendar().getTimeZone(), cal);
         }
-        
+
         return value;
 	}
 
@@ -203,11 +203,11 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
         if (value == null) {
             return null;
         }
-        
+
         if (cal != null) {
             value = TimestampWithTimezone.createTimestamp(value, getDefaultCalendar().getTimeZone(), cal);
         }
-        
+
         return value;
 	}
 
@@ -222,7 +222,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
     public void registerOutParameter (int parameterIndex, int jdbcSqlType, String typeName) throws SQLException {
         // ignore - we don't care
     }
-   
+
     public boolean wasNull() throws SQLException {
         checkStatement();
 
@@ -248,7 +248,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	public Blob getBlob(String parameterName) throws SQLException {
 		return DataTypeTransformer.getBlob(getObject(parameterName));
 	}
-	
+
 	public boolean getBoolean(String parameterName) throws SQLException {
 		return DataTypeTransformer.getBoolean(getObject(parameterName));
 	}
@@ -258,7 +258,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public byte[] getBytes(int parameterIndex) throws SQLException {
-		return DataTypeTransformer.getBytes(getObject(parameterIndex)); 
+		return DataTypeTransformer.getBytes(getObject(parameterIndex));
 	}
 
 	public byte[] getBytes(String parameterName) throws SQLException {
@@ -352,7 +352,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	public RowId getRowId(String parameterName) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 	public SQLXML getSQLXML(String parameterName) throws SQLException {
 		return DataTypeTransformer.getSQLXML(getObject(parameterName));
 	}
@@ -539,7 +539,7 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 
 	public void setNull(String parameterName, int sqlType) throws SQLException {
 		setObject((Object)parameterName, null);
-	}		
+	}
 
 	public void setNull(String parameterName, int sqlType, String typeName)
 			throws SQLException {

@@ -57,7 +57,7 @@ public class TestSelectSymbolImpl extends TestCase {
     public void testGetExpression() throws Exception {
         assertNotNull(example("testName", null).getExpression()); //$NON-NLS-1$
     }
-    
+
     public void testGetColumnDataTypes(){
         Class<?>[] expectedResults = new Class[2];
         List<DerivedColumn> symbols = new ArrayList<DerivedColumn>();
@@ -66,9 +66,9 @@ public class TestSelectSymbolImpl extends TestCase {
         symbols.add(new DerivedColumn("c2", new Literal(new Integer(5), DataTypeManager.DefaultDataClasses.INTEGER)));  //$NON-NLS-1$
         expectedResults[1] = DataTypeManager.DefaultDataClasses.INTEGER;
         Select query = new Select(symbols, false, null, null, null, null, null);
-        Class<?>[] results = query.getColumnTypes();  
+        Class<?>[] results = query.getColumnTypes();
         assertEquals( results[0], expectedResults[0]);
-        assertEquals( results[1], expectedResults[1]);     
+        assertEquals( results[1], expectedResults[1]);
     }
 
 }

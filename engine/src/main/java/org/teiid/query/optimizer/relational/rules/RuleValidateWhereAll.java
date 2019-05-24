@@ -64,7 +64,7 @@ public final class RuleValidateWhereAll implements OptimizerRule {
 		for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
             Object modelID = RuleRaiseAccess.getModelIDFromAccess(node, metadata);
 
-            if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder) 
+            if(CapabilitiesUtil.requiresCriteria(modelID, metadata, capFinder)
             		&& hasNoCriteria((Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST))) {
                 String modelName = metadata.getFullName(modelID);
                  throw new QueryPlannerException(QueryPlugin.Event.TEIID30268, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30268, modelName));

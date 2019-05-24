@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 
 
 
-/** 
+/**
  * @since 4.3
  */
 @SuppressWarnings("nls")
@@ -53,9 +53,9 @@ public class TestParams extends TestCase {
     private static String getTestVDBName() {
         return UnitTestUtil.getTestDataPath() + "/sptest/spvdb.vdb"; //$NON-NLS-1$
     }
-    
+
     public static TranslationUtility createTranslationUtility(String vdbName) {
-        return new TranslationUtility(vdbName);        
+        return new TranslationUtility(vdbName);
     }
 
     public Call getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
@@ -102,7 +102,7 @@ public class TestParams extends TestCase {
         Call proc = getProcedure("sptest.proc1", 4, CONNECTOR_METADATA_UTILITY);      //$NON-NLS-1$
         List params = proc.getArguments();
         assertEquals(4, params.size());
-        
+
         checkParameter((Argument)params.get(0),
                        "in1", //$NON-NLS-1$
                        "sptest.proc1.in1", //$NON-NLS-1$
@@ -151,7 +151,7 @@ public class TestParams extends TestCase {
                        0,
                        0); //$NON-NLS-1$
 
-    
-    }   
+
+    }
 
 }

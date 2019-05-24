@@ -43,17 +43,17 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
 	public static final String TEIID_DOMAINS = "domain-ddl"; //$NON-NLS-1$
 	public static final String TEIID_DDL = "full-ddl"; //$NON-NLS-1$
-	
+
 	private static final long serialVersionUID = -4723595252013356436L;
 
     public static final String PREPARSER_CLASS = "preparser-class"; //$NON-NLS-1$
-	
+
 	private LinkedHashMap<String, ModelMetaData> models = new LinkedHashMap<String, ModelMetaData>();
-	private LinkedHashMap<String, VDBTranslatorMetaData> translators = new LinkedHashMap<String, VDBTranslatorMetaData>(); 
-	private LinkedHashMap<String, DataPolicyMetadata> dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(); 
+	private LinkedHashMap<String, VDBTranslatorMetaData> translators = new LinkedHashMap<String, VDBTranslatorMetaData>();
+	private LinkedHashMap<String, DataPolicyMetadata> dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>();
 	private List<VDBImportMetadata> imports = new ArrayList<VDBImportMetadata>(2);
 	private List<EntryMetaData> entries = new ArrayList<EntryMetaData>(2);
-	
+
 	private String version = "1"; //$NON-NLS-1$
 	private String description;
 	private boolean xmlDeployment = false;
@@ -65,59 +65,59 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	private Map<Status, Timestamp> statusTimestamps = Collections.synchronizedMap(new HashMap<>(2));
 
 	public String getFullName() {
-		return getName() + VERSION_DELIM + getVersion(); 
+		return getName() + VERSION_DELIM + getVersion();
 	}
-	
+
 	@Override
 	public ConnectionType getConnectionType() {
 		return this.connectionType;
 	}
-	
+
 	public void setConnectionType(ConnectionType allowConnections) {
 		this.connectionType = allowConnections;
 	}
-	
+
 	public void setConnectionType(String allowConnections) {
 		this.connectionType = ConnectionType.valueOf(allowConnections);
 	}
-	
+
 	@Override
 	public Status getStatus() {
 		return this.status;
 	}
-	
+
 	public synchronized void setStatus(Status s) {
 		this.notifyAll();
 		this.status = s;
 		this.statusTimestamps.put(s, new Timestamp(System.currentTimeMillis()));
 	}
-	
+
 	public void setStatus(String s) {
 		setStatus(Status.valueOf(s));
 	}
-	
+
 	@Override
 	public String getVersion() {
 		return this.version;
 	}
-	
+
 	public void setVersion(int version) {
 		this.version = String.valueOf(version);
 	}
-	
+
 	public void setVersion(String version) {
 		this.version = version;
-	}	
-		
+	}
+
 	@Override
 	public List<Model> getModels(){
 		return new ArrayList<Model>(this.models.values());
 	}
-	
+
 	public LinkedHashMap<String, ModelMetaData> getModelMetaDatas() {
 		return this.models;
 	}
-	
+
 	/**
 	 * @param models
 	 */
@@ -127,39 +127,39 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 			addModel(obj);
 		}
 	}
-	
+
 	public ModelMetaData addModel(ModelMetaData m) {
 		return this.models.put(m.getName(), m);
-	}	
-	
+	}
+
 	@Override
 	public List<Translator> getOverrideTranslators() {
 		return new ArrayList<Translator>(this.translators.values());
 	}
-	
+
 	public LinkedHashMap<String, VDBTranslatorMetaData> getOverrideTranslatorsMap() {
 		return this.translators;
 	}
-	
+
 	public void setOverrideTranslators(List<Translator> translators) {
 		for (Translator t: translators) {
 			this.translators.put(t.getName(), (VDBTranslatorMetaData)t);
 		}
 	}
-	
+
 	public void addOverideTranslator(VDBTranslatorMetaData t) {
 		this.translators.put(t.getName(), t);
 	}
-	
+
 	public boolean isOverideTranslator(String name) {
 		return this.translators.containsKey(name);
 	}
-	
+
 	@Override
 	public String getDescription() {
 		return this.description;
 	}
-	
+
 	public void setDescription(String desc) {
 		this.description = desc;
 	}
@@ -177,14 +177,14 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 				}
 			}
 		}
-		return allErrors; 
+		return allErrors;
 	}
-	
+
 	@Override
     public boolean isValid() {
         return status == Status.ACTIVE && !hasErrors();
-    } 	
-	
+    }
+
 	public boolean hasErrors() {
 		for (ModelMetaData model : this.models.values()) {
 			if (model.hasErrors()) {
@@ -193,11 +193,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		}
 		return false;
 	}
-	
+
 	public String toString() {
-		return getName()+VERSION_DELIM+getVersion()+ models.values(); 
+		return getName()+VERSION_DELIM+getVersion()+ models.values();
 	}
-	
+
 	@Override
 	public boolean isVisible(String modelName) {
 		ModelMetaData model = getModel(modelName);
@@ -216,7 +216,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public ModelMetaData getModel(String modelName) {
 		return this.models.get(modelName);
 	}
-		
+
 	/**
 	 * If this is a *-vdb.xml deployment
 	 * @return
@@ -227,13 +227,13 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
 	public void setXmlDeployment(boolean dynamic) {
 		this.xmlDeployment = dynamic;
-	}	
-	
+	}
+
 	@Override
 	public List<DataPolicy> getDataPolicies(){
 		return new ArrayList<DataPolicy>(this.dataPolicies.values());
-	}	
-	
+	}
+
 	/**
 	 * This method is required by the Management framework to write the mappings to the persistent form. The actual assignment is done
 	 * in the VDBMetaDataClassInstancefactory
@@ -244,20 +244,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		for (DataPolicy policy:policies) {
 			this.dataPolicies.put(policy.getName(), (DataPolicyMetadata)policy);
 		}
-	}	
-	
+	}
+
 	public DataPolicyMetadata addDataPolicy(DataPolicyMetadata policy){
 		return this.dataPolicies.put(policy.getName(), policy);
 	}
-	
+
 	public LinkedHashMap<String, DataPolicyMetadata> getDataPolicyMap() {
 		return this.dataPolicies;
 	}
-	
+
 	public VDBTranslatorMetaData getTranslator(String name) {
 		return this.translators.get(name);
 	}
-	
+
 	public boolean isPreview() {
 		return Boolean.valueOf(getPropertyValue("preview")); //$NON-NLS-1$
 	}
@@ -271,16 +271,16 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 			}
 		}
 		return queryTimeout;
-	}	
-	
+	}
+
 	public List<VDBImportMetadata> getVDBImports() {
 		return imports;
 	}
-	
+
 	public Set<String> getImportedModels() {
 		return importedModels;
 	}
-	
+
 	public void setImportedModels(Set<String> importedModels) {
 		this.importedModels = importedModels;
 	}
@@ -289,11 +289,11 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public List<EntryMetaData> getEntries() {
 		return this.entries;
 	}
-	
+
 	public void setEntries(List<EntryMetaData> entries) {
 		this.entries = entries;
 	}
-	
+
 	@Override
 	public VDBMetaData clone() {
 		try {
@@ -312,7 +312,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	public void setVisibilityOverride(String name, boolean visible) {
 		this.visibilityOverrides.put(name, visible);
 	}
-	
+
 	public Map<String, Boolean> getVisibilityOverrides() {
 		return visibilityOverrides;
 	}

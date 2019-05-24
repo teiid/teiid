@@ -28,9 +28,9 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class OrderByItem implements LanguageObject {
-	
+
 	private static final long serialVersionUID = 6937561370697819126L;
-	
+
 	private Integer expressionPosition; //set during resolving to the select clause position
 	private boolean ascending = true;
 	private Expression symbol;
@@ -40,7 +40,7 @@ public class OrderByItem implements LanguageObject {
 		setSymbol(symbol);
 		this.ascending = ascending;
 	}
-	
+
 	public int getExpressionPosition() {
 		return expressionPosition == null?-1:expressionPosition;
 	}
@@ -67,17 +67,17 @@ public class OrderByItem implements LanguageObject {
 		}
 		this.symbol = symbol;
 	}
-	
+
 	public NullOrdering getNullOrdering() {
 		return nullOrdering;
 	}
-	
+
 	public void setNullOrdering(NullOrdering nullOrdering) {
 		this.nullOrdering = nullOrdering;
 	}
 
 	/**
-	 * 
+	 *
 	 * @return true if the expression does not appear in the select clause
 	 */
 	public boolean isUnrelated() {
@@ -88,7 +88,7 @@ public class OrderByItem implements LanguageObject {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public OrderByItem clone() {
 		OrderByItem clone = new OrderByItem((Expression)this.symbol.clone(), ascending);
@@ -96,7 +96,7 @@ public class OrderByItem implements LanguageObject {
 		clone.nullOrdering = this.nullOrdering;
 		return clone;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -108,15 +108,15 @@ public class OrderByItem implements LanguageObject {
 		OrderByItem o = (OrderByItem)obj;
 		return o.symbol.equals(symbol) && o.ascending == this.ascending && o.nullOrdering == this.nullOrdering;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return symbol.hashCode();
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

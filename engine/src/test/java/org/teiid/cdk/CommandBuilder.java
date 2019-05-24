@@ -48,14 +48,14 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * Convert a query string into a SQL language parse tree.
  */
 public class CommandBuilder {
-	
+
 	public static LanguageFactory getLanuageFactory() {
 		return LanguageFactory.INSTANCE;
 	}
 
     private QueryMetadataInterface metadata;
 	private LanguageBridgeFactory languageBridgeFactory;
-    
+
     /**
      * @param metadata The metadata describing the datasource which the query is for.
      */
@@ -63,22 +63,22 @@ public class CommandBuilder {
         this.metadata = metadata;
         this.languageBridgeFactory = new LanguageBridgeFactory(metadata);
     }
-    
+
     public LanguageBridgeFactory getLanguageBridgeFactory() {
 		return languageBridgeFactory;
 	}
-    
+
     public org.teiid.language.Command getCommand(String queryString) {
         return getCommand(queryString, false, false);
     }
-    
+
     public org.teiid.language.Command getCommand(String queryString, boolean generateAliases, boolean supportsGroupAlias) {
         Command command = null;
         try {
             command = QueryParser.getQueryParser().parseCommand(queryString);
             QueryResolver.resolveCommand(command, metadata);
             command = QueryRewriter.rewrite(command, metadata, null);
-            expandAllSymbol(command);            
+            expandAllSymbol(command);
             if (generateAliases) {
             	command = (Command)command.clone();
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
@@ -104,7 +104,7 @@ public class CommandBuilder {
             throw new TeiidRuntimeException(e);
 		}
     }
-    
+
     /**
      * Convert the "*" in "select * from..." to the list of column names for the data source.
      */
@@ -126,5 +126,5 @@ public class CommandBuilder {
             select.setSymbols(expandedSymbols);
         }
     }
-    
+
 }

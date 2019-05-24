@@ -12,11 +12,11 @@ import org.teiid.jdbc.TeiidDataSource;
 public class BaseConnection {
 	static String user = "admin";
 	static String password = "teiid";
-	
+
 	interface DataSourceFactory{
 		Connection getConnection(String vdbName) throws Exception;
 	}
-	
+
 	static class ServerDatasourceConnection implements DataSourceFactory {
 		public Connection getConnection(String vdbName) throws Exception {
 			TeiidDataSource ds = new TeiidDataSource();
@@ -29,7 +29,7 @@ public class BaseConnection {
 			return ds.getConnection();
 		}
 	}
-	
+
 	public void execute(DataSourceFactory connF, String vdbName, String sql) throws Exception {
 		Connection connection = connF.getConnection(vdbName);
 		try {
@@ -40,7 +40,7 @@ public class BaseConnection {
 				ResultSet results = statement.getResultSet();
 				ResultSetMetaData metadata = results.getMetaData();
 				int columns = metadata.getColumnCount();
-				
+
 				while(results.next()) {
 					for (int i = 0; i < columns; i++) {
 						System.out.print(results.getString(i+1));
@@ -49,7 +49,7 @@ public class BaseConnection {
 					System.out.println("");
 				}
 				System.out.println("Done getting results!");
-				results.close();				
+				results.close();
 			}
 			else {
 				System.out.println("update count is="+statement.getUpdateCount());
@@ -61,6 +61,6 @@ public class BaseConnection {
 			if (connection != null) {
 				connection.close();
 			}
-		}		
-	}	
+		}
+	}
 }

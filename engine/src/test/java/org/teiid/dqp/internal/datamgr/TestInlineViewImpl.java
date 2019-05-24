@@ -34,7 +34,7 @@ public class TestInlineViewImpl extends TestCase {
     public static SubqueryFromClause helpExample() {
         return new SubqueryFromClause("xyz", TestQueryImpl.helpExample(true)); //$NON-NLS-1$
     }
-    
+
     public static DerivedTable example() throws Exception {
         return (DerivedTable)TstLanguageBridgeFactory.factory.translate(helpExample());
     }

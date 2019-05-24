@@ -75,7 +75,7 @@ public class ConnectionContext {
 		}
 		return defalt;
 	}
-	
+
 	public static String[] getRoles(Subject subject, String[] defalt) {
 		ArrayList<String> roles = new ArrayList<String>();
 		Set<Group> principals = subject.getPrincipals(Group.class);
@@ -92,7 +92,7 @@ public class ConnectionContext {
 			return roles.toArray(new String[roles.size()]);
 		}
 		return defalt;
-	}	
+	}
 
 	// can not associate with MCF, as AS framework only identifies the PasswordCredential as known credential
 	// and assigns the MCF. So, we just take the first credential.

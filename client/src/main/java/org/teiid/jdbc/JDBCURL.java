@@ -35,18 +35,18 @@ import java.util.regex.Pattern;
 
 import org.teiid.net.TeiidURL;
 
-/** 
+/**
  * @since 4.3
  */
 public class JDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
     public static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
-    
+
     static final String URL_PATTERN = JDBC_PROTOCOL + "([^@^;]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
 	public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
-    
+
 	private static Map<String, String> buildProps() {
 		Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		for (String key : new String[] {ExecutionProperties.PROP_TXN_AUTO_WRAP,
@@ -63,9 +63,9 @@ public class JDBCURL {
 		}
 		return result;
 	}
-	
+
     public static final Map<String, String> KNOWN_PROPERTIES = getKnownProperties();
-    
+
     private static Map<String, String> getKnownProperties() {
     	Set<String> props = new HashSet<String>(Arrays.asList(
     	        BaseDataSource.APP_NAME,
@@ -91,16 +91,16 @@ public class JDBCURL {
 		}
     	return Collections.unmodifiableMap(result);
     }
-    
+
     private String vdbName;
     private String connectionURL;
     private Properties properties = new Properties();
-    
+
     public enum ConnectionType {
     	Embedded,
     	Socket
     }
-    
+
     public static ConnectionType acceptsUrl(String url) {
     	Matcher m = urlPattern.matcher(url);
     	if (m.matches()) {
@@ -108,13 +108,13 @@ public class JDBCURL {
     	}
     	return null;
     }
-    
+
     private String urlString;
-    
+
     public JDBCURL(String jdbcURL) {
         parseURL(jdbcURL);
     }
-    
+
     public JDBCURL(String vdbName, String connectionURL, Properties props) {
         if (vdbName == null || vdbName.trim().length() == 0) {
             throw new IllegalArgumentException();
@@ -125,22 +125,22 @@ public class JDBCURL {
             normalizeProperties(props, this.properties);
         }
     }
-    
+
     public String getVDBName() {
         return vdbName;
     }
-    
+
     public String getConnectionURL() {
         return connectionURL;
     }
-    
+
     public Properties getProperties() {
         // Make a copy of the properties object, including any non-string values that may be contained in the map.
         Properties newProps = new Properties();
         newProps.putAll(this.properties);
         return newProps;
     }
-    
+
     private void parseURL(String jdbcURL) {
         if (jdbcURL == null) {
             throw new IllegalArgumentException();
@@ -150,7 +150,7 @@ public class JDBCURL {
         if (jdbcURL.length() == 0) {
             throw new IllegalArgumentException();
         }
-        
+
         Matcher m = urlPattern.matcher(jdbcURL);
         if (!m.matches()) {
         	throw new IllegalArgumentException();
@@ -165,7 +165,7 @@ public class JDBCURL {
         	parseConnectionProperties(props, this.properties);
         }
     }
-    
+
     public static void parseConnectionProperties(String connectionInfo, Properties p) {
         String[] connectionParts = connectionInfo.split(";"); //$NON-NLS-1$
         if (connectionParts.length != 0) {
@@ -175,7 +175,7 @@ public class JDBCURL {
             }
         }
     }
-    
+
     static void parseConnectionProperty(String connectionProperty, Properties p) {
         if (connectionProperty.length() == 0) {
             // Be tolerant of double-semicolons and dangling semicolons
@@ -187,15 +187,15 @@ public class JDBCURL {
         int firstEquals = connectionProperty.indexOf('=');
         if(firstEquals < 1) {
             throw new IllegalArgumentException();
-        } 
+        }
         String key = connectionProperty.substring(0, firstEquals).trim();
-        String value = connectionProperty.substring(firstEquals+1).trim();        
+        String value = connectionProperty.substring(firstEquals+1).trim();
         if(value.indexOf('=') >= 0) {
             throw new IllegalArgumentException();
-        }        
+        }
         addNormalizedProperty(getValidValue(key), getValidValue(value), p);
     }
-    
+
     public String getJDBCURL() {
         if (urlString == null) {
             StringBuffer buf = new StringBuffer(JDBC_PROTOCOL)
@@ -205,7 +205,7 @@ public class JDBCURL {
             	}
             TreeMap sorted = new TreeMap();
             sorted.putAll(properties);
-            
+
             for (Iterator i = sorted.entrySet().iterator(); i.hasNext();) {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
@@ -213,75 +213,75 @@ public class JDBCURL {
 					buf.append(';')
 					   .append(entry.getKey())
 					   .append('=')
-					   .append(safeEncode((String)entry.getValue())); 
+					   .append(safeEncode((String)entry.getValue()));
                 }
             }
             urlString = buf.toString();
         }
         return urlString;
     }
-    
+
     public String getProperty(String key) {
         return properties.getProperty(key);
     }
-    
+
     public String getUserName() {
         return properties.getProperty(BaseDataSource.USER_NAME);
     }
-    
+
     public String getPassword() {
         return properties.getProperty(BaseDataSource.PASSWORD);
     }
-    
+
     public String getVDBVersion() {
         if (properties.contains(BaseDataSource.VDB_VERSION)) {
         	return properties.getProperty(BaseDataSource.VDB_VERSION);
         }
         return properties.getProperty(BaseDataSource.VERSION);
     }
-        
+
     public String getTransactionAutowrapMode() {
         return properties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
     }
-    
+
     public String getPartialResultsMode() {
         return properties.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
     }
-    
+
     public String getResultSetCacheMode() {
         return properties.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
     }
-    
+
     public String getAnsiQuotedIdentifiers() {
         return properties.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
     }
-    
+
     public String getFetchSize() {
         return properties.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
     }
-    
+
     public String getTransparentFailover() {
         return properties.getProperty(TeiidURL.CONNECTION.AUTO_FAILOVER);
     }
-    
+
     public String getDisableLocalTransactions() {
         return properties.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS);
     }
-    
+
     public String toString() {
         return getJDBCURL();
     }
-        
+
     private static void normalizeProperties(Properties source, Properties target) {
         for (Enumeration e = source.propertyNames(); e.hasMoreElements();) {
             String key = (String)e.nextElement();
             addNormalizedProperty(key, source.get(key), target);
         }
-    }    
-    
+    }
+
     public static void addNormalizedProperty(String key, Object value, Properties target) {
         String validKey = getValidKey(key);
-         
+
         // now add the normalized key and value into the properties object.
         target.put(validKey, value);
     }
@@ -293,26 +293,26 @@ public class JDBCURL {
     	}
     	return key;
     }
-    
+
     private static String getValidValue(String value) {
         try {
             // Decode the value of the property if incase they were encoded.
             return URLDecoder.decode(value, UTF_8);
         } catch (UnsupportedEncodingException e) {
             // use the original value
-        }            
+        }
         return value;
     }
-    
+
     private static String safeEncode(String value) {
         try {
             return URLEncoder.encode(value, UTF_8);
         } catch (UnsupportedEncodingException e) {
             // use the original value
-        }            
+        }
         return value;
     }
-    
+
     public static Properties normalizeProperties(Properties props) {
         normalizeProperties(props, props);
         return props;

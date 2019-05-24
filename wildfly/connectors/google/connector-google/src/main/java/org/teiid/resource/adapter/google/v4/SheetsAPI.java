@@ -51,7 +51,7 @@ public class SheetsAPI {
 	public Spreadsheet getSpreadsheet(String spreadsheetId) throws IOException {
         return this.service.spreadsheets().get(spreadsheetId).execute();
 	}
-	
+
     /**
      * Insert row into spreadsheet
      * @param spreadsheetKey  key that identifies spreadsheet
@@ -74,9 +74,9 @@ public class SheetsAPI {
             }
             row.add(value);
         }
-        
+
         content.setValues(Arrays.asList(row));
-        
+
 		try {
             service.spreadsheets().values()
             .append(spreadsheetId, worksheet.getName(), content)
@@ -85,8 +85,8 @@ public class SheetsAPI {
         } catch (IOException e) {
             throw new SpreadsheetOperationException("Error inserting spreadsheet row", e);
         }
-	    
+
 		return new UpdateResult(1, 1);
 	}
-	
+
 }

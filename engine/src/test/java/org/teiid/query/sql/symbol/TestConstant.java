@@ -36,18 +36,18 @@ public class TestConstant {
 
 	// ################################## TEST HELPERS ################################
 
-	public static final Constant sample1() { 
+	public static final Constant sample1() {
 		String s = "the string"; //$NON-NLS-1$
-        return new Constant(s);		
+        return new Constant(s);
 	}
 
-	public static final Constant sample2() { 
+	public static final Constant sample2() {
 		Integer i = new Integer(5);
         return new Constant(i);
 	}
-	
+
 	// ################################## ACTUAL TESTS ################################
-	
+
 	@Test public void testString() {
 		String s = "the string"; //$NON-NLS-1$
         Constant c = new Constant(s);
@@ -55,10 +55,10 @@ public class TestConstant {
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.STRING, c.getType()); //$NON-NLS-1$
         assertEquals("Should be non-null: ", false, c.isNull()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
-        
+
         Constant c2 = new Constant(s);
         assertEquals("Constants for same object aren't equal: ", c, c2); //$NON-NLS-1$
-        
+
         Constant cc = (Constant) c.clone();
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
 	}
@@ -70,10 +70,10 @@ public class TestConstant {
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.INTEGER, c.getType()); //$NON-NLS-1$
         assertEquals("Should be non-null: ", false, c.isNull()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
-        
+
         Constant c2 = new Constant(i);
         assertEquals("Constants for same object aren't equal: ", c, c2); //$NON-NLS-1$
-        
+
         Constant cc = (Constant) c.clone();
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
 	}
@@ -84,10 +84,10 @@ public class TestConstant {
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.NULL, c.getType()); //$NON-NLS-1$
         assertEquals("Should be null: ", true, c.isNull()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
-        
+
         Constant c2 = new Constant(null);
         assertEquals("Constants for same object aren't equal: ", c, c2); //$NON-NLS-1$
-        
+
         Constant cc = (Constant) c.clone();
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
     }
@@ -98,31 +98,31 @@ public class TestConstant {
         assertEquals("Type is incorrect: ", DataTypeManager.DefaultDataClasses.STRING, c.getType()); //$NON-NLS-1$
         assertEquals("Should be null: ", true, c.isNull()); //$NON-NLS-1$
         assertEquals("Object does not equal itself", c, c); //$NON-NLS-1$
-        
+
         Constant c2 = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
         assertEquals("Constants for same object aren't equal: ", c, c2); //$NON-NLS-1$
-        
+
         Constant cc = (Constant) c.clone();
         assertEquals("Cloned object not equal to original: ", c, cc); //$NON-NLS-1$
 
         Constant c3 = new Constant(null);
         assertEquals("Typed null not equal to non-typed null: ", c, c3); //$NON-NLS-1$
     }
-        
-	@Test public void testClone() { 
+
+	@Test public void testClone() {
 	    // Use this object as the "object"-type value for c1
 	    StringBuffer value = new StringBuffer("x"); //$NON-NLS-1$
-	    
+
 		Constant c1 = new Constant(value, DataTypeManager.DefaultDataClasses.OBJECT);
-		Constant copy = (Constant) c1.clone();			
-		
+		Constant copy = (Constant) c1.clone();
+
 		// Check equality
         assertEquals("Cloned object not equal to original: ", c1, copy); //$NON-NLS-1$
-		
-		// Check that modifying original value changes c1 and clone - this is expected as Constant 
+
+		// Check that modifying original value changes c1 and clone - this is expected as Constant
 		// uses a shallow clone
 		value.append("y"); //$NON-NLS-1$
-		
+
 		assertTrue("Original object has not changed, but should have", ((StringBuffer)c1.getValue()).toString().equals("xy"));		 //$NON-NLS-1$ //$NON-NLS-2$
 		assertTrue("Cloned object has not changed, but should have", ((StringBuffer)copy.getValue()).toString().equals("xy"));						 //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -139,7 +139,7 @@ public class TestConstant {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
 	@Test public void testNonEquivalence(){
 		Object s1 = sample1();
 		Object s2 = sample2();
@@ -151,7 +151,7 @@ public class TestConstant {
            // this exception should be thrown
         }
 	}
-	
+
 	@Test public void testPaddedStringComparison(){
 		assertEquals(1, Constant.comparePadded("a", ""));
 		assertEquals(0, Constant.comparePadded("a", "a "));
@@ -159,31 +159,31 @@ public class TestConstant {
 		assertEquals(66, Constant.comparePadded("ab ", "a "));
 		assertEquals(0, Constant.comparePadded("a1 ", "a1"));
 	}
-	
+
 	@Test public void testCollation() {
 		Comparator<Object> c = Constant.getComparator("es", true);
-		
+
 		List<String> vals = Arrays.asList("ñ", "n", "o");
 		Collections.sort(vals, c);
 		assertEquals("ñ", vals.get(1));
-		
+
 		assertEquals(0, c.compare("a ", "a"));
 	}
-	
+
 	@Test public void testArrayImplType() {
 	    Constant c = new Constant(new ArrayImpl(new Integer[0]));
 	    assertEquals(DataTypeManager.getArrayType(DefaultDataClasses.OBJECT), c.getType());
     }
-	
+
 	@Test public void testArrayCompare() {
         Constant c = new Constant(new ArrayImpl(new Integer[0]));
         assertEquals(DataTypeManager.getArrayType(DefaultDataClasses.OBJECT), c.getType());
     }
-	
+
 	@Test public void testEqualsWithDifferentTypes() {
         Constant c1 = new Constant("a");
         Constant c2 = new Constant("a", DefaultDataClasses.OBJECT);
         assertEquals(c1, c2);
     }
-	
+
 }

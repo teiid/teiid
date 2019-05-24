@@ -39,7 +39,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.util.CommandContext;
 
 public class TupleSourceCache {
-	
+
 	final static class CachableVisitor extends LanguageVisitor {
 		boolean cacheable = true;
 		List<Object> parameters;
@@ -66,13 +66,13 @@ public class TupleSourceCache {
 			notCachable();
 		}
 	}
-	
+
     private static class SharedState {
     	TupleBuffer tb;
     	TupleSource ts;
     	int id;
     	int expectedReaders;
-    	
+
     	private void remove() {
     		ts.closeSource();
 			tb.remove();
@@ -80,12 +80,12 @@ public class TupleSourceCache {
 			ts = null;
     	}
     }
-	
+
 	public abstract static class CopyOnReadTupleSource implements TupleSource {
 		int rowNumber = 1;
 		TupleBuffer tb;
 		TupleSource ts;
-		
+
 		protected CopyOnReadTupleSource(TupleBuffer tb, TupleSource ts) {
 			this.tb = tb;
 			this.ts = ts;
@@ -113,16 +113,16 @@ public class TupleSourceCache {
 		}
 
 	}
-	
+
 	private class SharedTupleSource extends CopyOnReadTupleSource {
 		private SharedState state;
 		private boolean closed = false;
-		
+
 		public SharedTupleSource(SharedState state) {
 			super(state.tb, state.ts);
 			this.state = state;
 		}
-		
+
 		@Override
 		public void closeSource() {
 			if (!closed && state.expectedReaders != -1 && --state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
@@ -130,12 +130,12 @@ public class TupleSourceCache {
 				sharedStates.remove(state.id);
 			}
 			closed = true;
-		}	
-		
+		}
+
 	}
-	
+
     private Map<Integer, SharedState> sharedStates;
-    
+
     public void close() {
     	if (sharedStates != null) {
     		for (SharedState ss : sharedStates.values()) {
@@ -144,7 +144,7 @@ public class TupleSourceCache {
     		sharedStates = null;
     	}
     }
-    
+
     public TupleSource getSharedTupleSource(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject, BufferManager bufferMgr, ProcessorDataManager pdm) throws TeiidComponentException, TeiidProcessingException {
 		if (sharedStates == null) {
 			sharedStates = new HashMap<Integer, SharedState>();

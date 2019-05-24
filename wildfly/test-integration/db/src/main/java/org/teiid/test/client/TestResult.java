@@ -21,9 +21,9 @@ package org.teiid.test.client;
 /**
  * The TestResult represents the results from a single test.  A single test can include 1 or more sql commands that
  * are considered 1 inclusive test.
- * 
+ *
  * @author vanhalbert
- * 
+ *
  */
 @SuppressWarnings("nls")
 public interface TestResult {
@@ -31,9 +31,9 @@ public interface TestResult {
     /**
      * The RESULT_STATE is the value assigned based the result of the executed
      * query test
-     * 
+     *
      * @author vanhalbert
-     * 
+     *
      */
     public interface RESULT_STATE {
 
@@ -79,7 +79,7 @@ public interface TestResult {
 
     /**
      * Return the id the uniquely identifies the query set.
-     * 
+     *
      * @return String is the query set id
      */
     String getQuerySetID();
@@ -87,18 +87,18 @@ public interface TestResult {
     /**
      * Return the id that uniquely identifies the query within the query set
      * {@link #getQuerySetID()}.
-     * 
+     *
      * @return
-     * 
+     *
      * @since
      */
     String getQueryID();
 
     /**
      * Return the query that was executed in order to produce this result.
-     * 
+     *
      * @return
-     * 
+     *
      * @since
      */
     String getQuery();
@@ -111,15 +111,15 @@ public interface TestResult {
     * @since
     */
     int getStatus();
-    
-    
+
+
     /**
      * Call to set the status for this test result.
      * @see TestResult.RESULT_STATE
      * @param status
      */
     void setStatus(int status);
-    
+
     /**
      * Return the result status in string format.
      * @return String
@@ -130,15 +130,15 @@ public interface TestResult {
     /**
      * If the result from this query produced an exception, then this method
      * should return the <code>String</code> representation of the exception.
-     * 
+     *
      * @return
-     * 
+     *
      * @since
      */
     String getExceptionMsg();
-    
+
     Throwable getException();
-    
+
     /**
      * Set the exception that indicates the reason why there is a problem
      * with the results.   Call {@link #setExceptionMessage(String)} to display
@@ -146,7 +146,7 @@ public interface TestResult {
      * @param error
      */
     void setException(Throwable error);
-    
+
     /**
      * Set the error message relating to the reason why there is a problem
      * with the results.
@@ -156,24 +156,24 @@ public interface TestResult {
 
     /**
      * Return the time (in a long value) that this query started.
-     * 
+     *
      * @return long representation of begin time
-     * 
+     *
      * @since
      */
     long getBeginTS();
-    
+
     void setBeginTS(long beginTS);
 
     /**
      * Return the time (in a long value) that this query ended
-     * 
+     *
      * @return long representation of end time
-     * 
+     *
      * @since
      */
     long getEndTS();
-    
+
     void setEndTS(long endTS);
 
     /**
@@ -181,7 +181,7 @@ public interface TestResult {
      *         written.
      */
     String getErrorfile();
-    
+
     void setErrorFile(String errorFile);
-    
+
 }

@@ -34,11 +34,11 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 
 public class SubstringFunctionModifier extends AliasModifier {
-	
+
 	public SubstringFunctionModifier() {
 		super("substr"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public List<?> translate(Function function) {
 		this.modify(function);
@@ -65,7 +65,7 @@ public class SubstringFunctionModifier extends AliasModifier {
 				Arrays.asList(
 						length,
 						new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)),
-			    TypeFacility.RUNTIME_TYPES.INTEGER))), 
+			    TypeFacility.RUNTIME_TYPES.INTEGER))),
 				from, TypeFacility.RUNTIME_TYPES.INTEGER);
 		function.getParameters().set(1, adjustedFrom);
 
@@ -89,10 +89,10 @@ public class SubstringFunctionModifier extends AliasModifier {
 		} else {
 			defaultExpr = forLength;
 		}
-		SearchedCase sc = new SearchedCase(clauses, 
+		SearchedCase sc = new SearchedCase(clauses,
 				defaultExpr, TypeFacility.RUNTIME_TYPES.INTEGER);
 		function.getParameters().set(2, sc);
 		return null;
 	}
-	
+
 }

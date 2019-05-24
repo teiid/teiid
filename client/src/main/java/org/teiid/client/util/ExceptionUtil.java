@@ -29,12 +29,12 @@ import org.teiid.core.TeiidRuntimeException;
 
 
 public class ExceptionUtil {
-	
+
 	public static <T extends Throwable> T getExceptionOfType(Throwable ex, Class<T> cls) {
         while (ex != null) {
             if (cls.isAssignableFrom(ex.getClass())) {
                 return cls.cast(ex);
-            } 
+            }
             if (ex.getCause() == ex) {
             	break;
             }
@@ -42,7 +42,7 @@ public class ExceptionUtil {
         }
         return null;
     }
-	
+
 	public static Throwable convertException(Method method, Throwable exception) {
 		boolean canThrowXATransactionException = false;
 		boolean canThrowComponentException = false;
@@ -69,9 +69,9 @@ public class ExceptionUtil {
         }
         return new TeiidRuntimeException(exception);
 	}
-	
+
 	/**
-	 * Strip out the message and optionally the stacktrace 
+	 * Strip out the message and optionally the stacktrace
 	 * @param t
 	 * @return
 	 */
@@ -100,7 +100,7 @@ public class ExceptionUtil {
 				result = (Throwable) ctor.newInstance(code);
 				break;
 	        } catch (Exception e) {
-	        	
+
 	        }
 			clazz = clazz.getSuperclass();
 		}

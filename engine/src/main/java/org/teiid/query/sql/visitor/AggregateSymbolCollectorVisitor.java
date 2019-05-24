@@ -33,23 +33,23 @@ import org.teiid.query.sql.symbol.WindowFunction;
 
 
 public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
-    
+
     public static class AggregateStopNavigator extends PreOrPostOrderNavigator {
-    	
+
     	private Collection<? extends Expression> groupingCols;
     	private Collection<? super Expression> groupingColsUsed;
-    	
+
         public AggregateStopNavigator(LanguageVisitor visitor, Collection<? super Expression> groupingColsUsed, Collection<? extends Expression> groupingCols) {
             super(visitor, PreOrPostOrderNavigator.PRE_ORDER, false);
             this.groupingCols = groupingCols;
             this.groupingColsUsed = groupingColsUsed;
         }
-        
+
         public AggregateStopNavigator(LanguageVisitor visitor, Collection<? extends Expression> groupingCols) {
             super(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
             this.groupingCols = groupingCols;
         }
-        
+
         public void visit(AggregateSymbol obj) {
         	if (!obj.isWindowed()) {
 	            // Visit aggregate symbol but do not dive into it's expression
@@ -59,7 +59,7 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
 	        	super.visit(obj);
 	        }
         }
-        
+
         @Override
         protected void visitNode(LanguageObject obj) {
         	if (groupingCols != null && obj instanceof Expression && groupingCols.contains(obj)) {
@@ -70,41 +70,41 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
         	}
         	super.visitNode(obj);
         }
-        
+
     }
 
     private Collection<? super AggregateSymbol> aggregates;
     private Collection<? super ElementSymbol> otherElements;
     private Collection<? super WindowFunction> windowFunctions;
-    
-	public AggregateSymbolCollectorVisitor(Collection<? super AggregateSymbol> aggregates, Collection<? super ElementSymbol> elements) { 
+
+	public AggregateSymbolCollectorVisitor(Collection<? super AggregateSymbol> aggregates, Collection<? super ElementSymbol> elements) {
         this.aggregates = aggregates;
         this.otherElements = elements;
-	}	
-    
+	}
+
     public void visit(AggregateSymbol obj) {
         if (aggregates != null && !obj.isWindowed()) {
             this.aggregates.add(obj);
         }
     }
-    
+
     public void visit(WindowFunction windowFunction) {
     	if (this.windowFunctions != null) {
     		this.windowFunctions.add(windowFunction);
     	}
     }
-    
+
     public void visit(ElementSymbol obj) {
         if (this.otherElements != null && !obj.isExternalReference()) {
-            this.otherElements.add(obj);  
+            this.otherElements.add(obj);
         }
     }
 
-    public static final void getAggregates(LanguageObject obj, 
-    		Collection<? super AggregateSymbol> aggregates, 
-    		Collection<? super ElementSymbol> otherElements, 
-    		Collection<? super Expression> groupingColsUsed, 
-    		Collection<? super WindowFunction> windowFunctions, 
+    public static final void getAggregates(LanguageObject obj,
+    		Collection<? super AggregateSymbol> aggregates,
+    		Collection<? super ElementSymbol> otherElements,
+    		Collection<? super Expression> groupingColsUsed,
+    		Collection<? super WindowFunction> windowFunctions,
     		Collection<? extends Expression> groupingCols) {
         AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(aggregates, otherElements);
         visitor.windowFunctions = windowFunctions;
@@ -120,12 +120,12 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
         if (removeDuplicates) {
             aggregates = new LinkedHashSet<AggregateSymbol>();
         } else {
-            aggregates = new ArrayList<AggregateSymbol>();    
+            aggregates = new ArrayList<AggregateSymbol>();
         }
         AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(aggregates, null);
         AggregateStopNavigator asn = new AggregateStopNavigator(visitor, null, null);
         obj.acceptVisitor(asn);
         return aggregates;
     }
-        
+
 }

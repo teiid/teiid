@@ -47,14 +47,14 @@ public class ExecutionContextImpl implements ExecutionContext {
     //  Access Node ID
     private String partID;
     // currentConnector ID
-    private String connectorName;    
+    private String connectorName;
     // Execute count of the query
     private String executeCount;
-    // keep the execution object alive during the processing. default:false 
+    // keep the execution object alive during the processing. default:false
     private boolean keepAlive = false;
-    
+
     private boolean isTransactional;
-    
+
     private int batchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
@@ -66,8 +66,8 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private RuntimeMetadata runtimeMetadata;
 	private ConnectorWorkItem workItem;
 	private Scope scope;
-	
-	public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload, 
+
+	public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload,
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
 		commandContext = new CommandContext();
 		commandContext.setVdbName(vdbName);
@@ -76,27 +76,27 @@ public class ExecutionContextImpl implements ExecutionContext {
 		commandContext.setConnectionID(originalConnectionID);
 		commandContext.setRequestId(new RequestID(originalConnectionID, requestId));
 		this.connectorName = connectorName;
-        this.partID = partId;        
+        this.partID = partId;
         this.executeCount = execCount;
 	}
-    
+
     public ExecutionContextImpl(CommandContext commandContext, String connectorName, String partId, String execCount, ConnectorWorkItem workItem) {
         this.connectorName = connectorName;
-        this.partID = partId;        
+        this.partID = partId;
         this.executeCount = execCount;
         this.commandContext = commandContext;
         this.workItem = workItem;
     }
-    
+
     @Override
     public org.teiid.CommandContext getCommandContext() {
     	return this.commandContext;
     }
-    
+
     public String getConnectorIdentifier() {
         return this.connectorName;
     }
-    
+
     @Override
     public String getRequestId() {
         return this.commandContext.getRequestId();
@@ -106,7 +106,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     public String getPartIdentifier() {
         return this.partID;
     }
-    
+
     @Override
     public String getExecutionCountIdentifier() {
         return this.executeCount;
@@ -123,12 +123,12 @@ public class ExecutionContextImpl implements ExecutionContext {
     public Subject getSubject() {
         return this.commandContext.getSubject();
     }
-    
+
     @Override
     public Serializable getCommandPayload() {
         return this.commandContext.getCommandPayload();
     }
-    
+
     @Override
 	public String getConnectionId() {
 		return this.commandContext.getConnectionId();
@@ -136,21 +136,21 @@ public class ExecutionContextImpl implements ExecutionContext {
     @Override
     public void keepExecutionAlive(boolean alive) {
         this.keepAlive = alive;
-    }    
-    
+    }
+
     boolean keepExecutionAlive() {
         return this.keepAlive;
     }
-    	
+
     public boolean equals(Object obj) {
         if(obj == this) {
             return true;
-        } 
+        }
         if(! (obj instanceof ExecutionContext)) {
             return false;
-        } 
+        }
         ExecutionContext other = (ExecutionContext) obj;
-        return EquivalenceUtil.areEqual(this.getRequestId(), other.getRequestId()) && 
+        return EquivalenceUtil.areEqual(this.getRequestId(), other.getRequestId()) &&
         EquivalenceUtil.areEqual(this.getPartIdentifier(), other.getPartIdentifier());
     }
 
@@ -167,7 +167,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     	}
         return "ExecutionContext<vdb=" + this.getVdbName() + ", version=" + this.getVdbVersion() + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
-	
+
     @Override
 	public boolean isTransactional() {
 		return isTransactional;
@@ -176,16 +176,16 @@ public class ExecutionContextImpl implements ExecutionContext {
 	void setTransactional(boolean isTransactional) {
 		this.isTransactional = isTransactional;
 	}
-		
+
 	@Override
 	public int getBatchSize() {
 		return batchSize;
 	}
-	
+
 	public void setBatchSize(int batchSize) {
 		this.batchSize = batchSize;
 	}
-		
+
 	/**
 	 * Add an exception as a warning to this Execution.
 	 */
@@ -196,18 +196,18 @@ public class ExecutionContextImpl implements ExecutionContext {
 		}
 		this.warnings.add(ex);
 	}
-	
+
 	public List<Exception> getWarnings() {
 		List<Exception> result = new ArrayList<Exception>(warnings);
 		warnings.clear();
 		return result;
 	}
-	
+
 	@Override
 	public Session getSession() {
 		return this.session;
 	}
-	
+
 	public void setSession(Session session) {
 		this.session = session;
 	}
@@ -220,37 +220,37 @@ public class ExecutionContextImpl implements ExecutionContext {
 			requestWorkItem.moreWork();
 		}
 	}
-	
+
 	public synchronized boolean isDataAvailable() {
 		boolean result = dataAvailable;
 		dataAvailable = false;
 		return result;
 	}
-	
+
 	@Override
 	public String getGeneralHint() {
 		return StringUtil.join(generalHint, " "); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public String getSourceHint() {
 		return StringUtil.join(hint, " "); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public Collection<String> getGeneralHints() {
 		return generalHint;
 	}
-	
+
 	@Override
 	public Collection<String> getSourceHints() {
 		return hint;
 	}
-	
+
 	public void setGeneralHints(Collection<String> generalHint) {
 		this.generalHint = generalHint;
 	}
-	
+
 	public void setHints(Collection<String> hint) {
 		this.hint = hint;
 	}
@@ -274,7 +274,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	public CacheDirective getCacheDirective() {
 		return cacheDirective;
 	}
-	
+
 	public void setCacheDirective(CacheDirective directive) {
 		this.cacheDirective = directive;
 	}
@@ -282,12 +282,12 @@ public class ExecutionContextImpl implements ExecutionContext {
 	public void setRuntimeMetadata(RuntimeMetadataImpl queryMetadata) {
 		this.runtimeMetadata = queryMetadata;
 	}
-	
+
 	@Override
 	public RuntimeMetadata getRuntimeMetadata() {
 		return this.runtimeMetadata;
 	}
-	
+
 	@Override
 	public void logCommand(Object... command) {
 		if (this.workItem != null) {
@@ -299,7 +299,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	public Scope getScope() {
 		return scope;
 	}
-	
+
 	@Override
 	public void setScope(Scope scope) {
 		this.scope = scope;

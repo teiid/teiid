@@ -69,7 +69,7 @@ public class SalesforceCXFTransport implements Transport {
 
         return connectLocal(uri, header);
     }
-    
+
     private OutputStream connectLocal(String uri, HashMap<String, String> httpHeaders) throws IOException {
         return connectLocal(uri, httpHeaders, true);
     }
@@ -97,21 +97,21 @@ public class SalesforceCXFTransport implements Transport {
     }
 
     private OutputStream connectRaw(String uri, HashMap<String, String> httpHeaders, boolean enableCompression) {
-        
+
         if (config.isTraceMessage()) {
             config.getTraceStream().println( "WSC: Creating a new connection to " + uri + " Proxy = " +
                     config.getProxy() + " username " + config.getProxyUsername());
         }
-        
+
         if (this.config.getCxfConfigFile() == null) {
             this.client = WebClient.create(uri);
         }
         else {
             this.client = WebClient.create(uri, this.config.getCxfConfigFile());
-        }        
-        
+        }
+
         this.client.header("User-Agent", VersionInfo.info());
-        
+
         /*
          * Add all the client specific headers here
          */
@@ -120,7 +120,7 @@ public class SalesforceCXFTransport implements Transport {
                 this.client.header(ent.getKey(), ent.getValue());
             }
         }
-        
+
         if (enableCompression && config.isCompression()) {
             this.client.header("Content-Encoding", "gzip");
             this.client.header("Accept-Encoding", "gzip");
@@ -152,21 +152,21 @@ public class SalesforceCXFTransport implements Transport {
             clientPolicy.setAllowChunking(true);
             clientPolicy.setChunkLength(4096);
         }
-        
+
         if (config.getProxy() != Proxy.NO_PROXY) {
             InetSocketAddress addr = (InetSocketAddress)config.getProxy().address();
             clientPolicy.setProxyServer(addr.getHostName());
             clientPolicy.setProxyServerPort(addr.getPort());
         }
-                
+
         return this.payload;
-    }    
+    }
 
     @Override
     public InputStream getContent() throws IOException {
         javax.ws.rs.core.Response response = client.post(new ByteArrayInputStream(this.payload.toByteArray()));
         successful = true;
-        InputStream in = (InputStream)response.getEntity();            
+        InputStream in = (InputStream)response.getEntity();
         if (response.getStatus() != 200) {
             successful = false;
         }
@@ -174,7 +174,7 @@ public class SalesforceCXFTransport implements Transport {
         if (!successful) {
             return in;
         }
-        
+
         String encoding = response.getHeaderString("Content-Encoding");
 
         if (config.getMaxResponseSize() > 0) {
@@ -196,7 +196,7 @@ public class SalesforceCXFTransport implements Transport {
                     config.getTraceStream().print("=");
                     config.getTraceStream().println(header.getValue());
                 }
-                
+
                 config.teeInputStream(bytes);
             }
         }
@@ -221,4 +221,3 @@ public class SalesforceCXFTransport implements Transport {
         return connectLocal(endpoint, httpHeaders, b);
     }
 }
-    

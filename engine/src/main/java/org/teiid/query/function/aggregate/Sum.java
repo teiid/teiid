@@ -32,7 +32,7 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * Accumulates (per tuple) and calculates the sum of the values 
+ * Accumulates (per tuple) and calculates the sum of the values
  * of a column.  The type of the result varies depending on the type
  * of the input {@see AggregateSymbol}
  */
@@ -43,9 +43,9 @@ public class Sum extends SingleArgumentAggregateFunction {
     protected static final int DOUBLE = 1;
     protected static final int BIG_INTEGER = 2;
     protected static final int BIG_DECIMAL = 3;
-    
+
     protected int accumulatorType = LONG;
-    
+
     private long sumLong;
     private double sumDouble;
     private BigDecimal sumBigDecimal;
@@ -54,7 +54,7 @@ public class Sum extends SingleArgumentAggregateFunction {
     /**
      * Allows subclasses to determine type of accumulator for the SUM.
      * @return Type, as defined in constants
-     */    
+     */
     protected int getAccumulatorType() {
         return this.accumulatorType;
     }
@@ -64,11 +64,11 @@ public class Sum extends SingleArgumentAggregateFunction {
      */
     public void initialize(Class<?> dataType, Class<?> inputType) {
         if(dataType.equals(DataTypeManager.DefaultDataClasses.LONG)) {
-                    
-            this.accumulatorType = LONG;    
-            
+
+            this.accumulatorType = LONG;
+
         } else if(dataType.equals(DataTypeManager.DefaultDataClasses.DOUBLE)) {
-        
+
             this.accumulatorType = DOUBLE;
 
         } else if(dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)) {
@@ -77,7 +77,7 @@ public class Sum extends SingleArgumentAggregateFunction {
             this.accumulatorType = BIG_DECIMAL;
         }
     }
-    
+
     public void reset() {
         sumLong = 0;
         sumDouble = 0;
@@ -90,10 +90,10 @@ public class Sum extends SingleArgumentAggregateFunction {
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-        
+
     	isNull = false;
-    	
-        switch(this.accumulatorType) {        
+
+        switch(this.accumulatorType) {
             case LONG:
                 this.sumLong = FunctionMethods.plus(this.sumLong, ((Number)input).longValue());
                 break;
@@ -113,21 +113,21 @@ public class Sum extends SingleArgumentAggregateFunction {
                 } else {
                 	this.sumBigDecimal = this.sumBigDecimal.add( new BigDecimal(((Number)input).longValue()));
                 }
-                break;    
+                break;
         }
     }
 
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult(CommandContext commandContext) 
+    public Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-        
+
     	if (isNull){
     		return null;
     	}
 
-        switch(this.accumulatorType) {        
+        switch(this.accumulatorType) {
         case LONG:
         	return this.sumLong;
         case DOUBLE:
@@ -137,7 +137,7 @@ public class Sum extends SingleArgumentAggregateFunction {
         }
         return this.sumBigDecimal;
     }
-    
+
     @Override
     public void getState(List<Object> state) {
     	switch (this.accumulatorType) {
@@ -160,7 +160,7 @@ public class Sum extends SingleArgumentAggregateFunction {
     		break;
     	}
     }
-    
+
     @Override
     public List<? extends Class<?>> getStateTypes() {
     	switch (this.accumulatorType) {

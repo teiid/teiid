@@ -75,7 +75,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 						this.command);
             }
         }
-    	
+
         final InfinispanUpdateVisitor visitor = new InfinispanUpdateVisitor(this.metadata);
         visitor.append(this.command);
 
@@ -86,7 +86,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
         TeiidTableMarsheller marshaller = null;
         try {
             Table table = visitor.getParentTable();
-        
+
             Column pkColumn = visitor.getPrimaryKey();
             if (pkColumn == null) {
                 throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, table.getName()));
@@ -188,7 +188,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			}
 		    if (insert.getParameterValues() != null) {
 		        throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25017,
-		                table.getName(), visitor.getParentTable().getName()));		    	
+		                table.getName(), visitor.getParentTable().getName()));
 		    }
 		    if (previous == null) {
 		        throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25009,
@@ -199,20 +199,20 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		    if (upsert) {
 		    	previous = (InfinispanDocument) cache.replace(visitor.getIdentity(), previous);
 		    } else {
-		    	previous = (InfinispanDocument) cache.put(visitor.getIdentity(), previous);			
+		    	previous = (InfinispanDocument) cache.put(visitor.getIdentity(), previous);
 		    }
 		    this.updateCount++;
 		} else {
-			if (insert.getParameterValues() == null) {  
+			if (insert.getParameterValues() == null) {
 				insertRow(cache, visitor.getIdentity(), visitor.getInsertPayload(), upsert);
-				this.updateCount++;			    
+				this.updateCount++;
 			} else {
-				
+
 				boolean putAll = false;
 				if (this.executionContext.getSourceHint() != null) {
-					putAll = this.executionContext.getSourceHint().indexOf("use-putall") != -1; 
+					putAll = this.executionContext.getSourceHint().indexOf("use-putall") != -1;
 				}
-				
+
 				// bulk insert
 				int batchSize = this.executionContext.getBatchSize();
 				Iterator<? extends List<Expression>> args = (Iterator<? extends List<Expression>>) insert
@@ -227,9 +227,9 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 						bi.run(rows, false);
 					} else {
 						BulkInsert bi = new OneAtATime(cache);
-						bi.run(rows, upsert);						
+						bi.run(rows, upsert);
 					}
-					this.updateCount+=rows.size();			    					
+					this.updateCount+=rows.size();
 				}
 			}
 		}
@@ -251,37 +251,37 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 			previous = (InfinispanDocument) cache.put(rowKey, previous);
 		}
 	}
-	
+
 	interface BulkInsert {
-		long run(Map<Object, InfinispanDocument> rows, boolean upsert) 
+		long run(Map<Object, InfinispanDocument> rows, boolean upsert)
 				throws TranslatorException;
 	}
-	
+
     interface Task {
         void run(Object rows) throws TranslatorException;
     }
-    
+
     /*
 	private class ExecutionBasedBulkInsert implements BulkInsert {
 		private TeiidTableMarsheller marshaller;
 		private InfinispanConnection connection;
-		
+
 		public ExecutionBasedBulkInsert(InfinispanConnection connection, TeiidTableMarsheller marshaller)
 				throws TranslatorException {
 			this.marshaller = marshaller;
 			this.connection = connection;
 		}
-		
+
 		@Override
 		public long run(Map<Object, InfinispanDocument> rows, boolean upsert) throws TranslatorException {
 			try {
-				HashMap<String, Object> parameters = new HashMap<>();				
+				HashMap<String, Object> parameters = new HashMap<>();
 				parameters.put("upsert", String.valueOf(upsert));
 				parameters.put("row-count", rows.size());
 				int count = 0;
 				for (Map.Entry<Object, InfinispanDocument> document:rows.entrySet()) {
 					parameters.put("row-key-"+count, document.getKey());
-					
+
 					ByteArrayOutputStream out;
 					try {
 						out = new ByteArrayOutputStream(10*1024);
@@ -302,39 +302,39 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 		}
 	}
 	*/
-	
+
 	private class OneAtATime implements BulkInsert {
 		private RemoteCache<Object, Object> cache;
-		
+
 		public OneAtATime(RemoteCache<Object, Object> cache) {
 			this.cache = cache;
 		}
-		
+
 		@Override
 		public long run(Map<Object, InfinispanDocument> rows, boolean upsert) throws TranslatorException {
 			long updateCount = 0;
 			for (Map.Entry<Object, InfinispanDocument> row : rows.entrySet()) {
 				insertRow(this.cache, row.getKey(), row.getValue(), upsert);
-				updateCount++;			    
+				updateCount++;
 			}
 			return updateCount;
 		}
 	}
-	
+
 	private class UsePutAll implements BulkInsert {
 		private RemoteCache<Object, Object> cache;
-		
+
 		public UsePutAll(RemoteCache<Object, Object> cache) {
 			this.cache = cache;
 		}
-		
+
 		@Override
 		public long run(Map<Object, InfinispanDocument> rows, boolean upsert) throws TranslatorException {
 			this.cache.putAll(rows);
 			return rows.size();
 		}
 	}
-	
+
 	/*
 	 * pagination for delete does not need to use the offset, because when a delete is done, the subsequent query does not include
 	 * the previously removed objects.
@@ -343,7 +343,7 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 	            throws TranslatorException {
 
 	    	if (cache.isEmpty()) return;
-	    	
+
 			QueryFactory qf = Search.getQueryFactory(cache);
 			Query query = qf.create(queryStr);
 
@@ -352,30 +352,30 @@ public class InfinispanUpdateExecution implements UpdateExecution {
 				while (true) {
 					query.startOffset(offset);
 					query.maxResults(batchSize);
-		
+
 					List<Object> values = query.list();
-		
+
 					if (values == null || values.isEmpty()) {
 						break;
 					}
 					for (Object doc : values) {
 						task.run(doc);
-					}		
+					}
 				}
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
 
 	    }
-	
+
 		/*
 		 * pagination for update options does use the offset, because the query returns the same set of objects, so the
-		 * offset has to be used to position the next group of objects to be updated 
+		 * offset has to be used to position the next group of objects to be updated
 		 */
 
     static void paginateUpdateResults(RemoteCache<Object, Object> cache, String queryStr, Task task, int batchSize)
             throws TranslatorException {
-    	
+
 		QueryFactory qf = Search.getQueryFactory(cache);
 		Query query = qf.create(queryStr);
 

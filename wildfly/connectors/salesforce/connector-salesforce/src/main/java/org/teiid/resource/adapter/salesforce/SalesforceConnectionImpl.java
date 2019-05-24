@@ -72,25 +72,25 @@ import com.sforce.ws.ConnectionException;
 import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
-	
+
 	private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
     private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
     private static final int MAX_CHUNK_SIZE = 100000;
-	private BulkConnection bulkConnection; 
+	private BulkConnection bulkConnection;
 	private PartnerConnection partnerConnection;
 	private SalesforceConnectorConfig config;
 	private String restEndpoint;
 	private String apiVersion;
 	private int pollingInterval = 500; //TODO: this could be configurable
-	
+
 	public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
 		login(mcf);
 	}
-	
+
 	SalesforceConnectionImpl(PartnerConnection partnerConnection) {
 		this.partnerConnection = partnerConnection;
 	}
-	
+
 	private void login(SalesForceManagedConnectionFactory mcf) throws ResourceException {
 	    config = new SalesforceConnectorConfig();
         String username = mcf.getUsername();
@@ -110,12 +110,12 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
                 password = ConnectionContext.getPassword(subject, mcf, username, password);
             }
         }
-		
+
 		config.setCxfConfigFile(mcf.getConfigFile());
 		if (useCXFTransport) {
 		    config.setTransport(SalesforceCXFTransport.class);
 		}
-		
+
         config.setCompression(true);
         config.setTraceMessage(false);
 
@@ -130,11 +130,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 			PropertiesUtils.setBeanProperties(config, p, null);
 		}
-		
+
         config.setUsername(username);
         config.setPassword(password);
         config.setAuthEndpoint(mcf.getURL());
-        
+
         //set proxy if needed
         if (mcf.getProxyURL() != null) {
 			try {
@@ -152,10 +152,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
         if (mcf.getRequestTimeout() != null) {
         	config.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
         }
-        
+
         try {
 	        partnerConnection = new TeiidPartnerConnection(config);
-	        
+
 	        String endpoint = config.getServiceEndpoint();
 	        // The endpoint for the Bulk API service is the same as for the normal
 	        // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
@@ -176,10 +176,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
         } catch (ConnectionException e) {
         	throw new ResourceException(e);
 		}
-        
+
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username", username); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public Long getCardinality(String sobject) throws TranslatorException {
 		InputStream is = null;
@@ -221,9 +221,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 		}
 	}
-	
+
 	private InputStream doRestHttpGet(URL url) throws IOException {
-		HttpURLConnection connection = JdkHttpTransport.createConnection(config, url, null); 
+		HttpURLConnection connection = JdkHttpTransport.createConnection(config, url, null);
 		connection.setRequestProperty("Authorization", "Bearer " + config.getSessionId()); //$NON-NLS-1$ //$NON-NLS-2$
 
 		InputStream in = connection.getInputStream();
@@ -235,7 +235,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
 		return in;
 	}
-	
+
 	public boolean isValid() {
 		if(partnerConnection != null) {
 			try {
@@ -249,12 +249,12 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	}
 
 	public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
-		
+
 		if(batchSize > 2000) {
 			batchSize = 2000;
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
 		}
-		
+
 		QueryResult qr = null;
 		partnerConnection.setQueryOptions(batchSize);
 		try {
@@ -305,7 +305,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		} finally {
 			partnerConnection.clearQueryOptions();
 		}
-		
+
 	}
 
 	public int delete(String[] ids) throws TranslatorException {
@@ -317,7 +317,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		} catch (ConnectionException e) {
 			throw new TranslatorException(e);
 		}
-		
+
 		boolean allGood = true;
 		StringBuffer errorMessages = new StringBuffer();
 		for(int i = 0; i < results.length; i++) {
@@ -334,7 +334,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 						errorMessages.append(error.getMessage()).append(';');
 					}
 				}
-				
+
 			}
 		}
 		if(!allGood) {
@@ -342,7 +342,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		}
 		return results.length;
 	}
-	
+
 	public int upsert(DataPayload data) throws TranslatorException {
 	    SObject toCreate = new SObject();
         toCreate.setType(data.getType());
@@ -424,7 +424,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 		return analyzeResult(result);
 	}
-	
+
 	private int analyzeResult(SaveResult[] results) throws TranslatorException {
 		for (SaveResult result : results) {
 			if(!result.isSuccess()) {
@@ -445,7 +445,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			} catch (ConnectionException e) {
 				throw new TranslatorException(e);
 			}
-			UpdatedResult result = new UpdatedResult(); 
+			UpdatedResult result = new UpdatedResult();
 			result.setLatestDateCovered(updated.getLatestDateCovered());
 			result.setIDs(Arrays.asList(updated.getIds()));
 			return result;
@@ -479,7 +479,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			result.setResultRecords(resultRecords);
 			return result;
 	}
-	
+
 	public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
 		try {
 			return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
@@ -496,7 +496,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		} catch (ConnectionException e) {
 			throw new TranslatorException(e);
 		}
-		
+
 	}
 
 	public DescribeGlobalResult getObjects() throws TranslatorException {
@@ -523,9 +523,9 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
 	@Override
 	public void close() throws ResourceException {
-		
+
 	}
-	
+
 	@Override
 	public boolean isAlive() {
 		return isValid();
@@ -566,7 +566,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			throw new TranslatorException(e);
 		}
 	}
-	
+
 	@Override
 	public BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException {
 		try {
@@ -576,7 +576,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			throw new TranslatorException(e);
 		}
 	}
-	
+
 	@Override
 	public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws TranslatorException {
 		if (info.getResultList() == null && info.getPkBatches() == null) {
@@ -669,11 +669,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
             info.setResultList(list.getResult());
             return;
         }
-        
+
         //update the batchInfo
         BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
         BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
-        
+
         String completedId = null;
         for (BatchInfo bi : batchInfo) {
             if (!batches.containsKey(bi.getId())) {
@@ -693,14 +693,14 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
                 break;
             }
         }
-        
+
         if (completedId == null) {
             throwDataNotAvailable(info);
         }
         QueryResultList list = this.bulkConnection.getQueryResultList(jobId, completedId);
         info.setResultList(list.getResult());
     }
-	
+
     private BulkBatchResult nextBulkBatch(String jobId, BatchResultInfo info)
             throws AsyncApiException {
 		int index = info.getAndIncrementResultNum();
@@ -728,7 +728,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		return null;
     }
 
-	@Override 
+	@Override
 	public JobInfo closeJob(String jobId) throws TranslatorException {
 		try {
 			return this.bulkConnection.closeJob(jobId);
@@ -746,14 +746,14 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			}
 			BatchResult[] results = new BatchResult[ids.size()];
 			for (int i = 0; i < ids.size(); i++) {
-				results[i] = this.bulkConnection.getBatchResult(job.getId(), ids.get(i));	
+				results[i] = this.bulkConnection.getBatchResult(job.getId(), ids.get(i));
 			}
 			return results;
 		} catch (AsyncApiException e) {
 			throw new TranslatorException(e);
 		}
 	}
-	
+
 	@Override
 	public void cancelBulkJob(JobInfo job) throws TranslatorException {
 		try {
@@ -761,11 +761,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		} catch (AsyncApiException e) {
 			throw new TranslatorException(e);
 		}
-	}	
-	
+	}
+
 	@Override
 	public String getVersion() {
 		return apiVersion;
 	}
-	
+
 }

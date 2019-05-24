@@ -23,27 +23,27 @@ package org.teiid.test.client;
  */
 @SuppressWarnings("nls")
 public class TestProperties {
-    
+
     /**
      * PROP_SCENARIO_FILE indicates the scenario properties file to load.
      */
     public static final String PROP_SCENARIO_FILE = "scenariofile";
-    
+
     /**
      * The {@link #QUERY_SET_NAME} property indicates the name of directory that contains
      * the set of queries and expected results that will be used.  This is referred
-     * to as the <b>query set</b> 
-     * 
-     * This property should be found in the {@link #PROP_SCENARIO_FILE}. 
+     * to as the <b>query set</b>
+     *
+     * This property should be found in the {@link #PROP_SCENARIO_FILE}.
      */
     public static final String QUERY_SET_NAME = "queryset.dir"; //$NON-NLS-1$
-    
+
     /**
      * PROP_RESULT_MODE controls what to do with the execution results.
-     * 
+     *
      * @see ExpectedResults.RESULT_MODES for the options.
      */
-    public static final String PROP_RESULT_MODE = "resultmode"; 
+    public static final String PROP_RESULT_MODE = "resultmode";
 
     /**
      * All test options will produce the following basic information at the end
@@ -51,7 +51,7 @@ public class TestProperties {
      * successfull</li> <li>how many errored</li> <li>the execution time for
      * each query</li> <li>total time for all the tests to run</li>
      */
-    
+
    public interface RESULT_MODES {
         /**
          * NONE - will provide the basic information
@@ -73,11 +73,11 @@ public class TestProperties {
 
     /**
      * The {@link #PROP_OUTPUT_DIR} property indicates the root directory that output
-     * files will be written.  
+     * files will be written.
      */
     public static final String PROP_OUTPUT_DIR = "outputdir"; //$NON-NLS-1$
-    
-    
+
+
 
 
 

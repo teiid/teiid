@@ -38,7 +38,7 @@ public class TestTupleBuffer {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
 		tb.setForwardOnly(true);
 		tb.addTuple(Arrays.asList(1));
 		TupleBatch batch = tb.getBatch(1);
@@ -48,7 +48,7 @@ public class TestTupleBuffer {
 			tb.getBatch(1);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (AssertionError e) {
-			
+
 		}
 		tb.addTuple(Arrays.asList(1));
 		tb.close();
@@ -56,12 +56,12 @@ public class TestTupleBuffer {
 		assertTrue(batch.getTerminationFlag());
 		assertEquals(2, batch.getBeginRow());
 	}
-	
+
 	@Test public void testReverseIteration() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		List<ElementSymbol> schema = Arrays.asList(x);
-		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
 		tb.addTuple(Arrays.asList(1));
 		tb.addTuple(Arrays.asList(2));
 		TupleBufferTupleSource tbts = tb.createIndexedTupleSource();
@@ -71,7 +71,7 @@ public class TestTupleBuffer {
 		assertEquals(1, tbts.nextTuple().get(0));
 		assertFalse(tbts.hasNext());
 	}
-	
+
 	@Test public void testTruncate() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -97,7 +97,7 @@ public class TestTupleBuffer {
 		batch = tb.getBatch(2);
 		assertTrue(batch.getTerminationFlag());
 	}
-	
+
 	@Test public void testTruncatePartial() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -115,7 +115,7 @@ public class TestTupleBuffer {
 		assertEquals(3, tb.getRowCount());
 		batch = tb.getBatch(3);
 	}
-	
+
 	@Test public void testTruncatePartial1() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -129,7 +129,7 @@ public class TestTupleBuffer {
 		assertEquals(129, tb.getManagedRowCount());
 		assertEquals(129, tb.getRowCount());
 	}
-	
+
 	@Test public void testTruncateMultiple() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -143,7 +143,7 @@ public class TestTupleBuffer {
 		assertEquals(17, tb.getManagedRowCount());
 		assertEquals(17, tb.getRowCount());
 	}
-	
+
 	@Test public void testLobHandling() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);
@@ -155,5 +155,5 @@ public class TestTupleBuffer {
 		tb.addTupleBatch(batch, false);
 		assertNotNull(tb.getLobReference(c.getReferenceStreamId()));
 	}
-	
+
 }

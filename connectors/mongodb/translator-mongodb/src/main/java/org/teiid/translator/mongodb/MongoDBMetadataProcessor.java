@@ -60,24 +60,24 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
     static final String ID = "_id"; //$NON-NLS-1$
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$
     private static final String ASSOSIATION = "ASSOSIATION"; //$NON-NLS-1$
-    
-    private static Set<String> STRING_COMPATIBLE_TYPES = new HashSet<String>(Arrays.asList(TypeFacility.RUNTIME_NAMES.INTEGER, 
-            TypeFacility.RUNTIME_NAMES.DOUBLE, 
+
+    private static Set<String> STRING_COMPATIBLE_TYPES = new HashSet<String>(Arrays.asList(TypeFacility.RUNTIME_NAMES.INTEGER,
+            TypeFacility.RUNTIME_NAMES.DOUBLE,
             TypeFacility.RUNTIME_NAMES.BOOLEAN,
             TypeFacility.RUNTIME_NAMES.LONG,
             TypeFacility.RUNTIME_NAMES.STRING,
             TypeFacility.RUNTIME_NAMES.TIMESTAMP));
-    
+
     private Pattern excludeTables;
     private Pattern includeTables;
-    
+
     private int sampleSize = 1;
-    
+
     @Override
     public void process(MetadataFactory metadataFactory, MongoDBConnection connection) throws TranslatorException {
         DB db = connection.getDatabase();
         for (String tableName:db.getCollectionNames()) {
-            
+
             if (getExcludeTables() != null && shouldExclude(tableName)) {
                 continue;
             }
@@ -85,7 +85,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             if (getIncludeTables() != null && !shouldInclude(tableName)) {
                 continue;
             }
-            
+
             try {
                 DBCollection collection = db.getCollection(tableName);
                 DBCursor cursor = collection.find();
@@ -97,11 +97,11 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     Table table = addTable(metadataFactory, tableName, row, null);
                     if (table != null) {
                         // top level documents can not be seen as merged
-                        table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));                    
-                    }         
+                        table.setProperty(TOP_LEVEL_DOC, String.valueOf(Boolean.TRUE));
+                    }
                     if (cursor.numSeen() >= sampleSize) {
                         break;
-                    }                
+                    }
                 }
                 cursor.close();
             } catch (MongoException e) {
@@ -115,7 +115,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 addForeignKey(metadataFactory, table, metadataFactory.getSchema().getTable(merge));
             }
         }
-        
+
         for (Table table:metadataFactory.getSchema().getTables().values()) {
             String top = table.getProperty(TOP_LEVEL_DOC, false);
             String merge = table.getProperty(MERGE, false);
@@ -145,15 +145,15 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     table.setProperty(FQN, parentfqn + FullyQualifiedName.SEPARATOR + rn.toString());
                 } else {
                     FullyQualifiedName fqn = new FullyQualifiedName("collection", tableName); //$NON-NLS-1$
-                    table.setProperty(FQN, fqn.toString());                
+                    table.setProperty(FQN, fqn.toString());
                 }
             }
-            
+
             for (String columnKey:keys) {
                 Object value = row.get(columnKey);
-                
+
                 Column column = addColumn(metadataFactory, table, columnKey, value);
-                
+
                 if (column != null) {
                     column.setUpdatable(true);
                 }
@@ -165,23 +165,23 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
 
     private Column addColumn(MetadataFactory metadataFactory, Table table, String columnKey, Object value) {
         Column column = null;
-        
+
         if (columnKey.equals(ID)) {
             if (value instanceof BasicDBObject) {
                 BasicDBObject compositeKey = (BasicDBObject)value;
-                for (String key:compositeKey.keySet()) {                    
-                    column = addColumn(metadataFactory, table, key, compositeKey.get(key));  
+                for (String key:compositeKey.keySet()) {
+                    column = addColumn(metadataFactory, table, key, compositeKey.get(key));
                     column.setUpdatable(true);
-                }                
+                }
             }
         }
-        
+
         if (!columnKey.equals(ID) && value instanceof BasicDBObject) {
             // embedded doc - one to one
             Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)value, table);
             if (childTable != null) {
                 childTable.setProperty(MERGE, table.getName());
-                childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name()); 
+                childTable.setProperty(ASSOSIATION, MergeDetails.Association.ONE.name());
             }
         }
         else if (value instanceof BasicDBList) {
@@ -199,13 +199,13 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 if (column == null) {
                     column = metadataFactory.addColumn(columnKey, dataType, table);
                     setNativeType(column, null);
-                } else if (!column.getRuntimeType().equals(dataType)) { 
+                } else if (!column.getRuntimeType().equals(dataType)) {
                     //type conflict
                     MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
                     column.setNativeType(null);
                 }
                 column.setSearchType(SearchType.Unsearchable);
-            }                
+            }
         }
         else if (value instanceof DBRef) {
             Object obj = ((DBRef)value).getId();
@@ -219,7 +219,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             if (column == null) {
                 column = metadataFactory.addColumn(columnKey, dataType, table);
                 setNativeType(column, value);
-            } else if (!column.getRuntimeType().equals(getDataType(value))) { 
+            } else if (!column.getRuntimeType().equals(getDataType(value))) {
                 //type conflict
                 if (STRING_COMPATIBLE_TYPES.contains(column.getRuntimeType()) && STRING_COMPATIBLE_TYPES.contains(dataType)) {
                     MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.STRING, column, metadataFactory.getDataTypes(), false);
@@ -230,15 +230,15 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                 column.setSearchType(SearchType.Unsearchable);
             }
         }
-        
+
         // create a PK out of _id
-        if (columnKey.equals(ID)) { 
+        if (columnKey.equals(ID)) {
             if (value instanceof BasicDBObject) {
                 BasicDBObject compositeKey = (BasicDBObject)value;
                 ArrayList<String> columns = new ArrayList<String>();
-                for (String key:compositeKey.keySet()) {                    
-                    columns.add(key);                    
-                }                
+                for (String key:compositeKey.keySet()) {
+                    columns.add(key);
+                }
                 metadataFactory.addPrimaryKey("PK0", columns, table); //$NON-NLS-1$
             }
             else {
@@ -247,14 +247,14 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         return column;
     }
-    
+
 	private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
         MergeDetails.Association association = MergeDetails.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
         childTable.setProperty(ASSOSIATION, null);
         if (association == MergeDetails.Association.ONE) {
             KeyRecord record = table.getPrimaryKey();
             if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>(); 
+                ArrayList<String> pkColumns = new ArrayList<String>();
                 for (Column column:record.getColumns()) {
                     Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(column.getName());
                     if (c == null) {
@@ -269,7 +269,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         else {
             KeyRecord record = table.getPrimaryKey();
             if (record != null) {
-                ArrayList<String> pkColumns = new ArrayList<String>(); 
+                ArrayList<String> pkColumns = new ArrayList<String>();
                 for (Column column:record.getColumns()) {
                     Column c = metadataFactory.getSchema().getTable(childTable.getName()).getColumnByName(table.getName()+"_"+column.getName()); //$NON-NLS-1$
                     if (c == null) {
@@ -277,8 +277,8 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
                     }
                     pkColumns.add(c.getName());
                 }
-                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$                
-            }            
+                metadataFactory.addForeignKey("FK0", pkColumns, table.getName(), childTable); //$NON-NLS-1$
+            }
         }
     }
 
@@ -294,24 +294,24 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         else if (value instanceof Long) {
             return TypeFacility.RUNTIME_NAMES.LONG;
-        }                
+        }
         else if (value instanceof String) {
             return TypeFacility.RUNTIME_NAMES.STRING;
         }
         else if (value instanceof Date) {
             return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
-        } 
+        }
         else if (value instanceof Binary || value instanceof byte[]) {
             return TypeFacility.RUNTIME_NAMES.VARBINARY;
         }
         else if (value instanceof org.bson.types.ObjectId ) {
             return TypeFacility.RUNTIME_NAMES.STRING;
-        }        
+        }
         else {
             return TypeFacility.RUNTIME_NAMES.OBJECT;
-        }        
+        }
     }
-    
+
     private void setNativeType(Column column, Object value) {
         if (value instanceof Binary ) {
         	column.setNativeType(Binary.class.getName());
@@ -319,9 +319,9 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         else if (column.getName().equals("_id") && value instanceof org.bson.types.ObjectId ) { //$NON-NLS-1$
         	column.setNativeType(org.bson.types.ObjectId.class.getName());
         	column.setAutoIncremented(true);
-        }		
+        }
 	}
-    
+
     @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter.")
     public String getExcludeTables() {
         if (this.excludeTables == null) {
@@ -329,15 +329,15 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         return this.excludeTables.pattern();
     }
-    
+
     protected boolean shouldExclude(String fullName) {
         return excludeTables != null && excludeTables.matcher(fullName).matches();
     }
-    
+
     public void setExcludeTables(String excludeTables) {
         this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     }
-    
+
     @TranslatorProperty(display="Include Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will include it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an exclusion filter")
     public String getIncludeTables() {
         if (this.includeTables == null) {
@@ -345,20 +345,20 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         return this.includeTables.pattern();
     }
-    
+
     protected boolean shouldInclude(String fullName) {
         return includeTables != null && includeTables.matcher(fullName).matches();
     }
-    
+
     public void setIncludeTables(String tableNamePattern) {
         this.includeTables = Pattern.compile(tableNamePattern, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);;
     }
-    
+
     @TranslatorProperty(display="Sample Size", category=PropertyType.IMPORT, description="The number of top level documents of a given collection name to sample.")
     public int getSampleSize() {
         return sampleSize;
     }
-    
+
     public void setSampleSize(int sampleSize) {
         this.sampleSize = sampleSize;
     }

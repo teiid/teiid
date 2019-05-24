@@ -25,7 +25,7 @@ import org.teiid.core.BundleUtil;
 /**
  * For logging purposes
  */
-public class SalesForcePlugin { 
+public class SalesForcePlugin {
 
     /**
      * The plug-in identifier of this plugin
@@ -45,7 +45,7 @@ public class SalesForcePlugin {
     	TEIID13005,
     	TEIID13006,
     	TEIID13007,
-    	TEIID13008, 
+    	TEIID13008,
     	TEIID13009,
     }
 }

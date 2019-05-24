@@ -27,20 +27,20 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 public class AutoCleanupUtil {
-	
+
 	public interface Removable {
 		public void remove();
 	}
-	
+
 	static final class PhantomCleanupReference extends PhantomReference<Object> {
-		
+
 		private Removable removable;
-		
+
 		public PhantomCleanupReference(Object referent, Removable removable) {
 			super(referent, QUEUE);
 			this.removable = removable;
 		}
-		
+
 		public void cleanup() {
 			try {
 				this.removable.remove();
@@ -60,7 +60,7 @@ public class AutoCleanupUtil {
 		doCleanup(true);
 		return ref;
 	}
-	
+
 	public static void removeCleanupReference(PhantomReference<Object> ref) {
 		if (ref == null) {
 			return;

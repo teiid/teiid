@@ -40,7 +40,7 @@ public class TestIsNullCriteriaImpl extends TestCase {
         crit.setNegated(negated);
         return crit;
     }
-    
+
     public static IsNull example(boolean negated) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(negated));
     }

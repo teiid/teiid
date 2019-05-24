@@ -27,15 +27,15 @@ import org.teiid.logging.LogManager;
  * During processing the WorkItem may receive events asynchronously through the moreWork method.
  */
 public abstract class AbstractWorkItem implements Runnable {
-	
+
     enum ThreadState {
     	MORE_WORK, WORKING, IDLE, DONE
     }
-    
+
     private ThreadState threadState = ThreadState.MORE_WORK;
     private volatile boolean isProcessing;
     private Object processLock = new Object();
-    
+
     public void run() {
 		startProcessing();
 		try {
@@ -46,15 +46,15 @@ public abstract class AbstractWorkItem implements Runnable {
 			endProcessing();
 		}
     }
-    
+
     synchronized ThreadState getThreadState() {
     	return this.threadState;
     }
-    
+
     public boolean isProcessing() {
 		return isProcessing;
 	}
-    
+
     private synchronized void startProcessing() {
     	isProcessing = true;
     	logTrace("start processing"); //$NON-NLS-1$
@@ -63,7 +63,7 @@ public abstract class AbstractWorkItem implements Runnable {
 		}
     	this.threadState = ThreadState.WORKING;
 	}
-    
+
     private synchronized void endProcessing() {
     	isProcessing = false;
     	logTrace("end processing"); //$NON-NLS-1$
@@ -89,11 +89,11 @@ public abstract class AbstractWorkItem implements Runnable {
     			throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
     	}
     }
-    
+
     public void moreWork() {
     	moreWork(true);
     }
-    
+
     protected synchronized void moreWork(boolean ignoreDone) {
     	logTrace("more work"); //$NON-NLS-1$
     	this.notifyAll();
@@ -114,20 +114,20 @@ public abstract class AbstractWorkItem implements Runnable {
 				LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, this, "ignoring more work, since the work item is done"); //$NON-NLS-1$
     	}
     }
-    
+
 	private void logTrace(String msg) {
-		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, this, msg, this.threadState); 
+		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, this, msg, this.threadState);
 	}
-    
+
     protected abstract void process();
 
 	protected void pauseProcessing() {
 	}
-    
+
     protected abstract void resumeProcessing();
-	
+
     protected abstract boolean isDoneProcessing();
-    
+
     public abstract String toString();
-    
+
 }

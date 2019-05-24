@@ -24,7 +24,7 @@ package org.teiid;
 public interface PreParser {
 
 	/**
-	 * Return a rewritten form of the incoming command 
+	 * Return a rewritten form of the incoming command
 	 * @param command
 	 * @param context
 	 * @return

@@ -22,7 +22,7 @@ import java.util.ResourceBundle;
 import org.teiid.core.BundleUtil;
 
 
-public class JPAPlugin { 
+public class JPAPlugin {
 
     public static final String PLUGIN_ID = "org.teiid.translator.jpa" ; //$NON-NLS-1$
 

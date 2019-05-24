@@ -31,7 +31,7 @@ public class KeyRecord extends ColumnSet<Table> {
 		AccessPattern,
 		Index,
 	}
-	
+
 	private Type type;
 
 	public KeyRecord(Type type) {
@@ -40,9 +40,9 @@ public class KeyRecord extends ColumnSet<Table> {
 		}
 		this.type = type;
 	}
-	
+
 	public Type getType() {
 		return type;
 	}
-	
+
 }

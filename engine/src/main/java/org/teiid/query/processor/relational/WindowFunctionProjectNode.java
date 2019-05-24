@@ -71,7 +71,7 @@ import org.teiid.query.util.CommandContext;
 
 
 public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
-	
+
 	private static final List<Integer> SINGLE_VALUE_ID = Arrays.asList(0);
 
 	private enum Phase {
@@ -79,13 +79,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		PROCESS,
 		OUTPUT
 	}
-	
+
 	private static class WindowFunctionInfo {
 		WindowFunction function;
 		int outputIndex;
         public WindowFunction primaryFunction;
 	}
-	
+
 	private static class WindowSpecificationInfo {
 		List<Integer> groupIndexes = new ArrayList<Integer>();
 		List<Integer> sortIndexes = new ArrayList<Integer>();
@@ -94,11 +94,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
         WindowFrame windowFrame;
         boolean emptyOrdering = false;
-        
+
         boolean isUnboundedFollowing() {
             return windowFrame != null && windowFrame.getEnd() != null && windowFrame.getEnd().getBound() == null && windowFrame.getEnd().getBoundMode() == BoundMode.FOLLOWING;
         }
-        
+
         Integer getWindowStartOffset() {
             if (windowFrame.getStart().getBoundMode() == BoundMode.CURRENT_ROW) {
                 return 0;
@@ -107,8 +107,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                 return null;
             }
             return (windowFrame.getStart().getBoundMode() == BoundMode.PRECEDING?-1:1)*windowFrame.getStart().getBound();
-        }        
-        
+        }
+
         Integer getWindowEndOffset() {
             if (windowFrame.getEnd() == null || windowFrame.getEnd().getBoundMode() == BoundMode.CURRENT_ROW) {
                 return 0;
@@ -118,7 +118,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
             }
             return (windowFrame.getEnd().getBoundMode() == BoundMode.PRECEDING?-1:1)*windowFrame.getEnd().getBound();
         }
-        
+
         boolean processEachFrame() {
             for (WindowFunctionInfo info : functions) {
                 //because getting the output is destructive, we need
@@ -143,13 +143,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                     || (windowFrame.getEnd() != null && windowFrame.getEnd().getBound() != null));
         }
 	}
-	
+
 	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
 	private LinkedHashMap<Expression, Integer> expressionIndexes;
 	private List<int[]> passThrough = new ArrayList<int[]>();
-	
+
 	private Map<Expression, Integer> elementMap;
-	
+
 	//processing state
 	private Phase phase = Phase.COLLECT;
 	private TupleBuffer tb;
@@ -157,14 +157,14 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	private STree[] partitionMapping;
 	private STree[] valueMapping;
 	private IndexedTupleSource outputTs;
-	
+
 	public WindowFunctionProjectNode(int nodeId) {
 		super(nodeId);
 	}
-	
+
 	protected WindowFunctionProjectNode() {
 	}
-	
+
 	@Override
 	public void reset() {
 		super.reset();
@@ -175,7 +175,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		this.valueMapping = null;
 		this.outputTs = null;
 	}
-	
+
 	@Override
 	public void closeDirect() {
 		if (tb != null) {
@@ -197,7 +197,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 		}
 	}
-	
+
 	public Object clone(){
 		WindowFunctionProjectNode clonedNode = new WindowFunctionProjectNode();
         this.copyTo(clonedNode);
@@ -206,7 +206,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         clonedNode.passThrough = passThrough;
 		return clonedNode;
 	}
-	
+
 	/**
 	 * This state can be determined prior to initialize and is the same for all nodes,
 	 * so it is moved into it's own init routine
@@ -314,19 +314,19 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		
+
 		if (phase == Phase.COLLECT) {
 			saveInput();
 			phase = Phase.PROCESS;
 			partitionMapping = new STree[this.windows.size()];
 			valueMapping = new STree[this.windows.size()];
 		}
-		
+
 		if (phase == Phase.PROCESS) {
 			buildResults();
 			phase = Phase.OUTPUT;
 		}
-		
+
 		if (phase == Phase.OUTPUT) {
 			if (outputTs == null) {
 				outputTs = tb.createIndexedTupleSource(true);
@@ -400,9 +400,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                                 int rc = (Integer)value;
                                 int rowsPerTile = rc/ntile;
                                 if (rn <= (rc%ntile) * (rowsPerTile + 1)) {
-                                    value = (rn - 1) / (rowsPerTile + 1) + 1;    
+                                    value = (rn - 1) / (rowsPerTile + 1) + 1;
                                 } else {
-                                    value = ntile - (rc - rn) / rowsPerTile;      
+                                    value = ntile - (rc - rn) / rowsPerTile;
                                 }
                                 break;
                             }
@@ -438,7 +438,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	/**
 	 * Build the results by maintaining indexes that map
 	 * rowid->partitionid and partitionid->values
-	 * 
+	 *
 	 * TODO use the size hint for tree balancing
 	 */
 	private void buildResults() throws TeiidComponentException,
@@ -494,15 +494,15 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     				specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
     			}
 			}
-			
+
 			try {
     			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex);
-    			
+
     			if (info.processEachFrame()) {
     			    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs);
                     return;
                 }
-    			
+
     			int groupId = 0;
                 List<?> lastRow = null;
     			//rolling creation of the output
@@ -511,8 +511,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     				if (multiGroup) {
     				    if (lastRow != null) {
     				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-    				    	if (!samePartition || (!info.isUnboundedFollowing() 
-    				    	        && ((info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS) 
+    				    	if (!samePartition || (!info.isUnboundedFollowing()
+    				    	        && ((info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS)
     				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1))) {
     			        		saveValues(specIndex, aggs, groupId, samePartition);
     		        			groupId++;
@@ -540,7 +540,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	/**
 	 * The frame clause requires us to recompute over reach frame, rather than using
 	 * the rolling strategy.
-	 * 
+	 *
 	 */
     private void processEachFrame(int specIndex, WindowSpecificationInfo info,
             IndexedTupleSource specificationTs, int[] partitionIndexes, int[] orderIndexes,
@@ -548,7 +548,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
             throws TeiidComponentException, TeiidProcessingException {
         Integer frameStartOffset = info.getWindowStartOffset();
         Integer frameEndOffset = info.getWindowEndOffset();
-        
+
         int groupId = 0;
         List<?> lastRow = null;
         Long startPartition = null;
@@ -557,7 +557,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         while (specificationTs.hasNext()) {
             long currentIndex = specificationTs.getCurrentIndex();
             List<?> tuple = specificationTs.nextTuple();
-            
+
             boolean peer = false;
             if (lastRow != null) {
                 if (endPartition != null && currentIndex > endPartition) {
@@ -565,9 +565,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                     endPartition = null;
                     lastRow = null;
                     groupId++;
-                } else if (info.windowFrame.getMode() == FrameMode.ROWS 
+                } else if (info.windowFrame.getMode() == FrameMode.ROWS
                         || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1) {
-                    groupId++;        
+                    groupId++;
                 } else {
                     peer = true;
                 }
@@ -575,13 +575,13 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
             lastRow = tuple;
             List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
             partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
-            
+
             if (peer) {
-                //it's been accounted for since we computed the aggregate 
+                //it's been accounted for since we computed the aggregate
                 //off of the first peer
                 continue;
             }
-            
+
             if (startPartition == null) {
                 startPartition = currentIndex;
                 //binary search for the end
@@ -607,14 +607,14 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                     endPartition = sorted.getRowCount();
                 }
             }
-            
+
             //determine the indexes of the frame bounds
-            
+
             long start = startPartition;
             if (frameStartOffset != null) {
                 start = Math.max(currentIndex + frameStartOffset, startPartition);
             }
-            
+
             long end = endPartition;
             if (frameEndOffset != null) {
                 end = currentIndex + frameEndOffset;
@@ -634,9 +634,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                 }
                 end = Math.min(end, endPartition);
             }
-            
+
             //compute the aggregates
-            
+
             for (long i = start; i <= end; i++) {
                 List<?> frameTuple = sorted.getBatch(i).getTuple(i);
                 for (AggregateFunction function : aggs) {
@@ -647,7 +647,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                     }
                 }
             }
-            
+
             saveValues(specIndex, aggs, groupId, false);
         }
     }
@@ -668,7 +668,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				function.reset();
 			}
 		}
-		valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);	
+		valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);
 	}
 
 	/**
@@ -736,7 +736,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			schema.add(es);
 			tb = this.getBufferManager().createTupleBuffer(schema, this.getConnectionID(), TupleSourceType.PROCESSOR);
 		}
-		
+
 		List<?> tuple = null;
 		while ((tuple = inputTs.nextTuple()) != null) {
 			tb.addTuple(tuple);
@@ -755,17 +755,17 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			this.elementMap = createLookupMap(sourceElements);
 		}
 	}
-	
+
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {
 		return getElements();
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
     	AnalysisRecord.addLanaguageObjects(props, PROP_WINDOW_FUNCTIONS, this.windows.keySet());
         return props;
 	}
-    
+
 }

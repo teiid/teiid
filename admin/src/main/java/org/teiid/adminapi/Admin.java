@@ -32,7 +32,7 @@ public interface Admin {
 	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
 
 	public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
-	
+
 	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
     /**
@@ -48,7 +48,7 @@ public interface Admin {
 	void removeSource(String vdbName, int vdbVersion, String modelName,
 			String sourceName)
 			throws AdminException;
-	
+
     /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
      *
@@ -77,7 +77,7 @@ public interface Admin {
 	void addSource(String vdbName, int vdbVersion, String modelName,
 			String sourceName, String translatorName, String dsName)
 			throws AdminException;
-	
+
     /**
      * Adds a {@link Translator} and Data source to a {@link VDB}'s Model
      *
@@ -119,7 +119,7 @@ public interface Admin {
      */
 	void updateSource(String vdbName, String vdbVersion, String sourceName,
 			String translatorName, String dsName) throws AdminException;
-	
+
     /**
      * Change the {@link ConnectionType} of the {@link VDB}.
      * @param vdbName Name of the VDB
@@ -153,15 +153,15 @@ public interface Admin {
      * @param content
      * @param persistent the deployed artifact is persisted or not
      * @throws AdminException
-     */    
+     */
     public void deploy(String deployName, InputStream content, boolean persistent) throws AdminException;
-    
+
     /**
      * Get existing deployments on in the sysem
      * @throws AdminException
      */
     public List<String> getDeployments() throws AdminException;
-    
+
     /**
      * Undeploy artifact (VDB, JAR, RAR files)
      * @param deployedName
@@ -187,7 +187,7 @@ public interface Admin {
      */
     @Deprecated
     VDB getVDB(String vdbName, int vdbVersion) throws AdminException;
-    
+
     /**
      * Get the VDB
      * @param vdbName
@@ -296,7 +296,7 @@ public interface Admin {
      * @throws AdminException
      */
     Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName, TranlatorPropertyType type) throws AdminException;
-    
+
 
     /**
      * Get all transaction matching the identifier.
@@ -323,7 +323,7 @@ public interface Admin {
      */
     @Deprecated
     void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException;
-    
+
     /**
      * Clear the cache of the given VDB for provided cache type
      * @param cacheType Cache Type
@@ -447,7 +447,7 @@ public interface Admin {
      * Creates a JCA data source
      * <br>
      * Use this method to create JDBC driver based connection, XA-datasource or Resource Adapter.
-     * Template Name defines the type of connection, if the template name is ends with "-xa" it is 
+     * Template Name defines the type of connection, if the template name is ends with "-xa" it is
      * considered to be a XA based data source.
      * <br>
      * @param deploymentName - This becomes the pool name, as well as the jndi name of the source
@@ -540,7 +540,7 @@ public interface Admin {
      * Get the VDBs that are currently deployed in the system
      *
      * @param singleInstance
-     * <br> 
+     * <br>
      * - <b>true</b> to return the VDB list from only a single server instance,
      * which is the same as {@link #getVDBs()}.
      * <br>

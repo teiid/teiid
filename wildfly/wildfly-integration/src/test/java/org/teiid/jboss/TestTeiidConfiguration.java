@@ -53,7 +53,7 @@ import org.xml.sax.SAXParseException;
 
 @SuppressWarnings("nls")
 public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
-    
+
     static String SCHEMA_1_1 = "schema/jboss-teiid.xsd";
     static String SCHEMA_1_2 = "schema/jboss-teiid_1_2.xsd";
 
@@ -63,31 +63,31 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
 	@Override
 	protected String getSubsystemXml() throws IOException {
-		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));		
+		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
 		return subsystemXml;
-	} 
-	
+	}
+
     @Override
     protected String getSubsystemXsdPath() throws Exception {
         return SCHEMA_1_2;
-    }	
-	
+    }
+
     @Test
     public void testDescribeHandler() throws Exception {
     	standardSubsystemTest(null, true);
     }
-    
+
     @Override
 	protected String readResource(final String name) throws IOException {
-    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.2\"> \n" +     			 
+    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.2\"> \n" +
     			"</subsystem>";
-        
+
     	if (name.equals("minimum")) {
         	return minimum;
         }
     	return null;
     }
-    
+
     @Test
     public void testMinimumConfiguration() throws Exception {
     	standardSubsystemTest("minimum");
@@ -105,11 +105,11 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         String marshalled = services.getPersistedSubsystemXml();
 
         //System.out.println(marshalled);
-        
+
         Assert.assertEquals(marshalled, triggered);
         Assert.assertEquals(normalizeXML(marshalled), normalizeXML(triggered));
     }
-    
+
     @Test
     public void testOutputModel() throws Exception {
     	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
@@ -123,13 +123,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
         Assert.assertEquals(marshalled, triggered);
         Assert.assertEquals(normalizeXML(marshalled), normalizeXML(triggered));
-    }    
-    
+    }
+
     @Test
     public void testSchema() throws Exception {
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
     	validate(subsystemXml);
-    	
+
         KernelServices services = standardSubsystemTest(null, false);
 
         //Get the model and the persisted xml from the controller
@@ -141,24 +141,24 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
 	private void validate(String marshalled) throws SAXException, IOException {
 		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource(SCHEMA_1_2);
-		
+
 		SchemaFactory factory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
 		Schema schema = factory.newSchema(xsdURL);
-		
+
 		Validator validator = schema.newValidator();
 		Source source = new StreamSource(new ByteArrayInputStream(marshalled.getBytes()));
 		validator.setErrorHandler(new ErrorHandler() {
-			
+
 			@Override
 			public void warning(SAXParseException exception) throws SAXException {
 				fail(exception.getMessage());
 			}
-			
+
 			@Override
 			public void fatalError(SAXParseException exception) throws SAXException {
 				fail(exception.getMessage());
 			}
-			
+
 			@Override
 			public void error(SAXParseException exception) throws SAXException {
 				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type")) {
@@ -166,10 +166,10 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 				}
 			}
 		});
-		
+
 		validator.validate(source);
 	}
-    
+
     @Test
     public void testParseSubsystem() throws Exception {
         //Parse the subsystem xml into operations
@@ -198,59 +198,59 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         assertEquals(addSubsystem.get("buffer-manager-heap-max-reserve-mb").asInt(), 2);
         return operations;
     }
-    
+
     @Test
     public void testQueryOperations() throws Exception {
     	KernelServices services = standardSubsystemTest(null, true);
-        
+
         PathAddress addr = PathAddress.pathAddress(
                 PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
         ModelNode addOp = new ModelNode();
         addOp.get(OP).set("read-operation-names");
         addOp.get(OP_ADDR).set(addr.toModelNode());
-        
+
         ModelNode result = services.executeOperation(addOp);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
+
         List<String> opNames = getList(result);
 		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role", "add-source",
 		        "assign-datasource", "cache-statistics", "cache-types", "cancel-request",
 		        "change-vdb-connection-type", "clear-cache", "engine-statistics", "execute-query",
 		        "get-query-plan", "get-schema", "get-translator", "get-vdb", "list-add", "list-clear",
-		        "list-get", "list-long-running-requests", "list-remove", "list-requests", 
-		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions", 
-		        "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove", 
-		        "mark-datasource-available", "query", "read-attribute", "read-attribute-group", 
-		        "read-attribute-group-names", "read-children-names", "read-children-resources", 
-		        "read-children-types", "read-operation-description", "read-operation-names", 
-		        "read-rar-description", "read-resource", "read-resource-description", 
-		        "read-translator-properties", "remove", "remove-anyauthenticated-role", 
-		        "remove-data-role", "remove-source", "restart-vdb", "terminate-session", 
-		        "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics", 
+		        "list-get", "list-long-running-requests", "list-remove", "list-requests",
+		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions",
+		        "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove",
+		        "mark-datasource-available", "query", "read-attribute", "read-attribute-group",
+		        "read-attribute-group-names", "read-children-names", "read-children-resources",
+		        "read-children-types", "read-operation-description", "read-operation-names",
+		        "read-rar-description", "read-resource", "read-resource-description",
+		        "read-translator-properties", "remove", "remove-anyauthenticated-role",
+		        "remove-data-role", "remove-source", "restart-vdb", "terminate-session",
+		        "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics",
 		        "write-attribute"};
 		Assert.assertArrayEquals(opNames.toString(), ops, opNames.toArray(new String[opNames.size()]));
     }
-    
+
     @Test
     public void testAddRemoveTransport() throws Exception {
     	KernelServices services = standardSubsystemTest(null, true);
-        
+
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
-        
+
         // look at current query engines make sure there are only two from configuration.
         ModelNode read = new ModelNode();
         read.get(OP).set("read-children-names");
         read.get(OP_ADDR).set(addr.toModelNode());
         read.get(CHILD_TYPE).set("transport");
-        
+
         ModelNode result = services.executeOperation(read);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
+
         List<String> opNames = getList(result);
         assertEquals(2, opNames.size());
         String [] ops = {"jdbc", "odbc"};
         assertEquals(Arrays.asList(ops), opNames);
-        
+
         // add transport
         ModelNode addOp = new ModelNode();
         addOp.get(OP).set("add");
@@ -258,31 +258,31 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         addOp.get("protocol").set("pg");
         addOp.get("socket-binding").set("socket");
         addOp.get("authentication-security-domain").set("teiid-security");
-        
+
         result = services.executeOperation(addOp);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
+
         result = services.executeOperation(read);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         opNames = getList(result);
         assertEquals(3, opNames.size());
         String [] ops2 = {"jdbc", "newbie",  "odbc"};
-        assertEquals(Arrays.asList(ops2), opNames);       
+        assertEquals(Arrays.asList(ops2), opNames);
 
         // add transport
         ModelNode remove = new ModelNode();
         remove.get(OP).set("remove");
         remove.get(OP_ADDR).set(addr.toModelNode().add("transport", "jdbc")); //$NON-NLS-1$);
         result = services.executeOperation(remove);
-        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());   
-        
+        Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
+
         result = services.executeOperation(read);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         opNames = getList(result);
         assertEquals(2, opNames.size());
         String [] ops3 = {"newbie", "odbc"};
-        assertEquals(Arrays.asList(ops3), opNames); 
-    }    
+        assertEquals(Arrays.asList(ops3), opNames);
+    }
 
     private static List<String> getList(ModelNode operationResult) {
         if(!operationResult.hasDefined("result")) {
@@ -299,7 +299,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
             list.add(node.asString());
         }
         return list;
-    }    
+    }
 
 //    private ModelNode buildProperty(String name, String value) {
 //    	ModelNode node = new ModelNode();
@@ -307,24 +307,24 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 //    	node.get("property-value").set(value);
 //    	return node;
 //    }
-    
+
     @Test
     public void testTranslator() throws Exception {
     	KernelServices services = standardSubsystemTest(null, true);
-        
+
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
-        
+
         ModelNode addOp = new ModelNode();
         addOp.get(OP).set("add");
         addOp.get(OP_ADDR).set(addr.toModelNode().add("translator", "oracle"));
-        ModelNode result = services.executeOperation(addOp);   
+        ModelNode result = services.executeOperation(addOp);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
+
         ModelNode read = new ModelNode();
         read.get(OP).set("read-children-names");
         read.get(OP_ADDR).set(addr.toModelNode());
-        read.get(CHILD_TYPE).set("translator");        
-        
+        read.get(CHILD_TYPE).set("translator");
+
         result = services.executeOperation(read);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
 
@@ -334,13 +334,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         ModelNode resourceRead = new ModelNode();
         resourceRead.get(OP).set("read-resource");
         resourceRead.get(OP_ADDR).set(addr.toModelNode());
-        resourceRead.get("translator").set("oracle");        
-        
+        resourceRead.get("translator").set("oracle");
+
         result = services.executeOperation(resourceRead);
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
-        
+
 //        ModelNode oracleNode = result.get("result");
-//        
+//
 //        ModelNode oracle = new ModelNode();
 //        oracle.get("translator-name").set("oracle");
 //        oracle.get("description").set("A translator for Oracle 9i Database or later");
@@ -359,9 +359,9 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 //        oracle.get("children", "properties").add(buildProperty("supportsFullOuterJoins","true"));
 //        oracle.get("children", "properties").add(buildProperty("Immutable","false"));
 //        oracle.get("children", "properties").add(buildProperty("MaxDependentInPredicates","50"));
-//        
+//
 //        super.compare(oracleNode, oracle);
     }
 
-   
+
 }

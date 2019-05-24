@@ -38,20 +38,20 @@ import org.teiid.core.TeiidRuntimeException;
  * java.util.Properties.
  */
 public final class PropertiesUtils {
-	
+
 	public static class InvalidPropertyException extends TeiidRuntimeException {
 		private static final long serialVersionUID = 1586068295007497776L;
 
 		public InvalidPropertyException(BundleUtil.Event event, String propertyName, Object value, Class<?> expectedType, Throwable cause) {
 			super(event, cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
-		}		
+		}
 
 	}
 
     /**
      * Performs a correct deep clone of the properties object by capturing
      * all properties in the default(s) and placing them directly into the
-     * new Properties object. 
+     * new Properties object.
      */
     public static Properties clone( Properties props ) {
         return clone(props, null, false);
@@ -60,7 +60,7 @@ public final class PropertiesUtils {
     /**
      * Performs a correct deep clone of the properties object by capturing
      * all properties in the default(s) and placing them directly into the
-     * new Properties object.  
+     * new Properties object.
      */
     public static Properties clone( Properties props, Properties defaults, boolean deepClone ) {
         Properties result = null;
@@ -72,9 +72,9 @@ public final class PropertiesUtils {
         } else {
             result = new Properties();
         }
-        
+
         putAll(result, props);
-        
+
         return result;
     }
 
@@ -109,7 +109,7 @@ public final class PropertiesUtils {
      * added to <code>a</code> using its <code>setProperty</code> method -
      * these new properties will overwrite any pre-existing ones of the same
      * name.
-     * 
+     *
      *
      * @param addToThis This Properties object is modified; the properties
      * of the other parameter are added to this.  The added property values
@@ -134,7 +134,7 @@ public final class PropertiesUtils {
             }
         }
     }
-    
+
     public static int getIntProperty(Properties props, String propName, int defaultValue) throws InvalidPropertyException {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
@@ -224,7 +224,7 @@ public final class PropertiesUtils {
             }
         }
     }
-    
+
     /**
      * Convert a nibble to a hex character
      * @param   nibble  the nibble to convert.
@@ -246,7 +246,7 @@ public final class PropertiesUtils {
 		}
     	return sb.toString();
     }
-    
+
     /**
      * Return the bytes for a given hex string, or throw an {@link IllegalArgumentException}
      * @param hex
@@ -273,14 +273,14 @@ public final class PropertiesUtils {
             }
             if (i % 2 == 0) {
                 //high nibble
-                result[i/2] |= (charValue << 4);  
+                result[i/2] |= (charValue << 4);
             } else {
-                result[i/2] |= charValue; 
+                result[i/2] |= charValue;
             }
         }
         return result;
     }
-    
+
     public static void toHex(StringBuilder sb, InputStream is) throws IOException {
     	int i = 0;
     	while ((i = is.read()) != -1) {
@@ -291,26 +291,26 @@ public final class PropertiesUtils {
     }
 
     /**
-     * The specialty of nested properties is, in a given property file 
+     * The specialty of nested properties is, in a given property file
      * there can be values with pattern like "${...}"
      * <code>
      *  key1=value1
      *  key2=${key1}/value2
-     * </code> 
+     * </code>
      * where the value of the <code>key2</code> should resolve to <code>value1/value2</code>
-     * also if the property in the pattern <code>${..}</code> is not found in the loaded 
+     * also if the property in the pattern <code>${..}</code> is not found in the loaded
      * properties, an exception is thrown. Multiple nesting is OK, however recursive nested is not supported.
      * @param original - Original properties to be resolved
      * @return resolved properties object.
      * @since 4.4
      */
     public static Properties resolveNestedProperties(Properties original) {
-        
+
         for(Enumeration<?> e = original.propertyNames(); e.hasMoreElements();) {
             String key = (String)e.nextElement();
             String value = original.getProperty(key);
 
-            // this will take care of the if there are any non-string properties, 
+            // this will take care of the if there are any non-string properties,
             // no nesting allowed on these.
             if (value == null) {
                 continue;
@@ -318,7 +318,7 @@ public final class PropertiesUtils {
 
             boolean matched = true;
             boolean modified = false;
-            
+
             while(matched) {
                 // now match the pattern, then extract and find the value
                 int start = value.indexOf("${"); //$NON-NLS-1$
@@ -326,11 +326,11 @@ public final class PropertiesUtils {
                 if (start != -1) {
                     end = value.indexOf('}', start);
                 }
-                matched = ((start != -1) && (end != -1)); 
+                matched = ((start != -1) && (end != -1));
                 if (matched) {
                     String nestedkey = value.substring(start+2, end);
                     String nestedvalue = original.getProperty(nestedkey);
-                    
+
                     // in cases where the key and the nestedkey are the same, this has to be bypassed
                     // because it will cause an infinite loop, and because there will be no value
                     // for the nestedkey that doesnt contain ${..} in the value
@@ -339,11 +339,11 @@ public final class PropertiesUtils {
 
                     } else {
 
-                    
+
                         // this will handle case where we did not resolve, mark it blank
                         if (nestedvalue == null) {
                         	  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10042, CorePlugin.Util.gs(CorePlugin.Event.TEIID10042, nestedkey));
-                        }                    
+                        }
                         value = value.substring(0,start)+nestedvalue+value.substring(end+1);
                         modified = true;
                    }
@@ -355,17 +355,17 @@ public final class PropertiesUtils {
         }
         return original;
     }
-    
+
     public static void setBeanProperties(Object bean, Properties props, String prefix) {
     	setBeanProperties(bean, props, prefix, false);
     }
-    
+
     public static void setBeanProperties(Object bean, Properties props, String prefix, boolean caseSensitive) {
 		// Move all prop names to lower case so we can use reflection to get
 	    // method names and look them up in the connection props.
     	Map<?, ?> map = props;
     	if (!caseSensitive) {
-    		map = caseInsensitiveProps(props);    		
+    		map = caseInsensitiveProps(props);
     	}
 	    final Method[] methods = bean.getClass().getMethods();
 	    for (int i = 0; i < methods.length; i++) {
@@ -390,7 +390,7 @@ public final class PropertiesUtils {
             }
 	    }
 	}
-    
+
     public static void setBeanProperty(Object bean, String name, Object value) {
 	    final Method[] methods = bean.getClass().getMethods();
 	    for (int i = 0; i < methods.length; i++) {
@@ -419,7 +419,7 @@ public final class PropertiesUtils {
 			  throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value, argType, e);
 		}
 		return argType;
-	}    
+	}
 
 	private static TreeMap<String, String> caseInsensitiveProps(final Properties connectionProps) {
 	    final TreeMap<String, String> caseInsensitive = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
@@ -429,11 +429,11 @@ public final class PropertiesUtils {
 	        String propValue = connectionProps.getProperty(name);
 	        if (propValue != null || connectionProps.containsKey(name)) {
 	        	caseInsensitive.put(name, propValue);
-	        } 
+	        }
 	    }
 	    return caseInsensitive;
 	}
-	
+
 	/**
      * Search for the property first in the environment, then in the system properties
      * @param key
@@ -443,7 +443,7 @@ public final class PropertiesUtils {
     public static String getHierarchicalProperty(String key, String defaultValue) {
         return getHierarchicalProperty(key, defaultValue, String.class);
     }
-	
+
 	/**
 	 * Search for the property first in the environment, then in the system properties
 	 * @param key
@@ -468,7 +468,7 @@ public final class PropertiesUtils {
         }
         return defaultValue;
 	}
-	
+
 	public static Properties getCombinedProperties() {
 	    Properties properties = new Properties();
         properties.putAll(System.getProperties());

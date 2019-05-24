@@ -51,7 +51,7 @@ public class XMLInputStream extends InputStream {
 	public XMLInputStream(StAXSource source, XMLOutputFactory outFactory) throws XMLStreamException {
 		this(source, outFactory, Streamable.ENCODING);
 	}
-	
+
 	public XMLInputStream(StAXSource source, XMLOutputFactory outFactory, String encoding) throws XMLStreamException {
 		reader = source.getXMLEventReader();
 		if (reader == null) {
@@ -59,7 +59,7 @@ public class XMLInputStream extends InputStream {
 		}
 		this.writer = outFactory.createXMLEventWriter(baos, encoding);
 	}
-	
+
 	@Override
 	public int read() throws IOException {
 		while (pos >= baos.getCount()) {
@@ -80,7 +80,7 @@ public class XMLInputStream extends InputStream {
 		}
 		return 0xff & baos.getBuffer()[pos++];
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		try {

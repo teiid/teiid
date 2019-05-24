@@ -20,7 +20,7 @@ package org.teiid.core;
 
 
 /**
- * This exception is a superclass for exceptions that are thrown during 
+ * This exception is a superclass for exceptions that are thrown during
  * processing as a result of user input.  This exception is the result
  * of handling a user request, not the result of an internal error.
  */
@@ -62,14 +62,14 @@ public class TeiidProcessingException extends TeiidException {
     public TeiidProcessingException(BundleUtil.Event code, Throwable t, String message ) {
         super(code, t, message );
     }
-    
+
     public TeiidProcessingException(BundleUtil.Event code, final String message) {
         super(code, message);
-    }     
-    
+    }
+
     public TeiidProcessingException(BundleUtil.Event code, Throwable t) {
         super(code, t);
-    }     
+    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.

@@ -15,29 +15,29 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.transaction.StandaloneGlobalTransaction;
 
 
-/** 
+/**
  * This is global transaction test to be used when transaction is external
  * in places like inside app server
  */
 @SuppressWarnings("nls")
 public class StandaloneGlobalTransactionTests extends LocalTransactionTests {
-    
+
     private static Properties SYS_PROPS;
-    
+
     @BeforeClass
     public static void beforeAll() throws Exception {
 	SYS_PROPS = (Properties) System.getProperties().clone();
-	
+
 	System.setProperty(ConfigPropertyNames.CONFIG_FILE, "xa-config.properties");
 
     }
-    
+
     @Override
     @Before
     public void beforeEach() throws Exception {
 	super.beforeEach();
     }
-    
+
     @Override
     @After
     public void afterEach() throws Exception {
@@ -45,22 +45,22 @@ public class StandaloneGlobalTransactionTests extends LocalTransactionTests {
 
     }
 
-    
+
     @Override
     protected TransactionContainer getTransactionContainter() {
 
 	return new StandaloneGlobalTransaction();
     }
-    
-    
+
+
     @AfterClass
     public static void afterAll() {
-	
+
 	System.setProperties(SYS_PROPS);
 
     }
-    
-    
-    
+
+
+
 
 }

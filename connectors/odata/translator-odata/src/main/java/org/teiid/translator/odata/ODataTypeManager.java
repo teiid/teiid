@@ -34,7 +34,7 @@ public class ODataTypeManager {
 
 	private static HashMap<String, EdmSimpleType> teiidkeyed = new HashMap<String, EdmSimpleType>();
 	private static HashMap<String, String> odatakeyed = new HashMap<String, String>();
-	
+
 	static {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.STRING, EdmSimpleType.STRING);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.BOOLEAN, EdmSimpleType.BOOLEAN);
@@ -55,7 +55,7 @@ public class ODataTypeManager {
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.CLOB, EdmSimpleType.STRING);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.XML, EdmSimpleType.STRING);
 		teiidkeyed.put(DataTypeManager.DefaultDataTypes.VARBINARY, EdmSimpleType.BINARY);
-		
+
 		odatakeyed.put(EdmSimpleType.STRING.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 		odatakeyed.put(EdmSimpleType.BOOLEAN.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
 		odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
@@ -72,7 +72,7 @@ public class ODataTypeManager {
 		odatakeyed.put(EdmSimpleType.BINARY.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.VARBINARY);
 		odatakeyed.put(EdmSimpleType.GUID.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 	}
-	
+
 	public static String teiidType(String odataType) {
         if (odataType.startsWith(CollectionKind.Bag.name() + "(")
                 && odataType.endsWith(")")) {
@@ -86,17 +86,17 @@ public class ODataTypeManager {
                 && odataType.endsWith(")")) {
             odataType = odataType.substring(11, odataType.length() - 1);
             return odatakeyed.get(odataType)+"[]";
-        }	    
+        }
 		return odatakeyed.get(odataType);
 	}
-	
+
 	public static EdmType odataType(String teiidType) {
 		if (DataTypeManager.isArrayType(teiidType)) {
 			return new EdmCollectionType(CollectionKind.Collection, odataType(DataTypeManager.getComponentType(teiidType)));
 		}
 		return teiidkeyed.get(teiidType);
 	}
-	
+
 	public static Object convertToTeiidRuntimeType(Object value) {
 		if (value == null) {
 			return null;

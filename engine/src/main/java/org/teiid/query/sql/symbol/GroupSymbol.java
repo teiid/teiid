@@ -38,7 +38,7 @@ import org.teiid.query.sql.LanguageVisitor;
  * name=Group2, definition=null.</p>
  */
 public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
-	
+
     public static final String TEMP_GROUP_PREFIX = "#"; //$NON-NLS-1$
 
 	/** Definition of the symbol, may be null */
@@ -46,19 +46,19 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 
 	/** Actual metadata ID */
 	private Object metadataID;
-    
+
     private boolean isTempTable;
     private boolean isGlobalTable;
     private boolean isProcedure;
-    
+
     private String outputDefinition;
     //possible qualifier, not included with the short name
     //due do legacy choice this is ambiguous with schema and may be part of the name
     //TODO: refactor to be a proper schema reference
-    private String qualifier; 
-    
+    private String qualifier;
+
     private Object checkMatViewStatus;
-    
+
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
@@ -78,20 +78,20 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		super(name);
 		setDefinition(definition);
 	}
-	
+
 	private GroupSymbol(String schema, String shortName, String definition) {
 		this.qualifier = schema;
 		this.setShortName(shortName);
 		this.setDefinition(definition);
 	}
-	
+
 	public Object getModelMetadataId() {
 		if (getMetadataID() instanceof TempMetadataID) {
 			return ((TempMetadataID)getMetadataID()).getTableData().getModel();
 		}
 		return null;
 	}
-	
+
 	public String getNonCorrelationName() {
 	    if (this.definition == null) {
 	        return this.getName();
@@ -158,7 +158,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	public boolean isResolved() {
 		return (metadataID != null);
 	}
-    
+
     /**
      * Returns true if this is a symbol for a temporary (implicit or explicit) group
      * May return false for explicit temp tables prior to resolving.
@@ -169,7 +169,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public boolean isTempGroupSymbol() {
         return isTempTable || (metadataID == null && isImplicitTempGroupSymbol());
     }
-    
+
     public boolean isImplicitTempGroupSymbol() {
         return isTempGroupName(getNonCorrelationName());
     }
@@ -219,32 +219,32 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		}
 		return EquivalenceUtil.areEqual(this.qualifier, other.qualifier) && this.getShortName().equals(other.getShortName());
 	}
-    
+
     public boolean hasAlias() {
         return getDefinition() != null;
     }
-    
+
     public void setIsTempTable(boolean isTempTable) {
         this.isTempTable = isTempTable;
     }
-    
+
     public static boolean isTempGroupName(String name) {
-        if (name == null) 
+        if (name == null)
             return false;
         return name.startsWith(TEMP_GROUP_PREFIX);
     }
 
     /**
-     * Returns if this is a Temp Table 
+     * Returns if this is a Temp Table
      * Set after resolving.
      * @return
      */
     public boolean isTempTable() {
         return this.isTempTable;
     }
-    
+
     /**
-     * Returns if this is a pushed Common Table 
+     * Returns if this is a pushed Common Table
      * Set after resolving and initial common table planning
      * @return
      */
@@ -259,7 +259,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public void setProcedure(boolean isProcedure) {
         this.isProcedure = isProcedure;
     }
-    
+
     public String getOutputDefinition() {
         return this.outputDefinition == null?this.getDefinition():this.outputDefinition;
     }
@@ -267,15 +267,15 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public void setOutputDefinition(String outputDefinition) {
         this.outputDefinition = outputDefinition;
     }
-    
+
     public boolean isGlobalTable() {
 		return isGlobalTable;
 	}
-    
+
     public void setGlobalTable(boolean isGlobalTable) {
 		this.isGlobalTable = isGlobalTable;
 	}
-    
+
     @Override
     public String getName() {
     	if (this.qualifier != null) {
@@ -283,7 +283,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     	}
     	return super.getName();
     }
-    
+
     @Override
     public int hashCode() {
     	if (this.qualifier != null) {
@@ -291,7 +291,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     	}
     	return super.hashCode();
     }
-    
+
     public void setName(String name) {
     	int index = name.indexOf('.');
     	if (index > 0) {
@@ -306,7 +306,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     public void setCheckMatStatus(Object viewMatadataId) {
         this.checkMatViewStatus = viewMatadataId;
     }
-    
+
     public Object getCheckMatViewStatus() {
         return this.checkMatViewStatus;
     }

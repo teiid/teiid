@@ -32,9 +32,9 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 
 	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
 	final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-	private JGroupsObjectReplicator replicator; 
-	
-	
+	private JGroupsObjectReplicator replicator;
+
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
@@ -55,5 +55,5 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 	public JGroupsObjectReplicator getValue() throws IllegalStateException,IllegalArgumentException {
 		return replicator;
 	}
-	
+
 }

@@ -22,11 +22,11 @@ import java.io.IOException;
 import java.io.Reader;
 
 
-/** 
+/**
  * Base class for any type of Reader, where data can be read as line by line.
  * The derived classes just need to extend this class and implement the "nextLine()"
  * method to get the full "Reader" functionality.
- * 
+ *
  */
 public abstract class StringLineReader extends Reader {
 
@@ -36,8 +36,8 @@ public abstract class StringLineReader extends Reader {
     int currentLineIndex = 0;
 
     boolean closed = false;
-    
-    /** 
+
+    /**
      * @see java.io.Reader#close()
      * @since 4.3
      */
@@ -45,7 +45,7 @@ public abstract class StringLineReader extends Reader {
         closed = true;
     }
 
-    /** 
+    /**
      * @see java.io.Reader#read(char[], int, int)
      * @since 4.3
      */
@@ -54,24 +54,24 @@ public abstract class StringLineReader extends Reader {
             throw new IllegalStateException("Reader already closed"); //$NON-NLS-1$
         }
 
-        int srcoff = currentLineIndex;        
-        if (currentLine == null || (currentLine != null && (currentLine.length()-currentLineIndex) <= 0)) {            
+        int srcoff = currentLineIndex;
+        if (currentLine == null || (currentLine != null && (currentLine.length()-currentLineIndex) <= 0)) {
             currentLine = nextLine();
-            currentLineIndex = 0; 
+            currentLineIndex = 0;
             srcoff = currentLineIndex;
         }
-         
+
         // If we have data available then send it.
         if (currentLine != null) {
             // If requested more than one line limit length to one line
             if (len > (currentLine.length()-currentLineIndex)) {
                 len = (currentLine.length()-currentLineIndex);
             }
-                                
+
             // Copy the contents to destination.
             System.arraycopy(currentLine.toCharArray(), srcoff, cbuf, off, len);
-            
-            // Now move the current index further 
+
+            // Now move the current index further
             currentLineIndex = currentLineIndex+len;
             return len;
         }
@@ -79,10 +79,10 @@ public abstract class StringLineReader extends Reader {
     }
 
     /**
-     * Get the next line of data from the data source. 
+     * Get the next line of data from the data source.
      * @return
      * @throws IOException
      * @since 4.3
      */
-    abstract protected String nextLine() throws IOException; 
+    abstract protected String nextLine() throws IOException;
 }

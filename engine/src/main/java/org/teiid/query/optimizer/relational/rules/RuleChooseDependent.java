@@ -65,10 +65,10 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * Finds nodes that can be turned into dependent joins 
+ * Finds nodes that can be turned into dependent joins
  */
 public final class RuleChooseDependent implements OptimizerRule {
-	
+
 	private static AtomicInteger ID = new AtomicInteger();
 
     private static class CandidateJoin {
@@ -79,25 +79,25 @@ public final class RuleChooseDependent implements OptimizerRule {
 
 	public static final int DEFAULT_INDEPENDENT_CARDINALITY = PropertiesUtils.getHierarchicalProperty("org.teiid.defaultIndependentCardinality", 10, Integer.class); //$NON-NLS-1$
 	public static final int UNKNOWN_INDEPENDENT_CARDINALITY = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
-	
+
 	private boolean fullPushOnly;
 	private boolean traditionalOnly;
-	
+
 	public RuleChooseDependent() {
 	}
-    
+
     public RuleChooseDependent(boolean b) {
     	this.fullPushOnly = b;
 	}
 
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-        
-        // Find first criteria node in plan with conjuncts        
+
+        // Find first criteria node in plan with conjuncts
         List<CandidateJoin> matches = null;
-        
+
         if (fullPushOnly) {
-            //full push requires bottom up processing, 
+            //full push requires bottom up processing,
             matches = findCandidate(plan, metadata, analysisRecord);
             Collections.reverse(matches);
         } else {
@@ -106,51 +106,51 @@ public final class RuleChooseDependent implements OptimizerRule {
             }
             matches = findCandidate(plan, metadata, analysisRecord);
         }
-        
+
         boolean pushCriteria = false;
 
         // Handle all cases where both siblings are possible matches
         for (CandidateJoin entry : matches) {
             PlanNode joinNode = entry.joinNode;
-            
+
             if (fullPushOnly && NodeEditor.findParent(joinNode, NodeConstants.Types.ACCESS) != null) {
                 continue; //already consumed by full pushdown
             }
-            
+
             PlanNode sourceNode = entry.leftCandidate?joinNode.getFirstChild():joinNode.getLastChild();
-            
+
             PlanNode siblingNode = entry.leftCandidate?joinNode.getLastChild():joinNode.getFirstChild();
-            
+
             boolean bothCandidates = entry.leftCandidate&&entry.rightCandidate;
-            
+
             PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, siblingNode, analysisRecord, bothCandidates);
             if(chosenNode != null) {
                 pushCriteria |= markDependent(chosenNode, joinNode, metadata, null, false, capFinder, context, rules, analysisRecord);
                 continue;
-            }   
-            
+            }
+
             DependentCostAnalysis dca = NewCalculateCostUtil.computeCostForDepJoin(joinNode, !entry.leftCandidate, metadata, capFinder, context);
             PlanNode dependentNode = sourceNode;
-            
+
             if (bothCandidates && dca.expectedCardinality == null) {
                 dca = NewCalculateCostUtil.computeCostForDepJoin(joinNode, true, metadata, capFinder, context);
                 if (dca.expectedCardinality != null) {
                     dependentNode = siblingNode;
                 }
             }
-            
+
             if (dca.expectedCardinality != null) {
                 pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca, null, capFinder, context, rules, analysisRecord);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
-            	
+
                 List leftExpressions = (List)joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
                 List rightExpressions = (List)joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
-                
+
                 float sourceNdv = NewCalculateCostUtil.getNDVEstimate(sourceNode, metadata, sourceCost, entry.leftCandidate?leftExpressions:rightExpressions, true);
                 float siblingNdv = NewCalculateCostUtil.getNDVEstimate(siblingNode, metadata, siblingCost, entry.leftCandidate?rightExpressions:leftExpressions, true);
-                
+
                 if (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv == NewCalculateCostUtil.UNKNOWN_VALUE) {
                 	sourceNdv = sourceCost;
                 }
@@ -158,7 +158,7 @@ public final class RuleChooseDependent implements OptimizerRule {
                 	siblingNdv = siblingCost;
                 }
 
-                if (bothCandidates && sourceNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceNdv <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
+                if (bothCandidates && sourceNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceNdv <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY
                         && sourceNdv < siblingNdv && sourceCost < 4*siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
                     pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, sourceCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null, capFinder, context, rules, analysisRecord);
                 } else if (siblingNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((siblingNdv <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY && siblingNdv < sourceNdv && siblingCost < 4*sourceCost) || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
@@ -166,20 +166,20 @@ public final class RuleChooseDependent implements OptimizerRule {
                 }
             }
         }
-        
+
         if (pushCriteria) {
             // Insert new rules to push down the SELECT criteria
             rules.push(RuleConstants.CLEAN_CRITERIA); //it's important to run clean criteria here since it will remove unnecessary dependent sets
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
         }
-        
+
         if (!matches.isEmpty() && plan.getParent() != null) {
         	//this can happen if we create a fully pushable plan from full dependent join pushdown
         	return plan.getParent();
         }
-        
+
         return plan;
-    }    
+    }
 
     /**
      * Walk the tree pre-order, finding all access nodes that are candidates and
@@ -187,20 +187,20 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @param metadata Metadata implementation
      * @param node Root node to search
      * @param matches Collection to accumulate matches in
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
      */
     List<CandidateJoin> findCandidate(PlanNode root, QueryMetadataInterface metadata, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
 
         List<CandidateJoin> candidates = new ArrayList<CandidateJoin>();
-        
+
         for (PlanNode joinNode : NodeEditor.findAllNodes(root, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
             CandidateJoin candidate = null;
-            
+
             for (Iterator<PlanNode> j = joinNode.getChildren().iterator(); j.hasNext();) {
                 PlanNode child = j.next();
                 child = FrameUtil.findJoinSourceNode(child);
-                
+
                 if(child.hasBooleanProperty(NodeConstants.Info.MAKE_NOT_DEP) || !isValidJoin(joinNode, child, analysisRecord)) {
                 	continue;
                 }
@@ -222,21 +222,21 @@ public final class RuleChooseDependent implements OptimizerRule {
                 }
             }
         }
-        
+
         return candidates;
-        
+
     }
-    
+
     /**
      * Check whether a join is valid.  Invalid joins are CROSS JOIN, FULL OUTER JOIN,
-     * any join without criteria, any join with no equality criteria, and any outer 
+     * any join without criteria, any join with no equality criteria, and any outer
      * join that has the outer side not the same as the dependent.
      * @param joinNode The join node to check
      * @param sourceNode The access node being considered
      * @param analysisRecord
      * @return True if valid for making dependent
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
      */
     boolean isValidJoin(PlanNode joinNode, PlanNode sourceNode, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException {
         JoinType jtype = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
@@ -246,7 +246,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	sourceNode.recordDebugAnnotation("parent join is CROSS", null, "Rejecting dependent join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
-        
+
         if (!joinNode.getExportedCorrelatedReferences().isEmpty()) {
         	sourceNode.recordDebugAnnotation("parent join has a correlated nested table", null, "Rejecting dependent join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	return false;
@@ -258,15 +258,15 @@ public final class RuleChooseDependent implements OptimizerRule {
         	sourceNode.recordDebugAnnotation("parent join has has no join criteria", null, "Rejecting dependent join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
-        
-        if(joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS) == null) { 
+
+        if(joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS) == null) {
         	sourceNode.recordDebugAnnotation("parent join has no equa-join predicates", null, "Rejecting dependent join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
-                        
-        return true;        
+
+        return true;
     }
-    
+
     PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2, AnalysisRecord analysisRecord, boolean bothCandidates) throws QueryMetadataException, TeiidComponentException  {
     	PlanNode sourceNode1 = FrameUtil.findJoinSourceNode(rootNode1);
     	if (sourceNode1.getType() == NodeConstants.Types.GROUP) {
@@ -285,17 +285,17 @@ public final class RuleChooseDependent implements OptimizerRule {
                 //have unsatisfied access patterns
             	rootNode1.getParent().recordDebugAnnotation("both children have unsatisfied access patterns", null, "Neither node can be made dependent", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
                 return null;
-            } 
+            }
             rootNode1.recordDebugAnnotation("unsatisfied access pattern detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return rootNode1;
-        } 
+        }
         if (bothCandidates && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
             //Access node 2 has unsatisfied access pattern,
             //so try to make node 2 dependent
         	sourceNode2.recordDebugAnnotation("unsatisfied access pattern detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return rootNode2;
-        } 
-        
+        }
+
         // Check for hints, which over-rule heuristics
         if(sourceNode1.hasProperty(NodeConstants.Info.MAKE_DEP)) {
         	sourceNode1.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
@@ -306,7 +306,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	sourceNode2.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode2.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_DEP));
             return rootNode2;
-        } 
+        }
         if (bothCandidates && sourceNode1.hasProperty(NodeConstants.Info.MAKE_IND)) {
         	sourceNode2.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
         	rootNode2.setProperty(Info.MAKE_DEP, sourceNode1.getProperty(Info.MAKE_IND));
@@ -317,37 +317,37 @@ public final class RuleChooseDependent implements OptimizerRule {
         	rootNode1.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_IND));
         	return rootNode1;
         }
-        
+
         return null;
     }
 
     /**
      * Mark the specified access node to be made dependent
      * @param sourceNode Node to make dependent
-     * @param dca 
-     * @param rules 
+     * @param dca
+     * @param rules
      * @param analysisRecord
      * @param commandContext
      * @param capFinder
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
-     * @throws QueryPlannerException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
+     * @throws QueryPlannerException
      */
-    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, 
+    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca,
     		Boolean bound, CapabilitiesFinder capabilitiesFinder, CommandContext context, RuleStack rules, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 
         boolean isLeft = joinNode.getFirstChild() == sourceNode;
-        
+
         // Get new access join node properties based on join criteria
-        List independentExpressions = (List)(isLeft?joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS):joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS)); 
+        List independentExpressions = (List)(isLeft?joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS):joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS));
         List dependentExpressions = (List)(isLeft?joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS):joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS));
-        
+
         if(independentExpressions == null || independentExpressions.isEmpty()) {
             return false;
         }
 
         PlanNode indNode = isLeft?joinNode.getLastChild():joinNode.getFirstChild();
-        
+
         if (bound == null) {
         	List<PlanNode> sources = NodeEditor.findAllNodes(indNode, NodeConstants.Types.SOURCE);
         	for (PlanNode planNode : sources) {
@@ -366,7 +366,7 @@ public final class RuleChooseDependent implements OptimizerRule {
     	if (fullPushOnly) {
     	    boolean result = fullyPush(sourceNode, joinNode, metadata, capabilitiesFinder, context, indNode, rules, makeDep, analysisRecord, independentExpressions);
     	    //before partial aggreage pushdown carry over a hint
-    		if (!result && !indNode.hasBooleanProperty(Info.MAKE_IND) && dca != null 
+    		if (!result && !indNode.hasBooleanProperty(Info.MAKE_IND) && dca != null
     		        && NodeEditor.findParent(joinNode, NodeConstants.Types.GROUP) != null) {
     		    //hint to be picked up on the next run
     		    MakeDep indHint = new MakeDep();
@@ -379,17 +379,17 @@ public final class RuleChooseDependent implements OptimizerRule {
     	    return false;
     	}
 
-    	// Check that for a outer join the dependent side must be the inner 
+    	// Check that for a outer join the dependent side must be the inner
     	JoinType jtype = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         if(jtype == JoinType.JOIN_FULL_OUTER || (jtype.isOuter() && JoinUtil.getInnerSideJoinNodes(joinNode)[0] != sourceNode)) {
         	sourceNode.recordDebugAnnotation("node is on outer side of the join", null, "Rejecting dependent join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
-    	
+
     	String id = nextId();
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
-        
+
         PlanNode depNode = isLeft?joinNode.getFirstChild():joinNode.getLastChild();
         depNode = FrameUtil.findJoinSourceNode(depNode);
         if (!depNode.hasCollectionProperty(Info.ACCESS_PATTERNS)) {
@@ -399,13 +399,13 @@ public final class RuleChooseDependent implements OptimizerRule {
         }
 
         PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, indNode, metadata, dca, bound, makeDep);
-        
+
         sourceNode.addAsParent(crit);
-              
+
         if (isLeft) {
             JoinUtil.swapJoinChildren(joinNode);
         }
-    	
+
         return true;
     }
 
@@ -440,9 +440,9 @@ public final class RuleChooseDependent implements OptimizerRule {
 
 	/**
 	 * Check for fully pushable dependent joins
-	 * currently we only look for the simplistic scenario where there are no intervening 
+	 * currently we only look for the simplistic scenario where there are no intervening
 	 * nodes above the dependent side
-	 * @param independentExpressions 
+	 * @param independentExpressions
 	 */
 	private boolean fullyPush(PlanNode sourceNode, PlanNode joinNode,
 			QueryMetadataInterface metadata,
@@ -456,7 +456,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 		Object modelID = RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata);
 
 		boolean hasHint = false;
-		
+
 		if (makeDep != null && makeDep.getJoin() != null) {
 			if (!makeDep.getJoin()) {
 				sourceNode.recordDebugAnnotation("cannot pushdown dependent join", modelID, "honoring hint", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
@@ -464,14 +464,14 @@ public final class RuleChooseDependent implements OptimizerRule {
 			}
     		hasHint = true;
     	}
-		
+
 		if (!CapabilitiesUtil.supports(Capability.FULL_DEPENDENT_JOIN, modelID, metadata, capabilitiesFinder)) {
 			if (hasHint) {
 				sourceNode.recordDebugAnnotation("cannot pushdown dependent join", modelID, "dependent join pushdown needs enabled at the source", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
 			}
             return false;
 		}
-		
+
 		List<? extends Expression> projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
 		if (projected == null) {
 			PlanNode plan = sourceNode;
@@ -481,7 +481,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 			new RuleAssignOutputElements(false).execute(plan, metadata, capabilitiesFinder, null, AnalysisRecord.createNonRecordingRecord(), context);
 			projected = (List<? extends Expression>) indNode.getProperty(Info.OUTPUT_COLS);
 		}
-		
+
 		if (!hasHint) {
 			//require no lobs
 			for (Expression ex : projected) {
@@ -489,20 +489,20 @@ public final class RuleChooseDependent implements OptimizerRule {
 					return false;
 				}
 			}
-			
+
 			//old optimizer tests had no buffermanager
 			if (context.getBufferManager() == null) {
 				return false;
 			}
-			
+
 			if (makeDep != null && makeDep.getMax() != null) {
 				//if the user specifies a max, it's best to just use a regular dependent join
 				return false;
-			}	
+			}
 		}
-    	
+
     	/*
-    	 * check to see how far the access node can be raised 
+    	 * check to see how far the access node can be raised
     	 */
     	PlanNode tempAccess = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
     	GroupSymbol gs = RulePlaceAccess.recontextSymbol(new GroupSymbol("TEIID_TEMP"), context.getGroups()); //$NON-NLS-1$
@@ -510,7 +510,7 @@ public final class RuleChooseDependent implements OptimizerRule {
     	tempAccess.addGroup(gs);
     	tempAccess.setProperty(Info.MODEL_ID, modelID);
     	indNode.addAsParent(tempAccess);
-    	
+
     	PlanNode originalSource = sourceNode;
     	sourceNode = originalSource.clone();
     	//more deeply clone
@@ -528,7 +528,7 @@ public final class RuleChooseDependent implements OptimizerRule {
     		raised = true;
     		if (first) { //raising over join required
     			first = false;
-    			continue; 
+    			continue;
     		}
 			switch (sourceNode.getFirstChild().getType()) {
 			case NodeConstants.Types.PROJECT:
@@ -555,7 +555,7 @@ public final class RuleChooseDependent implements OptimizerRule {
     	if (!moreProcessing && !hasHint) {
 			//restore the plan
 			if (sourceNode.getParent() != null) {
-				sourceNode.getParent().replaceChild(sourceNode, sourceNode.getFirstChild());	
+				sourceNode.getParent().replaceChild(sourceNode, sourceNode.getFirstChild());
 			} else {
 				sourceNode.removeAllChildren();
 			}
@@ -591,10 +591,10 @@ public final class RuleChooseDependent implements OptimizerRule {
 		for (GroupSymbol group : indNode.getGroups()) {
     		FrameUtil.convertFrame(joinNode, group, newGroups, inverse, metadata);
 		}
-		
+
 		//add the source a new group for the join
 		indNode.addAsParent(source);
-		
+
 		//convert the lower plan into a subplan
 		//it needs to be rooted by a project - a view isn't really needed
 		indNode.removeFromParent();
@@ -604,7 +604,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 		RuleChooseDependent ruleChooseDependent = new RuleChooseDependent();
 		ruleChooseDependent.traditionalOnly = true;
 	    ruleCopy.push(ruleChooseDependent);
-		
+
 		if (indNode.getType() == NodeConstants.Types.ACCESS) {
 			PlanNode root = RuleRaiseAccess.raiseAccessNode(project, indNode, metadata, capabilitiesFinder, true, null, context);
 			if (root != project) {
@@ -618,22 +618,22 @@ public final class RuleChooseDependent implements OptimizerRule {
 		return true;
 	}
 
-    /** 
+    /**
      * @param independentExpressions
      * @param dependentExpressions
-     * @param makeDep 
+     * @param makeDep
      * @return
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
      * @since 4.3
      */
     public static PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
                                            List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound, MakeDep makeDep) throws QueryMetadataException, TeiidComponentException {
-        
+
         Float cardinality = null;
-        
+
         List<DependentSetCriteria.AttributeComparison> expressions = new ArrayList<DependentSetCriteria.AttributeComparison>(dependentExpressions.size());
-        
+
         for (int i = 0; i < dependentExpressions.size(); i++) {
             Expression depExpr = dependentExpressions.get(i);
             Expression indExpr = independentExpressions.get(i);
@@ -645,7 +645,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             	}
             	comp.ndv = dca.expectedNdv[i];
             	comp.maxNdv = dca.maxNdv[i];
-            } else { 
+            } else {
                 Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indExpr, true);
                 if (cardinality == null) {
                 	cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
@@ -674,7 +674,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 
 	static PlanNode createDependentSetNode(String id, List<DependentSetCriteria.AttributeComparison> expressions) {
 		DependentSetCriteria crit = createDependentSetCriteria(id, expressions);
-		
+
         return RelationalPlanner.createSelectNode(crit, false);
 	}
 
@@ -682,7 +682,7 @@ public final class RuleChooseDependent implements OptimizerRule {
 		if (expressions.isEmpty()) {
 			return null;
 		}
-		
+
 		Expression indEx = null;
         Expression depEx = null;
         float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
@@ -713,7 +713,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	indEx = new Array(DefaultDataClasses.OBJECT, indExprs);
         	depEx = new Array(DefaultDataClasses.OBJECT, depExprs);
         }
-        
+
         DependentSetCriteria crit = new DependentSetCriteria(depEx, id);
         crit.setValueExpression(indEx);
         crit.setAttributes(expressions);
@@ -721,9 +721,9 @@ public final class RuleChooseDependent implements OptimizerRule {
         crit.setNdv(ndv);
 		return crit;
 	}
-    
+
     public String toString() {
         return "ChooseDependent"; //$NON-NLS-1$
     }
-    
+
 }

@@ -25,9 +25,9 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 /**
- * This class is being provided for sole reason to inject metadata as it used to be in previous 
+ * This class is being provided for sole reason to inject metadata as it used to be in previous
  * teiid versions. Take a look at modified interface of the MetadataRepostiory interface.
- * 
+ *
  * If a {@link DefaultMetadataRepository} is used, it will inject metadata onto whatever has been
  * loaded at that point in the repository chain.  Generally this means that a {@link DefaultMetadataRepository}
  * should be last.
@@ -44,7 +44,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 		String vdbName = factory.getVdbName();
 		String vdbVersion = factory.getVdbVersion();
 		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
-						
+
 		this.startLoadVdb(vdbName, vdbVersion);
 		Schema schema = factory.getSchema();
 		records.add(schema);
@@ -105,11 +105,11 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 			if (p.isVirtual() && !p.isFunction()) {
 				String proc = this.getProcedureDefinition(vdbName, vdbVersion, p);
 				if (proc != null) {
-					p.setQueryPlan(proc);								
+					p.setQueryPlan(proc);
 				}
 			}
 		}
-	
+
 		for (AbstractMetadataRecord abstractMetadataRecord : records) {
 			LinkedHashMap<String, String> p = this.getProperties(vdbName, vdbVersion, abstractMetadataRecord);
 			if (p != null) {
@@ -118,7 +118,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 		}
 		this.endLoadVdb(vdbName, vdbVersion);
 	}
-	
+
 	/**
 	 * Marks the start of vdb metadata loading
 	 * Note: this is called for every schema
@@ -127,7 +127,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	 */
 	public void startLoadVdb(String vdbName, String vdbVersion) {
 	}
-	
+
 	/**
 	 * Marks the end of vdb metadata loading
 	 * Note: this is called for every schema
@@ -136,7 +136,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	 */
 	public void endLoadVdb(String vdbName, String vdbVersion) {
 	}
-	
+
 	/**
 	 * Get updated {@link ColumnStats} for the given column
 	 * @param vdbName
@@ -147,7 +147,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public ColumnStats getColumnStats(String vdbName, String vdbVersion, Column column) {
 		return null;
 	}
-	
+
 	/**
 	 * Returns an updated trigger definition (FOR EACH ROW ...) or null if the current view definition should be used
 	 * should be used.
@@ -155,7 +155,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public String getInsteadOfTriggerDefinition(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation) {
 		return null;
 	}
-	
+
 	/**
 	 * Returns an updated procedure definition (CREATE PROCEDURE ...) or null if the current procedure definition should be used
 	 * should be used.
@@ -163,7 +163,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public String getProcedureDefinition(String vdbName, String vdbVersion, Procedure procedure) {
 		return null;
 	}
-	
+
 	/**
 	 * Get updated {@link TableStats} for the given table
 	 * @param vdbName
@@ -174,7 +174,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public TableStats getTableStats(String vdbName, String vdbVersion, Table table) {
 		return null;
 	}
-	
+
 	/**
 	 * Returns an updated view definition (AS SQL only) or null if the current view definition should be used
 	 * should be used.
@@ -182,7 +182,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public String getViewDefinition(String vdbName, String vdbVersion, Table table) {
 		return null;
 	}
-	
+
 	/**
 	 * Get the extension metadata for a given record.
 	 * @param vdbName
@@ -193,7 +193,7 @@ public abstract class DefaultMetadataRepository<F, C> implements MetadataReposit
 	public LinkedHashMap<String, String> getProperties(String vdbName, String vdbVersion, AbstractMetadataRecord record){
 		return null;
 	}
-	
+
 	/**
 	 * Returns whether the trigger is enabled
 	 * @param vdbName

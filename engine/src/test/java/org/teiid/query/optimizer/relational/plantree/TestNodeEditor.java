@@ -61,18 +61,18 @@ public class TestNodeEditor extends TestCase {
         }
         return node;
     }
-    
+
     private PlanNode buildNamedNode(String name) {
         PlanNode node = new PlanNode();
         node.addGroup(new GroupSymbol(name));
         return node;
     }
-    
+
     public PlanNode exampleTree1() {
-        return buildTree(new Object[] 
-        { 
+        return buildTree(new Object[]
+        {
             "node_0",  //$NON-NLS-1$
-            new Object[] { 
+            new Object[] {
                 "node_1",  //$NON-NLS-1$
                     "node_1_1", //$NON-NLS-1$
                     "node_1_2" //$NON-NLS-1$
@@ -83,40 +83,40 @@ public class TestNodeEditor extends TestCase {
             }
         }
         );
-    }      
-    
+    }
+
     // ############ BEGIN ACTUAL TESTS ###############
-    
+
     public void testRemoveLastChildNode() {
         PlanNode tree = exampleTree1();
         List expectedChildren = new ArrayList();
         expectedChildren.add(tree.getFirstChild());
         expectedChildren.addAll(tree.getLastChild().getChildren());
 
-        NodeEditor.removeChildNode(tree, tree.getLastChild());        
+        NodeEditor.removeChildNode(tree, tree.getLastChild());
         List actualChildren = tree.getChildren();
-        
+
         assertEquals("Didn't get expected children after removing last child", expectedChildren, actualChildren); //$NON-NLS-1$
     }
 
-    public void testFindNodePreOrder1() {               
+    public void testFindNodePreOrder1() {
         PlanNode node1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
         PlanNode node2 = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
         PlanNode node3 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         PlanNode node4 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
-        
+
         node1.addLastChild(node2);
         node2.addLastChild(node3);
         node2.addLastChild(node4);
-        
+
         assertEquals("Found wrong node", node1, NodeEditor.findNodePreOrder(node1, NodeConstants.Types.PROJECT)); //$NON-NLS-1$
         assertEquals("Found wrong node", node2, NodeEditor.findNodePreOrder(node1, NodeConstants.Types.JOIN)); //$NON-NLS-1$
         assertEquals("Found wrong node", node3, NodeEditor.findNodePreOrder(node1, NodeConstants.Types.ACCESS)); //$NON-NLS-1$
         assertEquals("Found wrong node", null, NodeEditor.findNodePreOrder(node1, NodeConstants.Types.GROUP));         //$NON-NLS-1$
         assertEquals("Found wrong node", null, NodeEditor.findNodePreOrder(node1, NodeConstants.Types.ACCESS, NodeConstants.Types.JOIN)); //$NON-NLS-1$
     }
-    
-    public void testFindParent() {               
+
+    public void testFindParent() {
         PlanNode node0 = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         PlanNode node1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
         PlanNode node2 = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
@@ -126,7 +126,7 @@ public class TestNodeEditor extends TestCase {
         node1.addLastChild(node2);
         node2.addLastChild(node3);
         node2.addLastChild(node4);
-        
+
         assertEquals("Found wrong node", node1, NodeEditor.findParent(node4, NodeConstants.Types.PROJECT)); //$NON-NLS-1$
         assertNull("Found wrong node", NodeEditor.findParent(node1, NodeConstants.Types.PROJECT)); //$NON-NLS-1$
         assertNull("Found wrong node", NodeEditor.findParent(node4, NodeConstants.Types.PROJECT, NodeConstants.Types.JOIN|NodeConstants.Types.SELECT)); //$NON-NLS-1$

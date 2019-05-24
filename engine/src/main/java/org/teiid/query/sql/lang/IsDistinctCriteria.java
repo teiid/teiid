@@ -36,7 +36,7 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
 	private LanguageObject rightRowValue;
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated;
-	
+
     /**
      * Constructs a default instance of this class.
      */
@@ -45,19 +45,19 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
     public void setLeftRowValue(LanguageObject leftRowValue) {
 		this.leftRowValue = leftRowValue;
 	}
-    
+
     public void setRightRowValue(LanguageObject rightRowValue) {
 		this.rightRowValue = rightRowValue;
 	}
-    
+
     public LanguageObject getLeftRowValue() {
 		return leftRowValue;
 	}
-    
+
     public LanguageObject getRightRowValue() {
 		return rightRowValue;
 	}
-	
+
     /**
      * Returns whether this criteria is negated.
      * @return flag indicating whether this criteria contains a NOT
@@ -65,7 +65,7 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
     public boolean isNegated() {
         return negated;
     }
-    
+
     /**
      * Sets the negation flag for this criteria.
      * @param negationFlag true if this criteria contains a NOT; false otherwise
@@ -73,7 +73,7 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
     }
-    
+
     @Override
     public void negate() {
     	this.negated = !this.negated;
@@ -92,29 +92,29 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
 	public int hashCode() {
 		return HashCodeUtil.hashCode(negated?0:1, leftRowValue, rightRowValue);
 	}
-	
+
     /**
      * Compares this criteria to another object for equality
      * @param obj Other object
      * @return True if objects are equal
      */
     public boolean equals(Object obj) {
-		if(this == obj) { 
+		if(this == obj) {
 			return true;
 		}
-		
+
 		if(! (obj instanceof IsDistinctCriteria)) {
 			return false;
-		} 
-		
+		}
+
 		IsDistinctCriteria other = (IsDistinctCriteria) obj;
         if (isNegated() ^ other.isNegated()) {
             return false;
         }
         return EquivalenceUtil.areEqual(leftRowValue, other.leftRowValue)
-        		&& EquivalenceUtil.areEqual(rightRowValue, other.rightRowValue);			
+        		&& EquivalenceUtil.areEqual(rightRowValue, other.rightRowValue);
 	}
-	
+
 	/**
 	 * Deep copy of object
 	 * @return Deep copy of object
@@ -126,5 +126,5 @@ public class IsDistinctCriteria extends PredicateCriteria implements Negatable {
         criteriaCopy.setRightRowValue((LanguageObject)this.rightRowValue.clone());
 		return criteriaCopy;
 	}
-	
+
 }

@@ -95,14 +95,14 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		public boolean returning;
 		public boolean usesLocalTemp;
 	}
-	
+
 	static final ElementSymbol ROWCOUNT =
 		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
-	
+
 	static {
 		ROWCOUNT.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 	}
-	
+
     private Program originalProgram;
 
 	// State initialized by processor
@@ -128,16 +128,16 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	private VariableContext parentContext;
 
     private List outputElements;
-    
+
 	private SubqueryAwareEvaluator evaluator;
-	
+
     // Stack of programs, with current program on top
     private Stack<Program> programs = new Stack<Program>();
-    
+
     private boolean evaluatedParams;
-    
+
     private int updateCount = Procedure.AUTO_UPDATECOUNT;
-    
+
     private TransactionContext blockContext;
     /**
      * Resources cannot be held open across the txn boundary.  This list is a hack at ensuring the resources are closed.
@@ -153,7 +153,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	this.originalProgram = originalProgram;
     	createVariableContext();
     }
-    
+
     public Program getOriginalProgram() {
 		return originalProgram;
 	}
@@ -161,7 +161,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     /**
      * @see ProcessorPlan#initialize(ProcessorDataManager, Object)
      */
-    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
+    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         this.bufferMgr = bufferMgr;
         this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
         this.parentContext = context.getVariableContext();
@@ -169,7 +169,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         this.parentDataMrg = dataMgr;
         if (evaluator == null) {
         	this.evaluator = new SubqueryAwareEvaluator(Collections.emptyMap(), getDataManager(), getContext(), this.bufferMgr);
-        } 
+        }
     }
 
     public void reset() {
@@ -209,17 +209,17 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 					setParameterValue(param, getCurrentVariableContext(), null);
 				}
     		}
-    		if (this.params != null) { 
+    		if (this.params != null) {
 		        for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
 		            ElementSymbol param = entry.getKey();
 		            Expression expr = entry.getValue();
-		            
+
 		            VariableContext context = getCurrentVariableContext();
 		            if (context.getVariableMap().containsKey(param)) {
 		            	continue;
 		            }
 		            Object value = this.evaluateExpression(expr);
-		
+
 		            //check constraint
 		            checkNotNull(param, value, metadata);
 		            setParameterValue(param, context, value);
@@ -258,13 +258,13 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 			VariableContext context, Object value) {
 		context.setValue(param, value);
 	}
-	
+
 	@Override
 	public TupleBatch nextBatch() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		if (blockContext != null) {
 			this.getContext().getTransactionServer().resume(blockContext);
-		} 
+		}
 		try {
 			return nextBatchDirect();
 		} finally {
@@ -356,7 +356,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
                 if(last != null){
                 	if (last.resultsBuffer == null) {
                 	    if (last.usesLocalTemp || !txnTupleSources.isEmpty()) {
-                            last.returning = true;                	        
+                            last.returning = true;
                 	    } else {
                 	        //check to see if we are returning from a loop - the processorplan can be reused, so we need to save this result
                 	        //
@@ -426,8 +426,8 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	        	if (atomic) {
     	        		TransactionContext tc = this.getContext().getTransactionContext();
     	            	if (tc != null && tc.getTransactionType() != Scope.NONE) {
-    		        		//a non-completing atomic block under a higher level transaction 
-    	            		
+    		        		//a non-completing atomic block under a higher level transaction
+
     		        		//this will not work correctly until we support
     		        		//checkpoints/subtransactions
 							tc.getTransaction().setRollbackOnly();
@@ -435,12 +435,12 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	            	}
     	        	}
 	        	} catch (IllegalStateException | SystemException| TeiidComponentException e1) {
-	        	    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception while rolling back transaction", e1); //$NON-NLS-1$	        	    
+	        	    LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception while rolling back transaction", e1); //$NON-NLS-1$
 	        	} catch (Throwable e1) {
-	        	    LogManager.logWarning(LogConstants.CTX_DQP, e1); 
+	        	    LogManager.logWarning(LogConstants.CTX_DQP, e1);
 	        	}
 	        	if (e instanceof RuntimeException) {
-                    LogManager.logWarning(LogConstants.CTX_DQP, e); 
+                    LogManager.logWarning(LogConstants.CTX_DQP, e);
                 } else {
                     LogManager.logDetail(LogConstants.CTX_DQP, "Caught exception in exception hanlding block", e); //$NON-NLS-1$
                 }
@@ -555,11 +555,11 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	node.addProperty(PROP_OUTPUT_COLS, AnalysisRecord.getOutputColumnProperties(getOutputElements()));
     	return node;
     }
-    
+
     public void setMetadata( QueryMetadataInterface metadata ) {
         this.metadata = metadata;
     }
-    
+
     public void setOutParams(List<ElementSymbol> outParams) {
 		this.outParams = outParams;
 	}
@@ -567,7 +567,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     public void setParams( LinkedHashMap<ElementSymbol, Expression> params ) {
         this.params = params;
     }
-    
+
 	private void createVariableContext() {
 		this.currentVarContext = new VariableContext(runInContext && this.params == null);
         this.currentVarContext.setValue(ROWCOUNT, 0);
@@ -587,7 +587,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     }
 
     /**
-     * 
+     *
      * @param command
      * @param rsName
      * @param procAssignments
@@ -598,7 +598,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      */
     public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode, boolean usesLocalTemp)
         throws TeiidComponentException, TeiidProcessingException {
-    	
+
         CursorState state = (CursorState) this.cursorStates.getValue(rsName);
         if (state == null || rsName == null) {
         	if (this.currentState != null && this.currentState.processor.getProcessorPlan() != command) {
@@ -609,7 +609,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         	if (this.currentState == null) {
 		        //this may not be the first time the plan is being run
 		        command.reset();
-		
+
 		        CommandContext subContext = getContext().clone();
 		        subContext.setVariableContext(this.currentVarContext);
 		        state = new CursorState();
@@ -663,7 +663,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         		}
         		getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, rowCount);
         		return;
-        	} 
+        	}
         	if (rsName == null && mode == Mode.NOHOLD) {
         		//unnamed without hold
         		//process fully, but don't save
@@ -687,11 +687,11 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	        this.currentState = null;
         }
     }
-    
-    /** 
+
+    /**
      * @param success
-     * @throws TeiidComponentException 
-     * @throws XATransactionException 
+     * @throws TeiidComponentException
+     * @throws XATransactionException
      */
     public void pop(boolean success) throws TeiidComponentException {
     	this.evaluator.close();
@@ -741,7 +741,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 			removeState((CursorState) entry.getValue());
 		}
 	}
-    
+
     public void push(Program program) throws XATransactionException {
     	this.evaluator.close();
     	program.reset(this.getContext().getConnectionId());
@@ -756,7 +756,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         VariableContext cc = new VariableContext(true);
         cc.setParentContext(this.cursorStates);
         this.cursorStates = cc;
-        
+
         if (program.isAtomic() && this.blockContext == null) {
         	TransactionContext tc = this.getContext().getTransactionContext();
         	if (tc != null && tc.getTransactionType() == Scope.NONE) {
@@ -782,7 +782,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         	}
         }
     }
-    
+
     public void incrementProgramCounter() throws TeiidComponentException {
     	if (this.programs.isEmpty()) {
     		return;
@@ -804,7 +804,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         throws TeiidComponentException, TeiidProcessingException {
 
         CursorState state = getCursorState(rsName);
-        
+
         state.currentRow = state.ts.nextTuple();
         return (state.currentRow != null);
     }
@@ -865,7 +865,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 		this.outputElements = outputElements;
 	}
 
-    /** 
+    /**
      * @return Returns the tempTableStore.
      * @since 5.5
      */
@@ -883,23 +883,23 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     	evaluator.initialize(getContext(), getDataManager());
 		return evaluator.evaluate(condition, Collections.emptyList());
     }
-    
+
     Object evaluateExpression(Expression expression) throws BlockedException, TeiidProcessingException, TeiidComponentException {
     	evaluator.initialize(getContext(), getDataManager());
     	return evaluator.evaluate(expression, Collections.emptyList());
     }
-               
+
     public Program peek() {
     	if (this.programs.isEmpty()) {
     		return null;
     	}
         return programs.peek();
     }
-    
+
     public void setUpdateCount(int updateCount) {
         this.updateCount = updateCount;
 	}
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         Boolean paramRequires = false;
@@ -920,16 +920,16 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
             return paramRequires;
         }
         if (updateCount == 0) {
-            return paramRequires;  
+            return paramRequires;
         }
         if (updateCount == 1) {
             return paramRequires==null?true:null;
         }
         return true;
     }
-    
+
     /**
-     * For procedures without explicit parameters, sets whether the 
+     * For procedures without explicit parameters, sets whether the
      * procedure should run in the parent variable context.
      * @param runInContext
      */
@@ -965,7 +965,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
 	public void setValidateAccess(boolean b) {
 		this.validateAccess = b;
 	}
-	
+
 	public boolean isValidateAccess() {
 		return validateAccess;
 	}

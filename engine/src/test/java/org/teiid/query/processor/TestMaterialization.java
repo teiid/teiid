@@ -50,14 +50,14 @@ import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestMaterialization {
-	
+
 	private TempMetadataAdapter metadata;
 	private TempTableDataManager dataManager;
 	private TempTableStore tempStore;
 	private GlobalTableStoreImpl globalStore;
 	private ProcessorPlan previousPlan;
 	private HardcodedDataManager hdm;
-	
+
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
@@ -68,12 +68,12 @@ public class TestMaterialization {
 		hdm.addData("SELECT MatSrc.MatSrc.x FROM MatSrc.MatSrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
 		hdm.addData("SELECT MatTable.info.e1, MatTable.info.e2 FROM MatTable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
 		hdm.addData("SELECT MatTable.info.e2, MatTable.info.e1 FROM MatTable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
-		
+
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(hdm, bm, cache);
 	}
-	
+
 	private void execute(String sql, List<?>... expectedResults) throws Exception {
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setTempTableStore(tempStore);
@@ -91,7 +91,7 @@ public class TestMaterialization {
 		execute("SELECT * from vgroup3 where x is null", Arrays.asList(null, null));
 		assertEquals(1, hdm.getCommandHistory().size());
 	}
-	
+
 	@Test public void testReadWrite() throws Exception {
 		execute("SELECT * from vgroup3 where x = 'one'", Arrays.asList("one", "zne"));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -103,31 +103,31 @@ public class TestMaterialization {
 		this.globalStore.setState(matTableName, new ByteArrayInputStream(baos.toByteArray()));
 		assertEquals(time, matTableInfo.getUpdateTime());
 		execute("SELECT * from vgroup3 where x = 'one'", Arrays.asList("one", "zne"));
-		
+
 		execute("select lookup('mattable.info', 'e1', 'e2', 5)", Arrays.asList((String)null));
 		baos = new ByteArrayOutputStream();
 		String codeTableName = "#CODE_MATTABLE.INFO.E2.E1";
 		this.globalStore.getState(codeTableName, baos);
 		this.globalStore.setState(codeTableName, new ByteArrayInputStream(baos.toByteArray()));
 	}
-	
+
     @Test(expected=TeiidProcessingException.class) public void testCodeTableResponseException() throws Exception {
     	//duplicate key
     	execute("select lookup('mattable.info', 'e2', 'e1', 'a')");
     }
-    
+
     @Test public void testCodeTable() throws Exception {
     	execute("select lookup('mattable.info', 'e1', 'e2', 5)", Arrays.asList((String)null));
     	assertEquals(1, hdm.getCommandHistory().size());
     	execute("select lookup('mattable.info', 'e1', 'e2', 1)", Arrays.asList("a"));
     	assertEquals(1, hdm.getCommandHistory().size());
     }
-    
+
     @Test public void testCodeTableReservedWord() throws Exception {
         hdm.addData("SELECT MatTable.info.\"value\", MatTable.info.e1 FROM MatTable.info", Arrays.asList("5", "a"));
         execute("select lookup('mattable.info', 'e1', 'VALUE', '5')", Arrays.asList("a"));
     }
-    
+
 	@Test public void testTtl() throws Exception {
 		execute("SELECT * from vgroup4 where x = 'one'", Arrays.asList("one"));
 		assertEquals(1, hdm.getCommandHistory().size());
@@ -137,7 +137,7 @@ public class TestMaterialization {
 		execute("SELECT * from vgroup4 where x is null", Arrays.asList((String)null));
 		assertEquals(2, hdm.getCommandHistory().size());
 	}
-	
+
 	@Test public void testProcedureCache() throws Exception {
 		execute("call sp1('one')", Arrays.asList("one"));
 		assertEquals(1, hdm.getCommandHistory().size());
@@ -150,30 +150,30 @@ public class TestMaterialization {
 		execute("call sp1(null)");
 		assertEquals(3, hdm.getCommandHistory().size());
 	}
-	
+
 	@Test public void testCoveringSecondaryIndex() throws Exception {
 		execute("SELECT * from vgroup3 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
 		execute("SELECT * from vgroup3 where y is null", Arrays.asList((String)null, (String)null));
 	}
-	
+
 	@Test public void testNonCoveringSecondaryIndex() throws Exception {
 		execute("SELECT * from vgroup5 where y in ('zwo', 'zne') order by y desc", Arrays.asList("two", "zwo", 1), Arrays.asList("one", "zne", 1));
 		execute("SELECT * from vgroup5 where y is null", Arrays.asList((String)null, (String)null, 1), Arrays.asList(" b", (String)null, 1), Arrays.asList(" c", (String)null, 1), Arrays.asList(" d", (String)null, 1));
 		execute("SELECT * from vgroup5 where y is null and z = 2");
 	}
-	
+
 	@Test public void testNonCoveringSecondaryIndexWithoutPrimaryKey() throws Exception {
 		execute("SELECT * from vgroup6 where y in ('zne', 'zwo') order by y desc", Arrays.asList("two", "zwo"), Arrays.asList("one", "zne"));
 		execute("SELECT * from vgroup6 where y is null", Arrays.asList((String)null, (String)null));
 	}
-	
+
 	@Test public void testPrimaryKeyOnOtherColumn() throws Exception {
 		execute("SELECT * from vgroup7 where y is null", Arrays.asList("1", null, 1));
 	}
-	
+
 	@Test public void testFunctionBasedIndexQuery() throws Exception {
 		TempMetadataID id = this.globalStore.getGlobalTempTableMetadataId(metadata.getGroupID("MatView.vgroup2a"));
 		assertEquals("SELECT MatView.VGroup2a.*, ucase(x) FROM MatView.VGroup2a option nocache MatView.VGroup2a", id.getQueryNode().getQuery());
 	}
-    
+
 }

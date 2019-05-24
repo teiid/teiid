@@ -55,57 +55,57 @@ public class ProjectIntoNode extends RelationalNode {
 	public enum Mode {
 		BATCH, ITERATOR, SINGLE
 	}
-	
+
     private static int REQUEST_CREATION = 1;
     private static int RESPONSE_PROCESSING = 2;
-    
+
     // Initialization state
     private GroupSymbol intoGroup;
     private List intoElements;
     private String modelName;
     private Mode mode;
     private boolean upsert;
-    
+
     // Processing state
     private long batchRow = 1;
     private long insertCount = 0;
-    private int phase = REQUEST_CREATION;    
+    private int phase = REQUEST_CREATION;
     private int requestsRegistered = 0;
     private int tupleSourcesProcessed = 0;
     private boolean sourceDone;
-    
+
     private TupleBuffer buffer;
     private TupleBuffer last;
     private TupleBatch currentBatch;
-        	
+
     private TupleSource tupleSource;
-    
+
     private Criteria constraint;
     private Evaluator eval;
-    
+
     private TransactionSupport transactionSupport;
     private SourceHint sourceHint;
 
     protected ProjectIntoNode() {
         super();
     }
-    
+
     public ProjectIntoNode(int nodeID) {
         super(nodeID);
     }
-    
+
     public void reset() {
-        super.reset();     
+        super.reset();
         this.phase = REQUEST_CREATION;
         this.batchRow = 1;
-        this.insertCount = 0; 
+        this.insertCount = 0;
         this.tupleSourcesProcessed = 0;
         this.requestsRegistered = 0;
         this.currentBatch=null;
         this.sourceDone=false;
     }
 
-    public void setIntoGroup(GroupSymbol group) { 
+    public void setIntoGroup(GroupSymbol group) {
         this.intoGroup = group;
     }
 
@@ -116,20 +116,20 @@ public class ProjectIntoNode extends RelationalNode {
     public void setModelName(String modelName) {
         this.modelName = modelName;
     }
-    
+
     /**
      * Get batch from child node
      * Walk through each row of child batch
      *    Bind values to insertCommand
      *    Execute insertCommand
      *    Update insertCount
-     * When no more data is available, output batch with single row containing insertCount 
-     */     
-    public TupleBatch nextBatchDirect() 
+     * When no more data is available, output batch with single row containing insertCount
+     */
+    public TupleBatch nextBatchDirect()
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        
+
         while(phase == REQUEST_CREATION) {
-            
+
             /* If we don't have a batch to work, get the next
              */
             if (currentBatch == null) {
@@ -140,7 +140,7 @@ public class ProjectIntoNode extends RelationalNode {
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
                 sourceDone = currentBatch.getTerminationFlag();
                 this.batchRow = currentBatch.getBeginRow();
-                
+
                 //normally we would want to skip a 0 sized batch, but it typically represents the terminal batch
                 //and for implicit temp tables we need to issue an empty insert
                 if(currentBatch.getRowCount() == 0
@@ -160,12 +160,12 @@ public class ProjectIntoNode extends RelationalNode {
 	                	}
 	                }
                 }
-            } 
-            
-            if (mode != Mode.ITERATOR) { //delay the check in the iterator case to accumulate batches
-            	checkExitConditions(); 
             }
-            
+
+            if (mode != Mode.ITERATOR) { //delay the check in the iterator case to accumulate batches
+            	checkExitConditions();
+            }
+
             int batchSize = currentBatch.getRowCount();
             int requests = 1;
             switch (mode) {
@@ -173,16 +173,16 @@ public class ProjectIntoNode extends RelationalNode {
             	if (buffer == null) {
             		buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
             	}
-            	
+
             	if (sourceDone) {
             		//if there is a pending request we can't process the last until it is done
-            		checkExitConditions(); 
+            		checkExitConditions();
             	}
-            	
+
             	for (List<?> tuple : currentBatch.getTuples()) {
             		buffer.addTuple(tuple);
             	}
-            	
+
             	try {
             		checkExitConditions();
             	} catch (BlockedException e) {
@@ -191,7 +191,7 @@ public class ProjectIntoNode extends RelationalNode {
                 	currentBatch = null;
             		continue;
             	}
-            	
+
             	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
             		registerIteratorRequest();
             	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4) {
@@ -206,8 +206,8 @@ public class ProjectIntoNode extends RelationalNode {
                 List<Command> rows = new ArrayList<Command>((int)(endRow-batchRow));
                 for(long rowNum = batchRow; rowNum <= endRow; rowNum++) {
 
-                    Insert insert = new Insert( intoGroup, 
-                                                 intoElements, 
+                    Insert insert = new Insert( intoGroup,
+                                                 intoElements,
                                                  convertValuesToConstants(currentBatch.getTuple(rowNum), intoElements));
                     insert.setSourceHint(sourceHint);
                     insert.setUpsert(upsert);
@@ -217,34 +217,34 @@ public class ProjectIntoNode extends RelationalNode {
                 break;
             case SINGLE:
                 batchSize = 1;
-                // Register insert command against source 
+                // Register insert command against source
                 // Defect 16036 - submit a new INSERT command to the DataManager.
                 Insert insert = new Insert(intoGroup, intoElements, convertValuesToConstants(currentBatch.getTuple(batchRow), intoElements));
                 insert.setSourceHint(sourceHint);
                 insert.setUpsert(upsert);
                 registerRequest(insert);
             }
-            
+
             this.batchRow += batchSize;
             if (batchRow > currentBatch.getEndRow()) {
             	currentBatch = null;
             }
             this.requestsRegistered+=requests;
         }
-        
+
         checkExitConditions();
-        
+
         if (this.buffer != null) {
         	this.buffer.remove();
         	this.buffer = null;
         }
-        
+
         // End this node's work
         //report only a max int
         int count = (int)Math.min(Integer.MAX_VALUE, insertCount);
         addBatchRow(Arrays.asList(count));
         terminateBatches();
-        return pullBatch();                                                           
+        return pullBatch();
     }
 
 	private void registerIteratorRequest() throws TeiidComponentException,
@@ -254,7 +254,7 @@ public class ProjectIntoNode extends RelationalNode {
 		insert.setUpsert(upsert);
 		buffer.close();
 		insert.setTupleSource(buffer.createIndexedTupleSource(true));
-		// Register insert command against source 
+		// Register insert command against source
 		registerRequest(insert);
         //remove the old buffer when the insert is complete
         last = buffer;
@@ -283,13 +283,13 @@ public class ProjectIntoNode extends RelationalNode {
         if (tupleSourcesProcessed < requestsRegistered) {
         	throw BlockedException.block(getContext().getRequestId(), "Blocking on insert update count"); //$NON-NLS-1$
         }
-                
+
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
-    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));        
+    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));
     }
-    
+
     private void closeRequest() {
     	if (this.last != null) {
     		this.last.remove();
@@ -300,12 +300,12 @@ public class ProjectIntoNode extends RelationalNode {
             this.tupleSource = null;
         }
     }
-    
+
     protected void getNodeString(StringBuffer str) {
         super.getNodeString(str);
         str.append(intoGroup);
     }
-    
+
     public Object clone(){
         ProjectIntoNode clonedNode = new ProjectIntoNode();
         super.copyTo(clonedNode);
@@ -323,7 +323,7 @@ public class ProjectIntoNode extends RelationalNode {
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_INTO_GROUP, intoGroup.toString());
-        if (upsert) { 
+        if (upsert) {
             props.addProperty(PROP_UPSERT, "true"); //$NON-NLS-1$
         }
         List<String> selectCols = new ArrayList<String>(intoElements.size());
@@ -334,7 +334,7 @@ public class ProjectIntoNode extends RelationalNode {
 
         return props;
     }
-    
+
     private List<Constant> convertValuesToConstants(List<?> values, List<ElementSymbol> elements) {
         ArrayList<Constant> constants = new ArrayList<Constant>(values.size());
         for(int i=0; i<elements.size(); i++) {
@@ -343,12 +343,12 @@ public class ProjectIntoNode extends RelationalNode {
             constants.add(new Constant(values.get(i),type));
         }
         return constants;
-    }  
-    
+    }
+
     public Mode getMode() {
 		return mode;
 	}
-            
+
     public void setMode(Mode mode) {
 		this.mode = mode;
 	}
@@ -364,11 +364,11 @@ public class ProjectIntoNode extends RelationalNode {
     	}
         closeRequest();
 	}
-    
+
     public String getModelName() {
 		return modelName;
 	}
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
 		Boolean requires = this.getChildren()[0].requiresTransaction(transactionalReads);
@@ -380,11 +380,11 @@ public class ProjectIntoNode extends RelationalNode {
 		}
 		return true;
     }
-    
+
     public void setConstraint(Criteria constraint) {
 		this.constraint = constraint;
 	}
-    
+
     public void setTransactionSupport(TransactionSupport transactionSupport) {
 		this.transactionSupport = transactionSupport;
 	}
@@ -392,9 +392,9 @@ public class ProjectIntoNode extends RelationalNode {
     public void setSourceHint(SourceHint property) {
         this.sourceHint = property;
     }
-    
+
     public void setUpsert(boolean upsert) {
         this.upsert = upsert;
     }
-    
+
 }

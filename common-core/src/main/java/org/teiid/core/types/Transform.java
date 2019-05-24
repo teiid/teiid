@@ -26,7 +26,7 @@ package org.teiid.core.types;
  * is the source name, etc.
  */
 public abstract class Transform {
-	
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -41,8 +41,8 @@ public abstract class Transform {
 		}
 		return transformDirect(value);
 	}
-	
-	
+
+
 	protected abstract Object transformDirect(Object value) throws TransformationException;
 
 	/**
@@ -92,7 +92,7 @@ public abstract class Transform {
 	public boolean isExplicit() {
 		return false;
 	}
-	
+
 	/**
 	 * Override Object.toString() to do getDisplayName() version.
 	 * @return String representation of object

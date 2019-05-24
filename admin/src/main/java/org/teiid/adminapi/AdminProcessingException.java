@@ -50,7 +50,7 @@ public final class AdminProcessingException extends AdminException {
     public AdminProcessingException(String msg) {
         super(msg);
     }
-    
+
     public AdminProcessingException(Throwable cause) {
     	super(cause);
     }
@@ -64,7 +64,7 @@ public final class AdminProcessingException extends AdminException {
     public AdminProcessingException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
-    
+
     public AdminProcessingException(String msg, Throwable cause) {
         super(msg, cause);
     }

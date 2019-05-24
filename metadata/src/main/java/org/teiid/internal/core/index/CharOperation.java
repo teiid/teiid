@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -14,7 +14,7 @@ package org.teiid.internal.core.index;
 
 /**
  * This class is a collection of helper methods to manipulate char arrays.
- * 
+ *
  * @since 2.1
  */
 public final class CharOperation {
@@ -22,7 +22,7 @@ public final class CharOperation {
 	/**
 	 * Answers true if the pattern matches the given name, false otherwise. This
 	 * char[] pattern matching accepts wild-cards '*' and '?'.
-	 * 
+	 *
 	 * When not case sensitive, the pattern is assumed to already be lowercased,
 	 * the name will be lowercased character per character as comparing. If name
 	 * is null, the answer is false. If pattern is null, the answer is true if
@@ -31,37 +31,37 @@ public final class CharOperation {
 	 * For example:
 	 * <ol>
 	 * <li>
-	 * 
+	 *
 	 * <pre>
 	 *    pattern = { '?', 'b', '*' }
 	 *    name = { 'a', 'b', 'c' , 'd' }
 	 *    isCaseSensitive = true
 	 *    result =&gt; true
 	 * </pre>
-	 * 
+	 *
 	 * </li>
 	 * <li>
-	 * 
+	 *
 	 * <pre>
 	 *    pattern = { '?', 'b', '?' }
 	 *    name = { 'a', 'b', 'c' , 'd' }
 	 *    isCaseSensitive = true
 	 *    result =&gt; false
 	 * </pre>
-	 * 
+	 *
 	 * </li>
 	 * <li>
-	 * 
+	 *
 	 * <pre>
 	 *    pattern = { 'b', '*' }
 	 *    name = { 'a', 'b', 'c' , 'd' }
 	 *    isCaseSensitive = true
 	 *    result =&gt; false
 	 * </pre>
-	 * 
+	 *
 	 * </li>
 	 * </ol>
-	 * 
+	 *
 	 * @param pattern
 	 *            the given pattern
 	 * @param name
@@ -70,10 +70,10 @@ public final class CharOperation {
 	 *            flag to know whether or not the matching should be case
 	 *            sensitive
 	 * @return true if the pattern matches the given name, false otherwise
-	 * 
-	 * TODO: this code was derived from eclipse CharOperation.  
+	 *
+	 * TODO: this code was derived from eclipse CharOperation.
 	 * It also lacks the ability to specify an escape character.
-	 * 
+	 *
 	 */
 	public static final boolean match(char[] pattern, char[] name,
 			boolean isCaseSensitive) {
@@ -175,7 +175,7 @@ public final class CharOperation {
      * </pre>
      * </li>
      * </ol>
-     * 
+     *
      * @param prefix the given prefix
      * @param name the given name
      * @param isCaseSensitive to find out whether or not the comparison should be case sensitive

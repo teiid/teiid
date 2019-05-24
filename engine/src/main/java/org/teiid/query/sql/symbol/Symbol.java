@@ -35,9 +35,9 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class Symbol implements LanguageObject {
 
-	/** 
+	/**
 	 * Name of the symbol
-	 * 
+	 *
 	 * Prior to resolving it is the name as entered in the query,
 	 * after resolving it is the fully qualified name.
 	 */
@@ -46,7 +46,7 @@ public abstract class Symbol implements LanguageObject {
 	/**
 	 * Prior to resolving null, after resolving it is the exact string
 	 * entered in the query.
-	 * 
+	 *
 	 * The AliasGenerator can also set this value as necessary for the data tier.
 	 */
     protected String outputName;
@@ -55,7 +55,7 @@ public abstract class Symbol implements LanguageObject {
 	 * Character used to delimit name components in a symbol
 	 */
 	public static final String SEPARATOR = "."; //$NON-NLS-1$
-    
+
 	/**
 	 * Construct a symbol with a name.
 	 * @param name Name of the symbol
@@ -64,11 +64,11 @@ public abstract class Symbol implements LanguageObject {
 	public Symbol(String name) {
 		this.setName(name);
 	}
-	
+
 	public Symbol() {
-		
+
 	}
-	
+
 	protected void setName(String name) {
 		setShortName(name);
 	}
@@ -136,7 +136,7 @@ public abstract class Symbol implements LanguageObject {
 	 * Return a copy of this object.
 	 */
 	public abstract Object clone();
-    
+
     public String getOutputName() {
         return this.outputName == null ? getName() : this.outputName;
     }
@@ -144,12 +144,12 @@ public abstract class Symbol implements LanguageObject {
     public void setOutputName(String outputName) {
         this.outputName = outputName;
     }
-    
+
     /**
      * Get the short name of the element
      * @return Short name of the symbol (un-dotted)
      */
-    public final String getShortName() { 
+    public final String getShortName() {
     	return shortName;
     }
 
@@ -159,14 +159,14 @@ public abstract class Symbol implements LanguageObject {
 		}
 		return "expr"; //$NON-NLS-1$
 	}
-	
+
 	public static String getName(Expression ex) {
 		if (ex instanceof Symbol) {
 			return ((Symbol)ex).getName();
 		}
 		return "expr"; //$NON-NLS-1$
 	}
-	
+
 	public static String getOutputName(Expression ex) {
 		if (ex instanceof Symbol) {
 			return ((Symbol)ex).getOutputName();
@@ -176,10 +176,10 @@ public abstract class Symbol implements LanguageObject {
 
 	public static String getShortName(String name) {
 	    int index = name.lastIndexOf(Symbol.SEPARATOR);
-	    if(index >= 0) { 
+	    if(index >= 0) {
 	        return name.substring(index+1);
 	    }
 	    return name;
 	}
-	
+
 }

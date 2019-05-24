@@ -42,7 +42,7 @@ public class TestCompareCriteriaImpl extends TestCase {
         Constant right = new Constant(new Integer(rightVal));
         return new org.teiid.query.sql.lang.CompareCriteria(left, operator, right);
     }
-    
+
     public static Comparison example(int operator, int leftVal, int rightVal) throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(operator, leftVal, rightVal));
     }

@@ -69,12 +69,12 @@ public abstract class JDBCBaseExecution implements Execution  {
         this.context = context;
 
         this.executionFactory = jef;
-        
+
         trimString = jef.isTrimStrings();
         fetchSize = context.getBatchSize();
         this.command = command;
     }
-    
+
     /**
      * Bind the values in the TranslatedCommand to the PreparedStatement
      */
@@ -136,7 +136,7 @@ public abstract class JDBCBaseExecution implements Execution  {
             }
         } catch (SQLException e) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Exception closing"); //$NON-NLS-1$
-        } 
+        }
     }
 
     public void cancel() throws TranslatorException {
@@ -196,14 +196,14 @@ public abstract class JDBCBaseExecution implements Execution  {
 
     /**
      * Returns the JDBC connection used by the execution object.
-     * 
+     *
      * @return Returns the connection.
      * @since 4.1.1
      */
     public Connection getConnection() {
         return this.connection;
     }
-    
+
     public void addStatementWarnings() throws SQLException {
     	SQLWarning warning = this.statement.getWarnings();
     	if (warning != null) {

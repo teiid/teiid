@@ -37,16 +37,16 @@ import org.teiid.query.QueryPlugin;
 
 
 public class LobWorkItem implements Runnable {
-	
+
 	private RequestWorkItem parent;
-	private int chunkSize; 
-    
+	private int chunkSize;
+
 	/* private work item state */
-	private String streamId; 
+	private String streamId;
     private ByteLobChunkStream stream;
     private int streamRequestId;
     private ResultsReceiver<LobChunk> resultsReceiver;
-	
+
 	public LobWorkItem(RequestWorkItem parent, DQPCore dqpCore, String streamId, int streamRequestId) {
 		this.chunkSize = dqpCore.getChunkSize();
 		this.streamId = streamId;
@@ -58,26 +58,26 @@ public class LobWorkItem implements Runnable {
 		LobChunk chunk = null;
 		Exception ex = null;
 		boolean shouldClose = false;
-		
+
     	try {
-        	// If no previous stream is not found for this request create one and 
-            // save for future 
+        	// If no previous stream is not found for this request create one and
+            // save for future
             if (stream == null) {
                 stream = createLobStream(streamId);
             }
-            
+
             // now get the chunk from stream
             chunk = stream.getNextChunk();
             parent.dataBytes.addAndGet(chunk.getBytes().length);
             shouldClose = chunk.isLast();
-        } catch (TeiidComponentException e) {            
+        } catch (TeiidComponentException e) {
             LogManager.logWarning(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
             ex = e;
         } catch (IOException|SQLException e) {
             //treat this as a processing exception
 			ex = new TeiidProcessingException(e);
-		} 
-        
+		}
+
         synchronized (this) {
 	        if (ex != null) {
 	        	resultsReceiver.exceptionOccurred(ex);
@@ -87,7 +87,7 @@ public class LobWorkItem implements Runnable {
 	        }
 	        resultsReceiver = null;
         }
-        
+
         if (shouldClose) {
         	close();
         }
@@ -102,32 +102,32 @@ public class LobWorkItem implements Runnable {
 			LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
 		}
 		parent.removeLobStream(streamRequestId);
-	}    
-    
+	}
+
     /**
      * Create a object which can create a sequence of LobChunk objects on a given
-     * LOB object 
-     * @throws SQLException 
+     * LOB object
+     * @throws SQLException
      */
-    private ByteLobChunkStream createLobStream(String referenceStreamId) 
+    private ByteLobChunkStream createLobStream(String referenceStreamId)
         throws TeiidComponentException, SQLException {
-        
+
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.
         Streamable<?> streamable = parent.resultsBuffer.getLobReference(referenceStreamId);
-        
+
         if (streamable instanceof XMLType) {
             XMLType xml = (XMLType)streamable;
             return new ByteLobChunkStream(xml.getBinaryStream(), chunkSize);
         }
         else if (streamable instanceof BaseClobType) {
             BaseClobType clob = (BaseClobType)streamable;
-            return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);            
-        } 
+            return new ByteLobChunkStream(new ReaderInputStream(clob.getCharacterStream(), Charset.forName(Streamable.ENCODING)), chunkSize);
+        }
         BlobType blob = (BlobType)streamable;
-        return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
+        return new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);
     }
-    
+
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {
     	Assertion.isNull(this.resultsReceiver, "Cannot request results with a pending request"); //$NON-NLS-1$
     	this.resultsReceiver = resultsReceiver;

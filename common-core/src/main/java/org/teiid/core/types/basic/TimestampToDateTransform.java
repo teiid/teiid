@@ -55,8 +55,8 @@ public class TimestampToDateTransform extends Transform {
 	public Class getTargetType() {
 		return java.sql.Date.class;
 	}
-    
-    /** 
+
+    /**
      * @see org.teiid.core.types.Transform#isExplicit()
      */
     public boolean isExplicit() {

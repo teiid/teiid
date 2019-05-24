@@ -56,28 +56,28 @@ public class TestRulePlaceAccess extends TestCase {
      */
     public void testAddAccessPatterns2() throws Exception {
         Query query = new Query();
-        
+
         From from = new From();
         GroupSymbol group = new GroupSymbol("pm4.g2"); //$NON-NLS-1$
         from.addGroup(group);
         query.setFrom(from);
-        
+
         Select select = new Select();
         select.addSymbol(new MultipleElementSymbol());
         query.setSelect(select);
 
         group.setMetadataID(METADATA.getGroupID("pm4.g2")); //$NON-NLS-1$
-                
+
         PlanNode n1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         n1.setProperty(NodeConstants.Info.ATOMIC_REQUEST, query);
         n1.addGroup(group);
-        
+
         RulePlaceAccess.addAccessPatternsProperty(n1, METADATA);
 
         Collection accessPatterns = (Collection)n1.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         assertNotNull(accessPatterns);
         assertTrue("Expected two access patterns, got " + accessPatterns.size(), accessPatterns.size() == 2); //$NON-NLS-1$
-    }   
-    
+    }
+
 
 }

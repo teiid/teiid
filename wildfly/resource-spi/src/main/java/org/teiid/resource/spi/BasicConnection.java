@@ -48,11 +48,11 @@ public abstract class BasicConnection implements Connection, org.teiid.resource.
 	public ResultSetInfo getResultSetInfo() throws ResourceException {
 		throw new ResourceException("This operation not supported"); //$NON-NLS-1$
 	}
-	
+
 	public XAResource getXAResource() throws ResourceException {
 		return null;
 	}
-	
+
 	/**
 	 * Tests the connection to see if it is still valid.
 	 * @return
@@ -60,13 +60,13 @@ public abstract class BasicConnection implements Connection, org.teiid.resource.
 	public boolean isAlive() {
 		return true;
 	}
-	
+
 	/**
 	 * Called by the {@link ManagedConnection} to indicate the physical connection
 	 * should be cleaned up for reuse.
 	 */
 	public void cleanUp() {
-		
+
 	}
 
 }

@@ -97,7 +97,7 @@ import org.teiid.query.validator.ValidatorReport;
  * Server side representation of the RequestMessage.  Knows how to process itself.
  */
 public class Request {
-    
+
 	private static final String CLEAN_LOBS_ONCLOSE = "clean_lobs_onclose"; //$NON-NLS-1$
 	// init state
     protected RequestMessage requestMsg;
@@ -122,10 +122,10 @@ public class Request {
     protected AnalysisRecord analysisRecord;
     protected CommandContext context;
     protected QueryProcessor processor;
-    
+
     protected TransactionContext transactionContext;
-    protected ConnectorManagerRepository connectorManagerRepo; 
-    
+    protected ConnectorManagerRepository connectorManagerRepo;
+
     protected Command userCommand;
     protected boolean returnsUpdateCount;
 	private GlobalTableStore globalTables;
@@ -146,7 +146,7 @@ public class Request {
                               SessionAwareCache<PreparedPlan> planCache) {
 
         this.requestMsg = requestMsg;
-        this.vdbName = workContext.getVdbName();        
+        this.vdbName = workContext.getVdbName();
         this.vdbVersion = workContext.getVdbVersion();
         this.bufferManager = bufferManager;
         this.processorDataManager = processorDataManager;
@@ -157,35 +157,35 @@ public class Request {
         this.connectorManagerRepo = workContext.getVDB().getAttachment(ConnectorManagerRepository.class);
         this.planCache = planCache;
     }
-    
+
     public void setOptions(Options options) {
 		this.options = options;
 	}
-    
+
 	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata) {
 		this.capabilitiesFinder = capabilitiesFinder;
 		this.metadata = metadata;
 	}
-	
+
 	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
 		this.resultSetCacheEnabled = resultSetCacheEnabled;
 	}
-	
+
 	public void setAuthorizationValidator(
 			AuthorizationValidator authorizationValidator) {
 		this.authorizationValidator = authorizationValidator;
 	}
-	
+
 	/**
 	 * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
-	 * 
+	 *
 	 * @throws TeiidComponentException
 	 */
     protected void initMetadata() throws TeiidComponentException {
         if (this.metadata != null) {
         	return;
         }
-    	// Prepare dependencies for running the optimizer        
+    	// Prepare dependencies for running the optimizer
         this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());
         if (this.bufferManager.getOptions() != null) {
         	this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder, this.bufferManager.getOptions().getDefaultNullOrder());
@@ -200,12 +200,12 @@ public class Request {
         if (metadata == null) {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30489, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30489, this.vdbName, this.vdbVersion));
         }
-        
+
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, this.tempTableStore.getMetadataStore());
         tma.setSession(true);
         this.metadata = tma;
     }
-    
+
     protected void createCommandContext() {
     	if (this.context != null) {
     		return;
@@ -220,9 +220,9 @@ public class Request {
                 groupName,
                 workContext.getUserName(),
                 requestMsg.getExecutionPayload(),
-                workContext.getVdbName(), 
-                workContext.getVdbVersion(), 
-                this.requestMsg.getShowPlan() != ShowPlan.OFF 
+                workContext.getVdbName(),
+                workContext.getVdbVersion(),
+                this.requestMsg.getShowPlan() != ShowPlan.OFF
                 || LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
@@ -261,7 +261,7 @@ public class Request {
         this.context.setTransactionService(this.transactionService);
         this.context.setVDBClassLoader(workContext.getVDB().getAttachment(ClassLoader.class));
     }
-    
+
     public void setUserRequestConcurrency(int userRequestConcurrency) {
 		this.userRequestConcurrency = userRequestConcurrency;
 	}
@@ -269,7 +269,7 @@ public class Request {
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
     	referenceCheck(references);
     }
-    
+
     static void referenceCheck(List<Reference> references) throws QueryValidatorException {
     	if (references != null && !references.isEmpty()) {
     		 throw new QueryValidatorException(QueryPlugin.Event.TEIID30491, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491));
@@ -281,15 +281,15 @@ public class Request {
         //rewrite and planning may alter options, symbols, etc.
     	QueryResolver.resolveCommand(command, metadata);
     }
-        
+
     private void validateQuery(Command command)
         throws QueryValidatorException, TeiidComponentException {
-                
+
         // Create generic sql validation visitor
         AbstractValidationVisitor visitor = new ValidationVisitor();
         validateWithVisitor(visitor, metadata, command);
     }
-    
+
     private Command parseCommand() throws QueryParserException {
     	if (requestMsg.getCommand() != null) {
     		return (Command)requestMsg.getCommand();
@@ -303,7 +303,7 @@ public class Request {
         		commandStr = preParser.preParse(commandStr, this.context);
         	}
             return queryParser.parseCommand(commandStr, parseInfo);
-        } 
+        }
         List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
         	String updateCommand = commands[i];
@@ -355,13 +355,13 @@ public class Request {
 			return this.transactionContext;
 		}
 		TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
-		
+
 		if (tc.getTransactionType() == TransactionContext.Scope.REQUEST && this.workContext.isDerived()) {
 		    //to a sub-request, request scope should appear as global - which means associated and non-suspendable
 	        tc = tc.clone();
 	        tc.setTransactionType(TransactionContext.Scope.INHERITED);
 		}
-        
+
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
         // If local or global transaction is not started.
@@ -370,8 +370,8 @@ public class Request {
             	return null;
             }
             Boolean startAutoWrapTxn = false;
-            
-            if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
+
+            if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){
                 startAutoWrapTxn = true;
             } else if (RequestMessage.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
             	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
@@ -380,8 +380,8 @@ public class Request {
         		if (startAutoWrapTxn == null) {
         			startAutoWrapTxn = false;
         		}
-            } 
-            
+            }
+
             if (startAutoWrapTxn) {
                 try {
                     transactionService.begin(tc);
@@ -389,8 +389,8 @@ public class Request {
                      throw new TeiidComponentException(QueryPlugin.Event.TEIID30493, err);
                 }
             }
-        } 
-        
+        }
+
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
         return this.transactionContext;
@@ -403,26 +403,26 @@ public class Request {
      * 		sets the pre-rewrite command on the request
      * 		adds a limit clause if the row limit is specified
      * 		sets the processor plan
-     * 
+     *
      * @throws TeiidComponentException
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      */
     protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
     	createCommandContext();
         Command command = parseCommand();
-        
+
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
-        
+
         getAnalysisRecord();
-                
+
         resolveCommand(command);
 
         checkReferences(references);
-        
+
         validateAccess(requestMsg.getCommands(), command, CommandType.USER);
-        
+
     	this.userCommand = (Command) command.clone();
-        
+
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
 			if (groupSymbol.isTempTable()) {
@@ -432,9 +432,9 @@ public class Request {
 		}
 
         validateQuery(command);
-        
+
         command = QueryRewriter.rewrite(command, metadata, context);
-        
+
         /*
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
          * doesn't already have a limit clause.
@@ -446,7 +446,7 @@ public class Request {
                 this.addedLimit = true;
             }
         }
-        
+
         boolean debug = analysisRecord.recordDebug();
 		if(debug) {
 			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
@@ -460,7 +460,7 @@ public class Request {
 			CommandContext.popThreadLocalContext();
             String debugLog = analysisRecord.getDebugLog();
             if(debugLog != null && debugLog.length() > 0) {
-                LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
+                LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);
             }
             if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
             	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
@@ -476,22 +476,22 @@ public class Request {
 		return this.analysisRecord;
 	}
 
-    public void processRequest() 
+    public void processRequest()
         throws TeiidComponentException, TeiidProcessingException {
-                    
+
     	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	
+
         initMetadata();
-        
+
         generatePlan(false);
-        
+
         createProcessor();
     }
 
 	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
 		boolean returnsResultSet = command.returnsResultSet();
     	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
-    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet) 
+    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet)
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
         	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
     	}
@@ -508,7 +508,7 @@ public class Request {
 	                ElementSymbol variable = iter.next();
 	                if (!(metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.NULL) ||
 	                        metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT))
-	                        || !cols.contains(variable.getMetadataID())) { 
+	                        || !cols.contains(variable.getMetadataID())) {
 	                    iter.remove();
 	                }
 	                colCount++;
@@ -523,7 +523,7 @@ public class Request {
 		}
 		return false;
 	}
-	
+
 	public void setExecutor(Executor executor) {
 		this.executor = executor;
 	}

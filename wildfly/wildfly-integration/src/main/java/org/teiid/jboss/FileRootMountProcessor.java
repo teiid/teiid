@@ -38,10 +38,10 @@ import org.jboss.vfs.VirtualFile;
 
 /**
  * Handle mounting descriptor files and marking them as a DEPLOYMENT_ROOT
- * 
+ *
  */
 public class FileRootMountProcessor implements DeploymentUnitProcessor {
-    
+
     public FileRootMountProcessor(String fileSuffix) {
         this.fileSuffix = fileSuffix;
     }
@@ -54,14 +54,14 @@ public class FileRootMountProcessor implements DeploymentUnitProcessor {
                 !deploymentUnit.getName().toLowerCase().endsWith( this.fileSuffix )) {
             return;
         }
-        
+
         final DeploymentMountProvider deploymentMountProvider = deploymentUnit.getAttachment( Attachments.SERVER_DEPLOYMENT_REPOSITORY );
         if(deploymentMountProvider == null) {
             throw new DeploymentUnitProcessingException( "No deployment repository available." );
         }
 
         final VirtualFile deploymentContents = deploymentUnit.getAttachment( Attachments.DEPLOYMENT_CONTENTS );
-        
+
         // internal deployments do not have any contents, so there is nothing to mount
         if (deploymentContents == null)
             return;

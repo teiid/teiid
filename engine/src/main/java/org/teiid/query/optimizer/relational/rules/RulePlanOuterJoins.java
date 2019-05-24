@@ -48,16 +48,16 @@ import org.teiid.query.util.CommandContext;
  * TODO: may need to rerun plan joins sequence after this
  */
 public class RulePlanOuterJoins implements OptimizerRule {
-	
+
 	@Override
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata,
 			CapabilitiesFinder capabilitiesFinder, RuleStack rules,
 			AnalysisRecord analysisRecord, CommandContext context)
 			throws QueryPlannerException, QueryMetadataException,
 			TeiidComponentException {
-	    
+
 	    boolean beforeJoinPlanning = rules.contains(RuleConstants.PLAN_JOINS);
-	    
+
 		while (beforeJoinPlanning?
 		        planLeftOuterJoinAssociativityBeforePlanning(plan, metadata, capabilitiesFinder, analysisRecord, context):
 		        planLeftOuterJoinAssociativity(plan, metadata, capabilitiesFinder, analysisRecord, context)) {
@@ -71,9 +71,9 @@ public class RulePlanOuterJoins implements OptimizerRule {
 			CapabilitiesFinder capabilitiesFinder,
 			AnalysisRecord analysisRecord, CommandContext context)
 			throws QueryMetadataException, TeiidComponentException {
-		
+
 		boolean changedAny = false;
-    	LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)); 
+    	LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS));
     	while (!joins.isEmpty()) {
     		Iterator<PlanNode> i = joins.iterator();
     		PlanNode join = i.next();
@@ -95,23 +95,23 @@ public class RulePlanOuterJoins implements OptimizerRule {
     		} else {
     			continue;
     		}
-    		
+
     		PlanNode cSource = other;
-    		
+
 			if (cSource.getType() != NodeConstants.Types.ACCESS) {
 				continue;
 			}
-    		
+
     		List<Criteria> joinCriteria = (List<Criteria>) join.getProperty(Info.JOIN_CRITERIA);
     		if (!isCriteriaValid(joinCriteria, metadata, join)) {
     			continue;
     		}
-    		
+
     		List<Criteria> childJoinCriteria = (List<Criteria>) childJoin.getProperty(Info.JOIN_CRITERIA);
     		if (!isCriteriaValid(childJoinCriteria, metadata, childJoin) || childJoin.hasBooleanProperty(Info.PRESERVE)) {
     			continue;
     		}
-    		
+
     		//there are 4 forms we can take
     		// (a b) c -> a (b c) or (a c) b
     		// c (b a) -> (c b) a or (c a) b
@@ -158,7 +158,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
 				updateGroups(newParent);
 				join.getParent().replaceChild(join, newParent);
 				if(RuleRaiseAccess.checkConformedSubqueries(newChild.getFirstChild(), newChild, true)) {
-                	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);                    
+                	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);
     				changedAny = true;
                 }
     		} else if (Collections.disjoint(groups, FrameUtil.findJoinSourceNode(childJoin == right?childJoin.getFirstChild():childJoin.getLastChild()).getGroups())) {
@@ -175,14 +175,14 @@ public class RulePlanOuterJoins implements OptimizerRule {
     			if (modelId == null) {
     				continue;
     			}
-    			
+
     			//rearrange
     			PlanNode newParent = RulePlanJoins.createJoinNode();
     			newParent.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
     			PlanNode newChild = RulePlanJoins.createJoinNode();
     			newChild.setProperty(Info.JOIN_TYPE, JoinType.JOIN_LEFT_OUTER);
     			joins.remove(childJoin);
-    			
+
     			if (childJoin == left) {
     				newChild.addFirstChild(childJoin.getFirstChild());
 	    			newChild.addLastChild(other);
@@ -200,7 +200,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
 				updateGroups(newParent);
 				join.getParent().replaceChild(join, newParent);
                 if(RuleRaiseAccess.checkConformedSubqueries(newChild.getFirstChild(), newChild, true)) {
-                	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);                    
+                	RuleRaiseAccess.raiseAccessOverJoin(newChild, newChild.getFirstChild(), modelId, capabilitiesFinder, metadata, true);
     				changedAny = true;
                 }
     		}
@@ -213,7 +213,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
 		node.addGroups(FrameUtil.findJoinSourceNode(node.getFirstChild()).getGroups());
 		node.addGroups(FrameUtil.findJoinSourceNode(node.getLastChild()).getGroups());
 	}
-    
+
     private boolean isCriteriaValid(List<Criteria> joinCriteria, QueryMetadataInterface metadata, PlanNode join) {
     	if (joinCriteria.isEmpty()) {
     		return false;
@@ -226,36 +226,36 @@ public class RulePlanOuterJoins implements OptimizerRule {
 		}
     	return true;
     }
-    
+
     /**
      * Similar to {@link #planLeftOuterJoinAssociativity(PlanNode, QueryMetadataInterface, CapabilitiesFinder, AnalysisRecord, CommandContext)},
      * but only looks for the creation of inner joins
      * @param plan
      * @param metadata
      * @return
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
      */
     private boolean planLeftOuterJoinAssociativityBeforePlanning(PlanNode plan,
             QueryMetadataInterface metadata,
             CapabilitiesFinder capabilitiesFinder,
             AnalysisRecord analysisRecord, CommandContext context) throws QueryMetadataException, TeiidComponentException {
-        
+
         boolean changedAny = false;
-        LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)); 
+        LinkedHashSet<PlanNode> joins = new LinkedHashSet<PlanNode>(NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS));
         while (!joins.isEmpty()) {
             Iterator<PlanNode> i = joins.iterator();
             PlanNode join = i.next();
             i.remove();
-            
+
             if (join.hasBooleanProperty(Info.PRESERVE)) {
                 continue;
             }
-            
+
             //check for left outer join ordering, such that we can combine for pushdown
             boolean val = checkLeftOrdering(metadata, capabilitiesFinder, analysisRecord,
                     context, join);
-            
+
             //we don't need to do further reordering at this point as it can be handled after join planning
             changedAny |= val;
         }
@@ -263,11 +263,11 @@ public class RulePlanOuterJoins implements OptimizerRule {
     }
 
     /**
-     * Check if the current join spans inner/left outer joins, such that 
+     * Check if the current join spans inner/left outer joins, such that
      * a different tree structure would group the join for pushing
-     * 
+     *
      * TODO: this is not tolerant to more complex left nesting structures
-     * 
+     *
      * @param metadata
      * @param capabilitiesFinder
      * @param analysisRecord
@@ -288,7 +288,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
         PlanNode childJoin = null;
         PlanNode left = join.getFirstChild();
         PlanNode right = join.getLastChild();
-        
+
         boolean nested = false;
         boolean hasOuter = join.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_LEFT_OUTER;
         childJoin = left;
@@ -316,7 +316,7 @@ public class RulePlanOuterJoins implements OptimizerRule {
             joinCriteria = new ArrayList<>(joinCriteria);
             RuleChooseJoinStrategy.filterOptionalCriteria(joinCriteria, false);
             Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(joinCriteria);
-            if (groups.containsAll(left.getFirstChild().getGroups()) 
+            if (groups.containsAll(left.getFirstChild().getGroups())
                     && groups.containsAll(right.getGroups())
                     && groups.size() == left.getFirstChild().getGroups().size() + right.getGroups().size()) {
                 Object modelId = RuleRaiseAccess.canRaiseOverJoin(Arrays.asList(left.getFirstChild(), right), metadata, capabilitiesFinder, joinCriteria, JoinType.JOIN_LEFT_OUTER, analysisRecord, context, false, false);
@@ -341,11 +341,11 @@ public class RulePlanOuterJoins implements OptimizerRule {
         }
         return false;
     }
-    
+
     @Override
     public String toString() {
     	return "PlanOuterJoins"; //$NON-NLS-1$
     }
-    
+
 }
 

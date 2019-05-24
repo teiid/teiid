@@ -22,14 +22,14 @@ import org.teiid.translator.TypeFacility;
 
 @SuppressWarnings("nls")
 public class TestTeiidLanguageToCQL {
-	
+
 	private QueryMetadataInterface cassandraMetadata(Properties modelProperties) {
-			
+
 		MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), modelProperties, "");
 		createFakeMetadata(factory);
 		return new TransformationMetadata(null, new CompositeMetadataStore(factory.asMetadataStore()), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
 	}
-	
+
 	private void createFakeMetadata(MetadataFactory factory) {
 		Table person = factory.addTable("Person");
 		factory.addColumn("id", TypeFacility.RUNTIME_NAMES.INTEGER, person);
@@ -54,8 +54,8 @@ public class TestTeiidLanguageToCQL {
 		visitor.translateSQL(c);
 		return visitor.getTranslatedSQL();
 	}
-	
-	
+
+
 	@Test
 	public void testSelect() throws Exception{
 		Properties props = new Properties();
@@ -72,14 +72,14 @@ public class TestTeiidLanguageToCQL {
 		assertEquals("SELECT id, name, age FROM Person WHERE id IN (1, 2, 3)", getTranslation("SELECT id, name, age from Person where id in(1,2,3)", props));
 
 		assertEquals("SELECT id FROM Person WHERE bday = '1900-01-01' AND employed = TRUE", getTranslation("select id from Person where bday = {d '1900-01-01'} and employed = true", props));
-		
+
 		assertEquals("SELECT id FROM Person WHERE bts = -2208949200000 AND employed = TRUE", getTranslation("select id from Person where bts = {ts '1900-01-01 12:00:00'} and employed = true", props));
 
 		//assertEquals("SELECT id FROM Person where custom = X'abcd'", getTranslation("SELECT id FROM Person WHERE custom = 0xABCD", props));
 
 		// assertEquals("INSERT into Person (id, custom1) values (1, X'abcd')",getTranslation("INSERT INTO Person (id, custom1) VALUES (1, 0xABCD)", props));
 	}
-	
+
 	@Test
 	public void testSelectWithAllowFiltering() throws Exception {
 		Properties props = new Properties();
@@ -88,12 +88,12 @@ public class TestTeiidLanguageToCQL {
 				getTranslation("select id, name, age, bday, employed, custom, custom from Person WHERE age = 8",
 						props));
 	}
-	
+
 	@BeforeClass
 	public static void oneTimeSetup() {
 	    TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT+1"));
 	}
-	
+
 	@AfterClass
 	public static void oneTimeTeardown() {
 	    TimestampWithTimezone.resetCalendar(null);

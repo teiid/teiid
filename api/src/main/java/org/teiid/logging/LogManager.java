@@ -118,7 +118,7 @@ public final class LogManager {
 		    try {
 		        Object result = method.invoke(instance, args);
 		        if (log) {
-		            LogManager.log(level, loggingContext, 
+		            LogManager.log(level, loggingContext,
 		                "after " + method.getName()+ " : "+result); //$NON-NLS-1$ //$NON-NLS-2$
 		        }
 		        return result;
@@ -199,7 +199,7 @@ public final class LogManager {
     public static void logError(String context, Throwable e, Object message) {
     	log(MessageLevel.ERROR,context,e,message);
     }
-    
+
     /**
      * Send a warning message to the log.  Warning messages generally described
      * expected errors from which the system should recover.  However, this level
@@ -232,7 +232,7 @@ public final class LogManager {
     public static void logWarning(String context, Throwable e, Object message) {
     	log(MessageLevel.WARNING,context,e,message);
     }
-    
+
     /**
      * Send a information message to the log.  This level of logging is the usually
      * the normal level.  All interesting periodic events should be logged at this
@@ -249,7 +249,7 @@ public final class LogManager {
     public static void logInfo(String context, Object message) {
     	logMessage(MessageLevel.INFO, context,message);
     }
-    
+
     /**
      * Send a detail message to the log.  Such messages are moderately detailed,
      * and help to debug typical problems in the system.  Generally, these
@@ -265,15 +265,15 @@ public final class LogManager {
     public static void logDetail(String context, Object msgPart) {
         logMessage(MessageLevel.DETAIL, context, msgPart);
     }
-    
+
     public static void logDetail(String context, Object msgPart, Object msgPart1) {
         logMessage(MessageLevel.DETAIL, context, msgPart, msgPart1);
     }
-    
+
     public static void logDetail(String context, Object msgPart, Object msgPart1, Object msgPart2) {
         logMessage(MessageLevel.DETAIL, context, msgPart, msgPart1, msgPart2);
     }
-    
+
     public static void logDetail(String context, Object ... msgParts) {
         logMessage(MessageLevel.DETAIL, context, msgParts);
     }
@@ -311,15 +311,15 @@ public final class LogManager {
     public static void logTrace(String context, Object ... msgParts) {
         logMessage(MessageLevel.TRACE, context, msgParts);
     }
-    
+
     public static void logTrace(String context, Object msgPart) {
         logMessage(MessageLevel.TRACE, context, msgPart);
     }
-    
+
     public static void logTrace(String context, Object msgPart, Object msgPart1) {
         logMessage(MessageLevel.TRACE, context, msgPart, msgPart1);
     }
-    
+
     public static void logTrace(String context, Object msgPart, Object msgPart1, Object msgPart2) {
         logMessage(MessageLevel.TRACE, context, msgPart, msgPart1, msgPart2);
     }
@@ -372,7 +372,7 @@ public final class LogManager {
     public static void log(int msgLevel, String context, Throwable e, Object... message) {
 		if (!isMessageToBeRecorded(context, msgLevel)) {
 			return;
-		} 
+		}
     	logListener.log(msgLevel, context, e, message);
     }
 
@@ -387,7 +387,7 @@ public final class LogManager {
     	}
     	return old;
     }
-    	
+
     /**
      * Utility method to identify whether a log message with the specified
      * context and level will be recorded in the LogManager's destinations.
@@ -406,33 +406,33 @@ public final class LogManager {
     private static void logMessage(int level, String context, Object ... msgParts) {
 		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
 			return;
-		} 
+		}
 		logListener.log(level, context, msgParts);
     }
-    
+
     private static void logMessage(int level, String context, Object msgPart) {
 		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
 			return;
-		} 
+		}
 		logListener.log(level, context, msgPart);
     }
-    
+
     private static void logMessage(int level, String context, Object msgPart, Object msgPart1) {
 		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
 			return;
-		} 
+		}
 		logListener.log(level, context, msgPart, msgPart1);
     }
-    
+
     private static void logMessage(int level, String context, Object msgPart, Object msgPart1, Object msgPart2) {
 		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
 			return;
-		} 
+		}
 		logListener.log(level, context, msgPart, msgPart1, msgPart2);
     }
-    
+
     /**
-     * Create a logging proxy, that logs at entry and exit points of the method calls on the provided interfaces.  
+     * Create a logging proxy, that logs at entry and exit points of the method calls on the provided interfaces.
      */
     public static Object createLoggingProxy(final String loggingContext,
                                              final Object instance,
@@ -440,7 +440,7 @@ public final class LogManager {
                                              final int level) {
         return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new LoggingProxy(instance, loggingContext, level));
     }
-    
+
     public static Object createLoggingProxy(final String loggingContext,
             final Object instance,
             final Class<?>[] interfaces,
@@ -448,7 +448,7 @@ public final class LogManager {
             ClassLoader classLoader) {
     		return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
     }
-    
+
     public static void putMdc(String key, String val) {
     	logListener.putMdc(key, val);
     }

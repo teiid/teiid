@@ -43,12 +43,12 @@ class TransportRemove extends AbstractRemoveStepHandler {
     	String transportName = pathAddress.getLastElement().getValue();
 
     	final ServiceRegistry serviceRegistry = context.getServiceRegistry(true);
-    	
+
     	ServiceName serviceName = TeiidServiceNames.transportServiceName(transportName);
 		final ServiceController<?> controller = serviceRegistry.getService(serviceName);
 		if (controller != null) {
 			TransportService transport = TransportService.class.cast(controller.getValue());
-			
+
 			if (transport.isLocal()) {
 				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
 				context.removeService(bindInfo.getBinderServiceName());

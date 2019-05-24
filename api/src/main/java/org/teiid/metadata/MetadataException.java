@@ -27,15 +27,15 @@ public class MetadataException extends TeiidRuntimeException {
 	public MetadataException(Event event, Throwable cause) {
 		super(event, cause);
 	}
-	
+
 	public MetadataException(Throwable cause) {
 		super(cause);
 	}
-	
+
 	public MetadataException(Event event, String message) {
 		super(event, message);
 	}
-	
+
 	public MetadataException(String message) {
 		super(message);
 	}

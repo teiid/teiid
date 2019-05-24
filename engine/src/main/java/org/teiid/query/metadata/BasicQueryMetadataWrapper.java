@@ -35,7 +35,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
-	
+
 	protected QueryMetadataInterface actualMetadata;
 	protected QueryMetadataInterface designTimeMetadata;
 	protected boolean designTime;
@@ -223,10 +223,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 			QueryMetadataException {
 		return actualMetadata.getRadix(elementID);
 	}
-	
+
 	public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
 		return actualMetadata.getFormat(elementID);
-	}   	
+	}
 
 	public int getScale(Object elementID) throws TeiidComponentException,
 			QueryMetadataException {
@@ -319,22 +319,22 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public FunctionLibrary getFunctionLibrary() {
 		return actualMetadata.getFunctionLibrary();
 	}
-	
+
 	@Override
 	public Object getPrimaryKey(Object metadataID) {
 		return actualMetadata.getPrimaryKey(metadataID);
 	}
-	
+
 	@Override
 	public boolean isMultiSource(Object modelId) throws QueryMetadataException, TeiidComponentException {
 		return actualMetadata.isMultiSource(modelId);
 	}
-	
+
 	@Override
 	public boolean isMultiSourceElement(Object elementId) throws QueryMetadataException, TeiidComponentException {
 		return actualMetadata.isMultiSourceElement(elementId);
 	}
-	
+
 	@Override
 	public QueryMetadataInterface getDesignTimeMetadata() {
 		if (designTime) {
@@ -348,42 +348,42 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
     	}
 		return designTimeMetadata;
 	}
-	
+
 	protected QueryMetadataInterface createDesignTimeMetadata() {
 		return actualMetadata.getDesignTimeMetadata();
 	}
-	
+
 	@Override
 	public boolean hasProcedure(String name) throws TeiidComponentException {
 		return actualMetadata.hasProcedure(name);
 	}
-	
+
 	@Override
 	public String getName(Object metadataID) throws TeiidComponentException,
 			QueryMetadataException {
 		return actualMetadata.getName(metadataID);
 	}
-	
+
 	@Override
 	public QueryMetadataInterface getSessionMetadata() {
 		return actualMetadata.getSessionMetadata();
 	}
-	
+
 	@Override
 	public Set<String> getImportedModels() {
 		return actualMetadata.getImportedModels();
 	}
-	
+
 	@Override
 	public ScriptEngine getScriptEngine(String langauge) throws TeiidProcessingException {
 		return actualMetadata.getScriptEngine(langauge);
 	}
-	
+
 	@Override
 	public boolean isVariadic(Object metadataID) {
 		return actualMetadata.isVariadic(metadataID);
 	}
-	
+
 	@Override
 	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
 		return actualMetadata.getFunctionBasedExpressions(metadataID);
@@ -393,53 +393,53 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public boolean isPseudo(Object elementId) {
 		return actualMetadata.isPseudo(elementId);
 	}
-	
+
 	@Override
 	public Object getModelID(String modelName) throws TeiidComponentException,
 			QueryMetadataException {
 		return actualMetadata.getModelID(modelName);
 	}
-	
+
 	@Override
 	public String getExtensionProperty(Object metadataID, String key,
 			boolean checkUnqualified) {
 		return actualMetadata.getExtensionProperty(metadataID, key, checkUnqualified);
 	}
-	
+
 	@Override
 	public boolean findShortName() {
 		return actualMetadata.findShortName();
 	}
-	
+
 	@Override
 	public boolean useOutputName() {
 		return actualMetadata.useOutputName();
 	}
-	
+
 	@Override
 	public boolean widenComparisonToString() {
 		return actualMetadata.widenComparisonToString();
 	}
-	
+
     @Override
     public Class<?> getDataTypeClass(String typeName)
             throws QueryMetadataException {
         return actualMetadata.getDataTypeClass(typeName);
     }
-    
+
     @Override
     public boolean isEnvAllowed() {
         return actualMetadata.isEnvAllowed();
     }
-    
+
     @Override
     public boolean isLongRanks() {
         return actualMetadata.isLongRanks();
     }
-    
+
     @Override
     public List<? extends Object> getModelIDs() {
         return actualMetadata.getModelIDs();
     }
-	
+
 }

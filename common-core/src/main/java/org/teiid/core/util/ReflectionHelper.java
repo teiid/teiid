@@ -77,7 +77,7 @@ public class ReflectionHelper {
     	if (methods != null && methods.size() == 1) {
     		return methods.get(0);
     	}
-    	
+
     	if (arguments == null) {
     		return findBestMethodWithSignature(methodName, Collections.EMPTY_LIST);
     	}
@@ -174,7 +174,7 @@ public class ReflectionHelper {
                 result = method;
             }
         }
-        
+
         if (result != null) {
             return result;
         }
@@ -214,7 +214,7 @@ public class ReflectionHelper {
 		    Class<?> objectClazz = argumentsClasses.get(i);
 		    if ( objectClazz != null ) {
 		        // Check for possible matches with (converted) primitive types
-		        // as well as the original Object type 
+		        // as well as the original Object type
 		        if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
 		            return false;   // found one that doesn't match
 		        }
@@ -227,7 +227,7 @@ public class ReflectionHelper {
 		}
 		return true;
 	}
-    
+
     /**
      * Convert any argument classes to primitives.
      * @param arguments the list of argument classes.
@@ -251,14 +251,14 @@ public class ReflectionHelper {
 
         return result;
     }
-    
+
     /**
      * Helper method to load a class.
      * @param className is the class to instantiate
      * @param classLoader the class loader to use; may be null if the current
      * class loader is to be used
-     * @return Class is the instance of the class 
-     * @throws ClassNotFoundException 
+     * @return Class is the instance of the class
+     * @throws ClassNotFoundException
      */
     private static final Class<?> loadClass(final String className, final ClassLoader classLoader) throws ClassNotFoundException {
         Class<?> cls = null;
@@ -269,7 +269,7 @@ public class ReflectionHelper {
         }
         return cls;
     }
-    
+
     /**
      * Helper method to create an instance of the class using the appropriate
      * constructor based on the ctorObjs passed.
@@ -277,18 +277,18 @@ public class ReflectionHelper {
      * @param ctorObjs are the objects to pass to the constructor; optional, nullable
      * @param classLoader the class loader to use; may be null if the current
      * class loader is to be used
-     * @return Object is the instance of the class 
+     * @return Object is the instance of the class
      * @throws TeiidException if an error occurs instantiating the class
      */
 
-    public static final Object create(String className, Collection<?> ctorObjs, 
+    public static final Object create(String className, Collection<?> ctorObjs,
                                       final ClassLoader classLoader) throws TeiidException {
     	try {
 	        int size = (ctorObjs == null ? 0 : ctorObjs.size());
 	        Class[] names = new Class[size];
 	        Object[] objArray = new Object[size];
 	        int i = 0;
-	
+
 	        if (size > 0) {
 	            for (Iterator<?> it=ctorObjs.iterator(); it.hasNext(); ) {
 	                Object obj = it.next();
@@ -298,14 +298,14 @@ public class ReflectionHelper {
 	                }
 	                i++;
 	            }
-	        } 
+	        }
 	        return create(className, objArray, names, classLoader);
     	} catch (Exception e) {
     		  throw new TeiidException(CorePlugin.Event.TEIID10033, e);
     	}
     }
-    	
-    public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes, 
+
+    public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes,
                 final ClassLoader classLoader) throws TeiidException {
     	Class<?> cls;
         try {
@@ -317,9 +317,9 @@ public class ReflectionHelper {
         try {
         	ctor = cls.getDeclaredConstructor(argTypes);
         } catch (NoSuchMethodException e) {
-        	
+
         }
-        
+
         if (ctor == null && argTypes != null && argTypes.length > 0) {
         	List<Class<?>> argumentsClasses = Arrays.asList(argTypes);
         	List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
@@ -330,11 +330,11 @@ public class ReflectionHelper {
         		}
         	}
         }
-        
+
         if (ctor == null) {
         	  throw new TeiidException(CorePlugin.Event.TEIID10035, className + CorePlugin.Event.TEIID10035 + Arrays.toString(argTypes));
         }
-        
+
         try {
 			return ctor.newInstance(ctorObjs);
 		} catch (InvocationTargetException e) {
@@ -343,5 +343,5 @@ public class ReflectionHelper {
 			throw new TeiidException(CorePlugin.Event.TEIID10036, e);
 		}
     }
-    
+
 }

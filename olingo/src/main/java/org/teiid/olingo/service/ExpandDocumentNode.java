@@ -38,7 +38,7 @@ public class ExpandDocumentNode extends DocumentNode {
     public static ExpandDocumentNode buildExpand(EdmNavigationProperty property,
             MetadataStore metadata, OData odata, UniqueNameGenerator nameGenerator,
             boolean useAlias, UriInfo uriInfo, URLParseService parseService, DocumentNode context) throws TeiidException {
-        
+
         EdmEntityType type = property.getType();
         ExpandDocumentNode resource = new ExpandDocumentNode();
         build(resource, type, null, metadata, odata, nameGenerator, useAlias, uriInfo, parseService);
@@ -47,19 +47,19 @@ public class ExpandDocumentNode extends DocumentNode {
         resource.collectionContext = context;
         return resource;
     }
-    
+
     public String getNavigationName() {
         return navigationName;
     }
-    
+
     public void setNavigationName(String navigationName) {
         this.navigationName = navigationName;
     }
-    
+
     public boolean isCollection() {
         return collection;
     }
-    
+
     public void setCollection(boolean collection) {
         this.collection = collection;
     }
@@ -83,13 +83,13 @@ public class ExpandDocumentNode extends DocumentNode {
 	public void setColumnIndex(int count) {
 		this.columnIndex = count;
 	}
-	
+
 	public int getColumnIndex() {
 		return columnIndex;
 	}
-	
+
 	public DocumentNode getCollectionContext() {
         return collectionContext;
     }
-	
+
 }

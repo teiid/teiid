@@ -35,12 +35,12 @@ import org.teiid.translator.jdbc.db2.BaseDB2ExecutionFactory;
 import org.teiid.translator.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.util.Version;
 
-/** 
+/**
  * @since 4.3
  */
 @Translator(name="derby", description="A translator for Apache Derby Database")
 public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
-	
+
 	public static final Version TEN_1 = Version.getVersion("10.1"); //$NON-NLS-1$
 	public static final Version TEN_2 = Version.getVersion("10.2"); //$NON-NLS-1$
 	public static final Version TEN_3 = Version.getVersion("10.3"); //$NON-NLS-1$
@@ -48,33 +48,33 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	public static final Version TEN_5 = Version.getVersion("10.5"); //$NON-NLS-1$
 	public static final Version TEN_6 = Version.getVersion("10.6"); //$NON-NLS-1$
 	public static final Version TEN_7 = Version.getVersion("10.7"); //$NON-NLS-1$
-	
+
 	public DerbyExecutionFactory() {
 		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
 		//additional derby functions
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
-        
+
         //overrides of db2 functions
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 
-    }  
- 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier());
+    }
+
     @Override
     public boolean addSourceComment() {
         return false;
     }
-    
+
     @Override
     public boolean supportsOrderByNullOrdering() {
     	return getVersion().compareTo(TEN_4) >= 0;
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -117,7 +117,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         }
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
         //supportedFunctions.add("TAN"); //$NON-NLS-1$
-        
+
         //supportedFunctions.add("ASCII"); //$NON-NLS-1$
         //supportedFunctions.add("CHR"); //$NON-NLS-1$
         //supportedFunctions.add("CHAR"); //$NON-NLS-1$
@@ -139,7 +139,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.TRIM);
         }
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
-        
+
         // These are executed within the server and never pushed down
         //supportedFunctions.add("CURDATE"); //$NON-NLS-1$
         //supportedFunctions.add("CURTIME"); //$NON-NLS-1$
@@ -148,7 +148,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         supportedFunctions.add("DAYOFMONTH"); //$NON-NLS-1$
         //supportedFunctions.add("DAYOFWEEK"); //$NON-NLS-1$
         //supportedFunctions.add("DAYOFYEAR"); //$NON-NLS-1$
-        
+
         // These should not be pushed down since the grammar for string conversion is different
 //        supportedFunctions.add("FORMATDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("FORMATTIME"); //$NON-NLS-1$
@@ -157,7 +157,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         supportedFunctions.add("MINUTE"); //$NON-NLS-1$
         supportedFunctions.add("MONTH"); //$NON-NLS-1$
         //supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
-        
+
         // These should not be pushed down since the grammar for string conversion is different
 //        supportedFunctions.add("PARSEDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("PARSETIME"); //$NON-NLS-1$
@@ -168,13 +168,13 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         //supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
-        
+
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         return supportedFunctions;
     }
-    
+
     @Override
     public boolean supportsRowLimit() {
     	return this.getVersion().compareTo(TEN_5) >= 0;
@@ -184,12 +184,12 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
     public boolean supportsRowOffset() {
     	return this.getVersion().compareTo(TEN_5) >= 0;
     }
-    
+
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
-	
+
 	@Override
 	public String getHibernateDialectClassName() {
 		if (this.getVersion().compareTo(TEN_6) >= 0) {
@@ -200,17 +200,17 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 		}
 		return "org.hibernate.dialect.DerbyTenFiveDialect"; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public boolean supportsGroupByRollup() {
 		return this.getVersion().compareTo(TEN_6) >= 0;
 	}
-	
+
 	@Override
 	public List<?> translate(LanguageObject obj, ExecutionContext context) {
 		if (obj instanceof DerivedColumn) {
 			DerivedColumn selectSymbol = (DerivedColumn)obj;
-			
+
 			if (selectSymbol.getExpression().getType() == TypeFacility.RUNTIME_TYPES.XML) {
 				if (selectSymbol.getAlias() == null) {
 					return Arrays.asList("XMLSERIALIZE(", selectSymbol.getExpression(), " AS CLOB)"); //$NON-NLS-1$//$NON-NLS-2$
@@ -221,7 +221,7 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 		}
 		return super.translate(obj, context);
 	}
-	
+
 	@Override
 	public List<?> translateLimit(Limit limit, ExecutionContext context) {
 		if (limit.getRowOffset() > 0) {
@@ -229,5 +229,5 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 		}
 		return super.translateLimit(limit, context);
 	}
-    
+
 }

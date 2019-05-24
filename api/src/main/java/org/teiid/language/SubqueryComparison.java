@@ -23,7 +23,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents a quantified comparison criteria.  This criteria has an expression on the left,
- * a comparison operator (such as =, &lt;, etc), a quantification operator (ALL, ANY), 
+ * a comparison operator (such as =, &lt;, etc), a quantification operator (ALL, ANY),
  * and a subquery.
  */
 public class SubqueryComparison extends Condition implements Predicate, SubqueryContainer {
@@ -32,14 +32,14 @@ public class SubqueryComparison extends Condition implements Predicate, Subquery
 		SOME,
 		ALL
 	}
-	
+
     private Expression leftExpr;
     private Operator operator;
     private Quantifier quantifier;
     private QueryExpression query;
-    
+
     /**
-     * 
+     *
      */
     public SubqueryComparison(Expression leftExpr, Operator operator, Quantifier quantifier, QueryExpression query) {
         this.leftExpr = leftExpr;

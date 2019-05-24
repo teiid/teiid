@@ -37,13 +37,13 @@ import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.SheetRow;
 
 public class TestNativeSpreadsheet {
-	
+
 	@Test public void testDirect() throws TranslatorException {
 		SpreadsheetExecutionFactory sef = new SpreadsheetExecutionFactory();
 		sef.setSupportsDirectQueryProcedure(true);
-		
+
 		String input = "call native('worksheet=x;query=$1 foo;limit=2', 'a')";
-		
+
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
@@ -53,7 +53,7 @@ public class TestNativeSpreadsheet {
         RowsResult result = Mockito.mock(RowsResult.class);
         Mockito.stub(result.iterator()).toReturn(Arrays.asList(new SheetRow()).iterator());
         Mockito.stub(connection.executeQuery("x", "'a' foo", null, 2, 0)).toReturn(result);
-        
+
 		ResultSetExecution execution = (ResultSetExecution)sef.createExecution(command, ec, rm, connection);
         execution.execute();
 

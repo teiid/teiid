@@ -25,7 +25,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
- * A FROM subpart that represents a subquery.  For example, the FROM clause: 
+ * A FROM subpart that represents a subquery.  For example, the FROM clause:
  * "FROM (SELECT a FROM b)" will have a SubqueryFromClause referencing the subquery.
  */
 public class SubqueryFromClause extends FromClause implements SubqueryContainer{
@@ -33,14 +33,14 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     private GroupSymbol symbol;
     private Command command;
     private boolean lateral;
-	
+
 	/**
 	 * Construct default object
 	 */
 	public SubqueryFromClause(String name) {
         setName(name);
 	}
-	
+
     /**
      * Construct object with specified command and name
      * @param command Command representing subquery, or stored procedure
@@ -50,22 +50,22 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         this(name);
         this.command = command;
     }
-    
+
     public SubqueryFromClause(GroupSymbol symbol, Command command) {
         this.symbol = symbol;
         this.command = command;
     }
-    
+
     public boolean isLateral() {
 		return lateral;
 	}
-    
+
     public void setLateral(boolean table) {
 		this.lateral = table;
 	}
 
-    /** 
-     * Reset the alias for this subquery from clause and it's pseudo-GroupSymbol.  
+    /**
+     * Reset the alias for this subquery from clause and it's pseudo-GroupSymbol.
      * WARNING: this will modify the hashCode and equals semantics and will cause this object
      * to be lost if currently in a HashMap or HashSet.
      * @param name New name
@@ -74,41 +74,41 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     public void setName(String name) {
         this.symbol = new GroupSymbol(name);
     }
-		
+
 	/**
 	 * Set the command held by the clause
 	 * @param command Command to hold
 	 */
 	public void setCommand(Command command) {
 		this.command = command;
-	} 
-	
+	}
+
 	/**
 	 * Get command held by clause
 	 * @return Command held by clause
 	 */
 	public Command getCommand() {
 		return this.command;
-	}	
-    
+	}
+
     /**
      * Get name of this clause.
      * @return Name of clause
      */
     public String getName() {
-        return this.symbol.getName();   
+        return this.symbol.getName();
     }
-    
+
     public String getOutputName() {
         return this.symbol.getOutputName();
     }
 
     /**
-     * Get GroupSymbol representing the named subquery 
+     * Get GroupSymbol representing the named subquery
      * @return GroupSymbol representing the subquery
      */
     public GroupSymbol getGroupSymbol() {
-        return this.symbol;    
+        return this.symbol;
     }
 
     /**
@@ -118,7 +118,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     public void collectGroups(Collection groups) {
         groups.add(getGroupSymbol());
     }
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -132,17 +132,17 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         if (!super.equals(obj)) {
             return false;
         }
-		
-		if(! (obj instanceof SubqueryFromClause)) { 
+
+		if(! (obj instanceof SubqueryFromClause)) {
 			return false;
-		}		
+		}
 		SubqueryFromClause sfc = (SubqueryFromClause) obj;
-		
+
         return this.getName().equalsIgnoreCase(sfc.getName()) &&
             sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command)
             && this.lateral == sfc.lateral;
 	}
-	
+
 	/**
 	 * Get hash code of object
 	 * @return Hash code
@@ -150,17 +150,17 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 	public int hashCode() {
 		return this.symbol.hashCode();
 	}
-	
+
 	/**
 	 * Get deep clone of object
 	 * @return Deep copy of the object
 	 */
 	public FromClause cloneDirect() {
-        Command commandCopy = null;        
+        Command commandCopy = null;
         if(this.command != null) {
             commandCopy = (Command) this.command.clone();
         }
-        
+
         SubqueryFromClause clause = new SubqueryFromClause(this.symbol.clone(), commandCopy);
         clause.setLateral(this.isLateral());
         return clause;

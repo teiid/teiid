@@ -32,13 +32,13 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.util.CommandContext;
 
 public class ArrayAgg extends SingleArgumentAggregateFunction {
-	
+
     private static final int MAX_SIZE = 1 << 23;
     private ArrayList<Object> result;
     private Class<?> componentType;
     private long size;
     private int elemSize;
-    
+
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
     	this.componentType = inputType;
@@ -46,7 +46,7 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
     	    elemSize = SizeUtility.getSize(false, componentType);
     	}
     }
-    
+
 	@Override
 	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
 		if (this.result == null) {
@@ -60,7 +60,7 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
         	    size += elemSize;
         	} else {
         	    size += SizeUtility.getSize(input, false);
-        	} 
+        	}
 	    }
         if (size > MAX_SIZE) {
             throw new TeiidProcessingException(QueryPlugin.Event.TEIID31209, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31209, MAX_SIZE));
@@ -90,7 +90,7 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
 	public void reset() {
 		this.result = null;
 	}
-	
+
 	@Override
 	public boolean respectsNull() {
 		return true;

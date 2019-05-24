@@ -25,7 +25,7 @@ public class ComplexReturnType {
     private String name;
     private boolean expand;
     private EdmEntityType type;
-    
+
     public ComplexReturnType(String name, EdmEntityType type, Entity entity, boolean expand) {
         this.name = name;
         this.type = type;

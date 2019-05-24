@@ -32,15 +32,15 @@ import org.teiid.test.framework.transaction.XATransaction;
 /**
  * TransactionFactory is used so that the type of {@link TransactionContainer } can be dynamically loaded
  * based on a property.
- * 
+ *
  * Specify the property {@link #TRANSACTION_TYPE} in order to set the transaction type to use.
- * 
+ *
  * @author vanhalbert
  *
  */
 @SuppressWarnings("nls")
 public class TransactionFactory {
-    
+
 
 	/**
 	 * Transaction Type indicates the type of transaction container to use
@@ -56,23 +56,23 @@ public class TransactionFactory {
 		public static final String ONWRAP_TRANSACTION = "on"; //$NON-NLS-1$
 		public static final String AUTOWRAP_TRANSACTION = "auto"; //$NON-NLS-1$
    }
-	
 
-        
+
+
     private TransactionFactory(){}
-        
-    
+
+
     public static TransactionContainer create(ConfigPropertyLoader config) throws QueryTestFailedException {
     	TransactionContainer transacton = null;
-    	    	
+
         String type = config.getProperty(TRANSACTION_TYPE);
         if (type == null) {
             throw new TransactionRuntimeException(TRANSACTION_TYPE + " property was not specified" );
-        } 
-        
-       
+        }
+
+
         TestLogger.logDebug("====  Create Transaction-Option: " + type);
-        
+
         if (type.equalsIgnoreCase(TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
         	transacton = new LocalTransaction();
         }
@@ -98,5 +98,5 @@ public class TransactionFactory {
         TestLogger.log("====  TransactionContainer: " + transacton.getClass().getName() + " option:" + type);
         return transacton;
     }
-    
+
 }

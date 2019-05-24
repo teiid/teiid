@@ -33,27 +33,27 @@ public class QueryString implements Expression {
 	private static final long serialVersionUID = -3348922701950966494L;
 	private List<DerivedColumn> args;
 	private Expression path;
-	
+
 	public QueryString(Expression path, List<DerivedColumn> args) {
 		this.args = args;
 		this.path = path;
 	}
-	
+
 	public List<DerivedColumn> getArgs() {
 		return args;
 	}
-	
+
 	@Override
 	public QueryString clone() {
 		QueryString clone = new QueryString((Expression)path.clone(), LanguageObject.Util.deepClone(args, DerivedColumn.class));
 		return clone;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return path.hashCode();
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -69,23 +69,23 @@ public class QueryString implements Expression {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	public Expression getPath() {
 		return path;
 	}
-	
+
 	public void setPath(Expression path) {
 		this.path = path;
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	@Override
 	public Class<?> getType() {
 		return DefaultDataClasses.STRING;
 	}
-	
+
 }

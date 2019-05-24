@@ -71,11 +71,11 @@ import org.teiid.query.util.CommandContext;
 public class PreparedStatementRequest extends Request {
     private SessionAwareCache<PreparedPlan> prepPlanCache;
     private PreparedPlan prepPlan;
-    
+
     public PreparedStatementRequest(SessionAwareCache<PreparedPlan> prepPlanCache) {
     	this.prepPlanCache = prepPlanCache;
     }
-    
+
     @Override
     protected void checkReferences(List<Reference> references)
     		throws QueryValidatorException {
@@ -86,10 +86,10 @@ public class PreparedStatementRequest extends Request {
     	}
         prepPlan.setReferences(references);
     }
-    
-    /** 
-     * @throws TeiidComponentException 
-     * @throws TeiidProcessingException 
+
+    /**
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
 	@Override
@@ -101,7 +101,7 @@ public class PreparedStatementRequest extends Request {
     	}
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg, this.workContext.getSession()), sqlQuery);
         prepPlan = prepPlanCache.get(id);
-        
+
         if (prepPlan != null) {
         	//already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
@@ -116,54 +116,54 @@ public class PreparedStatementRequest extends Request {
 	            processPlan = cachedPlan.clone();
             }
         }
-        
+
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
             super.generatePlan(true);
         	prepPlan.setCommand(this.userCommand);
-        	
+
         	//there's no need to cache the plan if it's a stored procedure, since we already do that in the optimizer
         	boolean cache = !(this.userCommand instanceof StoredProcedure);
-        	
+
 	        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 	        prepPlan.setPlan(cache?processPlan.clone():processPlan, this.context);
 	        prepPlan.setAnalysisRecord(analysisRecord);
-			
+
 	        if (cache) {
 		        Determinism determinismLevel = this.context.getDeterminismLevel();
 				if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
 					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
 					determinismLevel = userCommand.getCacheHint().getDeterminism();
-				}		        
-		        
+				}
+
 		        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
 	        }
         }
-        
+
         if (requestMsg.isBatchedUpdate()) {
 	        handlePreparedBatchUpdate();
         } else {
 	        List<Reference> params = prepPlan.getReferences();
 	        List<?> values = requestMsg.getParameterValues();
-	
+
 	    	PreparedStatementRequest.resolveParameterValues(params, values, this.context, this.metadata);
         }
     }
 
     /**
      * There are two cases
-     *   if 
+     *   if
      *     The source supports preparedBatchUpdate -> just let the command and values pass to the source
-     *   else 
-     *     create a batchedupdatecommand that represents the batch operation 
+     *   else
+     *     create a batchedupdatecommand that represents the batch operation
      * @param command
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      * @throws QueryResolverException
-     * @throws QueryPlannerException 
-     * @throws QueryValidatorException 
+     * @throws QueryPlannerException
+     * @throws QueryValidatorException
      */
 	private void handlePreparedBatchUpdate() throws QueryMetadataException,
 			TeiidComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
@@ -195,7 +195,7 @@ public class PreparedStatementRequest extends Request {
 				if (multiValues.isEmpty()) {
 					for (int i = 0; i < values.size(); i++) {
 						multiValues.add(new ArrayList<Object>(paramValues.size()));
-					}					
+					}
 				}
 				for (int i = 0; i < values.size(); i++) {
 					List<Object> multiValue = multiValues.get(i);
@@ -210,15 +210,15 @@ public class PreparedStatementRequest extends Request {
 				commands.add(command);
 			}
 		}
-		
+
 		if (paramValues.size() > 1) {
 			this.context.setVariableContext(new VariableContext());
-		} 
-		
+		}
+
 		if (paramValues.size() == 1) {
 			return; // just use the existing plan, and global reference evaluation
 		}
-		
+
 		if (supportPreparedBatchUpdate) {
 			for (int i = 0; i < this.prepPlan.getReferences().size(); i++) {
 				Constant c = new Constant(null, this.prepPlan.getReferences().get(i).getType());
@@ -227,18 +227,18 @@ public class PreparedStatementRequest extends Request {
 			}
 			return;
 		}
-		
+
 		BatchedUpdateCommand buc = new BatchedUpdateCommand(commands);
 		buc.setVariableContexts(contexts);
 		BatchedUpdatePlanner planner = new BatchedUpdatePlanner();
 		this.processPlan = planner.optimize(buc, idGenerator, metadata, capabilitiesFinder, analysisRecord, context);
 	}
 
-	/** 
+	/**
 	 * @param params
 	 * @param values
 	 * @throws QueryResolverException
-	 * @throws QueryValidatorException 
+	 * @throws QueryValidatorException
 	 */
 	public static void resolveParameterValues(List<Reference> params,
 	                                    List values, CommandContext context, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException, QueryValidatorException {
@@ -248,15 +248,15 @@ public class PreparedStatementRequest extends Request {
 	        String msg = QueryPlugin.Util.getString("QueryUtil.wrong_number_of_values", new Object[] {new Integer(values.size()), new Integer(params.size())}); //$NON-NLS-1$
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30556, msg);
 	    }
-	    
+
 	    boolean embedded = context != null && context.getSession() != null && context.getSession().isEmbedded();
-	    
+
 	    //the type must be the same, or the type of the value can be implicitly converted
 	    //to that of the reference
 	    for (int i = 0; i < params.size(); i++) {
 	        Reference param = params.get(i);
 	        Object value = values.get(i);
-	        
+
         	if(value != null) {
                 if (embedded && value instanceof BaseLob) {
     	            createStreamCopy(context, i, param, value);
@@ -273,19 +273,19 @@ public class PreparedStatementRequest extends Request {
                     throw new QueryResolverException(QueryPlugin.Event.TEIID30558, e, msg);
 				}
 	        }
-	        	        
+
         	if (param.getConstraint() != null) {
         		param.getConstraint().validate(value);
         	}
 	        //bind variable
 	        result.setGlobalValue(param.getContextSymbol(), value);
 	    }
-	    
+
 	    context.setVariableContext(result);
 	}
 
 	/**
-	 * embedded lobs can be sent with just a reference to a stream, 
+	 * embedded lobs can be sent with just a reference to a stream,
 	 * create a copy instead
 	 * @param context
 	 * @param i
@@ -303,7 +303,7 @@ public class PreparedStatementRequest extends Request {
                 //this violates the expectation that the inputstream is a new instance,
                 FileStore fs = context.getBufferManager().createFileStore("bytes"); //$NON-NLS-1$
                 FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-         
+
                 SaveOnReadInputStream is = new SaveOnReadInputStream(initial, fsisf);
                 context.addCreatedLob(fsisf);
                 ((BaseLob) value).setStreamFactory(is.getInputStreamFactory());
@@ -319,7 +319,7 @@ public class PreparedStatementRequest extends Request {
             throw new QueryResolverException(QueryPlugin.Event.TEIID30557, e, msg);
         }
     }
-	
+
 	@Override
 	public boolean isReturingParams() {
 		if (userCommand instanceof StoredProcedure) {
@@ -335,7 +335,7 @@ public class PreparedStatementRequest extends Request {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void processRequest() throws TeiidComponentException,
 			TeiidProcessingException {
@@ -344,4 +344,4 @@ public class PreparedStatementRequest extends Request {
 			this.processor.setContinuous(this.prepPlan, this.requestMsg.getCommandString());
 		}
 	}
-} 
+}

@@ -43,9 +43,9 @@ import java.util.stream.Collectors;
 import org.teiid.query.metadata.VirtualFile;
 
 public class JBossVirtualFile implements VirtualFile {
-    
+
     private org.jboss.vfs.VirtualFile file;
-    
+
     public JBossVirtualFile(org.jboss.vfs.VirtualFile file) {
         this.file = file;
     }
@@ -80,12 +80,12 @@ public class JBossVirtualFile implements VirtualFile {
     public String getPathName() {
         return file.getPathName();
     }
-    
+
     @Override
     public VirtualFile getChild(String string) {
         return new JBossVirtualFile(this.file.getChild(string));
     }
-    
+
     @Override
     public boolean exists() {
         return file.exists();

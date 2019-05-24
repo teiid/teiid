@@ -46,7 +46,7 @@ import org.teiid.util.StAXSQLXML;
 import org.teiid.util.WSUtil;
 
 /**
- * A WSDL soap call executor 
+ * A WSDL soap call executor
  */
 public class WSWSDLProcedureExecution implements ProcedureExecution {
 
@@ -56,8 +56,8 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
     private StAXSource returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
-    
-    /** 
+
+    /**
      * @param env
      */
     public WSWSDLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
@@ -67,23 +67,23 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
         this.conn = conn;
         this.executionFactory = executionFactory;
     }
-    
+
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
-        
+
         XMLType docObject = (XMLType)arguments.get(0).getArgumentValue().getValue();
         StAXSource source = null;
     	try {
 	        source = convertToSource(docObject);
-	        
+
 	        Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
 	        String operation = this.procedure.getProcedureName();
 	        if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
 	        	operation = this.procedure.getMetadataObject().getNameInSource();
 	        }
 	        QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
-	        dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName); 
-	
+	        dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName);
+
 			if (source == null) {
 				// JBoss Native DispatchImpl throws exception when the source is null
 				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
@@ -108,12 +108,12 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
 		}
 		return xml.getSource(StAXSource.class);
 	}
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
     	return null;
-    }  
-    
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
@@ -124,13 +124,13 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
 			result = xml;
 		}
         return Arrays.asList(result);
-    }    
-    
+    }
+
     public void close() {
-    	
+
     }
 
     public void cancel() throws TranslatorException {
         // no-op
-    }    
+    }
 }

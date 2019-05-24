@@ -36,7 +36,7 @@ public class MultipleElementSymbol implements Expression {
 
     public MultipleElementSymbol() {
     }
-    
+
     /**
      * Construct a multiple element symbol
      * @param name Name of the symbol
@@ -44,7 +44,7 @@ public class MultipleElementSymbol implements Expression {
     public MultipleElementSymbol(String name){
         this.group = new GroupSymbol(name);
     }
-    
+
     @Override
     public Class<?> getType() {
     	return null;
@@ -71,12 +71,12 @@ public class MultipleElementSymbol implements Expression {
      * @param symbol Element symbol referenced by this multiple element symbol
      */
     public void addElementSymbol(ElementSymbol symbol) {
-		if(getElementSymbols() == null) { 
+		if(getElementSymbols() == null) {
 			setElementSymbols(new LinkedList<ElementSymbol>());
 		}
 		getElementSymbols().add(symbol);
     }
-	
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -93,33 +93,33 @@ public class MultipleElementSymbol implements Expression {
 
 		List<ElementSymbol> elements = getElementSymbols();
 		if(elements != null && elements.size() > 0) {
-			copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));				
-		}	
+			copy.setElementSymbols(LanguageObject.Util.deepClone(elements, ElementSymbol.class));
+		}
 
 		return copy;
 	}
-	
+
 	/**
 	 * @return null if selecting all groups, otherwise the specific group
 	 */
 	public GroupSymbol getGroup() {
 		return group;
 	}
-	
+
 	public void setGroup(GroupSymbol group) {
 		this.group = group;
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(0, group);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {

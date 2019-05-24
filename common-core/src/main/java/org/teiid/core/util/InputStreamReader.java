@@ -32,7 +32,7 @@ import java.nio.charset.CoderResult;
 import org.teiid.core.CorePlugin;
 
 /**
- * Replacement for the standard {@link java.io.InputStreamReader}, 
+ * Replacement for the standard {@link java.io.InputStreamReader},
  * which suffers from a <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4744247">bug</a> in sun.nio.cs.StreamDecoder
  */
 public class InputStreamReader extends Reader {
@@ -43,11 +43,11 @@ public class InputStreamReader extends Reader {
 	private CharBuffer cb;
 	private boolean done;
 	private int bytesProcessed;
-	
+
 	public InputStreamReader(InputStream in, CharsetDecoder cd) {
 		this(in, cd, ReaderInputStream.DEFAULT_BUFFER_SIZE);
 	}
-	
+
 	public InputStreamReader(InputStream in, CharsetDecoder cd, int bufferSize) {
 		this.cd = cd;
 		this.rbc = Channels.newChannel(in);
@@ -55,7 +55,7 @@ public class InputStreamReader extends Reader {
 		this.cb = CharBuffer.allocate((int)(bufferSize * (double)cd.maxCharsPerByte()));
 		this.cb.limit(0);
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		rbc.close();

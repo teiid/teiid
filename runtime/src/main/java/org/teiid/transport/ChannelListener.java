@@ -23,16 +23,16 @@ import org.teiid.net.socket.ObjectChannel;
 
 
 public interface ChannelListener {
-	
+
 	public interface ChannelListenerFactory {
 		ChannelListener createChannelListener(ObjectChannel channel);
 	}
 
 	void receivedMessage(Object msg) throws CommunicationException;
-	
+
 	void exceptionOccurred(Throwable t);
-	
+
 	void disconnected();
-	
+
 	void onConnection() throws CommunicationException;
 }

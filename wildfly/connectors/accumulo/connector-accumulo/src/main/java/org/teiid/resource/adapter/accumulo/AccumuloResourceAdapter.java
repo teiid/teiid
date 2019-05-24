@@ -21,7 +21,7 @@ package org.teiid.resource.adapter.accumulo;
 import org.teiid.resource.spi.BasicResourceAdapter;
 
 public class AccumuloResourceAdapter extends BasicResourceAdapter {
-	
+
 	@Override
 	public int hashCode() {
 		return super.hashCode();

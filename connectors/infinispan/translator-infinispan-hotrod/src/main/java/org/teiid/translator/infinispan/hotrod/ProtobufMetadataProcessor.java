@@ -133,8 +133,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         String protobufFile = getProtoFilePath();
         String cacheName = null;
         if (connection != null) {
-            cacheName = connection.getCache().getName();            
-        }        
+            cacheName = connection.getCache().getName();
+        }
         String protoContents = null;
         if( protobufFile != null &&  !protobufFile.isEmpty()) {
             File f = new File(protobufFile);
@@ -211,8 +211,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 if (t.getAnnotation() != null && findFromAnnotation(AT_CACHE, t.getAnnotation(), "name") != null) {
                 	t.setProperty(CACHE, findFromAnnotation(AT_CACHE, t.getAnnotation(), "name"));
                 } else {
-                	// only set the cache name on the root message table, not on embedded 
-                	// of child tables, as they will be part of parent, and we do not want discrepancy 
+                	// only set the cache name on the root message table, not on embedded
+                	// of child tables, as they will be part of parent, and we do not want discrepancy
                 	// in metadata, as both parent child must be in single cache.
                 	if (getParentTag(t) == -1) {
 						t.setProperty(CACHE, (cacheName == null ? t.getName() : cacheName));
@@ -244,7 +244,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         table.setSupportsUpdate(true);
         table.setNameInSource(messageElement.qualifiedName());
         table.setAnnotation(messageElement.documentation());
-        
+
         for (FieldElement fieldElement:messageElement.fields()) {
             addColumn(mf, messageTypes, enumTypes, columnPrefix, table, fieldElement, ignoreTables, false);
         }
@@ -322,8 +322,8 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             	teiidType = ProtobufDataManager.teiidType(type, isCollection(fieldElement), false);
             } else {
             	// these are artificial types not defined in protobuf, so not eligible for pushdown based
-            	// comparisons so that need to be marked as such.             	            	
-            	searchable = false; 
+            	// comparisons so that need to be marked as such.
+            	searchable = false;
             }
         }
 
@@ -347,11 +347,11 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         if (precision != null) {
         	c.setPrecision(Integer.parseInt(precision));
         }
-        
+
         String scale = findFromAnnotation(AT_TEIID, annotation, "scale");
         if (scale != null) {
         	c.setScale(Integer.parseInt(scale));
-        }        
+        }
         // process default value
         if (fieldElement.getDefault() != null) {
             if (isEnum(messageTypes, enumTypes, type)) {
@@ -371,7 +371,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 c.setSearchType(SearchType.Searchable);
             }
         }
-        
+
         if ( annotation != null && !annotation.isEmpty()) {
         	// this is induced annotation already represented in Teiid metadata remove it.
         	if(annotation.contains("@Teiid(")) {
@@ -379,7 +379,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 int end = annotation.indexOf(")", start+7);
                 annotation = annotation.substring(0, start) + annotation.substring(end+1);
             }
-            
+
         	if (!annotation.isEmpty()) {
         		c.setAnnotation(annotation);
         	}
@@ -400,7 +400,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
                 mf.addPrimaryKey("PK_"+fieldElement.name().toUpperCase(), pkNames, table);
             }
         }
-        
+
         if (!searchable) {
         	c.setSearchType(SearchType.Unsearchable);
         }
@@ -412,7 +412,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
     private static final String AT_CACHE = "@Cache("; //$NON-NLS-1$
     private static final String AT_INDEXEDFIELD = "@IndexedField("; //$NON-NLS-1$
     private static final String AT_FIELD = "@Field("; //$NON-NLS-1$
-    
+
     private String findFromAnnotation(String rootProperty, String annotation, String verb) {
         if ( annotation != null && !annotation.isEmpty()) {
             if(annotation.contains(rootProperty)) {
@@ -432,7 +432,7 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
         }
         return null;
     }
-    
+
     private boolean isCollection(FieldElement fieldElement) {
         return fieldElement.label() == Label.REPEATED;
     }
@@ -573,5 +573,5 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
 
     static String getCacheName(Table table) {
         return table.getProperty(CACHE, false);
-    }    
+    }
 }

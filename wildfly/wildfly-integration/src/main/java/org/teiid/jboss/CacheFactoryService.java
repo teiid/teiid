@@ -30,7 +30,7 @@ import org.teiid.cache.infinispan.InfinispanCacheFactory;
 class CacheFactoryService implements Service<CacheFactory> {
 	protected InjectedValue<EmbeddedCacheManager> cacheContainerInjector = new InjectedValue<EmbeddedCacheManager>();
 	private CacheFactory cacheFactory;
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		EmbeddedCacheManager cc = cacheContainerInjector.getValue();

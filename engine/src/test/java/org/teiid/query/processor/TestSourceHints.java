@@ -47,53 +47,53 @@ public class TestSourceHints {
 
 	@Test public void testUserQueryHint() {
 		String sql = "SELECT /*+ sh:'foo' bar:'leading' */ e1 from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
-		
+
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo", "leading"), expected);
 	}
-	
+
 	@Test public void testWithHint() {
 		String sql = "WITH x as /*+ no_inline */ (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
 				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
-		
+
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo x", "leading", "foo x", "leading"), expected);
 	}
-	
+
 	@Test public void testWithHintPushdown() throws TeiidException {
 		String sql = "WITH x as /*+ no_inline */ (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
 				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
-		
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
 		CommandContext context = new CommandContext();
 		context.setDQPWorkContext(new DQPWorkContext());
 		context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo x", "leading"), expected);
 	}
-	
+
 	@Test public void testUnionHintPushdown() throws TeiidException {
 		String sql = "SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1 " +
 				"UNION ALL SELECT * from (SELECT /*+ sh:'x' bar:'z' */ g1.e1 from pm1.g1) as x"; //$NON-NLS-1$
-		
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
 		CommandContext context = new CommandContext();
 		context.setDQPWorkContext(new DQPWorkContext());
 		context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
 		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo x", "leading z"), expected);
 	}
-	
+
 	@Test public void testKeepAliases() throws Exception {
 		String sql = "SELECT /*+ sh KEEP ALIASES bar:'leading(g)' */ e1 from pm1.g1 g order by e1 limit 1"; //$NON-NLS-1$
 		CommandContext cc = TestProcessor.createCommandContext();
@@ -101,53 +101,53 @@ public class TestSourceHints {
 		cc.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
 		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached()), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
 		TestOptimizer.checkAtomicQueries(new String[] {"SELECT /*+sh KEEP ALIASES bar:'leading(g)' */ g.e1 AS c_0 FROM pm1.g1 AS g ORDER BY c_0"}, plan);
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager(null, "leading(g)"), expected);
 	}
-	
+
 	@Test public void testHintInView() {
     	MetadataStore metadataStore = new MetadataStore();
         Schema p1 = RealMetadataFactory.createPhysicalModel("p1", metadataStore); //$NON-NLS-1$
         Table t1 = RealMetadataFactory.createPhysicalGroup("t", p1); //$NON-NLS-1$
         RealMetadataFactory.createElements(t1, new String[] {"a", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        
+
         Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("SELECT /*+ sh:'x' */ a as c, b FROM p1.t"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vt1 = RealMetadataFactory.createVirtualGroup("t1", v1, n1); //$NON-NLS-1$
         RealMetadataFactory.createElements(vt1, new String[] {"c", "b" }, new String[] { "string", "string" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "metadata");
-        
+
         //top level applies
         HardcodedDataManager manager = manager("foo x", "leading");
-		
+
 		String sql = "SELECT /*+ sh:'foo' bar:'leading' */ c from t1 order by c limit 1"; //$NON-NLS-1$
 		ProcessorPlan plan = helpGetPlan(sql, metadata);
-        
+
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager, expected);
-        
+
         //use the underlying hint
         manager = manager("x", null);
 		sql = "SELECT c from t1 order by c limit 1"; //$NON-NLS-1$
 		plan = helpGetPlan(sql, metadata);
         helpProcess(plan, manager, expected);
-        
+
 		sql = "SELECT c from t1 union all select c from t1"; //$NON-NLS-1$
 		plan = helpGetPlan(sql, metadata);
         helpProcess(plan, manager, expected);
 	}
-	
+
 	@Test public void testInsertWithQueryExpression() throws TeiidException {
         String sql = "INSERT /*+ sh:'append' */ into pm1.g1 (e1) select e1 from pm2.g1"; //$NON-NLS-1$
-        
+
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         CommandContext context = new CommandContext();
         context.setDQPWorkContext(new DQPWorkContext());
         context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
         ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
-        
+
         HardcodedDataManager manager = manager("append", null);
         manager.addData("SELECT /*+sh:'append' */ g_0.e1 FROM pm2.g1 AS g_0", Arrays.asList("a"));
         manager.addData("INSERT /*+sh:'append' */ INTO pm1.g1 (e1) VALUES ('a')", Arrays.asList(1));
@@ -177,5 +177,5 @@ public class TestSourceHints {
 		};
 		return manager;
 	}
-	
+
 }

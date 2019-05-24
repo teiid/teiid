@@ -28,16 +28,16 @@ class TeiidSQLParserTokenManager extends SQLParserTokenManager {
 	static final int INVALID_TOKEN = -1;
 	int tokenCount = 0;
 	Token head;
-	
+
 	public TeiidSQLParserTokenManager(JavaCharStream stream) {
 		super(stream);
 	}
-	
+
 	void reinit() {
 		tokenCount = 0;
 		head = null;
 	}
-	
+
 	@Override
 	public Token getNextToken() {
 		try {

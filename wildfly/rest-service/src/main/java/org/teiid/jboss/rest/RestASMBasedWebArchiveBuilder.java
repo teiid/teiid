@@ -72,12 +72,12 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		if (generate == null || !Boolean.parseBoolean(generate)) {
 			return false;
 		}
-				
+
 		String securityType = vdb.getPropertyValue(REST_NAMESPACE+"security-type"); //$NON-NLS-1$
 		if (securityType != null && !securityType.equalsIgnoreCase("none") && !securityType.equalsIgnoreCase("httpbasic")) { //$NON-NLS-1$ //$NON-NLS-2$
 			return false;
 		}
-		
+
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
@@ -91,30 +91,30 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 				if (uri != null && method != null) {
 					return true;
 				}
-			}    	
-			
+			}
+
 		}
 		return false;
 	}
-	
+
 	@Override
 	public byte[] getContent(VDBMetaData vdb, String fullName) throws IOException  {
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-		
+
 		Properties props = new Properties();
-				
+
 		props.setProperty("${context-name}", fullName);
 		props.setProperty("${vdb-name}", vdb.getName());
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
 		props.setProperty("${api-page-title}", fullName + " API");
-		
+
 		String securityType = vdb.getPropertyValue(REST_NAMESPACE+"security-type");
 		String securityDomain = vdb.getPropertyValue(REST_NAMESPACE+"security-domain");
 		String securityRole = vdb.getPropertyValue(REST_NAMESPACE+"security-role");
-		
+
 		props.setProperty("${security-role}", ((securityRole == null)?"rest":securityRole));
 		props.setProperty("${security-domain}", ((securityDomain == null)?"teiid-security":securityDomain));
-		
+
 		if (securityType == null) {
 			securityType = "httpbasic";
 		}
@@ -125,25 +125,25 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		else if (securityType.equalsIgnoreCase("httpbasic")) {
 			props.setProperty("${security-content}", replaceTemplates(getFileContents("rest-war/httpbasic.xml"), props));
 		}
-		
+
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-		ZipOutputStream out = new ZipOutputStream(byteStream); 
+		ZipOutputStream out = new ZipOutputStream(byteStream);
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
 		writeEntry("WEB-INF/jboss-web.xml", out, replaceTemplates(getFileContents("rest-war/jboss-web.xml"), props).getBytes());
 		writeEntry("api.html", out, replaceTemplates(getFileContents("rest-war/api.html"), props).getBytes());
-		
+
 		writeDirectoryEntry(out, "swagger-ui-2.1.1.zip");
-		
+
 		String version = vdb.getVersion();
 		VDBKey vdbKey = new VDBKey(vdb.getName(), vdb.getVersion());
-		
+
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
 			if (schema == null) {
 				continue; //OTHER type, which does not have a corresponding Teiid schema
 			}
-			
+
 			byte[] viewContents = getViewClass(vdb.getName(), version, model.getName(), schema, true);
 			if (viewContents != null) {
 				writeEntry("WEB-INF/classes/org/teiid/jboss/rest/"+model.getName()+".class", out, viewContents);
@@ -152,12 +152,12 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		}
 		writeEntry("WEB-INF/classes/org/teiid/jboss/rest/TeiidRestApplication.class", out, getApplicationClass(applicationViews));
 		writeEntry("META-INF/MANIFEST.MF", out, getFileContents("rest-war/MANIFEST.MF").getBytes());
-		
+
 		byte[] bytes = getBootstrapServletClass(vdb.getName(), vdb.getDescription() == null ? vdb.getName() : vdb.getDescription(), vdbKey.getSemanticVersion(), new String[]{"http"}, File.separator + props.getProperty("${context-name}"), "org.teiid.jboss.rest", true);
 		writeEntry("WEB-INF/classes/org/teiid/jboss/rest/Bootstrap.class", out, bytes);
-		
+
 		writeEntry("images/teiid_logo_450px.png", out, getBinaryFileContents("rest-war/teiid_logo_450px.png"));
-		
+
 		out.close();
 		return byteStream.toByteArray();
 	}
@@ -166,9 +166,9 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         MethodVisitor mv;
         AnnotationVisitor av0;
-   
+
         cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/Bootstrap", null, "org/teiid/jboss/rest/BootstrapServlet", null);
-        
+
         {
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
             mv.visitCode();
@@ -178,7 +178,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
             mv.visitMaxs(1, 1);
             mv.visitEnd();
         }
-        
+
         //init method
         {
             mv = cw.visitMethod(ACC_PUBLIC, "init", "(Lio/swagger/jaxrs/config/BeanConfig;)V", null, null);
@@ -218,9 +218,9 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
             mv.visitMaxs(2, 1);
             mv.visitEnd();
         }
-        
+
         cw.visitEnd();
-        
+
         return cw.toByteArray();
     }
 
@@ -235,7 +235,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         }
         FileUtils.remove(new File(zipFile.getName()));
     }
-	
+
 	private ZipFile getZipFile(String name) throws IOException {
         InputStream in = this.getClass().getClassLoader().getResourceAsStream(name);
         File file = new File(System.getProperty("java.io.tmpdir") + File.separator + System.currentTimeMillis() + ".zip");
@@ -251,27 +251,27 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     }
 
     private void writeEntry(String name, ZipOutputStream out, byte[] contents) throws IOException {
-		ZipEntry e = new ZipEntry(name); 
+		ZipEntry e = new ZipEntry(name);
 		out.putNextEntry(e);
 		ObjectConverterUtil.write(out, new ByteArrayInputStream(contents), -1, false);
 		out.closeEntry();
 	}
 
 	private String getFileContents(String file) throws IOException {
-		InputStream in = this.getClass().getClassLoader().getResourceAsStream(file); 
-		Reader reader = new InputStreamReader(in); 
+		InputStream in = this.getClass().getClassLoader().getResourceAsStream(file);
+		Reader reader = new InputStreamReader(in);
 		String webXML = ObjectConverterUtil.convertToString(reader);
 		return webXML;
 	}
-	
+
 	private byte[] getBinaryFileContents(String file) throws IOException {
 	    InputStream in = this.getClass().getClassLoader().getResourceAsStream(file);
 	    return IOUtils.toByteArray(in);
 	}
-	
+
 	private String replaceTemplates(String orig, Properties replacements) {
 		for (String key:replacements.stringPropertyNames()) {
-			orig = StringUtil.replaceAll(orig, key, replacements.getProperty(key));	
+			orig = StringUtil.replaceAll(orig, key, replacements.getProperty(key));
 		}
 		return orig;
 	}
@@ -290,7 +290,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         }
         return pathParams;
     }
-    
+
     public byte[] getApplicationClass(ArrayList<String> models) {
     	ClassWriter cw = new ClassWriter(0);
     	FieldVisitor fv;
@@ -302,12 +302,12 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	fv = cw.visitField(ACC_PRIVATE, "singletons", "Ljava/util/Set;", "Ljava/util/Set<Ljava/lang/Object;>;", null);
     	fv.visitEnd();
     	}
-    	
+
     	{
     	fv = cw.visitField(ACC_PRIVATE, "empty", "Ljava/util/Set;", "Ljava/util/Set<Ljava/lang/Class<*>;>;", null);
     	fv.visitEnd();
     	}
-    	
+
     	{
     	mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
     	mv.visitCode();
@@ -324,7 +324,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	mv.visitMethodInsn(INVOKESPECIAL, "java/util/HashSet", "<init>", "()V");
     	mv.visitFieldInsn(PUTFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "empty", "Ljava/util/Set;");
     	mv.visitVarInsn(ALOAD, 0);
-    	
+
     	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
         mv.visitTypeInsn(NEW, "org/teiid/jboss/rest/CustomApiListingResource");
         mv.visitInsn(DUP);
@@ -332,7 +332,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
         mv.visitInsn(POP);
         mv.visitVarInsn(ALOAD, 0);
-        
+
         mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
         mv.visitTypeInsn(NEW, "io/swagger/jaxrs/listing/SwaggerSerializers");
         mv.visitInsn(DUP);
@@ -340,7 +340,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Set", "add", "(Ljava/lang/Object;)Z");
         mv.visitInsn(POP);
         mv.visitVarInsn(ALOAD, 0);
-    	
+
     	for (int i = 0; i < models.size(); i++) {
 	    	mv.visitFieldInsn(GETFIELD, "org/teiid/jboss/rest/TeiidRestApplication", "singletons", "Ljava/util/Set;");
 	    	mv.visitTypeInsn(NEW, "org/teiid/jboss/rest/"+models.get(i));
@@ -352,12 +352,12 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 	    		mv.visitVarInsn(ALOAD, 0);
 	    	}
     	}
-    	
+
     	mv.visitInsn(RETURN);
     	mv.visitMaxs(3, 1);
     	mv.visitEnd();
     	}
-    	
+
     	{
     	mv = cw.visitMethod(ACC_PUBLIC, "getClasses", "()Ljava/util/Set;", "()Ljava/util/Set<Ljava/lang/Class<*>;>;", null);
     	mv.visitCode();
@@ -380,13 +380,13 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 
     	return cw.toByteArray();
     }
-    
+
     protected byte[] getViewClass(String vdbName, String vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     	MethodVisitor mv;
     	AnnotationVisitor av0;
     	boolean hasValidProcedures = false;
-    	
+
     	cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "org/teiid/jboss/rest/"+modelName, null, "org/teiid/jboss/rest/TeiidRSProvider", null);
 
     	{
@@ -394,13 +394,13 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	av0.visit("value", "/"+modelName);
     	av0.visitEnd();
     	}
-    	
+
     	{
             av0 = cw.visitAnnotation("Lio/swagger/annotations/Api;", true);
             av0.visit("value", "/" + modelName);
             av0.visitEnd();
         }
-    	
+
     	cw.visitInnerClass("javax/ws/rs/core/Response$Status", "javax/ws/rs/core/Response", "Status", ACC_PUBLIC + ACC_FINAL + ACC_STATIC + ACC_ENUM);
 
     	{
@@ -412,23 +412,23 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	mv.visitMaxs(1, 1);
     	mv.visitEnd();
     	}
-    	
+
 		Collection<Procedure> procedures = schema.getProcedures().values();
 		for (Procedure procedure:procedures) {
 			String uri = procedure.getProperty(REST_NAMESPACE+"URI", false);
 			String method = procedure.getProperty(REST_NAMESPACE+"METHOD", false);
 			String contentType = procedure.getProperty(REST_NAMESPACE+"PRODUCES", false);
 			String charSet = procedure.getProperty(REST_NAMESPACE+"CHARSET", false);
-			
+
 			if (uri != null && method != null) {
 				if (contentType == null) {
 					contentType = findContentType(procedure);
 				}
-				
+
 				if (contentType != null) {
 					contentType = contentType.toLowerCase().trim();
 					if (contentType.equals("xml")) {
-						contentType = "application/xml"; 
+						contentType = "application/xml";
 					}
 					else if (contentType.equals("json")) {
 						contentType = "application/json";
@@ -440,15 +440,15 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 			    	hasValidProcedures = true;
 				}
 			}
-		}    	
-		
+		}
+
 		//don't expose a general interface by default
-		String sqlQuery = schema.getProperty(REST_NAMESPACE+"sqlquery", false); 
+		String sqlQuery = schema.getProperty(REST_NAMESPACE+"sqlquery", false);
 		if (sqlQuery != null && Boolean.valueOf(sqlQuery)) {
     		buildQueryProcedure(vdbName, vdbVersion, modelName, "xml", cw, passthroughAuth);
     		buildQueryProcedure(vdbName, vdbVersion, modelName, "json", cw, passthroughAuth);
     	}
-    	
+
     	cw.visitEnd();
 
     	if (!hasValidProcedures) {
@@ -487,7 +487,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 	private void buildRestService(String vdbName, String vdbVersion, String modelName, Procedure procedure,
 			String method, String uri, ClassWriter cw, String contentType,
 			String charSet, boolean passthroughAuth) {
-		
+
 		List<ProcedureParameter> params = new ArrayList<ProcedureParameter>(procedure.getParameters().size());
 		boolean usingReturn = false;
 		boolean hasLobInput = false;
@@ -504,24 +504,24 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 		}
 		int paramsSize = params.size();
 		MethodVisitor mv;
-		
+
 		boolean useMultipart = false;
         if (method.toUpperCase().equals("POST") && hasLobInput) {
             useMultipart = true;
         }
-		
+
 		AnnotationVisitor av0;
 		{
-    	
+
 		StringBuilder paramSignature = new StringBuilder();
     	paramSignature.append("(");
     	for (int i = 0; i < paramsSize; i++) {
     		paramSignature.append("Ljava/lang/String;");
     	}
     	paramSignature.append(")");
-    	
+
     	if (useMultipart) {
-    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replaceAll("[^\\w]", "_"), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });    	    
+    	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replaceAll("[^\\w]", "_"), "(Lorg/jboss/resteasy/plugins/providers/multipart/MultipartFormDataInput;)Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });
     	}
     	else {
     	    mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replaceAll("[^\\w]", "_"), paramSignature+"Ljavax/ws/rs/core/StreamingOutput;", null, new String[] { "javax/ws/rs/WebApplicationException" });
@@ -548,13 +548,13 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	av0 = mv.visitAnnotation("Ljavax/annotation/security/PermitAll;", true);
     	av0.visitEnd();
     	}
-    	
+
     	{
     	    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
             av0.visit("value", procedure.getName());
             av0.visitEnd();
     	}
-    	
+
     	{
     	    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
             ApiResponse[] array = new ApiResponse[]{};
@@ -565,7 +565,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
             av1.visitEnd();
             av0.visitEnd();
     	}
-        
+
     	if(useMultipart)
     	{
     	    addConsumes(mv, "multipart/form-data");
@@ -575,7 +575,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
     	    if (paramsSize > 0 && !get) {
     	        addConsumes(mv, "application/x-www-form-urlencoded");
     	    }
-    	    
+
         	HashSet<String> pathParms = getPathParameters(uri);
         	for (int i = 0; i < paramsSize; i++)
         	{
@@ -586,29 +586,29 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
                 if (pathParms.contains(params.get(i).getName())){
                     paramType = "Ljavax/ws/rs/PathParam;";
                 }
-        
+
         		av0 = mv.visitParameterAnnotation(i, paramType, true);
         		av0.visit("value", params.get(i).getName());
         		av0.visitEnd();
-        		
+
         		av0 = mv.visitParameterAnnotation(i, "Lio/swagger/annotations/ApiParam;", true);
         		av0.visit("value", params.get(i).getName());
         		av0.visitEnd();
     		}
     	}
-    	
+
     	mv.visitCode();
     	Label l0 = new Label();
     	Label l1 = new Label();
     	Label l2 = new Label();
     	mv.visitTryCatchBlock(l0, l1, l2, "java/sql/SQLException");
     	mv.visitLabel(l0);
-    	
+
     	if (!useMultipart) {
         	mv.visitTypeInsn(NEW, "java/util/LinkedHashMap");
         	mv.visitInsn(DUP);
         	mv.visitMethodInsn(INVOKESPECIAL, "java/util/LinkedHashMap", "<init>", "()V");
-    
+
         	mv.visitVarInsn(ASTORE, paramsSize+1);
         	for (int i = 0; i < paramsSize; i++) {
         		mv.visitVarInsn(ALOAD, paramsSize+1);
@@ -621,7 +621,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         	mv.visitLdcInsn(vdbName);
         	mv.visitLdcInsn(vdbVersion);
         	mv.visitLdcInsn(procedure.getSQLString());
-        	
+
         	mv.visitVarInsn(ALOAD, paramsSize+1);
         	mv.visitLdcInsn(charSet==null?"":charSet);
         	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
@@ -678,7 +678,7 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
         }
         av0.visitEnd();
     }
-	
+
 	private void buildQueryProcedure(String vdbName, String vdbVersion, String modelName, String context, ClassWriter cw, boolean passthroughAuth) {
 		MethodVisitor mv;
 		{
@@ -703,13 +703,13 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 			av0.visit("value", "/query");
 			av0.visitEnd();
 			}
-			
+
 			{
 			    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiOperation;", true);
 			    av0.visit("value", context);
 			    av0.visitEnd();
 			}
-			
+
 			{
 			    av0 = mv.visitAnnotation("Lio/swagger/annotations/ApiResponses;", true);
 			    ApiResponse[] array = new ApiResponse[]{};
@@ -720,13 +720,13 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
                 av1.visitEnd();
                 av0.visitEnd();
 			}
-			
+
 			{
 			    av0 = mv.visitParameterAnnotation(0, "Lio/swagger/annotations/ApiParam;", true);
 	            av0.visit("value", context);
 	            av0.visitEnd();
 			}
-			
+
 			{
 			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
 			av0.visit("value", "sql");
@@ -758,6 +758,6 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
 			mv.visitInsn(ATHROW);
 			mv.visitMaxs(6, 3);
 			mv.visitEnd();
-		}		
+		}
 	}
 }

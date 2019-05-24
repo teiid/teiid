@@ -41,14 +41,14 @@ class Teiid implements TeiidBean {
     private final DQPCore dqp;
     private final SessionService sessionService;
     private final BufferServiceImpl bufferService;
-    
+
     public Teiid(DQPCore dqp, SessionService sessionService,
             BufferServiceImpl bufferService) {
         this.dqp = dqp;
         this.sessionService = sessionService;
         this.bufferService = bufferService;
     }
-    
+
     @Override
     public String getQueryPlan(String sessionId, long executionId) {
         PlanNode plan = this.dqp.getPlan(sessionId, executionId);
@@ -95,7 +95,7 @@ class Teiid implements TeiidBean {
     public WorkerPoolStatisticsBean getWorkerPoolStatisticsBean() {
         return this.dqp.getWorkerPoolStatistics();
     }
-    
+
     @Override
     public EngineStatisticsBean getEngineStatisticsBean() {
         try {
@@ -113,7 +113,7 @@ class Teiid implements TeiidBean {
         }
         return this.bufferService.getUsedDiskBufferSpaceMb()/maxDiskBufferSpaceMb;
     }
-    
+
     @Override
     public int getTotalOutOfDiskErrors() {
         return this.bufferService.getTotalOutOfDiskErrors();
@@ -133,7 +133,7 @@ class Teiid implements TeiidBean {
     public int getLongRunningRequestCount() {
         return this.dqp.getLongRunningRequestCount();
     }
-    
+
     @Override
     public int getWaitingRequestsCount() {
         return this.dqp.getWaitingPlanCount();

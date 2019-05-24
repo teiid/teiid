@@ -43,7 +43,7 @@ public class VariableContext {
     public VariableContext() {
     	this(false);
     }
-    
+
     public VariableContext(boolean delegateSets) {
     	this.delegateSets = delegateSets;
     }
@@ -55,18 +55,18 @@ public class VariableContext {
     		variableMap.put(variable, value);
     	}
     }
-    
+
     public Object getGlobalValue(String variable) throws TeiidComponentException {
     	if (this.parentContext != null) {
     		return this.parentContext.getGlobalValue(variable);
-    	} 
+    	}
     	Object value = variableMap.get(variable);
     	if (value == null && !variableMap.containsKey(variable)) {
     		 throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, variable, "No value was available")); //$NON-NLS-1$
     	}
     	return value;
     }
-    
+
     /**
      * Set the value for the given, if the variable already exits replaces its value
      * with the given value else adds a new variable to the map.
@@ -157,7 +157,7 @@ public class VariableContext {
         }
         return false;
     }
-    
+
     public Object remove(Object symbol) {
     	if (!this.variableMap.containsKey(symbol)) {
     		if (this.parentContext != null) {
@@ -167,26 +167,26 @@ public class VariableContext {
     	}
     	return this.variableMap.remove(symbol);
     }
-    
+
     @Override
     public String toString() {
     	return this.variableMap.toString();
     }
-    
+
     public void clear() {
     	this.variableMap.clear();
     }
-    
+
     public void putAll(VariableContext other) {
     	this.variableMap.putAll(other.variableMap);
     }
-    
+
     public List<Object> getLocalValues() {
     	return new ArrayList<Object>(this.variableMap.values());
     }
-    
+
     public Map<Object, Object> getVariableMap() {
 		return variableMap;
 	}
-    
+
 }

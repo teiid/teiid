@@ -382,7 +382,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			} catch (TranslatorException e) {
 				this.exceptions.add(e);
 			}
-    	} 
+    	}
     	else if (isStringFunction(functionName)) {
     	    expr = handleStringFunction(functionName, obj);
     	}
@@ -401,7 +401,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 		if(expr != null) {
 		    //functions over dates do not work if the date is null/missing
-		    if (obj.getParameters().size() == 1 
+		    if (obj.getParameters().size() == 1
                     && Date.class.isAssignableFrom(obj.getParameters().get(0).getType())
                     && isDateTimeFunction(functionName) ) {
 		        BasicDBList newParams = new BasicDBList();
@@ -414,7 +414,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
                 newParams.add(null);
                 expr = new BasicDBObject("$cond", newParams);
 		    }
-		        
+
 			this.onGoingExpression.push(expr);
 		}
 	}
@@ -427,7 +427,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	    }
         return false;
     }
-    
+
     private boolean isDateTimeFunction(String functionName) {
         if (functionName.equalsIgnoreCase(SourceSystemFunctions.DAYOFYEAR)
                 || functionName.equalsIgnoreCase(SourceSystemFunctions.DAYOFMONTH)
@@ -442,7 +442,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
         return false;
     }
-    
+
     private BasicDBObject handleStringFunction(String functionName, Function function) {
         List<Expression> args = function.getParameters();
         BasicDBObject func = null;
@@ -451,7 +451,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         Object column = this.onGoingExpression.pop();
         if (args.size() == 1) {
             func = new BasicDBObject(function.getName(), column);
-        } 
+        }
         else {
             BasicDBList params = new BasicDBList();
             params.add(column);
@@ -460,27 +460,27 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
                 Object param = this.onGoingExpression.pop();
                 params.add(param);
             }
-            func = new BasicDBObject(function.getName(), params); 
+            func = new BasicDBObject(function.getName(), params);
         }
         BasicDBObject ne = buildNE(column.toString(), null);
         return buildCondition(ne, func, null);
-    }    
-    
+    }
+
     private BasicDBObject buildCondition(Object expr, Object trueExpr, Object falseExpr) {
         BasicDBList values = new BasicDBList();
         values.add(0, expr);
         values.add(1, trueExpr);
         values.add(2, falseExpr);
-        return new BasicDBObject("$cond", values);        
+        return new BasicDBObject("$cond", values);
     }
 
     private BasicDBObject buildNE(Object leftExpr, Object rightExpr) {
         BasicDBList values = new BasicDBList();
         values.add(0, leftExpr);
-        values.add(1, rightExpr);        
-        return new BasicDBObject("$ne", values);        
+        values.add(1, rightExpr);
+        return new BasicDBObject("$ne", values);
     }
-    
+
     private boolean isGeoSpatialFunction(String name) {
 		for (String func:MongoDBExecutionFactory.GEOSPATIAL_FUNCTIONS) {
 			if (name.equalsIgnoreCase(func)) {
@@ -613,7 +613,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
 
         append(obj.getGroupBy());
-        
+
         append(obj.getHaving());
 
         if (!this.onGoingExpression.isEmpty()) {
@@ -1091,7 +1091,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		} else {
 			builder.push("$geometry");//$NON-NLS-1$
 			builder.add("type", SpatialType.Point.name());//$NON-NLS-1$
-	
+
 			// walk the co-ordinates
 			BasicDBList coordinates = new BasicDBList();
 			coordinates.add(object);
@@ -1129,7 +1129,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		} else {
 			// Type: Point, LineString, Polygon..
 			SpatialType type = SpatialType.valueOf((String)object);
-			
+
 			append(args.get(paramIndex++));
 			builder.push("$geometry");//$NON-NLS-1$
 			builder.add("type", type.name());//$NON-NLS-1$

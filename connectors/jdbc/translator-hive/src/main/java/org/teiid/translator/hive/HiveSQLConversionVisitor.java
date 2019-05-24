@@ -34,37 +34,37 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
 	BaseHiveExecutionFactory baseHiveExecutionFactory;
-	
+
 	public HiveSQLConversionVisitor(BaseHiveExecutionFactory hef) {
 		super(hef);
 		this.baseHiveExecutionFactory = hef;
 	}
-	
+
     @Override
 	public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
         TableReference rightItem = obj.getRightItem();
         JoinType joinType = obj.getJoinType();
-        
+
         //impala only supports a left linear join
         if (baseHiveExecutionFactory.requiresLeftLinearJoin() && rightItem instanceof Join) {
         	if (leftItem instanceof Join) {
         		//TODO: this may need to be handled in the engine to inhibit pushdown
         		throw new AssertionError("A left linear join structure is required: " + obj); //$NON-NLS-1$
         	}
-        	
+
         	//swap
         	TableReference tr = leftItem;
         	leftItem = rightItem;
         	rightItem = tr;
-        	
+
         	if (joinType == JoinType.RIGHT_OUTER_JOIN) {
         		joinType = JoinType.LEFT_OUTER_JOIN;
         	} else if (joinType == JoinType.LEFT_OUTER_JOIN) {
         		joinType = JoinType.RIGHT_OUTER_JOIN;
         	}
         }
-        
+
         if(useParensForJoins() && leftItem instanceof Join) {
             buffer.append(Tokens.LPAREN);
             append(leftItem);
@@ -73,12 +73,12 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
             append(leftItem);
         }
         buffer.append(Tokens.SPACE);
-        
+
         switch(joinType) {
             case CROSS_JOIN:
             	// Hive just works with "JOIN" keyword no inner or cross
             	// fixed in - https://issues.apache.org/jira/browse/HIVE-2549
-                buffer.append(CROSS); 
+                buffer.append(CROSS);
                 break;
             case FULL_OUTER_JOIN:
                 buffer.append(FULL)
@@ -104,7 +104,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         buffer.append(Tokens.SPACE)
               .append(JOIN)
               .append(Tokens.SPACE);
-        
+
         if(rightItem instanceof Join && (useParensForJoins() || obj.getJoinType() == Join.JoinType.CROSS_JOIN)) {
             buffer.append(Tokens.LPAREN);
             append(rightItem);
@@ -112,16 +112,16 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         } else {
             append(rightItem);
         }
-        
+
         final Condition condition = obj.getCondition();
         if (condition != null) {
             buffer.append(Tokens.SPACE)
                   .append(ON)
                   .append(Tokens.SPACE);
-            append(condition);                    
-        }        
-    }	
-    
+            append(condition);
+        }
+    }
+
     public void addColumns(List<DerivedColumn> items) {
         if (items != null && items.size() != 0) {
         	addColumn(items.get(0));
@@ -130,7 +130,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
                       .append(Tokens.SPACE);
                 addColumn(items.get(i));
             }
-        }    	
+        }
     }
 
 	private void addColumn(DerivedColumn dc) {
@@ -147,7 +147,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 			}
 		}
 	}
-    
+
     @Override
     public void visit(SetQuery obj) {
     	//TODO: with hive 1.2, this handling is not necessary
@@ -155,19 +155,19 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     	if (obj.getWith() != null) {
     		append(obj.getWith());
     	}
-    	
+
     	Select select =  obj.getProjectedQuery();
     	startInlineView(select, !obj.isAll());
-    	
+
     	appendSetChild(obj, obj.getLeftQuery(), false);
-        
+
         appendSetOp(obj);
-        
+
         appendSetChild(obj, obj.getRightQuery(), true);
 
         endInlineView(obj);
     }
-    
+
     @Override
     protected String getLikeRegexString() {
         return "REGEXP"; //$NON-NLS-1$
@@ -177,7 +177,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 		buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         buffer.append("X__"); //$NON-NLS-1$
-        
+
         OrderBy orderBy = obj.getOrderBy();
         if(orderBy != null) {
             buffer.append(Tokens.SPACE);
@@ -204,12 +204,12 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 
 	private void appendSetOp(SetQuery obj) {
 		buffer.append(Tokens.SPACE);
-        
+
         appendSetOperation(obj.getOperation());
 
         // UNION "ALL" always
         buffer.append(Tokens.SPACE);
-        buffer.append(ALL);                
+        buffer.append(ALL);
         buffer.append(Tokens.SPACE);
 	}
 
@@ -219,20 +219,20 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     	} else {
     		//non-nested set op
     		SetQuery setQuery = (SetQuery)child;
-    		
+
             append(setQuery.getLeftQuery());
 
             appendSetOp(setQuery);
-            
+
             appendSetChild(setQuery, setQuery.getRightQuery(), true);
     	}
 	}
-    
+
     @Override
     public void visit(Select obj) {
     	if (obj.getOrderBy() != null) {
     		//hive does not like order by using the full column references
-    		//this should be fine even with joins as the engine should alias the select columns 
+    		//this should be fine even with joins as the engine should alias the select columns
 			for (SortSpecification spec : obj.getOrderBy().getSortSpecifications()) {
 				if (spec.getExpression() instanceof ColumnReference) {
 					ColumnReference cr = (ColumnReference)spec.getExpression();
@@ -258,7 +258,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
 					for (int i = 0; i < derivedColumns.size(); i++) {
 	    				DerivedColumn dc = derivedColumns.get(i);
 	    				dc.setAlias("c_" + i); //$NON-NLS-1$
-	    			}	
+	    			}
 				}
     		}
     		startInlineView(obj, obj.isDistinct());
@@ -270,7 +270,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     	}
     	super.visit(obj);
     }
-    
+
     @Override
     protected void translateSQLType(Class<?> type, Object obj,
     		StringBuilder valuesbuffer) {
@@ -283,16 +283,16 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
     		super.translateSQLType(type, obj, valuesbuffer);
     	}
     }
-    
+
     @Override
     public void visit(Comparison obj) {
-        if (baseHiveExecutionFactory.rewriteBooleanFunctions() && obj.getLeftExpression() instanceof Function 
-                && obj.getRightExpression() instanceof Literal 
+        if (baseHiveExecutionFactory.rewriteBooleanFunctions() && obj.getLeftExpression() instanceof Function
+                && obj.getRightExpression() instanceof Literal
                 && obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN) {
             Literal l = (Literal) obj.getRightExpression();
             Boolean val = (Boolean)l.getValue();
             Function leftExpression = (Function)obj.getLeftExpression();
-            if ((Boolean.FALSE.equals(val) && obj.getOperator() == Operator.EQ) || 
+            if ((Boolean.FALSE.equals(val) && obj.getOperator() == Operator.EQ) ||
                     (Boolean.TRUE.equals(val) && obj.getOperator() == Operator.NE)) {
                 buffer.append(SQLConstants.Reserved.NOT);
                 buffer.append(SQLConstants.Tokens.LPAREN);
@@ -307,7 +307,7 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         }
         super.visit(obj);
     }
-    
+
     @Override
     public void visit(WindowFrame windowFrame) {
         if (windowFrame.getEnd() == null) {
@@ -315,5 +315,5 @@ public class HiveSQLConversionVisitor extends SQLConversionVisitor {
         }
         super.visit(windowFrame);
     }
-    
+
 }

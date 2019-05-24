@@ -45,18 +45,18 @@ import org.teiid.util.Version;
 
 @Translator(name = "hana", description = "SAP HANA translator")
 public class HanaExecutionFactory extends JDBCExecutionFactory {
-	
+
 	private static final String TINYINT_TYPE = "tinyint"; //$NON-NLS-1$
 
 	public static final Version SPS8 = Version.getVersion("SPS8"); //$NON-NLS-1$
-	
+
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
 //	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF7";  //$NON-NLS-1$
-	
+
 	/*
-	 * Date/Time Pushdown Functions 
+	 * Date/Time Pushdown Functions
 	 */
 	public static final String HANA = "hana"; //$NON-NLS-1$
 	public static final String ADD_DAYS = "add_days"; //$NON-NLS-1$
@@ -77,9 +77,9 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	public static final String SECONDS_BETWEEN = "seconds_between"; //$NON-NLS-1$
 	public static final String WEEKDAY = "weekday"; //$NON-NLS-1$
 	public static final String WORKDAYS_BETWEEN = "weekdays_between"; //$NON-NLS-1$
-	
+
 	/*
-	 * Numeric Pushdown Functions 
+	 * Numeric Pushdown Functions
 	 */
 	public static final String COSH = "cosh"; //$NON-NLS-1$
 	public static final String BITSET = "bitset"; //$NON-NLS-1$
@@ -89,22 +89,22 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	public static final String SINH = "sinh"; //$NON-NLS-1$
 	public static final String TANH = "tanh"; //$NON-NLS-1$
 	public static final String UMINUS = "uminus"; //$NON-NLS-1$
-	
+
 	public HanaExecutionFactory() {
 	}
 
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("to_nvarchar")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
+
+		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lower")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("to_nvarchar")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LOG, new Log10FunctionModifier(getLanguageFactory()));
-        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "locate", true) { //$NON-NLS-1$
 
 			@Override
@@ -120,18 +120,18 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		            args.set(0, getLanguageFactory().createFunction(SourceSystemFunctions.SUBSTRING, substringArgs, null));
 		            args.remove(2);
 		        }
-				
+
 			}
-        	
+
     	});
-        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.WEEK, new TemplateFunctionModifier("cast(substring(isoweek(",0,"), 7, 2) as integer)")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new TemplateFunctionModifier("(MOD((WEEKDAY(",0,")+1),7)+1)")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new TemplateFunctionModifier("initcap(lower(dayname(", 0, ")))")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new TemplateFunctionModifier("((month(",0,")+2)/3)")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("current_timestamp")); //$NON-NLS-1$ 
-        
+        registerFunctionModifier(SourceSystemFunctions.NOW, new AliasModifier("current_timestamp")); //$NON-NLS-1$
+
         //spatial functions
         registerFunctionModifier(SourceSystemFunctions.ST_ASEWKT, new HanaSpatialFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new HanaSpatialFunctionModifier());
@@ -147,8 +147,8 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new HanaSpatialFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.ST_OVERLAPS, new HanaSpatialFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.ST_TOUCHES, new HanaSpatialFunctionModifier());
-        
-          
+
+
 		//////////////////////////////////////////////////////////
 		//TYPE CONVERION MODIFIERS////////////////////////////////
 		//////////////////////////////////////////////////////////
@@ -177,10 +177,10 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	//convertModifier.addTypeMapping("shorttext", FunctionModifier.STRING); //$NON-NLS-1$
     	convertModifier.addTypeMapping("st_geometry", FunctionModifier.GEOMETRY); //$NON-NLS-1$
 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$ 
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_time", TIME_FORMAT)); //$NON-NLS-1$ 
-        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$ 
-        
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_time", TIME_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", DATETIME_FORMAT));  //$NON-NLS-1$
+
     	convertModifier.setWideningNumericImplicit(true);
     	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
 			@Override
@@ -202,7 +202,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 			}
 		}, FunctionModifier.BOOLEAN);
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
-    	
+
     	/*
     	 * Date/Time Pushdown functions
     	 */
@@ -223,7 +223,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(HANA, SECONDS_BETWEEN, INTEGER, DATE, DATE);
     	addPushDownFunction(HANA, WEEKDAY, INTEGER, DATE);
     	addPushDownFunction(HANA, WORKDAYS_BETWEEN, DATE, INTEGER);
-    	
+
     	/*
     	 * Numeric Pushdown functions
     	 */
@@ -236,14 +236,14 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	addPushDownFunction(HANA, SINH, FLOAT, FLOAT);
     	addPushDownFunction(HANA, TANH, FLOAT, FLOAT);
     	addPushDownFunction(HANA, UMINUS, INTEGER, INTEGER);
-    	
+
 	}
-	
+
 	@Override
 	public String getHibernateDialectClassName() {
 		return "org.hibernate.dialect.HANARowStoreDialect"; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public List<String> getSupportedFunctions() {
 		List<String> supportedFunctions = new ArrayList<String>();
@@ -254,11 +254,11 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		//////////////////////////////////////////////////////////
 		supportedFunctions.add(SourceSystemFunctions.ASCII);// taken care with alias function modifier
 		supportedFunctions.add(SourceSystemFunctions.CHAR);
-		supportedFunctions.add(SourceSystemFunctions.CONCAT); 
+		supportedFunctions.add(SourceSystemFunctions.CONCAT);
 		supportedFunctions.add(SourceSystemFunctions.LCASE);//ALIAS 'lower'
 		supportedFunctions.add(SourceSystemFunctions.LPAD);
 		supportedFunctions.add(SourceSystemFunctions.LENGTH);
-		supportedFunctions.add(SourceSystemFunctions.LOCATE); 
+		supportedFunctions.add(SourceSystemFunctions.LOCATE);
 		supportedFunctions.add(SourceSystemFunctions.LTRIM);
 		supportedFunctions.add(SourceSystemFunctions.REPLACE);
 		supportedFunctions.add(SourceSystemFunctions.LEFT);
@@ -268,7 +268,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
 		supportedFunctions.add(SourceSystemFunctions.UCASE); //No Need of ALIAS as both ucase and upper work in HANA
 		supportedFunctions.add(SourceSystemFunctions.RTRIM);
-		
+
 		///////////////////////////////////////////////////////////
 		//NUMERIC FUNCTIONS////////////////////////////////////////
 		///////////////////////////////////////////////////////////
@@ -286,12 +286,12 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.MOD);
 		supportedFunctions.add(SourceSystemFunctions.POWER);
 		supportedFunctions.add(SourceSystemFunctions.ROUND);
-		supportedFunctions.add(SourceSystemFunctions.SIGN);	
+		supportedFunctions.add(SourceSystemFunctions.SIGN);
 		supportedFunctions.add(SourceSystemFunctions.SIN);
 		supportedFunctions.add(SourceSystemFunctions.SQRT);
 		supportedFunctions.add(SourceSystemFunctions.TAN);
-		supportedFunctions.add(SourceSystemFunctions.RAND); 
-		
+		supportedFunctions.add(SourceSystemFunctions.RAND);
+
 		/////////////////////////////////////////////////////////////////////
 		//BIT FUNCTIONS//////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////
@@ -299,19 +299,19 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.BITOR);
 		supportedFunctions.add(SourceSystemFunctions.BITNOT);
 		supportedFunctions.add(SourceSystemFunctions.BITXOR);
-		
+
 		/////////////////////////////////////////////////////////////////////
 		//DATE FUNCTIONS/////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////
-		supportedFunctions.add(SourceSystemFunctions.CURDATE); 
-		supportedFunctions.add(SourceSystemFunctions.CURTIME); 
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);
+		supportedFunctions.add(SourceSystemFunctions.CURTIME);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
-		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH); 
+		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
 		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
-		supportedFunctions.add(SourceSystemFunctions.HOUR); 
-		supportedFunctions.add(SourceSystemFunctions.MINUTE); 
+		supportedFunctions.add(SourceSystemFunctions.HOUR);
+		supportedFunctions.add(SourceSystemFunctions.MINUTE);
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
 		supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
 		supportedFunctions.add(SourceSystemFunctions.QUARTER);
@@ -322,14 +322,14 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
         /////////////////////////////////////////////////////////////////////
 		//SYSTEM FUNCTIONS///////////////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////
-		supportedFunctions.add(SourceSystemFunctions.IFNULL); 
+		supportedFunctions.add(SourceSystemFunctions.IFNULL);
 		supportedFunctions.add(SourceSystemFunctions.NULLIF);
-		
+
 		/////////////////////////////////////////////////////////////////////
 		//CONVERSION functions///////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////
 		supportedFunctions.add(SourceSystemFunctions.CONVERT);
-		
+
 		/////////////////////////////////////////////////////////////////////
 		//GEO Spatial functions//////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////
@@ -348,8 +348,8 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
 		supportedFunctions.add(SourceSystemFunctions.ST_SRID);
 		supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
-		
-		
+
+
 		return supportedFunctions;
 	}
 
@@ -365,7 +365,7 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	@Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	if (limit.getRowOffset() > 0) {
-    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$ 
+    		return Arrays.asList("LIMIT ", limit.getRowLimit(), " OFFSET ", limit.getRowOffset()); //$NON-NLS-1$ //$NON-NLS-2$
     	}
         return null;
     }
@@ -384,11 +384,11 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-	
+
 	@Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new SQLConversionVisitor(this) {
-    		
+
     		@Override
     		protected void translateSQLType(Class<?> type, Object obj,
     				StringBuilder valuesbuffer) {
@@ -400,10 +400,10 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     				super.translateSQLType(type, obj, valuesbuffer);
     			}
     		}
-    		
+
     	};
     }
-	
+
 	/**
      * Hana doesn't provide min/max(boolean)
      */
@@ -411,15 +411,15 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getParameters().size() == 1 
-    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX)) 
+    		if (agg.getParameters().size() == 1
+    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX))
     				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
         		return Arrays.asList("cast(", agg.getName(), "(to_tinyint(", agg.getParameters().get(0), ")) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
     	}
     	return super.translate(obj, context);
     }
-    
+
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
     	if (booleanValue) {
@@ -427,5 +427,5 @@ public class HanaExecutionFactory extends JDBCExecutionFactory {
     	}
     	return "false"; //$NON-NLS-1$
     }
-	
+
 }

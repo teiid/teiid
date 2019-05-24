@@ -27,9 +27,9 @@ import org.teiid.services.BufferServiceImpl;
 
 class BufferManagerService extends BufferServiceImpl implements Service<BufferManager> {
 	private static final long serialVersionUID = -6797455072198476318L;
-	
+
 	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 		setDiskDirectory(pathInjector.getValue());
@@ -41,7 +41,7 @@ class BufferManagerService extends BufferServiceImpl implements Service<BufferMa
 	public void stop(StopContext context) {
 		stop();
 	}
-	
+
 	@Override
 	public BufferManager getValue() throws IllegalStateException,IllegalArgumentException {
 		return getBufferManager();

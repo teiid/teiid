@@ -32,7 +32,7 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public class DDLFileMetadataRepository implements MetadataRepository {
-	
+
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
 		String ddlFile = factory.getModelProperties().getProperty("ddl-file");
@@ -60,6 +60,6 @@ public class DDLFileMetadataRepository implements MetadataRepository {
 				}
 			}
 		}
-	}	
+	}
 
 }

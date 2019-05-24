@@ -44,7 +44,7 @@ public final class ObjectInputStreamWithClassloader extends
 			return super.resolveClass(desc);
 		}
 	}
-	
+
 	public static void checkClass(String name) throws ClassNotFoundException {
 		//deny the resolving of classes that can cause security issues when deserialized
         if (name.endsWith("functors.InvokerTransformer") //$NON-NLS-1$

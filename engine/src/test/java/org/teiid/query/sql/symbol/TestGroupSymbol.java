@@ -24,7 +24,7 @@ import junit.framework.TestCase;
 import org.teiid.query.sql.lang.UnaryFromClause;
 
 
-/** 
+/**
  * @since 4.2
  */
 public class TestGroupSymbol extends TestCase {
@@ -43,24 +43,24 @@ public class TestGroupSymbol extends TestCase {
         group = new GroupSymbol("#temp"); //$NON-NLS-1$
         assertTrue(group.isTempGroupSymbol());
     }
-    
+
     public void testIsNotTempGroupSymbol() {
         GroupSymbol group = new GroupSymbol("g1"); //$NON-NLS-1$
         assertFalse(group.isTempGroupSymbol());
         group = new GroupSymbol("temp"); //$NON-NLS-1$
         assertFalse(group.isTempGroupSymbol());
     }
-    
+
     public void testEquality() {
         GroupSymbol group = new GroupSymbol("g1", "a"); //$NON-NLS-1$ //$NON-NLS-2$
         GroupSymbol group1 = new GroupSymbol("g1", "b"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(group, group1);
     }
-    
+
     public void testInequality1() {
         GroupSymbol group = new GroupSymbol("g1", "a"); //$NON-NLS-1$ //$NON-NLS-2$
-        GroupSymbol group1 = new GroupSymbol("g1"); //$NON-NLS-1$ 
+        GroupSymbol group1 = new GroupSymbol("g1"); //$NON-NLS-1$
         assertFalse(new UnaryFromClause(group).equals(new UnaryFromClause(group1)));
     }
-    
+
 }

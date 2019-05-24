@@ -35,46 +35,46 @@ public class TestRuleAssignOutputElements {
     }
 
     @Test public void testFindNoAllUnion1() {
-        PlanNode projNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
+        PlanNode projNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         projNode.addLastChild(accessNode);
-        
+
         helpTestIsUnionNoAll(projNode, false);
-    }    
+    }
 
     @Test public void testFindNoAllUnion2() {
         PlanNode unionNode = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
-        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
-        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
+        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
 
         unionNode.addLastChild(projNode1);
         projNode1.addLastChild(accessNode1);
         unionNode.addLastChild(projNode2);
         projNode2.addLastChild(accessNode2);
-        
+
         helpTestIsUnionNoAll(unionNode, false);
-    }    
-    
+    }
+
     @Test public void testFindNoAllUnion3() {
         PlanNode unionNode = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
-        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
-        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
+        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
 
         unionNode.addLastChild(projNode1);
         projNode1.addLastChild(accessNode1);
         unionNode.addLastChild(projNode2);
         projNode2.addLastChild(accessNode2);
-        
+
         helpTestIsUnionNoAll(unionNode, true);
-    }    
+    }
 
     @Test public void testFindNoAllUnion4() {
         PlanNode unionNode1 = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
@@ -83,12 +83,12 @@ public class TestRuleAssignOutputElements {
         PlanNode unionNode2 = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
         unionNode2.setProperty(NodeConstants.Info.SET_OPERATION, Operation.UNION);
         unionNode2.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
-        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
-        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
-        PlanNode projNode3 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);        
-        PlanNode accessNode3 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);        
+        PlanNode projNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode1 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        PlanNode projNode2 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode2 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
+        PlanNode projNode3 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+        PlanNode accessNode3 = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
 
         unionNode1.addLastChild(projNode1);
         projNode1.addLastChild(accessNode1);
@@ -97,8 +97,8 @@ public class TestRuleAssignOutputElements {
         projNode2.addLastChild(accessNode2);
         unionNode2.addLastChild(projNode3);
         projNode3.addLastChild(accessNode3);
-        
+
         helpTestIsUnionNoAll(unionNode1, true);
-    }    
+    }
 
 }

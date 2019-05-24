@@ -104,15 +104,15 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	protected TeiidOperationHandler(String operationName){
 		super(operationName);
 	}
-	
+
     protected TeiidOperationHandler(String operationName,boolean changesRuntime){
         super(operationName, changesRuntime);
     }
-	
+
 	static VDBMetaData checkVDB(OperationContext context, String vdbName,
 			String vdbVersion) throws OperationFailedException {
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
-	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
+	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
         	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50102, vdbName, vdbVersion));
@@ -160,24 +160,24 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	protected SessionService getSessionService(OperationContext context){
 		return (SessionService) context.getServiceRegistry(false).getService(TeiidServiceNames.SESSION).getValue();
 	}
-	
+
     public static ModelNode executeQuery(final VDBMetaData vdb,  final DQPCore engine, final String command, final long timoutInMilli, final ModelNode resultsNode, final boolean timeAsString) throws OperationFailedException {
         String user = "CLI ADMIN"; //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
-        
+
         try {
             Future<?> f = DQPCore.executeQuery(command, vdb, user, "admin-console", timoutInMilli, engine, new DQPCore.ResultsListener() { //$NON-NLS-1$
                 @Override
                 public void onResults(List<String> columns, List<? extends List<?>> results) throws Exception {
                     writeResults(resultsNode, columns, results, timeAsString);
                 }
-            }); 
+            });
             f.get();
         } catch (Throwable e) {
             throw new OperationFailedException(e);
         }
         return resultsNode;
-    }	
+    }
 
 	private static void writeResults(ModelNode resultsNode, List<String> columns,  List<? extends List<?>> results, boolean timeAsString) throws SQLException {
 		for (List<?> row:results) {
@@ -210,10 +210,10 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 					}
 					else if (aValue instanceof java.sql.Date && !timeAsString) {
 						rowNode.get(columns.get(colNum)).set(((java.sql.Date)aValue).getTime());
-					}	
+					}
 					else if (aValue instanceof java.sql.Time && !timeAsString) {
 						rowNode.get(columns.get(colNum)).set(((java.sql.Time)aValue).getTime());
-					}					
+					}
 					else if (aValue instanceof String) {
 						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
 						rowNode.get(columns.get(colNum)).set((String)aValue);
@@ -239,7 +239,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 			}
 			resultsNode.add(rowNode);
 		}
-	}	
+	}
 }
 
 abstract class TranslatorOperationHandler extends BaseOperationHandler<TranslatorRepository> {
@@ -278,7 +278,7 @@ class AttributeWrite extends AbstractWriteAttributeHandler<Void> {
 	public AttributeWrite(AttributeDefinition... attr) {
 		super(attr);
 	}
-	
+
 	@Override
 	public void execute(OperationContext context, ModelNode operation)
 	        throws OperationFailedException {
@@ -289,9 +289,9 @@ class AttributeWrite extends AbstractWriteAttributeHandler<Void> {
             String newAttribute = "buffer-manager-" + attributeDefinition.getXmlName(); //$NON-NLS-1$
             boolean defined = operation.hasDefined(VALUE);
             ModelNode newValue = defined ? operation.get(VALUE) : new ModelNode();
-            
-            if (defined && 
-                    (newAttribute.equals(Element.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getModelName()) 
+
+            if (defined &&
+                    (newAttribute.equals(Element.BUFFER_MANAGER_MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.getModelName())
                             || newAttribute.equals(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getModelName()))) {
                 int value = newValue.asInt();
                 if (value > 0) {
@@ -299,7 +299,7 @@ class AttributeWrite extends AbstractWriteAttributeHandler<Void> {
                 }
                 newValue = new ModelNode(value);
             }
-            
+
             PathAddress currentAddress = context.getCurrentAddress();
             operation = Util.createOperation(ModelDescriptionConstants.WRITE_ATTRIBUTE_OPERATION, currentAddress);
             operation.get(ModelDescriptionConstants.NAME).set(newAttribute);
@@ -527,7 +527,7 @@ class TerminateSession extends TeiidOperationHandler{
 	protected TerminateSession() {
 		super("terminate-session", true); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		if (!operation.hasDefined(OperationsConstants.SESSION.getName())) {
@@ -604,11 +604,11 @@ abstract class BaseCachehandler extends BaseOperationHandler<SessionAwareCache>{
 	BaseCachehandler(String operationName){
 		super(operationName);
 	}
-    
+
 	BaseCachehandler(String operationName, boolean changesRuntimeState){
         super(operationName, changesRuntimeState);
     }
-    
+
 	@Override
 	protected SessionAwareCache getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
 		String cacheType = Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.name();
@@ -872,7 +872,7 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
 			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
 		}
-		
+
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
@@ -897,7 +897,7 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 class GetSchema extends BaseOperationHandler<VDBRepository>{
 
 	protected GetSchema() {
-	    // even though this is read-only operation schema may be a protected 
+	    // even though this is read-only operation schema may be a protected
 	    // resource, should not visible to every one
 		super("get-schema", true); //$NON-NLS-1$
 	}
@@ -916,16 +916,16 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		if (!operation.hasDefined(OperationsConstants.VDB_VERSION.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION.getName()+MISSING));
 		}
-		
+
 		String modelName = null;
 		if (operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
-		    modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();	
+		    modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();
 		}
-		
+
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME.getName()).asString();
 		String vdbVersion = operation.get(OperationsConstants.VDB_VERSION.getName()).asString();
-		
+
 
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
@@ -955,7 +955,7 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		if (operation.hasDefined(OperationsConstants.ENTITY_PATTERN.getName())) {
 			regEx = operation.get(OperationsConstants.ENTITY_PATTERN.getName()).asString();
 		}
-		
+
 		String ddl = null;
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		if (modelName != null) {
@@ -997,7 +997,7 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 		if (operation.hasDefined(OperationsConstants.INCLUDE_SCHEMA.getName())) {
 			includeSchema = operation.get(OperationsConstants.INCLUDE_SCHEMA.getName()).asBoolean();
 		}
-		
+
 		ModelNode result = context.getResult();
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
@@ -1069,11 +1069,11 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
     public VDBOperations(String operationName) {
 		super(operationName);
 	}
-	
+
     public VDBOperations(String operationName, boolean changesRuntimeState) {
         super(operationName, changesRuntimeState);
         this.changesRuntimeState = changesRuntimeState;
-    }	
+    }
 
 	@Override
 	public RuntimeVDB getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
@@ -1099,7 +1099,7 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 		builder.addParameter(OperationsConstants.VDB_NAME);
 		builder.addParameter(OperationsConstants.VDB_VERSION);
 	}
-	
+
 	 static void updateServices(OperationContext context, RuntimeVDB vdb,
 				String dsName, ReplaceResult rr) {
 		if (rr.isNew) {
@@ -1302,13 +1302,13 @@ class RestartVDB extends VDBOperations {
 }
 
 class AssignDataSource extends VDBOperations {
-	
+
 	boolean modelNameParam;
 
 	public AssignDataSource() {
 		this("assign-datasource", true, true); //$NON-NLS-1$
 	}
-	
+
 	protected AssignDataSource(String operation, boolean modelNameParam, boolean changesRuntimeState) {
 		super(operation, changesRuntimeState);
 		this.modelNameParam = modelNameParam;
@@ -1355,19 +1355,19 @@ class AssignDataSource extends VDBOperations {
 }
 
 class UpdateSource extends AssignDataSource {
-	
+
 	public UpdateSource() {
 		super("update-source", false, true); //$NON-NLS-1$
 	}
-	
+
 }
 
 class AddSource extends VDBOperations {
-	
+
 	public AddSource() {
 		super("add-source", true); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
@@ -1413,17 +1413,17 @@ class AddSource extends VDBOperations {
 }
 
 class RemoveSource extends VDBOperations {
-	
+
 	public RemoveSource() {
 		super("remove-source", true); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME.getName()+MISSING));
 		}
-		
+
 		if (!operation.hasDefined(OperationsConstants.SOURCE_NAME.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.SOURCE_NAME.getName()+MISSING));
 		}
@@ -1453,21 +1453,21 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 	protected ReadTranslatorProperties() {
 		super("read-translator-properties"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	protected void executeOperation(OperationContext context, TranslatorRepository repo, ModelNode operation) throws OperationFailedException {
 
 		if (!operation.hasDefined(OperationsConstants.TRANSLATOR_NAME.getName())) {
 			throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.TRANSLATOR_NAME.getName()+MISSING));
 		}
-		
+
         if (!operation.hasDefined(OperationsConstants.PROPERTY_TYPE.getName())) {
             throw new OperationFailedException(IntegrationPlugin.Util.getString(OperationsConstants.PROPERTY_TYPE.getName() + MISSING));
-        }		
+        }
 
 		ModelNode result = context.getResult();
 		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
-		
+
 		String propertyType = operation.get(OperationsConstants.PROPERTY_TYPE.getName()).asString().toUpperCase();
 		TranlatorPropertyType translatorPropertyType = TranlatorPropertyType.valueOf(propertyType);
 
@@ -1479,16 +1479,16 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
                     result.add(buildNode(epm));
                 }
             } else {
-                PropertyType type = PropertyType.valueOf(propertyType);     
+                PropertyType type = PropertyType.valueOf(propertyType);
                 for (ExtendedPropertyMetadata epm:properties) {
                     if (PropertyType.valueOf(epm.category()).equals(type)) {
                         result.add(buildNode(epm));
                     }
-                }    
+                }
             }
-        }        
+        }
 	}
-	
+
 	static ModelNode buildNode(ExtendedPropertyMetadata prop) {
 		ModelNode node = new ModelNode();
 		String name = prop.name();
@@ -1515,18 +1515,18 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
 		if (prop.display() != null) {
 			node.get(name, "display").set(prop.display()); //$NON-NLS-1$
 		}
-        
+
         node.get(name, READ_ONLY).set(prop.readOnly());
         node.get(name, "advanced").set(prop.advanced()); //$NON-NLS-1$
-        
+
         if (prop.allowed() != null) {
         	for (String s:prop.allowed()) {
         		node.get(name, ALLOWED).add(s);
         	}
         }
-        
+
         node.get(name, "masked").set(prop.masked()); //$NON-NLS-1$
-        
+
         if (prop.owner() != null) {
             node.get(name, "owner").set(prop.owner()); //$NON-NLS-1$
         }
@@ -1534,13 +1534,13 @@ class ReadTranslatorProperties extends TranslatorOperationHandler {
         if (prop.defaultValue() != null) {
         	node.get(name, DEFAULT).set(prop.defaultValue());
         }
-        
+
         if (prop.category() != null) {
             node.get(name, "category").set(prop.category()); //$NON-NLS-1$
         }
 		return node;
-	}	
-	
+	}
+
 	@Override
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);

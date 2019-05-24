@@ -47,35 +47,35 @@ public class TestPermutation extends TestCase {
         }
         return items;
     }
-    
+
     public void compareArrays(Object[] a1, Object[] a2) {
         assertEquals("Arrays are of differing lengths", a1.length, a2.length); //$NON-NLS-1$
         for(int i=0; i<a1.length; i++) {
             assertEquals("Arrays have differing object at index " + i, a1[i], a2[i]);             //$NON-NLS-1$
         }
     }
-    
+
     public void compareOrders(List expected, List actual) {
         assertEquals("Number of orders differs", expected.size(), actual.size()); //$NON-NLS-1$
         for(int i=0; i<expected.size(); i++) {
-            compareArrays( (Object[]) expected.get(i), (Object[]) actual.get(i) );    
-        }    
+            compareArrays( (Object[]) expected.get(i), (Object[]) actual.get(i) );
+        }
     }
 
     public void testNull() {
         try {
             new Permutation(null);
             fail("Expected IllegalArgumentException"); //$NON-NLS-1$
-        } catch(IllegalArgumentException e) {                
-        }                    
+        } catch(IllegalArgumentException e) {
+        }
     }
-    
+
     public void test1() {
         Permutation perm = new Permutation(exampleItems(0));
-        Iterator iter = perm.generate();                        
+        Iterator iter = perm.generate();
         assertTrue("Should get no permutations for no items", ! iter.hasNext()); //$NON-NLS-1$
-        
-        try { 
+
+        try {
             iter.next();
             fail("Expected NoSuchElementException"); //$NON-NLS-1$
         } catch(NoSuchElementException e) {
@@ -84,49 +84,49 @@ public class TestPermutation extends TestCase {
 
     public void test2() {
         Permutation perm = new Permutation(exampleItems(2));
-        Iterator iter = perm.generate(0);                        
+        Iterator iter = perm.generate(0);
         assertTrue("Should get no permutations for no items", ! iter.hasNext()); //$NON-NLS-1$
     }
 
     public void test3() {
         Permutation perm = new Permutation(exampleItems(1));
         Iterator iter = perm.generate();
-        
+
         List orders = new ArrayList();
         while(iter.hasNext()) {
-            orders.add(iter.next());    
+            orders.add(iter.next());
         }
-                                        
+
         assertEquals("Should get one permutations for one item", 1, orders.size()); //$NON-NLS-1$
         compareArrays(exampleItems(1), (Object[]) orders.get(0));
     }
-    
+
     public void test4() {
         Permutation perm = new Permutation(exampleItems(2));
         Iterator iter = perm.generate();
-        
+
         List orders = new ArrayList();
         while(iter.hasNext()) {
-            orders.add(iter.next());    
+            orders.add(iter.next());
         }
-        
+
         List expected = new ArrayList();
         expected.add(new Object[] { "0", "1" }); //$NON-NLS-1$ //$NON-NLS-2$
         expected.add(new Object[] { "1", "0" }); //$NON-NLS-1$ //$NON-NLS-2$
-                                        
+
         compareOrders(expected, orders);
-        
+
     }
 
     public void test5() {
         Permutation perm = new Permutation(exampleItems(3));
         Iterator iter = perm.generate();
-        
+
         List orders = new ArrayList();
         while(iter.hasNext()) {
-            orders.add(iter.next());    
+            orders.add(iter.next());
         }
-        
+
         List expected = new ArrayList();
         expected.add(new Object[] { "0", "1", "2" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         expected.add(new Object[] { "0", "2", "1" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -134,27 +134,27 @@ public class TestPermutation extends TestCase {
         expected.add(new Object[] { "1", "2", "0" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         expected.add(new Object[] { "2", "0", "1" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         expected.add(new Object[] { "2", "1", "0" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                        
+
         compareOrders(expected, orders);
-        
+
     }
 
     public void test6() {
         Permutation perm = new Permutation(exampleItems(3));
         Iterator iter = perm.generate(1);
-        
+
         List orders = new ArrayList();
         while(iter.hasNext()) {
-            orders.add(iter.next());    
+            orders.add(iter.next());
         }
-        
+
         List expected = new ArrayList();
         expected.add(new Object[] { "0" }); //$NON-NLS-1$
         expected.add(new Object[] { "1" }); //$NON-NLS-1$
         expected.add(new Object[] { "2" }); //$NON-NLS-1$
-                                        
+
         compareOrders(expected, orders);
-        
+
     }
 
 }

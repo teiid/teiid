@@ -28,7 +28,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 
 public class Log10FunctionModifier extends FunctionModifier {
-    
+
     private LanguageFactory languageFactory;
 
     public Log10FunctionModifier(LanguageFactory languageFactory) {
@@ -38,7 +38,7 @@ public class Log10FunctionModifier extends FunctionModifier {
     @Override
     public List<?> translate(Function function) {
         function.setName("log"); //$NON-NLS-1$
-        
+
         List<Expression> args = function.getParameters();
         args.add(args.get(0));
         args.set(0, languageFactory.createLiteral(new Integer(10), TypeFacility.RUNTIME_TYPES.INTEGER));

@@ -77,7 +77,7 @@ public class TestResultsSummary {
     }
 
     public synchronized void addTestResult(String querySetID, TestResult result) {
-    	
+
      	if (result == null) {
     	    System.err
 		    .println("Error - trying to add a null result set for querysetID: " + querySetID); //$NON-NLS-1$
@@ -107,15 +107,15 @@ public class TestResultsSummary {
 	os = new BufferedOutputStream(os);
 	return new PrintStream(os);
     }
-    
+
 //    private static Writer getOverallSummaryStream(String outputDir) throws IOException {
 //	return createOverallSummaryFile(outputDir);
-//	
+//
 //    }
-    
-    
 
-    
+
+
+
     /**
      * Overloaded to overwrite the already existing files
      */
@@ -187,11 +187,11 @@ public class TestResultsSummary {
         	}
         	printOverallSummaryHeadings(out);
 	}
-	
+
 
 	return out;
     }
-    
+
     private static void printOverallSummaryHeadings(Writer overallsummary) {
 
 	try {
@@ -209,9 +209,9 @@ public class TestResultsSummary {
 	}
 
     }
-    
-    
-    
+
+
+
     private static Writer getOverallSummaryErrorsStream(String outputDir)
     throws IOException {
 	boolean exists = false;
@@ -236,7 +236,7 @@ public class TestResultsSummary {
 
         return out;
     }
-    
+
     private static void printOverallSummaryErrorHeadings(Writer overallsummary) {
 
 	try {
@@ -254,7 +254,7 @@ public class TestResultsSummary {
 	}
 
     }
-    
+
 
     private void printQueryTestResults(PrintStream outputStream,
 	    Date testStartTS, Date endTS, Date length, int numberOfClients,
@@ -270,7 +270,7 @@ public class TestResultsSummary {
 	//	outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
 	// outputStream
 	//		.println("Elapsed      Time: " + ((endTS - testStartTS) / 1000) + " seconds"); //$NON-NLS-1$ //$NON-NLS-2$
-	//	
+	//
 
 	outputStream.println("Number of Clients: " + numberOfClients); //$NON-NLS-1$
 
@@ -385,7 +385,7 @@ public class TestResultsSummary {
 
     /**
      * Print test results.
-     * 
+     *
      * @param testStartTS
      *            The test start time.
      * @param endTS
@@ -429,7 +429,7 @@ public class TestResultsSummary {
 	    Date diffdate = new Date(diff);
 
 	    // endtest - starttest;
-	    //	    
+	    //
 	    //		outputStream.println("Start        Time: " + new Date(testStartTS)); //$NON-NLS-1$
 	    //		outputStream.println("End          Time: " + new Date(endTS)); //$NON-NLS-1$
 	    // outputStream
@@ -461,14 +461,14 @@ public class TestResultsSummary {
 	    // numberOfClients, TestClientTransaction.TSFORMAT, testResults);
 	    // printQueryTestResults(overwriteStream, testStartTS, endTS,
 	    // numberOfClients, TestClientTransaction.TSFORMAT, testResults);
-	    //                	
+	    //
 	    // // HTML Vesion of output
 	    //                	PrintStream htmlStream = getSummaryStream(outputDir, CONFIG_ID+".html", true); //$NON-NLS-1$
 	    // CombinedTestUtil.printHtmlQueryTestResults(htmlStream,
 	    // testStartTS, endTS, numberOfClients,
 	    // TestClientTransaction.TSFORMAT, testResults);
 	    // htmlStream.close();
-	    //                	
+	    //
 	    // // Wiki Update
 	    //                	CombinedTestUtil.publishResultsToWiki(props, outputDir+File.separator+CONFIG_ID+".html", testStartTS, endTS, numberOfClients, testResults); //$NON-NLS-1$ //$NON-NLS-2$
 	    // break;
@@ -520,7 +520,7 @@ public class TestResultsSummary {
 	try {
 	    outputStream = getSummaryStream(summarydir,
 		    "Summary_" + querysetname + "_" + scenario_name, true); //$NON-NLS-1$
-	    
+
 	    overallsummary = getOverallSummaryStream(summarydir);
 	    overallsummaryerrors = getOverallSummaryErrorsStream(summarydir);
 	} catch (IOException e) {
@@ -544,7 +544,7 @@ public class TestResultsSummary {
 	if (!this.query_sets.isEmpty()) {
 	    // sort so that like failed queries are show together
 	    Collections.sort(this.query_sets);
-	    
+
 	    for (Iterator<String> it = this.query_sets.iterator(); it.hasNext();) {
 		outputStream.println(it.next()); //$NON-NLS-1$ //$NON-NLS-2$
 	    }
@@ -555,8 +555,8 @@ public class TestResultsSummary {
 	outputStream.println("\t" + "Totals" + "\t\t\t\t" + total_pass + "\t"
 		+ total_fail + "\t" + total_queries + "\t" + total_seconds
 		/ 1000);
-	
-	
+
+
 	try {
 	    overallsummary.write( pad(scenario_name, 30, ' ') + " \t" + total_pass + "\t" + total_fail + "\t" + total_queries + "\n");
 	    overallsummary.flush();
@@ -569,7 +569,7 @@ public class TestResultsSummary {
 	    } catch (IOException ioe2) {
 	    // just ignore it
 	    }
-	} // 
+	} //
 
 	// outputStream
 	//			.println("Number of Queries: " + total_queries); //$NON-NLS-1$ //$NON-NLS-2$
@@ -583,8 +583,8 @@ public class TestResultsSummary {
 	    Collections.sort(this.failed_queries);
 
 	    outputStream.println("\n\n=================="); //$NON-NLS-1$
-	    outputStream.println("Failed Queries"); //$NON-NLS-1$	
-	    
+	    outputStream.println("Failed Queries"); //$NON-NLS-1$
+
 	    overallsummaryerrors.write("\n" + scenario_name + "\n");
 
 
@@ -597,7 +597,7 @@ public class TestResultsSummary {
 
 
 	    }
-	    
+
 		try {
 		    overallsummaryerrors.flush();
 
@@ -609,7 +609,7 @@ public class TestResultsSummary {
 		    } catch (IOException ioe2) {
 		    // just ignore it
 		    }
-		} // 
+		} //
 
 	    outputStream.println("=================="); //$NON-NLS-1$
 
@@ -618,21 +618,21 @@ public class TestResultsSummary {
 	outputStream.close();
 
     }
-    
-         private static String pad(String src, int padTo, char padChar) {  
-	         int numPad = padTo - src.length();  
-	         if (numPad > 0) {  
-	             StringBuffer sb = new StringBuffer();  
+
+         private static String pad(String src, int padTo, char padChar) {
+	         int numPad = padTo - src.length();
+	         if (numPad > 0) {
+	             StringBuffer sb = new StringBuffer();
 	             char[] pad = new char[numPad] ;
-	             Arrays.fill(pad, padChar);  
-	             sb.append(src);  
-	             sb.append(pad);  
-	             return sb.toString();  
-	         } 
-	         
-	         return src;  
-	           
-	     } 
+	             Arrays.fill(pad, padChar);
+	             sb.append(src);
+	             sb.append(pad);
+	             return sb.toString();
+	         }
+
+	         return src;
+
+	     }
 
     private static String generateFileName(String configName, long timestamp,
 	    int runNumber) {
@@ -666,9 +666,9 @@ public class TestResultsSummary {
 	htmlCode.append("}").append(NL); //$NON-NLS-1$
 	htmlCode.append("scriptWin.focus();").append(NL); //$NON-NLS-1$
 	htmlCode.append("msg = msg.replace(/#/g, '\"');").append(NL); //$NON-NLS-1$
-	htmlCode.append("scriptWin.document.writeln(msg);").append(NL); //$NON-NLS-1$        
-	htmlCode.append("}").append(NL); //$NON-NLS-1$        
-	htmlCode.append("</SCRIPT>").append(NL); //$NON-NLS-1$        
+	htmlCode.append("scriptWin.document.writeln(msg);").append(NL); //$NON-NLS-1$
+	htmlCode.append("}").append(NL); //$NON-NLS-1$
+	htmlCode.append("</SCRIPT>").append(NL); //$NON-NLS-1$
 	htmlCode.append("</HEAD>").append(NL); //$NON-NLS-1$
 	htmlCode.append("<body>").append(NL); //$NON-NLS-1$
 	htmlCode.append("<h1>Query Test Results</h1>").append(NL); //$NON-NLS-1$
@@ -689,9 +689,9 @@ public class TestResultsSummary {
 	//       addTableRow(htmlCode, "Number Generated :", passFailGenMap.get("gen")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	ResponseTimes responseTimes = calcQueryResponseTimes(results);
-	addTableRow(htmlCode, "QPS :", Double.toString(responseTimes.qps)); //$NON-NLS-1$ 
-	//        addTableRow(htmlCode, "Ave First Resp   :", Double.toString(responseTimes.first)); //$NON-NLS-1$ 
-	//        addTableRow(htmlCode, "Ave Full Resp    :", Double.toString(responseTimes.full)); //$NON-NLS-1$ 
+	addTableRow(htmlCode, "QPS :", Double.toString(responseTimes.qps)); //$NON-NLS-1$
+	//        addTableRow(htmlCode, "Ave First Resp   :", Double.toString(responseTimes.first)); //$NON-NLS-1$
+	//        addTableRow(htmlCode, "Ave Full Resp    :", Double.toString(responseTimes.full)); //$NON-NLS-1$
 
 	htmlCode.append("</table> <p>").append(NL); //$NON-NLS-1$
 	htmlCode.append("<table border=\"1\">").append(NL); //$NON-NLS-1$
@@ -710,7 +710,7 @@ public class TestResultsSummary {
 	Iterator resultItr = results.iterator();
 	while (resultItr.hasNext()) {
 	    TestResult stat = (TestResult) resultItr.next();
-	    htmlCode.append("<tr>").append(NL); //$NON-NLS-1$            
+	    htmlCode.append("<tr>").append(NL); //$NON-NLS-1$
 	    addTableDataLink(htmlCode, stat.getQueryID(),
 		    "show('" + scrub(stat.getQuery()) + "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	    addTableData(htmlCode, stat.getResultStatusString(),
@@ -725,13 +725,13 @@ public class TestResultsSummary {
 		addTableData(htmlCode, stat.getExceptionMsg());
 		if (stat.getErrorfile() != null
 			&& !stat.getErrorfile().equals("null")) { //$NON-NLS-1$
-		    addTableDataLink(htmlCode, stat.getErrorfile(), ""); //$NON-NLS-1$ 
+		    addTableDataLink(htmlCode, stat.getErrorfile(), ""); //$NON-NLS-1$
 		} else {
 		    addTableData(htmlCode, ""); //$NON-NLS-1$
 		}
 	    } else {
 		addTableData(htmlCode, ""); //$NON-NLS-1$
-		addTableData(htmlCode, ""); //$NON-NLS-1$                                
+		addTableData(htmlCode, ""); //$NON-NLS-1$
 	    }
 	    htmlCode.append("</tr>").append(NL); //$NON-NLS-1$
 	}
@@ -741,10 +741,10 @@ public class TestResultsSummary {
 
     private static void addTableRow(StringBuffer table, String column,
 	    Object msg) {
-	table.append("<tr>").append(NL); //$NON-NLS-1$        
+	table.append("<tr>").append(NL); //$NON-NLS-1$
 	addTableData(table, column); //$NON-NLS-1$
 	addTableData(table, msg.toString());
-	table.append("</tr>").append(NL); //$NON-NLS-1$        
+	table.append("</tr>").append(NL); //$NON-NLS-1$
     }
 
     private static void addTableData(StringBuffer table, String msg) {
@@ -758,7 +758,7 @@ public class TestResultsSummary {
 		    .append("<td>").append("<a href=\"#" + link + "\" onclick=\"" + jsEvent + "\">" + link + "</a>").append("</td>").append(NL); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 	else
 	    table
-		    .append("<td>").append("<a href=\"" + link + "\" onclick=\"" + jsEvent + "\">" + link + "</a>").append("</td>").append(NL); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$         
+		    .append("<td>").append("<a href=\"" + link + "\" onclick=\"" + jsEvent + "\">" + link + "</a>").append("</td>").append(NL); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
     }
 
     private static void addTableData(StringBuffer table, String msg,

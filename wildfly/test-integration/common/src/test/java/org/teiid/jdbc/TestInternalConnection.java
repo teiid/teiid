@@ -48,9 +48,9 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestInternalConnection {
-	
+
 	public static class ThreadLocalSecurityHelper implements SecurityHelper {
-		
+
 		private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
 
 		@Override
@@ -59,7 +59,7 @@ public class TestInternalConnection {
 			threadLocalContext.set((Subject)context);
 			return previous;
 		}
-		
+
 		@Override
 		public Object getSecurityContext(String securityDomain) {
 			return threadLocalContext.get();
@@ -87,24 +87,24 @@ public class TestInternalConnection {
 				byte[] serviceTicket) throws LoginException {
 			return null;
 		}
-	    
+
 	}
-	
+
 	private static final String vdb = "<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA["
 			+ "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
 			+ "CREATE function func (val integer) returns string options (JAVA_CLASS '"+TestInternalConnection.class.getName()+"',  JAVA_METHOD 'doSomething');]]> </metadata></model></vdb>";
 	EmbeddedServer es;
 	static boolean useTxn = false;
-	
+
 	@Before public void setup() {
 		es = new EmbeddedServer();
 	}
-	
+
 	@After public void teardown() {
 		es.stop();
 		useTxn = false;
 	}
-	
+
 	public static String doSomething(CommandContext cc, Integer val) throws SQLException {
 		TeiidConnection tc = cc.getConnection();
 		try {
@@ -119,7 +119,7 @@ public class TestInternalConnection {
 			tc.close();
 		}
 	}
-	
+
 	@Test public void testInternalRemote() throws Exception {
 		SocketConfiguration s = new SocketConfiguration();
 		InetSocketAddress addr = new InetSocketAddress(0);
@@ -146,7 +146,7 @@ public class TestInternalConnection {
 			}
 		}
 	}
-	
+
 	@Test public void testInternalLocal() throws Exception {
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setSecurityHelper(new ThreadLocalSecurityHelper());
@@ -169,8 +169,8 @@ public class TestInternalConnection {
 				conn.close();
 			}
 		}
-	}	
-	
+	}
+
 	@Test public void testInternalLocalNestedTransactions() throws Exception {
 	    useTxn = true;
         EmbeddedConfiguration config = new EmbeddedConfiguration();
@@ -182,7 +182,7 @@ public class TestInternalConnection {
         TeiidDriver driver = es.getDriver();
         conn = driver.connect("jdbc:teiid:test;autoCommitTxn=on", null);
         try {
-            
+
             PreparedStatement ps = conn.prepareStatement("select func(?)");
             ps.setInt(1, 1);
             ps.execute();
@@ -191,7 +191,7 @@ public class TestInternalConnection {
                 conn.close();
             }
         }
-        
+
         conn = driver.connect("jdbc:teiid:test;autoCommitTxn=on", null);
         try {
             conn.setAutoCommit(false);
@@ -205,5 +205,5 @@ public class TestInternalConnection {
             }
         }
     }
-	
+
 }

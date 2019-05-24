@@ -45,7 +45,7 @@ import org.teiid.translator.SourceSystemFunctions;
 public class CachedFinder implements CapabilitiesFinder {
 
 	static class InvalidCaps extends BasicSourceCapabilities {
-		
+
 	};
 	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
 	static {
@@ -62,12 +62,12 @@ public class CachedFinder implements CapabilitiesFinder {
 		SYSTEM_CAPS.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
 		SYSTEM_CAPS.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
 	}
-	
+
     private ConnectorManagerRepository connectorRepo;
     private VDBMetaData vdb;
-    
+
     private Map<String, SourceCapabilities> userCache = new HashMap<String, SourceCapabilities>();
-    
+
     public CachedFinder(ConnectorManagerRepository repo, VDBMetaData vdb) {
         this.connectorRepo = repo;
         this.vdb = vdb;
@@ -110,14 +110,14 @@ public class CachedFinder implements CapabilitiesFinder {
         	ic.setSourceProperty(Capability.INVALID_EXCEPTION, cause);
         	caps = ic;
         }
-        
+
         userCache.put(modelName, caps);
         return caps;
     }
-    
+
     public boolean isValid(String modelName) {
     	SourceCapabilities caps = userCache.get(modelName);
     	return caps != null && !(caps instanceof InvalidCaps);
     }
-        
+
 }

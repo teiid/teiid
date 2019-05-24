@@ -34,8 +34,8 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 /**
- * A criteria which is true is the expression's value is a member in a list 
- * of values.  This criteria can be represented as "<expression> IN (<expr>, ...)".  
+ * A criteria which is true is the expression's value is a member in a list
+ * of values.  This criteria can be represented as "<expression> IN (<expr>, ...)".
  */
 public class SetCriteria extends AbstractSetCriteria {
 
@@ -50,7 +50,7 @@ public class SetCriteria extends AbstractSetCriteria {
 
     /**
      * Constructs an instance of this class with the membership expression and value expressions
-     * @param expression The membership expression 
+     * @param expression The membership expression
      * @param values   The set of value {@link org.teiid.query.sql.symbol.Expression}s
      */
     public SetCriteria( Expression expression, Collection values ) {
@@ -81,7 +81,7 @@ public class SetCriteria extends AbstractSetCriteria {
     public void setValues( Collection values ) {
         this.values = values;
     }
-    
+
     /**
      * Sets the membership expression and the set of value expressions
      * @param expression The membership expression
@@ -109,11 +109,11 @@ public class SetCriteria extends AbstractSetCriteria {
 		// The expHashCode method walks the set of values, combining
 		// the hash code at every power of 2: 1,2,4,8,...  This is
 		// much quicker than calculating hash codes for ALL values
-		
+
 		hc = HashCodeUtil.expHashCode(hc, getValues());
 		return hc;
 	}
-	
+
     /**
      * Override equals() method.
      * @param obj Other object
@@ -123,7 +123,7 @@ public class SetCriteria extends AbstractSetCriteria {
     	if(obj == this) {
 			return true;
 		}
-		
+
 		if(! (obj instanceof SetCriteria)) {
     		return false;
 		}
@@ -133,12 +133,12 @@ public class SetCriteria extends AbstractSetCriteria {
         if (isNegated() ^ sc.isNegated()) {
             return false;
         }
-        
+
         if (getValues().size() != sc.getValues().size() ||
             !EquivalenceUtil.areEqual(getExpression(), sc.getExpression())) {
             return false;
         }
-        
+
         if (this.allConstants) {
             for (Expression ex : (Collection<Expression>)sc.getValues()) {
                 if (!(ex instanceof Constant)) {
@@ -153,7 +153,7 @@ public class SetCriteria extends AbstractSetCriteria {
                 return false;
             }
         }
-        
+
         if (!(sc.values instanceof Set)) {
             Collection unique = null;
             if (!DataTypeManager.isHashable(sc.getExpression().getType())) {
@@ -165,20 +165,20 @@ public class SetCriteria extends AbstractSetCriteria {
                 return false;
             }
         }
-        
+
         return true;
 	}
-	
+
 	/**
 	 * Deep copy of object
 	 * @return Deep copy of object
 	 */
 	public Object clone() {
 	    Expression copy = null;
-	    if(getExpression() != null) { 
+	    if(getExpression() != null) {
 	        copy = (Expression) getExpression().clone();
-	    }	
-	    
+	    }
+
 	    Collection copyValues = null;
 	    if (isAllConstants()) {
 	    	if (values instanceof HashSet) {
@@ -193,17 +193,17 @@ public class SetCriteria extends AbstractSetCriteria {
 	    } else {
 	    	copyValues = LanguageObject.Util.deepClone(values, Expression.class);
 	    }
-	    
+
         SetCriteria criteriaCopy = new SetCriteria(copy, copyValues);
         criteriaCopy.setNegated(isNegated());
         criteriaCopy.allConstants = allConstants;
         return criteriaCopy;
 	}
-	
+
 	public boolean isAllConstants() {
 		return allConstants;
 	}
-	
+
 	public void setAllConstants(boolean allConstants) {
 		this.allConstants = allConstants;
 	}

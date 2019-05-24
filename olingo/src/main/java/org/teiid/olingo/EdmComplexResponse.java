@@ -57,7 +57,7 @@ public class EdmComplexResponse extends ServiceResponse {
                     SerializerException.MessageKeys.UNSUPPORTED_FORMAT, contentType.toContentTypeString());
         }
         return new EdmComplexResponse(request.getServiceMetaData(), response,
-                new TeiidODataJsonSerializer(contentType), 
+                new TeiidODataJsonSerializer(contentType),
                 request.getResponseContentType(), request.getPreferences(), contextURL);
     }
 
@@ -72,7 +72,7 @@ public class EdmComplexResponse extends ServiceResponse {
 
         // write the whole collection to response
         complexResult.serialize(response, serializer, metadata, contextURL, next);
-        
+
         writeOK(this.responseContentType);
         close();
     }

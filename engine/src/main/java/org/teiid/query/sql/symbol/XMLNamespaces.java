@@ -29,38 +29,38 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 public class XMLNamespaces implements LanguageObject {
-	
+
 	private static final long serialVersionUID = 681076404921001047L;
 
 	public static class NamespaceItem {
 		private String uri;
 		private String prefix;
-		
+
 		public NamespaceItem(String uri, String prefix) {
 			this.uri = uri;
 			this.prefix = prefix;
 		}
-		
+
 		public NamespaceItem(String defaultNamepace) {
 			this.uri = defaultNamepace;
 		}
-		
+
 		public NamespaceItem() {
 		}
-		
+
 		public String getUri() {
 			return uri;
 		}
-		
+
 		public String getPrefix() {
 			return prefix;
 		}
-		
+
 		@Override
 		public int hashCode() {
 			return HashCodeUtil.hashCode(0, this.uri, this.prefix);
 		}
-		
+
 		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
@@ -76,27 +76,27 @@ public class XMLNamespaces implements LanguageObject {
 	}
 
 	private List<NamespaceItem> namespaceItems;
-	
-	
+
+
 	public XMLNamespaces(List<NamespaceItem> namespaceItems) {
 		this.namespaceItems = namespaceItems;
 	}
-	
+
 	public List<NamespaceItem> getNamespaceItems() {
 		return namespaceItems;
 	}
-	
+
 	@Override
 	public XMLNamespaces clone() {
 		XMLNamespaces clone = new XMLNamespaces(new ArrayList<NamespaceItem>(namespaceItems));
 		return clone;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(namespaceItems.hashCode());
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -112,10 +112,10 @@ public class XMLNamespaces implements LanguageObject {
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

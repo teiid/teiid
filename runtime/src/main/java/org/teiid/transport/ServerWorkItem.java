@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.transport;
 
@@ -43,12 +43,12 @@ import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
 
 public class ServerWorkItem implements Runnable {
-	
+
 	private final ClientInstance socketClientInstance;
 	private final Serializable messageKey;
     private final Message message;
     private final ClientServiceRegistryImpl csr;
-    
+
     public ServerWorkItem(ClientInstance socketClientInstance, Serializable messageKey, Message message, ClientServiceRegistryImpl server) {
 		this.socketClientInstance = socketClientInstance;
 		this.messageKey = messageKey;
@@ -75,7 +75,7 @@ public class ServerWorkItem implements Runnable {
 				throw new AssertionError("unknown message contents"); //$NON-NLS-1$
 			}
 			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
-			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass.getName());			
+			final ClientService clientService = this.csr.getClientService(serviceStruct.targetClass.getName());
 			loggingContext = clientService.getLoggingContext();
 			Method m = clientService.getReflectionHelper().findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
 			Object methodResult;
@@ -114,7 +114,7 @@ public class ServerWorkItem implements Runnable {
 		} finally {
 			Thread.currentThread().setContextClassLoader(classLoader);
 		}
-		
+
 		if (result != null) {
 			sendResult(result, encrypt);
 		}
@@ -148,7 +148,7 @@ public class ServerWorkItem implements Runnable {
 
 		return new ExceptionHolder(e);
 	}
-	
+
 	private void logProcessingException(Throwable e, String context) {
 		Throwable cause = e;
 		while (cause.getCause() != null && cause != cause.getCause()) {

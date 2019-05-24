@@ -31,11 +31,11 @@ public class Column {
 	public void setAlphaName(String alphaName) {
 		this.alphaName = alphaName;
 	}
-	
+
 	public String getLabel() {
 		return label;
 	}
-	
+
 	public void setLabel(String label) {
 		this.label = label;
 	}

@@ -34,11 +34,11 @@ import org.teiid.translator.TranslatorException;
 
 /**
  * Simple metadata loader for functions
- * 
+ *
  * TODO: make the {@link TeiidFunction} annotation public
  */
 public class UDFMetadataRepository implements MetadataRepository {
-    
+
     @Override
     public void loadMetadata(MetadataFactory factory,
             ExecutionFactory executionFactory, Object connectionFactory,
@@ -52,7 +52,7 @@ public class UDFMetadataRepository implements MetadataRepository {
         }
         try {
             Class<?> clazz = classLoader.loadClass(className);
-        
+
             if (UserDefinedAggregate.class.isAssignableFrom(clazz)) {
                 factory.addFunction(clazz.getSimpleName(), clazz.getMethod("getResult", new Class<?>[] {CommandContext.class}));
             } else {

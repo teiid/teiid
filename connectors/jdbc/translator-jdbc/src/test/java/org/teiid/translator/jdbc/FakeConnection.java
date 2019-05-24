@@ -31,7 +31,7 @@ public class FakeConnection {
 
     boolean closed;
     boolean fail;
-    
+
     /* (non-Javadoc)
      * @see java.sql.Connection#createStatement()
      */
@@ -41,7 +41,7 @@ public class FakeConnection {
         }
         return SimpleMock.createSimpleMock(Statement.class);
     }
-    
+
     /* (non-Javadoc)
      * @see java.sql.Connection#isClosed()
      */

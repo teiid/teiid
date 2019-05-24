@@ -72,11 +72,11 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class RulePushAggregates implements
                                OptimizerRule {
-	
+
 	private IDGenerator idGenerator;
 	private CommandContext context;
 	private List<PlanNode> groupingNodes;
-	
+
 	public RulePushAggregates(IDGenerator idGenerator) {
 		this.idGenerator = idGenerator;
 	}
@@ -125,7 +125,7 @@ public class RulePushAggregates implements
 	            			parent = parent.getParent();
 	            		}
             			Set<AggregateSymbol> aggregates = collectAggregates(groupNode);
-            			
+
             			//hybrid of the join/union/decompose pushing logic
 	            		if (access.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
 	            			if (!RuleRaiseAccess.isPartitioned(metadata, groupingExpressions, groupNode)) {
@@ -134,7 +134,7 @@ public class RulePushAggregates implements
 		            					continue outer;
 		            				}
 		            			}
-		            			boolean shouldPushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, access, analysisRecord, groupNode); 
+		            			boolean shouldPushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, access, analysisRecord, groupNode);
 		            			if (!shouldPushdown) {
 		            				continue;
 		            			}
@@ -145,7 +145,7 @@ public class RulePushAggregates implements
 			                        continue;
 			                    }
 		            			addGroupBy(child, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, false, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
-	            			} else if (groupNode.getFirstChild() == access 
+	            			} else if (groupNode.getFirstChild() == access
 	            					&& RuleRaiseAccess.canRaiseOverGroupBy(groupNode, child, aggregates, metadata, capFinder, analysisRecord, false)
 	            					&& canFilterEmpty(metadata, capFinder, child, groupingExpressions)) {
 	            				if (groupingExpressions.isEmpty()) {
@@ -160,7 +160,7 @@ public class RulePushAggregates implements
 	            			}
 	            		}
             			//TODO: consider pushing aggregate in general
-	            	} 
+	            	}
 	                continue;
 	            }
 			} catch (QueryResolverException e) {
@@ -182,9 +182,9 @@ public class RulePushAggregates implements
 	 *     set op
 	 *       child 1
 	 *       ...
-	 * 
+	 *
 	 * we need to make it into
-	 * 
+	 *
 	 * group [agg(agg(x)), {a, b}]
 	 *   source
 	 *     set op
@@ -194,9 +194,9 @@ public class RulePushAggregates implements
 	 *             source
 	 *               child 1
 	 *       ...
-	 *       
+	 *
 	 * Or if the child does not support pushdown we add dummy aggregate projection
-     * count(*) = 1, count(x) = case x is null then 0 else 1 end, avg(x) = x, etc. 
+     * count(*) = 1, count(x) = case x is null then 0 else 1 end, avg(x) = x, etc.
 	 */
 	private void pushGroupNodeOverUnion(QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
 			PlanNode groupNode, PlanNode unionSourceParent,
@@ -241,7 +241,7 @@ public class RulePushAggregates implements
 					Expression mapped = parentMap.getMappedExpression((ElementSymbol)ex);
 					expressions.add(mapped);
 				}
-				
+
 				if (allCols) {
 					PlanNode project = NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT);
 					boolean projectsGrouping = true;
@@ -250,7 +250,7 @@ public class RulePushAggregates implements
 							projectsGrouping = false;
 							break;
 						}
-					}	
+					}
 					if (projectsGrouping) {
 						//since there are no expressions in the grouping cols, we know the grouping node is now not needed.
 						RuleAssignOutputElements.removeGroupBy(groupNode, metadata);
@@ -259,32 +259,32 @@ public class RulePushAggregates implements
 				}
 			}
 			return;
-		} 
+		}
 		for (AggregateSymbol agg : aggregates) {
 			if (!agg.canStage()) {
 				return;
 			}
 		}
-		
+
 		//TODO: merge virtual, plan unions, raise null - change the partition information
-		
+
 		if (unionChildren.size() < 2) {
 			return;
 		}
-		
+
 		List<AggregateSymbol> copy = new ArrayList<AggregateSymbol>(aggregates);
 		aggregates.clear();
 		Map<AggregateSymbol, Expression> aggMap = buildAggregateMap(copy, metadata, aggregates, false);
-		
+
 		boolean shouldPushdown = false;
 		List<Boolean> pushdownList = new ArrayList<Boolean>(unionChildren.size());
-		
+
 		for (PlanNode planNode : unionChildren) {
-			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, planNode, record, groupNode); 
+			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, planNode, record, groupNode);
 			pushdownList.add(pushdown);
 			shouldPushdown |= pushdown;
 		}
-		
+
 		if (!shouldPushdown) {
 			return;
 		}
@@ -297,14 +297,14 @@ public class RulePushAggregates implements
 			addUnionGroupBy(groupingExpressions, aggregates, parentMap, metadata, capFinder, group, first, planNode, !pushdownIterator.next(), false);
 			first = false;
 		}
-		
+
 		updateParentAggs(groupNode, aggMap, metadata);
-		
+
 		List<Expression> symbols = (List<Expression>) NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
 		GroupSymbol modifiedGroup = group.clone();
 		SymbolMap symbolMap = createSymbolMap(modifiedGroup, symbols, unionSourceParent, metadata);
 		unionSourceParent.setProperty(Info.SYMBOL_MAP, symbolMap);
-		
+
 		//correct the parent frame
 		Map<Expression, ElementSymbol> mapping = new HashMap<Expression, ElementSymbol>();
 		Iterator<ElementSymbol> elemIter = symbolMap.getKeys().iterator();
@@ -343,7 +343,7 @@ public class RulePushAggregates implements
 				} else {
 					compositeAggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(mappedAgg, false));
 					hasExpressionMapping = true;
-				}	
+				}
 			} else {
 				compositeAggs.add((AggregateSymbol) ex);
 			}
@@ -391,7 +391,7 @@ public class RulePushAggregates implements
 	}
 
     /* if partitioned, then we don't need decomposition or the top level group by
-     * 
+     *
 	 *   source
 	 *     set op
 	 *       project
@@ -399,16 +399,16 @@ public class RulePushAggregates implements
 	 *             source
 	 *               child 1
 	 *       ...
-     * 
+     *
      */
 	private void decomposeGroupBy(PlanNode groupNode, PlanNode sourceNode,
 			List<Expression> groupingExpressions,
 			LinkedHashSet<AggregateSymbol> aggregates,
-			LinkedList<PlanNode> unionChildren, SymbolMap parentMap, QueryMetadataInterface metadata, 
+			LinkedList<PlanNode> unionChildren, SymbolMap parentMap, QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder) throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
 		// remove the group node
 		groupNode.getParent().replaceChild(groupNode, groupNode.getFirstChild());
-		
+
 		GroupSymbol group = sourceNode.getGroups().iterator().next().clone();
 
 		boolean first = true;
@@ -427,7 +427,7 @@ public class RulePushAggregates implements
 		SymbolMap map = (SymbolMap)groupNode.getProperty(Info.SYMBOL_MAP);
 		Map<Expression, ElementSymbol> inverse = map.inserseMapping();
 		SymbolMap newMapping = (SymbolMap) NodeEditor.findNodePreOrder(sourceNode, NodeConstants.Types.GROUP).getProperty(Info.SYMBOL_MAP);
-		
+
 		GroupSymbol oldGroup = null;
 		Map<ElementSymbol, ElementSymbol> updatedMapping = new HashMap<ElementSymbol, ElementSymbol>();
 		for (Map.Entry<ElementSymbol, Expression> entry : symbolMap.asMap().entrySet()) {
@@ -442,12 +442,12 @@ public class RulePushAggregates implements
 
 	/**
 	 * TODO: remove me - the logic in {@link #addUnionGroupBy} should be redone
-	 * to not use a view, but the logic there is more straight-forward there 
+	 * to not use a view, but the logic there is more straight-forward there
 	 * and then we correct here.
 	 * @param sourceNode
 	 * @param metadata
 	 * @param capFinder
-	 * @param context 
+	 * @param context
 	 * @throws QueryPlannerException
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
@@ -484,7 +484,7 @@ public class RulePushAggregates implements
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException, QueryResolverException {
 		List<Expression> groupingColumns = LanguageObject.Util.deepClone(groupingExpressions, Expression.class);
-		
+
 		//branches other than the first need to have their projected column names updated
 		if (!first) {
 			PlanNode sortNode = NodeEditor.findNodePreOrder(planNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
@@ -511,11 +511,11 @@ public class RulePushAggregates implements
 				}
 			}
 		}
-		
+
 		PlanNode view = RuleDecomposeJoin.createSource(group, planNode, parentMap);
-		
+
 		PlanNode projectPlanNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-		
+
 		Select allSymbols = new Select();
 		for (Expression expr : groupingColumns) {
 			allSymbols.addSymbol(new ExpressionSymbol("expr", expr)); //$NON-NLS-1$
@@ -526,14 +526,14 @@ public class RulePushAggregates implements
 	    		if (agg.isCount()) {
 	    			if (isCountStar(agg)) {
 	    				allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", newLiteral(1, agg.getType()))); //$NON-NLS-1$
-	    			} else { 
+	    			} else {
 	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getArg(0))), Arrays.asList(newLiteral(0, agg.getType())));
 	        			count.setElseExpression(newLiteral(1, agg.getType()));
 	        			count.setType(agg.getType());
 	        			allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
 	    			}
 	    		} else { //min, max, sum
-	    			assert agg.getArgs().length == 1; //prior canStage should ensure this is true 
+	    			assert agg.getArgs().length == 1; //prior canStage should ensure this is true
 	    			Expression ex = agg.getArg(0);
 	    			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()), metadata);
 	    			allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", ex)); //$NON-NLS-1$
@@ -547,14 +547,14 @@ public class RulePushAggregates implements
 		}
 		projectPlanNode.setProperty(NodeConstants.Info.PROJECT_COLS, allSymbols.getSymbols());
 		projectPlanNode.addGroups(view.getGroups());
-		
+
 		view.addAsParent(projectPlanNode);
-		
+
 		if (!viewOnly) {
 			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty() && (partitioned || containsNullDependent(aggregates)));
 		}
 	}
-	
+
 	private void updateSymbolName(List<Expression> projectCols, int i,
 			ElementSymbol virtualElem, Expression projectedSymbol) {
 		if (projectedSymbol instanceof AliasSymbol) {
@@ -585,7 +585,7 @@ public class RulePushAggregates implements
 
 	private boolean containsNullDependent(Collection<AggregateSymbol> aggregates) {
 		for (AggregateSymbol aggregateSymbol : aggregates) {
-			//we don't consider count here as we dealing with the original aggregates, not the mapped expressions 
+			//we don't consider count here as we dealing with the original aggregates, not the mapped expressions
 			if (aggregateSymbol.getFunctionDescriptor() != null && aggregateSymbol.getFunctionDescriptor().isNullDependent()) {
 				return true;
 			}
@@ -600,11 +600,11 @@ public class RulePushAggregates implements
 			return true;
 		}
 		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
-		return (/*CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_ORDERED, modelId, metadata, capFinder) 
+		return (/*CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_ORDERED, modelId, metadata, capFinder)
 				&&*/ CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder)
 				/*&& CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelId, metadata, capFinder)*/);
 	}
-    
+
 	/**
 	 * Recursively searches the union tree for all applicable source nodes
 	 */
@@ -612,31 +612,31 @@ public class RulePushAggregates implements
 		if (setOp.getType() != NodeConstants.Types.SET_OP || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
 			return setOp;
 		}
-				
+
 		if (!setOp.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
 			if (carinalityDependent) {
 				return setOp;
 			}
 			setOp.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
 		}
-		
+
 		for (PlanNode planNode : setOp.getChildren()) {
 			PlanNode child = findUnionChildren(unionChildren, carinalityDependent, planNode);
 			if (child != null) {
 				unionChildren.add(child);
 			}
 		}
-		
+
 		return null;
 	}
-    
+
 	static SymbolMap createSymbolMap(GroupSymbol group,
 			List<? extends Expression> virtualElements,
 			PlanNode child, QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
 		List<ElementSymbol> projectedSymbols = defineNewGroup(group,
 				virtualElements, metadata);
-    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
+    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols,
 				(List<Expression>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
 		return symbolMap;
 	}
@@ -659,7 +659,7 @@ public class RulePushAggregates implements
     /**
      * Walk up the plan from the GROUP node. Should encounter only (optionally) a SELECT and can stop at the PROJECT node. Need to
      * collect any AggregateSymbols used in the select criteria or projected columns.
-     * 
+     *
      * @param groupNode
      * @return the set of aggregate symbols found
      * @since 4.2
@@ -668,7 +668,7 @@ public class RulePushAggregates implements
     	LinkedHashSet<AggregateSymbol> aggregates = new LinkedHashSet<AggregateSymbol>();
         PlanNode currentNode = groupNode.getParent();
         SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        
+
         while (currentNode != null) {
             if (currentNode.getType() == NodeConstants.Types.PROJECT) {
                 List<Expression> projectedSymbols = (List<Expression>)currentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
@@ -686,7 +686,7 @@ public class RulePushAggregates implements
         }
         return aggregates;
     }
-    
+
     static void mapAggregates(Collection<ElementSymbol> symbols, SymbolMap map, Collection<? super AggregateSymbol> aggs) {
     	for (ElementSymbol es : symbols) {
 			Expression ex = map.getMappedExpression(es);
@@ -699,8 +699,8 @@ public class RulePushAggregates implements
     /**
      * Attempt to push the group node below one or more joins, manipulating the parent plan as necessary. This may involve
      * modifying symbols in parent nodes (to account for staged aggregates).
-     * @throws QueryPlannerException 
-     * 
+     * @throws QueryPlannerException
+     *
      * @since 4.2
      */
     private void pushGroupNode(PlanNode groupNode,
@@ -725,18 +725,18 @@ public class RulePushAggregates implements
                 if (cardinalityDependent > 1) {
                     //we are not handling this case yet - the aggregate map expressions
                     //are more complicated as we aggregate on one side. the
-                    //other side to be a multiple of the other 
+                    //other side to be a multiple of the other
                     return;
                 }
-        		//can't change the cardinality on the other side of the join - 
+        		//can't change the cardinality on the other side of the join -
     			//unless it's a 1-1 join, in which case this optimization isn't needed
     			//TODO: make a better choice if there are multiple targets
     			possibleTargetNodes.clear();
     			possibleTargetNodes.add(entry.getKey());
-        	}        		
+        	}
     	}
-        
-        boolean recollectAggregates = false; 
+
+        boolean recollectAggregates = false;
         for (PlanNode planNode : possibleTargetNodes) {
             Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
             Collection<AggregateSymbol> aggregates = aggregateMap.get(planNode);
@@ -753,14 +753,14 @@ public class RulePushAggregates implements
         	    allAggregates = collectAggregates(groupNode);
         	}
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
-            
+
             //perform a costing check, if there's not a significant reduction, then don't stage
             float cardinality = NewCalculateCostUtil.computeCostForTree(planNode, metadata);
             float ndv = NewCalculateCostUtil.getNDVEstimate(planNode, metadata, cardinality, stagedGroupingSymbols, false);
         	if (ndv != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality / ndv < 4) {
     			continue;
         	}
-        	
+
             if (aggregates != null) {
                 aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates, true);
             } else {
@@ -770,7 +770,7 @@ public class RulePushAggregates implements
             if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
                 continue;
             }
-            
+
             addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty() && containsNullDependent(aggregates));
             //with the staged grouping added, the parent aggregate expressions can change due to mapping
             recollectAggregates = true;
@@ -793,7 +793,7 @@ public class RulePushAggregates implements
 		}
 		SymbolMap groupingSymbolMap = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator);
 		Map<Expression, ElementSymbol> reverseMapping = groupingSymbolMap.inserseMapping();
-		
+
 		GroupSymbol newGroup = reverseMapping.values().iterator().next().getGroupSymbol();
 		PlanNode node = stageGroup.getParent();
 		while (node != endNode) {
@@ -812,7 +812,7 @@ public class RulePushAggregates implements
         PlanNode accessNode = stageGroup.getFirstChild();
         if (accessNode.getType() != NodeConstants.Types.ACCESS) {
         	groupingNodes.add(stageGroup);
-        } else { 
+        } else {
         	//we need the aggregates from the symbol map, which has been cloned from the actual symbols
         	//this ensures that side effects from testing pushdown will be preserved
         	Collection<AggregateSymbol> aggs = new ArrayList<AggregateSymbol>(aggregates.size());
@@ -839,7 +839,7 @@ public class RulePushAggregates implements
 	private void addEmptyFilter(Collection<AggregateSymbol> aggregates,
 			PlanNode stageGroup, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, Object modelId) throws QueryMetadataException, TeiidComponentException {
 		PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-	    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
+	    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null);
 	    aggregates.add(count); //consider the count aggregate for the push down call below
 	    Criteria crit = new CompareCriteria(count, CompareCriteria.GT, new Constant(new Integer(0)));
 		selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
@@ -861,8 +861,8 @@ public class RulePushAggregates implements
             if (stagedGroupingSymbols.contains(expr)) {
                 iterator.remove();
             }
-        } 
-        
+        }
+
         if (aggregates.isEmpty()) {
         	return Collections.emptySet();
         }
@@ -877,7 +877,7 @@ public class RulePushAggregates implements
         updateParentAggs(groupNode, aggMap, metadata);
         return newAggs;
     }
-    
+
     private void collectSymbolsFromOtherAggregates(Collection<AggregateSymbol> allAggregates,
                                                       Collection<AggregateSymbol> aggregates,
                                                       PlanNode current,
@@ -900,23 +900,23 @@ public class RulePushAggregates implements
 
     /**
      * Ensures that we are only pushing through inner equi joins or cross joins.  Also collects the necessary staged grouping symbols
-     * @param aggregates 
-     * @param metadata 
+     * @param aggregates
+     * @param metadata
      * @return null if we cannot push otherwise the target join node
      */
     private PlanNode canPush(PlanNode groupNode,
                             Set<Expression> stagedGroupingSymbols,
                             PlanNode planNode, Collection<AggregateSymbol> aggregates, QueryMetadataInterface metadata) {
         PlanNode parentJoin = planNode.getParent();
-        
+
         Set<GroupSymbol> groups = FrameUtil.findJoinSourceNode(planNode).getGroups();
-        
+
         PlanNode result = planNode;
         while (parentJoin != groupNode) {
             if (parentJoin.getType() != NodeConstants.Types.JOIN) {
                 return null;
             }
-            
+
             JoinType joinType = (JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE);
 			if (joinType.isOuter() && aggregates != null) {
             	for (AggregateSymbol as : aggregates) {
@@ -934,7 +934,7 @@ public class RulePushAggregates implements
             		if (Collections.disjoint(expressionGroups, innerGroups)) {
             			continue;
             		}
-            		if (as.getFunctionDescriptor() != null 
+            		if (as.getFunctionDescriptor() != null
             				&& as.getFunctionDescriptor().isNullDependent()) {
             			return null;
             		}
@@ -943,7 +943,7 @@ public class RulePushAggregates implements
             		}
             	}
             }
-            
+
             //check for sideways correlation
         	PlanNode other = null;
         	if (planNode == parentJoin.getFirstChild()) {
@@ -963,7 +963,7 @@ public class RulePushAggregates implements
     				}
 	        	}*/
         	}
-            
+
         	if (!parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS) || !parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
         		List<Criteria> criteria = (List<Criteria>)parentJoin.getProperty(Info.JOIN_CRITERIA);
 	        	if (!findStagedGroupingExpressions(groups, criteria, stagedGroupingSymbols)) {
@@ -974,7 +974,7 @@ public class RulePushAggregates implements
             	if (!findStagedGroupingExpressions(groups, criteria, stagedGroupingSymbols)) {
             		return null;
             	}
-            	
+
                 //we move the target up if the filtered expressions introduce outside groups
                 if (planNode == parentJoin.getFirstChild()) {
                     if (filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), true)) {
@@ -988,7 +988,7 @@ public class RulePushAggregates implements
                     }
                 }
         	}
-        	
+
             planNode = parentJoin;
             parentJoin = parentJoin.getParent();
         }
@@ -1075,7 +1075,7 @@ public class RulePushAggregates implements
         		groups = (useLeft?joinNode.getFirstChild():joinNode.getLastChild()).getGroups();
         	}
         	originatingNode = FrameUtil.findOriginatingNode(groupNode.getFirstChild(), groups);
-            
+
             if (originatingNode == null) {
             	if (aggs) {
             		return null;  //should never happen
@@ -1103,7 +1103,7 @@ public class RulePushAggregates implements
             	}
                 continue; //don't perform intermediate grouping either
             }
-            
+
             if (aggs && ((AggregateSymbol)aggregateSymbol).isDistinct()) {
             	//TODO: support distinct
             	continue;
@@ -1128,7 +1128,7 @@ public class RulePushAggregates implements
                                                                                                         TeiidComponentException {
         Map<AggregateSymbol, Expression> aggMap = new LinkedHashMap<AggregateSymbol, Expression>();
         for (AggregateSymbol partitionAgg : aggregateExpressions) {
-           
+
             Expression newExpression = null;
 
             Type aggFunction = partitionAgg.getAggregateFunction();
@@ -1153,19 +1153,19 @@ public class RulePushAggregates implements
                                     newLiteral(0, partitionAgg.getType()) });
                 }
                 ResolverVisitor.resolveLanguageObject(newExpression, metadata);
-                
+
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
-                AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0)); 
-                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0)); 
-                
-                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); 
-                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); 
+                AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0));
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0));
+
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg);
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg);
 
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 Expression convertCount = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCountAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
-                
+
                 Function divideFunc = new Function("/", new Expression[] {convertedSum, convertCount}); //$NON-NLS-1$
                 ResolverVisitor.resolveLanguageObject(divideFunc, metadata);
 
@@ -1174,26 +1174,26 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumAgg);
             } else if (partitionAgg.isEnhancedNumeric()) {
             	//e.g. STDDEV_SAMP := CASE WHEN COUNT(X) > 1 THEN SQRT((SUM(X^2) - SUM(X)^2/COUNT(X))/(COUNT(X) - 1))
-            	AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0)); 
-                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0)); 
-                AggregateSymbol sumSqAgg = new AggregateSymbol(NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getArg(0), new Constant(2)})); 
-                
-                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); 
-                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); 
-                AggregateSymbol sumSumSqAgg = new AggregateSymbol(NonReserved.SUM, false, sumSqAgg); 
-                
+            	AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0));
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0));
+                AggregateSymbol sumSqAgg = new AggregateSymbol(NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getArg(0), new Constant(2)}));
+
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg);
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg);
+                AggregateSymbol sumSumSqAgg = new AggregateSymbol(NonReserved.SUM, false, sumSqAgg);
+
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.DefaultDataTypes.DOUBLE)});
 
-                Function divideFunc = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Function(SourceSystemFunctions.POWER, new Expression[] {convertedSum, new Constant(2)}), sumCountAgg}); 
-                
-                Function minusFunc = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumSumSqAgg, divideFunc}); 
+                Function divideFunc = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Function(SourceSystemFunctions.POWER, new Expression[] {convertedSum, new Constant(2)}), sumCountAgg});
+
+                Function minusFunc = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumSumSqAgg, divideFunc});
                 Expression divisor = null;
                 if (aggFunction == Type.STDDEV_SAMP || aggFunction == Type.VAR_SAMP) {
-                	divisor = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumCountAgg, new Constant(1)}); 
+                	divisor = new Function(SourceSystemFunctions.SUBTRACT_OP, new Expression[] {sumCountAgg, new Constant(1)});
                 } else {
                 	divisor = sumCountAgg;
                 }
-                Expression result = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {minusFunc, divisor}); 
+                Expression result = new Function(SourceSystemFunctions.DIVIDE_OP, new Expression[] {minusFunc, divisor});
                 if (aggFunction == Type.STDDEV_POP || aggFunction == Type.STDDEV_SAMP) {
                 	result = new Function(SourceSystemFunctions.SQRT, new Expression[] {result});
                 } else {
@@ -1236,7 +1236,7 @@ public class RulePushAggregates implements
     private static Constant newLiteral(int value, Class<?> type) {
         return new Constant(type==DefaultDataClasses.LONG?(long)value:value, type);
     }
-    
+
     /**
      * @see java.lang.Object#toString()
      * @since 4.2

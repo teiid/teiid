@@ -85,79 +85,79 @@ public class XMLQueryVisitationStrategy {
             String queryName = queryElement.getAttributeValue(TagNames.Attributes.NAME);
             if ( queryElement.getChild(TagNames.Elements.EXCEPTION) == null ) {
         	String uniqueID = querySetID + "_" + queryName;
-        	
+
 		List<Element> parmChildren = queryElement.getChildren(TagNames.Elements.SQL);
-        	
+
 		if (parmChildren == null || parmChildren.isEmpty()) {
         	    TestLogger.logDebug("=======  Single QueryTest ");
         	    QuerySQL sql = createQuerySQL(queryElement);
-         	    
+
         	    QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, false);
         	    queries.add(q);
         	} else {
         	    TestLogger.logDebug("=======  QueryTest has multiple sql statements");
          		QuerySQL[] querysql = new QuerySQL[parmChildren.size()];
         		int c = 0;
-        		
+
         		final Iterator<Element> sqliter = parmChildren.iterator();
         		while ( sqliter.hasNext() ) {
         			final Element sqlElement = (Element) sqliter.next();
         			QuerySQL sql = createQuerySQL(sqlElement);
         			querysql[c] = sql;
-        			c++;	
+        			c++;
         		}
         		QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, querysql, false);
         		queries.add(q);
-               		
-        		
-       	    
+
+
+
         	}
  //               queryMap.put(queryName, query);
             } else {
                 Element exceptionElement = queryElement.getChild(TagNames.Elements.EXCEPTION);
                 String exceptionType = exceptionElement.getChild(TagNames.Elements.CLASS).getTextTrim();
-                
+
                 String uniqueID = querySetID + "_" + queryName;
                 QuerySQL sql = new QuerySQL(exceptionType, null);
-                
+
                 QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, true);
                 queries.add(q);
 
-                
+
  //               queryMap.put(queryName, exceptionType);
             }
         }
         return queries;
     }
-    
+
     private QuerySQL createQuerySQL(Element queryElement) {
  	    String query = queryElement.getTextTrim();
- 	    	    
+
 	    Object[] parms = getParms(queryElement);
-	    	    
+
 	    QuerySQL sql = new QuerySQL(query, parms);
-	    
+
  	    String updateCnt = queryElement.getAttributeValue(TagNames.Attributes.UPDATE_CNT);
  	    if (updateCnt != null && updateCnt.trim().length() > 0) {
  		int cnt = Integer.parseInt(updateCnt);
  		sql.setUpdateCnt(cnt);
  	    }
- 	    
+
  	    String rowCnt = queryElement.getAttributeValue(TagNames.Attributes.TABLE_ROW_COUNT);
  	    if (rowCnt != null && rowCnt.trim().length() > 0) {
  		int cnt = Integer.parseInt(rowCnt);
  		sql.setRowCnt(cnt);
  	    }
-	    
-	    return sql;	
+
+	    return sql;
     }
-    
+
     private Object[] getParms(Element parent) {
 	List<Element> parmChildren = parent.getChildren(TagNames.Elements.PARM);
 	if (parmChildren == null) {
 	    return null;
 	}
-	
+
 	Object[] parms = new Object[parmChildren.size()];
 	int i = 0;
 	final Iterator<Element> iter = parmChildren.iterator();
@@ -169,20 +169,20 @@ public class XMLQueryVisitationStrategy {
 		    i++;
 		} catch (JDOMException e) {
 		    throw new TransactionRuntimeException(e);
-		}		
+		}
 	}
-	
-	
-	
+
+
+
 	return parms;
     }
-    
+
     private Object createParmType(Element cellElement) throws JDOMException {
 
         Object cellObject = null;
-        
+
         final String typeName = cellElement.getAttributeValue(TagNames.Attributes.TYPE);
- 
+
         if ( typeName.equalsIgnoreCase(TagNames.Elements.BOOLEAN) ) {
             cellObject = consumeMsg((Boolean) cellObject, cellElement);
         } else if ( typeName.equalsIgnoreCase(TagNames.Elements.STRING) ) {
@@ -263,7 +263,7 @@ public class XMLQueryVisitationStrategy {
                 final Element exceptionElement = resultElement.getChild(TagNames.Elements.EXCEPTION);
                 if ( exceptionElement != null ) {
                     expectedResults.setExceptionClassName(exceptionElement.getChild(TagNames.Elements.CLASS).getTextTrim());
-                    String msg = exceptionElement.getChild(TagNames.Elements.MESSAGE).getTextTrim();   
+                    String msg = exceptionElement.getChild(TagNames.Elements.MESSAGE).getTextTrim();
                     expectedResults.setExceptionMsg(StringUtil.removeChars(msg, new char[] {'\r'}));
                 }
             }
@@ -301,9 +301,9 @@ public class XMLQueryVisitationStrategy {
                     // ---------------------------
                     // Add the Message element ...
                     // ---------------------------
-                    Element messageElement = new Element(TagNames.Elements.MESSAGE);    
-                    String msg = exceptionElement.getChild(TagNames.Elements.MESSAGE).getTextTrim();   
-                    
+                    Element messageElement = new Element(TagNames.Elements.MESSAGE);
+                    String msg = exceptionElement.getChild(TagNames.Elements.MESSAGE).getTextTrim();
+
                     messageElement.setText(StringUtil.removeChars(msg, new char[] {'\r'}));
                     parent.addContent(messageElement);
 
@@ -364,10 +364,10 @@ public class XMLQueryVisitationStrategy {
         // ---------------------------
         // Add the Message element ...
         // ---------------------------
- 
+
         Element messageElement = new Element(TagNames.Elements.MESSAGE);
-        messageElement.setText(StringUtil.removeChars(ex.getMessage(), new char[] {'\r'}));     
-        		
+        messageElement.setText(StringUtil.removeChars(ex.getMessage(), new char[] {'\r'}));
+
         exceptionElement.addContent(messageElement);
 
         // -------------------------
@@ -877,8 +877,8 @@ public class XMLQueryVisitationStrategy {
         }
         return result;
     }
-    
-    
+
+
     /**
      * Consume an XML message and update the specified Byte instance.
      * <br>
@@ -901,21 +901,21 @@ public class XMLQueryVisitationStrategy {
 //                                    " element: " + cellElement.getTextTrim(), e); //$NON-NLS-1$
 //        }
 //        return result;
-        
+
     	return cellElement.getText();
         // ----------------------
         // Create the Object element ...
         // ----------------------
 //        Element objectElement = new Element(TagNames.Elements.OBJECT);
-//        
+//
 //        String result = null;
 //        if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
-//       	 
+//
 //        	if (object instanceof Clob){
 //        		Clob c = (Clob)object;
 //        		try {
 //        			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
-//					
+//
 //				} catch (Throwable e) {
 //					// TODO Auto-generated catch block
 //					throw new SQLException(e);
@@ -924,7 +924,7 @@ public class XMLQueryVisitationStrategy {
 //            		Blob b = (Blob)object;
 //            		try {
 //            			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
-//						
+//
 //					} catch (Throwable e) {
 //						// TODO Auto-generated catch block
 //						throw new SQLException(e);
@@ -933,16 +933,16 @@ public class XMLQueryVisitationStrategy {
 //            	SQLXML s = (SQLXML)object;
 //        		try {
 //        			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
-//					
+//
 //				} catch (Throwable e) {
 //					// TODO Auto-generated catch block
 //					throw new SQLException(e);
 //				}
-//            } 
+//            }
 //        } else {
 //        	result = object.toString();
 //        }
-//        
+//
 // //       System.out.println("ProductObject (before encoding): " + object.toString() );
 // //       try {
 //            objectElement.setText(result);
@@ -952,7 +952,7 @@ public class XMLQueryVisitationStrategy {
 // //       }
 ////        System.out.println("ProductObject (after encoding): " + objectElement.getText() );
 //
-//        
+//
 //        if ( parent != null ) {
 //            objectElement = parent.addContent(objectElement);
 //        }
@@ -1021,9 +1021,9 @@ public class XMLQueryVisitationStrategy {
     	if (object.isClosed()) {
             throw new SQLException(
             "ResultSet is closed at this point, unable to product results"); //$NON-NLS-1$
-    		
+
     	}
-    	
+
         if ( beginRow < START_ROW ) {
             throw new IllegalArgumentException(
                     "The starting row cannot be less than 1."); //$NON-NLS-1$
@@ -1315,15 +1315,15 @@ public class XMLQueryVisitationStrategy {
         // Create the Object element ...
         // ----------------------
         Element objectElement = new Element(TagNames.Elements.OBJECT);
-        
+
         String result = null;
         if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
-       	 
+
         	if (object instanceof Clob){
         		Clob c = (Clob)object;
         		try {
         			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
-					
+
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					throw new SQLException(e);
@@ -1332,7 +1332,7 @@ public class XMLQueryVisitationStrategy {
             		Blob b = (Blob)object;
             		try {
             			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
-						
+
 					} catch (Throwable e) {
 						// TODO Auto-generated catch block
 						throw new SQLException(e);
@@ -1341,19 +1341,19 @@ public class XMLQueryVisitationStrategy {
             	SQLXML s = (SQLXML)object;
         		try {
         			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
-					
+
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					throw new SQLException(e);
 				}
-            } 
+            }
         } else {
         	result = object.toString();
         }
-        
+
          objectElement.setText(result);
 
-        
+
         if ( parent != null ) {
             objectElement = parent.addContent(objectElement);
         }
@@ -1397,10 +1397,10 @@ public class XMLQueryVisitationStrategy {
         // Create the Character element ...
         // ----------------------
         Element charElement = new Element(TagNames.Elements.CHAR);
-               
+
         String v = object.toString();
         if (v != null && v.length() != 0) {
-            
+
 	    String toReplace = new String( new Character( (char)0x0).toString() );
 	    v.replaceAll(toReplace," ");
 	    charElement.setText(v.trim());
@@ -1719,7 +1719,7 @@ public class XMLQueryVisitationStrategy {
         // ---------------------------
         Element messageElement = new Element(TagNames.Elements.MESSAGE);
         messageElement.setText(StringUtil.removeChars(exception.getMessage(), new char[] {'\r'}));
-         
+
         exceptionElement.addContent(messageElement);
 
         // -------------------------

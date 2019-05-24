@@ -44,12 +44,12 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCase {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
@@ -58,39 +58,39 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 
 	@Test
     public void testViewDefinition() throws Exception {
-				
+
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
-		
+
 		Properties props = new Properties();
 		props.setProperty("ParentDirectory", UnitTestUtil.getTestDataFile("/arquillian/txt/").getAbsolutePath());
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
-		
+
 		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * FROM Sys.Columns WHERE tablename='stock'"); //$NON-NLS-1$
 		assertRowCount(2);
     }
-	
+
 	@Test public void testUdfClasspath() throws Exception {
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "func.jar")
 			      .addClasses(SampleFunctions.class);
 		admin.deploy("func.jar", jar.as(ZipExporter.class).exportAsInputStream());
-		
+
 		admin.deploy("dynamicfunc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicfunc-vdb.xml")));
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-func", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-func@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT func('a')"); //$NON-NLS-1$
 		assertRowCount(1);
 	}
-	
+
 	@Test public void testVdbZipWithDDLAndUDF() throws Exception {
 		JavaArchive udfJar = ShrinkWrap.create(JavaArchive.class, "func.jar").addClasses(SampleFunctions.class);
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "temp.jar")
@@ -98,11 +98,11 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 			      .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"))
 			      .addAsResource(new ArchiveAsset(udfJar, ZipExporter.class), "lib/udf.jar");
 		admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
-		
+
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1));
-		
+
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-ddl@mm://localhost:31000;user=user;password=user", null);
-		
+
 		execute("SELECT * from stock"); //$NON-NLS-1$
 		assertRowCount(1);
 		execute("SELECT func('a')"); //$NON-NLS-1$

@@ -30,15 +30,15 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 
 
 public class GroupInfo implements Serializable {
-	
+
 	private static final long serialVersionUID = 5724520038004637086L;
 
 	public static final String CACHE_PREFIX = "groupinfo/"; //$NON-NLS-1$
-	
+
 	private Map<Object, ElementSymbol> idToSymbolMap;
 	private List<ElementSymbol> symbolList;
-	private Map<String, ElementSymbol> shortNameToSymbolMap; 
-	
+	private Map<String, ElementSymbol> shortNameToSymbolMap;
+
 	public GroupInfo(LinkedHashMap<Object, ElementSymbol> symbols) {
 		this.idToSymbolMap = symbols;
 		this.symbolList = Collections.unmodifiableList(new ArrayList<ElementSymbol>(symbols.values()));
@@ -47,15 +47,15 @@ public class GroupInfo implements Serializable {
 			shortNameToSymbolMap.put(symbol.getShortName(), symbol);
 		}
 	}
-	
+
 	public List<ElementSymbol> getSymbolList() {
 		return symbolList;
 	}
-	
+
 	public ElementSymbol getSymbol(Object metadataID) {
 		return idToSymbolMap.get(metadataID);
 	}
-	
+
 	public ElementSymbol getSymbol(String shortCanonicalName) {
 		return shortNameToSymbolMap.get(shortCanonicalName);
 	}

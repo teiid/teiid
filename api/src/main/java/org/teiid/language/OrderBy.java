@@ -23,16 +23,16 @@ import java.util.List;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
- * Represents an ORDER BY clause in a command. 
+ * Represents an ORDER BY clause in a command.
  */
 public class OrderBy extends BaseLanguageObject {
 
     private List<SortSpecification> sortSpecifications;
-    
+
     public OrderBy(List<SortSpecification> items) {
         this.sortSpecifications = items;
     }
-    
+
     public List<SortSpecification> getSortSpecifications() {
         return sortSpecifications;
     }

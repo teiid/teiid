@@ -30,11 +30,11 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
 	private String address;
 	private String keyspace;
     private String username;
-    private String password;	
+    private String password;
     private Integer port;
-	
+
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CassandraManagedConnectionFactory.class);
-	
+
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<CassandraConnectionImpl> createConnectionFactory() throws ResourceException {
@@ -61,7 +61,7 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	
+
     public String getUsername() {
         return username;
     }
@@ -76,16 +76,16 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
 
     public void setPassword(String password) {
         this.password = password;
-    }	
-    
+    }
+
     public Integer getPort() {
         return port;
     }
 
     public void setPort(Integer port) {
         this.port = port;
-    }    
-    
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -136,5 +136,5 @@ public class CassandraManagedConnectionFactory extends BasicManagedConnectionFac
         } else if (!username.equals(other.username))
             return false;
         return true;
-    }	
+    }
 }

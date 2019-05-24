@@ -45,7 +45,7 @@ public final class AdminComponentException extends AdminException {
     public AdminComponentException(String msg) {
         super(msg);
     }
-    
+
     public AdminComponentException(Throwable cause) {
     	super(cause);
     }
@@ -59,7 +59,7 @@ public final class AdminComponentException extends AdminException {
     public AdminComponentException(BundleUtil.Event code, String msg) {
         super(code, msg);
     }
-    
+
     public AdminComponentException(String msg, Throwable cause) {
         super(msg, cause);
     }
@@ -67,7 +67,7 @@ public final class AdminComponentException extends AdminException {
     public AdminComponentException(BundleUtil.Event code, Throwable cause, String msg) {
         super(code, cause, msg);
     }
-    
+
     public AdminComponentException(BundleUtil.Event code, Throwable cause) {
         super(code, cause);
     }

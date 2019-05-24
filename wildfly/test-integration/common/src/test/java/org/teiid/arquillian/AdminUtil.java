@@ -30,7 +30,7 @@ import org.teiid.adminapi.jboss.AdminFactory.AdminImpl;
 @SuppressWarnings("nls")
 public class AdminUtil {
     public static final int MANAGEMENT_PORT = 9990;
-    
+
 	static void cleanUp(Admin admin) throws AdminException {
 		//TODO: cleanup when as supports it
 		/*for (String name : admin.getDataSourceNames()) {
@@ -43,7 +43,7 @@ public class AdminUtil {
 			}
 		}
 	}
-	
+
 	//TODO: this should not be needed, but cli doesn't currently support delete
 	static boolean createDataSource(Admin admin, String deploymentName, String templateName, Properties properties) throws AdminException {
 		if (admin.getDataSourceNames().contains(deploymentName)) {
@@ -54,7 +54,7 @@ public class AdminUtil {
 	}
 
 	public static final int DEFAULT_VDB_LOAD_TIMEOUT = 7;
-	
+
 	static boolean waitForVDBLoad(Admin admin, String vdbName, Object vdbVersion) throws AdminException {
 		long waitUntil = System.currentTimeMillis() + DEFAULT_VDB_LOAD_TIMEOUT*1000;
 		boolean first = true;
@@ -75,7 +75,7 @@ public class AdminUtil {
 		} while (System.currentTimeMillis() < waitUntil);
 		return false;
 	}
-	
+
 	static boolean waitForDeployment(Admin admin, String deploymentName,
 			int timeoutInSecs) {
 		long waitUntil = System.currentTimeMillis() + timeoutInSecs*1000;

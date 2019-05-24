@@ -43,7 +43,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
     private List inputReferences;
     private List inputDefaults;
     private Criteria critInProgress;
-    
+
     public DependentProcedureCriteriaProcessor(RelationalNode dependentNode,
                                                Criteria dependentCriteria,
                                                List references,
@@ -52,21 +52,21 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
         this.inputDefaults = defaults;
         this.inputReferences = references;
     }
-    
+
     protected boolean prepareNextCommand(VariableContext context) throws BlockedException,
                                           TeiidComponentException, TeiidProcessingException {
 
         if (this.critInProgress == null) {
             critInProgress = prepareCriteria();
         }
-        
+
         for (int j = 0; j < inputReferences.size(); j++) {
 
             Reference ref = (Reference)inputReferences.get(j);
 
             context.remove(ref.getExpression());
         }
-        
+
     	if (critInProgress == QueryRewriter.FALSE_CRITERIA) {
     		critInProgress = null;
     		consumedCriteria();
@@ -158,5 +158,5 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 		context.setValue(parameterSymbol, value);
 		return true;
 	}
-    
+
 }

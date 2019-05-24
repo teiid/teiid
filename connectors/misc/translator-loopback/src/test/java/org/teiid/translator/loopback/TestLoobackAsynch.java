@@ -28,7 +28,7 @@ import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 
 
-/** 
+/**
  * @since 4.3
  */
 public class TestLoobackAsynch extends TestCase {
@@ -38,7 +38,7 @@ public class TestLoobackAsynch extends TestCase {
         connector.setWaitTime(200);
         connector.setRowCount(1000);
         connector.setPollIntervalInMilli(100L);
-        
+
         ConnectorHost host = new ConnectorHost(connector, null, FakeTranslationFactory.getInstance().getBQTTranslationUtility());
         List results = host.executeCommand("SELECT intkey from bqt1.smalla"); //$NON-NLS-1$
         assertEquals(1000, results.size());

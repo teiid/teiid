@@ -42,13 +42,13 @@ import org.teiid.query.unittest.RealMetadataFactory;
 public class TestMetadataFactory {
     private static final String MY_RESOURCE_PATH = "my/resource/path";
 	private RuntimeMetadataImpl metadataFactory;
-	
+
 	@BeforeClass public static void beforeClass() throws IOException {
     	FileWriter f = new FileWriter(UnitTestUtil.getTestScratchPath()+"/foo");
     	f.write("ResourceContents");
     	f.close();
 	}
-	
+
     @Before public void setUp() {
         VDBMetaData vdbMetaData = RealMetadataFactory.example1VDB();
         vdbMetaData.getModel("pm1").setVisible(false);
@@ -60,7 +60,7 @@ public class TestMetadataFactory {
         metadata.setHiddenResolvable(false);
         metadataFactory = new RuntimeMetadataImpl(metadata);
     }
-    
+
     @Test public void testGetVDBResourcePaths() throws Exception {
         String[] expectedPaths = new String[] {MY_RESOURCE_PATH}; //$NON-NLS-1$
         String[] mfPaths = metadataFactory.getVDBResourcePaths();
@@ -69,7 +69,7 @@ public class TestMetadataFactory {
             assertEquals(expectedPaths[i], mfPaths[i]);
         }
     }
-     
+
     @Test public void testGetBinaryVDBResource() throws Exception {
         byte[] expectedBytes = "ResourceContents".getBytes(); //$NON-NLS-1$
         byte[] mfBytes =  metadataFactory.getBinaryVDBResource(MY_RESOURCE_PATH);
@@ -78,13 +78,13 @@ public class TestMetadataFactory {
             assertEquals("Byte at index " + i + " differs from expected content", expectedBytes[i], mfBytes[i]); //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
-     
+
     @Test public void testGetCharacterVDBResource() throws Exception {
         assertEquals("ResourceContents", metadataFactory.getCharacterVDBResource(MY_RESOURCE_PATH)); //$NON-NLS-1$
     }
-    
+
     @Test public void testHidden() throws Exception {
         assertNotNull(metadataFactory.getTable("pm1.g1"));
     }
-     
+
 }

@@ -43,7 +43,7 @@ public class TranslatorDependencyDeployer implements DeploymentUnitProcessor {
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.resource.api"), false, false, false, false)); //$NON-NLS-1$
 		} catch (ModuleLoadException e) {
 			throw new DeploymentUnitProcessingException(e);
-		}	
+		}
 	}
 
 	@Override

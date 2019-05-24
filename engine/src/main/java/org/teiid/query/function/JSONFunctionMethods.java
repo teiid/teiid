@@ -52,7 +52,7 @@ import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.util.CommandContext;
 
 public class JSONFunctionMethods {
-	
+
 	/**
 	 * Does nothing, just allows the parser to validate
 	 */
@@ -70,7 +70,7 @@ public class JSONFunctionMethods {
 
 		@Override
 		public void startJSON() throws ParseException, IOException {
-			
+
 		}
 
 		@Override
@@ -95,7 +95,7 @@ public class JSONFunctionMethods {
 
 		@Override
 		public void endJSON() throws ParseException, IOException {
-			
+
 		}
 
 		@Override
@@ -103,13 +103,13 @@ public class JSONFunctionMethods {
 			return true;
 		}
 	};
-	
+
 	public static class JSONBuilder {
 		private Writer writer;
 		private FileStoreInputStreamFactory fsisf;
 		private FileStore fs;
 		private Stack<Integer> position = new Stack<Integer>();
-		
+
 		public JSONBuilder(BufferManager bm) {
 			fs = bm.createFileStore("json"); //$NON-NLS-1$
 			fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
@@ -133,7 +133,7 @@ public class JSONFunctionMethods {
 		public void addValue(Object object) throws TeiidProcessingException {
 			addValue(null, object);
 		}
-		
+
 		public void addValue(String key, Object object) throws TeiidProcessingException {
 			try {
 				startValue(key);
@@ -190,11 +190,11 @@ public class JSONFunctionMethods {
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
 			}
 		}
-		
+
 		public Writer getWriter() {
 			return writer;
 		}
-		
+
 		public JsonType close(CommandContext cc) throws TeiidProcessingException {
 			try {
 				writer.close();
@@ -233,7 +233,7 @@ public class JSONFunctionMethods {
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30442, e);
 			}
 		}
-		
+
 	}
 
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
@@ -255,7 +255,7 @@ public class JSONFunctionMethods {
 			}
 		}
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
 	public static JsonType jsonParse(BlobType val, boolean wellformed) throws SQLException, IOException, ParseException {
 		InputStreamReader r = XMLSystemFunctions.getJsonReader(val);
@@ -272,7 +272,7 @@ public class JSONFunctionMethods {
 			r.close();
 		}
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
 	public static JsonType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		if (vals == null) {

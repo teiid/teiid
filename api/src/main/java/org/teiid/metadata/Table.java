@@ -52,13 +52,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 			}
 		}
 	}
-	
+
     public static enum TriggerEvent {
 		INSERT,
 		UPDATE,
 		DELETE
 	}
-    
+
     static final int asInt(long f) {
 		if (f == UNKNOWN_CARDINALITY || f < 0) {
     		return UNKNOWN_CARDINALITY;
@@ -68,7 +68,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		//NaN 0x7ffffffff will map to -1 (unknown)
 		return Float.floatToRawIntBits(f) | 0x80000000;
 	}
-	
+
 	static final float asFloat(int i) {
 		if (i >= UNKNOWN_CARDINALITY) {
     		return i;
@@ -88,7 +88,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private List<KeyRecord> uniqueKeys = new ArrayList<KeyRecord>(2);
     private List<KeyRecord> accessPatterns = new ArrayList<KeyRecord>(2);
     private KeyRecord primaryKey;
-    
+
     //table information
     private Map<String, Trigger> triggers = new LinkedHashMap<String, Trigger>();
 
@@ -107,10 +107,10 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private List<String> bindings;
 	private List<String> schemaPaths;
 	private String resourcePath;
-	
+
 	private volatile transient long lastModified;
 	private volatile transient long lastDataModification;
-	
+
 	/**
 	 * Used in xml document models mapping classes to represent input parameters
 	 * @return
@@ -146,7 +146,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     	}
     	return Integer.MAX_VALUE;
     }
-    
+
     public float getCardinalityAsFloat() {
     	return asFloat(cardinality);
     }
@@ -184,7 +184,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     public void setCardinality(int i) {
     	cardinality = asInt(i);
     }
-    
+
     public void setCardinality(long f) {
     	cardinality = asInt(f);
     }
@@ -228,103 +228,103 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     public String getInsertPlan() {
     	return insertPlan;
     }
-    
+
     public String getUpdatePlan() {
     	return updatePlan;
     }
-    
+
     public String getDeletePlan() {
     	return deletePlan;
     }
-    
+
     public void setInsertPlan(String insertPlan) {
 		this.insertPlan = DataTypeManager.getCanonicalString(insertPlan);
 		this.insertPlanEnabled = true;
 	}
-    
+
     public void setUpdatePlan(String updatePlan) {
 		this.updatePlan = DataTypeManager.getCanonicalString(updatePlan);
 		this.updatePlanEnabled = true;
 	}
-    
+
     public void setDeletePlan(String deletePlan) {
 		this.deletePlan = DataTypeManager.getCanonicalString(deletePlan);
 		this.deletePlanEnabled = true;
 	}
-    
+
     public List<ForeignKey> getForeignKeys() {
     	return this.foreignKeys;
     }
-    
+
     public void setForeignKeys(List<ForeignKey> foreignKeys) {
         this.foreignKeys = foreignKeys;
     }
-    
+
     @Deprecated
     public void setForiegnKeys(List<ForeignKey> foriegnKeys) {
 		this.foreignKeys = foriegnKeys;
 	}
-    
+
     public List<KeyRecord> getIndexes() {
     	return this.indexes;
     }
-    
+
     public void setIndexes(List<KeyRecord> indexes) {
 		this.indexes = indexes;
 	}
-    
+
     public List<KeyRecord> getFunctionBasedIndexes() {
 		return functionBasedIndexes;
 	}
-    
+
     public void setFunctionBasedIndexes(List<KeyRecord> functionBasedIndexes) {
 		this.functionBasedIndexes = functionBasedIndexes;
 	}
-    
+
     public List<KeyRecord> getUniqueKeys() {
     	return this.uniqueKeys;
     }
-    
+
     public void setUniqueKeys(List<KeyRecord> uniqueKeys) {
 		this.uniqueKeys = uniqueKeys;
 	}
-    
+
     public List<KeyRecord> getAccessPatterns() {
     	return this.accessPatterns;
     }
-    
+
     public void setAccessPatterns(List<KeyRecord> accessPatterns) {
 		this.accessPatterns = accessPatterns;
 	}
-    
+
     public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
-    
+
     public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
 	}
-    
+
     public String getSelectTransformation() {
 		return selectTransformation;
 	}
-    
+
     public void setSelectTransformation(String selectTransformation) {
 		this.selectTransformation = DataTypeManager.getCanonicalString(selectTransformation);
 	}
-    
+
     public Table getMaterializedStageTable() {
 		return materializedStageTable;
 	}
-    
+
     public Table getMaterializedTable() {
 		return materializedTable;
 	}
-    
+
     public void setMaterializedStageTable(Table materializedStageTable) {
 		this.materializedStageTable = materializedStageTable;
 	}
-    
+
     public void setMaterializedTable(Table materializedTable) {
 		this.materializedTable = materializedTable;
 	}
@@ -336,8 +336,8 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	public String getResourcePath() {
 		return resourcePath;
 	}
-	
-	public Collection<KeyRecord> getAllKeys() { 
+
+	public Collection<KeyRecord> getAllKeys() {
 		Collection<KeyRecord> keys = new LinkedList<KeyRecord>();
 		if (getPrimaryKey() != null) {
 			keys.add(getPrimaryKey());
@@ -348,59 +348,59 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		keys.addAll(getUniqueKeys());
 		return keys;
 	}
-	
+
 	@Override
 	public void addColumn(Column column) {
 		super.addColumn(column);
 		column.setParent(this);
 	}
-	
+
 	public long getLastDataModification() {
 		return lastDataModification;
 	}
-	
+
 	public long getLastModified() {
 		return lastModified;
 	}
-	
+
 	public void setLastDataModification(long lastDataModification) {
 		this.lastDataModification = lastDataModification;
 	}
-	
+
 	public void setLastModified(long lastModified) {
 		this.lastModified = lastModified;
 	}
-	
+
 	public void setTableStats(TableStats stats) {
 		if (stats.getCardinality() != null) {
 			setCardinality(stats.getCardinality().longValue());
 		}
 	}
-	
+
 	public boolean isDeletePlanEnabled() {
 		return deletePlanEnabled;
 	}
-	
+
 	public boolean isInsertPlanEnabled() {
 		return insertPlanEnabled;
 	}
-	
+
 	public boolean isUpdatePlanEnabled() {
 		return updatePlanEnabled;
 	}
-	
+
 	public void setInsertPlanEnabled(boolean insertPlanEnabled) {
 		this.insertPlanEnabled = insertPlanEnabled;
 	}
-	
+
 	public void setDeletePlanEnabled(boolean deletePlanEnabled) {
 		this.deletePlanEnabled = deletePlanEnabled;
 	}
-	
+
 	public void setUpdatePlanEnabled(boolean updatePlanEnabled) {
 		this.updatePlanEnabled = updatePlanEnabled;
 	}
-	
+
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
     	in.defaultReadObject();
@@ -408,7 +408,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     		this.functionBasedIndexes = new ArrayList<KeyRecord>(2);
     	}
     }
-    
+
     @Override
     public String getFullName() {
     	if (this.tableType == Type.TemporaryTable && !this.isVirtual) {
@@ -416,8 +416,8 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     	}
     	return super.getFullName();
     }
-    
+
     public Map<String, Trigger> getTriggers() {
         return triggers;
-    }    
+    }
 }

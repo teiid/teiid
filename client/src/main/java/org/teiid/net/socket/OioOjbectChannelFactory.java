@@ -44,14 +44,14 @@ import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 
 public final class OioOjbectChannelFactory implements ObjectChannelFactory {
-	
+
 	public static ThreadLocal<Long> TIMEOUTS = new ThreadLocal<Long>();
-	
+
 	private final static int STREAM_BUFFER_SIZE = 1<<15;
 	private final static int DEFAULT_MAX_OBJECT_SIZE = 1 << 25;
-	
+
 	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
-	
+
 	final static class OioObjectChannel implements ObjectChannel {
 		private final Socket socket;
 		private ObjectOutputStream outputStream;
@@ -95,7 +95,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		public SocketAddress getRemoteAddress() {
 			return socket.getRemoteSocketAddress();
 		}
-		
+
 		@Override
 		public InetAddress getLocalAddress() {
 			return socket.getLocalAddress();
@@ -130,7 +130,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		    ResultsFuture<Void> result = new ResultsFuture<Void>();
 		    try {
 		        outputStream.writeObject(msg);
-		        outputStream.flush();     
+		        outputStream.flush();
 		        outputStream.reset();
 		    	result.getResultsReceiver().receiveResults(null);
 		    } catch (IOException e) {
@@ -179,7 +179,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	    socket.setSoTimeout(soTimeout);
 	    return new OioObjectChannel(socket, maxObjectSize);
 	}
-	
+
 	public int getSendBufferSize() {
 		return sendBufferSize;
 	}
@@ -203,11 +203,11 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	public void setConserveBandwidth(boolean conserveBandwidth) {
 		this.conserveBandwidth = conserveBandwidth;
 	}
-	
+
 	public void setSoTimeout(int soTimeout) {
 		this.soTimeout = soTimeout;
 	}
-	
+
 	public void setMaxObjectSize(int maxObjectSize) {
 		this.maxObjectSize = maxObjectSize;
 	}

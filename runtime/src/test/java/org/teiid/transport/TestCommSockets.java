@@ -66,7 +66,7 @@ public class TestCommSockets {
 	@Before public void setUp() {
 		addr = new InetSocketAddress(0);
 	}
-	
+
 	@After public void tearDown() throws Exception {
 		if (listener != null) {
 			listener.stop();
@@ -101,7 +101,7 @@ public class TestCommSockets {
 		stats = listener.getStats();
 		assertEquals(0, stats.sockets);
 	}
-	
+
 	@Test public void testLobs() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
@@ -115,7 +115,7 @@ public class TestCommSockets {
 		assertEquals(6, storageManager.getCreated());
 		assertEquals(6, storageManager.getRemoved());
 	}
-	
+
 	@Test public void testServerRemoteStreaming() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
@@ -145,11 +145,11 @@ public class TestCommSockets {
 				}
 			};
 			service = new SessionServiceImpl();
-			server.registerClientService(ILogon.class, new LogonImpl(service, "fakeCluster"), null); 
+			server.registerClientService(ILogon.class, new LogonImpl(service, "fakeCluster"), null);
 			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
 			storageManager = new MemoryStorageManager();
 			listener = new SocketListener(addr, 0, 0, 2, config, server, storageManager);
-			
+
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);
 			assertEquals(0, stats.objectsRead);
@@ -159,7 +159,7 @@ public class TestCommSockets {
 
 		Properties p = new Properties(socketConfig);
 		String url = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
-		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
+		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url);
 		p.setProperty(TeiidURL.CONNECTION.APP_NAME, "test");
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
@@ -176,7 +176,7 @@ public class TestCommSockets {
 			helpEstablishConnection(true);
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			
+
 		}
 	}
 
@@ -187,7 +187,7 @@ public class TestCommSockets {
 	        //Cannot test anon if no cipher suite is available
             return;
         }
-	    
+
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
@@ -196,15 +196,15 @@ public class TestCommSockets {
 		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
-		
+
 		try {
 			helpEstablishConnection(false, config, p);
 			fail();
 		} catch (CommunicationException e) {
-			
+
 		}
 	}
-	
+
 	@Test(expected=CommunicationException.class) public void testNonAnonSSLConnectWithSSLServer() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
@@ -213,7 +213,7 @@ public class TestCommSockets {
 		p.setProperty(SocketUtil.ALLOW_ANON, Boolean.FALSE.toString());
 		helpEstablishConnection(true, config, p);
 	}
-	
+
 	@Test(expected=CommunicationException.class) public void testOnewayFails() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
@@ -223,7 +223,7 @@ public class TestCommSockets {
 		//TODO: we may want to clarify the server exception in this case, which
 		//is just that there are no cipher suites in common
 	}
-	
+
 	/**
 	 * shows one-way auth with a key alias/password
 	 */
@@ -240,7 +240,7 @@ public class TestCommSockets {
 		p.setProperty("org.teiid.ssl.trustStorePassword", "password");
 		helpEstablishConnection(true, config, p);
 	}
-	
+
 	@Test public void testSSLSelfSignedTrustAll() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
@@ -253,7 +253,7 @@ public class TestCommSockets {
 		p.setProperty("org.teiid.ssl.trustAll", "true");
 		helpEstablishConnection(true, config, p);
 	}
-	
+
 	@Test public void testTwoWaySSLSelfSigned() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
@@ -272,7 +272,7 @@ public class TestCommSockets {
 		p.setProperty("org.teiid.ssl.keyPassword", "changeit");
 		helpEstablishConnection(true, config, p);
 	}
-	
+
 	@Test public void testSelectNewInstanceWithoutPooling() throws Exception {
 		Properties p = new Properties();
 		SSLConfiguration config = new SSLConfiguration();
@@ -292,13 +292,13 @@ public class TestCommSockets {
 		conn.close();
 		conn2.close();
 	}
-	
+
 	@Test public void testEnableCipherSuites() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setEnabledCipherSuites("x,y,z");
 		assertArrayEquals(new String[] {"x","y","z"}, config.getEnabledCipherSuitesAsArray());
 	}
-	
+
 	@Test public void testAnonSSLMode() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode("enabled");
@@ -307,21 +307,21 @@ public class TestCommSockets {
 		config.setMode("login");
 		assertTrue(config.isClientEncryptionEnabled());
 	}
-	
+
 	@Test(expected=CommunicationException.class) public void testCheckExpired() throws Exception {
 		SSLConfiguration config = new SSLConfiguration();
 		config.setMode(SSLConfiguration.ENABLED);
 		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
 		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/TEIID-4080/keystore_server_root_expired.jks");
 		config.setKeystorePassword("keystorepswd");
-		
+
 		Properties p = new Properties();
 		p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/TEIID-4080/truststore.jks");
 		p.setProperty("org.teiid.ssl.trustStorePassword", "truststorepswd");
 		p.setProperty("org.teiid.ssl.checkExpired", "true");
 		helpEstablishConnection(true, config, p);
 	}
-	
+
 	@Test public void testAutoFailoverPing() throws Exception {
 	    Properties p = new Properties();
 	    p.setProperty(TeiidURL.CONNECTION.AUTO_FAILOVER, "true");
@@ -329,7 +329,7 @@ public class TestCommSockets {
 	    SocketServerConnection conn = helpEstablishConnection(false, new SSLConfiguration(), p);
 	    ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
 	    Future<?> future = exec.submit(new Runnable() {
-            
+
             @Override
             public void run() {
                 final FakeService fs = conn.getService(FakeService.class);
@@ -349,5 +349,5 @@ public class TestCommSockets {
         });
 	    future.get(19, TimeUnit.SECONDS);
     }
-	
+
 }

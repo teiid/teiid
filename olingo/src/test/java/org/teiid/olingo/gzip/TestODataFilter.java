@@ -31,7 +31,7 @@ import org.teiid.olingo.web.ODataFilter;
 
 @SuppressWarnings("nls")
 public class TestODataFilter {
-    
+
     @Test public void testVdbVersion() throws Exception {
         ODataFilter filter = new ODataFilter();
         FilterConfig config = Mockito.mock(FilterConfig.class);
@@ -39,11 +39,11 @@ public class TestODataFilter {
         Mockito.stub(mock.getInitParameterNames()).toReturn(Collections.emptyEnumeration());
         Mockito.stub(config.getServletContext()).toReturn(mock);
         Mockito.stub(config.getInitParameterNames()).toReturn(Collections.emptyEnumeration());
-        
+
         //default to 1
         filter.init(config);
         assertEquals("1", filter.getDefaultVdbVersion());
-        
+
         //override
         Mockito.stub(config.getInitParameter("explicit-vdb-version")).toReturn("false");
         filter.init(config);

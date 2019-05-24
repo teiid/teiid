@@ -39,42 +39,42 @@ public class TestSecurityFunctions {
      *  hasRole should be true without a service
      */
     @Test public void testHasRoleWithoutService() throws Exception {
-        
+
         String sql = "select pm1.g1.e2 from pm1.g1 where true = hasRole('data', pm1.g1.e1)";  //$NON-NLS-1$
-        
+
         // Create expected results
-        List[] expected = new List[] { 
+        List[] expected = new List[] {
             Arrays.asList(new Object[] { new Integer(0) }),
-        };    
-        
+        };
+
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        
+
         dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List[] { //$NON-NLS-1$
-            Arrays.asList(new Object[] { "fooRole", new Integer(0) }), //$NON-NLS-1$  
-        }); 
-        
-        Command command = TestProcessor.helpParse(sql);   
+            Arrays.asList(new Object[] { "fooRole", new Integer(0) }), //$NON-NLS-1$
+        });
+
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached());
-        
+
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
-    
+
     @Test public void testHasRoleWithService() throws Exception {
-        
+
         String sql = "select pm1.g1.e2 from pm1.g1 where true = hasRole('data', pm1.g1.e1)";  //$NON-NLS-1$
-        
+
         // Create expected results
-        List[] expected = new List[] { };    
-        
+        List[] expected = new List[] { };
+
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        
+
         dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List[] { //$NON-NLS-1$
-            Arrays.asList(new Object[] { "fooRole", new Integer(0) }), //$NON-NLS-1$  
-        }); 
-        
+            Arrays.asList(new Object[] { "fooRole", new Integer(0) }), //$NON-NLS-1$
+        });
+
         CommandContext context = new CommandContext();
         context.setAuthoriziationValidator(new AuthorizationValidator() {
 
@@ -91,36 +91,36 @@ public class TestSecurityFunctions {
 					CommandContext commandContext) {
 				return false;
 			}
-			
+
 			@Override
 			public boolean isAccessible(AbstractMetadataRecord record,
 					CommandContext commandContext) {
 				return true;
 			}
-			
+
         });
-        
-        Command command = TestProcessor.helpParse(sql);   
+
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
-        
+
         // Run query
         TestProcessor.helpProcess(plan, context, dataManager, expected);
     }
-    
+
     @Test public void testHashes() {
         String sql = "select cast(to_chars(md5(pm1.g1.e1), 'hex') as string), cast(to_chars(sha1(X'61'), 'hex') as string) from pm1.g1";  //$NON-NLS-1$
-        
-        List<?>[] expected = new List[] { Arrays.asList("0CC175B9C0F1B6A831C399E269772661", "86F7E437FAA5A7FCE15D1DDCB9EAEAEA377667B8")}; //$NON-NLS-1$ //$NON-NLS-2$      
-        
+
+        List<?>[] expected = new List[] { Arrays.asList("0CC175B9C0F1B6A831C399E269772661", "86F7E437FAA5A7FCE15D1DDCB9EAEAEA377667B8")}; //$NON-NLS-1$ //$NON-NLS-2$
+
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        
+
         dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", new List[] { //$NON-NLS-1$
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$  
-        }); 
-        
-        Command command = TestProcessor.helpParse(sql);   
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        });
+
+        Command command = TestProcessor.helpParse(sql);
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder());
-        
+
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
 

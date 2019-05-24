@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.common.buffer;
 
 import java.io.ByteArrayInputStream;
@@ -50,7 +50,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	public InputStream getInputStream() {
 		return getInputStream(0, -1);
 	}
-	
+
 	public InputStream getInputStream(long start, long len) {
 		if (fsos != null && !fsos.bytesWritten()) {
 			if (start > Integer.MAX_VALUE) {
@@ -65,14 +65,14 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		}
 		return lobBuffer.createInputStream(start, len);
 	}
-	
+
 	public byte[] getMemoryBytes() {
 		if (fsos != null && !fsos.bytesWritten() && fsos.getBuffer().length == fsos.getCount()) {
 			return fsos.getBuffer();
 		}
 		throw new IllegalStateException("In persistent mode or not closed for writing"); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public Reader getCharacterStream() throws IOException {
 		return new InputStreamReader(getInputStream(), Charset.forName(encoding).newDecoder());
@@ -97,7 +97,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		}
 		return writer;
 	}
-	
+
 	/**
 	 * The returned output stream is shared among all uses.
 	 * Once closed no further writing can occur
@@ -106,7 +106,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	public FileStoreOutputStream getOuputStream() {
 		return getOuputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
 	}
-	
+
 	/**
 	 * The returned output stream is shared among all uses.
 	 * Once closed no further writing can occur
@@ -126,7 +126,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		AutoCleanupUtil.removeCleanupReference(cleanup);
 		cleanup = null;
 	}
-	
+
 	@Override
 	public StorageMode getStorageMode() {
 		if (fsos == null || fsos.bytesWritten()) {
@@ -134,11 +134,11 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 		}
 		return StorageMode.MEMORY;
 	}
-	
+
 	public boolean isTemporary() {
         return temporary;
     }
-	
+
 	@Override
     public void setTemporary(boolean b) {
         this.temporary = b;

@@ -25,7 +25,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.language.SQLConstants;
 
 public class ReturnInstruction extends ProgramInstruction {
-	
+
     public ReturnInstruction() {
 	}
 
@@ -36,11 +36,11 @@ public class ReturnInstruction extends ProgramInstruction {
     public void process(ProcedurePlan env) throws TeiidComponentException {
         while(env.peek() != null){
     		env.pop(true);
-        } 
+        }
     }
-    
+
     public PlanNode getDescriptionProperties() {
         return new PlanNode(SQLConstants.Reserved.RETURN);
     }
-    
+
 }

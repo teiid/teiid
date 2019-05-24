@@ -34,7 +34,7 @@ import junit.framework.TestCase;
 public class TestLogManager extends TestCase {
 
 	private static final String CONTEXT = "SomeContext"; //$NON-NLS-1$
-	
+
     /**
      * Constructor for TestLogManager.
      * @param name
@@ -42,14 +42,14 @@ public class TestLogManager extends TestCase {
     public TestLogManager(String name) {
         super(name);
     }
-    
+
 	@Override
 	protected void setUp() throws Exception {
     	ListLogger logger = new ListLogger();
     	logger.setLogLevel(CONTEXT, MessageLevel.DETAIL);
     	LogManager.logListener = logger;
-	}    
-    
+	}
+
     // =========================================================================
     //                         T E S T     C A S E S
     // =========================================================================
@@ -58,8 +58,8 @@ public class TestLogManager extends TestCase {
      * Test for boolean isMessageToBeRecorded(String, int)
      */
     public void testIsMessageToBeRecordedString() {
-    	assertTrue(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) ); 
-    	
+    	assertTrue(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) );
+
     	ListLogger cfg = (ListLogger)LogManager.logListener;
         cfg.setLogLevel(CONTEXT, MessageLevel.NONE);
         assertFalse(LogManager.isMessageToBeRecorded(CONTEXT, MessageLevel.CRITICAL) );
@@ -82,14 +82,14 @@ public class TestLogManager extends TestCase {
 
         for (Iterator<String> iter = sentMsgList.iterator(); iter.hasNext();) {
             String msg = iter.next();
-            LogManager.logInfo(CONTEXT, msg); 
+            LogManager.logInfo(CONTEXT, msg);
         }
-        
+
         List<String> recevedMsgList = cfg.getLoggedMessages();
         assertEquals(sentMsgList.size(), recevedMsgList.size());
         assertEquals(sentMsgList, recevedMsgList);
     }
-    
+
     /**
      *
      * A log listener that saves messages (IStatus)s in a
@@ -102,14 +102,14 @@ public class TestLogManager extends TestCase {
 
         public ListLogger() {
         }
-        
+
         public void log(int level, String context, Object... msg){
             this.messages.add(msg[0].toString());
         }
-        
+
 		public void log(int level, String context, Throwable t, Object... msg) {
             this.messages.add(msg[0].toString());
-		}        
+		}
 
         public void shutdown() {
             messages.clear();
@@ -124,12 +124,12 @@ public class TestLogManager extends TestCase {
         public List<String> getLoggedMessages() {
             return this.messages;
         }
-    	
+
     	public Set<String> getContexts() {
     		return this.contextMap.keySet();
     	}
 
-    	public int getLogLevel(String context) {				
+    	public int getLogLevel(String context) {
     		Integer level = this.contextMap.get(context);
     		if (level != null) {
     			return level;
@@ -154,7 +154,7 @@ public class TestLogManager extends TestCase {
 
 		@Override
 		public void removeMdc(String key) {
-			
+
 		}
     }
 

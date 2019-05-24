@@ -32,7 +32,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
 		Like_Only {
 			@Override
 			public String toString() {
-				return "Like Only"; //$NON-NLS-1$ 
+				return "Like Only"; //$NON-NLS-1$
 			}
 		},
 		All_Except_Like {
@@ -49,7 +49,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
 			}
 		}
 	}
-	
+
     private boolean selectable = true;
     private boolean updatable;
     private boolean autoIncremented;
@@ -67,12 +67,12 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private volatile int distinctValues = -1;
     private volatile int nullValues = -1;
     private ColumnSet<?> parent;
-    
+
     @Override
     public void setDatatype(Datatype datatype, boolean copyAttributes, int arrayDimensions) {
     	super.setDatatype(datatype, copyAttributes, arrayDimensions);
     	if (datatype != null && copyAttributes) {
-    		//if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) { 
+    		//if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) {
     		    //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
     			//this.charOctetLength = datatype.getLength();
     		//}
@@ -82,11 +82,11 @@ public class Column extends BaseColumn implements Comparable<Column> {
     		this.signed = datatype.isSigned();
     	}
     }
-    
+
     public void setParent(ColumnSet<?> parent) {
 		this.parent = parent;
 	}
-    
+
     @Override
     public ColumnSet<?> getParent() {
     	return parent;
@@ -96,7 +96,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public int compareTo(Column record) {
     	return this.getPosition() - record.getPosition();
     }
-    
+
     public int getCharOctetLength() {
         return charOctetLength;
     }
@@ -115,7 +115,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     	}
         return searchType;
     }
-    
+
     public boolean isSearchTypeSet() {
     	return searchType != null;
     }
@@ -162,18 +162,18 @@ public class Column extends BaseColumn implements Comparable<Column> {
     	}
     	return Integer.MAX_VALUE;
     }
-    
+
     public float getNullValuesAsFloat() {
     	return Table.asFloat(nullValues);
     }
-    
+
     public int getDistinctValues() {
     	if (distinctValues >= -1) {
     		return distinctValues;
     	}
     	return Integer.MAX_VALUE;
     }
-    
+
     public float getDistinctValuesAsFloat() {
     	return Table.asFloat(distinctValues);
     }
@@ -269,7 +269,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setDistinctValues(int distinctValues) {
         this.distinctValues = Table.asInt(distinctValues);
     }
-    
+
     public void setDistinctValues(long distinctValues) {
     	this.distinctValues = Table.asInt(distinctValues);
     }
@@ -281,7 +281,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setNullValues(int nullValues) {
         this.nullValues = Table.asInt(nullValues);
     }
-    
+
     public void setNullValues(long nullValues) {
     	this.nullValues = Table.asInt(nullValues);
     }
@@ -293,7 +293,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     public void setNativeType(String nativeType) {
         this.nativeType = DataTypeManager.getCanonicalString(nativeType);
     }
-    
+
     public void setColumnStats(ColumnStats stats) {
     	if (stats.getDistinctValues() != null) {
 			setDistinctValues(stats.getDistinctValues().longValue());

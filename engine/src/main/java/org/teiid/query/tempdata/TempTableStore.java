@@ -66,12 +66,12 @@ import org.teiid.query.util.CommandContext;
  * TempTableStores are transactional, but do not act as full resource manager.
  * This means we are effectively 1PC and don't allow any heuristic exceptions
  * on commit.
- *  
+ *
  * Table state snapshoting and a {@link Synchronization} are used to
  * perform the appropriate commit/rollback actions.
- * 
+ *
  * Full row level MVCC would be a good next step as it would remove the
- * cost of state cloning and would allow for concurrent read/write transactions. 
+ * cost of state cloning and would allow for concurrent read/write transactions.
  */
 public class TempTableStore {
 
@@ -81,13 +81,13 @@ public class TempTableStore {
     	void commit();
     	void rollback();
     }
-    
+
     public enum TransactionMode {
     	ISOLATE_READS, //for matviews that have atomic updates
     	ISOLATE_WRITES, //for session/procedure stores that need rollback support - this is effectively READ_UNCOMMITTED
     	NONE
     }
-    
+
     public static class TableProcessor {
 		QueryProcessor queryProcessor;
     	List<ElementSymbol> columns;
@@ -99,7 +99,7 @@ public class TempTableStore {
 			this.columns = columns;
 			this.iterator = new BatchProducerTupleSource(queryProcessor);
 		}
-    	
+
     	public void close() {
 			iterator.closeSource();
 			queryProcessor.closeProcessing();
@@ -132,10 +132,10 @@ public class TempTableStore {
     	 * @param create
     	 */
 		public void alterCreate(Create create) {
-			
+
 		}
     }
-    
+
     public static class RecursiveTableProcessor extends TableProcessor {
 		private ProcessorPlan recursive;
     	private boolean all;
@@ -146,7 +146,7 @@ public class TempTableStore {
     	private boolean building;
     	private int iterations;
 		private int maxIterations = 10000; //Default to 10000
-    	
+
 		public RecursiveTableProcessor(QueryProcessor queryProcessor,
 				List<ElementSymbol> columns, ProcessorPlan processorPlan, boolean all) throws TransformationException {
 			super(queryProcessor, columns);
@@ -173,19 +173,19 @@ public class TempTableStore {
 					intermediate = tempTable.clone();
 				}
 				processPlan(tempTable, working);
-				initial = false;	
+				initial = false;
 			}
-			
+
 			//continue to build the result
 			while (working.getRowCount() > 0) {
 				if (building) {
 					return working;
-				} 
+				}
 				building = true;
 				try {
 					if (workingQp == null) {
 						recursive.reset();
-						workingQp = new QueryProcessor(recursive, this.queryProcessor.getContext().clone(), 
+						workingQp = new QueryProcessor(recursive, this.queryProcessor.getContext().clone(),
 								this.queryProcessor.getBufferManager(), this.queryProcessor.getProcessorDataManager());
 						this.iterator = new BatchProducerTupleSource(workingQp);
 					}
@@ -217,7 +217,7 @@ public class TempTableStore {
 				throws TeiidComponentException, TeiidProcessingException {
 			List<Object> row = null;
 			List tuple = null;
-			
+
 			while ((tuple = this.iterator.nextTuple()) != null) {
 				if (all) {
 					row = new ArrayList<Object>(tuple);
@@ -226,19 +226,19 @@ public class TempTableStore {
 					row = tuple;
 				}
 				if (tempTable.insertTuple(row, false, false)) {
-					target.insertTuple(row, false, true);	
+					target.insertTuple(row, false, true);
 				}
 			}
 			iterator.closeSource();
 		}
-		
+
 		@Override
 		public void alterCreate(Create create) {
 			if (!all) {
 				create.getPrimaryKey().addAll(create.getColumnSymbols());
 			}
 		}
-		
+
 		@Override
 		public void close() {
 			super.close();
@@ -253,16 +253,16 @@ public class TempTableStore {
 			}
 		}
     }
-    
+
     public class TempTableSynchronization implements Synchronization {
-    	
+
     	private String id;
     	Set<Long> existingTables = new HashSet<Long>();
     	ConcurrentHashMap<String, TempTable> tables = new ConcurrentHashMap<String, TempTable>();
         private List<TransactionCallback> callbacks = new LinkedList<TransactionCallback>();
-    	        
+
         private boolean completed;
-        
+
         public TempTableSynchronization(final String id) {
         	this.id = id;
         	for (TempTable tempTable : tempTables.values()) {
@@ -272,7 +272,7 @@ public class TempTableStore {
         		addCallback(new TransactionCallback() {
         	        private Map<String, TempMetadataID> clonedMetadata = new ConcurrentHashMap<String, TempMetadataID>(tempMetadataStore.getData());
         	        private Map<String, TempTable> clonedTables = new ConcurrentHashMap<String, TempTable>(tempTables);
-					
+
 					@Override
 					public void rollback() {
 						LogManager.logDetail(LogConstants.CTX_DQP, "Rolling back txn", id, "restoring", clonedTables.keySet(), "using rollback tables", tables); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -281,17 +281,17 @@ public class TempTableStore {
 						for (TempTable table : tempTables.values()) {
 							table.remove();
 						}
-						
+
 						//restore the state
 						tempMetadataStore.getData().clear();
 						tempMetadataStore.getData().putAll(clonedMetadata);
 						tempTables.clear();
 						tempTables.putAll(clonedTables);
-						
+
 						//overlay the rollback tables
 						tempTables.putAll(tables);
 					}
-					
+
 					@Override
 					public void commit() {
 						//remove any original tables that were removed in this txn
@@ -303,7 +303,7 @@ public class TempTableStore {
 				});
         	}
 		}
-    	
+
     	@Override
     	public synchronized void afterCompletion(int status) {
     		completed = true;
@@ -329,16 +329,16 @@ public class TempTableStore {
 			}
     		callbacks.clear();
     	}
-    	
+
     	public boolean isCompleted() {
 			return completed;
 		}
-    	
+
     	@Override
     	public void beforeCompletion() {
-    		
+
     	}
-    	
+
     	public synchronized boolean addCallback(TransactionCallback callback) {
     		if (!completed) {
     			callbacks.add(0, callback);
@@ -346,37 +346,37 @@ public class TempTableStore {
     		return !completed;
     	}
     }
-    
+
     private Map<String, TempTableSynchronization> synchronizations = new ConcurrentHashMap<String, TempTableSynchronization>();
     private TransactionMode transactionMode = TransactionMode.NONE;
-	
+
     private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentSkipListMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER));
     private Map<String, TempTable> tempTables = new ConcurrentSkipListMap<String, TempTable>(String.CASE_INSENSITIVE_ORDER);
     private Map<String, Table> foreignTempTables = new ConcurrentSkipListMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
     private String sessionID;
     private TempTableStore parentTempTableStore;
-    
+
     private HashMap<String, TableProcessor> processors;
     private boolean localScoped;
-    
+
     public TempTableStore(String sessionID, TransactionMode transactionMode) {
         this(sessionID, transactionMode, true);
     }
-    
+
     public TempTableStore(String sessionID, TransactionMode transactionMode, boolean localScoped) {
         this.sessionID = sessionID;
         this.transactionMode = transactionMode;
         this.localScoped = localScoped;
     }
-    
+
     public void setParentTempTableStore(TempTableStore parentTempTableStore) {
 		this.parentTempTableStore = parentTempTableStore;
 	}
-    
+
     public TempTableStore getParentTempTableStore() {
 		return parentTempTableStore;
 	}
-    
+
     public boolean hasTempTable(String tempTableName, boolean checkParent) {
     	boolean local = tempTables.containsKey(tempTableName) || foreignTempTables.containsKey(tempTableName);
     	if (local) {
@@ -387,11 +387,11 @@ public class TempTableStore {
     	}
     	return false;
     }
-    
+
     public void setProcessors(HashMap<String, TableProcessor> plans) {
 		this.processors = plans;
 	}
-    
+
     void addForeignTempTable(final String tempTableName, Create create) {
     	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
     	if (id == null) {
@@ -403,7 +403,7 @@ public class TempTableStore {
     }
 
     /**
-     * 
+     *
      * @param tempTableName
      * @param create
      * @param buffer
@@ -443,7 +443,7 @@ public class TempTableStore {
         }
         return tempTable;
     }
-    
+
     public void removeTempTableByName(final String tempTableName, CommandContext context) throws TeiidProcessingException {
     	TempTableSynchronization synch = getSynchronization(context);
     	tempMetadataStore.removeTempGroup(tempTableName);
@@ -491,7 +491,7 @@ public class TempTableStore {
     public TempMetadataStore getMetadataStore() {
         return tempMetadataStore;
     }
-            
+
     public void removeTempTables() throws TeiidComponentException {
         for (String name : tempTables.keySet()) {
             try {
@@ -508,22 +508,22 @@ public class TempTableStore {
 			}
         }
     }
-    
+
     public void setUpdatable(String name, boolean updatable) {
     	TempTable table = tempTables.get(name);
     	if (table != null) {
     		table.setUpdatable(updatable);
     	}
     }
-    
+
     TempTable getTempTable(String tempTableID) {
         return this.tempTables.get(tempTableID);
     }
-    
+
     public HashMap<String, TableProcessor> getProcessors() {
 		return processors;
 	}
-    
+
     TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context, GroupSymbol group) throws TeiidProcessingException, BlockedException, TeiidComponentException{
 		if (!(group.getMetadataID() instanceof TempMetadataID)) {
 			//TODO: use a proper metadata
@@ -588,7 +588,7 @@ public class TempTableStore {
         Create create = new Create();
         create.setTable(new GroupSymbol(tempTableID));
         create.setElementSymbolsAsColumns(columns);
-        return addTempTable(tempTableID, create, buffer, true, context);       
+        return addTempTable(tempTableID, create, buffer, true, context);
     }
 
 	private TempTable getTempTable(String tempTableID, Command command,
@@ -647,9 +647,9 @@ public class TempTableStore {
         }
         return null;
 	}
-    
+
     Map<String, TempTable> getTempTables() {
 		return tempTables;
 	}
-    
+
 }

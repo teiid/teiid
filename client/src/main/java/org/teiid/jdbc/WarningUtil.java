@@ -27,13 +27,13 @@ import org.teiid.core.TeiidException;
 
 
 /**
- * Utilities for creating SQLWarnings.  
+ * Utilities for creating SQLWarnings.
  */
 class WarningUtil {
 
     private WarningUtil() {
     }
-    
+
     /**
      * Used to wrap warnings/exceptions into SQLWarning.
      * The chain of warnings is translated into a chain of SQLWarnings.
@@ -68,15 +68,15 @@ class WarningUtil {
      */
     static SQLWarning convertWarnings(List<Throwable> exceptions) {
         if(exceptions == null || exceptions.size() == 0) {
-            return null;    
+            return null;
         }
         SQLWarning root = createWarning(exceptions.get(0));
         SQLWarning current = root;
         for (int i = 1; i < exceptions.size(); i++) {
-            SQLWarning newWarning = createWarning(exceptions.get(i)); 
+            SQLWarning newWarning = createWarning(exceptions.get(i));
             current.setNextWarning(newWarning);
             current = newWarning;
         }
-        return root;   
+        return root;
     }
 }

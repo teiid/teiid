@@ -45,25 +45,25 @@ import org.teiid.core.util.PropertiesUtils;
 
 /**
  * This class represents the SQLXML object along with the Streamable interface.
- * 
+ *
  * NOTE that this representation of XML does not become unreadable after
  * read operations.
  */
 public final class XMLType extends Streamable<SQLXML> implements SQLXML {
-	
+
 	public enum Type {
 		UNKNOWN, DOCUMENT, CONTENT, ELEMENT, COMMENT, PI, TEXT
 	}
-	
+
 	private static final long serialVersionUID = -7922647237095135723L;
 	static final boolean SUPPORT_DTD = PropertiesUtils.getHierarchicalProperty("org.teiid.supportDTD", false, Boolean.class); //$NON-NLS-1$
-	
+
 	private static ThreadLocal<XMLInputFactory> threadLocalFactory = new ThreadLocal<XMLInputFactory>() {
 		protected XMLInputFactory initialValue() {
 			return createXMLInputFactory();
 		}
 	};
-	
+
 	private static XMLInputFactory createXMLInputFactory()
 			throws FactoryConfigurationError {
 		XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -72,7 +72,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			//these next ones are somewhat redundant, we set them just in case the DTD support property is not respected
 			factory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
 			factory.setXMLResolver(new XMLResolver() {
-				
+
 				@Override
 				public Object resolveEntity(String arg0, String arg1, String arg2,
 						String arg3) throws XMLStreamException {
@@ -95,22 +95,22 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		}
 		return factoriesTreadSafe;
 	}
-	
+
 	public static XMLInputFactory getXmlInputFactory() {
 		if (isThreadSafeXmlFactories()) {
 			return factory;
 		}
 		return threadLocalFactory.get();
 	}
-	
+
     public XMLType(){
-        
+
     }
-    
-    public XMLType(SQLXML xml) {      
+
+    public XMLType(SQLXML xml) {
         super(xml);
-    }    
-                    
+    }
+
     public InputStream getBinaryStream() throws SQLException {
         return this.reference.getBinaryStream();
     }
@@ -146,33 +146,33 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {
 		return this.reference.setResult(resultClass);
-	} 
-	
+	}
+
 	public Type getType() {
 		return type;
 	}
-	
+
 	public void setType(Type type) {
 		this.type = type;
 	}
-	
+
 	public String getEncoding() {
 		if (encoding == null) {
 			this.encoding = getEncoding(this);
 		}
 		return encoding;
 	}
-	
+
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
-	
+
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
 		readExternal(in, (byte)0);
 	}
-	
+
 	public void readExternal(ObjectInput in, byte version) throws IOException,
 		ClassNotFoundException {
 		super.readExternal(in);
@@ -195,12 +195,12 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			this.type = Type.UNKNOWN;
 		}
 	}
-	
+
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		writeExternal(out, (byte)0);
 	}
-	
+
 	public void writeExternal(ObjectOutput out, byte version) throws IOException {
 		super.writeExternal(out);
 		if (this.encoding == null) {
@@ -253,7 +253,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			}
 		}
 	}
-	
+
 	@Override
 	long computeLength() throws SQLException {
         if (this.reference instanceof SQLXMLImpl) {
@@ -262,14 +262,14 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
         }
         return BaseLob.length(getBinaryStream());
     }
-	
+
 	@Override
 	protected void readReference(ObjectInput in) throws IOException {
 		byte[] bytes = new byte[(int)getLength()];
 		in.readFully(bytes);
 		this.reference = new SQLXMLImpl(bytes);
 	}
-	
+
 	@Override
 	protected void writeReference(final DataOutput out) throws IOException {
 		try {
@@ -278,7 +278,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			throw new IOException();
 		}
 	}
-	
+
 	@Override
 	public long length() throws SQLException {
 		if (this.length != -1) {

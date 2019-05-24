@@ -42,20 +42,20 @@ import org.teiid.query.QueryPlugin;
  * Implements file storage that automatically splits large files and limits the number of open files.
  */
 public class FileStorageManager implements StorageManager {
-	
+
 	private static final long MB = 1024L * 1024L;
 	public static final int DEFAULT_MAX_OPEN_FILES = 64;
 	public static final long DEFAULT_MAX_BUFFERSPACE = 5L * 1024L * MB; //5 GB
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
-	
+
 	private long maxBufferSpace = DEFAULT_MAX_BUFFERSPACE;
 	private AtomicLong usedBufferSpace = new AtomicLong();
 	private AtomicInteger fileCounter = new AtomicInteger();
-	
+
 	private AtomicLong sample = new AtomicLong();
-	
+
 	private AtomicInteger outOfDiskCount = new AtomicInteger();
-	
+
 	private class FileInfo {
     	private File file;
         private RandomAccessFile fileData;       // may be null if not open
@@ -78,7 +78,7 @@ public class FileStorageManager implements StorageManager {
         	fileCache.put(this.file, this.fileData);
             this.fileData = null;
         }
-        
+
         public void delete()  {
         	if (fileData == null) {
         		fileData = fileCache.remove(this.file);
@@ -96,15 +96,15 @@ public class FileStorageManager implements StorageManager {
             return "FileInfo<" + file.getName() + ", has fileData = " + (fileData != null) + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
     }
-	
+
 	public class DiskStore extends FileStore {
 	    private String name;
-		private FileInfo fileInfo; 
-	    
+		private FileInfo fileInfo;
+
 	    public DiskStore(String name) {
 			this.name = name;
 		}
-	    
+
 	    @Override
 	    public synchronized long getLength() {
 	    	if (fileInfo == null) {
@@ -112,7 +112,7 @@ public class FileStorageManager implements StorageManager {
 	    	}
 	    	return fileInfo.file.length();
 	    }
-	    
+
 	    @Override
 	    protected synchronized int readWrite(long fileOffset, byte[] b, int offSet,
 	    		int length, boolean write) throws IOException {
@@ -139,7 +139,7 @@ public class FileStorageManager implements StorageManager {
 	            fileAccess.write(b, offSet, length);
 	        } finally {
 	        	fileInfo.close();
-	        }	    		
+	        }
 	    	return length;
 	    }
 
@@ -184,7 +184,7 @@ public class FileStorageManager implements StorageManager {
 				}
 			}
 		}
-	    
+
 	    @Override
 	    public synchronized void setLength(long length) throws IOException {
 	    	if (fileInfo == null) {
@@ -196,7 +196,7 @@ public class FileStorageManager implements StorageManager {
 	    		fileInfo.close();
 	    	}
 	    }
-		
+
 	    @Override
 		public synchronized void removeDirect() {
 			usedBufferSpace.addAndGet(-getLength());
@@ -204,14 +204,14 @@ public class FileStorageManager implements StorageManager {
 				fileInfo.delete();
 			}
 		}
-	    
+
 	}
 
     // Initialization
     private int maxOpenFiles = DEFAULT_MAX_OPEN_FILES;
     private String directory;
     private File dirFile;
-    //use subdirectories to hold the files since we may create a relatively unbounded amount of lob files and 
+    //use subdirectories to hold the files since we may create a relatively unbounded amount of lob files and
     //fs performance will typically degrade if a single directory is too large
     private File[] subDirectories = new File[256];
 
@@ -230,7 +230,7 @@ public class FileStorageManager implements StorageManager {
     		return false;
     	}
     });
-    
+
     /**
      * Initialize
      */
@@ -246,7 +246,7 @@ public class FileStorageManager implements StorageManager {
         	makeDir(subDirectories[i]);
         }
     }
-    
+
     private static void makeDir(File file) throws TeiidComponentException {
     	if(file.exists()) {
             if(! file.isDirectory()) {
@@ -256,15 +256,15 @@ public class FileStorageManager implements StorageManager {
         	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30042, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30042, file.getAbsoluteFile()));
         }
     }
-    
+
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
-    
+
     public void setStorageDirectory(String directory) {
 		this.directory = directory;
 	}
-    
+
     File createFile(String name) throws IOException {
     	//spray the files into separate different directories in a round robin fashion.
     	File storageFile = File.createTempFile(FILE_PREFIX + name + "_", null, this.subDirectories[fileCounter.getAndIncrement()&(this.subDirectories.length-1)]); //$NON-NLS-1$
@@ -273,23 +273,23 @@ public class FileStorageManager implements StorageManager {
         }
         return storageFile;
     }
-    
+
     public FileStore createFileStore(String name) {
     	return new DiskStore(name);
     }
-    
+
     public String getDirectory() {
 		return directory;
 	}
-    
+
     Map<File, RandomAccessFile> getFileCache() {
 		return fileCache;
 	}
-    
+
     public int getOpenFiles() {
     	return this.fileCache.size();
     }
-    
+
     /**
      * Get the used buffer space in bytes
      * @return
@@ -297,11 +297,11 @@ public class FileStorageManager implements StorageManager {
     public long getUsedBufferSpace() {
 		return usedBufferSpace.get();
 	}
-    
+
     public int getOutOfDiskErrorCount() {
         return outOfDiskCount.get();
     }
-    
+
     /**
      * Set the max amount of buffer space in bytes
      * @param maxBufferSpace
@@ -309,7 +309,7 @@ public class FileStorageManager implements StorageManager {
     public void setMaxBufferSpace(long maxBufferSpace) {
 		this.maxBufferSpace = maxBufferSpace;
 	}
-    
+
     @Override
     public long getMaxStorageSpace() {
         return maxBufferSpace;

@@ -39,10 +39,10 @@ public class ODataQuery {
     protected RuntimeMetadata metadata;
     protected ODataDocumentNode rootDocument;
     protected DocumentNode joinNode;
-    
+
     protected ArrayList<ODataDocumentNode> complexTables = new ArrayList<ODataDocumentNode>();
     protected ArrayList<ODataDocumentNode> expandTables = new ArrayList<ODataDocumentNode>();
-    
+
     public ODataQuery(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
         this.executionFactory = executionFactory;
         this.metadata = metadata;
@@ -50,73 +50,73 @@ public class ODataQuery {
 
     public void addRootDocument(Table table) throws TranslatorException {
         ODataDocumentNode node = null;
-        
+
         if (this.rootDocument == null) {
             if (ODataMetadataProcessor.isEntitySet(table)) {
-                node = new ODataDocumentNode(table, ODataDocumentType.PRIMARY, 
+                node = new ODataDocumentNode(table, ODataDocumentType.PRIMARY,
                         ODataMetadataProcessor.isCollection(table));
                 this.rootDocument = node;
                 this.joinNode = node;
             } else {
-                // add the complex or expand tables                
+                // add the complex or expand tables
                 Table parentTable = ODataMetadataProcessor.getComplexTableParentTable(this.metadata, table);
                 if (parentTable == null) {
-                    throw new TranslatorException(ODataPlugin.Event.TEIID17028, 
+                    throw new TranslatorException(ODataPlugin.Event.TEIID17028,
                             ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17028, table.getName()));
                 }
                 addRootDocument(parentTable);
-                // if this is not complex/navigation we already added 
+                // if this is not complex/navigation we already added
                 // this as the parent document; no need to join
                 if (ODataMetadataProcessor.isComplexType(table)
                         || ODataMetadataProcessor.isNavigationType(table)) {
                     joinChildDocument(table, JoinType.INNER_JOIN);
-                } 
+                }
             }
         } else {
             joinChildDocument(table, JoinType.INNER_JOIN);
-        }               
+        }
     }
 
     private ODataDocumentNode addComplexOrNavigation(Table table) {
         ODataDocumentNode node;
         if (ODataMetadataProcessor.isComplexType(table)) {
-            node = new ODataDocumentNode(table, ODataDocumentType.COMPLEX, 
-                    ODataMetadataProcessor.isCollection(table));            
+            node = new ODataDocumentNode(table, ODataDocumentType.COMPLEX,
+                    ODataMetadataProcessor.isCollection(table));
             this.complexTables.add(node);
         } else if (ODataMetadataProcessor.isNavigationType(table)){
-            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND, 
-                    ODataMetadataProcessor.isCollection(table));            
+            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND,
+                    ODataMetadataProcessor.isCollection(table));
             this.expandTables.add(node);
         } else {
-            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND, 
-                    ODataMetadataProcessor.isCollection(table));            
-            this.expandTables.add(node);            
+            node = new ODataDocumentNode(table, ODataDocumentType.EXPAND,
+                    ODataMetadataProcessor.isCollection(table));
+            this.expandTables.add(node);
         }
         return node;
     }
-    
+
     private void joinChildDocument(Table table, JoinType joinType) throws TranslatorException {
         ODataDocumentNode node = addComplexOrNavigation(table);
         this.joinNode = this.joinNode.joinWith(joinType, node);
     }
-    
-    public Condition addNavigation(Condition obj, JoinType joinType, Table right) 
+
+    public Condition addNavigation(Condition obj, JoinType joinType, Table right)
             throws TranslatorException {
-        joinChildDocument(right, joinType);
-        return parseKeySegmentFromCondition(obj);        
-    }
-    
-    public Condition addNavigation(Condition obj, JoinType joinType, Table left, Table right) 
-            throws TranslatorException {
-        addRootDocument(left);  
         joinChildDocument(right, joinType);
         return parseKeySegmentFromCondition(obj);
     }
-    
+
+    public Condition addNavigation(Condition obj, JoinType joinType, Table left, Table right)
+            throws TranslatorException {
+        addRootDocument(left);
+        joinChildDocument(right, joinType);
+        return parseKeySegmentFromCondition(obj);
+    }
+
     public DocumentNode getRootDocument() {
         return this.rootDocument;
     }
-    
+
     protected String processFilter(Condition condition) throws TranslatorException {
         List<Condition> crits = LanguageUtil.separateCriteriaByAnd(condition);
         if (!crits.isEmpty()) {
@@ -139,8 +139,8 @@ public class ODataQuery {
             }
         }
         return sb.length() == 0?null:sb.toString();
-    }     
-        
+    }
+
     protected Condition parseKeySegmentFromCondition(Condition obj)
             throws TranslatorException {
         List<Condition> crits = LanguageUtil.separateCriteriaByAnd(obj);
@@ -162,8 +162,8 @@ public class ODataQuery {
             }
         }
         return obj;
-    }   
-    
+    }
+
     private boolean parseKeySegmentFromComparison(Comparison obj) throws TranslatorException {
         if (obj.getOperator().equals(Comparison.Operator.EQ)) {
             if (obj.getLeftExpression() instanceof ColumnReference
@@ -179,7 +179,7 @@ public class ODataQuery {
         }
         return false;
     }
-    
+
     ODataDocumentNode getSchemaElement(Table table) {
         if (this.rootDocument != null && this.rootDocument.getTable().equals(table)) {
             return this.rootDocument;
@@ -193,9 +193,9 @@ public class ODataQuery {
             if (schemaElement.getTable().equals(table)) {
                 return schemaElement;
             }
-        }        
+        }
         return null;
-    }    
+    }
 
     private boolean isJoinOrPkColumn(Column column) {
         Table table = (Table)column.getParent();

@@ -11,23 +11,23 @@ import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 
 
 
-/** 
- * This transction is only valid when 
- * AutoCommit = ON 
+/**
+ * This transction is only valid when
+ * AutoCommit = ON
  * txnAutoWrap = OFF
  */
 public class OffWrapTransaction extends TransactionContainer {
-    
+
     public OffWrapTransaction() {
 	super();
     }
-    
+
     public void before(TransactionQueryTestCase test) {
 	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
 
-        
+
     }
-    
+
     public void after(TransactionQueryTestCase test) {
 
     }

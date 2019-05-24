@@ -129,12 +129,12 @@ import org.xml.sax.SAXException;
 
 /**
  * A simplified server environment for embedded use.
- * 
+ *
  * Needs to be started prior to use with a call to {@link #start(EmbeddedConfiguration)}
  */
 @SuppressWarnings("serial")
 public class EmbeddedServer extends AbstractVDBDeployer implements EventDistributorFactory, ExecutionFactoryProvider {
-	
+
 	static {
 		LogManager.setLogListener(new JBossLogger());
 	}
@@ -160,7 +160,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				protected ClientServiceRegistry getClientServiceRegistry(String name) {
 					return services;
 				}
-				
+
 				@Override
 				public void addListener(VDBLifeCycleListener listener) {
 					EmbeddedServer.this.repo.addListener(listener);
@@ -189,7 +189,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			csi.setCommand(command);
 			return csi;
 		}
-		
+
 		@Override
 		public TeiidPreparedStatement prepareStatement(Command command,
 				EmbeddedRequestOptions options) throws SQLException {
@@ -197,16 +197,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			psi.setCommand(command);
 			return psi;
 		}
-		
+
 	}
 
 	protected class ProviderAwareConnectorManagerRepository extends
 			ConnectorManagerRepository {
-		
+
 		public ProviderAwareConnectorManagerRepository() {
 			super(true);
 		}
-		
+
 		@Override
 		protected ConnectorManager createConnectorManager(
 				String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
@@ -229,11 +229,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public interface ConnectionFactoryProvider<T> {
 		T getConnectionFactory() throws TranslatorException;
 	}
-	
+
 	public static class SimpleConnectionFactoryProvider<T> implements ConnectionFactoryProvider<T> {
-		
+
 		private T connectionFactory;
-		
+
 		public SimpleConnectionFactoryProvider(T connectionFactory) {
 			this.connectionFactory = connectionFactory;
 		}
@@ -242,16 +242,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		public T getConnectionFactory() throws TranslatorException {
 			return connectionFactory;
 		}
-		
+
 	}
-	
+
 	private static class VDBValidationError extends TeiidRuntimeException {
-		
+
 		private VDBValidationError(Event event, String message) {
 			super(event, message);
 		}
 	}
-	
+
 	protected DQPCore dqp = new DQPCore();
 	/**
 	 * Custom vdb repository that will immediately throw exceptions for metadata validation errors
@@ -267,25 +267,25 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			return true;
 		}
 	};
-	
+
 	class EmbeddedEventDistributorFactoryService extends AbstractEventDistributorFactoryService {
 
         @Override
         protected VDBRepository getVdbRepository() {
             return repo;
         }
-        
+
         @Override
         protected ObjectReplicator getObjectReplicator() {
             return replicator;
         }
-        
+
         @Override
         protected DQPCore getDQPCore() {
             return dqp;
         }
-    };	
-	
+    };
+
 	protected boolean throwMetadataErrors = true;
 	private ConcurrentHashMap<String, ExecutionFactory<?, ?>> translators = new ConcurrentHashMap<String, ExecutionFactory<?, ?>>();
 	private TranslatorRepository translatorRepository = new TranslatorRepository();
@@ -310,7 +310,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected LogonImpl logon;
 	private TeiidDriver driver = new TeiidDriver();
 	protected ConnectorManagerRepository cmr = new ProviderAwareConnectorManagerRepository();
-	
+
 	protected AbstractEventDistributorFactoryService eventDistributorFactoryService;
 	protected boolean useCallingThread = true;
 	private Boolean running;
@@ -337,7 +337,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectionFactoryProvider<?> connectionFactoryProvider) {
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
 	}
-	
+
 	/**
 	 * Adds the object as the named connection factory to replace the default JNDI lookup strategy.
 	 * @param name
@@ -346,7 +346,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public void addConnectionFactory(String name, Object connectionFactory) {
 		this.connectionFactoryProviders.put(name, new SimpleConnectionFactoryProvider<Object>(connectionFactory));
 	}
-	
+
 	public synchronized void start(@SuppressWarnings("hiding") EmbeddedConfiguration config) {
 		if (running != null) {
 			throw new IllegalStateException();
@@ -365,7 +365,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
-				
+
 				@Override
 				public Object invoke(Object proxy, Method method, Object[] args)
 						throws Throwable {
@@ -376,16 +376,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			this.transactionService.setDetectTransactions(true);
 			this.transactionService.setTransactionManager(config.getTransactionManager());
 		}
-		
+
 		if (config.getCacheFactory() == null) {
 		    String infinispanConfig = config.getInfinispanConfigFile();
-		    
+
 		    CacheFactory cacheFactory = null;
-		    
+
 		    try {
                 Class<?> clazz = Class.forName("org.teiid.cache.infinispan.EmbeddedInfinispanCacheFactoryBuilder"); //$NON-NLS-1$
                 Method m = clazz.getMethod("buildCacheFactory", String.class, TransactionManager.class); //$NON-NLS-1$
-                
+
                 cacheFactory = (CacheFactory) m.invoke(null, infinispanConfig, config.getTransactionManager());
             } catch (Throwable t) {
                 if (infinispanConfig != null) {
@@ -393,7 +393,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                 }
                 LogManager.logInfo(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40169) + ": " + t.getMessage());
             }
-		    
+
 		    if (cacheFactory == null) {
 		        cacheFactory = new CacheFactory() {
 	                @Override
@@ -405,10 +405,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	                }
 	            };
 		    }
-		    
-            config.setCacheFactory(cacheFactory);			
+
+            config.setCacheFactory(cacheFactory);
 		}
-		
+
 		if (config.getSecurityHelper() != null) {
 			this.sessionService.setSecurityHelper(config.getSecurityHelper());
 		} else {
@@ -438,7 +438,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.setPreparedPlanCache(ppc);
 
 		this.dqp.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, this.transactionService, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
-		
+
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
@@ -448,7 +448,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		this.sessionService.start();
 		this.services.setVDBRepository(this.repo);
-		this.materializationMgr = getMaterializationManager();		
+		this.materializationMgr = getMaterializationManager();
 		this.repo.addListener(this.materializationMgr);
 		this.repo.setAllowEnvFunction(this.config.isAllowEnvFunction());
 		this.logon = new LogonImpl(sessionService, null);
@@ -478,7 +478,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	private void setBufferManagerProperties(EmbeddedConfiguration config) {
-		
+
 		this.bufferService.setUseDisk(config.isUseDisk());
 		if (config.isUseDisk()) {
 			if (config.getBufferDirectory() == null) {
@@ -486,7 +486,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 			this.bufferService.setDiskDirectory(config.getBufferDirectory());
 		}
-		
+
 		if(config.getProcessorBatchSize() != -1)
 			this.bufferService.setProcessorBatchSize(config.getProcessorBatchSize());
 		if(config.getMaxReserveKb() != -1)
@@ -496,10 +496,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.bufferService.setInlineLobs(config.isInlineLobs());
 		if(config.getMaxOpenFiles() != -1)
 			this.bufferService.setMaxOpenFiles(config.getMaxOpenFiles());
-		
+
 		if(config.getMaxBufferSpace() != -1)
 			this.bufferService.setMaxDiskBufferSpaceMb(config.getMaxBufferSpace());
-		if(config.getMaxFileSize() != -1) 
+		if(config.getMaxFileSize() != -1)
 			this.bufferService.setMaxFileSize(config.getMaxFileSize());
 		this.bufferService.setEncryptFiles(config.isEncryptFiles());
 		if(config.getMaxStorageObjectSize() != -1) {
@@ -508,13 +508,13 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.bufferService.setFixedMemoryBufferOffHeap(config.isMemoryBufferOffHeap());
 		if(config.getMemoryBufferSpace() != -1)
 			this.bufferService.setFixedMemoryBufferSpaceMb(config.getMemoryBufferSpace());
-		
+
 	}
 
 	private void initDriver() {
 		driver.setLocalProfile(embeddedProfile);
 	}
-	
+
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
 		InetSocketAddress address = null;
 		try {
@@ -553,9 +553,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				if (replicator != null) {
 					replicator.stop(vdb.getVDB().getAttachment(GlobalTableStore.class));
 				}
-				rs.clearForVDB(vdb.getVDBKey()); 
-				ppc.clearForVDB(vdb.getVDBKey()); 
-				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey())) { 
+				rs.clearForVDB(vdb.getVDBKey());
+				ppc.clearForVDB(vdb.getVDBKey());
+				for (SessionMetadata session : sessionService.getSessionsLoggedInToVDB(vdb.getVDBKey())) {
 					try {
 						sessionService.closeSession(session.getSessionId());
 					} catch (InvalidSessionException e) {
@@ -569,7 +569,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 					return;
 				}
 				GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, dqp.getBufferManager(), replicator);
-				
+
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 			}
 
@@ -608,7 +608,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 	protected MaterializationManager getMaterializationManager() {
 	    return new MaterializationManager(this.shutdownListener) {
-	    	
+
 	    	@Override
 	    	public ScheduledExecutorService getScheduledExecutorService() {
 	    		return scheduler;
@@ -630,7 +630,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * Adds a definition of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
 	 * Only {@link ExecutionFactory} classes with a {@link Translator} annotation can be referenced by {@link #addTranslator(String, String, Map)}
 	 * @param clazz
-	 * @throws TranslatorException 
+	 * @throws TranslatorException
 	 */
 	public void addTranslator(Class<? extends ExecutionFactory> clazz) throws TranslatorException {
 		try {
@@ -647,7 +647,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             throw new TranslatorException(e);
         }
 	}
-	
+
 	/**
 	 * Add an override translator
 	 * @param name
@@ -669,7 +669,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	    }
 	    this.translatorRepository.addTranslatorMetadata(name, vdbTranslatorMetaData);
 	}
-	
+
 	/**
      * Add a named {@link ExecutionFactory}. NOTE: Only this single instance will be shared for all usage.
      * See {@link #addTranslator(String, String, Map)} or {@link #addTranslator(Class)}
@@ -716,28 +716,28 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		//missing source/translator names will cause issues
 		deployVDB(vdb, null);
 	}
-	
+
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
 	 * @param is which will be closed by this deployment
-	 * @throws TranslatorException 
-	 * @throws ConnectorManagerException 
-	 * @throws VirtualDatabaseException 
-	 * @throws IOException 
+	 * @throws TranslatorException
+	 * @throws ConnectorManagerException
+	 * @throws VirtualDatabaseException
+	 * @throws IOException
 	 */
 	public void deployVDB(InputStream is) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
 		deployVDB(is, false);
 	}
-	
+
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
 	 * @param is which will be closed by this deployment
 	 * @param ddl true if the file contents are DDL
-	 * @throws TranslatorException 
-	 * @throws ConnectorManagerException 
-	 * @throws VirtualDatabaseException 
-	 * @throws IOException 
-	 */	
+	 * @throws TranslatorException
+	 * @throws ConnectorManagerException
+	 * @throws VirtualDatabaseException
+	 * @throws IOException
+	 */
 	public void deployVDB(InputStream is, boolean ddl) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
 		if (is == null) {
 			return;
@@ -753,7 +753,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				VDBMetadataParser.validate(new ByteArrayInputStream(bytes));
 			} catch (SAXException e) {
 				throw new VirtualDatabaseException(e);
-			}			
+			}
 			try {
 				metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
 			} catch (XMLStreamException e) {
@@ -762,21 +762,21 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		metadata.setXmlDeployment(true);
 		deployVDB(metadata, null);
-	}	
-	
+	}
+
 	/**
 	 * Deploy a vdb zip file.  The name and version will be derived from the xml.
 	 * @param url
-	 * @throws TranslatorException 
-	 * @throws ConnectorManagerException 
-	 * @throws VirtualDatabaseException 
-	 * @throws URISyntaxException 
-	 * @throws IOException 
+	 * @throws TranslatorException
+	 * @throws ConnectorManagerException
+	 * @throws VirtualDatabaseException
+	 * @throws URISyntaxException
+	 * @throws IOException
 	 */
 	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
 		VirtualFile root = NioZipFileSystem.mount(url);
 		VDBMetaData metadata;
-		
+
 		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
 		if (vdbMetadata.exists()) {
     		try {
@@ -799,26 +799,26 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		VDBResources resources = new VDBResources(root);
 		deployVDB(metadata, resources);
 	}
-	
+
 	protected boolean allowOverrideTranslators() {
 	    return false;
 	}
-	
-	protected void deployVDB(VDBMetaData vdb, VDBResources resources) 
+
+	protected void deployVDB(VDBMetaData vdb, VDBResources resources)
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
-		
+
 		if (!vdb.getOverrideTranslators().isEmpty() && !allowOverrideTranslators()) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
 		}
-		
+
 		vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
 		try {
             createPreParser(vdb);
         } catch (TeiidException e1) {
             throw new VirtualDatabaseException(e1);
         }
-		
+
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
@@ -855,18 +855,18 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             throw new VirtualDatabaseException(e);
         }
     }
-	
+
 	@Override
 	protected MetadataRepository<?, ?> getMetadataRepository(String repoType)
 			throws VirtualDatabaseException {
 		if ("index".equals(repoType)) { //$NON-NLS-1$
 			//return a new instance since the repos are globally scoped
 			//this does not support MMX style index files organized by type
-			return createIndexMetadataRepository(); 
+			return createIndexMetadataRepository();
 		}
 		return super.getMetadataRepository(repoType);
 	}
-	
+
 	/**
 	 * TODO: consolidate this logic more into the abstract deployer
 	 */
@@ -876,10 +876,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
 		MetadataFactory factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
-		
+
 		ExecutionFactory ef = null;
 		Object cf = null;
-		
+
 		Exception te = null;
 		for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
 			if (te != null) {
@@ -894,11 +894,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			} catch (TranslatorException e) {
 				LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
 			}
-		
+
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			
+
 			try {
 				metadataRepository.loadMetadata(factory, ef, cf);
 				break;
@@ -918,21 +918,21 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 		metadataLoaded(vdb, model, store, loadCount, factory, true, cmr, vdbResources);
 	}
-	
+
 	public void undeployVDB(String vdbName) {
 	    undeployVDB(vdbName, "1");
 	}
-	
+
     public void undeployVDB(String vdbName, String version) {
         checkStarted();
         this.repo.removeVDB(vdbName, version);
     }
-	
+
 
 	protected EmbeddedConfiguration getConfiguration() {
 	    return this.config;
 	}
-	
+
 	/**
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
@@ -976,7 +976,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		checkStarted();
 		return driver;
 	}
-	
+
 	@Override
 	public EventDistributor getEventDistributor() {
 		return this.eventDistributorFactoryService.getEventDistributor();
@@ -999,19 +999,19 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                             e -> (ExecutionFactory<Object, Object>) e
                                     .getValue(),
                             (x, y) -> x, IdentityHashMap::new));
-		    return TranslatorUtil.getExecutionFactory(name, this.translatorRepository, this.translatorRepository, 
+		    return TranslatorUtil.getExecutionFactory(name, this.translatorRepository, this.translatorRepository,
 		            null, map, new HashSet<String>());
 		}
 		return (ExecutionFactory<Object, Object>) ef;
 	}
-	
+
 	@Override
 	protected VDBRepository getVDBRepository() {
 		return this.repo;
 	}
-	
+
 	/**
-	 * Get the effective ddl text for the given schema 
+	 * Get the effective ddl text for the given schema
 	 * @param vdbName
 	 * @param schemaName
 	 * @return the ddl or null if the vdb/schema does not exist
@@ -1029,9 +1029,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (schema == null) {
 			return null;
 		}
-		return DDLStringVisitor.getDDLString(schema, null, null); 
+		return DDLStringVisitor.getDDLString(schema, null, null);
 	}
-	
+
 	/**
 	 * Return the bound port for the transport number
 	 * @param transport
@@ -1040,23 +1040,23 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public int getPort(int transport) {
 		return this.transports.get(transport).getPort();
 	}
-	
+
 	protected TranslatorRepository getTranslatorRepository() {
 	    return translatorRepository;
 	}
-	
+
 	protected ConcurrentHashMap<String, ConnectionFactoryProvider<?>> getConnectionFactoryProviders() {
 	    return connectionFactoryProviders;
 	}
-	
+
 	protected SessionAwareCache<CachedResults> getRsCache() {
 		return this.rs;
 	}
-	
+
 	protected SessionAwareCache<PreparedPlan> getPpcCache() {
 		return this.ppc;
 	}
-	
+
 	public Admin getAdmin() {
 		return EmbeddedAdminFactory.getInstance().createAdmin(this);
 	}
@@ -1065,7 +1065,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	    private boolean shutdownInProgress = false;
 	    private boolean bootInProgress = false;
 	    private boolean running = false;
-	    
+
         @Override
         public boolean isShutdownInProgress() {
             return shutdownInProgress;
@@ -1090,13 +1090,13 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		public void started() {
 			running = true;
 		}
-		
+
 		@Override
 		public boolean isStarted() {
 			return running;
 		}
 	}
-	
+
 	public static void createPreParser(VDBMetaData deployment) throws TeiidException {
 	    String preparserClass = deployment.getPropertyValue(VDBMetaData.PREPARSER_CLASS);
         if (preparserClass != null) {
@@ -1105,7 +1105,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             deployment.addAttchment(PreParser.class, preParser);
         }
 	}
-	
+
     static class LocalCache<K, V> implements Cache<K, V> {
         private String name;
         private Map<K, V> cache;
@@ -1129,30 +1129,30 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         public boolean isTransactional() {
             return false;
         }
-        
+
         @Override
         public V get(K key) {
             return cache.get(key);
         }
-        
+
         @Override
         public Set<K> keySet() {
             return new HashSet<>(cache.keySet());
         }
-        
+
         @Override
         public int size() {
             return cache.size();
         }
-        
+
         @Override
         public void clear() {
             cache.clear();
         }
-        
+
         @Override
         public V remove(K key) {
             return cache.remove(key);
         }
-    }	
+    }
 }

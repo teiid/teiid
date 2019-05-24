@@ -45,12 +45,12 @@ public class SimpleDBDirectQueryExecution extends SimpleDBQueryExecution impleme
     private List<Argument> arguments;
     protected int updateCount = -1;
     private String sourceSQL;
-    
+
     public SimpleDBDirectQueryExecution(List<Argument> arguments,
             Command command, RuntimeMetadata metadata,
             SimpleDBConnection connection, ExecutionContext context)
             throws TranslatorException {
-        
+
         super((Select)command, context, metadata, connection);
         this.arguments = arguments;
     }
@@ -69,15 +69,15 @@ public class SimpleDBDirectQueryExecution extends SimpleDBQueryExecution impleme
         if (!sourceSQL.toLowerCase().startsWith("select")) { //$NON-NLS-1$
             throw new TranslatorException(SimpleDBPlugin.Event.TEIID24002, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24002));
         }
-        
+
         executeDirect(getSQL(), null);
     }
 
     @Override
     protected String getSQL() {
         return this.sourceSQL;
-    }    
-    
+    }
+
     @Override
     protected List<?> buildRow(Item item) throws TranslatorException {
         Map<String, List<String>> valueMap = createAttributeMap(item.getAttributes());
@@ -90,12 +90,12 @@ public class SimpleDBDirectQueryExecution extends SimpleDBQueryExecution impleme
                 continue;
             }
             List<String> value = valueMap.get(attributeName);
-            results[i++] = (value.size() == 1)?value.get(0):value.toString(); 
+            results[i++] = (value.size() == 1)?value.get(0):value.toString();
         }
         row.add(results);
         return row;
-    }    
-    
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return null;

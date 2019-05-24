@@ -21,5 +21,5 @@ package org.teiid.query.sql.symbol;
 public interface ContextReference {
 
 	public String getContextSymbol();
-	
+
 }

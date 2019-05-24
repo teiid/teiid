@@ -44,12 +44,12 @@ public class TeiidPartnerConnection extends PartnerConnection {
 
     public com.sforce.soap.partner.LoginResult login(java.lang.String username,java.lang.String password)
             throws com.sforce.ws.ConnectionException {
-        
+
         SalesforceConnectorConfig config = (SalesforceConnectorConfig)getConfig();
         if (config.getCredential(OAuthCredential.class.getName()) == null) {
             return super.login(username, password);
         }
-        
+
         // for details see
         // https://developer.salesforce.com/blogs/developer-relations/2011/03/oauth-and-the-soap-api.html
         OAuthCredential credential = (OAuthCredential)config.getCredential(OAuthCredential.class.getName());
@@ -58,7 +58,7 @@ public class TeiidPartnerConnection extends PartnerConnection {
             throw new com.sforce.ws.ConnectionException("Failed to get OAuth based connection");
         }
         String accessToken = credential.getAuthorizationHeader(null, "POST");
-        
+
         com.sforce.soap.partner.LoginResult loginResult = null;
         WebClient client = WebClient.create(id);
         client.header(AUTHORIZATION, accessToken);
@@ -68,34 +68,34 @@ public class TeiidPartnerConnection extends PartnerConnection {
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(new ByteArrayInputStream(response.getBytes()));
             doc.getDocumentElement().normalize();
-            
+
             Element urls = (Element)doc.getDocumentElement().getElementsByTagName("urls").item(0);
             loginResult = new com.sforce.soap.partner.LoginResult();
             loginResult.setSessionId(accessToken.substring(7)); // remove "Bearer " prefix.
-            
+
             String endpoint = config.getAuthEndpoint();
             int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
             String apiVersion = endpoint.substring(index+7);
-            
+
             String partnerURL = urls.getElementsByTagName("partner").item(0).getTextContent();
             partnerURL = partnerURL.replace("{version}", apiVersion);
-            
+
             loginResult.setServerUrl(partnerURL);
-            
+
         } catch (IOException e) {
             throw new com.sforce.ws.ConnectionException("Failed to get OAuth based connection; "
                     + "Failed to get user information", e);
         } catch (ParserConfigurationException e) {
             throw new com.sforce.ws.ConnectionException("Failed to get OAuth based connection; "
-                    + "Failed to get user information", e);            
+                    + "Failed to get user information", e);
         } catch (IllegalStateException e) {
             throw new com.sforce.ws.ConnectionException("Failed to get OAuth based connection; "
-                    + "Failed to get user information", e);            
+                    + "Failed to get user information", e);
         } catch (SAXException e) {
             throw new com.sforce.ws.ConnectionException("Failed to get OAuth based connection; "
-                    + "Failed to get user information", e);            
+                    + "Failed to get user information", e);
         }
-        
+
         return loginResult;
-    }    
+    }
 }

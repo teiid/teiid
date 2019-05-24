@@ -32,7 +32,7 @@ public interface IndexedTupleSource extends TupleSource {
 
 	/**
 	 * Save the current position that can be restored with a call to {@link #reset()}
-	 * @throws TeiidComponentException 
+	 * @throws TeiidComponentException
 	 */
 	void mark() throws TeiidComponentException;
 
@@ -46,12 +46,12 @@ public interface IndexedTupleSource extends TupleSource {
 	 * @param position
 	 */
 	void setPosition(long position);
-	
+
 	/**
 	 * Get the current position.  The position is 1 based and reports the position of the
 	 * tuple that will be retrieved with a call to {@link TupleSource#nextTuple()}
 	 * @return
 	 */
 	long getCurrentIndex();
-	
+
 }

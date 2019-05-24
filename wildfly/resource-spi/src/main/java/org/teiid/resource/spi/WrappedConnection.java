@@ -27,11 +27,11 @@ public class WrappedConnection implements Connection, org.teiid.resource.api.Wra
 
 	private BasicManagedConnection mc;
 	boolean closed = false;
-	
+
 	public WrappedConnection(BasicManagedConnection mc) {
 		this.mc = mc;
 	}
-	
+
 	@Override
 	public void close() throws ResourceException {
 		if (!this.closed && this.mc != null) {
@@ -65,7 +65,7 @@ public class WrappedConnection implements Connection, org.teiid.resource.api.Wra
 	public ResultSetInfo getResultSetInfo() throws ResourceException {
 		return this.mc.getConnection().getResultSetInfo();
 	}
-	
+
 	public Connection unwrap() throws ResourceException {
 		return this.mc.getConnection();
 	}

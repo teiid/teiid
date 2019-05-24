@@ -39,21 +39,21 @@ public class TestResultsMetadataWithProvider extends TestCase {
     }
 
     public MetadataProvider exampleProvider() throws Exception {
-        MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$  
-        Map col1 = processor.getDefaultColumn("table", "col1", "col1Label", String.class); //$NON-NLS-1$ //$NON-NLS-2$ 
-        Map col2 = processor.getDefaultColumn("table", "col2", "col2Label", Integer.class); //$NON-NLS-1$ //$NON-NLS-2$ 
-        
+        MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$
+        Map col1 = processor.getDefaultColumn("table", "col1", "col1Label", String.class); //$NON-NLS-1$ //$NON-NLS-2$
+        Map col2 = processor.getDefaultColumn("table", "col2", "col2Label", Integer.class); //$NON-NLS-1$ //$NON-NLS-2$
+
         Map[] columnMetadata = new Map[] {
             col1, col2
         };
-                
-        MetadataProvider provider = new MetadataProvider(columnMetadata);                      
-        return provider;        
+
+        MetadataProvider provider = new MetadataProvider(columnMetadata);
+        return provider;
     }
-    
-    public void test1() throws Exception {        
+
+    public void test1() throws Exception {
         ResultSetMetaDataImpl rmd = new ResultSetMetaDataImpl(exampleProvider(), null);
-        
+
         assertEquals(false, rmd.isAutoIncrement(1));
         assertEquals(true, rmd.isCaseSensitive(1));
         assertEquals(false, rmd.isCurrency(1));
@@ -63,16 +63,16 @@ public class TestResultsMetadataWithProvider extends TestCase {
         assertEquals(true, rmd.isSigned(1));
         assertEquals(true, rmd.isWritable(1));
         assertEquals("vdb", rmd.getCatalogName(1)); //$NON-NLS-1$
-        assertEquals(null, rmd.getSchemaName(1)); 
+        assertEquals(null, rmd.getSchemaName(1));
         assertEquals("table", rmd.getTableName(1)); //$NON-NLS-1$
         assertEquals("col1", rmd.getColumnName(1)); //$NON-NLS-1$
         assertEquals("col1Label", rmd.getColumnLabel(1)); //$NON-NLS-1$
         assertEquals("string", rmd.getColumnTypeName(1)); //$NON-NLS-1$
     }
-    
-    public void test2BackwardCompatibilityTest() throws Exception {        
+
+    public void test2BackwardCompatibilityTest() throws Exception {
         ResultSetMetaDataImpl rmd = new ResultSetMetaDataImpl(exampleProvider(), "false");
-        
+
         assertEquals(false, rmd.isAutoIncrement(1));
         assertEquals(true, rmd.isCaseSensitive(1));
         assertEquals(false, rmd.isCurrency(1));
@@ -82,10 +82,10 @@ public class TestResultsMetadataWithProvider extends TestCase {
         assertEquals(true, rmd.isSigned(1));
         assertEquals(true, rmd.isWritable(1));
         assertEquals("vdb", rmd.getCatalogName(1)); //$NON-NLS-1$
-        assertEquals(null, rmd.getSchemaName(1)); 
+        assertEquals(null, rmd.getSchemaName(1));
         assertEquals("table", rmd.getTableName(1)); //$NON-NLS-1$
         assertEquals("col1Label", rmd.getColumnName(1)); //$NON-NLS-1$
         assertEquals("col1Label", rmd.getColumnLabel(1)); //$NON-NLS-1$
         assertEquals("string", rmd.getColumnTypeName(1)); //$NON-NLS-1$
-    }    
+    }
 }

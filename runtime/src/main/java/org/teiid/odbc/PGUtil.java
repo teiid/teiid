@@ -22,9 +22,9 @@ import java.sql.Types;
 public class PGUtil {
 
 	public static final int PG_TYPE_UNSPECIFIED = 0;
-	
+
 	public static final int PG_TYPE_VARCHAR = 1043;
-	
+
 	public static final int PG_TYPE_BOOL = 16;
 	public static final int PG_TYPE_BYTEA = 17;
 	public static final int PG_TYPE_CHAR = 18;
@@ -38,10 +38,10 @@ public class PGUtil {
 	public static final int PG_TYPE_FLOAT4 = 700;
 	public static final int PG_TYPE_FLOAT8 = 701;
 	public static final int PG_TYPE_UNKNOWN = 705;
-	
+
 	public static final int PG_TYPE_GEOMETRY = 32816;
 	public static final int PG_TYPE_GEOMETRYARRAY = 32824;
-	
+
     public static final int PG_TYPE_GEOGRAPHY = 33454;
     public static final int PG_TYPE_GEOGRAPHYARRAY = 33462;
 
@@ -53,12 +53,12 @@ public class PGUtil {
     public static final int PG_TYPE_OIDARRAY = 1028;
     public static final int PG_TYPE_CHARARRAY = 1002;
     public static final int PG_TYPE_TEXTARRAY = 1009;
-    
+
 	public static final int PG_TYPE_DATE = 1082;
 	public static final int PG_TYPE_TIME = 1083;
 	public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
 	public static final int PG_TYPE_NUMERIC = 1700;
-	
+
 	public static final int PG_TYPE_BOOLARRAY = 1000;
     public static final int PG_TYPE_BYTEAARRAY = 1001;
     public static final int PG_TYPE_INT8ARRAY = 1026;
@@ -71,7 +71,7 @@ public class PGUtil {
     public static final int PG_TYPE_TIMESTAMP_NO_TMZONEARRAY = 1115;
     public static final int PG_TYPE_NUMERICARRAY = 1031;
     public static final int PG_TYPE_XMLARRAY = 143;
-    
+
 	public static class PgColInfo {
 		public String name;
 		public int reloid;
@@ -80,7 +80,7 @@ public class PGUtil {
 		public int precision;
 		public int mod = -1;
 	}
-	
+
 	/**
 	 * Types.ARRAY is not supported
 	 */
@@ -90,7 +90,7 @@ public class PGUtil {
         case Types.BOOLEAN:
             return PG_TYPE_BOOL;
         case Types.VARCHAR:
-            return PG_TYPE_VARCHAR;        
+            return PG_TYPE_VARCHAR;
         case Types.CHAR:
             return PG_TYPE_BPCHAR;
         case Types.TINYINT:
@@ -114,29 +114,29 @@ public class PGUtil {
             return PG_TYPE_DATE;
         case Types.TIMESTAMP:
             return PG_TYPE_TIMESTAMP_NO_TMZONE;
-            
-        case Types.BLOB:            
+
+        case Types.BLOB:
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
             if (typeName.equalsIgnoreCase("geometry")) { //$NON-NLS-1$
                 return PG_TYPE_GEOMETRY;
             }
-            if (typeName.equalsIgnoreCase("geography")) { //$NON-NLS-1$ 
+            if (typeName.equalsIgnoreCase("geography")) { //$NON-NLS-1$
                 return PG_TYPE_GEOGRAPHY;
             }
         	return PG_TYPE_BYTEA;
 
         case Types.SQLXML:
             return PG_TYPE_XML;
-        	
+
         case Types.LONGVARCHAR:
         case Types.CLOB:
             if (typeName.equalsIgnoreCase("json")) { //$NON-NLS-1$
-                return PG_TYPE_JSON; 
+                return PG_TYPE_JSON;
             }
             return PG_TYPE_TEXT;
-            
+
         case Types.ARRAY:
             switch (typeName) {
             case "boolean[]": //$NON-NLS-1$
@@ -172,9 +172,9 @@ public class PGUtil {
             default:
                 return PG_TYPE_TEXTARRAY;
             }
-        	
+
         default:
             return PG_TYPE_UNKNOWN;
         }
-	}	
+	}
 }

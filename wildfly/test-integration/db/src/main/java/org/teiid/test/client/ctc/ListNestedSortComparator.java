@@ -32,24 +32,24 @@ import java.util.List;
  * <h3>Example</h3>
  * <pre>
  *    Records...
- *      { "a1", "b1", "c1" } 
+ *      { "a1", "b1", "c1" }
  *      { "a1", "b1", "c2" }
  *      { "a1", "b2", "c1" }
  *      { "a1", "b2", "c2" }
- *      { "a2", "b1", "c1" } 
- *      { "a2", "b1", "c2" } 
- *      { "a2", "b2", "c1" } 
+ *      { "a2", "b1", "c1" }
+ *      { "a2", "b1", "c2" }
+ *      { "a2", "b2", "c1" }
  *      { "a2", "b2", "c2" }
  *
  *    Records sorted in ascending order on columns 0, 2...
- *      { "a1", "b1", "c1" } 
+ *      { "a1", "b1", "c1" }
  *      { "a1", "b2", "c1" }
  *      { "a1", "b2", "c2" }
  *      { "a1", "b1", "c2" }
- *      { "a2", "b1", "c1" } 
- *      { "a2", "b2", "c1" } 
- *      { "a2", "b1", "c2" } 
- *      { "a2", "b2", "c2" } 
+ *      { "a2", "b1", "c1" }
+ *      { "a2", "b2", "c1" }
+ *      { "a2", "b1", "c2" }
+ *      { "a2", "b2", "c2" }
  * </pre>
  */
 public class ListNestedSortComparator implements java.util.Comparator, java.io.Serializable {
@@ -69,7 +69,7 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
      * List of booleans indicating the order in which each column should be sorted
      */
     private List orderTypes = null;
-    
+
     private boolean isDistinct = true;
     private int distinctIndex;
 
@@ -101,11 +101,11 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
         this.sortParameters = sortParameters;
         this.orderTypes = orderTypes;
     }
-    
+
     public boolean isDistinct() {
 		return isDistinct;
 	}
-    
+
     public void setDistinctIndex(int distinctIndex) {
 		this.distinctIndex = distinctIndex;
 	}
@@ -160,6 +160,6 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
         }
     	return 0;
     }
-    
-} // END CLASS    
+
+} // END CLASS
 

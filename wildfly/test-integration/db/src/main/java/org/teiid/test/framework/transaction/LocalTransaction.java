@@ -14,8 +14,8 @@ import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 
-/** 
- * A transaction which is user controlled. 
+/**
+ * A transaction which is user controlled.
  */
 @SuppressWarnings("nls")
 public class LocalTransaction extends TransactionContainer {
@@ -25,21 +25,21 @@ public class LocalTransaction extends TransactionContainer {
     }
     protected void before(TransactionQueryTestCase test) {
 	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
-	
+
         try {
        		debug("Autocommit: " + test.getConnectionStrategy().getAutocommit());
             test.getConnection().setAutoCommit(test.getConnectionStrategy().getAutocommit());
         } catch (SQLException e) {
             throw new TransactionRuntimeException(e);
-        }        
+        }
     }
-    
+
     protected void after(TransactionQueryTestCase test) {
     	boolean exception = false;
-        try {            
+        try {
             if (test.rollbackAllways()|| test.exceptionOccurred()) {
                 test.getConnection().rollback();
-                
+
             }
             else {
                  test.getConnection().commit();
@@ -54,8 +54,8 @@ public class LocalTransaction extends TransactionContainer {
         		// do nothing
         	}
             throw new TransactionRuntimeException(se);
-            
-            
+
+
         } finally {
         	// if an exception occurs and the autocommit is set to true - while doing a transaction
         	// will generate a new exception overriding the first exception
@@ -67,8 +67,8 @@ public class LocalTransaction extends TransactionContainer {
 	            }
         	}
         }
-    }   
-    
+    }
+
 
 
 }

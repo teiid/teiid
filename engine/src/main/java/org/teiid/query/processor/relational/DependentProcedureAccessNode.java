@@ -58,12 +58,12 @@ public class DependentProcedureAccessNode extends AccessNode {
         copyTo(copy);
         return copy;
     }
-    
+
     public void reset() {
         super.reset();
         criteriaProcessor = null;
     }
-    
+
     public void closeDirect() {
         super.closeDirect();
 
@@ -71,7 +71,7 @@ public class DependentProcedureAccessNode extends AccessNode {
             criteriaProcessor.close();
         }
     }
-    
+
     @Override
     public void open() throws TeiidComponentException,
     		TeiidProcessingException {
@@ -82,22 +82,22 @@ public class DependentProcedureAccessNode extends AccessNode {
     	super.open();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.processor.relational.AccessNode#prepareNextCommand(org.teiid.query.sql.lang.Command)
      */
     protected boolean prepareNextCommand(Command atomicCommand) throws TeiidComponentException, TeiidProcessingException {
-        
+
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults);
         }
-        
+
         if (criteriaProcessor.prepareNextCommand(this.getContext().getVariableContext())) {
         	return super.prepareNextCommand(atomicCommand);
         }
-        
+
         return false;
     }
-    
+
     @Override
     protected boolean processCommandsIndividually() {
     	return true;
@@ -110,20 +110,20 @@ public class DependentProcedureAccessNode extends AccessNode {
         return criteriaProcessor.hasNextCommand();
     }
 
-    /** 
+    /**
      * @return Returns the inputCriteria.
      */
     public Criteria getInputCriteria() {
         return this.inputCriteria;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
     	Boolean requires = super.requiresTransaction(transactionalReads);
 		if (requires == null || requires) {
 			return true;
 		}
-		return false; 
+		return false;
     }
 
 }

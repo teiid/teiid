@@ -111,7 +111,7 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
 	public Expression getLeftExpression() {
 		return this.leftExpression;
 	}
-    
+
     /**
      * Returns the operator as a string.
      * @return String version of operator
@@ -127,15 +127,15 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
             default: return "??"; //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public void negate() {
     	this.setOperator(getInverseOperator(this.getOperator()));
     }
-    
+
     public static int getInverseOperator(int op) {
     	switch ( op ) {
-        case EQ: return NE; 
+        case EQ: return NE;
         case NE: return EQ;
         case LT: return GE;
         case GT: return LE;
@@ -144,5 +144,5 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
         default: return -1;
     	}
     }
-        
+
 }  // END CLASS

@@ -31,12 +31,12 @@ class NodeTrackerService implements Service<NodeTracker> {
     private NodeTracker tracker = null;
     private String nodeName;
     private ScheduledExecutorService scheduler;
-    
+
     public NodeTrackerService(String nodeName, ScheduledExecutorService scheduler) {
         this.nodeName = nodeName;
         this.scheduler = scheduler;
     }
-    
+
 	@Override
 	public void start(StartContext context) throws StartException {
 	    try {
@@ -48,14 +48,14 @@ class NodeTrackerService implements Service<NodeTracker> {
             };
         } catch (Exception e) {
             throw new StartException(e);
-        } 
+        }
 	}
 
 	@Override
 	public void stop(StopContext context) {
 	    this.tracker = null;
 	}
-	
+
 	@Override
 	public NodeTracker getValue() throws IllegalStateException,IllegalArgumentException {
 	    return this.tracker;

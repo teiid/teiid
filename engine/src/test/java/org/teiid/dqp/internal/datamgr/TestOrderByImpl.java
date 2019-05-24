@@ -36,7 +36,7 @@ public class TestOrderByImpl {
         elements.add(TestElementImpl.helpExample("vm1.g1", "e2")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e3")); //$NON-NLS-1$ //$NON-NLS-2$
         elements.add(TestElementImpl.helpExample("vm1.g1", "e4")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         ArrayList<Boolean> types = new ArrayList<Boolean>();
         types.add(Boolean.TRUE);
         types.add(Boolean.FALSE);
@@ -44,7 +44,7 @@ public class TestOrderByImpl {
         types.add(Boolean.FALSE);
         return new org.teiid.query.sql.lang.OrderBy(elements, types);
     }
-    
+
     public static OrderBy example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample(), false);
     }

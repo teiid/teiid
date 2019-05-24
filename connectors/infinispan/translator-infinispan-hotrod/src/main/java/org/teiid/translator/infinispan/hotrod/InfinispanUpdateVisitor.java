@@ -84,7 +84,7 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                     InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25013, getParentTable().getName())));
             return;
         }
-        
+
         if (obj.getParameterValues() == null) {
         	List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
         	this.insertPayload = buildInsertPayload(obj, values);
@@ -106,24 +106,24 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
     	}
     	return updates;
     }
-    
+
 	private InfinispanDocument buildInsertPayload(Insert obj, List<Expression> values) {
         InfinispanDocument targetDocument = null;
 		try {
 	        // table that insert issued for
 	        Table table = obj.getTable().getMetadataObject();
 	        Column pkColumn = getPrimaryKey();
-	        
+
 	        // create the top table parent document, where insert is actually being done at
 			targetDocument = buildTargetDocument(table, true);
-			
+
             // build the payload object from insert
             int elementCount = obj.getColumns().size();
-        	
+
         	for (int i = 0; i < elementCount; i++) {
                 ColumnReference columnReference = obj.getColumns().get(i);
                 Column column = columnReference.getMetadataObject();
-                
+
                 Object value = null;
                 if (values.get(i) instanceof Expression) {
 	                Expression expr = values.get(i);
@@ -140,7 +140,7 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
             if (targetDocument.getIdentifier() == null) {
                 this.exceptions.add(new TranslatorException(
                         InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25004, getParentTable().getName())));
-            }	            
+            }
         } catch (NumberFormatException e) {
             this.exceptions.add(new TranslatorException(e));
         } catch (TranslatorException e) {
@@ -148,7 +148,7 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
         }
 		return targetDocument;
 	}
-    
+
 
     @SuppressWarnings("unchecked")
     private void updateDocument(InfinispanDocument parentDocument, Column column, Object value)
@@ -282,7 +282,7 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
         if (!table.equals(getParentTable())) {
             this.nested = true;
         }
-        
+
         // read the properties
         try {
             InfinispanDocument targetDocument = buildTargetDocument(table, false);

@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -44,14 +44,14 @@ public class BlocksIndexInput extends IndexInput {
 		this.indexFile= inputFile;
 		blockCache= new LRUCache(CACHE_SIZE);
 	}
-    
+
 	/**
 	 * @see IndexInput#clearCache()
 	 */
 	public void clearCache() {
 		blockCache= new LRUCache(CACHE_SIZE);
 	}
-    
+
 	/**
 	 * @see IndexInput#close()
 	 */
@@ -68,7 +68,7 @@ public class BlocksIndexInput extends IndexInput {
 			}
 		}
 	}
-    
+
 	/**
 	 * @see IndexInput#getCurrentFile()
 	 */
@@ -83,7 +83,7 @@ public class BlocksIndexInput extends IndexInput {
 		}
 		return file;
 	}
-    
+
 	/**
 	 * Returns the entry corresponding to the given word.
 	 */
@@ -93,7 +93,7 @@ public class BlocksIndexInput extends IndexInput {
 		IndexBlock block= getIndexBlock(blockNum);
 		return block.findExactEntry(word);
 	}
-    
+
 	/**
 	 * Returns the FileListBlock with the given number.
 	 */
@@ -107,7 +107,7 @@ public class BlocksIndexInput extends IndexInput {
 		blockCache.put(key, fileListBlock);
 		return fileListBlock;
 	}
-    
+
 	/**
 	 * Returns the IndexBlock (containing words) with the given number.
 	 */
@@ -121,7 +121,7 @@ public class BlocksIndexInput extends IndexInput {
 		blockCache.put(key, indexBlock);
 		return indexBlock;
 	}
-    
+
 	/**
 	 * @see IndexInput#getIndexedFile(int)
 	 */
@@ -132,7 +132,7 @@ public class BlocksIndexInput extends IndexInput {
 		FileListBlock block= getFileListBlock(blockNum);
 		return block.getFile(fileNum);
 	}
-    
+
 	/**
 	 * @see IndexInput#getIndexedFile(IDocument)
 	 */
@@ -148,7 +148,7 @@ public class BlocksIndexInput extends IndexInput {
 		}
 		return null;
 	}
-    
+
 	/**
 	 * Returns the list of numbers of files containing the given word.
 	 */
@@ -160,28 +160,28 @@ public class BlocksIndexInput extends IndexInput {
 		WordEntry entry= block.findExactEntry(word);
 		return entry == null ? new int[0] : entry.getRefs();
 	}
-    
+
 	/**
 	 * @see IndexInput#getNumFiles()
 	 */
 	public int getNumFiles() {
 		return summary.getNumFiles();
 	}
-    
+
 	/**
 	 * @see IndexInput#getNumWords()
 	 */
 	public int getNumWords() {
 		return summary.getNumWords();
 	}
-    
+
 	/**
 	 * @see IndexInput#getSource()
 	 */
 	public Object getSource() {
 		return indexFile;
 	}
-    
+
 	/**
 	 * Initialises the blocksIndexInput
 	 */
@@ -196,7 +196,7 @@ public class BlocksIndexInput extends IndexInput {
 	public void moveToNextFile() throws IOException {
 		filePosition++;
 	}
-    
+
 	/**
 	 * @see IndexInput#moveToNextWordEntry()
 	 */
@@ -212,7 +212,7 @@ public class BlocksIndexInput extends IndexInput {
 			currentIndexBlock.nextEntry(currentWordEntry);
 		}
 	}
-    
+
 	/**
 	 * @see IndexInput#open()
 	 */
@@ -231,7 +231,7 @@ public class BlocksIndexInput extends IndexInput {
 			setOpen(true);
 		}
 	}
-    
+
 	/**
 	 * @see IndexInput#query(String)
 	 */
@@ -245,9 +245,9 @@ public class BlocksIndexInput extends IndexInput {
 		}
 		return files;
 	}
-    
+
 	/**
-     * Overloaded the method in BlocksIndexInput to allow a user to specify if the 
+     * Overloaded the method in BlocksIndexInput to allow a user to specify if the
      * query should be case sensitive.
      * @param pattern
      * @param isCaseSensitive
@@ -256,7 +256,7 @@ public class BlocksIndexInput extends IndexInput {
      */
     public IEntryResult[] queryEntriesMatching(char[] pattern, boolean isCaseSensitive) throws IOException {
         open();
-    
+
         if (pattern == null || pattern.length == 0) return null;
         int[] blockNums = null;
         int firstStar = indexOf('*', pattern);
@@ -274,7 +274,7 @@ public class BlocksIndexInput extends IndexInput {
                 blockNums = summary.getBlockNumsForPrefix(prefix);
         }
         if (blockNums == null || blockNums.length == 0) return null;
-                
+
         IEntryResult[] entries = new IEntryResult[5];
         int count = 0;
         for (int i = 0, max = blockNums.length; i < max; i++) {
@@ -296,20 +296,20 @@ public class BlocksIndexInput extends IndexInput {
         }
         return entries;
     }
-    
+
     static final int indexOf(char toBeFound, char[] array) {
         for (int i = 0; i < array.length; i++)
             if (toBeFound == array[i])
                 return i;
         return -1;
     }
-    
+
     public IEntryResult[] queryEntriesPrefixedBy(char[] prefix) throws IOException {
         open();
-		
+
 		int blockLoc = summary.getFirstBlockLocationForPrefix(prefix);
 		if (blockLoc < 0) return null;
-			
+
 		IEntryResult[] entries = new IEntryResult[5];
 		int count = 0;
 		while(blockLoc >= 0){
@@ -329,7 +329,7 @@ public class BlocksIndexInput extends IndexInput {
 				}
 			}
 			/* consider next block ? */
-			blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);				
+			blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);
 		}
 		if (count == 0) return null;
 		if (count != entries.length){
@@ -339,7 +339,7 @@ public class BlocksIndexInput extends IndexInput {
 	}
 
     /**
-     * Overloaded the method in BlocksIndexInput to allow a user to specify if the 
+     * Overloaded the method in BlocksIndexInput to allow a user to specify if the
      * query should be case sensitive.
      */
     public IEntryResult[] queryEntriesPrefixedBy(char[] prefix, boolean isCaseSensitive) throws IOException {
@@ -367,7 +367,7 @@ public class BlocksIndexInput extends IndexInput {
                 }
             }
             /* consider next block ? */
-            blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);             
+            blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);
         }
         if (count == 0) return null;
         if (count != entries.length){
@@ -375,7 +375,7 @@ public class BlocksIndexInput extends IndexInput {
         }
         return entries;
     }
-    
+
 	public IQueryResult[] queryFilesReferringToPrefix(char[] prefix) throws IOException {
         open();
 
@@ -384,7 +384,7 @@ public class BlocksIndexInput extends IndexInput {
 
 		// each filename must be returned already once
 		HashMap<Integer, IndexedFile> fileMatches = new HashMap<Integer, IndexedFile>();
-		int count = 0; 
+		int count = 0;
 		while(blockLoc >= 0){
 			IndexBlock block = getIndexBlock(summary.getBlockNum(blockLoc));
 			block.reset();
@@ -407,13 +407,13 @@ public class BlocksIndexInput extends IndexInput {
 				}
 			}
 			/* consider next block ? */
-			blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);				
+			blockLoc = summary.getNextBlockLocationForPrefix(prefix, blockLoc);
 		}
 		/* extract indexed files */
 		IQueryResult[] files = fileMatches.values().toArray(new IQueryResult[count]);
 		return files;
 	}
-    
+
 	/**
 	 * @see IndexInput#queryInDocumentNames(String)
 	 */
@@ -431,7 +431,7 @@ public class BlocksIndexInput extends IndexInput {
 		matches.toArray(match);
 		return match;
 	}
-    
+
 	/**
 	 * @see IndexInput#setFirstFile()
 	 */
@@ -442,7 +442,7 @@ public class BlocksIndexInput extends IndexInput {
 			currentFileListBlock= getFileListBlock(currentFileListBlockNum);
 		}
 	}
-    
+
 	/**
 	 * @see IndexInput#setFirstWord()
 	 */

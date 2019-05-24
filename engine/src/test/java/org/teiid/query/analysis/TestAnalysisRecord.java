@@ -41,27 +41,27 @@ public class TestAnalysisRecord extends TestCase {
     public void testAnnotations() {
         AnalysisRecord rec = new AnalysisRecord(true, false);
         assertTrue(rec.recordAnnotations());
-        
+
         Annotation ann1 = new Annotation("cat", "ann", "res", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Annotation ann2 = new Annotation("cat2", "ann2", "res2", Priority.HIGH); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-      
+
         rec.addAnnotation(ann1);
         rec.addAnnotation(ann2);
-        
+
         Collection<Annotation> annotations = rec.getAnnotations();
         assertEquals(2, annotations.size());
         assertTrue(annotations.contains(ann1));
         assertTrue(annotations.contains(ann2));
-        
+
     }
-    
+
     public void testDebugLog() {
         AnalysisRecord rec = new AnalysisRecord(false, true);
         assertTrue(rec.recordDebug());
-        
+
         rec.println("a"); //$NON-NLS-1$
         rec.println("b"); //$NON-NLS-1$
-        
+
         String log = rec.getDebugLog();
         assertEquals("a\nb\n", log); //$NON-NLS-1$
     }

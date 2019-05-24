@@ -33,27 +33,27 @@ public abstract class RuntimeVDB {
 	private VDBMetaData vdb;
 	private VDBModificationListener listener;
 	private volatile boolean restartInProgress = false;
-	
+
 	public static class ReplaceResult {
 		public boolean isNew;
 		public String removedDs;
 	}
-	
+
 	public interface VDBModificationListener {
 		void dataRoleChanged(String policyName) throws AdminProcessingException;
 		void connectionTypeChanged() throws AdminProcessingException;
 		void dataSourceChanged(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException;
 		void onRestart(List<String> modelNames) throws AdminProcessingException;
 	}
-	
+
 	public RuntimeVDB(VDBMetaData vdb, VDBModificationListener listener) {
 		this.vdb = vdb;
 		this.listener = listener;
 	}
-	
+
 	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException {
 		synchronized (this.vdb) {
-			DataPolicyMetadata policy = getPolicy(policyName);		
+			DataPolicyMetadata policy = getPolicy(policyName);
 			List<String> previous = policy.getMappedRoleNames();
 			policy.addMappedRoleName(mappedRole);
 			try {
@@ -64,7 +64,7 @@ public abstract class RuntimeVDB {
 			}
 		}
 	}
-	
+
 	public void remoteDataRole(String policyName, String mappedRole) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			DataPolicyMetadata policy = getPolicy(policyName);
@@ -77,11 +77,11 @@ public abstract class RuntimeVDB {
 				throw e;
 			}
 		}
-	}	
-	
+	}
+
 	public void addAnyAuthenticated(String policyName) throws AdminProcessingException{
 		synchronized (this.vdb) {
-			DataPolicyMetadata policy = getPolicy(policyName);		
+			DataPolicyMetadata policy = getPolicy(policyName);
 			boolean previous = policy.isAnyAuthenticated();
 			policy.setAnyAuthenticated(true);
 			try {
@@ -91,8 +91,8 @@ public abstract class RuntimeVDB {
 				throw e;
 			}
 		}
-	}	
-	
+	}
+
 	public void removeAnyAuthenticated(String policyName) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			DataPolicyMetadata policy = getPolicy(policyName);
@@ -105,8 +105,8 @@ public abstract class RuntimeVDB {
 				throw e;
 			}
 		}
-	}		
-	
+	}
+
 	public void changeConnectionType(ConnectionType type) throws AdminProcessingException {
 		synchronized (this.vdb) {
 			ConnectionType previous = this.vdb.getConnectionType();
@@ -119,7 +119,7 @@ public abstract class RuntimeVDB {
 			}
 		}
 	}
-	
+
 	public ReplaceResult updateSource(String sourceName, String translatorName, String dsName) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
@@ -127,10 +127,10 @@ public abstract class RuntimeVDB {
 			if(cr == null) {
 				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40091, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40091, sourceName, this.vdb.getName(), this.vdb.getVersion()));
 			}
-			
+
 			String previousTranslatorName = cr.getTranslatorName();
 			String previousDsName = cr.getConnectionName();
-			
+
 			//modify all source elements in all models
 			for (ModelMetaData m : this.vdb.getModelMetaDatas().values()) {
 				SourceMappingMetadata mapping = m.getSourceMapping(sourceName);
@@ -139,11 +139,11 @@ public abstract class RuntimeVDB {
 					mapping.setConnectionJndiName(dsName);
 				}
 			}
-			
+
 			boolean success = false;
 			try {
 				this.listener.dataSourceChanged(null, sourceName, translatorName, dsName);
-				
+
 				ReplaceResult rr = new ReplaceResult();
 				if (dsName != null) {
 					rr.isNew = !dsExists(dsName, cmr);
@@ -164,10 +164,10 @@ public abstract class RuntimeVDB {
 						}
 					}
 				}
-			}			
+			}
 		}
 	}
-	
+
 	public ReplaceResult addSource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			ModelMetaData model = this.vdb.getModel(modelName);
@@ -185,10 +185,10 @@ public abstract class RuntimeVDB {
 			try {
 				SourceMappingMetadata mapping = new SourceMappingMetadata(sourceName, translatorName, dsName);
 				boolean updated = getVDBStatusChecker().updateSource(vdb.getName(), vdb.getVersion(), mapping, false);
-				
+
 				model.addSourceMapping(mapping);
 				this.listener.dataSourceChanged(modelName, sourceName, translatorName, dsName);
-				
+
 				ReplaceResult rr = new ReplaceResult();
 				if (dsName != null && updated) {
 					ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
@@ -200,10 +200,10 @@ public abstract class RuntimeVDB {
 				if (!success) {
 					model.getSources().remove(sourceName);
 				}
-			}			
+			}
 		}
 	}
-	
+
 	public ReplaceResult removeSource(String modelName, String sourceName) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			ModelMetaData model = this.vdb.getModel(modelName);
@@ -254,7 +254,7 @@ public abstract class RuntimeVDB {
 					//TODO: this means that the order has changed
 					model.addSourceMapping(source);
 				}
-			}			
+			}
 		}
 	}
 
@@ -267,31 +267,31 @@ public abstract class RuntimeVDB {
 		}
 		return false;
 	}
-	
+
 	public void restart(List<String> modelNames) throws AdminProcessingException {
 		synchronized(this.vdb) {
 			this.restartInProgress = true;
 			this.listener.onRestart(modelNames);
 		}
 	}
-	
+
 	private DataPolicyMetadata getPolicy(String policyName)
 			throws AdminProcessingException {
 		DataPolicyMetadata policy = vdb.getDataPolicyMap().get(policyName);
-		
+
 		if (policy == null) {
 			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40092, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40092, policyName, vdb.getName(), vdb.getVersion()));
 		}
 		return policy;
-	}	
-	
+	}
+
 	public boolean isRestartInProgress() {
 		return this.restartInProgress;
 	}
-	
+
 	public VDBMetaData getVdb() {
 		return vdb;
 	}
-	
+
 	protected abstract VDBStatusChecker getVDBStatusChecker();
 }

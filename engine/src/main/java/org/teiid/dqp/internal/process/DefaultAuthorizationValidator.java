@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 package org.teiid.dqp.internal.process;
 
 import java.util.HashMap;
@@ -52,15 +52,15 @@ import org.teiid.query.util.CommandContext;
  * The default Teiid authorization validator
  */
 public class DefaultAuthorizationValidator implements AuthorizationValidator {
-	
+
 	public static final String IGNORE_UNAUTHORIZED_ASTERISK = "ignore_unauthorized_asterisk"; //$NON-NLS-1$
 	private PolicyDecider policyDecider;
 	private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.ignoreUnauthorizedAsterisk", false, Boolean.class); //$NON-NLS-1$
     private boolean metadataRequiresPermission = PropertiesUtils.getHierarchicalProperty("org.teiid.metadataRequiresPermission", true, Boolean.class); //$NON-NLS-1$
-	
+
 	public DefaultAuthorizationValidator() {
 	}
-	
+
 	public void setMetadataRequiresPermission(
             boolean metadataRequiresPermission) {
         this.metadataRequiresPermission = metadataRequiresPermission;
@@ -104,7 +104,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 			}
 			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
 			Request.validateWithVisitor(visitor, metadata, command);
-		}		
+		}
 		return modified;
 	}
 
@@ -128,7 +128,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		}
 		return false;
 	}
-	
+
 	@Override
 	public boolean hasRole(String roleName, CommandContext commandContext) {
 		if (policyDecider == null) {
@@ -136,11 +136,11 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		}
 		return this.policyDecider.hasRole(roleName, commandContext);
 	}
-	
+
 	public void setPolicyDecider(PolicyDecider policyDecider) {
 		this.policyDecider = policyDecider;
 	}
-	
+
 	@Override
 	public boolean isAccessible(AbstractMetadataRecord record,
 			CommandContext commandContext) {
@@ -166,7 +166,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 			action = PermissionType.EXECUTE;
 		}
 		HashSet<String> resources = new HashSet<String>(2);
-		
+
 		boolean result = false;
 		if (record instanceof Schema) {
 		    Boolean cachedResult = commandContext.isAccessible(record);
@@ -199,5 +199,5 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
         resources.add(record.getFullName());
 		return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
     }
-	
+
 }

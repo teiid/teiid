@@ -25,8 +25,8 @@ import org.teiid.language.Function;
 
 
 /**
- * Wrap a function in standard JDBC escape syntax.  In some cases, the 
- * driver can then convert to the correct database syntax for us. 
+ * Wrap a function in standard JDBC escape syntax.  In some cases, the
+ * driver can then convert to the correct database syntax for us.
  * @since 5.0
  */
 public class EscapeSyntaxModifier extends FunctionModifier {

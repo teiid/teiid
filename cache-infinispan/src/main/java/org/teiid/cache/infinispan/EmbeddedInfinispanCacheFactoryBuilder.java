@@ -31,13 +31,13 @@ import org.teiid.core.TeiidRuntimeException;
  * Needed to create the CacheFactory for embedded usage.
  */
 public class EmbeddedInfinispanCacheFactoryBuilder {
-    
+
     public static CacheFactory buildCacheFactory(String configFile, TransactionManager tm) {
         try {
             if (configFile == null) {
                 configFile = "infinispan-config.xml"; // in classpath
             }
-            DefaultCacheManager cacheManager = new DefaultCacheManager(configFile, true);               
+            DefaultCacheManager cacheManager = new DefaultCacheManager(configFile, true);
             for(String cacheName:cacheManager.getCacheNames()) {
                 if (tm != null) {
                     cacheManager.getCacheConfiguration(cacheName).transaction().transactionManagerLookup(new TransactionManagerLookup() {
@@ -46,7 +46,7 @@ public class EmbeddedInfinispanCacheFactoryBuilder {
                             return tm;
                         }
                     });
-                }                   
+                }
                 cacheManager.startCache(cacheName);
             }
             return new InfinispanCacheFactory(cacheManager, InfinispanCacheFactory.class.getClassLoader());

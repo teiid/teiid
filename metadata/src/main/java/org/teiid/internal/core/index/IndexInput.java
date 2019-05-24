@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -21,8 +21,8 @@ import org.teiid.core.index.IQueryResult;
 
 /**
  * This class provides an input on an index, after it has been generated.
- * You can access all the files of an index via getNextFile(), getCurrentFile() 
- * and moveToNextFile() (idem for the word entries). 
+ * You can access all the files of an index via getNextFile(), getCurrentFile()
+ * and moveToNextFile() (idem for the word entries).
  * The usage is the same for every subclass: creation (constructor), opening
  * (the open() method), usage, and closing (the close() method), to release the
  * data source used by this input.
@@ -31,7 +31,7 @@ public abstract class IndexInput {
 	protected int filePosition;
 	protected WordEntry currentWordEntry;
 	protected int wordPosition;
-    
+
     // Cache the open state of the Index
     private boolean openState;
 
@@ -47,7 +47,7 @@ public abstract class IndexInput {
 	public abstract void clearCache();
 	/**
 	 * Closes the IndexInput. For example, if the input is on a RandomAccessFile,
-	 * it calls the close() method of RandomAccessFile. 
+	 * it calls the close() method of RandomAccessFile.
 	 */
 	public abstract void close() throws IOException;
 	/**
@@ -68,14 +68,14 @@ public abstract class IndexInput {
 	public int getFilePosition() {
 		return filePosition;
 	}
-    /**  
+    /**
      * Set the open state of the Index
      * @since 5.0
      */
     public void setOpen(boolean state) {
         this.openState = state;
     }
-    
+
     /**
      * returns the open state of the index
      * @since 5.0
@@ -83,7 +83,7 @@ public abstract class IndexInput {
     public boolean isOpen() {
         return this.openState;
     }
-    
+
 	/**
 	 * Returns the indexedFile corresponding to the given document number in the index the input
 	 * reads in, or null if such indexedFile does not exist.
@@ -91,7 +91,7 @@ public abstract class IndexInput {
 	public abstract IndexedFile getIndexedFile(int fileNum) throws IOException;
 	/**
 	 * Returns the indexedFile corresponding to the given document in the index the input
-	 * reads in (e.g. the indexedFile with the same path in this index), or null if such 
+	 * reads in (e.g. the indexedFile with the same path in this index), or null if such
 	 * indexedFile does not exist.
 	 */
 	public abstract IndexedFile getIndexedFile(IDocument document) throws IOException;

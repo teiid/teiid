@@ -52,9 +52,9 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
 public class ConvertVDB {
-    
+
     public static void main(String[] args) throws Exception {
-        
+
         if (args.length < 1) {
             System.out.println("usage: CovertVDB /path/to/file-vdb.xml [/path/to/writefile-vdb.ddl]");
             System.exit(0);
@@ -65,7 +65,7 @@ public class ConvertVDB {
             System.out.println("vdb file " + f.getAbsolutePath() + " does not exist");
             return;
         }
-        
+
         if (f.getName().toLowerCase().endsWith(".xml")) {
 			if (args.length > 1 && args[1] != null) {
 				System.out.println("Writing to file " + args[1]);
@@ -81,26 +81,26 @@ public class ConvertVDB {
     public static String convert(File f)
             throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException,
             URISyntaxException, MalformedURLException, AdminException, Exception, FileNotFoundException {
-        
+
         LogManager.setLogListener(new JBossLogger() {
             @Override
             public boolean isEnabled(String context, int level) {
                 return false;
             }
         });
-        
+
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
-        
+
         MyServer es = new MyServer();
-        
+
         LogManager.setLogListener(new JBossLogger() {
             @Override
             public boolean isEnabled(String context, int level) {
                 return false;
             }
-        });        
-        
+        });
+
         es.start(ec);
         try {
             return es.convertVDB(new FileInputStream(f));
@@ -108,7 +108,7 @@ public class ConvertVDB {
             es.stop();
         }
     }
-    
+
     private static class MyServer extends EmbeddedServer {
         @Override
         public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
@@ -135,7 +135,7 @@ public class ConvertVDB {
                 throw new VirtualDatabaseException(e);
             }
             metadata.setXmlDeployment(true);
-            
+
             MetadataStore metadataStore = new MetadataStore();
             final LinkedHashMap<String, ModelMetaData> modelMetaDatas = metadata.getModelMetaDatas();
             for (ModelMetaData m:modelMetaDatas.values()) {
@@ -147,14 +147,14 @@ public class ConvertVDB {
                 schema.setProperties(m.getPropertiesMap());
                 metadataStore.addSchema(schema);
             }
-            
+
             Database db = DatabaseUtil.convert(metadata, metadataStore);
             DDLStringVisitor visitor = new DDLStringVisitor(null, null) {
-                
+
                 @Override
                 protected void createdSchmea(Schema schema) {
                 }
-                
+
                 @Override
                 protected void visit(Schema schema) {
                     ModelMetaData m = modelMetaDatas.get(schema.getName());
@@ -164,7 +164,7 @@ public class ConvertVDB {
                     if (schemaName == null) {
                         schemaName = "%";
                     }
-                    
+
                     if (m.getSourceMetadataType().isEmpty()) {
                         // nothing defined; so this is NATIVE only
                        if (m.isSource()) {
@@ -185,7 +185,7 @@ public class ConvertVDB {
                     }
                     buffer.append(replace);
                 }
-                
+
             };
             visitor.visit(db);
             return visitor.toString();
@@ -214,5 +214,5 @@ public class ConvertVDB {
             return true;
         }
     };
-    
+
 }

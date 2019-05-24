@@ -47,19 +47,19 @@ import org.teiid.jdbc.TeiidDriver;
 public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 
 	private Admin admin;
-	
+
 	@Before
 	public void setup() throws Exception {
         admin = AdminFactory.getInstance().createAdmin("localhost",
                 AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
 	}
-	
+
 	@After
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
-	
+
 	@Test
 	public void testDDL() throws Exception {
 		String ddl = "create database foo version '1';"
@@ -73,19 +73,19 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user;autoFailover=true", null);
-        
+
         execute("SELECT * FROM test.G1"); //$NON-NLS-1$
-        assertRowCount(1);        
+        assertRowCount(1);
         try {
             execute("SELECT * FROM test.G2"); //$NON-NLS-1$
             fail("should have failed as there is no G2 Table");
         } catch (Exception e) {
         }
-        
+
         // add table
         ddl = ddl + "CREATE FOREIGN TABLE G2 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double)";
         this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
-        
+
         // THIS SHOULD BE REMOVED, AUTOFAILOVER NOT WORKING
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user;autoFailover=true", null);
@@ -94,17 +94,17 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
     	execute("SELECT * FROM test.G2"); //$NON-NLS-1$
         assertRowCount(1);
         printResults();
-        
+
         String exportedDdl = admin.getSchema("foo", "1", null, null, null);
 		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-vdb.ddl")),
 				exportedDdl);
-        
+
         closeConnection();
         admin.undeploy("foo-vdb.ddl");
 	}
 
 	@Test
-	public void testOverrideTranslator() throws Exception {    
+	public void testOverrideTranslator() throws Exception {
 		String ddl = "create database foo;"
 		+ "use database foo version '1';"
         + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
@@ -112,20 +112,20 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         + "create schema test server serverOne;"
         + "set schema test;"
         + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
-    
+
 		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
-		
+
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user", null);
-        
+
         execute("SELECT * FROM test.G1"); //$NON-NLS-1$
-        assertRowCount(500);        
+        assertRowCount(500);
         closeConnection();
         admin.undeploy("foo-vdb.ddl");
     }
 
 	@Test
-    public void testVDBImport() throws Exception {        
+    public void testVDBImport() throws Exception {
 		String ddl = "create database foo;"
 		        + "use database foo version '1';"
 		        + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
@@ -135,45 +135,45 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 		        + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
 		String bar =  "create database BAR;"
 		        + "IMPORT database foo VERSION '1';";
-		    
+
 		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
 		this.admin.deploy("bar-vdb.ddl", new ByteArrayInputStream(bar.getBytes()), false);
-		
+
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:BAR@mm://localhost:31000;user=user;password=user", null);
-        
+
         execute("SELECT * FROM test.G1"); //$NON-NLS-1$
-        assertRowCount(500);        
+        assertRowCount(500);
         closeConnection();
         admin.undeploy("bar-vdb.ddl");
         admin.undeploy("foo-vdb.ddl");
-    }    
-    
+    }
+
 	@Test
     public void testUdfClasspath() throws Exception {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "func.jar")
                   .addClasses(SampleFunctions.class);
         admin.deploy("func.jar", jar.as(ZipExporter.class).exportAsInputStream());
-        
+
         String ddl = "create database \"dynamic-func\" OPTIONS(lib 'deployment.func.jar');"
                 + "USE DATABASE \"dynamic-func\" version '1';"
         		+ "CREATE VIRTUAL schema test;"
                 + "SET SCHEMA test;"
         		+ "CREATE function func (val string) returns integer "
                 + "options (JAVA_CLASS 'org.teiid.arquillian.SampleFunctions',  JAVA_METHOD 'doSomething');";
-                
+
         this.admin.deploy("dynamic-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:dynamic-func@mm://localhost:31000;user=user;password=user", null);
-        
+
         execute("SELECT func('a')"); //$NON-NLS-1$
         assertRowCount(1);
         admin.undeploy("dynamic-vdb.ddl");
         closeConnection();
     }
-	
+
 	@Test(expected=SQLException.class)
-    public void testDDLOverJDBCNoAuth() throws Exception {	 
+    public void testDDLOverJDBCNoAuth() throws Exception {
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo2@mm://localhost:31000;user=dummy;password=user;autoFailover=true;vdbEdit=true", null);
 	}

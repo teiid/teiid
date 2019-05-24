@@ -34,7 +34,7 @@ public class BinaryToBlobTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-        BinaryType contents = (BinaryType)value;                
+        BinaryType contents = (BinaryType)value;
 		return contents.toBlob();
 	}
 
@@ -53,5 +53,5 @@ public class BinaryToBlobTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.BLOB;
 	}
-	
+
 }

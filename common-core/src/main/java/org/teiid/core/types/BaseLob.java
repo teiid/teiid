@@ -34,19 +34,19 @@ import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.InputStreamReader;
 
 public class BaseLob implements Externalizable, StreamFactoryReference {
-	
+
 	private static final long serialVersionUID = -1586959324208959519L;
 	private InputStreamFactory streamFactory;
 	private Charset charset;
-	
+
 	public BaseLob() {
-		
+
 	}
-	
+
 	protected BaseLob(InputStreamFactory streamFactory) {
 		this.streamFactory = streamFactory;
 	}
-	
+
 	public void setStreamFactory(InputStreamFactory streamFactory) {
 		this.streamFactory = streamFactory;
 	}
@@ -57,7 +57,7 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
     	}
 		return streamFactory;
 	}
-	
+
 	public void setEncoding(String encoding) {
 		if (encoding != null) {
 			this.charset = Charset.forName(encoding);
@@ -65,20 +65,20 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
 			this.charset = null;
 		}
 	}
-	
+
 	public Charset getCharset() {
 		return charset;
 	}
-	
+
 	public void setCharset(Charset charset) {
 		this.charset = charset;
 	}
-	
+
 	public void free() {
 		//we don't actually free the underlying streamFactory as this could be a caching scenario
 		this.streamFactory = null;
 	}
-	
+
     public Reader getCharacterStream() throws SQLException {
     	try {
 			Reader r = this.getStreamFactory().getCharacterStream();
@@ -106,7 +106,7 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
 			throw ex;
 		}
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
     		ClassNotFoundException {
@@ -119,13 +119,13 @@ public class BaseLob implements Externalizable, StreamFactoryReference {
     		//just ignore
     	}
     }
-    
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
     	out.writeObject(streamFactory);
     	out.writeObject(charset);
     }
-    
+
     /**
      * Returns the number of bytes.
      */

@@ -35,7 +35,7 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	private String parentDirectory;
 	private String fileMapping;
 	private boolean allowParentPaths = true;
-	
+
 	@Override
 	@SuppressWarnings("serial")
 	public BasicConnectionFactory<FileConnectionImpl> createConnectionFactory() throws ResourceException {
@@ -44,34 +44,34 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 		}
 		final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
 		return new BasicConnectionFactory<FileConnectionImpl>() {
-			
+
 			@Override
 			public FileConnectionImpl getConnection() throws ResourceException {
 				return new FileConnectionImpl(parentDirectory, map, allowParentPaths);
 			}
 		};
 	}
-	
+
 	public String getParentDirectory() {
 		return parentDirectory;
 	}
-	
+
 	public void setParentDirectory(String parentDirectory) {
 		this.parentDirectory = parentDirectory;
 	}
-	
+
 	public String getFileMapping() {
 		return fileMapping;
 	}
-	
+
 	public void setFileMapping(String fileMapping) {
 		this.fileMapping = fileMapping;
 	}
-	
+
 	public Boolean isAllowParentPaths() {
 		return allowParentPaths;
 	}
-	
+
 	public void setAllowParentPaths(Boolean allowParentPaths) {
 		this.allowParentPaths = allowParentPaths != null && allowParentPaths;
 	}
@@ -102,5 +102,5 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 		}
 		return true;
 	}
-	
+
 }

@@ -30,13 +30,13 @@ import org.teiid.query.util.CommandContext;
 
 public class TestBaseProcessorPlan {
 
-    @Test public void testGetAndClearWarnings() {        
+    @Test public void testGetAndClearWarnings() {
         FakeProcessorPlan plan = new FakeProcessorPlan(Collections.emptyList(), Collections.emptyList());
         CommandContext cc = new CommandContext();
         plan.initialize(cc, null, null);
         TeiidException warning = new TeiidException("test"); //$NON-NLS-1$
         plan.addWarning(warning);
-        
+
         List<Exception> warnings = cc.getAndClearWarnings();
         assertEquals("Did not get expected number of warnings", 1, warnings.size()); //$NON-NLS-1$
         assertEquals("Did not get expected warning", warning, warnings.get(0)); //$NON-NLS-1$

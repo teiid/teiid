@@ -59,7 +59,7 @@ public class TestExecutionReuse {
 
 	private static final int EXEC_COUNT = 3;
 	private static FakeServer server;
-	
+
 	private static class FakeReusableExecution implements ResultSetExecution, ReusableExecution<Object> {
 
 		@Override
@@ -88,12 +88,12 @@ public class TestExecutionReuse {
 		public void reset(Command c, ExecutionContext executionContext,
 				Object connection) {
 		}
-		
+
 	}
-	
+
 	private static FakeReusableExecution execution;
 	private static boolean isDisposed;
-	
+
 	@Before public void setup() throws DataNotAvailableException, TranslatorException {
 		execution = Mockito.mock(FakeReusableExecution.class);
 		ec = null;
@@ -122,7 +122,7 @@ public class TestExecutionReuse {
 		server.setConnectorManagerRepository(new ConnectorManagerRepository() {
 			private ConnectorManager cm = new ConnectorManager("x", "y") {
 				private ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object>() {
-					
+
 					@Override
 					public ResultSetExecution createResultSetExecution(
 							QueryExpression command,
@@ -132,7 +132,7 @@ public class TestExecutionReuse {
 						ec = executionContext;
 						return execution;
 					};
-					
+
 					public boolean isSourceRequired() {
 						return false;
 					};
@@ -141,13 +141,13 @@ public class TestExecutionReuse {
 				public ExecutionFactory<Object, Object> getExecutionFactory() {
 					return ef;
 				}
-				
+
 				@Override
 				public Object getConnectionFactory()
 						throws TranslatorException {
 					return null;
 				}
-				
+
 			};
 			@Override
 			public ConnectorManager getConnectorManager(String connectorName) {
@@ -157,16 +157,16 @@ public class TestExecutionReuse {
 		server.start(config, false);
 		server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     }
-    
+
     @AfterClass public static void oneTimeTearDown() throws Exception {
     	server.stop();
     }
-    
+
 	@Test public void testReusableAsynchContinuous() throws Exception {
 		Connection c = server.createConnection("jdbc:teiid:partssupplier");
 		Statement s = c.createStatement();
 		TeiidStatement ts = s.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		ts.submitExecute("select part_id from parts order by part_id", new StatementCallback() {
 			int rowCount;
 			@Override
@@ -176,12 +176,12 @@ public class TestExecutionReuse {
 					stmt.close();
 				}
 			}
-			
+
 			@Override
 			public void onException(Statement stmt, Exception e) {
 				result.getResultsReceiver().exceptionOccurred(e);
 			}
-			
+
 			@Override
 			public void onComplete(Statement stmt) {
 				result.getResultsReceiver().receiveResults(rowCount);
@@ -199,13 +199,13 @@ public class TestExecutionReuse {
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset((Command)Mockito.anyObject(), (ExecutionContext)Mockito.anyObject(), Mockito.anyObject());
 	}
-	
+
 	@Test public void testCommandContext() {
 		CommandContext cc = new CommandContext();
 		FakeReusableExecution fe = new FakeReusableExecution();
 		cc.putReusableExecution("a", fe);
 		cc.putReusableExecution("a", new FakeReusableExecution());
-		
+
 		ReusableExecution<?> re = cc.getReusableExecution("a");
 		ReusableExecution<?> re1 = cc.getReusableExecution("a");
 		assertSame(fe, re);

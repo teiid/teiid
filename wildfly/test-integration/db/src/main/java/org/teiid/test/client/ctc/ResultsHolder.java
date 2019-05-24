@@ -36,7 +36,7 @@ public class ResultsHolder {
 
     // Identifier
     private String queryID;
-    
+
     // The SQl query if available.
     private String query;
 
@@ -156,8 +156,8 @@ public class ResultsHolder {
 	        }
         }
         else {
-            buf.append(getExceptionClassName()).append(":").append(getExceptionMsg()); //$NON-NLS-1$            
+            buf.append(getExceptionClassName()).append(":").append(getExceptionMsg()); //$NON-NLS-1$
         }
         return buf.toString();
-    }    
+    }
 }

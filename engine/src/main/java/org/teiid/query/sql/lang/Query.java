@@ -52,33 +52,33 @@ public class Query extends QueryCommand implements FilteredCommand {
 
 	/** The from clause. */
 	private From from;
-	
+
     /** The criteria specifying constraints on what data will be retrieved. */
     private Criteria criteria;
 
 	/** The group by specifying how to group rows. */
 	private GroupBy groupBy;
-	
+
 	/** The having specifying which group rows will be returned. */
 	private Criteria having;
 
     /** The into clause. */
     private Into into;
-    
+
     //currently set by parser, but can be derived
     private boolean isRowConstructor;
-	
+
     // =========================================================================
     //                         C O N S T R U C T O R S
     // =========================================================================
-    
+
     /**
      * Constructs a default instance of this class.
      */
     public Query() {
         super();
     }
-    
+
     public static Query rowConstructor(List<Expression> select) {
     	Query query = new Query();
     	query.setSelect(new Select());
@@ -86,8 +86,8 @@ public class Query extends QueryCommand implements FilteredCommand {
     	query.setRowConstructor(true);
     	return query;
     }
-    
-    
+
+
     /**
      * Constructs an instance of this class given the specified clauses
      * @param select SELECT clause
@@ -133,11 +133,11 @@ public class Query extends QueryCommand implements FilteredCommand {
 	public int getType() {
 		return Command.TYPE_QUERY;
 	}
-    
+
     // =========================================================================
     //                     S E L E C T      M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the select clause for the query.
      * @return SELECT clause
@@ -145,7 +145,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     public Select getSelect() {
         return select;
     }
-    
+
     /**
      * Set the select clause for the query.
      * @param select SELECT clause
@@ -153,11 +153,11 @@ public class Query extends QueryCommand implements FilteredCommand {
     public void setSelect( Select select ) {
         this.select = select;
     }
-     
+
     // =========================================================================
     //                     F R O M      M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the from clause for the query.
      * @return FROM clause
@@ -165,7 +165,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     public From getFrom() {
         return from;
     }
-    
+
     /**
      * Set the from clause for the query.
      * @param from FROM clause
@@ -173,11 +173,11 @@ public class Query extends QueryCommand implements FilteredCommand {
     public void setFrom( From from  ) {
         this.from = from;
     }
-        
+
     // =========================================================================
     //                   C R I T E R I A      M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the criteria clause for the query.
      * @return WHERE clause
@@ -185,7 +185,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     public Criteria getCriteria() {
         return criteria;
     }
-    
+
     /**
      * Set the criteria clause for the query.
      * @param criteria WHERE clause
@@ -204,7 +204,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     // =========================================================================
     //                    G R O U P   B Y     M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the group by clause for the query.
      * @return GROUP BY clause
@@ -212,7 +212,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     public GroupBy getGroupBy() {
         return groupBy;
     }
-    
+
     /**
      * Set the group by clause for the query.
      * @param groupBy GROUP BY clause
@@ -225,7 +225,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     // =========================================================================
     //                   H A V I N G      M E T H O D S
     // =========================================================================
-    
+
     /**
      * Get the having clause for the query.
      * @return HAVING clause
@@ -233,7 +233,7 @@ public class Query extends QueryCommand implements FilteredCommand {
     public Criteria getHaving() {
         return having;
     }
-    
+
     /**
      * Set the criteria clause for the query.
      * @param having HAVING clause
@@ -259,23 +259,23 @@ public class Query extends QueryCommand implements FilteredCommand {
     public void setInto(Into into) {
         this.into = into;
     }
-    
+
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
    	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
 	public List<Expression> getProjectedSymbols() {
-		if(getSelect() != null) { 
+		if(getSelect() != null) {
             if(getInto() != null){
                 //SELECT INTO clause
                 return Command.getUpdateCommandSymbol();
@@ -284,7 +284,7 @@ public class Query extends QueryCommand implements FilteredCommand {
 		}
 		return Collections.emptyList();
 	}
-	
+
     // =========================================================================
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
@@ -293,7 +293,7 @@ public class Query extends QueryCommand implements FilteredCommand {
 	 * Deep clone Query to produce a new identical query.
 	 * @return Deep clone
 	 */
-	public Object clone() {		
+	public Object clone() {
 		Query copy = new Query();
 
 		if(select != null) {
@@ -308,13 +308,13 @@ public class Query extends QueryCommand implements FilteredCommand {
 			copy.setCriteria( (Criteria) criteria.clone());
 		}
 
-		if(groupBy != null) { 
+		if(groupBy != null) {
 			copy.setGroupBy( (GroupBy) groupBy.clone());
-		} 
-		
-		if(having != null) { 
+		}
+
+		if(having != null) {
 			copy.setHaving( (Criteria) having.clone());
-		}	
+		}
 
         if(getOrderBy() != null) {
             copy.setOrderBy(getOrderBy().clone());
@@ -323,22 +323,22 @@ public class Query extends QueryCommand implements FilteredCommand {
         if(getLimit() != null) {
             copy.setLimit( getLimit().clone());
         }
-        
+
         copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
 
         if (into != null) {
         	copy.into = (Into)into.clone();
         }
-        
+
         copyMetadataState(copy);
         copy.setRowConstructor(this.isRowConstructor);
 		return copy;
 	}
-	
+
     /**
      * Compare two queries for equality.  Queries will only evaluate to equal if
      * they are IDENTICAL: select variables are in the same order, criteria are in
-     * the same exact structure.  
+     * the same exact structure.
      * @param obj Other object
      * @return True if equal
      */
@@ -352,7 +352,7 @@ public class Query extends QueryCommand implements FilteredCommand {
 		}
 
 		Query other = (Query) obj;
-		
+
         return EquivalenceUtil.areEqual(getSelect(), other.getSelect()) &&
                EquivalenceUtil.areEqual(getFrom(), other.getFrom()) &&
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria()) &&
@@ -379,7 +379,7 @@ public class Query extends QueryCommand implements FilteredCommand {
 		myHash = HashCodeUtil.hashCode(myHash, this.criteria);
 		return myHash;
 	}
-      
+
 	/**
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
@@ -394,32 +394,32 @@ public class Query extends QueryCommand implements FilteredCommand {
 	public static boolean areColumnsCachable(Collection<? extends Expression> projectedSymbols) {
 		return true;
 	}
-    
-    /** 
+
+    /**
      * @see org.teiid.query.sql.lang.QueryCommand#getProjectedQuery()
      */
     @Override
     public Query getProjectedQuery() {
         return this;
     }
-    
+
     @Override
     public boolean returnsResultSet() {
     	return into == null;
     }
-    
+
     public boolean hasAggregates() {
-    	return getGroupBy() != null 
-    	|| getHaving() != null 
+    	return getGroupBy() != null
+    	|| getHaving() != null
     	|| !AggregateSymbolCollectorVisitor.getAggregates(getSelect(), false).isEmpty();
     }
-    
+
     public boolean isRowConstructor() {
 		return isRowConstructor;
 	}
-    
+
     public void setRowConstructor(boolean isRowConstructor) {
 		this.isRowConstructor = isRowConstructor;
 	}
-    
+
 }  // END CLASS

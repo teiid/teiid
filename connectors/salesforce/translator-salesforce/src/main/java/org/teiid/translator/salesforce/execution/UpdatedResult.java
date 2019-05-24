@@ -25,7 +25,7 @@ public class UpdatedResult {
 
 	private Calendar latestDateCovered;
 	private List<String> IDs;
-	
+
 	public Calendar getLatestDateCovered() {
 		return latestDateCovered;
 	}

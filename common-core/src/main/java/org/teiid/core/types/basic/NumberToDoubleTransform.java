@@ -22,16 +22,16 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 
 public class NumberToDoubleTransform extends NumberToNumberTransform {
-	
+
 	private boolean isNarrowing;
 	private boolean isLossy;
-	
+
 	public NumberToDoubleTransform(Class<?> sourceType, boolean isNarrowing, boolean isLossy) {
 		super(-Double.MAX_VALUE, Double.MAX_VALUE, sourceType);
 		this.isNarrowing = isNarrowing;
 		this.isLossy = isLossy;
 	}
-	
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -54,10 +54,10 @@ public class NumberToDoubleTransform extends NumberToNumberTransform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.DOUBLE;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return isNarrowing || isLossy;
 	}
-	
+
 }

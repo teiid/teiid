@@ -84,14 +84,14 @@ import io.opentracing.Scope;
 import io.opentracing.Span;
 
 public class ConnectorWorkItem implements ConnectorWork {
-	
+
 	/* Permanent state members */
 	private AtomicRequestID id;
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
     private ExecutionFactory<Object, Object> connector;
     private RuntimeMetadataImpl queryMetadata;
-    
+
     /* Created on new request */
     private Object connection;
     private Object connectionFactory;
@@ -99,16 +99,16 @@ public class ConnectorWorkItem implements ConnectorWork {
     private volatile ResultSetExecution execution;
     private ProcedureBatchHandler procedureBatchHandler;
     private int expectedColumns;
-        
-    /* End state information */    
+
+    /* End state information */
     private volatile boolean lastBatch;
     private long rowCount;
-    
+
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
-	
+
 	private DataNotAvailableException dnae;
-	
+
     private FileStore lobStore;
     private byte[] lobBuffer;
     private boolean[] convertToRuntimeType;
@@ -116,25 +116,25 @@ public class ConnectorWorkItem implements ConnectorWork {
     private boolean[] isLob;
     private Class<?>[] schema;
 	private boolean explicitClose;
-	
+
 	private boolean copyLobs;
 	private boolean copyStreamingLobs;
 	private boolean areLobsUsableAfterClose;
-	
+
 	private TeiidException conversionError;
-	
+
 	private ThreadCpuTimer timer = new ThreadCpuTimer();
-	
+
 	private boolean unmodifiableList;
-	
+
 	private Span span;
-	
+
 	ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
         AtomicRequestID requestID = this.requestMsg.getAtomicRequestID();
-        this.securityContext = new ExecutionContextImpl(message.getCommandContext(),                                                                      
+        this.securityContext = new ExecutionContextImpl(message.getCommandContext(),
                 requestMsg.getConnectorName(),
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId()),
@@ -149,7 +149,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         }
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setSession(requestMsg.getWorkContext().getSession());
-        
+
         this.connector = manager.getExecutionFactory();
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
     	QueryMetadataInterface qmi = vdb.getAttachment(QueryMetadataInterface.class);
@@ -168,7 +168,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
         //read directly from the connector
         factory.setConvertIn(!this.connector.supportsInCriteria());
-        
+
         translatedCommand = factory.translate(message.getCommand());
         List<Expression> symbols = this.requestMsg.getCommand().getProjectedSymbols();
 		this.schema = new Class[symbols.size()];
@@ -200,12 +200,12 @@ public class ConnectorWorkItem implements ConnectorWork {
         factory.setSourceNullOrder((NullOrder) capabilities.getSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER));
         factory.setSupportsNullOrdering(capabilities.supportsCapability(Capability.QUERY_ORDERBY_NULL_ORDERING));
     }
-    
+
     @Override
     public AtomicRequestID getId() {
 		return id;
 	}
-    
+
     @Override
     public void cancel(boolean abnormal) {
     	if (lastBatch) {
@@ -217,7 +217,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             	Execution ex = this.execution;
             	if(ex != null) {
             		if (abnormal) {
-                		this.manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.CANCEL, -1l, null);
+                		this.manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.CANCEL, -1L, null);
             		}
     	            ex.cancel();
     	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("DQPCore.The_atomic_request_has_been_cancelled", this.id)); //$NON-NLS-1$
@@ -227,7 +227,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30024, this.id));
         }
     }
-    
+
     public synchronized AtomicResultsMessage more() throws TranslatorException {
     	if (this.execution == null) {
     		return null; //already closed
@@ -258,7 +258,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     		}
     	}
     }
-    
+
     public synchronized void close() {
     	lobBuffer = null;
     	if (lobStore != null) {
@@ -282,7 +282,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		        	this.requestMsg.getCommandContext().putReusableExecution(this.manager.getId(), (ReusableExecution<?>) execution);
 		        }
 	            execution = null;
-	        }	        
+	        }
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
@@ -299,9 +299,9 @@ public class ConnectorWorkItem implements ConnectorWork {
             if (scope != null) {
                 scope.close();
             }
-        } 
+        }
     }
-    
+
     private TranslatorException handleError(Throwable t) {
     	if (t instanceof DataNotAvailableException) {
     		throw (DataNotAvailableException)t;
@@ -309,9 +309,9 @@ public class ConnectorWorkItem implements ConnectorWork {
     	if (t instanceof RuntimeException && t.getCause() != null) {
     		t = t.getCause();
     	}
-        
+
         String msg = QueryPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$
-        if (isCancelled.get()) {            
+        if (isCancelled.get()) {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, msg);
         } else {
             manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.ERROR, null, null);
@@ -324,14 +324,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        	LogManager.logWarning(LogConstants.CTX_CONNECTOR, toLog, msg);
 	        } else {
 	            LogManager.logError(LogConstants.CTX_CONNECTOR, toLog, msg);
-	        } 
+	        }
         }
 		if (t instanceof TranslatorException) {
 			return (TranslatorException)t;
 		}
 		return new TranslatorException(t);
     }
-    
+
 	public synchronized void execute() throws TranslatorException {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
@@ -341,7 +341,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	try {
 	        if (this.execution == null) {
 	        	if (this.connection == null) {
-		        	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
+		        	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$
 		    		try {
 		    			this.connectionFactory = this.manager.getConnectionFactory();
 		    		} catch (TranslatorException e) {
@@ -351,28 +351,28 @@ public class ConnectorWorkItem implements ConnectorWork {
 		    		}
 			    	if (this.connectionFactory != null) {
 			    		this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
-			    	} 
+			    	}
 			    	if (this.connection == null && this.connector.isSourceRequired()) {
 			    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", this.manager.getConnectionName())); //$NON-NLS-1$);
 			    	}
 	        	}
-	
+
 		        Object unwrapped = null;
 				if (connection instanceof WrappedConnection) {
 					try {
 						unwrapped = ((WrappedConnection)connection).unwrap();
 					} catch (Exception e) {
 						 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477, this.manager.getConnectionName()));
-					}	
+					}
 				}
-	
+
 		        // Translate the command
 		        Command command = this.requestMsg.getCommand();
 		        this.expectedColumns = command.getProjectedSymbols().size();
 		        if (command instanceof StoredProcedure) {
 		        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
 		        }
-	
+
 				Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.manager.getId());
 				if (exec != null) {
 					((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
@@ -380,8 +380,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 			        exec = connector.createExecution(translatedCommand, this.securityContext, queryMetadata, (unwrapped == null) ? this.connection:unwrapped);
 				}
 		        setExecution(command, translatedCommand, exec);
-				
-		        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
+
+		        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$
 		        //Log the Source Command (Must be after obtaining the execution context)
 		        manager.logSRCCommand(this, this.requestMsg, this.securityContext, Event.NEW, null, null);
 		        if (this.span != null) {
@@ -412,14 +412,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 		} else if (command instanceof QueryCommand){
 			this.execution = Assertion.isInstanceOf(exec, ResultSetExecution.class, "QueryExpression Executions are expected to be ResultSetExecutions"); //$NON-NLS-1$
 		} else {
-			final boolean singleUpdateCount = connector.returnsSingleUpdateCount() 
+			final boolean singleUpdateCount = connector.returnsSingleUpdateCount()
 					&& (translatedCommand instanceof BatchedUpdates || (translatedCommand instanceof BulkCommand && ((BulkCommand)translatedCommand).getParameterValues() != null));
-			
+
 			Assertion.isInstanceOf(exec, UpdateExecution.class, "Update Executions are expected to be UpdateExecutions"); //$NON-NLS-1$
 			this.execution = new ResultSetExecution() {
 				private int[] results;
 				private int index;
-				
+
 				@Override
 				public void cancel() throws TranslatorException {
 					exec.cancel();
@@ -452,16 +452,16 @@ public class ConnectorWorkItem implements ConnectorWork {
 			};
 		}
 	}
-	
+
     protected AtomicResultsMessage handleBatch() throws TranslatorException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Getting results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
         List<List<?>> rows = new ResizingArrayList<List<?>>(batchSize/4);
-        
+
         try {
 	        while (batchSize < this.requestMsg.getFetchSize()) {
-	        	
+
         		List<?> row = this.execution.next();
             	if (row == null) {
             		this.lastBatch = true;
@@ -477,7 +477,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            		}
 						row = correctTypes(row);
 	            	} catch (UnsupportedOperationException | ArrayStoreException e) {
-	            		//it's generally expected that the returned list from 
+	            		//it's generally expected that the returned list from
 	            		//the translator should be modifiable, but we should be lax
 	            		if (unmodifiableList) {
 	            			throw e;
@@ -507,19 +507,19 @@ public class ConnectorWorkItem implements ConnectorWork {
 	                     throw new TranslatorException(QueryPlugin.Event.TEIID30478, msg);
 	                }
 	            }
-	            
+
 	        }
     	} catch (DataNotAvailableException e) {
     		if (rows.size() == 0) {
     			throw e;
     		}
     		if (e.getWaitUntil() != null) {
-    			//we have an await until that we need to enforce 
+    			//we have an await until that we need to enforce
     			this.dnae = e;
     		}
     		//else we can just ignore the delay
     	}
-                
+
         if (lastBatch) {
         	if (this.procedureBatchHandler != null) {
         		List<?> row = this.procedureBatchHandler.getParameterRow();
@@ -538,7 +538,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         }  else {
         	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained results from connector, current row count:", rowCount}); //$NON-NLS-1$
         }
-        
+
     	int currentRowCount = rows.size();
 		if ( !lastBatch && currentRowCount == 0 ) {
 		    // Defect 13366 - Should send all batches, even if they're zero size.
@@ -547,28 +547,28 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
 
 		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]));
-		
+
 		// if we need to keep the execution alive, then we can not support implicit close.
 		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive() && !explicitClose);
 		response.setWarnings(this.securityContext.getWarnings());
 		if (this.securityContext.getCacheDirective() != null) {
 			response.setScope(this.securityContext.getCacheDirective().getScope());
 		}
-		if (this.securityContext.getScope() != null && 
+		if (this.securityContext.getScope() != null &&
 				(response.getScope() == null || response.getScope().compareTo(this.securityContext.getScope()) > 0)) {
 			response.setScope(this.securityContext.getScope());
 		}
 
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);
-		} 
+		}
 		return response;
 	}
-    
+
     public static AtomicResultsMessage createResultsMessage(List<?>[] batch) {
         return new AtomicResultsMessage(batch);
-    }    
-            
+    }
+
     boolean isCancelled() {
     	return this.isCancelled.get();
     }
@@ -577,12 +577,12 @@ public class ConnectorWorkItem implements ConnectorWork {
 	public String toString() {
 		return this.id.toString();
 	}
-	
+
 	@Override
 	public boolean isDataAvailable() {
 		return this.securityContext.isDataAvailable();
 	}
-	
+
 	@Override
 	public CacheDirective getCacheDirective() throws TranslatorException {
 		CacheDirective cd = connector.getCacheDirective(this.translatedCommand, this.securityContext, this.queryMetadata);
@@ -592,15 +592,15 @@ public class ConnectorWorkItem implements ConnectorWork {
 
 	@Override
 	public boolean isForkable() {
-		return this.connector.isForkable() 
+		return this.connector.isForkable()
 				&& (!this.requestMsg.isTransactional() || this.connector.getTransactionSupport() == TransactionSupport.NONE);
 	}
-	
+
 	@Override
 	public boolean isThreadBound() {
 		return this.connector.isThreadBound() || (this.requestMsg.isTransactional() && !this.connector.supportsMultipleOpenExecutions());
 	}
-	
+
 	private List<?> correctTypes(List row) throws TeiidException {
 		//TODO: add a proper intermediate schema
 		for (int i = 0; i < row.size(); i++) {
@@ -614,10 +614,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 					if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 						convertToRuntimeType[i] = false;
 					} else {
-						if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
+						if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass())
 								&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
 							explicitClose = true;
-						}				
+						}
 						row.set(i, result);
 						value = result;
 					}
@@ -659,13 +659,13 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
 		return row;
 	}
-	
+
 	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType, CommandContext context) throws TransformationException {
 		if (desiredType != DataTypeManager.DefaultDataClasses.XML || !(value instanceof Source)) {
 			if (value instanceof DataSource) {
 			    final DataSource ds = (DataSource)value;
 			    try {
-			        //Teiid uses the datasource interface in a degenerate way that 
+			        //Teiid uses the datasource interface in a degenerate way that
 			        //reuses the stream, so we test for that here
                     InputStream initial = ds.getInputStream();
                     InputStream other = null;
@@ -681,7 +681,7 @@ public class ConnectorWorkItem implements ConnectorWork {
                             return asLob((InputStreamFactory)value, desiredType);
                         }
                         return asLob(new InputStreamFactory() {
-                            
+
                             @Override
                             public InputStream getInputStream() throws IOException {
                                 return ds.getInputStream();
@@ -691,7 +691,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
     				//TODO: guess at the encoding from the content type
     				FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-	
+
 					SaveOnReadInputStream is = new SaveOnReadInputStream(initial, fsisf);
 					if (context != null) {
 						context.addCreatedLob(fsisf);
@@ -747,7 +747,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 						context.addCreatedLob(fsisf);
 					}
 				} else if (value instanceof StAXSource) {
-					//TODO: do this lazily.  if the first access to get the STaXSource, then 
+					//TODO: do this lazily.  if the first access to get the STaXSource, then
 					//it's more efficient to let the processing happen against STaX
 					StAXSource ss = (StAXSource)value;
 					try {
@@ -771,7 +771,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 					} catch (TeiidProcessingException e) {
 						 throw new TransformationException(e);
 					}
-					return new XMLType(sqlxml);	
+					return new XMLType(sqlxml);
 				}
 			}
 			return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
@@ -819,7 +819,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     public void setTracingSpan(Span span) {
         this.span = span;
     }
-    
+
     public Span getTracingSpan() {
         return span;
     }

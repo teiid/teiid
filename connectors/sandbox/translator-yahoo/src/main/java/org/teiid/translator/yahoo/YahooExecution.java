@@ -59,19 +59,19 @@ public class YahooExecution implements ResultSetExecution {
     private static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mma"); //$NON-NLS-1$
 
     private Select command;
-    
+
     // Execution state
     Iterator<List<?>> results;
     int[] neededColumns;
     private Select query;
 
     /**
-     * 
+     *
      */
     public YahooExecution(Select query) {
         this.query = query;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         // Log our command
@@ -79,34 +79,34 @@ public class YahooExecution implements ResultSetExecution {
 
         // Build url
         String yahooUrl = translateIntoUrl(query);
-        
+
         // Execute url to get results
         this.results = executeUrl(yahooUrl).iterator();
-        
+
         // Determine needed columns in results
-        this.neededColumns = getNeededColumns(query.getDerivedColumns()); 
-    }    
+        this.neededColumns = getNeededColumns(query.getDerivedColumns());
+    }
 
     static String translateIntoUrl(Select query) throws TranslatorException {
         StringBuffer url = new StringBuffer();
         url.append(YahooPlugin.Util.getString("YahooExecution.URL_BEGIN")); //$NON-NLS-1$
-        
+
         Set<String> tickers = getTickers(query);
-        if(tickers.size() == 0) { 
+        if(tickers.size() == 0) {
             throw new TranslatorException(YahooPlugin.Util.getString("YahooExecution.No_tickers")); //$NON-NLS-1$
         }
         String urlAppendChar = YahooPlugin.Util.getString("YahooExecution.URL_APPEND_CHAR"); //$NON-NLS-1$
         Iterator<String> tickerIter = tickers.iterator();
-        url.append(tickerIter.next());        
+        url.append(tickerIter.next());
         while(tickerIter.hasNext()) {
             url.append(urlAppendChar);
             url.append(tickerIter.next());
         }
-                       
-        url.append(YahooPlugin.Util.getString("YahooExecution.URL_END")); //$NON-NLS-1$              
+
+        url.append(YahooPlugin.Util.getString("YahooExecution.URL_END")); //$NON-NLS-1$
         return url.toString();
     }
-    
+
     /**
      * @return
      */
@@ -126,25 +126,25 @@ public class YahooExecution implements ResultSetExecution {
         List<List<?>> rows = new ArrayList<List<?>>();
         InputStreamReader inSR  = null;
         BufferedReader buffReader = null;
-        
+
         try {
             // create the URL object
             URL url = new URL(yahooUrl);
-            
+
             // create the connection to the URL
             URLConnection conn = url.openConnection();
 
-            // establish the connection to the URL                          
+            // establish the connection to the URL
             conn.connect();
-            
+
             // get the stream from the commection
             inSR = new InputStreamReader(conn.getInputStream());
-            
+
             // place the stream into a buffered reader
-            buffReader = new BufferedReader(inSR);          
-            
+            buffReader = new BufferedReader(inSR);
+
             // now read each line from the Yahoo! Source and place
-            // it into a StringBuffer object 
+            // it into a StringBuffer object
             String line = null;
             while((line = buffReader.readLine()) != null){
                 rows.add(parseLine(line));
@@ -152,7 +152,7 @@ public class YahooExecution implements ResultSetExecution {
             // clean up our opened connections
             buffReader.close();
             inSR.close();
-                        
+
         } catch(MalformedURLException mue){
             throw new TranslatorException(mue, mue.getMessage());
         } catch(IOException e) {
@@ -165,7 +165,7 @@ public class YahooExecution implements ResultSetExecution {
 				}
         	}
         }
-        
+
         return rows;
     }
 
@@ -181,7 +181,7 @@ public class YahooExecution implements ResultSetExecution {
             if(data.charAt(0) == '"') {
                 data = data.substring(1, data.length()-1);
             }
-            
+
             if(data.equals("N/A")) { //$NON-NLS-1$
                 row.add(null);
             } else if(i==1 || i==4 || i== 5 || i==6 || i==7) {
@@ -197,7 +197,7 @@ public class YahooExecution implements ResultSetExecution {
 						}
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
-                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14001, params)); 
+                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14001, params));
                         row.add(null);
                     }
                 } else{
@@ -218,19 +218,19 @@ public class YahooExecution implements ResultSetExecution {
                 } else {
                     row.add(null);
                 }
-                
+
             } else {
                 row.add(data);
             }
         }
-        
+
         return row;
     }
 
     /**
      * @param select
      * @return
-     * @throws TranslatorException 
+     * @throws TranslatorException
      */
     static int[] getNeededColumns(List<DerivedColumn> select) throws TranslatorException {
         int[] cols = new int[select.size()];
@@ -245,7 +245,7 @@ public class YahooExecution implements ResultSetExecution {
                 throw new TranslatorException(YahooPlugin.Util.getString("YahooExecution.Invalid_select_symbol", expr)); //$NON-NLS-1$
             }
         }
-        
+
         return cols;
     }
 
@@ -263,12 +263,12 @@ public class YahooExecution implements ResultSetExecution {
      */
     static List<Object> projectRow(List<?> row, int[] neededColumns) {
         List<Object> output = new ArrayList<Object>(neededColumns.length);
-        
+
         for(int i=0; i<neededColumns.length; i++) {
             output.add(row.get(neededColumns[i]-1));
         }
-        
-        return output;    
+
+        return output;
     }
 
     @Override

@@ -25,18 +25,18 @@ public class EmbeddedRequestOptions {
 
 	public EmbeddedRequestOptions() {
 	}
-	
+
 	public int getResultSetType() {
 		return resultSetType;
 	}
-	
+
 	public void setResultSetType(int resultSetType) {
 		this.resultSetType = resultSetType;
 	}
-	
+
 	public EmbeddedRequestOptions resultSetType(int r) {
 		this.resultSetType = r;
 		return this;
 	}
-	
+
 }

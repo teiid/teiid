@@ -37,24 +37,24 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         List<org.teiid.metadata.FunctionMethod> methods = new ArrayList<org.teiid.metadata.FunctionMethod>();
         methods.add(new FunctionMethod("xyz", "", "misc", PushDown.MUST_PUSHDOWN,  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                        FakeFunctionMetadataSource.class.getName(), "xyz", //$NON-NLS-1$
-                                       null,  
+                                       null,
                                        new FunctionParameter("out", "integer"), true, Determinism.DETERMINISTIC)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         FunctionParameter p1 = new FunctionParameter("astring", "string");  //$NON-NLS-1$  //$NON-NLS-2$
         FunctionParameter result = new FunctionParameter("trimstring", "string"); //$NON-NLS-1$  //$NON-NLS-2$
 
         FunctionMethod method = new FunctionMethod("MYRTRIM", "", "", FakeFunctionMetadataSource.class.getName(), "myrtrim", new FunctionParameter[] {p1}, result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         method.setPushdown(PushDown.CAN_PUSHDOWN);
         methods.add(method);
-        
+
         FunctionMethod method2 = new FunctionMethod("misc.namespace.func", "", "", null, null, new FunctionParameter[] {p1}, result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         method2.setPushdown(PushDown.MUST_PUSHDOWN);
         methods.add(method2);
-        
+
         FunctionMethod method3 = new FunctionMethod("parsedate_", "", "", null, null, new FunctionParameter[] {p1}, new FunctionParameter("", DataTypeManager.DefaultDataTypes.DATE));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         method3.setPushdown(PushDown.MUST_PUSHDOWN);
         methods.add(method3);
-        
+
         FunctionMethod method4 = new FunctionMethod("FIRST_VALUE", "", "", null, null, new FunctionParameter[] {p1},result);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         method4.setPushdown(PushDown.MUST_PUSHDOWN);
         method4.setAggregateAttributes(new AggregateAttributes());
@@ -62,16 +62,16 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
 
         return methods;
     }
-    
-    public Class<?> getInvocationClass(String className) throws ClassNotFoundException { 
-        return Class.forName(className, true, this.getClass().getClassLoader()); 
+
+    public Class<?> getInvocationClass(String className) throws ClassNotFoundException {
+        return Class.forName(className, true, this.getClass().getClassLoader());
     }
-    
+
     // dummy function
     public static Object xyz() {
         return null;
     }
-    
+
     /** defect 15348*/
     public static Object myrtrim(Object astring) {
         String string = (String)astring;

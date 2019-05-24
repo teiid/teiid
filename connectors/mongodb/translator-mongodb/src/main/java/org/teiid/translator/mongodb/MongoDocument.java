@@ -340,7 +340,7 @@ class MongoDocument {
             return this.getDocumentName()+"."+columnName; //$NON-NLS-1$
         }
         else if (isEmbeddable()) {
-            
+
         }
         return columnName;
     }

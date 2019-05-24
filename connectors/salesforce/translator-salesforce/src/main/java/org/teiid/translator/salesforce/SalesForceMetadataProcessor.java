@@ -56,7 +56,7 @@ import com.sforce.soap.partner.PicklistEntry;
 public class SalesForceMetadataProcessor implements MetadataProcessor<SalesforceConnection>{
 	private MetadataFactory metadataFactory;
 	private SalesforceConnection connection;
-	
+
 	private Map<String, Table> tableMap = new LinkedHashMap<String, Table>();
 	private Map<String, ChildRelationship[]> relationships = new LinkedHashMap<String, ChildRelationship[]>();
 	private List<Column> columns;
@@ -92,7 +92,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
 	static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_URI+"Supports Search"; //$NON-NLS-1$
-	
+
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
 	static final String COLUMN_DEFAULTED = MetadataFactory.SF_URI+"Defaulted on Create"; //$NON-NLS-1$
 	static final String COLUMN_CUSTOM = TABLE_CUSTOM;
@@ -100,14 +100,14 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	static final String COLUMN_CALCULATED = MetadataFactory.SF_URI+"Calculated"; //$NON-NLS-1$
 	@ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
 	static final String COLUMN_PICKLIST_VALUES = MetadataFactory.SF_URI+"Picklist Values"; //$NON-NLS-1$
-	
+
 	public void process(MetadataFactory mf, SalesforceConnection connection) throws TranslatorException {
         this.connection = connection;
         this.metadataFactory = mf;
-        
+
         processMetadata();
-        
-        addProcedrues(metadataFactory);         
+
+        addProcedrues(metadataFactory);
 	}
 
 	public static void addProcedrues(MetadataFactory metadataFactory) {
@@ -122,8 +122,8 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
         param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
-        
-        
+
+
         Procedure p2 = metadataFactory.addProcedure("GetDeleted"); //$NON-NLS-1$
         p2.setAnnotation("Gets the deleted objects"); //$NON-NLS-1$
         param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
@@ -135,18 +135,18 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         param = metadataFactory.addProcedureParameter("EarliestDateAvailable", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
         param.setAnnotation("Earliest Date Available"); //$NON-NLS-1$
         param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
-        param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$       
-        metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$     
+        param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$
+        metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$
         metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$
 	}
-	
+
 	public void processMetadata() throws TranslatorException {
 		DescribeGlobalResult globalResult = connection.getObjects();
 		DescribeGlobalSObjectResult[] objects = globalResult.getSobjects();
 		for (DescribeGlobalSObjectResult object : objects) {
 			addTable(object);
-		}  
-		
+		}
+
 		List<String> names = new ArrayList<String>();
 		for (String name : this.tableMap.keySet()) {
 			names.add(name);
@@ -158,9 +158,9 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		if (!names.isEmpty()) {
 			getColumnsAndRelationships(names);
 		}
-		
+
 		addRelationships();
-		
+
 		// Mark id fields are auto increment values, as they are not allowed to be updated
 		for (Table table:this.metadataFactory.getSchema().getTables().values()) {
 			if (importStatistics) {
@@ -208,19 +208,19 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				if (!isModelAuditFields() && isAuditField(relationship.getField())) {
 	                continue;
 	            }
-	
+
 				Table parent = tableMap.get(entry.getKey());
 				KeyRecord pk = parent.getPrimaryKey();
 				if (null == pk) {
 	                throw new RuntimeException("ERROR !!primary key column not found!!"); //$NON-NLS-1$
 	            }
-				
+
 				Table child = tableMap.get(relationship.getChildSObject());
-				
+
 				if (child == null) {
 					continue; //child must have been excluded
 				}
-				
+
 				Column col = null;
 				columns = child.getColumns();
 				for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
@@ -234,11 +234,11 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                     throw new RuntimeException(
                             "ERROR !!foreign key column not found!! " + child.getName() + relationship.getField()); //$NON-NLS-1$
                 }
-	
-				
+
+
 				String name = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
 				ArrayList<String> columnNames = new ArrayList<String>();
-				columnNames.add(col.getName());	
+				columnNames.add(col.getName());
 				ForeignKey fk = metadataFactory.addForeignKey(name, columnNames, parent.getName(), child);
 				fk.setNameInSource(relationship.getRelationshipName()); //TODO: only needed for custom relationships
 			}
@@ -270,7 +270,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		table.setProperty(FQN, fqn.toString());
 		table.setNameInSource(objectMetadata.getName());
 		tableMap.put(objectMetadata.getName(), table);
-		
+
 		table.setProperty(TABLE_CUSTOM, String.valueOf(objectMetadata.isCustom()));
 		table.setProperty(TABLE_SUPPORTS_CREATE, String.valueOf(objectMetadata.isCreateable()));
 		table.setProperty(TABLE_SUPPORTS_DELETE, String.valueOf(objectMetadata.isDeletable()));
@@ -285,7 +285,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 	    if (!shouldInclude(name)) {
 	        return false;
 	    }
-	    
+
 	    if (shouldExclude(name)) {
 	        return false;
 	    }
@@ -339,7 +339,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 				} else {
 					column.setNativeType(sfTypeName);
 				}
-				
+
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
 				break;
 			case multipicklist:
@@ -401,9 +401,9 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			    } else {
 			        LogManager.logWarning(LogConstants.CTX_CONNECTOR, SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13001, sfTypeName));
 			    }
-                continue;			    
+                continue;
 			}
-			
+
 			column.setNameInSource(field.getName());
 			column.setLength(field.getLength());
 			if(field.isUpdateable() || field.isCreateable()) {
@@ -417,10 +417,10 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 			    column.setDefaultValue("sf default"); //$NON-NLS-1$
 			}
 			column.setNullType(field.isNillable()?NullType.Nullable:NullType.No_Nulls);
-		}		
+		}
 		return hasUpdateableColumn;
 	}
-	
+
 	private String getPicklistValues(Field field) {
 		StringBuffer picklistValues = new StringBuffer();
 		if(null != field.getPicklistValues() && field.getPicklistValues().length > 0) {
@@ -436,25 +436,25 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 		}
 		return picklistValues.toString();
 	}
-	
+
     @TranslatorProperty(display="Model Audit Fields", category=PropertyType.IMPORT, description="Determines if the salesforce audit fields are modeled")
     public boolean isModelAuditFields() {
         return this.auditModelFields;
     }
-    
+
     public void setModelAuditFields(boolean modelAuditFields) {
         this.auditModelFields = modelAuditFields;
-    }	
-    
+    }
+
     @TranslatorProperty(display="Normalize Names", category=PropertyType.IMPORT, description="Normalize the object/field names to not need quoting")
     public boolean isNormalizeNames() {
 		return normalizeNames;
 	}
-    
+
     public void setNormalizeNames(boolean normalizeNames) {
 		this.normalizeNames = normalizeNames;
 	}
-    
+
     public void setExcludeTables(String excludeTables) {
         this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
     }
@@ -463,7 +463,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     public String getExcludeTables() {
         return this.excludeTables.pattern();
     }
-    
+
     protected boolean shouldExclude(String fullName) {
         if (this.excludeTables == null) {
             return false;
@@ -479,19 +479,19 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     public String getIncludeTables() {
         return this.includeTables.pattern();
     }
-    
+
     protected boolean shouldInclude(String fullName) {
         if (includeTables == null) {
             return true;
         }
         return includeTables != null && includeTables.matcher(fullName).matches();
     }
-    
+
     @TranslatorProperty(display="Import Statistics", category=PropertyType.IMPORT, description="Set to true to retrieve cardinalities during import.")
     public boolean isImportStatistics() {
 		return importStatistics;
 	}
-    
+
     public void setImportStatistics(boolean importStatistics) {
 		this.importStatistics = importStatistics;
 	}

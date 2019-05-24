@@ -57,7 +57,7 @@ import org.teiid.translator.CacheDirective.Scope;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
-    
+
 	private VDBMetaData vdb = RealMetadataFactory.exampleBQTVDB();
     private DQPCore rm;
     private DataTierManagerImpl dtm;
@@ -66,42 +66,42 @@ public class TestDataTierManager {
     private RequestWorkItem workItem;
     private int limit = -1;
     private boolean serial = false;
-    
+
     @Before public void setUp() {
     	limit = -1;
     	connectorManager = new AutoGenDataService();
     	serial = false;
     }
-    
+
     private static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
         return command;
     }
-    
+
     private DataTierTupleSource helpSetup(int nodeId) throws Exception {
         return helpSetup("SELECT * FROM BQT1.SmallA", nodeId); //$NON-NLS-1$
     }
-    
+
     private DataTierTupleSource helpSetup(String sql, int nodeId) throws Exception {
         helpSetupDataTierManager();
         AtomicRequestMessage request = helpSetupRequest(sql, nodeId, RealMetadataFactory.exampleBQTCached());
         request.setSerial(serial);
         return new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
     }
-    
+
     private int id;
 
 	private AtomicRequestMessage helpSetupRequest(String sql, int nodeId, QueryMetadataInterface metadata) throws Exception {
 		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
-        
+
         Command command = helpGetCommand(sql, metadata);
-        
+
         RequestMessage original = new RequestMessage();
         original.setExecutionId(id++);
         original.setPartialResults(true);
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
-        
+
         context = new CommandContext();
         context.setSession(workContext.getSession());
         context.setVdbName("test"); //$NON-NLS-1$
@@ -130,10 +130,10 @@ public class TestDataTierManager {
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
         vdb.addAttchment(ConnectorManagerRepository.class, repo);
-        
+
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
 	}
-    
+
     @Test public void testDataTierTupleSource() throws Exception {
     	DataTierTupleSource info = helpSetup(1);
     	assertEquals(10, pullTuples(info, 10));
@@ -142,7 +142,7 @@ public class TestDataTierManager {
         info.closeSource();
         assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
     }
-    
+
     @Test public void testDataTierTupleSourceWarnings() throws Exception {
     	DataTierTupleSource info = helpSetup(1);
     	connectorManager.addWarning = true;
@@ -156,7 +156,7 @@ public class TestDataTierManager {
         info.closeSource();
         assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
     }
-    
+
     @Test public void testDataTierTupleSourceLimit() throws Exception {
     	limit = 1;
     	DataTierTupleSource info = helpSetup(1);
@@ -185,7 +185,7 @@ public class TestDataTierManager {
     	}
 		return i;
 	}
-    
+
     @Test public void testPartialResults() throws Exception {
     	DataTierTupleSource info = helpSetup(1);
     	connectorManager.throwExceptionOnExecute = true;
@@ -201,7 +201,7 @@ public class TestDataTierManager {
     	}
     	fail();
     }
-    
+
     @Test public void testNoRowsException() throws Exception {
     	this.connectorManager.setRows(0);
     	DataTierTupleSource info = helpSetup(3);
@@ -214,7 +214,7 @@ public class TestDataTierManager {
 	    	}
     	}
     }
-    
+
     @Test public void testAsynch() throws Exception {
     	this.connectorManager.dataNotAvailable = 10;
     	this.serial = true;
@@ -237,7 +237,7 @@ public class TestDataTierManager {
     	}
     	assertTrue(blocked);
     }
-    
+
     @Test public void testAsynchStrict() throws Exception {
     	this.connectorManager.dataNotAvailable = 1000;
     	this.serial = true;
@@ -262,19 +262,19 @@ public class TestDataTierManager {
     	}
     	assertTrue(blocked);
     }
-    
+
     @Test public void testCachingScope() throws Exception {
     	assertEquals(Determinism.SESSION_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.SESSION));
     	assertEquals(Determinism.SESSION_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.NONE));
     	assertEquals(Determinism.USER_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.USER));
     	assertEquals(Determinism.VDB_DETERMINISTIC, CachingTupleSource.getDeterminismLevel(Scope.VDB));
     }
-    
+
     @Test public void testCaching() throws Exception {
     	assertEquals(0, connectorManager.getExecuteCount().get());
 
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	
+
     	CacheDirective cd = new CacheDirective();
     	this.connectorManager.cacheDirective = cd;
     	helpSetupDataTierManager();
@@ -291,7 +291,7 @@ public class TestDataTierManager {
     	ts.closeSource();
     	assertEquals(1, this.rm.getRsCache().getCachePutCount());
     	assertEquals(1, this.rm.getRsCache().getTotalCacheEntries());
-    	
+
     	//same session, should be cached
     	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	rrp = new RegisterRequestParameter();
@@ -301,7 +301,7 @@ public class TestDataTierManager {
     	assertEquals(10, pullTuples(ts, -1));
     	assertEquals(1, connectorManager.getExecuteCount().get());
     	assertTrue(rrp.doNotCache);
-    	
+
     	//switch sessions
     	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	this.context.getSession().setSessionId("different");
@@ -315,10 +315,10 @@ public class TestDataTierManager {
     	ts.closeSource(); //should force read all
     	assertFalse(((CachingTupleSource)ts).dtts.errored);
     	assertNull(((CachingTupleSource)ts).dtts.scope);
-    	
+
     	assertEquals(2, this.rm.getRsCache().getCachePutCount());
     	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
-    	
+
     	//proactive invalidation, removes immediately
     	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	cd.setInvalidation(Invalidation.IMMEDIATE);
@@ -330,7 +330,7 @@ public class TestDataTierManager {
     	assertEquals(3, connectorManager.getExecuteCount().get());
     	assertFalse(rrp.doNotCache);
     }
-    
+
     @Test public void testCancelWithCaching() throws Exception {
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
     	CacheDirective cd = new CacheDirective();
@@ -349,10 +349,10 @@ public class TestDataTierManager {
     	ts.closeSource(); //should force read all
     	assertFalse(((CachingTupleSource)ts).dtts.errored);
     	assertNull(((CachingTupleSource)ts).dtts.scope);
-    	
+
     	assertEquals(0, this.rm.getRsCache().getCachePutCount());
     }
-    
+
     @Test public void testCheckForUpdatesWithBatched() throws Exception {
     	helpSetupDataTierManager();
     	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
@@ -363,5 +363,5 @@ public class TestDataTierManager {
         DataTierTupleSource dtts = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
         pullTuples(dtts, 2);
     }
-    
+
 }

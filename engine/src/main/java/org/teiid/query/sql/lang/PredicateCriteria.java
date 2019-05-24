@@ -22,25 +22,25 @@ package org.teiid.query.sql.lang;
 
 /**
  * <p>This abstract class represents a predicate criteria, which involves some
- * statement involving expressions and can be evaluated in the context of 
+ * statement involving expressions and can be evaluated in the context of
  * a single row of data to be either true or false.</p>
  *
  * <p>Predicate criteria can be composed into more sophisticated criteria
  * using "OR" and "AND" logical operators.</P>
  */
 public abstract class PredicateCriteria extends Criteria {
-   
+
 	public interface Negatable {
-		
+
 		void negate();
-		
+
 	}
-	
+
     /**
      * Constructs a default instance of this class.
      */
     public PredicateCriteria() {
-    }   
+    }
 
 	/**
 	 * Deep copy of object

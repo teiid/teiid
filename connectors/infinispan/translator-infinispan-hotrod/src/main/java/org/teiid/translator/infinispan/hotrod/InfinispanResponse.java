@@ -129,7 +129,7 @@ public class InfinispanResponse {
         }
         return result;
     }
-    
+
     private List<Object> buildRow(Object[] values) throws IOException {
     	ArrayList<Object> result = new ArrayList<>();
     	int i = 0;

@@ -37,7 +37,7 @@ import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
 
 public class GeometryJsonUtils {
-    
+
     @TeiidFunction(name = SourceSystemFunctions.ST_ASGEOJSON, category = FunctionCategoryConstants.GEOMETRY, pushdown = PushDown.CAN_PUSHDOWN, nullOnNull = true)
     public static ClobType asGeoJson(GeometryType geometry)
             throws FunctionExecutionException {
@@ -49,15 +49,15 @@ public class GeometryJsonUtils {
             throws FunctionExecutionException {
         return geometryFromGeoJson(clob, srid);
     }
-    
+
     @TeiidFunction(name = SourceSystemFunctions.ST_GEOMFROMGEOJSON, category = FunctionCategoryConstants.GEOMETRY, nullOnNull = true)
     public static GeometryType geomFromGeoJson(ClobType clob)
             throws FunctionExecutionException {
         return geometryFromGeoJson(clob, GeometryType.UNKNOWN_SRID);
     }
-    
-    public static ClobType geometryToGeoJson(GeometryType geometry) 
-            throws FunctionExecutionException {        
+
+    public static ClobType geometryToGeoJson(GeometryType geometry)
+            throws FunctionExecutionException {
         Geometry jtsGeometry = GeometryUtils.getGeometry(geometry);
         GeoJSONWriter writer = new GeoJSONWriter();
         try {
@@ -69,8 +69,8 @@ public class GeometryJsonUtils {
             throw new FunctionExecutionException(e);
         }
     }
-    
-    public static GeometryType geometryFromGeoJson(ClobType json, int srid) 
+
+    public static GeometryType geometryFromGeoJson(ClobType json, int srid)
             throws FunctionExecutionException {
         try {
             GeoJSONReader reader = new GeoJSONReader();
@@ -78,10 +78,10 @@ public class GeometryJsonUtils {
             Geometry jtsGeometry = reader.read(jsonText);
             return GeometryUtils.getGeometryType(jtsGeometry, srid);
         } catch (SQLException e) {
-            throw new FunctionExecutionException(e);            
+            throw new FunctionExecutionException(e);
         } catch (IOException e) {
-            throw new FunctionExecutionException(e);            
+            throw new FunctionExecutionException(e);
         }
-    }    
+    }
 
 }

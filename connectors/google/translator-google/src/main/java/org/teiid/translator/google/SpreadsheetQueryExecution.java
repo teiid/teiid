@@ -33,7 +33,7 @@ import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
 /**
  * Execution of SELECT Command
- * 
+ *
  * @author felias
  *
  */
@@ -67,11 +67,11 @@ public class SpreadsheetQueryExecution implements ResultSetExecution {
 		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
 		visitor.translateSQL(query);
 		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
-		
+
 	}
 
 	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {		
+	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (rowIterator.hasNext()) {
 			return rowIterator.next().getRow();
 		}

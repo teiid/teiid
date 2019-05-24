@@ -31,19 +31,19 @@ import org.teiid.resource.api.Connection;
  * Simple interface for web services
  */
 public interface WSConnection extends Connection {
-	
+
 	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 
 	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
-	
+
 	<T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
-	
+
 	URL getWsdl();
-	
+
 	QName getServiceQName();
-	
+
 	QName getPortQName();
 
 	String getStatusMessage(int status);
-	
+
 }

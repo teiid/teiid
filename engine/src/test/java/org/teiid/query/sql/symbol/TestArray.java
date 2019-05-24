@@ -41,42 +41,42 @@ public class TestArray {
 
 	@Test public void testArrayValueCompare() {
 		ArrayImpl a1 = new ArrayImpl(new Object[] {1, 2, 3});
-		
+
 		UnitTestUtil.helpTestEquivalence(0, a1, a1);
-		
+
 		ArrayImpl a2 = new ArrayImpl(new Object[] {1, 2});
-		
+
 		UnitTestUtil.helpTestEquivalence(1, a1, a2);
 	}
-	
+
 	@Test public void testArrayValueEqualsDifferentTypes() {
         ArrayImpl a1 = new ArrayImpl(new Object[] {1, 2, 3});
-        
+
         ArrayImpl a2 = new ArrayImpl(new Object[] {"1", 2});
-        
+
         assertFalse(a1.equals(a2));
     }
-	
+
 	@Test public void testArrayValueToString() {
 		ArrayImpl a1 = new ArrayImpl(new Object[] {1, "x'2", 3});
-		
+
 		assertEquals("(1, 'x''2', 3)", SQLStringVisitor.getSQLString(new Constant(a1)));
-		
+
 		a1 = new ArrayImpl((Object[])new Object[][] {{1, "x'2"}, {"c"}});
-		
+
 		assertEquals("(('1', 'x''2'), ('c',))", SQLStringVisitor.getSQLString(new Constant(a1)));
 	}
-	
+
 	@Test public void testArrayClone() {
 		Array array = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList((Expression)new ElementSymbol("e1")));
-		
+
 		Array a1 = array.clone();
-		
+
 		assertNotSame(a1, array);
 		assertEquals(a1, array);
 		assertNotSame(a1.getExpressions().get(0), array.getExpressions().get(0));
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Test public void testArrayValueSerialization() throws Exception {
 		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, null, 3});
@@ -94,16 +94,16 @@ public class TestArray {
 			((java.sql.Array)batch.get(1).get(0)).getArray();
 			fail();
 		} catch (SQLException e) {
-			
+
 		}
 	}
-	
+
 	@Test public void testZeroBasedArray() throws Exception {
 		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1.setZeroBased(true);
 		assertEquals(2, java.lang.reflect.Array.get(a1.getArray(1, 1), 0));
 	}
-	
+
 	/**
 	 * This is for compatibility with array_get
 	 * @throws Exception
@@ -112,7 +112,7 @@ public class TestArray {
 		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1.getArray(-1, 1);
 	}
-	
+
 	@Test public void testSerialize() throws Exception {
 		ArrayImpl a1 = new ArrayImpl((Object[])new Integer[] {1, 2, 3});
 		a1 = UnitTestUtil.helpSerialize(a1);

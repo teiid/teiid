@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.core.util;
 
@@ -38,10 +38,10 @@ import org.teiid.core.CorePlugin;
  * Implements a buffered {@link InputStream} for a given {@link Reader} and {@link Charset}
  */
 public class ReaderInputStream extends InputStream {
-	
+
 	//even though we're dealing with chars, we'll use the same default
 	static final int DEFAULT_BUFFER_SIZE = 1<<13;
-	
+
 	private final Reader reader;
 	private CharBuffer cb;
 	private ByteBuffer bb;
@@ -49,7 +49,7 @@ public class ReaderInputStream extends InputStream {
 	private boolean wasOverflow;
 	private CharsetEncoder encoder;
 	private byte[] singleByte = new byte[1];
-	
+
 	/**
 	 * Creates a new inputstream that will replace any malformed/unmappable input
 	 * @param reader
@@ -58,10 +58,10 @@ public class ReaderInputStream extends InputStream {
 	public ReaderInputStream(Reader reader, Charset charset) {
 		this(reader, charset.newEncoder()
 				.onMalformedInput(CodingErrorAction.REPLACE)
-				.onUnmappableCharacter(CodingErrorAction.REPLACE), 
+				.onUnmappableCharacter(CodingErrorAction.REPLACE),
 				DEFAULT_BUFFER_SIZE);
 	}
-	
+
 	public ReaderInputStream(Reader reader, CharsetEncoder encoder) {
 		this(reader, encoder, DEFAULT_BUFFER_SIZE);
 	}
@@ -74,7 +74,7 @@ public class ReaderInputStream extends InputStream {
 		this.bb = ByteBuffer.allocate(bufferSize);
 		this.bb.limit(0);
 	}
-	
+
 	@Override
 	public int read(byte[] bbuf, int off, int len) throws IOException {
 		if ((off < 0) || (off > bbuf.length) || (len < 0) ||
@@ -133,7 +133,7 @@ public class ReaderInputStream extends InputStream {
 			wasOverflow = false;
 		}
 	}
-	
+
 	@Override
 	public int read() throws IOException {
 		int read = read(singleByte, 0, 1);
@@ -143,7 +143,7 @@ public class ReaderInputStream extends InputStream {
 		assert read != 0;
 		return -1;
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		this.reader.close();

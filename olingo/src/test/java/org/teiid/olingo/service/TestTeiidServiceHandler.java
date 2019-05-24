@@ -25,13 +25,13 @@ public class TestTeiidServiceHandler {
     @Test
     public void testSkipToken() throws Exception {
         TeiidServiceHandler handler = new TeiidServiceHandler("foo");
-        
-        assertEquals("$skiptoken=xxx", 
+
+        assertEquals("$skiptoken=xxx",
                 handler.buildNextToken("$skiptoken=sdhhdd--23", "xxx"));
-        assertEquals("$filter=e1 eq '1'&$skiptoken=xxx", 
+        assertEquals("$filter=e1 eq '1'&$skiptoken=xxx",
                 handler.buildNextToken("$filter=e1 eq '1'&$skiptoken=sdhhdd--23", "xxx"));
-        assertEquals("$filter=e1 eq '1'&$top=23&$skiptoken=xxx", 
+        assertEquals("$filter=e1 eq '1'&$top=23&$skiptoken=xxx",
                 handler.buildNextToken("$filter=e1 eq '1'&$skiptoken=sdhhdd--23&$top=23", "xxx"));
-        
+
     }
 }

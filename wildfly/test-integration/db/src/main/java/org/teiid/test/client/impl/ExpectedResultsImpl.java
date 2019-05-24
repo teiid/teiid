@@ -68,7 +68,7 @@ public class ExpectedResultsImpl implements ExpectedResults {
 	    throws QueryTestFailedException {
 	return false;
     }
-    
+
 	public boolean isExpectedResultsNeeded() {
     	return true;
 
@@ -89,7 +89,7 @@ public class ExpectedResultsImpl implements ExpectedResults {
 
     /**
      * Compare the results of a query with those that were expected.
-     * 
+     *
      * @param expectedResults
      *            The expected results.
      * @param results
@@ -127,11 +127,11 @@ public class ExpectedResultsImpl implements ExpectedResults {
 		t.initCause(e);
 		throw t;
 	    }
-	    
+
 	    if (results != null && results.size() > 0) {
 		return results;
 	    }
-	    
+
 	    return null;
 
 	}
@@ -153,8 +153,8 @@ public class ExpectedResultsImpl implements ExpectedResults {
 		    throw new QueryTestFailedException("No results from query, but expected results");
 		}
 	    }
-	    
-	    
+
+
 	} else {
 
 	    try {
@@ -167,8 +167,8 @@ public class ExpectedResultsImpl implements ExpectedResults {
 				"Expected results is empty, but query produced results");
 		    }
 		    return results;
-		} 
-		
+		}
+
 		resultSet.beforeFirst();
 
 		results = TestResultSetUtil.writeAndCompareResultSet(resultSet, sql,
@@ -183,15 +183,15 @@ public class ExpectedResultsImpl implements ExpectedResults {
 		throw t;
 	    }
 
-	    
+
 	    if (results != null && results.size() > 0) {
 		return results;
 	    }
-	    
+
 	    return null;
 
 	}
-	
+
 	return results;
 
     }

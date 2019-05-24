@@ -63,20 +63,20 @@ import org.xml.sax.SAXException;
 
 @SuppressWarnings("nls")
 public class TestVisitor {
-    
+
     private static Path N1QL_PATH = Paths.get("src/test/resources", "N1QL.properties");
-    
+
     static LinkedHashMap<String, String> N1QL = new LinkedHashMap<String, String>();
-    
+
     static final Boolean PRINT_TO_CONSOLE = Boolean.FALSE;
     static final Boolean REPLACE_EXPECTED = Boolean.FALSE;
-    
+
     private static TransformationMetadata queryMetadataInterface() {
         try {
             ModelMetaData mmd = new ModelMetaData();
             mmd.setName("couchbase");
 
-            CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();  
+            CouchbaseMetadataProcessor mp = new CouchbaseMetadataProcessor();
             MetadataFactory mf = new MetadataFactory("couchbase", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), mmd);
             Table customer = createTable(mf, KEYSPACE, "Customer");
             mp.scanRow(KEYSPACE, KEYSPACE_SOURCE, formCustomer(), mf, customer, customer.getName(), false, new Dimension());
@@ -99,42 +99,42 @@ public class TestVisitor {
             throw new RuntimeException(e);
         }
     }
-    
+
     static TranslationUtility translationUtility = new TranslationUtility(queryMetadataInterface());
     static RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(queryMetadataInterface());
-    
+
     static CouchbaseExecutionFactory TRANSLATOR;
-    
+
     @BeforeClass
     public static void init() throws TranslatorException {
         TRANSLATOR = new CouchbaseExecutionFactory();
         TRANSLATOR.start();
         translationUtility.addUDF(CoreConstants.SYSTEM_MODEL, TRANSLATOR.getPushDownFunctions());
-        
+
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(Files.newInputStream(N1QL_PATH));
             doc.getDocumentElement().normalize();
-            
+
             NodeList list = doc.getElementsByTagName("entry");
             for (int i = 0; i < list.getLength(); i++) {
                 Node node = list.item(i);
                 if(node.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) node;
                     N1QL.put(element.getAttribute("key"), element.getTextContent());
-                }  
-            } 
+                }
+            }
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
             assert(false);
         }
 
     }
-    
+
     @AfterClass
     public static void replaceProperties() {
-        
+
         if(REPLACE_EXPECTED.booleanValue()) {
             OutputStream out = null;
             try {
@@ -153,7 +153,7 @@ public class TestVisitor {
                         entry.appendChild(doc.createTextNode(value));
                     }
                 }
-                
+
                 TransformerFactory tf = TransformerFactory.newInstance();
                 Transformer t = tf.newTransformer();
                 t.setOutputProperty(OutputKeys.INDENT, "yes");

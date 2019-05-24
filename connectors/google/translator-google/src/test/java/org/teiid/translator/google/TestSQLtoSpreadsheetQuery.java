@@ -58,14 +58,14 @@ import org.teiid.translator.google.visitor.SpreadsheetUpdateVisitor;
 
 /**
  * Tests transformation from Teiid Query to worksheet Query.
- * 
+ *
  * @author fnguyen
  *
  */
 @SuppressWarnings("nls")
 public class TestSQLtoSpreadsheetQuery {
 	static SpreadsheetInfo people;
-	
+
 	@BeforeClass
 	public static void createSpreadSheetInfo() {
 	    people=  new SpreadsheetInfo("People");
@@ -80,10 +80,10 @@ public class TestSQLtoSpreadsheetQuery {
         worksheet.getColumns().get("C").setDataType(SpreadsheetColumnType.NUMBER);
         worksheet.getColumns().get("D").setDataType(SpreadsheetColumnType.BOOLEAN);
 	}
-	
+
 	private QueryMetadataInterface dummySpreadsheetMetadata() throws Exception {
 	    GoogleSpreadsheetConnection conn = Mockito.mock(GoogleSpreadsheetConnection.class);
-	    
+
 		Mockito.stub(conn.getSpreadsheetInfo()).toReturn(people);
 
 		MetadataFactory factory = new MetadataFactory("", 1, "", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), "");
@@ -96,31 +96,31 @@ public class TestSQLtoSpreadsheetQuery {
 		CommandBuilder builder = new CommandBuilder(dummySpreadsheetMetadata());
 		return builder.getCommand(sql);
 	}
-	
+
 	private void testConversion(String sql, String expectedSpreadsheetQuery) throws Exception{
 		Select select = (Select)getCommand(sql);
-		
+
 		SpreadsheetSQLVisitor spreadsheetVisitor = new SpreadsheetSQLVisitor(people);
 		spreadsheetVisitor.translateSQL(select);
 		assertEquals(expectedSpreadsheetQuery, spreadsheetVisitor.getTranslatedSQL());
 	}
-	
+
 	private void testUpdateConversion(String sql, String expectedCriteria) throws Exception {
 		Update update = (Update)getCommand(sql);
 		SpreadsheetUpdateVisitor spreadsheetVisitor = new SpreadsheetUpdateVisitor(people);
 		spreadsheetVisitor.visit(update);
 		assertEquals(expectedCriteria, spreadsheetVisitor.getCriteriaQuery());
 	}
-	
+
 	private void testDeleteConversion(String sql, String expectedCriteria) throws Exception {
 		Delete delete = (Delete)getCommand(sql);
 		SpreadsheetDeleteVisitor spreadsheetVisitor = new SpreadsheetDeleteVisitor(people);
 		spreadsheetVisitor.visit(delete);
 		assertEquals(expectedCriteria, spreadsheetVisitor.getCriteriaQuery());
 	}
-	
+
 	private SpreadsheetSQLVisitor getVisitorAndTranslateSQL(String sql) throws Exception{
-        Select select = (Select)getCommand(sql);		
+        Select select = (Select)getCommand(sql);
 		SpreadsheetSQLVisitor spreadsheetVisitor = new SpreadsheetSQLVisitor(people);
 		spreadsheetVisitor.translateSQL(select);
 		return spreadsheetVisitor;
@@ -130,7 +130,7 @@ public class TestSQLtoSpreadsheetQuery {
 		assertEquals(limitValue, visitor.getLimitValue());
 		assertEquals(offsetvalue, visitor.getOffsetValue());
 	}
-		
+
 	@Test
 	public void testSelectFrom1() throws Exception {
 		testConversion("select A,B from PeopleList", "SELECT A, B");
@@ -157,7 +157,7 @@ public class TestSQLtoSpreadsheetQuery {
 		testUpdateConversion("update PeopleList set A=1 where C >= 50 or C <=60.1","c >= 50.0 OR (c <= 60.1 AND c <> \"\")");
 		testUpdateConversion("update PeopleList set A=1 where A = 'car'","a = \"car\"");
 	}
-	
+
 	@Test
 	public void testDeleteCriteria() throws Exception {
 		testDeleteConversion("delete from PeopleList where C > 1","c > 1.0");
@@ -167,7 +167,7 @@ public class TestSQLtoSpreadsheetQuery {
 		testDeleteConversion("delete from PeopleList where A = 'car'","a = \"car\"");
 		testDeleteConversion("delete from PeopleList where D = true","d = true");
 	}
-	
+
 	@Test public void testLiterals() throws Exception {
 		helpTestExpression("1", "1");
 		helpTestExpression("true", "TRUE");
@@ -185,23 +185,23 @@ public class TestSQLtoSpreadsheetQuery {
 		spreadsheetVisitor.translateSQL(ex);
 		assertEquals(expected, spreadsheetVisitor.getTranslatedSQL());
 	}
-	
+
 	@Test
 	public void testSelectVisitorValues() throws Exception {
         SpreadsheetSQLVisitor visitor=getVisitorAndTranslateSQL("select * from PeopleList where A = 'car' limit 2");
         testVisitorValues(visitor, "PeopleList",2,null);
-        
+
         visitor=getVisitorAndTranslateSQL("select * from PeopleList where A = 'car' offset 5 row");
         testVisitorValues(visitor, "PeopleList",Integer.MAX_VALUE,5);
-        
+
         visitor=getVisitorAndTranslateSQL("select A,B from PeopleList where B like 'Filip%' order by B desc");
         testVisitorValues(visitor, "PeopleList",null,null);
-        
+
         visitor=getVisitorAndTranslateSQL("select A,B from PeopleList limit 2,3");
         testVisitorValues(visitor, "PeopleList",3,2);
-        
+
 	}
-	
+
 	@Test
 	public void testInsertVisitor() throws Exception {
 		String sql="insert into PeopleList(A,B,C) values ('String,String', 'String@String', 15.5)";
@@ -212,7 +212,7 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("String@String",visitor.getColumnNameValuePair().get("B"));
         assertEquals(15.5,visitor.getColumnNameValuePair().get("C"));
 	}
-	
+
 	@Test
     public void testInsertVisitorNull() throws Exception {
         String sql="insert into PeopleList(A,B,C) values ('String,String', null, 15.5)";
@@ -222,7 +222,7 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("String,String",visitor.getColumnNameValuePair().get("A"));
         assertEquals(15.5,visitor.getColumnNameValuePair().get("C"));
     }
-	
+
 	@Test
     public void testInsertExecution() throws Exception {
         String sql="insert into PeopleList(A,B,C) values ('String,String', 'val', 15.5)";
@@ -239,7 +239,7 @@ public class TestSQLtoSpreadsheetQuery {
         vals.put("C", 15.5);
         Mockito.verify(gsc).executeRowInsert("PeopleList", vals);
     }
-	
+
 	@Test
 	public void testUpdateVisitor() throws Exception {
 		String sql="UPDATE PeopleList set A = 'String,String', C = 1.5";
@@ -252,7 +252,7 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("1.5", visitor.getChanges().get(1).getValue());
         assertNull(visitor.getCriteriaQuery());
 	}
-	
+
     @Test
     public void testUpdateVisitorNull() throws Exception {
         String sql="UPDATE PeopleList set A = 'String,String', C = null where A='Str,Str'";
@@ -265,7 +265,7 @@ public class TestSQLtoSpreadsheetQuery {
         assertEquals("", visitor.getChanges().get(1).getValue());
         assertEquals("a = \"Str,Str\"", visitor.getCriteriaQuery());
     }
-    
+
     //should fail as the null string would be treated as empty
     @Test(expected=SpreadsheetOperationException.class)
     public void testUpdateVisitorNullString() throws Exception {
@@ -273,5 +273,5 @@ public class TestSQLtoSpreadsheetQuery {
         SpreadsheetUpdateVisitor visitor=new SpreadsheetUpdateVisitor(people);
         visitor.visit((Update)getCommand(sql));
     }
-	
+
 }

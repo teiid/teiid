@@ -24,7 +24,7 @@ public class DeletedObject {
 
 	String ID;
 	Calendar deletedDate;
-	
+
 	public String getID() {
 		return ID;
 	}

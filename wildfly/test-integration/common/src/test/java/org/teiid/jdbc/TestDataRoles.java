@@ -48,7 +48,7 @@ public class TestDataRoles {
 		public MaterializationManager getMaterializationManager() {
 			return super.getMaterializationManager();
 		}
-		
+
 		@Override
 		public VDBRepository getVDBRepository() {
 			return super.getVDBRepository();
@@ -56,7 +56,7 @@ public class TestDataRoles {
 	}
 
 	private ExtendedEmbeddedServer es;
-	
+
 	@After public void tearDown() {
 		es.stop();
 	}
@@ -71,7 +71,7 @@ public class TestDataRoles {
 				+ "<data-role name=\"y\" any-authenticated=\"true\"/></vdb>").getBytes()));
     	Connection c = es.getDriver().connect("jdbc:teiid:role-1", null);
     	Statement s = c.createStatement();
-    	
+
     	try {
     		s.execute("select * from vw");
     		Assert.fail();
@@ -87,7 +87,7 @@ public class TestDataRoles {
 		authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
         ec.setAuthorizationValidator(authorizationValidator);
     }
-	
+
 	@Test public void testExecuteImmediate() throws Exception {
 		es = new ExtendedEmbeddedServer();
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -99,43 +99,43 @@ public class TestDataRoles {
     	Connection c = es.getDriver().connect("jdbc:teiid:role-1", null);
     	Statement s = c.createStatement();
     	s.execute("set autoCommitTxn off");
-    	
+
     	try {
     		s.execute("begin execute immediate 'select * from vw'; end");
     		fail();
     	} catch (TeiidSQLException e) {
-    		
+
     	}
-    	
+
     	//should be valid
     	s.execute("begin execute immediate 'select 1'; end");
-    	
+
     	//no temp permission
     	try {
     		s.execute("begin execute immediate 'select 1' as x integer into #temp; end");
     		fail();
     	} catch (TeiidSQLException e) {
-    		
+
     	}
-    	
+
     	//nested should not pass either
     	try {
 	    	s.execute("begin execute immediate 'begin execute immediate ''select * from vw''; end'; end");
 	    	fail();
     	} catch (TeiidSQLException e) {
-    		
+
     	}
 	}
-	
+
 	@Test public void testMetadataWithSecurity() throws Exception {
 		es = new ExtendedEmbeddedServer();
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		es.start(ec);
 		deploySampleVDB();
-		
+
     	Connection c = es.getDriver().connect("jdbc:teiid:role-1", null);
     	Statement s = c.createStatement();
-    	
+
     	ResultSet rs = s.executeQuery("select * from sys.tables where name like 't_' order by name");
     	//only t1/t3 should be visible - both have at least 1 permission
     	assertTrue(rs.next());
@@ -143,26 +143,26 @@ public class TestDataRoles {
     	rs.next();
     	assertEquals("t3", rs.getString("name"));
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.schemas where name like 's_' order by name");
     	//only s1 is visible, nothing in s2 is visible
     	assertTrue(rs.next());
     	assertEquals("s1", rs.getString("name"));
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.columns where tablename like 't_'");
     	//only col should be visible
     	assertTrue(rs.next());
     	assertEquals("col", rs.getString("name"));
         assertTrue(rs.next());
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.procedures where name like 'proc_'");
     	//only proc1 should be visible
     	assertTrue(rs.next());
     	assertEquals("proc1", rs.getString("name"));
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.procedureparams where procedurename like 'proc_'");
     	//only proc1 should be visible
     	assertTrue(rs.next());
@@ -170,79 +170,79 @@ public class TestDataRoles {
     	assertTrue(rs.next());
     	assertEquals("proc_col", rs.getString("name"));
     	assertFalse(rs.next());
-    	    	
+
     	rs = s.executeQuery("select * from sysadmin.usage where schemaname like 's_'");
     	//nothing should be visible
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.properties where name = 'x'");
     	assertTrue(rs.next());
     	assertEquals("y1", rs.getString("Value"));
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.keycolumns where tablename = 't1'");
     	//nothing should be visible
     	assertFalse(rs.next());
-    	
+
     	rs = s.executeQuery("select * from sys.keys where tablename = 't1'");
     	//nothing should be visible
     	assertFalse(rs.next());
-    	
+
         rs = s.executeQuery("select count(*) from pg_catalog.pg_constraint, pg_class where pg_class.oid = conrelid and relname like 't_'");
         assertTrue(rs.next());
         assertEquals(1, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from pg_catalog.pg_attribute, pg_class where pg_class.oid = pg_attribute.attrelid and relname like 't_'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
 	}
-	
+
     @Test public void testMetadataWithoutPermission() throws Exception {
         es = new ExtendedEmbeddedServer();
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         setAuthorizationValidator(ec, false);
         es.start(ec);
         deploySampleVDB();
-        
+
         Connection c = es.getDriver().connect("jdbc:teiid:role-1", null);
         Statement s = c.createStatement();
-        
+
         ResultSet rs = s.executeQuery("select count(*) from sys.tables where name like 't_'");
         assertTrue(rs.next());
         assertEquals(4, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.schemas where name like 's_'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.columns where tablename like 't_'");
         assertTrue(rs.next());
         assertEquals(6, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.procedures where name like 'proc_'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sysadmin.usage where schemaname like 's_'");
         assertTrue(rs.next());
         assertEquals(3, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.properties where name = 'x'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.keycolumns where tablename = 't1'");
         assertTrue(rs.next());
         assertEquals(3, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from sys.keys where tablename = 't1'");
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from pg_catalog.pg_constraint, pg_class where pg_class.oid = conrelid and relname like 't_'");
         assertTrue(rs.next());
         assertEquals(4, rs.getInt(1));
-        
+
         rs = s.executeQuery("select count(*) from pg_catalog.pg_attribute, pg_class where pg_class.oid = pg_attribute.attrelid and relname like 't_'");
         assertTrue(rs.next());
         assertEquals(6, rs.getInt(1));
@@ -271,5 +271,5 @@ public class TestDataRoles {
                 + "<permission><resource-name>sysadmin</resource-name><allow-read>true</allow-read></permission>"
                 + "</data-role></vdb>").getBytes()));
     }
-	
+
 }

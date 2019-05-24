@@ -70,38 +70,38 @@ public class AtomicRequestMessage {
 	private long processingTimestamp = System.currentTimeMillis();
 
     private boolean partialResultsFlag;
-    
+
     private RequestID requestID;
-    
+
     private boolean exceptionOnMaxRows;
     private int maxRows;
-    
+
     private boolean serial;
-    
+
     private boolean copyStreamingLobs;
-    
+
     private DQPWorkContext workContext;
     private CommandContext commandContext;
     private BufferManager bufferManager;
-    
+
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
     	this.workContext = parent;
     	this.requestID = new RequestID(parent.getSessionId(), requestMessage.getExecutionId());
         this.atomicRequestId = new AtomicRequestID(this.requestID, nodeId, EXECUTION_COUNT.getAndIncrement());
     }
-    
+
     public int getMaxResultRows() {
 		return maxRows;
 	}
-    
+
     public void setMaxResultRows(int maxRows) {
 		this.maxRows = maxRows;
 	}
-    
+
     public boolean isExceptionOnMaxRows() {
 		return exceptionOnMaxRows;
 	}
-    
+
     public void setExceptionOnMaxRows(boolean exceptionOnMaxRows) {
 		this.exceptionOnMaxRows = exceptionOnMaxRows;
 	}
@@ -109,7 +109,7 @@ public class AtomicRequestMessage {
     public AtomicRequestID getAtomicRequestID() {
         return this.atomicRequestId;
     }
-          
+
     public String getConnectorName() {
         return connectorName;
     }
@@ -125,7 +125,7 @@ public class AtomicRequestMessage {
     public void setModelName(String modelName) {
         this.modelName = modelName;
     }
-    
+
     public TransactionContext getTransactionContext() {
         return txnContext;
     }
@@ -133,19 +133,19 @@ public class AtomicRequestMessage {
     public void setTransactionContext(TransactionContext context) {
         txnContext = context;
     }
-    
+
     public boolean isSerial() {
     	return serial;
     }
-    
+
     public void setSerial(boolean serial) {
 		this.serial = serial;
 	}
 
     public boolean isTransactional(){
         return this.txnContext != null && this.txnContext.getTransactionType() != Scope.NONE;
-    }    
-	
+    }
+
 	public Command getCommand() {
 		return command;
 	}
@@ -163,7 +163,7 @@ public class AtomicRequestMessage {
 			throw new IllegalArgumentException("fetch size must be positive"); //$NON-NLS-1$
 		}
 		this.fetchSize = fetchSize;
-	}   
+	}
 
     /**
      * Get time that the request was assigned a unique ID by the server.
@@ -200,19 +200,19 @@ public class AtomicRequestMessage {
 	public DQPWorkContext getWorkContext() {
 		return workContext;
 	}
-	
+
 	public CommandContext getCommandContext() {
 		return commandContext;
 	}
-	
+
 	public void setCommandContext(CommandContext commandContext) {
 		this.commandContext = commandContext;
 	}
-	
+
 	public BufferManager getBufferManager() {
 		return bufferManager;
 	}
-	
+
 	public void setBufferManager(BufferManager bufferManager) {
 		this.bufferManager = bufferManager;
 	}
@@ -220,7 +220,7 @@ public class AtomicRequestMessage {
     public boolean isCopyStreamingLobs() {
         return copyStreamingLobs;
     }
-    
+
     public void setCopyStreamingLobs(boolean copyStreamingLobs) {
         this.copyStreamingLobs = copyStreamingLobs;
     }

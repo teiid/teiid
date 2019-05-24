@@ -22,7 +22,7 @@ import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidProcessingException;
 
 
-/** 
+/**
  * Used to notify the user that the virtual procedure raised an error.
  * @since 4.3
  */
@@ -30,15 +30,15 @@ public class ProcedureErrorInstructionException extends TeiidProcessingException
 
 	private static final long serialVersionUID = 895480748445855790L;
 
-	/** 
-     * 
+	/**
+     *
      * @since 4.3
      */
     public ProcedureErrorInstructionException() {
         super();
     }
 
-    /** 
+    /**
      * @param message
      * @since 4.3
      */
@@ -48,5 +48,5 @@ public class ProcedureErrorInstructionException extends TeiidProcessingException
 
     public ProcedureErrorInstructionException(BundleUtil.Event event, Exception parent) {
         super(event, parent);
-    }    
+    }
 }

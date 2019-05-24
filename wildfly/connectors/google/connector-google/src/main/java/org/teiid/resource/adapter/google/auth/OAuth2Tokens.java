@@ -25,7 +25,7 @@ public class OAuth2Tokens {
 	private String refreshToken = null;
 	private Integer expiresIn = null;
 	private Date created = null;
-	
+
 	public String getAccessToken() {
 		return accessToken;
 	}
@@ -35,8 +35,8 @@ public class OAuth2Tokens {
 	public Integer getExpiresIn() {
 		return expiresIn;
 	}
-	
-	
+
+
 	public Date getCreated() {
 		return created;
 	}

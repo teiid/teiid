@@ -42,25 +42,25 @@ public class TestCriteria extends TestCase {
 	public CompareCriteria exampleCompareCrit(int num) {
 		return new CompareCriteria(
 			new ElementSymbol("" + num),  //$NON-NLS-1$
-			CompareCriteria.EQ, 
+			CompareCriteria.EQ,
 			new Constant("" + num)); //$NON-NLS-1$
 	}
 
 	public void helpTestSeparateCriteria(Criteria originalCrit, Criteria[] partsArray) {
 		Collection<Criteria> expectedParts = Arrays.asList(partsArray);
 		Collection<Criteria> actualParts = Criteria.separateCriteriaByAnd(originalCrit);
-		
+
 		assertEquals("Didn't get the same parts ", expectedParts, actualParts); //$NON-NLS-1$
 	}
 
     public void testSeparateCriteriaByAnd1() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
+    	CompareCriteria crit1 = exampleCompareCrit(1);
     	helpTestSeparateCriteria(crit1, new Criteria[] { crit1 });
     }
 
     public void testSeparateCriteriaByAnd2() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
     	CompoundCriteria compCrit = new CompoundCriteria();
     	compCrit.setOperator(CompoundCriteria.AND);
     	compCrit.addCriteria(crit1);
@@ -69,9 +69,9 @@ public class TestCriteria extends TestCase {
     }
 
     public void testSeparateCriteriaByAnd3() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
-    	CompareCriteria crit3 = exampleCompareCrit(3);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
+    	CompareCriteria crit3 = exampleCompareCrit(3);
     	CompoundCriteria compCrit1 = new CompoundCriteria();
     	compCrit1.setOperator(CompoundCriteria.AND);
     	compCrit1.addCriteria(crit2);
@@ -84,9 +84,9 @@ public class TestCriteria extends TestCase {
     }
 
     public void testSeparateCriteriaByAnd4() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
-    	CompareCriteria crit3 = exampleCompareCrit(3);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
+    	CompareCriteria crit3 = exampleCompareCrit(3);
     	CompoundCriteria compCrit1 = new CompoundCriteria();
     	compCrit1.setOperator(CompoundCriteria.OR);
     	compCrit1.addCriteria(crit2);
@@ -99,9 +99,9 @@ public class TestCriteria extends TestCase {
     }
 
     public void testSeparateCriteriaByAnd5() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
-    	CompareCriteria crit3 = exampleCompareCrit(3);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
+    	CompareCriteria crit3 = exampleCompareCrit(3);
     	CompoundCriteria compCrit1 = new CompoundCriteria();
     	compCrit1.setOperator(CompoundCriteria.AND);
     	compCrit1.addCriteria(crit2);
@@ -126,14 +126,14 @@ public class TestCriteria extends TestCase {
     public void testCombineCriteria2() {
     	helpTestCombineCriteria(exampleCompareCrit(1), null, exampleCompareCrit(1));
     }
-    
+
     public void testCombineCriteria3() {
     	helpTestCombineCriteria(null, exampleCompareCrit(1), exampleCompareCrit(1));
     }
-    
+
     public void testCombineCriteria4() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
     	CompoundCriteria compCrit = new CompoundCriteria();
     	compCrit.setOperator(CompoundCriteria.AND);
     	compCrit.addCriteria(crit1);
@@ -142,14 +142,14 @@ public class TestCriteria extends TestCase {
     }
 
     public void testCombineCriteria5() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
-    	CompareCriteria crit3 = exampleCompareCrit(3);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
+    	CompareCriteria crit3 = exampleCompareCrit(3);
     	CompoundCriteria compCrit = new CompoundCriteria();
     	compCrit.setOperator(CompoundCriteria.AND);
     	compCrit.addCriteria(crit1);
     	compCrit.addCriteria(crit2);
-    	
+
     	CompoundCriteria compCrit2 = new CompoundCriteria();
     	compCrit2.setOperator(CompoundCriteria.AND);
     	compCrit2.addCriteria(crit1);
@@ -160,14 +160,14 @@ public class TestCriteria extends TestCase {
     }
 
     public void testCombineCriteria6() {
-    	CompareCriteria crit1 = exampleCompareCrit(1);    	
-    	CompareCriteria crit2 = exampleCompareCrit(2);  
-    	CompareCriteria crit3 = exampleCompareCrit(3);  
+    	CompareCriteria crit1 = exampleCompareCrit(1);
+    	CompareCriteria crit2 = exampleCompareCrit(2);
+    	CompareCriteria crit3 = exampleCompareCrit(3);
     	CompoundCriteria compCrit = new CompoundCriteria();
     	compCrit.setOperator(CompoundCriteria.AND);
     	compCrit.addCriteria(crit1);
     	compCrit.addCriteria(crit2);
-    	
+
     	CompoundCriteria compCrit2 = new CompoundCriteria();
     	compCrit2.setOperator(CompoundCriteria.AND);
     	compCrit2.addCriteria(crit3);

@@ -27,16 +27,16 @@ import java.util.Arrays;
  * A dynamic buffer that limits copying overhead
  */
 public class MultiArrayOutputStream extends OutputStream {
-	
+
 	private byte bufferIndex;
 	private int index;
 	private int count;
 	private byte[][] bufs = new byte[15][];
-	
+
 	public MultiArrayOutputStream(int initialSize) {
 		bufs[0] = new byte[initialSize];
 	}
-	
+
 	public void reset(int newIndex) {
 		Assertion.assertTrue(newIndex < bufs[0].length);
 		while (bufferIndex > 0) {
@@ -44,7 +44,7 @@ public class MultiArrayOutputStream extends OutputStream {
 		}
 		count = index = newIndex;
 	}
-	
+
 	@Override
 	public void write(int b) throws IOException {
 		int newIndex = index + 1;
@@ -59,7 +59,7 @@ public class MultiArrayOutputStream extends OutputStream {
         }
 		count++;
 	}
-	
+
 	@Override
 	public void write(byte[] b, int off, int len) throws IOException {
         int newIndex = index + len;
@@ -83,24 +83,24 @@ public class MultiArrayOutputStream extends OutputStream {
         }
 		count += len;
 	}
-	
+
 	public void writeTo(DataOutput out) throws IOException {
 		for (byte i = 0; i <= bufferIndex; i++) {
     		byte[] b = bufs[i];
     		out.write(b, 0, bufferIndex == i?index:b.length);
     	}
 	}
-	
+
 	public int getCount() {
 		return count;
 	}
-	
+
 	public byte[][] getBuffers() {
 		return bufs;
 	}
-	
+
 	public int getIndex() {
 		return index;
 	}
-	
+
 }

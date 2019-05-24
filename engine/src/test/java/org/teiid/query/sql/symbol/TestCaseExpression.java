@@ -44,7 +44,7 @@ public class TestCaseExpression extends TestCase {
             expr.getWhen().add(new Object());
             fail("Should not be modifiable"); //$NON-NLS-1$
         } catch (UnsupportedOperationException e) {
-            
+
         }
     }
 
@@ -56,14 +56,14 @@ public class TestCaseExpression extends TestCase {
             expr.getThen().add(new Object());
             fail("Should not be modifiable"); //$NON-NLS-1$
         } catch (UnsupportedOperationException e) {
-            
+
         }
     }
 
     public static List getWhenExpressions(int expressions) {
         return getWhenExpressions(expressions, -1, false);
     }
-    
+
     public static List getWhenExpressions(int expressions, int nullIndex, boolean includeNull) {
         ArrayList list = new ArrayList();
         for (int i = 0; i < expressions; i++) {
@@ -75,7 +75,7 @@ public class TestCaseExpression extends TestCase {
         }
         return list;
     }
-    
+
     public static List getThenExpressions(int expressions) {
         ArrayList list = new ArrayList();
         for (int i = 0; i < expressions; i++) {
@@ -90,7 +90,7 @@ public class TestCaseExpression extends TestCase {
         caseExpr.setElseExpression(new Constant(new Integer(9999)));
         return caseExpr;
     }
-    
+
     public static CaseExpression example(int whens, int nullIndex, boolean includeNull) {
         ArgCheck.isTrue(nullIndex < whens, "Null Index must be less than the number of When expressions"); //$NON-NLS-1$
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
@@ -98,7 +98,7 @@ public class TestCaseExpression extends TestCase {
         caseExpr.setElseExpression(new Constant(new Integer(9999)));
         return caseExpr;
     }
-    
+
     public static void helpTestWhenExpressions(CaseExpression caseExpr, int expectedWhens) {
         assertEquals(expectedWhens, caseExpr.getWhenCount());
         for (int i = 0; i < expectedWhens; i++) {
@@ -112,7 +112,7 @@ public class TestCaseExpression extends TestCase {
             assertEquals(new Constant(new Integer(i)), caseExpr.getThenExpression(i));
         }
     }
-    
+
     /**
      * Test that the Object references are not equal, but that the result of
      * the equals() method is true.
@@ -144,13 +144,13 @@ public class TestCaseExpression extends TestCase {
         ElementSymbol y = new ElementSymbol("y"); //$NON-NLS-1$
         caseExpr.setExpression(y);
         assertEquals(y, caseExpr.getExpression());
-        
+
         try {
             caseExpr.setExpression(null);
             fail("Setting the expression to null should fail."); //$NON-NLS-1$
         } catch (IllegalArgumentException e) {
             // There should be no side-effects of an illegal argument
-            assertEquals(y, caseExpr.getExpression());            
+            assertEquals(y, caseExpr.getExpression());
         }
     }
 
@@ -173,30 +173,30 @@ public class TestCaseExpression extends TestCase {
         CaseExpression expr = new CaseExpression(x, whens, thens);
         expr.setElseExpression(elseExpression);
         expr.setType(DataTypeManager.DefaultDataClasses.STRING);
-        
+
         CaseExpression clone = (CaseExpression)expr.clone();
-        
+
         assertTrue(expr != clone);
-        
+
         helpTestStrictEquivalence(x, clone.getExpression());
         helpTestStrictEquivalence(expr.getExpression(), clone.getExpression());
-        
+
         assertEquals(2, clone.getWhenCount());
-        
+
         helpTestStrictEquivalence(e1, clone.getWhenExpression(0));
         helpTestStrictEquivalence(expr.getWhenExpression(0), clone.getWhenExpression(0));
         helpTestStrictEquivalence(e2, clone.getWhenExpression(1));
         helpTestStrictEquivalence(expr.getWhenExpression(1), clone.getWhenExpression(1));
-        
+
         helpTestStrictEquivalence(const1, clone.getThenExpression(0));
         helpTestStrictEquivalence(expr.getThenExpression(0), clone.getThenExpression(0));
         helpTestStrictEquivalence(const2, clone.getThenExpression(1));
         helpTestStrictEquivalence(expr.getThenExpression(1), clone.getThenExpression(1));
-        
+
         helpTestStrictEquivalence(expr.getElseExpression(), clone.getElseExpression());
         assertEquals(expr.getType(), clone.getType());
     }
-    
+
     public void testGetWhenExpression() {
         helpTestWhenExpressions(example(3), 3);
     }
@@ -324,17 +324,17 @@ public class TestCaseExpression extends TestCase {
         assertTrue(sc1.equals(sc1.clone()));
         assertTrue(sc1.clone().equals(sc1));
         assertTrue(sc1.equals(example(3)));
-        
+
         CaseExpression sc2 = example(4);
-        
+
         assertFalse(sc1.equals(sc2));
         assertFalse(sc2.equals(sc1));
-        
+
         CaseExpression sc3 = example(3);
         sc3.setElseExpression(new ElementSymbol("y")); //$NON-NLS-1$
         assertFalse(sc1.equals(sc3));
         assertFalse(sc3.equals(sc1));
-        
+
         CaseExpression sc4 = example(3);
         sc4.setExpression(new ElementSymbol("y")); //$NON-NLS-1$
         assertFalse(sc1.equals(sc4));

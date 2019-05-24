@@ -52,23 +52,23 @@ import org.teiid.translator.CacheDirective.Scope;
 
 
 /**
- * This tuple source impl can only be used once; once it is closed, it 
+ * This tuple source impl can only be used once; once it is closed, it
  * cannot be reopened and reused.
- * 
+ *
  * TODO: the handling of DataNotAvailable is awkward.
  * In the multi-threaded case we'd like to not even
- * notify the parent plan and just schedule the next poll. 
+ * notify the parent plan and just schedule the next poll.
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
-	
+
 	// Construction state
     private final AtomicRequestMessage aqr;
     private final RequestWorkItem workItem;
     private final ConnectorWork cwi;
     private final DataTierManagerImpl dtm;
-    
+
     private int limit = -1;
-    
+
     // Data state
     private int index;
     private int rowsProcessed;
@@ -80,16 +80,16 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     private boolean executed;
     private volatile boolean done;
     private boolean explicitClose;
-    
+
     private volatile FutureWork<AtomicResultsMessage> futureResult;
     private volatile boolean running;
-    
+
     boolean errored;
 	Scope scope; //this is to avoid synchronization
-	
+
 	private long waitUntil;
 	private Future<Void> scheduledFuture;
-    
+
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
         this.workItem = workItem;
@@ -241,7 +241,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				}
 			}
 			return;
-		} 
+		}
 		Table t = (Table)metadataId;
 		t.setLastDataModification(ts);
 		if (distributor != null) {
@@ -308,7 +308,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		}
 		return results;
 	}
-    
+
     public boolean isQueued() {
     	FutureWork<AtomicResultsMessage> future = futureResult;
     	return !running && future != null && !future.isDone();
@@ -317,11 +317,11 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	public boolean isDone() {
 		return done;
 	}
-    
+
     public boolean isRunning() {
 		return running;
 	}
-    
+
     public void fullyCloseSource() {
     	cancelFutures();
 		cancelAsynch = true;
@@ -334,25 +334,25 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    		this.cwi.close();
 	    	} else {
 	    		futureResult.addCompletionListener(new CompletionListener<AtomicResultsMessage>() {
-					
+
 					@Override
 					public void onCompletion(FutureWork<AtomicResultsMessage> future) {
 						if (running) {
 							return; //-- let the other thread close
 						}
 						if (closed.compareAndSet(false, true)) {
-							cwi.close();						
+							cwi.close();
 						}
 					}
 				});
 	    	}
     	}
     }
-    
+
     public boolean isCanceled() {
 		return canceled;
 	}
-    
+
     public void cancelRequest() {
     	this.canceled = true;
 		this.cwi.cancel(true);
@@ -386,7 +386,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
 			return emptyResults;
-		} 
+		}
 		fullyCloseSource();
 		if (exception.getCause() instanceof TeiidComponentException) {
 			throw (TeiidComponentException)exception.getCause();
@@ -416,7 +416,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     		done = true;
     	}
 	}
-	
+
 	public AtomicRequestMessage getAtomicRequestMessage() {
 		return aqr;
 	}
@@ -424,7 +424,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	public String getConnectorName() {
 		return this.aqr.getConnectorName();
 	}
-	
+
 	public boolean isTransactional() {
 		return this.aqr.isTransactional();
 	}
@@ -435,13 +435,13 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			workItem.moreWork(); //this is not necessary in some situations with DataNotAvailable
 		}
 	}
-	
+
 	public boolean isExplicitClose() {
 		return explicitClose;
 	}
-	
+
 	public Future<Void> getScheduledFuture() {
 		return scheduledFuture;
 	}
-	
+
 }

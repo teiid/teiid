@@ -23,25 +23,25 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * This is the primary interface for all language objects.  It extends a few 
+ * This is the primary interface for all language objects.  It extends a few
  * key interfaces and adds some additional methods to allow the {@link LanguageVisitor}
  * to work.
  */
 public interface LanguageObject extends Cloneable {
 
     /**
-     * Method for accepting a visitor.  It is the responsibility of the 
+     * Method for accepting a visitor.  It is the responsibility of the
      * language object to call back on the visitor.
      * @param visitor Visitor being used
      */
     void acceptVisitor(LanguageVisitor visitor);
-		
+
 	/**
 	 * Implement clone to make objects cloneable.
 	 * @return Deep clone of this object
 	 */
     Object clone();
-    
+
     public static class Util {
 
 		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(Collection<T> collection, Class<S> type) {
@@ -54,7 +54,7 @@ public interface LanguageObject extends Cloneable {
 			}
 			return result;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		public static <T extends LanguageObject> T[] deepClone(T[] collection) {
 			if (collection == null) {
@@ -67,7 +67,7 @@ public interface LanguageObject extends Cloneable {
 			}
 			return copy;
 		}
-    	
+
     }
-    	 
+
 }

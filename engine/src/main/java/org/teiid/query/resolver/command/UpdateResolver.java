@@ -53,10 +53,10 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  */
 public class UpdateResolver extends ProcedureContainerResolver implements VariableResolver {
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.ProcedureContainerResolver#resolveProceduralCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter)
      */
-    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata) 
+    public void resolveProceduralCommand(Command command, TempMetadataAdapter metadata)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 
         //Cast to known type
@@ -71,8 +71,8 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
     }
-    
-    /** 
+
+    /**
      * @param metadata
      * @param group
      * @return
@@ -85,18 +85,18 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         return metadata.getUpdatePlan(group.getMetadataID());
     }
 
-    /** 
+    /**
      * @see org.teiid.query.resolver.VariableResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
      */
     public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException,
                                                                  TeiidComponentException {
         Map<ElementSymbol, Expression> result = new HashMap<ElementSymbol, Expression>();
-        
+
         Update update = (Update) command;
-        
+
         Map<ElementSymbol, Expression> changing = update.getChangeList().getClauseMap();
-        
+
         for (Entry<ElementSymbol, Expression> entry : changing.entrySet()) {
         	ElementSymbol leftSymbol = entry.getKey().clone();
             leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
@@ -108,7 +108,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             	result.put(leftSymbol, entry.getValue());
             }
         }
-        
+
         Collection<ElementSymbol> insertElmnts = ResolverUtil.resolveElementsInGroup(update.getGroup(), metadata);
 
         insertElmnts.removeAll(changing.keySet());
@@ -120,7 +120,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
         }
-        
+
         return result;
     }
 

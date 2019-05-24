@@ -31,31 +31,31 @@ import org.teiid.translator.TypeFacility;
 
 
 /**
- * A modifier class that can be used to translate the scalar function 
- * <code>locate(search_string, source_string)</code> and 
- * <code>locate(search_string, source_string, start_index)</code> to a function 
+ * A modifier class that can be used to translate the scalar function
+ * <code>locate(search_string, source_string)</code> and
+ * <code>locate(search_string, source_string, start_index)</code> to a function
  * or expression that can be used at the data source.
  * <p>
- * If the default implementation is used, a function name of LOCATE will be used 
+ * If the default implementation is used, a function name of LOCATE will be used
  * for the function name.
  * <p>
- * If the default implementation is used, the expression will not be modified if: 
+ * If the default implementation is used, the expression will not be modified if:
  * <li><code>locate(search_string, source_string)</code> is used</li>
- * <li><code>locate(search_string, source_string, start_index)</code> is used 
+ * <li><code>locate(search_string, source_string, start_index)</code> is used
  * and <code>start_index</code> is a literal integer greater then 0</li>
  * <li>the default function parameter order is used or unspecified</li>
  * <p>
- * If the default implementation is used, the expression will be modified if: 
- * <li><code>locate(search_string, source_string, start_index)</code> is used 
- * and <code>start_index</code> is a literal integer less then 1</li>  
- * <li><code>locate(search_string, source_string, start_index)</code> is used 
- * and <code>start_index</code> is not a literal integer</li> 
+ * If the default implementation is used, the expression will be modified if:
+ * <li><code>locate(search_string, source_string, start_index)</code> is used
+ * and <code>start_index</code> is a literal integer less then 1</li>
+ * <li><code>locate(search_string, source_string, start_index)</code> is used
+ * and <code>start_index</code> is not a literal integer</li>
  * <li>the function parameter order is something other than the default</li>
  * <p>
- * If the default implementation is used and the expression is modified, it is 
- * modified to ensure that any literal integer value less than 1 is made equal 
- * to 1 and any non literal value is wrapped by a searched case expression 
- * to ensure that a value of less then 1 will be equal to 1 and the parameter 
+ * If the default implementation is used and the expression is modified, it is
+ * modified to ensure that any literal integer value less than 1 is made equal
+ * to 1 and any non literal value is wrapped by a searched case expression
+ * to ensure that a value of less then 1 will be equal to 1 and the parameter
  * order matches that of what the data source expects.
  * <p>
  * For example:
@@ -63,20 +63,20 @@ import org.teiid.translator.TypeFacility;
  * <li><code>locate('a', 'abcdef', 2)</code> --> <code>LOCATE('a', 'abcdef', 2)</code></li>
  * <li><code>locate('a', 'abcdef', 0)</code> --> <code>LOCATE('a', 'abcdef', 1)</code></li>
  * <li><code>locate('a', 'abcdef', intCol)</code> --> <code>LOCATE('a', 'abcdef', CASE WHEN intCol < 1 THEN 1 ELSE intCol END)</code></li>
- * 
+ *
  * @since 6.2
  */
 public class LocateFunctionModifier extends AliasModifier {
 
 	public static String LOCATE = "LOCATE"; //$NON-NLS-1$
-	
+
     private LanguageFactory langFactory;
     private boolean sourceStringFirst;
-    
+
 	/**
-	 * Translates the scalar function LOCATE() to a source specific scalar 
+	 * Translates the scalar function LOCATE() to a source specific scalar
 	 * function or expression.
-	 * 
+	 *
 	 * @param langFactory the language factory associated with translation
 	 */
     public LocateFunctionModifier(LanguageFactory langFactory) {
@@ -84,9 +84,9 @@ public class LocateFunctionModifier extends AliasModifier {
     }
 
 	/**
-	 * Translates the scalar function LOCATE() to a source specific scalar 
+	 * Translates the scalar function LOCATE() to a source specific scalar
 	 * function or expression.
-	 * 
+	 *
 	 * @param langFactory the language factory associated with translation
 	 * @param functionName the function name or alias to be used instead of LOCATE
 	 * @param sourceStringFirst
@@ -98,7 +98,7 @@ public class LocateFunctionModifier extends AliasModifier {
     }
 
 	/**
-	 * Returns a version of <code>function</code> suitable for executing at the 
+	 * Returns a version of <code>function</code> suitable for executing at the
 	 * data source.
 	 * <p>
 	 * For example:
@@ -110,7 +110,7 @@ public class LocateFunctionModifier extends AliasModifier {
 	 * <code>locate('a', 'abcdefg', 1)  --->  FINDSTR('a', 'abcdefg', 1)</code><br />
 	 * <code>locate('a', 'abcdefg', myCol)  --->  LOCATE('a', 'abcdefg', CASE WHEN myCol < 1 THEN 1 ELSE myCol END)</code>
 	 * </ul>
-	 * 
+	 *
 	 * @param function the LOCATE function that may need to be modified
 	 */
     public void modify(Function function) {
@@ -131,14 +131,14 @@ public class LocateFunctionModifier extends AliasModifier {
 
 	private Expression ensurePositiveStartIndex(Expression startIndex) {
 		if (startIndex instanceof Literal) {
-			Literal literal = (Literal)startIndex;  
+			Literal literal = (Literal)startIndex;
 			if (literal.getValue() instanceof Integer && ((Integer)literal.getValue() < 1)) {
 				literal.setValue(1);
 			}
 		} else {
 			Comparison whenExpr = langFactory.createCompareCriteria(
-					Operator.LT, 
-					startIndex, 
+					Operator.LT,
+					startIndex,
 					langFactory.createLiteral(1, Integer.class)
 				);
 			Literal thenExpr = langFactory.createLiteral(1, Integer.class);
@@ -146,10 +146,10 @@ public class LocateFunctionModifier extends AliasModifier {
 		}
 		return startIndex;
 	}
-	
+
 	/**
      * Get the instance of {@link LanguageFactory} set during construction.
-     * 
+     *
      * @return the <code>ILanguageFactory</code> instance
      */
 	protected LanguageFactory getLanguageFactory() {

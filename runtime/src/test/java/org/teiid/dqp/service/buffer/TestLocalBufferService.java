@@ -69,11 +69,11 @@ public class TestLocalBufferService {
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(false);
         svc.start();
-        
+
         // all the properties are set
         assertFalse(svc.isUseDisk());
     }
-    
+
     @Test public void testSchemaSize() throws Exception {
     	//82 strings of Total Length 2515 charcacters
     	//11 Dates
@@ -92,38 +92,38 @@ public class TestLocalBufferService {
     	for (int i = 0; i <20; i++) {
     		schema.add(new Constant(null, DataTypeManager.DefaultDataClasses.BIG_DECIMAL));
     	}
-    	
+
     	BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(false);
         svc.start();
-        
+
         BufferManager mgr = svc.getBufferManager();
         assertEquals(3364096, mgr.getSchemaSize(schema));
         assertEquals(128, mgr.getProcessorBatchSize(schema));
     }
-    
+
     @Test
     public void testStateTransfer() throws Exception {
     	BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
         svc.setUseDisk(true);
         svc.start();
-    	
+
         BufferManager mgr = svc.getBufferManager();
 		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(2);
 		ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
 		es.setType(DataTypeManager.getDataTypeClass(DefaultDataTypes.STRING));
 		schema.add(es);
-		
+
 		ElementSymbol es2 = new ElementSymbol("y"); //$NON-NLS-1$
 		es2.setType(DataTypeManager.getDataTypeClass(DefaultDataTypes.INTEGER));
 		schema.add(es2);
-		
+
 		TupleBuffer buffer = mgr.createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$
 		buffer.setBatchSize(50);
 		buffer.setId("state_id");
-		
+
 		for (int batch=0; batch<3; batch++) {
 			for (int row = 0; row < 50; row++) {
 				int val = (batch*50)+row;
@@ -132,23 +132,23 @@ public class TestLocalBufferService {
 		}
 		buffer.close();
 		mgr.distributeTupleBuffer(buffer.getId(), buffer);
-		
+
 		FileOutputStream fo = new FileOutputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
 		((BufferManagerImpl)mgr).getState(buffer.getId(), fo);
 		fo.close();
 		svc.stop();
-		
+
 		// now read back
     	BufferServiceImpl svc2 = new BufferServiceImpl();
         svc2.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/2");
         svc2.setUseDisk(true);
         svc2.start();
-    	
+
         BufferManagerImpl mgr2 = svc2.getBufferManager();
         FileInputStream fis = new FileInputStream(UnitTestUtil.getTestScratchPath()+"/teiid/statetest");
 		mgr2.setState(buffer.getId(), fis);
 		fis.close();
-		
+
 		String id = "state_id";
 		buffer = mgr2.getTupleBuffer(id);
 		for (int batch=0; batch<3; batch++) {
@@ -162,7 +162,7 @@ public class TestLocalBufferService {
 		}
 		svc2.stop();
     }
-    
+
     @Test public void testUseDiskFalse() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
@@ -173,11 +173,11 @@ public class TestLocalBufferService {
         FileStore f = mgr.getCache().createFileStore("x");
         f.write(new byte[1234], 0, 1234);
     }
-    
+
     @Test public void testFixedSizing() throws Exception {
         BufferServiceImpl svc = new BufferServiceImpl();
         svc.setDiskDirectory(UnitTestUtil.getTestScratchPath()+"/teiid/1");
-        svc.setVmMaxMemory(14l<<30);
+        svc.setVmMaxMemory(14L<<30);
         svc.setMaxReservedHeapMb(10<<10);
         svc.start();
         BufferManagerImpl impl = svc.getBufferManager();

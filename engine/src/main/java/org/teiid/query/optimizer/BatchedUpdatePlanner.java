@@ -52,13 +52,13 @@ import org.teiid.query.util.CommandContext;
 
 
 
-/** 
+/**
  * Planner for BatchedUpdateCommands
  * @since 4.2
  */
 public class BatchedUpdatePlanner implements CommandPlanner {
 
-    /** 
+    /**
      * Optimizes batched updates by batching all contiguous commands that relate to the same physical model.
      * For example, for the following batch of commands:
      * <br/>
@@ -156,9 +156,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         List symbols = batchedUpdateCommand.getProjectedSymbols();
                         projectNode.setSelectSymbols(symbols);
                         projectNode.setElements(symbols);
-                        
+
                         batchNode.setElements(symbols);
-                        
+
                         projectNode.addChild(batchNode);
                         // Add a new RelationalPlan that represents the plan for this batch.
                         childPlans.add(new RelationalPlan(projectNode));
@@ -182,9 +182,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         }
         return new BatchedUpdatePlan(childPlans, batchedUpdateCommand.getUpdateCommands().size(), planContexts, batchedUpdateCommand.isSingleResult());
     }
-    
+
     /**
-     * Get the group being updated by the update command 
+     * Get the group being updated by the update command
      * @param command an INSERT, UPDATE, DELETE or SELECT INTO command
      * @return the group being updated
      * @since 4.2
@@ -200,9 +200,9 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         }
          throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30244, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30244, command));
     }
-    
+
     /**
-     * Returns whether a command can be placed in a connector batch 
+     * Returns whether a command can be placed in a connector batch
      * @param command an update command
      * @param metadata
      * @return true if this command can be added to a batch; false otherwise
@@ -216,13 +216,13 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         // If the command updates a physical group, it's eligible
         return aNode != null && !metadata.isVirtualGroup(getUpdatedGroup(command).getMetadataID());
     }
-    
+
     /**
-     * Returns whether a command can be placed in a given batch 
+     * Returns whether a command can be placed in a given batch
      * @param command an update command
      * @param batchModelID the model ID for the batch concerned
      * @param metadata
-     * @param capFinder 
+     * @param capFinder
      * @return true if this command can be place in a batch associated with the model ID; false otherwise
      * @throws QueryMetadataException
      * @throws TeiidComponentException
@@ -232,7 +232,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         // If it's eligible ...
         if (isEligibleForBatching(command, metadata)) {
             Object modelID = metadata.getModelID(getUpdatedGroup(command).getMetadataID());
-            
+
             return CapabilitiesUtil.isSameConnector(modelID, batchModelID, metadata, capFinder);
         }
         return false;

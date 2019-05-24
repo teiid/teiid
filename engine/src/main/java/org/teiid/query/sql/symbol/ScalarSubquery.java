@@ -39,12 +39,12 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable<QueryCommand>, ContextReference {
 
 	private static AtomicInteger ID = new AtomicInteger();
-	
+
     private QueryCommand command;
     private Class<?> type;
     private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
     private boolean shouldEvaluate;
-    
+
     private SubqueryHint subqueryHint = new SubqueryHint();
 
     /**
@@ -57,20 +57,20 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     public ScalarSubquery(QueryCommand subqueryCommand){
         this.setCommand(subqueryCommand);
     }
-    
+
     public boolean shouldEvaluate() {
     	return shouldEvaluate;
     }
-    
+
     public void setShouldEvaluate(boolean shouldEvaluate) {
 		this.shouldEvaluate = shouldEvaluate;
 	}
-    
+
     @Override
     public String getContextSymbol() {
     	return id;
     }
-    
+
     /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
@@ -96,7 +96,7 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     }
 
     /**
-     * Sets the command.  
+     * Sets the command.
      */
     public void setCommand(QueryCommand command){
         this.command = command;
@@ -162,11 +162,11 @@ public class ScalarSubquery implements Expression, SubqueryContainer.Evaluatable
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public SubqueryHint getSubqueryHint() {
 		return subqueryHint;
 	}
-    
+
     public void setSubqueryHint(SubqueryHint subqueryHint) {
 		this.subqueryHint = subqueryHint;
 	}

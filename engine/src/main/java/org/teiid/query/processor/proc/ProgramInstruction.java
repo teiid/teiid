@@ -26,9 +26,9 @@ import org.teiid.jdbc.TeiidSQLException;
 
 /**
  * <p>Abstract superclass of all program instructions.</p>
- * 
+ *
  * <p>All processor
- * instructions need to be cloneable, but it most cases the default 
+ * instructions need to be cloneable, but it most cases the default
  * Object.clone operation will suffice, since in most cases the processing
  * instructions will be stateless, or the state will be immutable.
  * The exception to this are instructions that have sub programs in them -
@@ -37,22 +37,22 @@ import org.teiid.jdbc.TeiidSQLException;
 public abstract class ProgramInstruction implements Cloneable {
 
     public ProgramInstruction() {
-    } 
-   
+    }
+
     /**
      * Allow this instruction to do whatever processing it needs, and to
      * in turn manipulate the running program. A typical instruction should simply {@link
      * Program#incrementProgramCounter increment} the program counter of the current program, but specialized
      * instructions may add sub programs to the stack or not increment the counter (so that they are executed again.)
-     * @throws TeiidSQLException 
+     * @throws TeiidSQLException
      */
-    public abstract void process(ProcedurePlan env) 
+    public abstract void process(ProcedurePlan env)
         throws TeiidComponentException, TeiidProcessingException, TeiidSQLException;
-        
+
     /**
-     * Override Object.clone() to make the method public.  This method 
+     * Override Object.clone() to make the method public.  This method
      * simply calls super.clone(), deferring to the default shallow
-     * cloning.  Some ProcessorInstruction subclasses may need to 
+     * cloning.  Some ProcessorInstruction subclasses may need to
      * override with custom safe or deep cloning.
      * @return shallow clone
      */
@@ -71,5 +71,5 @@ public abstract class ProgramInstruction implements Cloneable {
     public Boolean requiresTransaction(boolean transactionalReads) {
         return false;
     }
-    
+
 }

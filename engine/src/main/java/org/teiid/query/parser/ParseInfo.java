@@ -30,27 +30,27 @@ public class ParseInfo implements Serializable{
     public static boolean REQUIRE_UNQUALIFIED_NAMES = PropertiesUtils.getHierarchicalProperty("org.teiid.requireUnqualifiedNames", true, Boolean.class); //$NON-NLS-1$
 
     public int referenceCount = 0;
-    
+
     public static final ParseInfo DEFAULT_INSTANCE = new ParseInfo();
     static {
     	DEFAULT_INSTANCE.ansiQuotedIdentifiers = true;
     }
 
-    // treat a double quoted variable as variable instead of string 
+    // treat a double quoted variable as variable instead of string
     public boolean ansiQuotedIdentifiers=ANSI_QUOTED_DEFAULT;
     boolean backslashDefaultMatchEscape=false;
-    
+
 	public ParseInfo() { }
-	
+
 	public boolean useAnsiQuotedIdentifiers() {
 	    return ansiQuotedIdentifiers;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return ansiQuotedIdentifiers?1:0;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -63,11 +63,11 @@ public class ParseInfo implements Serializable{
 		return this.ansiQuotedIdentifiers == other.ansiQuotedIdentifiers
 		        && this.backslashDefaultMatchEscape == other.backslashDefaultMatchEscape;
 	}
-	
+
 	public boolean isBackslashDefaultMatchEscape() {
         return backslashDefaultMatchEscape;
     }
-	
+
 	public void setBackslashDefaultMatchEscape(
             boolean backslashDefaultMatchEscape) {
         this.backslashDefaultMatchEscape = backslashDefaultMatchEscape;

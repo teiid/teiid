@@ -34,22 +34,22 @@ public class RecordFactory {
 
 	/** Delimiter used to separate the URI string from the URI fragment */
     public static final String URI_REFERENCE_DELIMITER = "#"; //$NON-NLS-1$
-    
+
     public static final int INDEX_RECORD_BLOCK_SIZE = IIndexConstants.BLOCK_SIZE - 32;
-    
+
     /**
      * The version number associated with any index records prior to the point
-     * when version information was encoded in newly created records 
+     * when version information was encoded in newly created records
      */
     public static final int NONVERSIONED_RECORD_INDEX_VERSION = 0;
-    
+
     /**
      * The version number that is associated with the change made to change the list
      * delimiter.  Added 07/22/2004.
      * @since 4.1.1
      */
     public static final int DELIMITER_INDEX_VERSION = 1;
-    
+
     /**
      * The version number that is associated with the change made to add materialization
      * property on tables. Added 08/18/2004.
@@ -88,39 +88,39 @@ public class RecordFactory {
      * @since 4.2
      */
     public static final int TRANSFORMATION_UUID_INDEX_VERSION = 6;
-    
+
     /**
      * The version number that is associated with the change made to add count of null and
      * distinct values for columns on the column records 7/8/2005.
      * @since 4.2
      */
     public static final int COLUMN_NULL_DISTINCT_INDEX_VERSION = 7;
-    
+
     /**
-     * The version number that is associated with the change made to add 
+     * The version number that is associated with the change made to add
      * primitive type ID on datatype records 02/28/2006.
      * @since 5.0
      */
     public static final int PRIMITIVE_TYPE_ID_INDEX_VERSION = 8;
-    
+
     /**
-     * The version number that is associated with the change made to add 
+     * The version number that is associated with the change made to add
      * an update count to physical stored and XQuery procedures 04/29/2008.
      * @since 5.0
      */
     public static final int PROCEDURE_UPDATE_COUNT_VERSION = 9;
-    
+
     public static final int NONZERO_UNKNOWN_CARDINALITY = 10;
 
     /**
      * The version number that is encoded with all newly created index records
      */
     public static final int CURRENT_INDEX_VERSION = PROCEDURE_UPDATE_COUNT_VERSION;
-    
+
     private int version = NONVERSIONED_RECORD_INDEX_VERSION;
 
 	protected String parentId;
-    
+
     /**
      * Return a collection of {@link AbstractMetadataRecord}
      * instances for the result obtained from executing <code>queryEntriesMatching</code>
@@ -172,7 +172,7 @@ public class RecordFactory {
             	return null;
         }
     }
-    
+
     /**
      * Append the specified IEntryResult[] to the IEntryResult
      * to create a single result representing an index entry that
@@ -181,8 +181,8 @@ public class RecordFactory {
      * @param continuationResults
      * @param blockSize
      */
-    public static IEntryResult joinEntryResults(final IEntryResult result, 
-                                                final IEntryResult[] continuationResults, 
+    public static IEntryResult joinEntryResults(final IEntryResult result,
+                                                final IEntryResult[] continuationResults,
                                                 final int blockSize) {
         // If the IEntryResult is not continued on another record, return the original
         char[] baseResult = result.getWord();
@@ -198,7 +198,7 @@ public class RecordFactory {
         StringBuffer sb = new StringBuffer();
         sb.append(baseStr.substring(0,blockSize-1));
 
-        // Append the continuation results onto the original - 
+        // Append the continuation results onto the original -
         // assumes the IEntryResult[] are in ascending order of segment number
         final IEntryResult[] sortedResults = sortContinuationResults(objectID,continuationResults);
         for (int i = 0; i < sortedResults.length; i++) {
@@ -214,14 +214,14 @@ public class RecordFactory {
 
         return new EntryResult(sb.toString().toCharArray(),result.getFileReferences());
     }
-    
+
     private static IEntryResult[] sortContinuationResults(final String objectID, final IEntryResult[] continuationResults) {
         // If the array length is less than 10, then we should be able to safely
         // assume the IEntryResult[] are in ascending order of segment count
         if (continuationResults.length < 10) {
             return continuationResults;
         }
-        
+
         // If the number of continuation records is 10 or greater then we need to sort them
         // by segment count since continuation records 10-19 will appear before records 1-9
         // in the array
@@ -232,14 +232,14 @@ public class RecordFactory {
         }
         return sortedResults;
     }
-    
+
     public static int getContinuationSegmentNumber(final String objectID, final IEntryResult continuationResult) {
         // The header portion of the continuation record is of the form:
         // RECORD_CONTINUATION|objectID|segmentCount|
         char[] record  = continuationResult.getWord();
-        
+
         int segNumber = -1;
-        
+
         int index = objectID.length() + 4;
         if (record[index+1] == IndexConstants.RECORD_STRING.RECORD_DELIMITER) {
             // segment count < 10
@@ -294,13 +294,13 @@ public class RecordFactory {
         setRecordHeaderValues(model, tokens.get(tokenIndex++), tokens.get(tokenIndex++), tokens.get(tokenIndex++),
                              tokens.get(tokenIndex++), tokens.get(tokenIndex++),
                              tokens.get(tokenIndex++));
-        
+
         // The next token is the max set size
         tokenIndex++;
-        
+
         // The next token is the model type
         model.setPhysical(Integer.parseInt(tokens.get(tokenIndex++)) == 0);
-        
+
         // The next token is the primary metamodel Uri
         model.setPrimaryMetamodelUri(getObjectValue(tokens.get(tokenIndex++)));
 
@@ -320,12 +320,12 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final TransformationRecordImpl transform = new TransformationRecordImpl();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
         int tokenIndex = 2;
-        
+
         // The next token is the UUID of the transformed object
         transform.setUUID(getObjectValue(tokens.get(tokenIndex++)));
 
@@ -333,7 +333,7 @@ public class RecordFactory {
         if(includeTransformationUUID(indexVersion)) {
             tokenIndex++;
             //transform.setUUID(getObjectValue((tokens.get(tokenIndex++))));
-        }        
+        }
 
         // The next token is the transformation definition
         transform.setTransformation(getObjectValue(tokens.get(tokenIndex++)));
@@ -351,7 +351,7 @@ public class RecordFactory {
 
         return transform;
     }
-    
+
     protected static short getKeyTypeForRecordType(final char recordType) {
         switch (recordType) {
             case MetadataConstants.RECORD_TYPE.UNIQUE_KEY: return MetadataConstants.KEY_TYPES.UNIQUE_KEY;
@@ -372,7 +372,7 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Table table = new Table();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
@@ -434,7 +434,7 @@ public class RecordFactory {
         }
 
 		// The next tokens are footer values
-		setRecordFooterValues(table, tokens, tokenIndex);       
+		setRecordFooterValues(table, tokens, tokenIndex);
 
         return table;
     }
@@ -456,7 +456,7 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Column column = new Column();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
@@ -503,7 +503,7 @@ public class RecordFactory {
             // The next token is the distinct value
             column.setDistinctValues(Integer.parseInt(tokens.get(tokenIndex++)) );
             // The next token is the null value
-            column.setNullValues(Integer.parseInt(tokens.get(tokenIndex++)) );            
+            column.setNullValues(Integer.parseInt(tokens.get(tokenIndex++)) );
         }
 
         // The next token is the min value
@@ -541,7 +541,7 @@ public class RecordFactory {
     public ColumnSet createColumnSetRecord(final char[] record, ColumnSet columnSet) {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
@@ -571,7 +571,7 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final ForeignKey fkRecord = new ForeignKey();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
@@ -579,17 +579,17 @@ public class RecordFactory {
         setRecordHeaderValues(fkRecord, tokens.get(tokenIndex++), tokens.get(tokenIndex++),
                              tokens.get(tokenIndex++), tokens.get(tokenIndex++),
                              tokens.get(tokenIndex++), tokens.get(tokenIndex++));
-        
+
         // The next token are the UUIDs for the column references
         List<String> uuids = getStrings(tokens.get(tokenIndex++), getListDelimiter(indexVersion));
         fkRecord.setColumns(createColumns(uuids));
 
         // The next token is the UUID of the unique key
-        fkRecord.setUniqueKeyID(getObjectValue(tokens.get(tokenIndex++)));        
+        fkRecord.setUniqueKeyID(getObjectValue(tokens.get(tokenIndex++)));
 
 		// The next tokens are footer values
 		setRecordFooterValues(fkRecord, tokens, tokenIndex);
-        
+
         return fkRecord;
     }
 
@@ -600,9 +600,9 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Datatype dt = new Datatype();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
-        
+
         // The tokens are the standard header values
         int tokenIndex = 0;
 
@@ -634,39 +634,39 @@ public class RecordFactory {
         dt.setName(fullName);
         dt.setUUID(getObjectValue(tokens.get(tokenIndex++)));
         dt.setNameInSource(getObjectValue(tokens.get(tokenIndex++)));
-        
+
         // Set the variety type and its properties
         dt.setVarietyType(Variety.values()[Short.parseShort(tokens.get(tokenIndex++))]);
         tokenIndex++;
-        
+
         // Set the runtime and java class names
         dt.setRuntimeTypeName(getObjectValue(tokens.get(tokenIndex++)));
         dt.setJavaClassName(getObjectValue(tokens.get(tokenIndex++)));
-        
+
         // Set the datatype type
         dt.setType(Datatype.Type.values()[Short.parseShort(tokens.get(tokenIndex++))]);
-        
+
         // Set the search type
         dt.setSearchType(SearchType.values()[3 - Integer.parseInt(tokens.get(tokenIndex++))]);
-        
+
         // Set the null type
         dt.setNullType(NullType.values()[Integer.parseInt(tokens.get(tokenIndex++))]);
- 
+
         // Set the boolean flags
         char[] booleanValues = (tokens.get(tokenIndex++)).toCharArray();
         dt.setSigned(getBooleanValue(booleanValues[0]));
         dt.setAutoIncrement(getBooleanValue(booleanValues[1]));
         dt.setCaseSensitive(getBooleanValue(booleanValues[2]));
-        
+
         // Append the length
         dt.setLength( Integer.parseInt(tokens.get(tokenIndex++)) );
-        
+
         // Append the precision length
         dt.setPrecision( Integer.parseInt(tokens.get(tokenIndex++)) );
-        
+
         // Append the scale
         dt.setScale( Integer.parseInt(tokens.get(tokenIndex++)) );
-        
+
         // Append the radix
         dt.setRadix( Integer.parseInt(tokens.get(tokenIndex++)) );
 
@@ -677,8 +677,8 @@ public class RecordFactory {
         }
 
 		// The next tokens are footer values
-		setRecordFooterValues(dt, tokens, tokenIndex);       
-        
+		setRecordFooterValues(dt, tokens, tokenIndex);
+
         return dt;
     }
 
@@ -689,7 +689,7 @@ public class RecordFactory {
         final List<String> tokens = getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
         final Procedure procRd = new Procedure();
 
-        // Extract the index version information from the record 
+        // Extract the index version information from the record
         int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
@@ -724,11 +724,11 @@ public class RecordFactory {
         	cs.setUUID(rsId);
             procRd.setResultSet(cs);
         }
-        
+
         if (includeProcedureUpdateCount(indexVersion)) {
             procRd.setUpdateCount(Integer.parseInt(tokens.get(tokenIndex++)) - 1);
         }
-        
+
 		// The next tokens are footer values
 		setRecordFooterValues(procRd, tokens, tokenIndex);
 
@@ -809,7 +809,7 @@ public class RecordFactory {
 
         return paramRd;
     }
-    
+
     /**
      * Search for and return the version number associated with this record.
      * If no version information is found encoded in the record then the
@@ -837,17 +837,17 @@ public class RecordFactory {
     public String getObjectValue(final String str) {
         if (str != null && str.length() == 1 && str.charAt(0) == IndexConstants.RECORD_STRING.SPACE) {
             return null;
-        } 
+        }
         return str;
     }
 
     public boolean getBooleanValue(final char b) {
         if (b == IndexConstants.RECORD_STRING.TRUE) {
             return true;
-        } 
+        }
         return false;
     }
-    
+
     public static List<String> getStrings(final String record, final char listDelimiter) {
     	return getStrings(record.toCharArray(), listDelimiter);
     }
@@ -858,7 +858,7 @@ public class RecordFactory {
         }
         if (record.length == 1 && record[0] == IndexConstants.RECORD_STRING.SPACE) {
             return Collections.emptyList();
-        } 
+        }
         List<String> result = new ArrayList<String>();
         int start = 0;
         for (int i = 0; i < record.length; i++) {
@@ -874,7 +874,7 @@ public class RecordFactory {
         }
         return result;
     }
-    
+
     public char getListDelimiter(final int indexVersionNumber) {
         if (indexVersionNumber < DELIMITER_INDEX_VERSION) {
             return IndexConstants.RECORD_STRING.LIST_DELIMITER_OLD;
@@ -901,21 +901,21 @@ public class RecordFactory {
             return false;
         }
         return true;
-    }    
+    }
 
 	public boolean includeColumnNullDistinctValues(final int indexVersionNumber) {
         if (indexVersionNumber < COLUMN_NULL_DISTINCT_INDEX_VERSION) {
             return false;
         }
         return true;
-    } 
+    }
 
 	public boolean includePrimitiveTypeIdValue(final int indexVersionNumber) {
         if (indexVersionNumber < PRIMITIVE_TYPE_ID_INDEX_VERSION) {
             return false;
         }
         return true;
-    } 
+    }
 
     public boolean includeInputParameterFlag(final int indexVersionNumber) {
         if (indexVersionNumber < COLUMN_INPUT_PARAMETER_FLAG_INDEX_VERSION) {
@@ -937,7 +937,7 @@ public class RecordFactory {
         }
         return true;
     }
-    
+
     private static boolean includeProcedureUpdateCount(final int indexVersionNumber) {
         return (indexVersionNumber >= PROCEDURE_UPDATE_COUNT_VERSION);
     }
@@ -950,14 +950,14 @@ public class RecordFactory {
      * Set the "header" values on the specified MetadataRecord.
      * All index file record headers are of the form:
      * recordType|upperFullName|objectID|fullName|nameInSource|parentObjectID
-     * The order of the fields in the index file header must also 
+     * The order of the fields in the index file header must also
      * be the order of the arguments in method signature.
      */
-    private void setRecordHeaderValues(final AbstractMetadataRecord record, final String recordType, 
-                                              final String upperName, final String objectID, String fullName, 
-                                              final String nameInSource, 
+    private void setRecordHeaderValues(final AbstractMetadataRecord record, final String recordType,
+                                              final String upperName, final String objectID, String fullName,
+                                              final String nameInSource,
                                               final String parentObjectID) {
-        
+
         record.setUUID(getObjectValue(objectID));
         String parentName = fullName;
         if (fullName != null) {
@@ -1000,7 +1000,7 @@ public class RecordFactory {
      * Set the "footer" values on the specified MetadataRecord.
      * All index file record footers are of the form:
      * modelPath|name|indexVersion
-     * The order of the fields in the index file header must also 
+     * The order of the fields in the index file header must also
      * be the order of the arguments in method signature.
      */
     private void setRecordFooterValues(final AbstractMetadataRecord record, final List<String> tokens, int tokenIndex) {
@@ -1017,7 +1017,7 @@ public class RecordFactory {
 
     public String getOptionalToken( final List<String> tokens, int tokenIndex) {
         if(tokens.size() > tokenIndex) {
-            return tokens.get(tokenIndex);     
+            return tokens.get(tokenIndex);
         }
         return null;
     }

@@ -31,7 +31,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 
 @SuppressWarnings("nls")
 public class TestXMLReader {
-	
+
 	@Test public void testStreaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
 		xmlBuilder.append("<root>");
@@ -41,7 +41,7 @@ public class TestXMLReader {
 		}
 		xmlBuilder.append("</root>");
 		String xml = xmlBuilder.toString();
-		
+
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
 		XMLReader is = new XMLReader(source, XMLOutputFactory.newFactory());
 		String str = ObjectConverterUtil.convertToString(is);

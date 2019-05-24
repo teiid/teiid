@@ -43,12 +43,12 @@ import org.teiid.translator.UpdateExecution;
 public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExecution {
 	private Command command;
 	private int[] results;
-	
+
 	public JPQLUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
 		super(executionContext, metadata, em);
 		this.command = command;
 	}
-	
+
 	@Override
 	public void execute() throws TranslatorException {
 		if (this.command instanceof Insert) {
@@ -60,7 +60,7 @@ public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExec
 		else {
 			// update or delete
 			this.results = new int[1];
-			this.results[0] = executeUpdate(this.command);			
+			this.results[0] = executeUpdate(this.command);
 		}
 	}
 
@@ -83,12 +83,12 @@ public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExec
 	@Override
 	public void cancel() throws TranslatorException {
 	}
-	
+
 	private Object handleInsert(Insert insert) throws TranslatorException {
 		try {
 			String entityClassName = insert.getTable().getMetadataObject().getProperty(JPAMetadataProcessor.ENTITYCLASS, false);
 			Object entity = ReflectionHelper.create(entityClassName, null, this.executionContext.getCommandContext().getVDBClassLoader());
-			
+
 			List<ColumnReference> columns = insert.getColumns();
 			List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
 			if(columns.size() != values.size()) {
@@ -97,9 +97,9 @@ public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExec
 			for(int i = 0; i < columns.size(); i++) {
 				Column column = columns.get(i).getMetadataObject();
 				Object value = values.get(i);
-				
+
 				// do not add the derived columns
-				String name = column.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false); 				
+				String name = column.getProperty(JPAMetadataProcessor.KEY_ASSOSIATED_WITH_FOREIGN_TABLE, false);
 				if (name == null) {
 					if(value instanceof Literal) {
 						Literal literalValue = (Literal)value;
@@ -108,7 +108,7 @@ public class JPQLUpdateExecution extends JPQLBaseExecution implements UpdateExec
 						PropertiesUtils.setBeanProperty(entity, column.getName(), value);
 					}
 				}
-			}			
+			}
 			return entity;
 		} catch (TeiidException e) {
 			throw new TranslatorException(e);

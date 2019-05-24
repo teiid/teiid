@@ -35,37 +35,37 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
      * employing chunked uploads
      */
     public static final String STREAMING_BODY_SHA256 = "STREAMING-AWS4-HMAC-SHA256-PAYLOAD";
-    
+
     private static final String CLRF = "\r\n";
     private static final String CHUNK_STRING_TO_SIGN_PREFIX = "AWS4-HMAC-SHA256-PAYLOAD";
     private static final String CHUNK_SIGNATURE_HEADER = ";chunk-signature=";
     private static final int SIGNATURE_LENGTH = 64;
     private static final byte[] FINAL_CHUNK = new byte[0];
-    
+
     /**
      * Tracks the previously computed signature value; for chunk 0 this will
      * contain the signature included in the Authorization header. For
      * subsequent chunks it contains the computed signature of the prior chunk.
      */
     private String lastComputedSignature;
-    
+
     /**
      * Date and time of the original signing computation, in ISO 8601 basic
      * format, reused for each chunk
      */
     private String dateTimeStamp;
-    
+
     /**
      * The scope value of the original signing computation, reused for each chunk
      */
     private String scope;
-    
+
     /**
      * The derived signing key used in the original signature computation and
      * re-used for each chunk
      */
     private byte[] signingKey;
-    
+
     public AWS4SignerForChunkedUpload(URL endpointUrl, String httpMethod,
             String serviceName, String regionName) {
         super(endpointUrl, httpMethod, serviceName, regionName);
@@ -74,7 +74,7 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
     /**
      * Computes an AWS4 signature for a request, ready for inclusion as an
      * 'Authorization' header.
-     * 
+     *
      * @param headers
      *            The request headers; 'Host' and 'X-Amz-Date' will be added to
      *            this set.
@@ -105,22 +105,22 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
 
         // update the headers with required 'x-amz-date' and 'host' values
         headers.put("x-amz-date", dateTimeStamp);
-        
+
         String hostHeader = endpointUrl.getHost();
         int port = endpointUrl.getPort();
         if ( port > -1 ) {
             hostHeader.concat(":" + Integer.toString(port));
         }
         headers.put("Host", hostHeader);
-        
+
         // canonicalize the headers; we need the set of header names as well as the
         // names and values to go into the signature process
         String canonicalizedHeaderNames = getCanonicalizeHeaderNames(headers);
         String canonicalizedHeaders = getCanonicalizedHeaderString(headers);
-        
+
         // if any query string parameters have been supplied, canonicalize them
         String canonicalizedQueryParameters = getCanonicalizedQueryString(queryParameters);
-        
+
         // canonicalize the various components of the request
         String canonicalRequest = getCanonicalRequest(endpointUrl, httpMethod,
                 canonicalizedQueryParameters, canonicalizedHeaderNames,
@@ -128,7 +128,7 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
         LogManager.logDetail(LogConstants.CTX_WS,"--------- Canonical request --------");
         LogManager.logDetail(LogConstants.CTX_WS,canonicalRequest);
         LogManager.logDetail(LogConstants.CTX_WS,"------------------------------------");
-        
+
         // construct the string to be signed
         String dateStamp = dateStampFormat.format(now);
         this.scope =  dateStamp + "/" + regionName + "/" + serviceName + "/" + TERMINATOR;
@@ -136,7 +136,7 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
         LogManager.logDetail(LogConstants.CTX_WS,"--------- String to sign -----------");
         LogManager.logDetail(LogConstants.CTX_WS,stringToSign);
         LogManager.logDetail(LogConstants.CTX_WS,"------------------------------------");
-        
+
         // compute the signing key
         byte[] kSecret = (SCHEME + awsSecretKey).getBytes();
         byte[] kDate = sign(dateStamp, kSecret, "HmacSHA256");
@@ -144,10 +144,10 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
         byte[] kService = sign(serviceName, kRegion, "HmacSHA256");
         this.signingKey= sign(TERMINATOR, kService, "HmacSHA256");
         byte[] signature = sign(stringToSign, signingKey, "HmacSHA256");
-        
+
         // cache the computed signature ready for chunk 0 upload
         lastComputedSignature = BinaryUtils.toHex(signature);
-        
+
         String credentialsAuthorizationHeader =
                 "Credential=" + awsAccessKey + "/" + scope;
         String signedHeadersAuthorizationHeader =
@@ -162,10 +162,10 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
 
         return authorizationHeader;
     }
-    
+
     /**
      * Calculates the expanded payload size of our data when it is chunked
-     * 
+     *
      * @param originalLength
      *            The true size of the data payload to be uploaded
      * @param chunkSize
@@ -179,18 +179,18 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
         if (originalLength <= 0) {
             throw new IllegalArgumentException("Nonnegative content length expected.");
         }
-        
+
         long maxSizeChunks = originalLength / chunkSize;
         long remainingBytes =  originalLength % chunkSize;
         return maxSizeChunks * calculateChunkHeaderLength(chunkSize)
                 + (remainingBytes > 0? calculateChunkHeaderLength(remainingBytes) : 0)
                 + calculateChunkHeaderLength(0);
     }
-    
+
     /**
      * Returns the size of a chunk header, which only varies depending on the
      * selected chunk size
-     * 
+     *
      * @param chunkDataSize
      *            The intended size of each chunk; this is placed into the chunk
      *            header
@@ -205,13 +205,13 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
                 + chunkDataSize
                 + CLRF.length();
     }
-    
+
     /**
      * Returns a chunk for upload consisting of the signed 'header' or chunk
      * prefix plus the user data. The signature of the chunk incorporates the
      * signature of the previous chunk (or, if the first chunk, the signature of
      * the headers portion of the request).
-     * 
+     *
      * @param userDataLen
      *            The length of the user data contained in userData
      * @param userData
@@ -236,50 +236,50 @@ public class AWS4SignerForChunkedUpload extends AWS4SignerBase {
                 dataToChunk = userData;
             }
         }
-        
+
         StringBuilder chunkHeader = new StringBuilder();
-        
+
         // start with size of user data
         chunkHeader.append(Integer.toHexString(dataToChunk.length));
-        
+
         // nonsig-extension; we have none in these samples
         String nonsigExtension = "";
-        
+
         // if this is the first chunk, we package it with the signing result
         // of the request headers, otherwise we use the cached signature
         // of the previous chunk
-        
+
         // sig-extension
-        String chunkStringToSign = 
+        String chunkStringToSign =
                 CHUNK_STRING_TO_SIGN_PREFIX + "\n" +
                 dateTimeStamp + "\n" +
                 scope + "\n" +
                 lastComputedSignature + "\n" +
                 BinaryUtils.toHex(AWS4SignerBase.hash(nonsigExtension)) + "\n" +
                 BinaryUtils.toHex(AWS4SignerBase.hash(dataToChunk));
-        
+
         // compute the V4 signature for the chunk
         String chunkSignature = BinaryUtils.toHex(AWS4SignerBase.sign(chunkStringToSign, signingKey, "HmacSHA256"));
-        
+
         // cache the signature to include with the next chunk's signature computation
         lastComputedSignature = chunkSignature;
-        
+
         // construct the actual chunk, comprised of the non-signed extensions, the
         // 'headers' we just signed and their signature, plus a newline then copy
         // that plus the user's data to a payload to be written to the request stream
         chunkHeader.append(nonsigExtension + CHUNK_SIGNATURE_HEADER + chunkSignature);
         chunkHeader.append(CLRF);
-        
+
         try {
             byte[] header = chunkHeader.toString().getBytes("UTF-8");
             byte[] trailer = CLRF.getBytes("UTF-8");
             byte[] signedChunk = new byte[header.length + dataToChunk.length + trailer.length];
             System.arraycopy(header, 0, signedChunk, 0, header.length);
             System.arraycopy(dataToChunk, 0, signedChunk, header.length, dataToChunk.length);
-            System.arraycopy(trailer, 0, 
-                    signedChunk, header.length + dataToChunk.length, 
+            System.arraycopy(trailer, 0,
+                    signedChunk, header.length + dataToChunk.length,
                     trailer.length);
-            
+
             // this is the total data for the chunk that will be sent to the request stream
             return signedChunk;
         } catch (Exception e) {

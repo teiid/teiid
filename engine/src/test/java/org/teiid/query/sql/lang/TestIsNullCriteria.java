@@ -27,30 +27,30 @@ import junit.framework.*;
 public class TestIsNullCriteria extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestIsNullCriteria(String name) { 
+
+	public TestIsNullCriteria(String name) {
 		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################	
-		
+	}
+
+	// ################################## TEST HELPERS ################################
+
 	public static IsNullCriteria example(String element, boolean negated) {
 		IsNullCriteria crit = new IsNullCriteria();
         crit.setNegated(negated);
 		crit.setExpression(new ElementSymbol(element));
-		return crit;		    
+		return crit;
     }
-		
+
 	// ################################## ACTUAL TESTS ################################
-	
+
 	public void testEquals1() {
         IsNullCriteria c1 = example("abc", true); //$NON-NLS-1$
         IsNullCriteria c2 = example("abc", true); //$NON-NLS-1$
-        
+
 		assertTrue("Equivalent is null criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testEquals2() {    
+	public void testEquals2() {
         IsNullCriteria c1 = example("abc", false); //$NON-NLS-1$
         IsNullCriteria c2 = (IsNullCriteria)c1.clone();
 		assertTrue("Equivalent is null criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
@@ -70,15 +70,15 @@ public class TestIsNullCriteria extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
 	}
-	
+
 	public void testCloneEquivalence(){
         IsNullCriteria c1 = example("abc", false); //$NON-NLS-1$
-        
+
         IsNullCriteria c2 = (IsNullCriteria)c1.clone();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}	
-	
+	}
+
     public void testNonEquivalence1(){
         //test transitivity with two nonequal Objects
         IsNullCriteria c1 = example("abc", true); //$NON-NLS-1$
@@ -86,7 +86,7 @@ public class TestIsNullCriteria extends TestCase {
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, c1, c2);
     }
-    
+
     public void testNonEquivalence2(){
         IsNullCriteria c1 = example("abc", true); //$NON-NLS-1$
         IsNullCriteria c2 = example("abc", false); //$NON-NLS-1$

@@ -31,24 +31,24 @@ import org.apache.cxf.rs.security.oauth2.grants.saml.Saml2BearerGrant;
 
 public abstract class SAMLBearerTokenLoginModule extends OAuth20LoginModule {
     private String scope;
-    
+
     @Override
     public void initialize(Subject subject, CallbackHandler handler, Map<String, ?> sharedState, Map<String, ?> options) {
        super.initialize(subject, handler, sharedState, options);
-       
+
        this.scope = (String) options.get("scope"); //$NON-NLS-1$
     }
-    
+
     @Override
     public boolean login() throws LoginException {
         this.callerSubject = getSubject();
         this.callerPrincipal = getPrincipal();
-        
+
         final String samlToken = getSAMLResponseToken();
         if (samlToken == null) {
             return false;
         }
-        
+
         OAuth20CredentialImpl cred = new OAuth20CredentialImpl() {
             protected ClientAccessToken getAccessToken() {
                 Consumer consumer = new Consumer(getClientId(), getClientSecret());
@@ -61,7 +61,7 @@ public abstract class SAMLBearerTokenLoginModule extends OAuth20LoginModule {
                     grant = new Saml2BearerGrant(samlToken);
                 }
                 return OAuthClientUtils.getAccessToken(client, consumer, grant, null, false);
-            }            
+            }
         };
         cred.setClientId(getClientId());
         cred.setClientSecret(getClientSecret());

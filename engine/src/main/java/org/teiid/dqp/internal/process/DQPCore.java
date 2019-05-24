@@ -98,13 +98,13 @@ import io.opentracing.tag.Tags;
  * Implements the core DQP processing.
  */
 public class DQPCore implements DQP {
-	
+
 	public interface CompletionListener<T> {
 		void onCompletion(FutureWork<T> future);
 	}
-	
+
 	private TeiidExecutor processWorkerPool;
-    
+
     // Resources
     private BufferManager bufferManager;
     private TempTableDataManager dataTierMgr;
@@ -112,14 +112,14 @@ public class DQPCore implements DQP {
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private EventDistributor eventDistributor;
-    
+
     private DQPConfiguration config = new DQPConfiguration();
-    
+
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
-    
-	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
+
+	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();
 	private Map<String, ClientState> clientState = new ConcurrentHashMap<String, ClientState>();
-    
+
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS;
     private volatile int currentlyActivePlans;
     private AtomicLong totalPlansProcessed = new AtomicLong();
@@ -127,17 +127,17 @@ public class DQPCore implements DQP {
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private volatile int maxWaitingPlans = 0;
 	private AuthorizationValidator authorizationValidator;
-	
+
 	private EnhancedTimer cancellationTimer;
 	private Options options;
 
 	private ExecutorService timeoutExecutor;
-	
+
 	private LocalProfile localProfile;
 	private SessionService sessionService;
-	
+
 	private volatile boolean shutdown;
-    
+
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      */
@@ -162,7 +162,7 @@ public class DQPCore implements DQP {
     	// TODO: Should we be doing more cleanup here??
 		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
     }
-    
+
     /**
      * Return a list of {@link RequestMetadata} for the given session
      */
@@ -173,7 +173,7 @@ public class DQPCore implements DQP {
     	}
         return buildRequestInfos(state.getRequests(), -1);
     }
-    
+
     public ClientState getClientState(String key, boolean create) {
     	if (key == null) {
     		return null;
@@ -187,16 +187,16 @@ public class DQPCore implements DQP {
     }
 
     /**
-     * Return a list of all {@link RequestMetadata} 
+     * Return a list of all {@link RequestMetadata}
      */
     public List<RequestMetadata> getRequests() {
 		return buildRequestInfos(requests.keySet(), -1);
-    } 
-    
+    }
+
     public List<RequestMetadata> getLongRunningRequests(){
     	return buildRequestInfos(requests.keySet(), System.currentTimeMillis() - this.config.getQueryThresholdInMilli() );
     }
-    
+
     public int getLongRunningRequestCount(){
         long longRunningQueryThreshold = System.currentTimeMillis() - this.config.getQueryThresholdInMilli();
         int count = 0;
@@ -210,13 +210,13 @@ public class DQPCore implements DQP {
 
     private List<RequestMetadata> buildRequestInfos(Collection<RequestID> ids, long longRunningQueryThreshold) {
 		List<RequestMetadata> results = new ArrayList<RequestMetadata>();
-    	
+
 		for (RequestID requestID : ids) {
             RequestWorkItem holder = requests.get(requestID);
-            
+
             if(holder != null && !holder.isCanceled() && (longRunningQueryThreshold == -1 || holder.getProcessingTimestamp() < longRunningQueryThreshold)) {
             	RequestMetadata req = new RequestMetadata();
-            	
+
             	req.setExecutionId(holder.requestID.getExecutionID());
             	req.setSessionId(holder.requestID.getConnectionID());
             	req.setCommand(holder.requestMsg.getCommandString());
@@ -264,18 +264,18 @@ public class DQPCore implements DQP {
                 	info.setState(conInfo.isCanceled()?ProcessingState.CANCELED:conInfo.isDone()?ProcessingState.DONE:ProcessingState.PROCESSING);
         			results.add(info);
                 }
-                
+
             	results.add(req);
             }
         }
     	return results;
-	}    
+	}
 
     @Override
     public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) throws TeiidProcessingException {
     	return executeRequest(reqID, requestMsg, null);
     }
-    
+
 	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg, Long queryTimeout) throws TeiidProcessingException {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
     	checkActive(workContext);
@@ -303,7 +303,7 @@ public class DQPCore implements DQP {
 		    if (this.config.getPreParser() != null) {
 		        //chain the preparsing effect
 		        request.setPreParser(new PreParser() {
-                    
+
                     @Override
                     public String preParse(String command, org.teiid.CommandContext context) {
                         String preParse = config.getPreParser().preParse(command, context);
@@ -319,7 +319,7 @@ public class DQPCore implements DQP {
 		request.setUserRequestConcurrency(this.getUserRequestSourceConcurrency());
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
         final RequestWorkItem workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
-    	logMMCommand(workItem, Event.NEW, null, null); 
+    	logMMCommand(workItem, Event.NEW, null, null);
         addRequest(requestID, workItem, state);
         long timeout = workContext.getVDB().getQueryTimeout();
         timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, config.getQueryTimeout()>0?config.getQueryTimeout():Long.MAX_VALUE);
@@ -351,7 +351,7 @@ public class DQPCore implements DQP {
 			} else {
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		            LogManager.logDetail(LogConstants.CTX_DQP, workItem.requestID, "Queuing plan, since max plans has been reached.");  //$NON-NLS-1$
-		        }  
+		        }
 				waitingPlans.add(workItem);
 				maxWaitingPlans = Math.max(this.maxWaitingPlans, waitingPlans.size());
 			}
@@ -362,7 +362,7 @@ public class DQPCore implements DQP {
         }
         return resultsFuture;
     }
-	
+
 	public ResultsFuture<ResultsMessage> processCursorRequest(long reqID,
 			int batchFirst, int fetchSize) throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -394,7 +394,7 @@ public class DQPCore implements DQP {
 			this.currentlyActivePlans++;
 		}
 	}
-	
+
     void finishProcessing(final RequestWorkItem workItem) {
     	synchronized (waitingPlans) {
     		if (!workItem.active) {
@@ -412,15 +412,15 @@ public class DQPCore implements DQP {
             LogManager.logDetail(LogConstants.CTX_DQP, workItem.requestID, "Finished Processing");  //$NON-NLS-1$
         }
     }
-    
+
     public int getActivePlanCount() {
     	return this.currentlyActivePlans;
     }
-    
+
     public long getTotalPlansProcessed() {
         return this.totalPlansProcessed.get();
     }
-    
+
     public boolean blockOnOutputBuffer(RequestWorkItem item) {
     	synchronized (waitingPlans) {
     		if (!waitingPlans.isEmpty()) {
@@ -432,17 +432,17 @@ public class DQPCore implements DQP {
 		}
     	return true;
     }
-    
+
     public int getWaitingPlanCount() {
         synchronized (waitingPlans) {
             return waitingPlans.size();
         }
     }
-    
+
     public int getMaxWaitingPlanWatermark() {
         return this.maxWaitingPlans;
     }
-    
+
     void removeRequest(final RequestWorkItem workItem) {
     	finishProcessing(workItem);
     	this.requests.remove(workItem.requestID);
@@ -451,7 +451,7 @@ public class DQPCore implements DQP {
     		state.removeRequest(workItem.requestID);
     	}
     }
-    
+
     void addWork(Runnable work) {
         try {
             this.processWorkerPool.execute(work);
@@ -462,17 +462,17 @@ public class DQPCore implements DQP {
             LogManager.logDetail(LogConstants.CTX_DQP, e, "In the process of shutting down, work will not be started"); //$NON-NLS-1$
         }
     }
-    
+
     Future<Void> scheduleWork(final Runnable r, long delay) {
     	return this.cancellationTimer.add(r, delay);
     }
-    
+
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,
 			long requestId, String streamId)
 			throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
-        }   
+        }
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestWorkItem workItem = safeGetWorkItem(workContext.getRequestID(requestId));
         if (workItem != null) {
@@ -480,19 +480,19 @@ public class DQPCore implements DQP {
         }
         return ResultsFuture.NULL_FUTURE;
     }
-	    
+
 	public ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId,
 			long requestId, String streamId)
 			throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request for next Lob chunk with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
-        }  
+        }
         RequestWorkItem workItem = getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(requestId));
         ResultsFuture<LobChunk> resultsFuture = new ResultsFuture<LobChunk>();
         workItem.processLobChunkRequest(streamId, lobRequestId, resultsFuture.getResultsReceiver());
         return resultsFuture;
     }
-    
+
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws TeiidProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
@@ -500,19 +500,19 @@ public class DQPCore implements DQP {
     	}
     	return result;
     }
-    
+
 	RequestWorkItem safeGetWorkItem(Object processorID) {
     	return this.requests.get(processorID);
 	}
-	
+
     public WorkerPoolStatisticsMetadata getWorkerPoolStatistics() {
     	return this.processWorkerPool.getStats();
     }
-    
+
     public TeiidExecutor getProcessWorkerPool() {
         return processWorkerPool;
     }
-           
+
     public void terminateSession(String sessionId) {
         // sometimes there will not be any atomic requests pending, in that
         // situation we still need to clear the master request from our map
@@ -526,13 +526,13 @@ public class DQPCore implements DQP {
 				}
 	        }
         }
-        
+
         try {
             transactionService.cancelTransactions(sessionId, false);
         } catch (XATransactionException err) {
             LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30005,sessionId));
         }
-        
+
         if (state != null && state.sessionTables != null) {
             try {
                 state.sessionTables.removeTempTables();
@@ -546,7 +546,7 @@ public class DQPCore implements DQP {
     	RequestID requestID = new RequestID(sessionId, executionId);
     	return cancelRequest(requestID, "by an admin operation"); //$NON-NLS-1$
     }
-    
+
     public PlanNode getPlan(String sessionId, long executionId) {
     	RequestID requestID = new RequestID(sessionId, executionId);
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
@@ -562,13 +562,13 @@ public class DQPCore implements DQP {
         }
         return qp.getProcessorPlan().getDescriptionProperties();
     }
-    
+
     private boolean cancelRequest(RequestID requestID, String reason) throws TeiidComponentException {
         boolean markCancelled = false;
-        
+
         RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
-        	markCancelled = workItem.requestCancel(reason); 
+        	markCancelled = workItem.requestCancel(reason);
         }
     	if (markCancelled) {
             logMMCommand(workItem, Event.CANCEL, null, null);
@@ -577,23 +577,23 @@ public class DQPCore implements DQP {
     	}
         return markCancelled;
     }
-    
+
 	public ResultsFuture<?> closeRequest(long requestId) throws TeiidProcessingException, TeiidComponentException {
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         closeRequest(workContext.getRequestID(requestId));
         return ResultsFuture.NULL_FUTURE;
 	}
-    
+
     /**
-     * Close the request with given ID 
+     * Close the request with given ID
      * @param requestID
-     * @throws TeiidComponentException 
+     * @throws TeiidComponentException
      */
     void closeRequest(RequestID requestID) throws TeiidComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "closeQuery for requestID=" + requestID); //$NON-NLS-1$
         }
-        
+
         RequestWorkItem workItem = safeGetWorkItem(requestID);
         if (workItem != null) {
         	workItem.requestClose();
@@ -601,15 +601,15 @@ public class DQPCore implements DQP {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID + " close call ignored as the request has already been removed."); //$NON-NLS-1$
         }
     }
-    
+
 	public Collection<TransactionMetadata> getTransactions() {
 		return this.transactionService.getTransactions();
 	}
-	
+
 	public void terminateTransaction(String xid) throws AdminException {
 		this.transactionService.terminateTransaction(xid);
-	}	
-	
+	}
+
     void logMMCommand(RequestWorkItem workItem, Event status, Long rowCount, Long cpuTime) {
     	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
     			|| (status == Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE))) {
@@ -618,7 +618,7 @@ public class DQPCore implements DQP {
     		}
     		//else tracing is enabled
     	}
-    	
+
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = workItem.requestID;
@@ -666,11 +666,11 @@ public class DQPCore implements DQP {
         }
         LogManager.log(status == Event.PLAN?MessageLevel.TRACE:MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
-    
+
     public TempTableDataManager getDataTierManager() {
     	return this.dataTierMgr;
     }
-    
+
 	public BufferManager getBufferManager() {
 		return bufferManager;
 	}
@@ -682,19 +682,19 @@ public class DQPCore implements DQP {
 	SessionAwareCache<CachedResults> getRsCache() {
 		return rsCache;
 	}
-	
+
     public SessionAwareCache<CachedResults> getResltSetCache() {
         return rsCache;
     }
-	
+
 	int getProcessorTimeSlice() {
 		return this.config.getTimeSliceInMilli();
-	}	
-	
+	}
+
 	int getChunkSize() {
 		return chunkSize;
 	}
-	
+
 	public void start(DQPConfiguration theConfig) {
 		this.config = theConfig;
         this.authorizationValidator = config.getAuthorizationValidator();
@@ -706,18 +706,18 @@ public class DQPCore implements DQP {
         timeoutExecutor = new TracedExecutorService(ExecutorUtils.newFixedThreadPool(3, "Server Side Timeout"), GlobalTracerInjector.getTracer()); //$NON-NLS-1$
         this.cancellationTimer = new EnhancedTimer(timeoutExecutor, timeoutExecutor);
         this.maxActivePlans = config.getMaxActivePlans();
-        
+
         if (this.maxActivePlans > config.getMaxThreads()) {
         	LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30006, this.maxActivePlans, config.getMaxThreads()));
         	this.maxActivePlans = config.getMaxThreads();
         }
-        
+
         //for now options are scoped to the engine - vdb scoping is a todo
         options = new Options();
         options.setAssumeMatchingCollation(false);
         options.setProperties(config.getProperties());
         PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
-        
+
         this.bufferManager.setOptions(options);
         //hack to set the max active plans
         this.bufferManager.setMaxActivePlans(this.maxActivePlans);
@@ -726,17 +726,17 @@ public class DQPCore implements DQP {
 		} catch (TeiidComponentException e) {
 			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30496, e);
 		}
-        
+
         this.userRequestSourceConcurrency = config.getUserRequestSourceConcurrency();
         if (this.userRequestSourceConcurrency < 1) {
         	this.userRequestSourceConcurrency = Math.min(config.getMaxThreads(), 2*config.getMaxThreads()/this.maxActivePlans);
         }
-        
+
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this, this.bufferManager, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
 		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.rsCache);
 		dataTierMgr.setExecutor(new TempTableDataManager.RequestExecutor() {
-			
+
 			@Override
 			public void execute(String command, List<?> parameters) {
 				final String sessionId = DQPWorkContext.getWorkContext().getSessionId();
@@ -756,10 +756,10 @@ public class DQPCore implements DQP {
 							ResultsFuture<ResultsMessage> future) {
 						terminateSession(sessionId);
 					}
-					
+
 				});
 			}
-			
+
 			@Override
 			public boolean isShutdown() {
 			    return shutdown;
@@ -768,33 +768,33 @@ public class DQPCore implements DQP {
         dataTierMgr.setEventDistributor(eventDistributor);
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
-	
+
 	public void setBufferManager(BufferManager mgr) {
 		this.bufferManager = mgr;
 	}
-	
+
 	public void setTransactionService(TransactionService service) {
 		this.transactionService = service;
 	}
-	
+
 	public void setEventDistributor(EventDistributor eventDistributor) {
 		this.eventDistributor = eventDistributor;
 	}
-	
+
 	@Override
 	public boolean cancelRequest(long requestID)
 			throws TeiidProcessingException, TeiidComponentException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		return this.cancelRequest(workContext.getRequestID(requestID), "by the client"); //$NON-NLS-1$
 	}
-	
+
 	// local txn
 	public ResultsFuture<?> begin() throws XATransactionException {
     	String threadId = DQPWorkContext.getWorkContext().getSessionId();
     	this.getTransactionService().begin(threadId);
     	return ResultsFuture.NULL_FUTURE;
 	}
-	
+
 	// local txn
 	public ResultsFuture<?> commit() throws XATransactionException {
 		final String threadId = DQPWorkContext.getWorkContext().getSessionId();
@@ -807,7 +807,7 @@ public class DQPCore implements DQP {
 		};
 		return addWork(processor, 0);
 	}
-	
+
 	// local txn
 	public ResultsFuture<?> rollback() throws XATransactionException {
 		final String threadId = DQPWorkContext.getWorkContext().getSessionId();
@@ -845,7 +845,7 @@ public class DQPCore implements DQP {
 		this.getTransactionService().forget(workContext.getSessionId(), xid, workContext.getSession().isEmbedded());
 		return ResultsFuture.NULL_FUTURE;
 	}
-		
+
 	// global txn
 	public ResultsFuture<Integer> prepare(final XidImpl xid) throws XATransactionException {
 		Callable<Integer> processor = new Callable<Integer>() {
@@ -880,7 +880,7 @@ public class DQPCore implements DQP {
 		}
 		return result;
 	}
-	
+
 	// global txn
 	public ResultsFuture<Xid[]> recover(int flag) throws XATransactionException {
 		ResultsFuture<Xid[]> result = new ResultsFuture<Xid[]>();
@@ -941,47 +941,47 @@ public class DQPCore implements DQP {
 			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, workContext.getVDB(), workContext.getVDB().getStatus()));
 		}
 	}
-	
+
 	public boolean isExceptionOnMaxSourceRows() {
 		return this.config.isExceptionOnMaxSourceRows();
 	}
-	
+
 	public int getMaxSourceRows() {
 		return this.config.getMaxSourceRows();
 	}
-	
+
 	public int getMaxRowsFetchSize() {
 		return this.config.getMaxRowsFetchSize();
 	}
-	
+
 	public void setResultsetCache(SessionAwareCache<CachedResults> cache) {
 		this.rsCache = cache;
 	}
-	
+
 	public void setPreparedPlanCache(SessionAwareCache<PreparedPlan> cache) {
 		this.prepPlanCache = cache;
-	}	
-	
+	}
+
 	public int getUserRequestSourceConcurrency() {
 		return userRequestSourceConcurrency;
 	}
-	
+
 	void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
 		this.userRequestSourceConcurrency = userRequestSourceConcurrency;
 	}
-	
+
 	public int getMaxActivePlans() {
 		return maxActivePlans;
 	}
-	
+
 	public SessionAwareCache<PreparedPlan> getPrepPlanCache() {
 		return prepPlanCache;
 	}
-	
+
 	public String getRuntimeVersion() {
 		return ApplicationInfo.getInstance().getBuildNumber();
 	}
-	
+
 	public interface ResultsListener {
 	    void onResults(List<String> columns,  List<? extends List<?>> results) throws Exception;
 	}
@@ -1000,7 +1000,7 @@ public class DQPCore implements DQP {
 	 */
     public static ResultsFuture<?> executeQuery(final Object command, final VDBMetaData vdb, final String user, final String app,
             final long timeoutInMilli, final DQPCore engine, final ResultsListener listener) throws Throwable {
-        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb); 
+        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, app, vdb);
 
         final long requestID =  0L;
 
@@ -1014,7 +1014,7 @@ public class DQPCore implements DQP {
 
         final ResultsFuture<Void> resultFuture = new ResultsFuture<Void>();
         resultFuture.addCompletionListener(new ResultsFuture.CompletionListener<Void>() {
-        	
+
         	@SuppressWarnings("unchecked")
 			@Override
         	public void onCompletion(ResultsFuture<Void> future) {
@@ -1025,7 +1025,7 @@ public class DQPCore implements DQP {
 	                	@Override
 	                	public void onCompletion(ResultsFuture future) {
 	                          engine.terminateSession(session.getSessionId());
-	              		  	}		                    		
+	              		  	}
 	                	}
 	    			);
 				} catch (Exception e) {
@@ -1033,7 +1033,7 @@ public class DQPCore implements DQP {
 				}
         	}
 		});
-        
+
         workContext.runInContext(new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -1048,7 +1048,7 @@ public class DQPCore implements DQP {
                 request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
                 ResultsFuture<ResultsMessage> message = engine.executeRequest(requestID, request, timeoutInMilli);
                 message.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
-                	
+
                 	@Override
                 	public void onCompletion(
                 			ResultsFuture<ResultsMessage> future) {
@@ -1098,7 +1098,7 @@ public class DQPCore implements DQP {
         });
         return resultFuture;
 	}
-    
+
     /**
      * The localprofile to use if this is an embedded DQP
      * @param localProfile
@@ -1110,7 +1110,7 @@ public class DQPCore implements DQP {
     public void setSessionService(SessionService sessionService) {
         this.sessionService = sessionService;
     }
-    
+
     public SessionService getSessionService() {
         return sessionService;
     }

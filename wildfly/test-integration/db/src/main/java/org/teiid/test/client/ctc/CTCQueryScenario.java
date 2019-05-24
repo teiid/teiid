@@ -29,18 +29,18 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 /**
  * The CTCQueryScenario represents the tests that were created using the old xml file formats.
- *  
+ *
  * @author vanhalbert
  *
  */
 @SuppressWarnings("nls")
 public class CTCQueryScenario extends QueryScenario {
-    
-     
+
+
     public CTCQueryScenario(String scenarioName, Properties querySetProperties) {
 	super(scenarioName, querySetProperties);
     }
-    
+
     protected void setUp() {
 
 	try {
@@ -61,11 +61,11 @@ public class CTCQueryScenario extends QueryScenario {
 
     }
 
- 
-    @Override 
-    public ExpectedResults getExpectedResults(String querySetID) {    
+
+    @Override
+    public ExpectedResults getExpectedResults(String querySetID) {
 	return new XMLExpectedResults( querySetID, this.getProperties());
-    }    
+    }
 
 
 
@@ -79,29 +79,29 @@ public class CTCQueryScenario extends QueryScenario {
 	if (getResultsMode().equalsIgnoreCase(TestProperties.RESULT_MODES.COMPARE)) {
 	    if (tr.getStatus() != TestResult.RESULT_STATE.TEST_EXCEPTION) {
 			try {
-			    this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(), 
-				    sql, 
-				    resultSet, 
-				    resultException, 
+			    this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(),
+				    sql,
+				    resultSet,
+				    resultException,
 				    tr.getStatus(), isOrdered(sql), -1,  resultFromQuery);
-	
+
 			} catch (QueryTestFailedException qtf) {
 			    resultException = (resultException != null ? resultException
 				    : qtf);
 			    tr.setException(resultException);
 			    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
-	
+
 			}
 	    }
 
 	    if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
 			try {
-			    
+
 			    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
 				    tr.getQueryID(), sql, resultSet, resultException,
 				    this.getExpectedResults(tr.getQuerySetID()).getResultsFile(tr.getQueryID()) );
-			    
-	
+
+
 			} catch (QueryTestFailedException qtfe) {
 			    throw new TransactionRuntimeException(qtfe.getMessage());
 			}
@@ -110,10 +110,10 @@ public class CTCQueryScenario extends QueryScenario {
 	} else if (getResultsMode().equalsIgnoreCase(TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
 
 	    try {
-		
+
 			this.getResultsGenerator().generateQueryResultFile(tr.getQuerySetID(),
 				tr.getQueryID(), sql, resultSet, resultException, tr.getStatus());
-		
+
 	    } catch (QueryTestFailedException qtfe) {
 		throw new TransactionRuntimeException(qtfe.getMessage());
 	    }
@@ -133,9 +133,9 @@ public class CTCQueryScenario extends QueryScenario {
 	}
 
 
-	
+
     }
-    
+
 
     private boolean isOrdered(String sql) {
 

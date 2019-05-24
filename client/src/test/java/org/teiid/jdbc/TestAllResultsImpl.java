@@ -61,7 +61,7 @@ public class TestAllResultsImpl {
 	@Before public void setUp() throws Exception {
 		statement = TestResultSet.createMockStatement(TYPE_SCROLL_SENSITIVE);
 	}
-	
+
 	/** test hasNext(), actual result set should return FALSE. */
 	@Test public void testHasNext1() throws Exception {
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg1(),
@@ -72,7 +72,7 @@ public class TestAllResultsImpl {
 
 		boolean actual = rs.hasNext();
 		boolean expected = false;
-		assertEquals(expected, actual); 
+		assertEquals(expected, actual);
 
 		rs.close();
 	}
@@ -89,7 +89,7 @@ public class TestAllResultsImpl {
 
 		boolean actual = rs.hasNext();
 		boolean expected = true;
-		assertEquals(expected, actual); 
+		assertEquals(expected, actual);
 
 		rs.close();
 	}
@@ -121,7 +121,7 @@ public class TestAllResultsImpl {
 			// walk through and compare
 			List actual = rs.getCurrentRecord();
 			List expected = results[i];
-			assertEquals(expected, actual); 
+			assertEquals(expected, actual);
 			i++;
 		}
 
@@ -132,7 +132,7 @@ public class TestAllResultsImpl {
 	@Test public void testNext3() throws Exception {
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg1(),
 				statement);
-		assertEquals(new Integer(0), new Integer(rs.getRow())); 
+		assertEquals(new Integer(0), new Integer(rs.getRow()));
 
 		rs.close();
 	}
@@ -147,7 +147,7 @@ public class TestAllResultsImpl {
 			rs.next();
 			List actual = rs.getCurrentRecord();
 			List expected = results[i];
-			assertEquals(expected, actual); 
+			assertEquals(expected, actual);
 		}
 
 		rs.close();
@@ -163,7 +163,7 @@ public class TestAllResultsImpl {
 
 		boolean actual = rs.hasNext();
 		boolean expected = false;
-		assertEquals(expected, actual); 
+		assertEquals(expected, actual);
 
 		rs.close();
 	}
@@ -187,7 +187,7 @@ public class TestAllResultsImpl {
 			actual = (String) rs.getObject(2);
 		}
 
-		assertEquals(expected, actual); 
+		assertEquals(expected, actual);
 
 		rs.close();
 	}
@@ -217,11 +217,11 @@ public class TestAllResultsImpl {
 				statement);
 
 		int expected = 0;
-		assertEquals(expected, rs.getRow()); 
+		assertEquals(expected, rs.getRow());
 
 		if (rs.next()) {
 			expected = 1;
-			assertEquals(expected, rs.getRow()); 
+			assertEquals(expected, rs.getRow());
 		}
 		rs.close();
 
@@ -241,7 +241,7 @@ public class TestAllResultsImpl {
 		while (rs.previous()) {
 			List expected = new ArrayList(1);
 			expected.add(new Integer(i + 1));
-			assertEquals(expected, rs.getCurrentRecord()); 
+			assertEquals(expected, rs.getCurrentRecord());
 			i--;
 		}
 
@@ -255,7 +255,7 @@ public class TestAllResultsImpl {
 
 		rs.next();
 		List actual = rs.getCurrentRecord();
-		assertEquals(results[0], actual); 
+		assertEquals(results[0], actual);
 		rs.close();
 	}
 
@@ -263,13 +263,13 @@ public class TestAllResultsImpl {
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2a(),
 				statement);
 		ResultSetMetaData rmetadata = rs.getMetaData();
-		assertEquals(2, rmetadata.getColumnCount()); 
+		assertEquals(2, rmetadata.getColumnCount());
 
 		String[] columnNames = columnNames();
 		String[] dataTypes = dataTypes();
 		for (int i = 0; i < 2; i++) {
-			assertEquals(columnNames[i], rmetadata.getColumnLabel(i + 1)); 
-			assertEquals(dataTypes[i], rmetadata.getColumnTypeName(i + 1)); 
+			assertEquals(columnNames[i], rmetadata.getColumnLabel(i + 1));
+			assertEquals(dataTypes[i], rmetadata.getColumnTypeName(i + 1));
 		}
 		rs.close();
 	}
@@ -295,14 +295,14 @@ public class TestAllResultsImpl {
 		Properties p = new Properties();
 		stub(c.getConnectionProps()).toReturn(p);
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2(), s);
-		assertEquals(500, rs.getFetchSize()); 
+		assertEquals(500, rs.getFetchSize());
 		rs.setFetchSize(100);
 		assertEquals(100, rs.getFetchSize());
-		
+
 		//ensure that disabling works as well
 		p.setProperty(ResultSetImpl.DISABLE_FETCH_SIZE, Boolean.TRUE.toString());
 		rs = new ResultSetImpl(exampleResultsMsg2(), s);
-		assertEquals(500, rs.getFetchSize()); 
+		assertEquals(500, rs.getFetchSize());
 		rs.setFetchSize(100);
 		assertEquals(500, rs.getFetchSize());
 	}
@@ -324,7 +324,7 @@ public class TestAllResultsImpl {
 
 		// right before the first row
 		boolean actual = rs.isBeforeFirst();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 		rs.close();
 	}
 
@@ -333,7 +333,7 @@ public class TestAllResultsImpl {
 
 		// right before the first row
 		boolean actual = rs.isBeforeFirst();
-		assertEquals(false, actual); 
+		assertEquals(false, actual);
 		rs.close();
 	}
 
@@ -353,7 +353,7 @@ public class TestAllResultsImpl {
 		// move cursor to the first row
 		rs.next();
 		boolean actual = rs.isFirst();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 		rs.close();
 	}
 
@@ -363,7 +363,7 @@ public class TestAllResultsImpl {
 		// move cursor to the first row
 		rs.next();
 		boolean actual = rs.isFirst();
-		assertEquals(false, actual); 
+		assertEquals(false, actual);
 		rs.close();
 	}
 
@@ -387,7 +387,7 @@ public class TestAllResultsImpl {
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2a(),
 				statement);
 
-		assertEquals(1, rs.findColumn("IntNum")); //$NON-NLS-1$ 
+		assertEquals(1, rs.findColumn("IntNum")); //$NON-NLS-1$
 		rs.close();
 	}
 
@@ -396,7 +396,7 @@ public class TestAllResultsImpl {
 
 		// move cursor to the last row
 		boolean actual = rs.isLast();
-		assertEquals(false, actual); 
+		assertEquals(false, actual);
 	}
 
 	@Test public void testIsLast2() throws Exception {
@@ -404,7 +404,7 @@ public class TestAllResultsImpl {
 
 		// move cursor to the last row
 		boolean actual = rs.isLast();
-		assertEquals(false, actual); 
+		assertEquals(false, actual);
 	}
 
 	@Test(expected=SQLException.class) public void testLast1() throws Exception {
@@ -421,12 +421,12 @@ public class TestAllResultsImpl {
 		rs.next();
 		// move to 2nd row
 		boolean actual = rs.relative(1);
-		assertEquals(true, actual); 
-		assertEquals(2, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(2, rs.getRow());
 
 		actual = rs.relative(-1);
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 		rs.close();
 	}
 
@@ -446,7 +446,7 @@ public class TestAllResultsImpl {
 		rs.afterLast();
 
 		// the expected row == 0 because it pasts the last row
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 		rs.close();
 	}
 
@@ -456,12 +456,12 @@ public class TestAllResultsImpl {
 		// the last row
 		rs.last();
 		boolean actual = rs.isAfterLast();
-		assertEquals(false, actual); 
+		assertEquals(false, actual);
 
 		// move after the last row
 		rs.next();
 		actual = rs.isAfterLast();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 		rs.close();
 	}
 
@@ -470,7 +470,7 @@ public class TestAllResultsImpl {
 
 		// right before the first row
 		boolean actual = rs.isBeforeFirst();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 		rs.close();
 	}
 
@@ -484,7 +484,7 @@ public class TestAllResultsImpl {
 		// move back to before first row
 		rs.beforeFirst();
 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 		rs.close();
 	}
 
@@ -494,10 +494,10 @@ public class TestAllResultsImpl {
 		// move cursor to the first row
 		rs.next();
 		boolean actual = rs.isFirst();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 
 		// check row number
-		assertEquals(1, rs.getRow()); 
+		assertEquals(1, rs.getRow());
 		rs.close();
 	}
 
@@ -506,20 +506,20 @@ public class TestAllResultsImpl {
 
 		// move cursor to the first row
 		boolean actual = rs.first();
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 
 		// move cursor to the first row starting from the last row
 		rs.afterLast();
 		actual = rs.first();
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 
 		// move cursor to the first row from random number;
 		rs.absolute(3);
 		actual = rs.first();
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 		rs.close();
 	}
 
@@ -529,10 +529,10 @@ public class TestAllResultsImpl {
 		// check whether the movement of cursor is successful
 		rs.last();
 		boolean actual = rs.isLast();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 
 		// check row number
-		assertEquals(5, rs.getRow()); 
+		assertEquals(5, rs.getRow());
 		rs.close();
 	}
 
@@ -541,10 +541,10 @@ public class TestAllResultsImpl {
 
 		// check whether the movement of cursor is successful
 		boolean actual = rs.last();
-		assertEquals(true, actual); 
+		assertEquals(true, actual);
 
 		// check weather the current row is the last row
-		assertEquals(5, rs.getRow()); 
+		assertEquals(5, rs.getRow());
 		rs.close();
 	}
 
@@ -557,12 +557,12 @@ public class TestAllResultsImpl {
 		// move to 2nd row
 		boolean actual = rs.relative(1);
 
-		assertEquals(true, actual); 
-		assertEquals(2, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(2, rs.getRow());
 
 		actual = rs.relative(-1);
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 		rs.close();
 	}
 
@@ -579,8 +579,8 @@ public class TestAllResultsImpl {
 		// test if move before first
 		actual = rs.relative(-3);
 		// relative should return false when not on a row
-		assertEquals(false, actual); 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(false, actual);
+		assertEquals(0, rs.getRow());
 
 		// test if move after last
 		// this line is very important because it positions the cursor in a
@@ -589,8 +589,8 @@ public class TestAllResultsImpl {
 		rs.next();
 		actual = rs.relative(7);
 		// should return false because it's not on a valid row
-		assertEquals(false, actual); 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(false, actual);
+		assertEquals(0, rs.getRow());
 		rs.close();
 	}
 
@@ -608,7 +608,7 @@ public class TestAllResultsImpl {
 		}
 		assertEquals(
 				" Should still be before the first row ", true, rs.isBeforeFirst()); //$NON-NLS-1$
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 
 		try {
 			rs.relative(2);
@@ -618,7 +618,7 @@ public class TestAllResultsImpl {
 		}
 		assertEquals(
 				" Should still be before the first row ", true, rs.isBeforeFirst()); //$NON-NLS-1$
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 		// test if move after last will work or not
 
 		rs.afterLast();
@@ -631,7 +631,7 @@ public class TestAllResultsImpl {
 		}
 		assertEquals(
 				" Should still be after the last row. ", true, rs.isAfterLast()); //$NON-NLS-1$
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 		try {
 			rs.relative(-2);
 			fail("relative move from an invalid row should fail"); //$NON-NLS-1$
@@ -640,7 +640,7 @@ public class TestAllResultsImpl {
 		}
 		assertEquals(
 				" Should still be after the last row. ", true, rs.isAfterLast()); //$NON-NLS-1$
-		assertEquals(0, rs.getRow()); 
+		assertEquals(0, rs.getRow());
 		rs.close();
 	}
 
@@ -650,22 +650,22 @@ public class TestAllResultsImpl {
 
 		// start from beginning
 		boolean actual = rs.absolute(1);
-		assertEquals(true, actual); 
-		assertEquals(1, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(1, rs.getRow());
 
 		actual = rs.absolute(12);
-		assertEquals(false, actual); 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(false, actual);
+		assertEquals(0, rs.getRow());
 
 		// start from right after last
 		rs.afterLast();
 		actual = rs.absolute(-1);
-		assertEquals(true, actual); 
-		assertEquals(5, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(5, rs.getRow());
 
 		actual = rs.absolute(-2);
-		assertEquals(true, actual); 
-		assertEquals(4, rs.getRow()); 
+		assertEquals(true, actual);
+		assertEquals(4, rs.getRow());
 		rs.close();
 	}
 
@@ -674,17 +674,17 @@ public class TestAllResultsImpl {
 		ResultSetImpl rs = helpGetNoResults(TYPE_SCROLL_SENSITIVE);
 
 		// start from beginning
-		assertEquals(false, rs.absolute(1)); 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(false, rs.absolute(1));
+		assertEquals(0, rs.getRow());
 
 		// start from right after last
 		rs.afterLast();
-		assertEquals(false, rs.absolute(-1)); 
-		assertEquals(0, rs.getRow()); 
+		assertEquals(false, rs.absolute(-1));
+		assertEquals(0, rs.getRow());
 
 		rs.close();
 	}
-	
+
 	/**
 	 * 3 batches
 	 */
@@ -692,19 +692,19 @@ public class TestAllResultsImpl {
 		int fetchSize = 5;
 		int batchLength = 4;
 		int totalLength = 10;
-		
+
 		ResultSetImpl rs = helpTestBatching(statement, fetchSize, batchLength,
 				totalLength);
-		
+
 		assertTrue(rs.absolute(6));
 		assertTrue(rs.absolute(-1));
 		assertFalse(rs.next());
-		
+
 		for (int i = 0; i < totalLength; i++) {
 			assertTrue(rs.previous());
 		}
 	}
-    
+
     @Test(expected=TeiidSQLException.class) public void testResultsMessageException() throws Exception {
         ResultsMessage resultsMsg = exampleMessage(exampleResults1(1), new String[] { "IntNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$
         resultsMsg.setFinalRow(-1);
@@ -717,12 +717,12 @@ public class TestAllResultsImpl {
         cs.next();
         cs.next();
     }
-	
+
 	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
 			final int totalLength) throws TeiidProcessingException, SQLException {
 		return helpTestBatching(statement, fetchSize, batchLength, totalLength, false);
 	}
-    
+
 	static ResultSetImpl helpTestBatching(StatementImpl statement, final int fetchSize, final int batchLength,
 			final int totalLength, final boolean partial) throws TeiidProcessingException, SQLException {
 		DQP dqp = statement.getDQP();
@@ -754,7 +754,7 @@ public class TestAllResultsImpl {
 	static List<Object>[] exampleResults1(int length) {
 		return exampleResults1(length, 1);
 	}
-	
+
 	static List<Object>[] exampleResults1(int length, int begin) {
 		List<Object>[] results = new List[length];
 
@@ -811,14 +811,14 @@ public class TestAllResultsImpl {
 	private ResultsMessage exampleResultsMsg1() {
 		return exampleMessage(exampleResults1(5), new String[] { "IntNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$
 	}
-	
+
 	private ResultsMessage exampleMessage(List<Object>[] results, String[] columnNames, String[] datatypes) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage();
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(columnNames);
-		resultsMsg.setDataTypes(datatypes); 
+		resultsMsg.setDataTypes(datatypes);
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
@@ -848,7 +848,7 @@ public class TestAllResultsImpl {
 	private ResultsMessage exampleResultsMsg3() {
 		return exampleMessage(new List[0], new String[] { "IntNum", "StringNum" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	static ResultsMessage exampleResultsMsg4(int begin, int length, boolean lastBatch) {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
@@ -856,7 +856,7 @@ public class TestAllResultsImpl {
 		List[] results = exampleResults1(length, begin);
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntKey" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.INTEGER });
 		resultsMsg.setFirstRow(begin);
 		if (lastBatch) {
 			resultsMsg.setFinalRow(begin + results.length - 1);
@@ -876,28 +876,28 @@ public class TestAllResultsImpl {
 			assertEquals("The cursor is not on a valid row.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
-	
+
 	@Test public void testDateType() throws SQLException {
 		RequestMessage request = new RequestMessage();
 		request.setExecutionId(REQUEST_ID);
 		ResultsMessage resultsMsg = new ResultsMessage();
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
 		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
-		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.TIMESTAMP }); 
+		resultsMsg.setDataTypes(new String[] { DataTypeManager.DefaultDataTypes.TIMESTAMP });
 		resultsMsg.setFirstRow(1);
 		resultsMsg.setFinalRow(1);
 		resultsMsg.setLastRow(1);
 		ResultSetImpl rs = new ResultSetImpl(resultsMsg, statement);
 		assertTrue(rs.next());
 		//assumes the mock statement is setup with GMT-5 server and GMT-6 client
-		
+
 		//will adjust ahead one hour
 		assertEquals(new Timestamp(3600000), rs.getObject(1));
-		
+
 		//will be the same as the original
 		assertEquals(new Timestamp(0), rs.getTimestamp(1, Calendar.getInstance(TimeZone.getTimeZone("GMT-05:00")))); //$NON-NLS-1$
 	}
-	
+
 	@Test public void testWasNull() throws SQLException{
 		ResultsMessage message = exampleMessage(new List[] { Arrays.asList((String)null), Arrays.asList("1") }, new String[] { "string" }, //$NON-NLS-1$
 				new String[] { DataTypeManager.DefaultDataTypes.STRING });
@@ -909,10 +909,10 @@ public class TestAllResultsImpl {
 		assertTrue(rs.wasNull());
 		assertEquals(0, rs.getInt(1));
 		assertTrue(rs.wasNull());
-		assertEquals(0l, rs.getLong(1));
+		assertEquals(0L, rs.getLong(1));
 		assertTrue(rs.wasNull());
 		assertEquals(0f, rs.getFloat(1), 0);
-		assertTrue(rs.wasNull());		
+		assertTrue(rs.wasNull());
 		assertEquals(0d, rs.getDouble(1), 0);
 		assertTrue(rs.wasNull());
 		assertNull(rs.getString(1));
@@ -922,11 +922,11 @@ public class TestAllResultsImpl {
 		assertFalse(rs.wasNull());
 		assertFalse(rs.next());
 	}
-	
+
 	@Test public void testGetters() throws SQLException{
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00")); //$NON-NLS-1$
-		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$ 
-				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ 
+		ResultsMessage message = exampleMessage(new List[] { Arrays.asList(1, TimestampUtil.createTime(0, 0, 0), TimestampUtil.createDate(1, 1, 1), TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), "<root/>") }, //$NON-NLS-1$
+				new String[] { "int", "time", "date", "timestamp", "sqlxml" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 				new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.STRING });
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
 		ResultSetImpl rs = new ResultSetImpl(message, statement);
@@ -934,13 +934,13 @@ public class TestAllResultsImpl {
 		assertEquals(Boolean.TRUE.booleanValue(), rs.getBoolean(1));
 		assertEquals(1, rs.getShort(1));
 		assertEquals(1, rs.getInt(1));
-		assertEquals(1l, rs.getLong(1));
+		assertEquals(1L, rs.getLong(1));
 		assertEquals(1f, rs.getFloat(1), 0);
 		assertEquals(1d, rs.getDouble(1), 0);
 		assertEquals("1", rs.getString(1)); //$NON-NLS-1$
-		assertEquals(Integer.valueOf(1), rs.getObject(1)); 
+		assertEquals(Integer.valueOf(1), rs.getObject(1));
 		//the mock statement is in GMT-6 the server results are from GMT-5, so we expect them to display the same
-		assertEquals(TimestampUtil.createTime(0, 0, 0), rs.getTime(2)); 
+		assertEquals(TimestampUtil.createTime(0, 0, 0), rs.getTime(2));
 		assertEquals(TimestampUtil.createDate(1, 1, 1), rs.getDate(3));
 		assertEquals(TimestampUtil.createTimestamp(1, 1, 1, 1, 1, 1, 1), rs.getTimestamp(4));
 		assertEquals("<root/>", rs.getSQLXML(5).getString()); //$NON-NLS-1$

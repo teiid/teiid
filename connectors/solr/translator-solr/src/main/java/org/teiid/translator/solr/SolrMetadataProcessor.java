@@ -39,19 +39,19 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
     public void process(MetadataFactory metadataFactory,
             SolrConnection connection) throws TranslatorException {
         getConnectorMetadata(connection, metadataFactory);
-    }    
-    
+    }
+
 	public void getConnectorMetadata(SolrConnection conn, MetadataFactory metadataFactory) throws TranslatorException {
 		int count = 0;
 		LukeRequest request = new LukeRequest();
 		request.setShowSchema(true);
 		LukeResponse response = conn.metadata(request);
-		
+
 		Map<String, FieldInfo> fields = response.getFieldInfo();
-		
+
 		Table table = metadataFactory.addTable(conn.getCoreName());
 		table.setSupportsUpdate(true);
-		
+
 		for (String name:fields.keySet()) {
 			FieldInfo field = fields.get(name);
 			EnumSet<FieldFlag> flags = field.getFlags();
@@ -63,11 +63,11 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 						column = metadataFactory.addColumn(field.getName(), resolveType(field.getType())+"[]", table); //$NON-NLS-1$
 					}
 					else {
-						column = metadataFactory.addColumn(field.getName(), resolveType(field.getType()), table);	
+						column = metadataFactory.addColumn(field.getName(), resolveType(field.getType()), table);
 					}
 					column.setUpdatable(true);
 					column.setSearchType(SearchType.Searchable);
-						
+
 					// create primary key; and unique keys
 					if (field.getDistinct() > 0 || field.getName().equals("id")) { //$NON-NLS-1$
 						if (table.getPrimaryKey() == null) {
@@ -82,7 +82,7 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 			}
 		}
 	}
-	
+
 	private String resolveType(String solrType) {
 		if (solrType.equals("string") || solrType.startsWith("text_") || solrType.equals("alphaOnlySort") || solrType.equals("phonetic") || solrType.equals("payloads") ||solrType.equals("lowercase")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 			return DataTypeManager.DefaultDataTypes.STRING;
@@ -93,7 +93,7 @@ public class SolrMetadataProcessor implements MetadataProcessor<SolrConnection>{
 		else if (solrType.equals("boolean") || solrType.equals("tboolean") || solrType.equals("pboolean")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			return DataTypeManager.DefaultDataTypes.BOOLEAN;
 		}
-		else if (solrType.equals("binary")) { //$NON-NLS-1$ 
+		else if (solrType.equals("binary")) { //$NON-NLS-1$
 			return DataTypeManager.DefaultDataTypes.BLOB;
 		}
 		else if (solrType.equals("date") || solrType.equals("tdate") || solrType.equals("pdate")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

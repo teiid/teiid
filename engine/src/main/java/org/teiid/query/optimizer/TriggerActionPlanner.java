@@ -61,15 +61,15 @@ import org.teiid.query.util.CommandContext;
 
 
 public final class TriggerActionPlanner {
-	
+
 	public ProcessorPlan optimize(ProcedureContainer userCommand, TriggerAction ta, IDGenerator idGenerator, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, CommandContext context)
 	throws QueryMetadataException, TeiidComponentException, QueryResolverException, TeiidProcessingException {
 		//TODO consider caching the plans without using the changing vars
 		QueryRewriter.rewrite(ta, metadata, context, QueryResolver.getVariableValues(userCommand, true, metadata));
-		
+
 		QueryCommand query = null;
 		Map<ElementSymbol, Expression> params = new HashMap<ElementSymbol, Expression>();
-		
+
 		Map<ElementSymbol, Expression> mapping = QueryResolver.getVariableValues(userCommand, false, metadata);
 		for (Map.Entry<ElementSymbol, Expression> entry : mapping.entrySet()) {
 			entry.setValue(QueryRewriter.rewriteExpression(entry.getValue(), context, metadata));
@@ -151,29 +151,29 @@ public final class TriggerActionPlanner {
 			for (int i = 0; groups.contains(group); i++) {
 				group.setName("X_" + i);
 			}
-			
+
 			List<Expression> projectedSymbols = query.getProjectedSymbols();
 			Query queryExpression = QueryRewriter.createInlineViewQuery(group, query, metadata, projectedSymbols);
 			List<Expression> viewSymbols = new ArrayList<Expression>(queryExpression.getSelect().getSymbols());
-			
+
 			//switch to the values
 			queryExpression.getSelect().clearSymbols();
 			List<Expression> values = mapped.getValues();
 			queryExpression.getSelect().addSymbols(values);
 			values.clear();
-			
+
 			//update the mapping to the view symbols
             for (int i = 0; i < projectedSymbols.size(); i++) {
                 ElementSymbol es = insert.getVariables().get(i);
                 mapping.put(new ElementSymbol(es.getShortName(), new GroupSymbol(SQLConstants.Reserved.NEW)), SymbolMap.getExpression(viewSymbols.get(i)));
             }
-            
+
 			//map to the query form - changes references back to element form
 			SymbolMap queryMapping = new SymbolMap();
 			queryMapping.asUpdatableMap().putAll(mapping);
 			ExpressionMappingVisitor visitor = new RulePlanSubqueries.ReferenceReplacementVisitor(queryMapping);
 			DeepPostOrderNavigator.doVisit(queryExpression.getSelect(), visitor);
-			
+
 			//now we can return a plan based off a single insert statement
 			mapped.setQueryExpression(queryExpression);
 			return QueryOptimizer.optimizePlan(mapped, metadata, idGenerator, capFinder, analysisRecord, context);
@@ -218,5 +218,5 @@ public final class TriggerActionPlanner {
 		QueryCommand query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(ta.getView()))), ((FilteredCommand)userCommand).getCriteria(), null, null);
 		return query;
 	}
-        
+
 }

@@ -36,40 +36,40 @@ public class PreparedPlan implements Cachable {
 	private Command command;
 	private List<Reference> refs;
 	private AnalysisRecord analysisRecord;
-	
+
 	private AccessInfo accessInfo = new AccessInfo();
-	
+
 	/**
 	 * Return the ProcessorPlan.
 	 */
 	public ProcessorPlan getPlan(){
 		return plan;
 	}
-	
+
 	/**
 	 * Return the plan description.
 	 */
 	public AnalysisRecord getAnalysisRecord(){
 		return this.analysisRecord;
 	}
-	
+
 	/**
 	 * Return the Command .
 	 */
 	public Command getCommand(){
 		return command;
 	}
-	
+
 	/**
 	 * Return the list of Reference.
 	 */
 	public List<Reference> getReferences(){
 		return refs;
 	}
-	
+
 	/**
 	 * Set the ProcessorPlan.
-	 * @param context 
+	 * @param context
 	 */
 	public void setPlan(ProcessorPlan planValue, CommandContext context){
 		plan = planValue;
@@ -82,45 +82,45 @@ public class PreparedPlan implements Cachable {
 			}
 		}
 	}
-	
+
 	/**
 	 * Set the plan description.
 	 */
 	public void setAnalysisRecord(AnalysisRecord analysisRecord){
         this.analysisRecord = analysisRecord;
 	}
-	
+
 	/**
 	 * Set the Command.
 	 */
 	public void setCommand(Command commandValue){
 		command = commandValue;
 	}
-	
+
 	/**
 	 * Set the list of Reference.
 	 */
 	public void setReferences(List<Reference> refsValue){
 		refs = refsValue;
 	}
-	
+
 	@Override
 	public AccessInfo getAccessInfo() {
 		return accessInfo;
 	}
-	
+
 	@Override
 	public boolean prepare(TupleBufferCache bufferManager) {
 		return true; //no remotable actions
 	}
-	
+
 	@Override
 	public boolean restore(TupleBufferCache bufferManager) {
 		return true; //no remotable actions
 	}
-	
+
 	public boolean validate() {
 		return this.accessInfo.validate(false, 0);
 	}
-		
+
 }

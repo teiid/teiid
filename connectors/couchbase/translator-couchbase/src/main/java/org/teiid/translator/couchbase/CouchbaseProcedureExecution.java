@@ -44,9 +44,9 @@ import com.couchbase.client.java.query.N1qlQueryResult;
 import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseProcedureExecution extends CouchbaseExecution implements ProcedureExecution {
-    
+
     private final Call call;
-    
+
     private N1QLVisitor visitor;
     private Iterator<N1qlQueryRow> results;
 
@@ -57,7 +57,7 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
 
     @Override
     public void execute() throws TranslatorException {
-        
+
         this.visitor = this.executionFactory.getN1QLVisitor();
         this.visitor.append(call);
         String n1ql = this.visitor.toString();
@@ -84,22 +84,22 @@ public class CouchbaseProcedureExecution extends CouchbaseExecution implements P
                 Object value = new BlobType(new BlobImpl(isf));
                 result.add(value);
                 return result;
-            } 
+            }
         }
-        
+
         return null;
     }
-    
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         return Collections.emptyList();// not define out parameter
     }
-    
+
     @Override
     public void cancel() throws TranslatorException {
         close();
     }
-    
+
     @Override
     public void close() {
         this.results = null;

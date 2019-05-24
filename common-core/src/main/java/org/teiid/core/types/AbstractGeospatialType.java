@@ -28,22 +28,22 @@ import java.sql.Blob;
 
 /**
  * Base type for geography and geometry.
- * 
+ *
  * Simply a blob reference with an srid.
  */
 public abstract class AbstractGeospatialType extends BlobType {
 
     private int srid;
     private Reference<?> geoCache;
-    
+
     public AbstractGeospatialType() {
-        
+
     }
-    
+
     public AbstractGeospatialType(Blob blob) {
         super(blob);
     }
-    
+
     public AbstractGeospatialType(byte[] bytes) {
         super(bytes);
     }
@@ -55,20 +55,20 @@ public abstract class AbstractGeospatialType extends BlobType {
     public void setSrid(int srid) {
         this.srid = srid;
     }
-    
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
         out.writeInt(srid);
     }
-    
+
     @Override
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
         super.readExternal(in);
         srid = in.readInt();
     }
-    
+
     /**
      * Get the Object model representation of the geospatial value
      */
@@ -82,7 +82,7 @@ public abstract class AbstractGeospatialType extends BlobType {
         }
         return result;
     }
-    
+
     /**
      * Set the Object model representation of the geospatial value
      */
@@ -93,11 +93,11 @@ public abstract class AbstractGeospatialType extends BlobType {
             this.geoCache = new WeakReference(objectReference);
         }
     }
-    
+
     public synchronized void copyTo(AbstractGeospatialType geo) {
         geo.setGeoCache(geoCache==null?null:geoCache.get());
         geo.setSrid(srid);
         geo.setReference(this.reference);
     }
-    
+
 }

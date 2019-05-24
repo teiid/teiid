@@ -26,25 +26,25 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 
-/** 
- * The ValueIteratorSource lets a language object that needs a ValueIterator hold this 
- * reference to the source of the ValueIterator as a reference until the ValueIterator 
- * can be ready.  
- *  
+/**
+ * The ValueIteratorSource lets a language object that needs a ValueIterator hold this
+ * reference to the source of the ValueIterator as a reference until the ValueIterator
+ * can be ready.
+ *
  * @since 5.0.1
  */
 public interface ValueIteratorSource {
-    
+
     /**
-     * Attempt to obtain a ValueIterator from this source.  If the iterator is 
+     * Attempt to obtain a ValueIterator from this source.  If the iterator is
      * not ready yet, return null to indicate that.
-     * @param valueExpression The expression we are retrieving an iterator for  
+     * @param valueExpression The expression we are retrieving an iterator for
      * @return ValueIterator if ready, null otherwise
-     * @throws TeiidComponentException 
+     * @throws TeiidComponentException
      * @since 5.0.1
      */
     ValueIterator getValueIterator(Expression valueExpression) throws TeiidComponentException;
-    
+
     Set<Object> getCachedSet(Expression valueExpression) throws TeiidComponentException, TeiidProcessingException;
 
 	void setUnused(boolean unused);

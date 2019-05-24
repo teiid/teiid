@@ -37,9 +37,9 @@ public abstract class ConnectionStrategy {
 
     /**
      * Returns a connection
-     * 
+     *
      * @return Connection
-     * @throws QueryTestFailedException 
+     * @throws QueryTestFailedException
      */
     public abstract Connection getConnection() throws QueryTestFailedException;
 
@@ -59,7 +59,7 @@ public abstract class ConnectionStrategy {
     }
 
     /**
-     * @throws QueryTestFailedException  
+     * @throws QueryTestFailedException
      */
     public Connection getAdminConnection() throws QueryTestFailedException {
 	return null;
@@ -72,7 +72,7 @@ public abstract class ConnectionStrategy {
     }
 
     /**
-     * @throws QueryTestFailedException  
+     * @throws QueryTestFailedException
      */
     public XAConnection getXAConnection() throws QueryTestFailedException {
 	return null;
@@ -82,7 +82,7 @@ public abstract class ConnectionStrategy {
      * In certain testcases, the data that being provided is already
      * preconfigured and should not be touched by the {@link DataStore}
      * processing.
-     * 
+     *
      * @return
      */
     public boolean isDataStoreDisabled() {
@@ -98,14 +98,14 @@ public abstract class ConnectionStrategy {
     }
 
     /**
-     * @throws QueryTestFailedException  
+     * @throws QueryTestFailedException
      */
     void configure() throws QueryTestFailedException {
 //
 //	if (this.isDataStoreDisabled()) {
 //	    return;
 //	} else {
-//	    
+//
 //	 // commenting out until embedded testing is made available and its required to configure
 //	 // the vdb and bindings in this mannder
 //
@@ -129,8 +129,8 @@ public abstract class ConnectionStrategy {
 //			.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
 //		return;
 //	    }
-//	    
-//	   	   
+//
+//
 //	    // setupVDBConnectorBindings(admin);
 //
 //	    // admin.restart();
@@ -154,9 +154,9 @@ public abstract class ConnectionStrategy {
 
     // protected void setupVDBConnectorBindings(Admin api) throws
     // QueryTestFailedException {
-    //         
+    //
     // try {
-    //    	    
+    //
     // VDB vdb = null;
     // Set<VDB> vdbs = api.getVDBs();
     // if (vdbs == null || vdbs.isEmpty()) {
@@ -180,7 +180,7 @@ public abstract class ConnectionStrategy {
     // "GetVDBS did not return a vdb that matched "
     // + url.getVDBName());
     // }
-    //	    	    
+    //
     // List<Model> models = vdb.getModels();
     // Iterator<Model> modelIt = models.iterator();
     // while (modelIt.hasNext()) {
@@ -220,7 +220,7 @@ public abstract class ConnectionStrategy {
     // }
     //
     // }
-    //    		
+    //
     // } catch (QueryTestFailedException qt) {
     // throw qt;
     // } catch (Exception t) {
@@ -228,7 +228,7 @@ public abstract class ConnectionStrategy {
     // throw new QueryTestFailedException(t);
     // }
     //
-    //    	
+    //
     // }
 
     public synchronized Connection createDriverConnection(String identifier)

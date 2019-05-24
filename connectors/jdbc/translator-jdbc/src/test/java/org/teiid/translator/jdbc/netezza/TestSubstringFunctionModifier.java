@@ -45,51 +45,51 @@ public class TestSubstringFunctionModifier extends TestCase {
     }
 
     public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
-        Function func = LANG_FACTORY.createFunction("substring",  
+        Function func = LANG_FACTORY.createFunction("substring",
             Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
-        
+
         NetezzaExecutionFactory trans = new NetezzaExecutionFactory();
         trans.start();
 
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(func);  
-        
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(func);
+
         assertEquals(expectedStr, sqlVisitor.toString());
     }
 
     public void testTwoArgs() throws Exception {
         Expression[] args = new Expression[] {
-            LANG_FACTORY.createLiteral("a.b.c", String.class), 
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)           
-        }; 
-        helpTestMod(args, "substring('a.b.c', 1)"); 
+            LANG_FACTORY.createLiteral("a.b.c", String.class),
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
+        helpTestMod(args, "substring('a.b.c', 1)");
     }
 
     public void testThreeArgsWithConstant() throws Exception {
         Expression[] args = new Expression[] {
-            LANG_FACTORY.createLiteral("a.b.c", String.class), 
+            LANG_FACTORY.createLiteral("a.b.c", String.class),
             LANG_FACTORY.createLiteral(new Integer(3), Integer.class),
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
-        }; 
-        helpTestMod(args, "substring('a.b.c', 3, 1)"); 
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
+        helpTestMod(args, "substring('a.b.c', 3, 1)");
     }
 
     public void testThreeArgsWithElement() throws Exception {
         Expression[] args = new Expression[] {
-            LANG_FACTORY.createLiteral("a.b.c", String.class), 
-            LANG_FACTORY.createColumnReference("e1", null, null, Integer.class), 
-            LANG_FACTORY.createLiteral(new Integer(1), Integer.class) 
-        }; 
-        helpTestMod(args, "substring('a.b.c', e1, 1)"); 
+            LANG_FACTORY.createLiteral("a.b.c", String.class),
+            LANG_FACTORY.createColumnReference("e1", null, null, Integer.class),
+            LANG_FACTORY.createLiteral(new Integer(1), Integer.class)
+        };
+        helpTestMod(args, "substring('a.b.c', e1, 1)");
     }
 
     public void testThreeArgsWithNull() throws Exception {
         Expression[] args = new Expression[] {
-            LANG_FACTORY.createLiteral("a.b.c", String.class), 
+            LANG_FACTORY.createLiteral("a.b.c", String.class),
             LANG_FACTORY.createLiteral(null, Integer.class),
-            LANG_FACTORY.createLiteral(new Integer(5), Integer.class) 
-        }; 
-        helpTestMod(args, "substring('a.b.c', NULL, 5)"); 
+            LANG_FACTORY.createLiteral(new Integer(5), Integer.class)
+        };
+        helpTestMod(args, "substring('a.b.c', NULL, 5)");
     }
 
 }

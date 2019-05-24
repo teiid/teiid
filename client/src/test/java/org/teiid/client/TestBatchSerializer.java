@@ -43,7 +43,7 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.unittest.TimestampUtil;
 
 
-/** 
+/**
  * @since 4.2
  */
 @SuppressWarnings("nls")
@@ -53,12 +53,12 @@ public class TestBatchSerializer {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(byteStream);
         List<List<?>> batchList = Arrays.asList(batch);
-        
+
         BatchSerializer.writeBatch(out, types, batchList, version);
         out.flush();
-        
+
         byte[] bytes = byteStream.toByteArray();
-        
+
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytes);
         ObjectInputStream in = new ObjectInputStream(bytesIn);
         List<List<Object>> newBatch = BatchSerializer.readBatch(in, types);
@@ -68,7 +68,7 @@ public class TestBatchSerializer {
         assertTrue(batchList.equals(newBatch));
         return newBatch;
     }
-    
+
     private static final String[] sampleBatchTypes = {DataTypeManager.DefaultDataTypes.BIG_DECIMAL,
                                                       DataTypeManager.DefaultDataTypes.BIG_INTEGER,
                                                       DataTypeManager.DefaultDataTypes.BOOLEAN,
@@ -93,10 +93,10 @@ public class TestBatchSerializer {
         }
         return new String(chars);
     }
-    
+
     private static List<?>[] sampleBatchWithNulls(int rows) {
         List<?>[] batch = new List[rows];
-        
+
         for (int i = 0; i < rows; i++) {
         	java.util.Date d = new java.util.Date();
             int mod = i%16;
@@ -121,7 +121,7 @@ public class TestBatchSerializer {
         }
         return batch;
     }
-    
+
     @Test public void testSerializeBasicTypes() throws Exception {
         // The number 8 is important here because boolean isNull information is packed into bytes,
         // so we want to make sure the boundary cases are handled correctly
@@ -132,16 +132,16 @@ public class TestBatchSerializer {
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(833), BatchSerializer.CURRENT_VERSION); // A bunch of rows. This should also test large strings
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(4096), BatchSerializer.CURRENT_VERSION); // A bunch of rows. This should also test large strings
     }
-    
+
     @Test public void testSerializeLargeStrings() throws Exception {
         List<?> row = Arrays.asList(new Object[] {sampleString(66666)});
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.STRING}, new List[] {row}, BatchSerializer.CURRENT_VERSION);
     }
-    
+
     @Test public void testSerializeNoData() throws Exception {
         helpTestSerialization(sampleBatchTypes, new List[0], BatchSerializer.CURRENT_VERSION);
     }
-    
+
     @Test public void testSerializeDatatypeMismatch() throws Exception {
         try {
             helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DOUBLE}, new List[] {Arrays.asList(new Object[] {"Hello!"})}, BatchSerializer.CURRENT_VERSION); //$NON-NLS-1$
@@ -149,15 +149,15 @@ public class TestBatchSerializer {
             assertEquals("TEIID20001 The modeled datatype double for column 0 doesn't match the runtime type \"java.lang.String\". Please ensure that the column's modeled datatype matches the expected data.", e.getMessage()); //$NON-NLS-1$
         }
     }
-    
+
     @Test(expected=IOException.class) public void testOutOfRangeDate() throws Exception {
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DATE}, new List[] {Arrays.asList(TimestampUtil.createDate(-2, 0, 1))}, (byte)1);
     }
-    
+
     @Test public void testStringArray() throws IOException, ClassNotFoundException {
-    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1l, new ArrayImpl(new String[] {"Silly String", "Silly String"}))}, BatchSerializer.CURRENT_VERSION);
+    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1L, new ArrayImpl(new String[] {"Silly String", "Silly String"}))}, BatchSerializer.CURRENT_VERSION);
     }
-    
+
     @Test public void testGeometry() throws IOException, ClassNotFoundException {
     	GeometryType geometryType = new GeometryType(new byte[0]);
     	geometryType.setReferenceStreamId(null);
@@ -166,14 +166,14 @@ public class TestBatchSerializer {
 		assertTrue(val instanceof GeometryType);
 		assertEquals(10000, ((GeometryType)val).getSrid());
     	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
-    	
+
     	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
     	assertFalse(val instanceof GeometryType);
-    	
+
     	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
     	assertFalse(val instanceof GeometryType);
     }
-    
+
     @Test public void testGeography() throws IOException, ClassNotFoundException {
         GeometryType geometryType = new GeometryType(new byte[0]);
         geometryType.setReferenceStreamId(null);
@@ -182,24 +182,24 @@ public class TestBatchSerializer {
         assertTrue(val instanceof GeographyType);
         assertEquals(4326, ((GeographyType)val).getSrid());
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOGRAPHY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
-        
+
         val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOGRAPHY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
         assertFalse(val instanceof GeographyType);
-        
+
         val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
         assertFalse(val instanceof GeographyType);
     }
-    
+
     @Test public void testJson() throws IOException, ClassNotFoundException {
         JsonType json = new JsonType(new ClobImpl("5"));
         json.setReferenceStreamId(null);
         Object val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, BatchSerializer.VERSION_GEOGRAPHY).get(0).get(0);
         assertTrue(val instanceof JsonType);
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, (byte)0); //object serialization - should fail on the client side
-        
+
         val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.JSON}, new List[] {Arrays.asList(json)}, (byte)1).get(0).get(0); //clob serialization
         assertTrue(val instanceof ClobType);
-        
+
         val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(json)}, (byte)1).get(0).get(0); //clob serialization
         assertTrue(val instanceof ClobType);
     }

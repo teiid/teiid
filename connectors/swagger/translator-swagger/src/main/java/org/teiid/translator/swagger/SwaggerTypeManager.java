@@ -43,37 +43,37 @@ public class SwaggerTypeManager {
 
     private static final String INTEGER = "integer";
     private static final String INTEGER_ = typeFormat("integer", "int32");
-    
+
     private static final String LONG = "long";
     private static final String LONG_ = typeFormat("integer", "int64");
-    
-    private static final String FLOAT = "float";  
+
+    private static final String FLOAT = "float";
     private static final String FLOAT_ = typeFormat("number", "float");
-    
+
     private static final String DOUBLE = "double";
     private static final String DOUBLE_ = typeFormat("number", "double");
-    
+
     private static final String STRING = "string";
     private static final String STRING_ = typeFormat("string", "");
-    
+
     private static final String BYTE = "byte";
     private static final String BYTE_ = typeFormat("string", "byte");
-    
+
     private static final String BINARY = "binary";
     private static final String BINARY_ = typeFormat("string", "binary");
-    
+
     private static final String BOOLEAN = "boolean";
     private static final String BOOLEAN_ = typeFormat("boolean", "");
-    
+
     private static final String DATE = "date";
     private static final String DATE_ = typeFormat("string", "date");
-    
+
     private static final String DATETIME = "dateTime";
     private static final String DATETIME_ = typeFormat("string", "date-time");
-    
+
     private static final String PASSWORD = "password";
     private static final String PASSWORD_ = typeFormat("string", "password");
-    
+
     // this no swagger definition
     private static final String OBJECT = typeFormat("array", "");
 //    private static final String OBJECT_ = typeFormat("object", "");
@@ -81,9 +81,9 @@ public class SwaggerTypeManager {
     static String typeFormat(String type, String format){
         return type + "/" + format;
     }
-    
-    private static HashMap<String, String> swaggerTypes = new HashMap<String, String>();    
-    
+
+    private static HashMap<String, String> swaggerTypes = new HashMap<String, String>();
+
     static {
         swaggerTypes.put(INTEGER, DataTypeManager.DefaultDataTypes.INTEGER);
         swaggerTypes.put(INTEGER_, DataTypeManager.DefaultDataTypes.INTEGER);
@@ -107,11 +107,11 @@ public class SwaggerTypeManager {
         swaggerTypes.put(DATETIME_, DataTypeManager.DefaultDataTypes.TIMESTAMP);
         swaggerTypes.put(PASSWORD, DataTypeManager.DefaultDataTypes.STRING);
         swaggerTypes.put(PASSWORD_, DataTypeManager.DefaultDataTypes.STRING);
-        
+
         swaggerTypes.put(OBJECT, DataTypeManager.DefaultDataTypes.OBJECT);
-        
+
     }
-    
+
     static String teiidType(String name) {
         String type = swaggerTypes.get(name);
         if (type == null) {
@@ -119,31 +119,31 @@ public class SwaggerTypeManager {
         }
         return type ;
     }
-    
+
     static String teiidType(String type, String format, boolean array) {
         if(null == format) {
             format = "";
         }
         String returnType = swaggerTypes.get(typeFormat(type, format));
         if(null == returnType) {
-            returnType = DataTypeManager.DefaultDataTypes.STRING; 
+            returnType = DataTypeManager.DefaultDataTypes.STRING;
         }
         if (array) {
             returnType +="[]";
-        }        
+        }
         return returnType;
     }
-    
+
     static Object convertTeiidRuntimeType(Object value, Class<?> expectedType) throws TranslatorException {
-        
+
         if (value == null) {
             return null;
         }
-        
+
         if (expectedType.isAssignableFrom(value.getClass())) {
             return value;
         } else {
-            
+
             if(expectedType.isAssignableFrom(Timestamp.class) && value instanceof Long) {
                 return new Timestamp((Long)value);
             } else if (expectedType.isAssignableFrom(java.sql.Timestamp.class) && value instanceof String){
@@ -155,11 +155,11 @@ public class SwaggerTypeManager {
             } else if (expectedType.isArray() && value instanceof List) {
                 List<?> values = (List<?>)value;
                 Class<?> expectedArrayComponentType = expectedType.getComponentType();
-                Object array = Array.newInstance(expectedArrayComponentType, values.size());                
+                Object array = Array.newInstance(expectedArrayComponentType, values.size());
                 for (int i = 0; i < values.size(); i++) {
                     Object arrayItem = convertTeiidRuntimeType(values.get(i), expectedArrayComponentType);
                     Array.set(array, i, arrayItem);
-                }               
+                }
                 return array;
             }
 
@@ -174,7 +174,7 @@ public class SwaggerTypeManager {
         }
         return value;
     }
-    
+
     static Date formDate(String value) throws TranslatorException {
         try {
             DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -194,11 +194,11 @@ public class SwaggerTypeManager {
             } else {
                 cal = Calendar.getInstance(TimeZone.getTimeZone("GMT" + m.group(9)));
             }
-            
+
             cal.set(Integer.valueOf(m.group(1)), Integer.valueOf(m.group(2))-1,
                     Integer.valueOf(m.group(3)), Integer.valueOf(m.group(4)),
                     Integer.valueOf(m.group(5)), Integer.valueOf(m.group(6)));
-            
+
             Timestamp ts = new Timestamp(cal.getTime().getTime());
             if (m.group(7) != null) {
                 String fraction = m.group(7).substring(1);
@@ -212,7 +212,7 @@ public class SwaggerTypeManager {
                     .gs(SwaggerPlugin.Event.TEIID28011, timestampPattern));
         }
     }
-        
+
     static String timestampToString(Timestamp ts) {
         SimpleDateFormat timestampSDF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SZ");
         if (ts == null) {
@@ -224,7 +224,7 @@ public class SwaggerTypeManager {
         }
         return str;
     }
-    
+
     static String dateToString(Date date) {
         SimpleDateFormat dateSDF = new SimpleDateFormat("yyyy-MM-dd");
         if (date == null) {

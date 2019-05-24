@@ -26,21 +26,21 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * load the set of available datasources once for the duration of the entire
  * test suite. And it will maintain one {@link DataSource} for each
  * connection.properties file that it finds.
- * 
+ *
  * @author vanhalbert
- * 
+ *
  */
 @SuppressWarnings("nls")
 public class DataSourceMgr {
 
     private static DataSourceMgr _instance = null;
-    
+
     /**
      * Defines the default location where the datasource files will be found.
      * An override can be specified by setting the property {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC}.
      */
     public static final String DEFAULT_DATASOURCES_LOC="./src/main/resources/datasources/";
-    
+
     /**
      * When run from maven, the {@link ConfigPropertyNames#OVERRIDE_DATASOURCES_LOC} will be assigned
      * to this value because of its a place holder for when a user does set the vm argument.
@@ -59,12 +59,12 @@ public class DataSourceMgr {
     private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>(); // key
 											      // =
 											      // modelname
-    
+
     private DataSourceFactory dsfactory = null;
 
 
     private DataSourceMgr() {
-	
+
     }
 
     public static synchronized DataSourceMgr getInstance() {
@@ -81,7 +81,7 @@ public class DataSourceMgr {
 	}
 	return _instance;
     }
-    
+
     private static synchronized void reset() {
 	_instance = null;
     }
@@ -102,20 +102,20 @@ public class DataSourceMgr {
 	if (modelToDatasourceMap.containsKey(modelname)) {
 	    return modelToDatasourceMap.get(modelname);
 	}
-	
+
 	try {
 	    DataSource ds = dsfactory.getDatasource( modelname);
-	    
+
 		if (ds == null) {
 		    printAllDatasources();
-		    
+
 		    try {
 			Thread.sleep(100000);
 		    } catch (InterruptedException e) {
 		    }
 		   Thread.currentThread().getThreadGroup().stop();
-		   
-		   
+
+
 //			throw new QueryTestFailedException(
 //					"Unable to assign a datasource for model "
 //							+ modelname );
@@ -127,22 +127,22 @@ public class DataSourceMgr {
 	    throw new TransactionRuntimeException(e);
 	}
     }
-    
+
     private void printAllDatasources() {
 	Iterator<String> it=allDatasourcesMap.keySet().iterator();
 	while(it.hasNext()) {
 	    String key = it.next();
 	    DataSource ds = allDatasourcesMap.get(key);
 	    TestLogger.log("DataSource: " + ds.getName());
-	    
+
 	}
 
     }
 
-    
+
     public void shutdown() {
 	 TestLogger.log("Shutting down data sources");
-	 
+
 	if (allDatasourcesMap != null && allDatasourcesMap.size() > 0) {
 		Iterator<String> it=allDatasourcesMap.keySet().iterator();
 		while(it.hasNext()) {
@@ -151,13 +151,13 @@ public class DataSourceMgr {
 		    try {
 			ds.shutdown();
 		    } catch (Throwable t) {
-			
+
 		    }
 		}
-		
+
 		allDatasourcesMap.clear();
 	}
-	
+
 	if (modelToDatasourceMap != null || modelToDatasourceMap.size() > 0) {
 		Iterator<String> it=modelToDatasourceMap.keySet().iterator();
 		while(it.hasNext()) {
@@ -166,17 +166,17 @@ public class DataSourceMgr {
 		    try {
 			ds.shutdown();
 		    } catch (Throwable t) {
-			
+
 		    }
 		}
-		
+
 		modelToDatasourceMap.clear();
 	}
-	
+
 	if (dsfactory != null) dsfactory.cleanup();
-	
+
 	DataSourceMgr.reset();
-	
+
     }
 
     public void setDataSource(String modelName, DataSource ds) {
@@ -190,14 +190,14 @@ public class DataSourceMgr {
 	}
 
 	String dsloc = ConfigPropertyLoader.getInstance().getProperty(ConfigPropertyNames.OVERRIDE_DATASOURCES_LOC);
-	
+
 	if (dsloc == null || dsloc.indexOf(UNASSIGNEDDSLOC) > -1) {
 	    dsloc = DEFAULT_DATASOURCES_LOC;
 	    TestLogger.logDebug("Using default datasource loc: " +dsloc);
 	} else {
 	    TestLogger.logDebug("Using override for datasources loc: " + dsloc);
 	}
-	
+
 	File[] dirs = findAllChildDirectories(dsloc);
 	if (dirs == null || dirs.length == 0) {
 	    throw new TransactionRuntimeException(
@@ -217,13 +217,13 @@ public class DataSourceMgr {
 	} else if (allDatasourcesMap.size() < 2) {
 	    throw new TransactionRuntimeException(
 	    	"Error: Must load 2 Datasources, only 1 was found.");
- 
+
 	}
 
 	TestLogger.logDebug("Number of total datasource mappings loaded "
 		+ allDatasourcesMap.size());
-	
-	
+
+
 	dsfactory = new DataSourceFactory(ConfigPropertyLoader.getInstance());
 	dsfactory.config(this);
 
@@ -232,7 +232,7 @@ public class DataSourceMgr {
     /**
      * Returns a <code>File</code> array that will contain all the directories
      * that exist in the directory
-     * 
+     *
      * @return File[] of directories in the directory
      */
     private static File[] findAllChildDirectories(String dir) {
@@ -267,11 +267,11 @@ public class DataSourceMgr {
 
     }
 
-    private void addDataSource(File datasourcedir, 
+    private void addDataSource(File datasourcedir,
 	    Map<String, DataSource> datasources) {
-	
+
 	File dsfile = new File(datasourcedir, "connection.properties");
-	
+
 	if (!dsfile.exists()) {
 	    return;
 	}
@@ -292,10 +292,10 @@ public class DataSourceMgr {
 	Properties props = null;
 
 	try {
-	    
+
 	    props = PropertiesUtils.load(dsfile.getAbsolutePath());
 	    return props;
-	    
+
 	} catch (IOException e) {
 	    throw new TransactionRuntimeException(
 		    "Error loading properties from file '" + dsfile.getAbsolutePath() + "'"

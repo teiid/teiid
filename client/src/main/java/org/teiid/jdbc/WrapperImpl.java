@@ -27,7 +27,7 @@ import org.teiid.core.util.ArgCheck;
 public class WrapperImpl implements Wrapper {
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		ArgCheck.isNotNull(iface);
-		
+
 		return iface.isInstance(this);
 	}
 
@@ -35,7 +35,7 @@ public class WrapperImpl implements Wrapper {
 		if (!isWrapperFor(iface)) {
 			throw new SQLException(JDBCPlugin.Util.getString("WrapperImpl.wrong_class", iface)); //$NON-NLS-1$
 		}
-		
+
 		return iface.cast(this);
 	}
 

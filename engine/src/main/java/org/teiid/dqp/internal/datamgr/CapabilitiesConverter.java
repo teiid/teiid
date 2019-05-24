@@ -33,7 +33,7 @@ import org.teiid.translator.ExecutionFactory;
 
 
 /**
- * Utility to convert a ConnectorCapabilities class into a Map of 
+ * Utility to convert a ConnectorCapabilities class into a Map of
  * capabilities information that can be passed through the system.
  */
 public class CapabilitiesConverter {
@@ -44,7 +44,7 @@ public class CapabilitiesConverter {
     public static SourceCapabilities convertCapabilities(ExecutionFactory srcCaps) {
         return convertCapabilities(srcCaps, null);
     }
-    
+
     public static BasicSourceCapabilities convertCapabilities(ExecutionFactory srcCaps, Object connectorID) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         tgtCaps.setTranslator(srcCaps);
@@ -153,7 +153,7 @@ public class CapabilitiesConverter {
         	Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
         	Assertion.assertTrue(!srcCaps.supportsGroupBy());
         }
-        
+
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
             Iterator<String> iter = functions.iterator();
@@ -162,14 +162,14 @@ public class CapabilitiesConverter {
                 tgtCaps.setFunctionSupport(func, true);
             }
         }
-        
+
         List<FunctionMethod> pushDowns = srcCaps.getPushDownFunctions();
         if(pushDowns != null && pushDowns.size() > 0) {
             for(FunctionMethod func:pushDowns) {
                 tgtCaps.setFunctionSupport(func.getName(), true);
             }
         }
-        
+
         tgtCaps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(srcCaps.getMaxInCriteriaSize()));
         tgtCaps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, new Integer(srcCaps.getMaxDependentInPredicates()));
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);

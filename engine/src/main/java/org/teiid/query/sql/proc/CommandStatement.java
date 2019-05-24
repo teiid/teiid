@@ -55,13 +55,13 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 	 * @return The <code>Command</code> on this statement
 	 */
 	public Command getCommand() {
-		return command;	
+		return command;
 	}
 
     public void setCommand(Command command){
         this.command = command;
     }
-	
+
 	/**
 	 * Return the type for this statement, this is one of the types
 	 * defined on the statement object.
@@ -69,26 +69,26 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 	 */
 	public int getType() {
 		return Statement.TYPE_COMMAND;
-	}	
+	}
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
+
 	/**
 	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
-	public Object clone() {		
+	public Object clone() {
 		CommandStatement cs = new CommandStatement((Command)this.command.clone());
 		cs.returnable = this.returnable;
 		return cs;
 	}
-	
+
     /**
      * Compare two CommandStatements for equality.  They will only evaluate to equal if
      * they are IDENTICAL: the command objects are equal.
@@ -101,13 +101,13 @@ public class CommandStatement extends Statement implements SubqueryContainer {
     		return true;
 		}
 
-		// Quick fail tests		
+		// Quick fail tests
     	if(!(obj instanceof CommandStatement)) {
     		return false;
 		}
 
         return EquivalenceUtil.areEqual(getCommand(), ((CommandStatement)obj).getCommand());
-    } 
+    }
 
     /**
      * Get hashcode for CommandStatement.  WARNING: This hash code relies on the
@@ -118,13 +118,13 @@ public class CommandStatement extends Statement implements SubqueryContainer {
     	// This hash code relies on the commands hash code
     	return this.getCommand().hashCode();
 	}
-    
+
     public boolean isReturnable() {
 		return returnable;
 	}
-    
+
     public void setReturnable(boolean returnable) {
 		this.returnable = returnable;
 	}
-      
+
 } // END CLASS

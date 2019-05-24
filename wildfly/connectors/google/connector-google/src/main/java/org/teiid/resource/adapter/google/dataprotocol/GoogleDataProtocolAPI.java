@@ -49,10 +49,10 @@ import org.teiid.translator.google.api.result.RowsResult;
 import org.teiid.translator.google.api.result.SheetRow;
 
 /**
- * 
+ *
  * This class is used to make requests to Google Visualization Data Protocol. The most important
  * method is executeQuery.
- * 
+ *
  * @author fnguyen
  *
  */
@@ -60,7 +60,7 @@ public class GoogleDataProtocolAPI {
 	private AuthHeaderFactory headerFactory = null;
 	public static String ENCODING = "UTF-8"; //$NON-NLS-1$
 	private static GoogleJSONParser PARSER = new GoogleJSONParser();
-	
+
 	public AuthHeaderFactory getHeaderFactory() {
 		return headerFactory;
 	}
@@ -71,42 +71,42 @@ public class GoogleDataProtocolAPI {
 
 	/**
 	 * Most important method that will issue query [1] to specific worksheet. The columns in the query
-	 * should be identified by their real alphabetic name (A, B, C...). 
-	 * 
+	 * should be identified by their real alphabetic name (A, B, C...).
+	 *
 	 * There is one important restriction to query. It should not contain offset and limit clauses.
 	 * To achieve functionality of offset and limit please use corresponding parameters in this method.
-	 * 
-	 * 
+	 *
+	 *
 	 * [1] https://developers.google.com/chart/interactive/docs/querylanguage
-	 * 
+	 *
 	 * @param query The query defined in [1]
 	 * @param batchSize How big portions of data should be returned by one roundtrip to Google.
-	 * @return Iterable RowsResult that will actually perform the roundtrips to Google for data 
+	 * @return Iterable RowsResult that will actually perform the roundtrips to Google for data
 	 */
 	public RowsResult executeQuery(SpreadsheetInfo info, String worksheetTitle,
 			String query, int batchSize, Integer offset, Integer limit) {
-	
+
 		String key = info.getSpreadsheetKey();
-		
+
 		RowsResult result = new RowsResult(new DataProtocolQueryStrategy(key,worksheetTitle,query), batchSize);
 		if (offset!= null)
 			result.setOffset(offset);
 		if (limit != null)
 			result.setLimit(limit);
-		
+
 		return result;
 	}
-	
+
 	public List<Column> getMetadata(String key, String worksheetTitle) {
 		DataProtocolQueryStrategy dpqs = new DataProtocolQueryStrategy(key,worksheetTitle,"SELECT *"); //$NON-NLS-1$
 		dpqs.getResultsBatch(0, 1);
 		return dpqs.getMetadata();
 	}
-	
+
 	/**
 	 * Logic to query portion of data from Google Visualization Data Protocol. We do not use any special library just simple
 	 * Http request. Google sends response back in CSV that we parse afterwards.
-	 * 
+	 *
 	 * @author fnguyen
 	 *
 	 */
@@ -115,14 +115,14 @@ public class GoogleDataProtocolAPI {
 		private String worksheetName;
 		private String urlEncodedQuery;
 		private List<Column> metadata;
-		
+
 		public DataProtocolQueryStrategy(String key, String worksheetKey,
 				String query) {
 			super();
 			this.spreadsheetKey = key;
 			this.worksheetName = worksheetKey;
 			try {
-				this.urlEncodedQuery = URLEncoder.encode(query, ENCODING); 
+				this.urlEncodedQuery = URLEncoder.encode(query, ENCODING);
 			} catch (UnsupportedEncodingException e) {
 				throw new SpreadsheetOperationException(e);
 			}
@@ -143,7 +143,7 @@ public class GoogleDataProtocolAPI {
 			}
 			HttpGet get = new HttpGet("https://spreadsheets.google.com/tq?key="+spreadsheetKey+"&sheet="+worksheet+"&tqx=responseHandler:x;out:json&tq="+boundariedQuery);  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			get.setHeader("Authorization", headerFactory.getAuthHeader()); //$NON-NLS-1$
-			
+
 			try {
 				DefaultHttpClient client = new DefaultHttpClient();
 				try {
@@ -167,7 +167,7 @@ public class GoogleDataProtocolAPI {
 				Calendar cal = null;
 				Reader reader = null;
 				try {
-					reader = new InputStreamReader(response.getEntity().getContent(), Charset.forName(ENCODING));  
+					reader = new InputStreamReader(response.getEntity().getContent(), Charset.forName(ENCODING));
 					Map<?, ?> jsonResponse = (Map<?, ?>)PARSER.parseObject(reader, true);
 					String status = (String)jsonResponse.get("status"); //$NON-NLS-1$
 					if ("error".equals(status)) { //$NON-NLS-1$
@@ -182,10 +182,10 @@ public class GoogleDataProtocolAPI {
 							reasons.add(reason);
 						}
 						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Google request failed", errors); //$NON-NLS-1$
-						throw new SpreadsheetOperationException(reasons.toString());							
+						throw new SpreadsheetOperationException(reasons.toString());
 					}
 					//TODO: the warning could be sent to the client via the ExecutionContext
-					
+
 					Map<?,?> table = (Map<?,?>)jsonResponse.get("table"); //$NON-NLS-1$
 					List<Map<?, ?>> cols = (List<Map<?, ?>>) table.get("cols"); //$NON-NLS-1$
 					this.metadata = new ArrayList<Column>(cols.size());
@@ -217,7 +217,7 @@ public class GoogleDataProtocolAPI {
 								continue;
 							}
 							Object object = val.get("v"); //$NON-NLS-1$
-							
+
 							if (object != null) {
 								//special handling for time types
 								Column c = this.metadata.get(i);
@@ -229,14 +229,14 @@ public class GoogleDataProtocolAPI {
 						}
 						result.add(returnRow);
 					}
-					
+
 					return result;
 				} finally {
 					if (reader != null) {
 						reader.close();
 					}
 				}
-			} else if (response.getStatusLine().getStatusCode() == 500){ 
+			} else if (response.getStatusLine().getStatusCode() == 500){
 				//500 from server may not be a actual error. It can mean that offset is higher then actual result size. Can be solved by calling "count" first but performance penalty
 				return new ArrayList<SheetRow>();
 			}
@@ -257,21 +257,21 @@ public class GoogleDataProtocolAPI {
 		private String getQueryWithBoundaries(int amount, int offset) throws UnsupportedEncodingException {
 			String[] keywordsToJump = new String[] {"label","format","options"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			int indexToPut = urlEncodedQuery.length();
-			
+
 			for (String jumpIt : keywordsToJump){
 				int index = urlEncodedQuery.indexOf(jumpIt);
-				
+
 				if (index != -1) {
 					indexToPut = index;
 					break;
 				}
 			}
-			
-			return urlEncodedQuery.substring(0, indexToPut).toString() +URLEncoder.encode(" limit "+amount+" offset "+offset+" ",ENCODING).toString() //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+
+			return urlEncodedQuery.substring(0, indexToPut).toString() +URLEncoder.encode(" limit "+amount+" offset "+offset+" ",ENCODING).toString() //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					+ urlEncodedQuery.substring(indexToPut).toString();
-		}		
+		}
 	}
-	
+
 	static Object convertValue(Calendar cal, Object object, SpreadsheetColumnType type) {
 		switch (type) {
 		case DATE:
@@ -316,7 +316,7 @@ public class GoogleDataProtocolAPI {
 		}
 		return object;
 	}
-	
+
 }
 
 

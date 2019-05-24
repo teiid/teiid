@@ -29,7 +29,7 @@ import javax.transaction.xa.XAResource;
 
 public class BasicResourceAdapter implements ResourceAdapter {
 	BootstrapContext ctx;
-	
+
 	@Override
 	public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) throws ResourceException {
 		throw new UnsupportedOperationException("not supported"); //$NON-NLS-1$
@@ -57,7 +57,7 @@ public class BasicResourceAdapter implements ResourceAdapter {
 	public WorkManager getWorkManager() {
 		return ctx.getWorkManager();
 	}
-	
+
 	public XATerminator getXATerminator() {
 		return ctx.getXATerminator();
 	}

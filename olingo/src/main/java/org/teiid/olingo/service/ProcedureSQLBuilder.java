@@ -55,34 +55,34 @@ public class ProcedureSQLBuilder {
     private Procedure procedure;
     private ProcedureReturn procedureReturn;
     private OperationParameterValueProvider parameterValueProvider;
-    
+
     static class ProcedureReturn implements ProcedureReturnType {
         private EdmReturnType type;
         private Integer sqlType = null;
         private boolean hasResultSet;
-        
+
         public ProcedureReturn(EdmReturnType type, Integer sqlType, boolean hasResultSet) {
             this.type = type;
             this.sqlType = sqlType;
             this.hasResultSet = hasResultSet;
         }
-        
+
         @Override
         public EdmReturnType getReturnType() {
             return type;
         }
-        
+
         @Override
         public boolean hasResultSet() {
             return this.hasResultSet;
-        } 
-        
+        }
+
         @Override
         public Integer getSqlType() {
             return sqlType;
-        }        
+        }
     }
-    
+
     public ProcedureSQLBuilder(MetadataStore metadata, EdmOperation edmOperation,
             OperationParameterValueProvider parameterProvider, ArrayList<SQLParameter> params)
             throws TeiidProcessingException {
@@ -95,30 +95,30 @@ public class ProcedureSQLBuilder {
         this.sqlParameters = params;
         visit(edmOperation);
     }
-    
+
     /**
-     * 
+     *
      * @return the {@link ProcedureReturnType} or null if none is found
      */
     public ProcedureReturn getReturn() {
         return this.procedureReturn;
     }
-    
+
     private void visit(EdmOperation edmOperation) throws TeiidProcessingException {
         if (edmOperation.getReturnType() != null) {
             visit(edmOperation.getReturnType());
         }
-        
+
         for (String parameterName : edmOperation.getParameterNames()) {
             visit(edmOperation.getParameter(parameterName));
         }
     }
-    
+
     private boolean hasResultSet() {
         return this.procedure.getResultSet() != null;
     }
-    
-    private void visit(EdmReturnType returnType) {        
+
+    private void visit(EdmReturnType returnType) {
         if (hasResultSet()) {
             // this is complex type
             this.procedureReturn = new ProcedureReturn(returnType, null, true);
@@ -131,7 +131,7 @@ public class ProcedureSQLBuilder {
             this.procedureReturn = new ProcedureReturn(returnType, sqlType, false);
         }
     }
-    
+
     private ProcedureParameter getReturnParameter() {
         for (ProcedureParameter parameter: this.procedure.getParameters()) {
             if (parameter.getType().equals(ProcedureParameter.Type.ReturnValue)) {
@@ -147,11 +147,11 @@ public class ProcedureSQLBuilder {
         Object value = this.parameterValueProvider.getValue(edmParameter, runtimeType);
         this.sqlParameters.add(new SQLParameter(edmParameter.getName(), value, sqlType));
     }
-    
+
     public String buildProcedureSQL() {
-                
+
         StringBuilder sql = new StringBuilder();
-        
+
         if (procedureReturn == null || procedureReturn.hasResultSet()) {
             sql.append("{"); //$NON-NLS-1$
         }
@@ -160,23 +160,23 @@ public class ProcedureSQLBuilder {
         }
 
         // fully qualify the procedure name
-        sql.append("call ").append(SQLStringVisitor.escapeSinglePart(this.procedure.getFullName())); //$NON-NLS-1$ 
+        sql.append("call ").append(SQLStringVisitor.escapeSinglePart(this.procedure.getFullName())); //$NON-NLS-1$
         sql.append("("); //$NON-NLS-1$
-        
+
         boolean first = true;
         for (SQLParameter parameter:this.sqlParameters) {
             if (!first) {
                 sql.append(","); //$NON-NLS-1$
             }
             first = false;
-            sql.append(SQLStringVisitor.escapeSinglePart(parameter.getName())).append("=>?"); //$NON-NLS-1$            
-                        
+            sql.append(SQLStringVisitor.escapeSinglePart(parameter.getName())).append("=>?"); //$NON-NLS-1$
+
         }
         sql.append(")"); //$NON-NLS-1$
         sql.append("}"); //$NON-NLS-1$
         return sql.toString();
     }
-    
+
     private Class<?> resolveParameterType(String parameterName) {
         for (ProcedureParameter pp : this.procedure.getParameters()) {
             if (pp.getName().equalsIgnoreCase(parameterName)) {
@@ -185,13 +185,13 @@ public class ProcedureSQLBuilder {
         }
         return null;
     }
-    
+
     static class ActionParameterValueProvider implements OperationParameterValueProvider {
         private InputStream payload;
         private boolean alreadyConsumed;
         private ActionRequest actionRequest;
         private List<Parameter> parameters;
-        
+
         public ActionParameterValueProvider(InputStream payload, ActionRequest actionRequest) {
             this.payload = payload;
             this.actionRequest = actionRequest;
@@ -210,7 +210,7 @@ public class ProcedureSQLBuilder {
                         }
                     };
                     if (runtimeType.isAssignableFrom(XMLType.class)) {
-                        return new SQLXMLImpl(isf);    
+                        return new SQLXMLImpl(isf);
                     } else if (runtimeType.isAssignableFrom(ClobType.class)) {
                         return new ClobImpl(isf, -1);
                     } else if (runtimeType.isAssignableFrom(BlobType.class)) {
@@ -224,35 +224,35 @@ public class ProcedureSQLBuilder {
                     }
                 }
             }
-            
+
             if (this.parameters != null && !this.parameters.isEmpty()) {
                 for (Parameter parameter : this.parameters) {
                     if (parameter.getName().equals(edmParameter.getName())) {
                         // In Teiid one can only pass simple literal values, not complex
-                        // types, no complex parsing required. And LOBs can not be inlined 
+                        // types, no complex parsing required. And LOBs can not be inlined
                         // for Function
                         return parameter.getValue();
-                    }                    
+                    }
                 }
             }
             return null;
         }
-    }  
-    
+    }
+
     static class FunctionParameterValueProvider implements OperationParameterValueProvider {
         private List<UriParameter> parameters;
-        
+
         public FunctionParameterValueProvider(List<UriParameter> parameters) {
             this.parameters = parameters;
         }
-        
+
         @Override
         public Object getValue(EdmParameter edmParameter, Class<?> runtimeType)
-                throws TeiidProcessingException {                
+                throws TeiidProcessingException {
             for (UriParameter parameter : this.parameters) {
                 if (parameter.getName().equals(edmParameter.getName())) {
                     // In Teiid one can only pass simple literal values, not complex
-                    // types, no complex parsing required. And LOBs can not be inlined 
+                    // types, no complex parsing required. And LOBs can not be inlined
                     // for Function
                     return ODataTypeManager.parseLiteral(edmParameter,
                             runtimeType, parameter.getText());

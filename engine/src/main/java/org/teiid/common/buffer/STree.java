@@ -44,11 +44,11 @@ import org.teiid.query.processor.relational.ListNestedSortComparator;
 /**
  * Self balancing search tree using skip list like logic
  * This has similar performance similar to a B+/-Tree,
- * but with fewer updates. 
+ * but with fewer updates.
  */
 @SuppressWarnings("unchecked")
 public class STree implements Cloneable {
-	
+
 	public enum InsertMode {ORDERED, NEW, UPDATE}
 
 	private static final Random seedGenerator = new Random(0);
@@ -70,11 +70,11 @@ public class STree implements Cloneable {
 	protected boolean batchInsert;
 	protected SPage incompleteInsert;
 	protected LobManager lobManager;
-    
+
     protected ReentrantLock updateLock = new ReentrantLock();
-    
+
     private AtomicLong rowCount = new AtomicLong();
-	
+
 	public STree(BatchManager manager,
 			BatchManager leafManager,
             final ListNestedSortComparator comparator,
@@ -102,7 +102,7 @@ public class STree implements Cloneable {
 		this.minPageSize = this.pageSize>>5;
 		this.minStorageSize = this.pageSize>>2;
 	}
-	
+
 	public STree clone() {
 		updateLock.lock();
 		try {
@@ -139,14 +139,14 @@ public class STree implements Cloneable {
 			updateLock.unlock();
 		}
 	}
-	
+
 	private SPage getPage(SPage page) {
 		if (page == null) {
 			return page;
 		}
 		return pages.get(page.getId());
 	}
-	
+
 	public void writeValuesTo(ObjectOutputStream oos) throws TeiidComponentException, IOException {
 		SPage page = header[0];
 		oos.writeLong(this.rowCount.get());
@@ -159,7 +159,7 @@ public class STree implements Cloneable {
 			page = page.next;
 		}
 	}
-	
+
 	public void setBatchInsert(boolean batchInsert) throws TeiidComponentException {
 		if (this.batchInsert == batchInsert) {
 			return;
@@ -175,7 +175,7 @@ public class STree implements Cloneable {
 		}
 		toFlush.setValues(toFlush.getValues());
 	}
-	
+
 	public void readValuesFrom(ObjectInputStream ois) throws IOException, ClassNotFoundException, TeiidComponentException {
 		long size = ois.readLong();
 		int sizeHint = this.getExpectedHeight(size);
@@ -188,7 +188,7 @@ public class STree implements Cloneable {
 		}
 		batchInsert = false;
 	}
-	
+
 	protected SPage findChildTail(SPage page) {
 		if (page == null) {
 			page = header[header.length - 1];
@@ -208,13 +208,13 @@ public class STree implements Cloneable {
 
 	/**
 	 * Determine a new random level using an XOR rng.
-	 * 
+	 *
 	 * This uses the simplest of the generators described in George
      * Marsaglia's "Xorshift RNGs" paper.  This is not a high-quality
      * generator but is acceptable here.
-	 * 
+	 *
 	 * See also the JSR-166 working group ConcurrentSkipListMap implementation.
-	 * 
+	 *
 	 * @return
 	 */
     private int randomLevel() {
@@ -223,20 +223,20 @@ public class STree implements Cloneable {
         x ^= x >>> 17;
         randomSeed = x ^= x << 5;
         int level = 0;
-        while ((x & mask) == mask) { 
+        while ((x & mask) == mask) {
         	++level;
         	x >>>= shift;
         }
         return level;
     }
-    
+
 	/**
 	 * Search each level to find the pointer to the next level
 	 * @param n
 	 * @param places
 	 * @return
 	 * @throws IOException
-	 * @throws TeiidComponentException 
+	 * @throws TeiidComponentException
 	 */
 	List find(List n, List<SearchResult> places) throws TeiidComponentException {
 		SPage x = null;
@@ -269,11 +269,11 @@ public class STree implements Cloneable {
 		}
 		return null;
 	}
-	
+
 	public List find(List n) throws TeiidComponentException {
 		return find(n, new LinkedList<SPage.SearchResult>());
 	}
-	
+
 	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
 		if (tuple.size() != this.leafManager.getTypes().length) {
 			throw new AssertionError("Invalid tuple."); //$NON-NLS-1$
@@ -345,7 +345,7 @@ public class STree implements Cloneable {
 		}
 		return null;
 	}
-	
+
 	public int getExpectedHeight(long sizeHint) {
 		if (sizeHint == 0) {
 			return 0;
@@ -412,7 +412,7 @@ public class STree implements Cloneable {
 		}
 		return page;
 	}
-	
+
 	static void setValue(int index, List key, Object value, List<List<?>> values, SPage page) {
 		if (value instanceof SPage) {
 			values.add(index, key);
@@ -421,7 +421,7 @@ public class STree implements Cloneable {
 			values.add(index, (List)value);
 		}
 	}
-	
+
 	public List remove(List key) throws TeiidComponentException {
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List tuple = find(key, places);
@@ -488,7 +488,7 @@ public class STree implements Cloneable {
 		}
 		return tuple;
 	}
-	
+
 	public void remove() {
 		truncate(true);
 		this.keyManager.remove();
@@ -501,7 +501,7 @@ public class STree implements Cloneable {
 	public long getRowCount() {
 		return this.rowCount.get();
 	}
-	
+
 	public long truncate(boolean force) {
 		long oldSize = rowCount.getAndSet(0);
 		for (int i = 0; i < header.length; i++) {
@@ -514,11 +514,11 @@ public class STree implements Cloneable {
 		header = new SPage[] {new SPage(this, true)};
 		return oldSize;
 	}
-	
+
 	public int getHeight() {
 		return header.length;
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer result = new StringBuffer();
@@ -534,23 +534,23 @@ public class STree implements Cloneable {
 		}
 		return result.toString();
 	}
-	
+
 	public int getKeyLength() {
 		return keyLength;
 	}
-	
+
 	public void setPreferMemory(boolean preferMemory) {
 		this.leafManager.setPrefersMemory(preferMemory);
 	}
-	
+
 	public boolean isPreferMemory() {
 		return this.leafManager.prefersMemory();
 	}
-	
+
 	public ListNestedSortComparator getComparator() {
 		return comparator;
 	}
-	
+
 	/**
 	 * Quickly check if the index can be compacted
 	 */
@@ -575,7 +575,7 @@ public class STree implements Cloneable {
 		sortParameters = Arrays.copyOf(sortParameters, sortParameters.length - 1);
 		this.comparator.setSortParameters(sortParameters);
 	}
-	
+
 	public void clearClonedFlags() {
 		for (SPage page : pages.values()) {
 			if (page.trackingObject != null) {
@@ -589,27 +589,27 @@ public class STree implements Cloneable {
 			}
 		}
 	}
-	
+
 	public int getPageSize(boolean leaf) {
 		if (leaf) {
 			return leafSize;
 		}
 		return pageSize;
 	}
-	
+
 	BatchManager getBatchManager(boolean leaf) {
 		if (leaf) {
 			return leafManager;
 		}
 		return keyManager;
 	}
-	
+
 	public TupleSource getTupleSource(final boolean destructive) {
 		return new TupleSource() {
 			SPage current = header[0];
 			List<List<?>> values;
 			int index = 0;
-			
+
 			@Override
 			public List<?> nextTuple() throws TeiidComponentException,
 					TeiidProcessingException {
@@ -633,14 +633,14 @@ public class STree implements Cloneable {
 				}
 				return values.get(index++);
 			}
-			
+
 			@Override
 			public void closeSource() {
-				
+
 			}
 		};
 	}
-	
+
 	public void setMinStorageSize(int minStorageSize) {
 		this.minStorageSize = minStorageSize;
 	}

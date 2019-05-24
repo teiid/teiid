@@ -23,8 +23,8 @@ import org.apache.cxf.rs.security.oauth.client.OAuthClientUtils;
 import org.teiid.OAuthCredential;
 
 /**
- * This helps aid with OAuth1.0a authentication. WS resource-adapter will look for instance of this class in current 
- * subject's credentials. 
+ * This helps aid with OAuth1.0a authentication. WS resource-adapter will look for instance of this class in current
+ * subject's credentials.
  */
 public class OAuth10CredentialImpl implements OAuthCredential, Serializable {
     private static final long serialVersionUID = 7478594712832822465L;
@@ -32,18 +32,18 @@ public class OAuth10CredentialImpl implements OAuthCredential, Serializable {
     private String consumerSecret;
     private String accessToken;
     private String accessSecret;
-    
+
     public String getAuthorizationHeader(String resourceURI, String httpMethod) {
         OAuthClientUtils.Consumer consumer = new OAuthClientUtils.Consumer(this.consumerKey, this.consumerSecret);
         OAuthClientUtils.Token accessToken = new OAuthClientUtils.Token(this.accessToken, this.accessSecret);
-        return OAuthClientUtils.createAuthorizationHeader(consumer, accessToken, httpMethod, resourceURI);        
+        return OAuthClientUtils.createAuthorizationHeader(consumer, accessToken, httpMethod, resourceURI);
     }
-    
+
     @Override
     public String getAuthrorizationProperty(String key) {
         // for now only in OAUTH2
         return null;
-    }    
+    }
 
     public String getConsumerKey() {
         return consumerKey;
@@ -75,5 +75,5 @@ public class OAuth10CredentialImpl implements OAuthCredential, Serializable {
 
     public void setAccessSecret(String accessSecret) {
         this.accessSecret = accessSecret;
-    }   
+    }
 }

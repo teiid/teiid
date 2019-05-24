@@ -31,19 +31,19 @@ import org.teiid.vdb.runtime.VDBKey;
 
 
 public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry {
-	
+
 	public static class ClientService {
 		private Object instance;
 		private String loggingContext;
 		private ReflectionHelper reflectionHelper;
-		
+
 		public ClientService(Object instance, String loggingContext,
 				ReflectionHelper reflectionHelper) {
 			this.instance = instance;
 			this.loggingContext = loggingContext;
 			this.reflectionHelper = reflectionHelper;
 		}
-		
+
 		public Object getInstance() {
 			return instance;
 		}
@@ -54,21 +54,21 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
 			return reflectionHelper;
 		}
 	}
-	
+
     private HashMap<String, ClientService> clientServices = new HashMap<String, ClientService>();
     private SecurityHelper securityHelper;
     private Type type = Type.JDBC;
     private AuthenticationType authenticationType = AuthenticationType.USERPASSWORD;
     private VDBRepository vdbRepository;
-    
+
     public ClientServiceRegistryImpl() {
-    	
+
     }
-    
+
     public ClientServiceRegistryImpl(Type type) {
     	this.type = type;
 	}
-    
+
     public void setAuthenticationType(AuthenticationType authenticationType) {
 		this.authenticationType = authenticationType;
 	}
@@ -77,7 +77,7 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
     	ClientService cs = getClientService(iface.getName());
     	return iface.cast(cs.getInstance());
     }
-    
+
 	public ClientService getClientService(String iface) throws ComponentNotFoundException {
 		ClientService cs = clientServices.get(iface);
 		if (cs == null) {
@@ -88,13 +88,13 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
 
 	public <T> void registerClientService(Class<T> iface, T instance, String loggingContext) {
 		this.clientServices.put(iface.getName(), new ClientService(instance, loggingContext, new ReflectionHelper(iface)));
-	}	
-	
+	}
+
 	@Override
 	public SecurityHelper getSecurityHelper() {
 		return this.securityHelper;
 	}
-	
+
 	public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
@@ -103,20 +103,20 @@ public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry
 	public AuthenticationType getAuthenticationType() {
 		return authenticationType;
 	}
-	
+
 	@Override
 	public void waitForFinished(VDBKey vdbKey,
 			int timeOutMillis) throws ConnectionException {
-		
+
 	}
-	
+
 	@Override
 	public VDBRepository getVDBRepository() {
 		return vdbRepository;
 	}
-	
+
 	public void setVDBRepository(VDBRepository vdbRepository) {
 		this.vdbRepository = vdbRepository;
 	}
-	
+
 }

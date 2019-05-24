@@ -24,7 +24,7 @@ import org.junit.Test;
 
 @SuppressWarnings("nls")
 public class TestFullyQualifiedName {
-    
+
     @Test public void testEscaping() {
         FullyQualifiedName fqn = new FullyQualifiedName("a", "b");
         fqn.append("hello world", "/value").append("other?", "1");

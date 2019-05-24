@@ -29,9 +29,9 @@ public interface TeiidExecutor extends Executor {
 	void execute(final Runnable command);
 
 	WorkerPoolStatisticsMetadata getStats();
-	
+
 	int getQueued();
-	
+
 	int getActiveCount();
 
 	List<Runnable> shutdownNow();

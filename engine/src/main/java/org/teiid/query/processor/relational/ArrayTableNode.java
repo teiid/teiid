@@ -49,19 +49,19 @@ import org.teiid.query.util.CommandContext;
 public class ArrayTableNode extends SubqueryAwareRelationalNode {
 
 	private ArrayTable table;
-	
+
 	//initialized state
     private int[] projectionIndexes;
-    
+
     //multi-row state
     private int index;
     private int length;
     private Object array;
-	
+
 	public ArrayTableNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
@@ -72,21 +72,21 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
         Map elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
 	}
-	
+
 	@Override
 	public void reset() {
 	    super.reset();
 	    array = null;
 	    length = 0;
-	    index = 0; 
+	    index = 0;
 	}
-	
+
 	@Override
 	public void closeDirect() {
 		super.closeDirect();
 		reset();
 	}
-	
+
 	public void setTable(ArrayTable table) {
 		this.table = table;
 	}
@@ -104,7 +104,7 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 			TeiidComponentException, TeiidProcessingException {
 	    if (array == null) {
 	        array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
-	    } 
+	    }
 
 		if (array != null) {
 		    if (!Boolean.FALSE.equals(table.getSingleRow())) {
@@ -154,12 +154,12 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
         }
         addBatchRow(tuple);
     }
-	
+
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {
 		return Arrays.asList(this.table.getArrayValue());
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();

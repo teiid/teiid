@@ -55,7 +55,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	}
 
 	private VersionNumber version;
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -75,8 +75,8 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			CassandraConnection connection) throws TranslatorException {
 		return new CassandraUpdateExecution(command, executionContext, metadata, connection);
-	} 
-	
+	}
+
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -87,7 +87,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 		}
 		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,
 			Command command, ExecutionContext executionContext,
@@ -95,7 +95,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			throws TranslatorException {
 		return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext, true);
 	}
-	
+
 	@Override
     public MetadataProcessor<CassandraConnection> getMetadataProcessor(){
 	    return new CassandraMetadataProcessor();
@@ -103,7 +103,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 
 	@Override
 	public boolean supportsOrderBy() {
-		// Order by is allowed in very restrictive case when this is used as 
+		// Order by is allowed in very restrictive case when this is used as
 		// compound primary key's second column where it is defined partioned key
 		return false;
 	}
@@ -132,17 +132,17 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public boolean supportsRowLimit() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsBulkUpdate() {
 		return version.compareTo(V2) >= 0;
 	}
-	
+
 	@Override
 	public boolean supportsBatchedUpdates() {
 	    return version.compareTo(V2) >= 0;
 	}
-      
+
     @Override
     public boolean supportsAggregatesSum() {
         return version.compareTo(V2_2) >= 0;
@@ -167,7 +167,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 	public boolean returnsSingleUpdateCount() {
 		return true;
 	}
-	
+
 	@Override
 	public void initCapabilities(CassandraConnection connection)
 			throws TranslatorException {
@@ -176,13 +176,13 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 		}
 		this.version = connection.getVersion();
 		if (this.version == null) {
-		     this.version = DEFAULT_VERSION;  
+		     this.version = DEFAULT_VERSION;
 		}
 	}
-	
+
 	@Override
 	public boolean isSourceRequiredForCapabilities() {
 		return true;
 	}
-	
+
 }

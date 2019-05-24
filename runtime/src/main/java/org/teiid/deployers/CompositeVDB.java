@@ -49,10 +49,10 @@ import org.teiid.vdb.runtime.VDBKey;
  * Represents the runtime state of a vdb that may aggregate several vdbs.
  */
 public class CompositeVDB {
-	
+
 	private static final boolean WIDEN_COMPARISON_TO_STRING = PropertiesUtils.getHierarchicalProperty("org.teiid.widenComparisonToString", false, Boolean.class); //$NON-NLS-1$
 	private static final boolean HIDDEN_METADATA_RESOLVABLE = PropertiesUtils.getHierarchicalProperty("org.teiid.hiddenMetadataResolvable", true, Boolean.class); //$NON-NLS-1$
-	
+
 	private VDBMetaData vdb;
 	private MetadataStore store;
 	private LinkedHashMap<String, VDBResources.Resource> visibilityMap;
@@ -66,7 +66,7 @@ public class CompositeVDB {
 	private VDBMetaData originalVDB;
 	private Collection<Future<?>> tasks = Collections.synchronizedSet(new HashSet<Future<?>>());
 	private VDBKey vdbKey;
-	
+
     public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions,
             ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores)
@@ -84,18 +84,18 @@ public class CompositeVDB {
 		buildCompositeState(vdbRepository);
 		this.mergedVDB.addAttchment(VDBKey.class, this.vdbKey);
 	}
-	
+
     private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,
             LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf,
             FunctionTree systemFunctions, MetadataStore[] additionalStores, boolean allowEnv) {
 
         Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
-		if (udf != null) {			
+		if (udf != null) {
 			for (Map.Entry<String, UDFSource> entry : udf.getFunctions().entrySet()) {
 				udfs.add(new FunctionTree(entry.getKey(), entry.getValue(), true));
 			}
 		}
-		
+
 		//add functions for procedures
 		for (Schema schema:store.getSchemas().values()) {
 			if (!schema.getProcedures().isEmpty()) {
@@ -105,7 +105,7 @@ public class CompositeVDB {
 				}
 			}
 		}
-		
+
 		CompositeMetadataStore compositeStore = new CompositeMetadataStore(store);
 		for (MetadataStore s:additionalStores) {
 			compositeStore.merge(s);
@@ -125,7 +125,7 @@ public class CompositeVDB {
 				}
 			}
 		}
-		
+
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
 		metadata.setAllowENV(allowEnv);
 		metadata.setLongRanks(AggregateSymbol.LONG_RANKS);
@@ -138,13 +138,13 @@ public class CompositeVDB {
 	public VDBMetaData getVDB() {
 		return this.mergedVDB;
 	}
-	
+
 	private void buildCompositeState(VDBRepository vdbRepository) throws VirtualDatabaseException {
 		if (vdb.getVDBImports().isEmpty()) {
 			this.vdb.addAttchment(ConnectorManagerRepository.class, this.cmr);
 			return;
 		}
-		
+
 		VDBMetaData newMergedVDB = this.vdb.clone();
 		ConnectorManagerRepository mergedRepo = this.cmr;
 		if (!this.cmr.isShared()) {
@@ -174,15 +174,15 @@ public class CompositeVDB {
 			VDBMetaData childVDB = importedVDB.getVDB();
 			VDBMetaData originalChildVDB = importedVDB.getOriginalVDB();
 			//detect transitive importing vdb
-			if (!originalChildVDB.getVDBImports().isEmpty() 
-			        && originalChildVDB.getVisibilityOverrides().isEmpty() 
+			if (!originalChildVDB.getVDBImports().isEmpty()
+			        && originalChildVDB.getVisibilityOverrides().isEmpty()
 			        && originalChildVDB.getDataPolicies().isEmpty()
 			        && originalChildVDB.getModels().isEmpty()) {
 			    for (VDBImport childImport : originalChildVDB.getVDBImports()) {
 			        if (seen.add(childImport)) {
 			            toLoad.push(childImport);
 			        } else {
-			            LogManager.logDetail(LogConstants.CTX_DQP, "Ommitting the duplicate import of " + childImport + " from " + vdbImport + " for the creation of " + vdb); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			            LogManager.logDetail(LogConstants.CTX_DQP, "Ommitting the duplicate import of " + childImport + " from " + vdbImport + " for the creation of " + vdb); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			        }
 			    }
 			    continue;
@@ -190,7 +190,7 @@ public class CompositeVDB {
 			newMergedVDB.getVisibilityOverrides().putAll(childVDB.getVisibilityOverrides());
 			toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
 			this.children.put(importedVDB.getVDBKey(), importedVDB);
-			
+
 			if (vdbImport.isImportDataPolicies()) {
 				for (DataPolicy dp : importedVDB.getVDB().getDataPolicies()) {
 					DataPolicyMetadata role = (DataPolicyMetadata)dp;
@@ -202,7 +202,7 @@ public class CompositeVDB {
 					}
 				}
 			}
-			
+
 			// add models
 			for (ModelMetaData m:childVDB.getModelMetaDatas().values()) {
 				if (newMergedVDB.addModel(m) != null) {
@@ -233,13 +233,13 @@ public class CompositeVDB {
 		}
 		this.mergedVDB = newMergedVDB;
 	}
-	
+
 	private UDFMetaData getUDF() {
 		UDFMetaData mergedUDF = new UDFMetaData();
 		if (this.udf != null) {
 			mergedUDF.addFunctions(this.udf);
 		}
-		
+
 		for (Schema schema:store.getSchemas().values()) {
 			Collection<FunctionMethod> funcs = schema.getFunctions().values();
 			mergedUDF.addFunctions(schema.getName(), funcs);
@@ -252,7 +252,7 @@ public class CompositeVDB {
 				mergedUDF.addFunctions(CoreConstants.SYSTEM_MODEL, funcs);
 			}
 		}
-		
+
 		if (this.children != null) {
 			//udf model functions - also scoped to the model
 			for (CompositeVDB child:this.children.values()) {
@@ -260,11 +260,11 @@ public class CompositeVDB {
 				if (funcs != null) {
 					mergedUDF.addFunctions(funcs);
 				}
-			}		
+			}
 		}
 		return mergedUDF;
 	}
-	
+
 	/**
 	 * TODO: we are not checking for collisions here.
 	 */
@@ -272,34 +272,34 @@ public class CompositeVDB {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.visibilityMap;
 		}
-		
+
 		LinkedHashMap<String, VDBResources.Resource> mergedvisibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
 		for (CompositeVDB child:this.children.values()) {
 			LinkedHashMap<String, VDBResources.Resource> vm = child.getVisibilityMap();
 			if ( vm != null) {
 				mergedvisibilityMap.putAll(vm);
 			}
-		}	
+		}
 		if (this.visibilityMap != null) {
 			mergedvisibilityMap.putAll(this.visibilityMap);
 		}
 		return mergedvisibilityMap;
 	}
-	
+
 	private MetadataStore getMetadataStore() {
 		return this.store;
 	}
-		
+
 	VDBMetaData getOriginalVDB() {
 		return originalVDB;
 	}
-	
+
 	public void metadataLoadFinished(boolean allowEnv) {
 		if (this.metadataloadFinished) {
 			return;
 		}
 		this.metadataloadFinished = true;
-		
+
 		MetadataStore mergedStore = getMetadataStore();
 		//the order of the models is important for resolving ddl
 		//TODO we might consider not using the intermediate MetadataStore
@@ -319,9 +319,9 @@ public class CompositeVDB {
 				if ( childStore != null) {
 					mergedStore.merge(childStore);
 				}
-			}		
+			}
 		}
-		
+
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores, allowEnv);
 		QueryMetadataInterface qmi = metadata;
         Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(mergedVDB);
@@ -332,7 +332,7 @@ public class CompositeVDB {
 		mergedVDB.addAttchment(TransformationMetadata.class, metadata);
 		mergedVDB.addAttchment(MetadataStore.class, mergedStore);
 	}
-	
+
 	LinkedHashMap<VDBKey, CompositeVDB> getChildren() {
 		return children;
 	}
@@ -354,5 +354,5 @@ public class CompositeVDB {
 	public VDBKey getVDBKey() {
 		return this.vdbKey;
 	}
-	
+
 }

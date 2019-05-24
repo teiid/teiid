@@ -44,18 +44,18 @@ public class TestScalarSubqueryImpl extends TestCase {
         ss.setType(((Expression)query.getProjectedSymbols().get(0)).getType());
         return ss;
     }
-    
+
     public static ScalarSubquery example() throws Exception {
         return (ScalarSubquery)TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetQuery() throws Exception {
         assertNotNull(example().getSubquery());    }
-    
+
     public void testGetType() throws Exception {
         Select query = TstLanguageBridgeFactory.factory.translate(TestQueryImpl.helpExample(true));
         Class<?> firstSymbolType = query.getDerivedColumns().get(0).getExpression().getType();
         assertEquals("Got incorrect type", firstSymbolType, example().getType()); //$NON-NLS-1$
     }
-    
+
 }

@@ -28,7 +28,7 @@ import org.teiid.translator.ExecutionContext;
  * Log Message for source and user command events.
  */
 public class CommandLogMessage {
-    
+
 	public enum Event {
 		NEW,
 		PLAN,
@@ -37,21 +37,21 @@ public class CommandLogMessage {
 		SOURCE,
 		ERROR
 	}
-	
+
     private boolean source;
     private Event event;
     private long timestamp;
-    
+
     // Transaction info
     private String transactionID;
-    
+
     // Session info
     private String sessionID;
     private String applicationName;
     private String principal;
     private String vdbName;
     private String vdbVersion;
-    
+
     // RequestInfo
     private String requestID;
     private Long sourceCommandID;
@@ -61,10 +61,10 @@ public class CommandLogMessage {
     private String translatorName;
     private ExecutionContext executionContext;
     private PlanNode plan;
-    
+
     private Object[] sourceCommand;
     private Long cpuTime;
-        
+
     public CommandLogMessage(long timestamp,
                                 String requestID,
                                 String transactionID,
@@ -87,7 +87,7 @@ public class CommandLogMessage {
                                 String sessionID,
                                 String principal,
                                 String vdbName,
-                                String vdbVersion, 
+                                String vdbVersion,
                                 Long finalRowCount,
                                 Event event, PlanNode plan) {
         // userCommandEnd
@@ -106,7 +106,7 @@ public class CommandLogMessage {
                                 String requestID,
                                 long sourceCommandID,
                                 String transactionID,
-                                String modelName, 
+                                String modelName,
                                 String translatorName,
                                 String sessionID,
                                 String principal,
@@ -120,7 +120,7 @@ public class CommandLogMessage {
                                 String requestID,
                                 long sourceCommandID,
                                 String transactionID,
-                                String modelName, 
+                                String modelName,
                                 String translatorName,
                                 String sessionID,
                                 String principal,
@@ -142,7 +142,7 @@ public class CommandLogMessage {
         this.executionContext = context;
         this.cpuTime = cpuTime;
     }
-    
+
     public String toString() {
     	if (!source) {
     		if (event == Event.NEW) {
@@ -202,18 +202,18 @@ public class CommandLogMessage {
 	public String getModelName() {
 		return modelName;
 	}
-	
+
 	/**
 	 * @deprecated in 7.7 see {@link #getTranslatorName()}
 	 */
 	public String getConnectorBindingName() {
 		return translatorName;
 	}
-	
+
 	public String getTranslatorName() {
 		return translatorName;
 	}
-	
+
 	public Event getStatus() {
 		return event;
 	}
@@ -234,18 +234,18 @@ public class CommandLogMessage {
 	public PlanNode getPlan() {
 		return plan;
 	}
-	
+
 	/**
 	 * the cpu time in nanoseconds.  Will be null for events
 	 * that don't have a cpu time measurement.  Will be -1 when
 	 * the system is not able to determine a value.
-	 * 
+	 *
 	 * @return
 	 */
 	public Long getCpuTime() {
 		return cpuTime;
 	}
-	
+
 	public void setSourceCommand(Object[] sourceCommand) {
 		this.sourceCommand = sourceCommand;
 	}

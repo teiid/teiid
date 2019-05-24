@@ -31,8 +31,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
 /**
- * Represents a FROM clause in a SELECT query.  The from clause holds a set of 
- * FROM subclauses.  Each FROM subclause can be either a single group 
+ * Represents a FROM clause in a SELECT query.  The from clause holds a set of
+ * FROM subclauses.  Each FROM subclause can be either a single group
  * ({@link UnaryFromClause}) or a join predicate ({@link JoinPredicate}).
  */
 public class From implements LanguageObject {
@@ -57,7 +57,7 @@ public class From implements LanguageObject {
     // =========================================================================
     //                             M E T H O D S
     // =========================================================================
-	
+
 	/**
 	 * Add a clause to the FROM
 	 * @param clause Add a clause to the FROM
@@ -65,32 +65,32 @@ public class From implements LanguageObject {
 	public void addClause(FromClause clause) {
 		this.clauses.add(clause);
 	}
-	
+
 	/**
-	 * Add clauses to the FROM 
+	 * Add clauses to the FROM
 	 * @param clauses Collection of {@link FromClause}s
 	 */
 	public void addClauses(Collection<? extends FromClause> toAdd) {
 		this.clauses.addAll(toAdd);
 	}
-	
-	/** 
+
+	/**
 	 * Get all the clauses in FROM
 	 * @return List of {@link FromClause}
 	 */
 	public List<FromClause> getClauses() {
 		return this.clauses;
 	}
-    
-	/** 
+
+	/**
 	 * Set all the clauses
 	 * @param clauses List of {@link FromClause}
 	 */
 	public void setClauses(List<FromClause> clauses) {
 		this.clauses = clauses;
 	}
-	
-	
+
+
     /**
      * Adds a new group to the list (it will be wrapped in a UnaryFromClause)
      * @param group Group to add
@@ -99,7 +99,7 @@ public class From implements LanguageObject {
     	if( group != null ) {
 			clauses.add(new UnaryFromClause(group));
         }
-    }   
+    }
 
     /**
      * Adds a new collection of groups to the list
@@ -125,10 +125,10 @@ public class From implements LanguageObject {
                 clause.collectGroups(groups);
             }
         }
-            
+
         return groups;
     }
-    
+
     /**
      * Checks if a group is in the From
      * @param group Group to check for
@@ -137,11 +137,11 @@ public class From implements LanguageObject {
     public boolean containsGroup( GroupSymbol group ) {
         return getGroups().contains(group);
     }
-	
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
     // =========================================================================
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
@@ -166,7 +166,7 @@ public class From implements LanguageObject {
 		if(!(obj instanceof From)) {
 			return false;
 		}
-        
+
         return EquivalenceUtil.areEqual(getClauses(), ((From)obj).getClauses());
    	}
 

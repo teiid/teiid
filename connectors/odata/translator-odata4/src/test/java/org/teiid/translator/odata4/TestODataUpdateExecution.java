@@ -69,25 +69,25 @@ public class TestODataUpdateExecution {
 
         ODataExecutionFactory translator = new ODataExecutionFactory();
         translator.start();
-        
+
         TranslationUtility utility = new TranslationUtility(
                 TestODataMetadataProcessor.getTransformationMetadata(mf,translator));
-        
+
 		Command cmd = utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		WSConnection connection = Mockito.mock(WSConnection.class);
-		
+
 		Map<String, Object> headers = new HashMap<String, Object>();
 		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
 		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
-		
+
 		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
 		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
 		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
-		
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), 
+
+		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
 		        Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
-		
+
 		DataSource ds = new DataSource() {
 			@Override
 			public OutputStream getOutputStream() throws IOException {
@@ -109,16 +109,16 @@ public class TestODataUpdateExecution {
 		};
 		ArgumentCaptor<DataSource> data = ArgumentCaptor.forClass(DataSource.class);
 		Mockito.stub(dispatch.invoke(data.capture())).toReturn(ds);
-		
+
 		UpdateExecution execution = translator
                 .createUpdateExecution(cmd, context,
                         utility.createRuntimeMetadata(), connection);
 		execution.execute();
-		
+
 		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
-		
-		
+
+
         Mockito.verify(connection).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
@@ -130,16 +130,16 @@ public class TestODataUpdateExecution {
 		return execution;
 	}
 
-    
+
 	@Test
 	public void testInsertEntitySet() throws Exception {
 		String query = "INSERT INTO People(UserName,FirstName,LastName, EMails, Gender, Concurrency) "
 		        + "values ('jdoe', 'John', 'Doe', ('jdoe@cantfind.ws',), 'Male', 1234)";
 		String expectedURL = "People";
-		String returnResponse = "{\n" + 
-		        "   \"UserName\":\"russellwhyte\",\n" + 
-		        "   \"FirstName\":\"Russell\",\n" + 
-		        "   \"LastName\":\"Whyte\"\n" + 
+		String returnResponse = "{\n" +
+		        "   \"UserName\":\"russellwhyte\",\n" +
+		        "   \"FirstName\":\"Russell\",\n" +
+		        "   \"LastName\":\"Whyte\"\n" +
 		        "}";
 		String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Person\","
 		        + "\"UserName@odata.type\":\"String\",\"UserName\":\"jdoe\","
@@ -151,68 +151,68 @@ public class TestODataUpdateExecution {
 		        + "\"Concurrency@odata.type\":\"Int64\",\"Concurrency\":1234}";
 		UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
 		        query, expectedPayload, returnResponse, expectedURL, "POST", 201);
-		
+
 	}
-	
+
 	@Test
 	public void testInsertComplexType() throws Exception {
 		String query = "INSERT INTO Persons_address(street, city, state, Persons_ssn) "
 		        + "VALUES('sesame street', 'Newyork', 'NY', 1234)";
 		String expectedURL = "Persons(1234)/address";
-        
-		String returnResponse = "{\n" + 
-                "   \"UserName\":\"russellwhyte\",\n" + 
-                "   \"FirstName\":\"Russell\",\n" + 
-                "   \"LastName\":\"Whyte\"\n" + 
+
+		String returnResponse = "{\n" +
+                "   \"UserName\":\"russellwhyte\",\n" +
+                "   \"FirstName\":\"Russell\",\n" +
+                "   \"LastName\":\"Whyte\"\n" +
                 "}";
         String expectedPayload = "{\"@odata.type\":\"#Edm.Address\","
                 + "\"street@odata.type\":\"String\",\"street\":\"sesame street\","
                 + "\"city@odata.type\":\"String\",\"city\":\"Newyork\","
                 + "\"state@odata.type\":\"String\",\"state\":\"NY\"}";
-		
+
         // single complex requires PATCH
 		UpdateExecution excution = helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
 		        query, expectedPayload, returnResponse, expectedURL, "PATCH", 201);
 
 	}
-	
+
     @Test
     public void testInsertComplexTypeTripPin() throws Exception {
         String query = "INSERT INTO People_AddressInfo(Address, People_UserName) "
                 + "VALUES('sesame street', 'russel')";
         String expectedURL = "People('russel')/AddressInfo";
-        
-        String returnResponse = "{\n" + 
-                "   \"Address\":\"russellwhyte\",\n" + 
-                "   \"FirstName\":\"Russell\",\n" + 
-                "   \"LastName\":\"Whyte\"\n" + 
+
+        String returnResponse = "{\n" +
+                "   \"Address\":\"russellwhyte\",\n" +
+                "   \"FirstName\":\"Russell\",\n" +
+                "   \"LastName\":\"Whyte\"\n" +
                 "}";
         String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Location\","
                 + "\"value\":[{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Location\","
                 + "\"Address@odata.type\":\"String\","
                 + "\"Address\":\"sesame street\"}]}";
-        
+
         //collection needs PUT
         UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
                 query, expectedPayload, returnResponse, expectedURL, "PUT", 201);
-    }	
+    }
 
     @Test
     public void testInsertNavigation() throws Exception {
         String query = "INSERT INTO People_Friends(UserName, FirstName, LastName, People_UserName) "
                 + "VALUES('jdoe', 'John', 'Doe', 'russel')";
         String expectedURL = "People('russel')/Friends";
-        
-        String returnResponse = "{\n" + 
-                "   \"UserName\":\"jdoe\",\n" + 
-                "   \"FirstName\":\"John\",\n" + 
-                "   \"LastName\":\"Doe\"\n" + 
+
+        String returnResponse = "{\n" +
+                "   \"UserName\":\"jdoe\",\n" +
+                "   \"FirstName\":\"John\",\n" +
+                "   \"LastName\":\"Doe\"\n" +
                 "}";
         String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Person\","
                 + "\"UserName@odata.type\":\"String\",\"UserName\":\"jdoe\","
                 + "\"FirstName@odata.type\":\"String\",\"FirstName\":\"John\","
                 + "\"LastName@odata.type\":\"String\",\"LastName\":\"Doe\"}";
-        
+
         UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
                 query, expectedPayload, returnResponse, expectedURL, "POST", 201);
     }

@@ -62,17 +62,17 @@ import org.teiid.runtime.RuntimePlugin;
  * @version $Rev: 381 $, $Date: 2008-10-01 20:06:18 +0900 (Wed, 01 Oct 2008) $
  *
  * @apiviz.landmark
- * 
+ *
  * Note this has been customized to utilize even more idomatic serialization
  * and to support out of message streaming
- * 
+ *
  */
 public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
-	
-	public static final long MAX_LOB_SIZE = 1l << 32;
+
+	public static final long MAX_LOB_SIZE = 1L << 32;
 
     private final ClassLoader classLoader;
-    
+
     private Object result;
     private int streamIndex;
     private OutputStream stream;
@@ -82,7 +82,7 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
     private StreamCorruptedException error;
 
     private int streamDataToRead = -1;
-    
+
 	private long maxLobSize = MAX_LOB_SIZE;
 
     /**
@@ -125,7 +125,7 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 	    	if (streamDataToRead == -1) {
 	    		if (buffer.readableBytes() < 2) {
 		            return null;
-		        }	
+		        }
 		        streamDataToRead = buffer.readUnsignedShort();
 	    	}
 	        if (stream == null) {
@@ -175,7 +175,7 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
         }
         return toReturn;
     }
-    
+
     @Override
     protected ByteBuf extractFrame(ChannelHandlerContext ctx, ByteBuf buffer, int index, int length) {
     	return buffer.slice(index, length);

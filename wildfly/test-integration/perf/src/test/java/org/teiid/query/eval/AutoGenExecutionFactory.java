@@ -52,9 +52,9 @@ class AutoGenExecutionFactory extends HardCodedExecutionFactory {
     private static final java.sql.Date SQL_DATE_VAL = TimestampUtil.createDate(69, 11, 31);
     private static final java.sql.Time TIME_VAL = new java.sql.Time(0);
     private static final java.sql.Timestamp TIMESTAMP_VAL = new java.sql.Timestamp(0);
-    
+
     private static final java.sql.Timestamp IN_RANGE = TimestampUtil.createTimestamp(117, 2, 0, 0, 0, 0, 0);
-    
+
     static Object getValue(Class<?> type, int row, int max) {
         if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
             //return "a";
@@ -62,8 +62,8 @@ class AutoGenExecutionFactory extends HardCodedExecutionFactory {
             //return "" + String.valueOf(100000+(row/4)*4); //sample;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.INTEGER)) {
             return row%max;
-        } else if(type.equals(DataTypeManager.DefaultDataClasses.SHORT)) { 
-            return (short)row%max;    
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.SHORT)) {
+            return (short)row%max;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.LONG)) {
             return (long)row%max;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.FLOAT)) {
@@ -95,9 +95,9 @@ class AutoGenExecutionFactory extends HardCodedExecutionFactory {
             return null;
         }
     }
-    
+
     private Map<String, Integer> rowCounts = new HashMap<String, Integer>();
-    
+
     @Override
     protected List<? extends List<?>> getData(QueryExpression command) {
         List<? extends List<?>> result = super.getData(command);
@@ -109,7 +109,7 @@ class AutoGenExecutionFactory extends HardCodedExecutionFactory {
         int rowCount = rowCounts.get(name);
         List resultList = new ArrayList();
         for (int i = 0; i < rowCount; i++) {
-            List row = new ArrayList(); 
+            List row = new ArrayList();
             for (int j = 0; j < types.length; j++) {
                 Object value = getValue(types[j], i, Integer.MAX_VALUE);
                 row.add(value);
@@ -118,7 +118,7 @@ class AutoGenExecutionFactory extends HardCodedExecutionFactory {
         }
         return resultList;
     }
-    
+
     public void addRowCount(String name, int count) {
         this.rowCounts.put(name, count);
     }

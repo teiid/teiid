@@ -58,11 +58,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         this.command = command;
         this.expectedColumnTypes = command.getResultSetColumnTypes();
     }
-    
+
     private boolean isFunction(Procedure proc) {
         ODataType type = ODataType.valueOf(proc.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
         return type == ODataType.FUNCTION;
-    }   
+    }
 
     private ProcedureParameter getReturnParameter() {
         for (ProcedureParameter pp : this.command.getMetadataObject().getParameters()) {
@@ -72,7 +72,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return null;
     }
-    
+
     static String getQueryParameters(Call obj) throws EdmPrimitiveTypeException {
         StringBuilder sb = new StringBuilder();
         final List<Argument> params = obj.getArguments();
@@ -86,7 +86,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
                     }
                     sb.append(WSUtil.httpURLEncode(param.getMetadataObject().getName()));
                     sb.append(Tokens.EQ);
-                    sb.append(WSUtil.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(), 
+                    sb.append(WSUtil.httpURLEncode(ODataTypeManager.convertToODataURIValue(param.getArgumentValue().getValue(),
                             ODataTypeManager.odataType(param.getType()).getFullQualifiedName()
                             .getFullQualifiedNameAsString())));
                 }
@@ -94,7 +94,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return sb.toString();
     }
-    
+
     private String buildFunctionURL(Call obj, String parameters) {
         StringBuilder sb = new StringBuilder();
         sb.append(obj.getProcedureName());
@@ -104,12 +104,12 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         }
         return sb.toString();
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
         try {
-        	String  parameters = getQueryParameters(this.command); 
-                
+        	String  parameters = getQueryParameters(this.command);
+
             InputStream response = null;
             Procedure procedure = this.command.getMetadataObject();
             if (isFunction(procedure)) {
@@ -147,7 +147,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
             if (property.isCollection()) {
                 this.returnValue = property.asCollection();
             } else {
-                this.returnValue = property.asPrimitive();    
+                this.returnValue = property.asPrimitive();
             }
         }
     }
@@ -158,8 +158,8 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         if (this.response != null) {
             Map<String, Object> row = this.response.getNext();
             if (row != null) {
-                return buildRow(procedure.getResultSet(), 
-                        procedure.getResultSet().getColumns(), 
+                return buildRow(procedure.getResultSet(),
+                        procedure.getResultSet().getColumns(),
                         this.expectedColumnTypes, row);
             }
         }

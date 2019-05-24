@@ -39,13 +39,13 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * and Delete procedures.</p>
  */
 public class CreateProcedureCommand extends Command {
-	
+
 	// top level block for the procedure
 	private Block block;
-	
+
     private List projectedSymbols;
     private List<? extends Expression> resultSetColumns;
-    
+
     private GroupSymbol virtualGroup;
 
 	private int updateType = Command.TYPE_UNKNOWN;
@@ -62,18 +62,18 @@ public class CreateProcedureCommand extends Command {
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
 	 * @param block The block on this command
-	 * @param type The procedure type 
+	 * @param type The procedure type
 	 */
 	public CreateProcedureCommand(Block block) {
 		this.block = block;
-	}	
+	}
 
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
 	 * @return The type of this command
 	 */
 	public int getType() {
-		return Command.TYPE_UPDATE_PROCEDURE;	
+		return Command.TYPE_UPDATE_PROCEDURE;
 	}
 
 	/**
@@ -102,9 +102,9 @@ public class CreateProcedureCommand extends Command {
 
 	/**
 	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
-	public Object clone() {		
+	public Object clone() {
 		CreateProcedureCommand copy = new CreateProcedureCommand();
 
         //Clone this class state
@@ -123,7 +123,7 @@ public class CreateProcedureCommand extends Command {
         if (this.returnVariable != null) {
         	copy.returnVariable = this.returnVariable;
         }
-        copy.updateType = this.updateType; 
+        copy.updateType = this.updateType;
         this.copyMetadataState(copy);
 		return copy;
 	}
@@ -140,16 +140,16 @@ public class CreateProcedureCommand extends Command {
     		return true;
 		}
 
-		// Quick fail tests		
+		// Quick fail tests
     	if(! (obj instanceof CreateProcedureCommand)) {
     		return false;
 		}
-    	
+
     	CreateProcedureCommand other = (CreateProcedureCommand)obj;
-        
+
         // Compare the block
         return sameOptionAndHint(other) && EquivalenceUtil.areEqual(getBlock(), other.getBlock());
-    } 
+    }
 
     /**
      * Get hashcode for CreateUpdateProcedureCommand.  WARNING: This hash code relies
@@ -178,7 +178,7 @@ public class CreateProcedureCommand extends Command {
 
 	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
@@ -188,16 +188,16 @@ public class CreateProcedureCommand extends Command {
         }
         //user may have not entered any query yet
         return Collections.EMPTY_LIST;
-	}  
-	
+	}
+
 	public List<? extends Expression> getResultSetColumns() {
 		return resultSetColumns;
 	}
-	
+
 	public void setResultSetColumns(List<? extends Expression> resultSetColumns) {
 		this.resultSetColumns = resultSetColumns;
 	}
-	
+
     /**
      * @param projSymbols
      */
@@ -211,7 +211,7 @@ public class CreateProcedureCommand extends Command {
 	public boolean areResultsCachable() {
 		return Query.areColumnsCachable(getProjectedSymbols());
 	}
-    
+
     public GroupSymbol getVirtualGroup() {
         return this.virtualGroup;
     }
@@ -225,7 +225,7 @@ public class CreateProcedureCommand extends Command {
 		this.resultSetColumns = Command.getUpdateCommandSymbol();
 		this.updateType = type;
 	}
-	
+
 	public int getUpdateType() {
 		return updateType;
 	}
@@ -233,11 +233,11 @@ public class CreateProcedureCommand extends Command {
 	public void setReturnVariable(ElementSymbol symbol) {
 		this.returnVariable = symbol;
 	}
-	
+
 	public ElementSymbol getReturnVariable() {
 		return returnVariable;
 	}
-	
+
 	@Override
 	public boolean returnsResultSet() {
 		return this.resultSetColumns != null && !this.resultSetColumns.isEmpty();

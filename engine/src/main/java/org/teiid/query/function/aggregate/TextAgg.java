@@ -48,9 +48,9 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 
     private FileStoreInputStreamFactory result;
     private TextLine textLine;
-    
+
     public TextAgg(TextLine textLine) {
-    	this.textLine = textLine;    	    	
+    	this.textLine = textLine;
 	}
 
 	private FileStoreInputStreamFactory buildResult(CommandContext context) throws TeiidProcessingException {
@@ -87,8 +87,8 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @throws TeiidProcessingException 
-     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
      * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
@@ -114,11 +114,11 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     	if (this.result == null) {
     		this.result = buildResult(commandContext);
     	}
-    	
+
     	try {
     		FileStoreOutputStream fs = this.result.getOuputStream();
 			fs.close();
-		
+
 			if (fs.bytesWritten()) {
 				return new BlobType(new BlobImpl(result));
 			}

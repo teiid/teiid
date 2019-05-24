@@ -31,7 +31,7 @@ import org.teiid.language.Command;
 import org.teiid.translator.ExecutionContext;
 
 public class TestJDBCProcedureExecution {
-	
+
 	@Test public void testProcedureExecution() throws Exception {
 		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec pm2.spTest8a()"); //$NON-NLS-1$
 		Connection connection = Mockito.mock(Connection.class);
@@ -40,7 +40,7 @@ public class TestJDBCProcedureExecution {
 		Mockito.stub(cs.getInt(1)).toReturn(5);
 		Mockito.stub(connection.prepareCall("{call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		
+
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
 		procedureExecution.execute();
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());

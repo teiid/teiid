@@ -29,25 +29,25 @@ import org.teiid.metadata.KeyRecord;
 
 
 public class PhoenixSQLConversionVisitor extends org.teiid.translator.jdbc.SQLConversionVisitor {
-    
+
     private PhoenixExecutionFactory executionFactory ;
-    
+
     public PhoenixSQLConversionVisitor(PhoenixExecutionFactory ef) {
         super(ef);
         this.executionFactory = ef;
     }
-    
+
     @Override
     protected String getInsertKeyword() {
     	return "UPSERT"; //$NON-NLS-1$
     }
-    
+
     @Override
     public void visit(Like obj) {
     	obj.setEscapeCharacter(null); //not supported - capabilities ensure only \ is pushed
     	super.visit(obj);
     }
-    
+
     @Override
     public void visit(Update update) {
     	//use an upsert
@@ -69,7 +69,7 @@ public class PhoenixSQLConversionVisitor extends org.teiid.translator.jdbc.SQLCo
 			for (Expression val : vals) {
 				select.add(new DerivedColumn(null, val));
 			}
-			
+
 			KeyRecord pk = update.getTable().getMetadataObject().getPrimaryKey();
 			if(pk != null) {
 				for (Column c : pk.getColumns()) {
@@ -80,10 +80,10 @@ public class PhoenixSQLConversionVisitor extends org.teiid.translator.jdbc.SQLCo
 					}
 				}
 			}
-			
+
 			Select query = new Select(select, false, Arrays.asList((TableReference)update.getTable()), update.getWhere(), null, null, null);
 			insert = new Insert(update.getTable(), cols, query);
-			
+
 		}
 		append(insert);
     }

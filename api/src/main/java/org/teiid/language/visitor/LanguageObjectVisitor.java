@@ -37,7 +37,7 @@ public interface LanguageObjectVisitor {
     public void visit(GroupBy obj);
     public void visit(In obj);
     public void visit(DerivedTable obj);
-    public void visit(Insert obj);    
+    public void visit(Insert obj);
     public void visit(IsNull obj);
     public void visit(Join obj);
     public void visit(Like obj);

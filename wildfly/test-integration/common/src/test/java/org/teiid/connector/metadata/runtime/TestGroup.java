@@ -47,13 +47,13 @@ public class TestGroup extends TestCase {
     private static String getTestVDBName() {
     	return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
     }
-    
+
     public static TranslationUtility createTranslationUtility(String vdbName) {
-        return new TranslationUtility(vdbName);        
+        return new TranslationUtility(vdbName);
     }
 
     // ################ TEST GROUP METADATAID ######################
-    
+
     public Table getGroup(String groupName, TranslationUtility transUtil) throws Exception {
         Select query = (Select) transUtil.parseCommand("SELECT 1 FROM " + groupName); //$NON-NLS-1$
         NamedTable group = (NamedTable) query.getFrom().get(0);
@@ -61,18 +61,18 @@ public class TestGroup extends TestCase {
     }
 
     public void helpTestGroup(String fullGroupName, String nameInSource, Properties expectedProps, TranslationUtility transUtil) throws Exception {
-        Table group = getGroup(fullGroupName, transUtil);     
+        Table group = getGroup(fullGroupName, transUtil);
         assertEquals("table name in source", group.getNameInSource()); //$NON-NLS-1$
-        
+
         Map<String, String> extProps = group.getProperties();
         assertEquals(expectedProps, extProps);
     }
-    
+
     public void testGroup() throws Exception {
         Properties props = new Properties();
         props.put("TestExtraProperty", "extension prop value"); //$NON-NLS-1$ //$NON-NLS-2$
-        helpTestGroup("ConnectorMetadata.TestTable", "TestTable", props, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$ 
-    }   
-    
+        helpTestGroup("ConnectorMetadata.TestTable", "TestTable", props, CONNECTOR_METADATA_UTILITY);//$NON-NLS-1$ //$NON-NLS-2$
+    }
+
 
 }

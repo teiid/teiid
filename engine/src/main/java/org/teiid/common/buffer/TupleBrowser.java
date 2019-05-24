@@ -28,29 +28,29 @@ import org.teiid.core.TeiidProcessingException;
 
 /**
  * Implements intelligent browsing over a {@link STree}
- * 
+ *
  * TODO: this is not as efficient as it should be over partial matches
  */
 public class TupleBrowser implements TupleSource {
-	
+
 	private final STree tree;
-	
+
 	private TupleSource valueSet;
-	
+
 	private SPage page;
 	private int index;
-	
+
 	private SPage bound;
 	private int boundIndex = -1;
-	
+
 	private List<List<?>> values;
 	private boolean updated;
 	private boolean direction;
-	
+
 	private boolean inPartial;
-	
+
 	private List<Object> cachedBound;
-	
+
 	private ArrayList<SearchResult> places = new ArrayList<SearchResult>();
 
     private boolean readOnly = true;
@@ -67,7 +67,7 @@ public class TupleBrowser implements TupleSource {
     public TupleBrowser(STree sTree, TupleSource valueSet, boolean direction) {
         this(sTree, valueSet, direction, true);
     }
-    
+
 	/**
 	 * Construct a value based browser.  The {@link TupleSource} should already be in the
 	 * proper direction.
@@ -82,7 +82,7 @@ public class TupleBrowser implements TupleSource {
 		this.valueSet = valueSet;
 		this.readOnly = readOnly;
 	}
-	
+
 	/**
 	 * Construct a range based browser
 	 * @param sTree
@@ -108,9 +108,9 @@ public class TupleBrowser implements TupleSource {
 		} else {
 			page = tree.header[0];
 		}
-		
+
 		boolean valid = true;
-		
+
 		if (upperBound != null) {
 			if (!isPartialKey && lowerBound != null && this.tree.comparator.compare(upperBound, lowerBound) < 0) {
 				valid = false;
@@ -141,7 +141,7 @@ public class TupleBrowser implements TupleSource {
 				boundIndex = values.size() - 1;
 			}
 		}
-				
+
 		if (!direction) {
 			SPage swap = page;
 			page = bound;
@@ -150,7 +150,7 @@ public class TupleBrowser implements TupleSource {
 			boundIndex = index;
 			index = upperIndex;
 		}
-		
+
 		if (!valid) {
 			page = null;
 		}
@@ -158,7 +158,7 @@ public class TupleBrowser implements TupleSource {
 
 	private boolean setPage(List<?> lowerBound) throws TeiidComponentException {
 		this.tree.find(lowerBound, getPlaces());
-		
+
 		SearchResult sr = places.get(places.size() - 1);
 		page = sr.page;
 		index = sr.index;
@@ -170,12 +170,12 @@ public class TupleBrowser implements TupleSource {
 		setValues(sr.values);
 		return result;
 	}
-	
+
 	private ArrayList<SearchResult> getPlaces() {
 		places.clear();
 		return places;
 	}
-	
+
 	@Override
 	public List<?> nextTuple() throws TeiidComponentException,
 			TeiidProcessingException {
@@ -260,7 +260,7 @@ public class TupleBrowser implements TupleSource {
             }
 		}
 	}
-	
+
 	public void reset(TupleSource ts) throws TeiidComponentException {
 		this.valueSet = ts;
 		resetState();
@@ -273,14 +273,14 @@ public class TupleBrowser implements TupleSource {
 		updated = false;
 		setValues(null);
 	}
-	
+
 	private int getOffset() {
 		if (!inPartial && valueSet != null) {
 			return 0;
 		}
 		return direction?1:-1;
 	}
-	
+
 	/**
 	 * Perform an in-place update of the tuple just returned by the next method
 	 * WARNING - this must not change the key value
@@ -294,10 +294,10 @@ public class TupleBrowser implements TupleSource {
 		values.set(index - getOffset(), tuple);
 		updated = true;
 	}
-	
+
 	/**
 	 * Notify the browser that the last value was deleted.
-	 * @throws TeiidComponentException 
+	 * @throws TeiidComponentException
 	 */
 	public void removed() throws TeiidComponentException {
 	    if (readOnly) {
@@ -332,10 +332,10 @@ public class TupleBrowser implements TupleSource {
         //an external call
         values.remove(index);
     }
-	
+
 	@Override
 	public void closeSource() {
-		
+
 	}
 
     private void setValues(List<List<?>> values) {
@@ -353,7 +353,7 @@ public class TupleBrowser implements TupleSource {
             this.values = new LightWeightCopyOnWriteList<List<?>>(values);
         }
     }
-    
+
     /**
      * For testing
      * @return
@@ -364,5 +364,5 @@ public class TupleBrowser implements TupleSource {
         }
         return values.size();
     }
-    
+
 }

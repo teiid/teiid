@@ -49,10 +49,10 @@ import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 public class ExasolExecutionFactory extends JDBCExecutionFactory {
 
     public static final String EXASOL = "exasol";
-    public static final String TIME_FORMAT = "HH24:MI:SS"; 
-    public static final String DATE_FORMAT = "YYYY-MM-DD"; 
-    public static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; 
-    public static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF1";  
+    public static final String TIME_FORMAT = "HH24:MI:SS";
+    public static final String DATE_FORMAT = "YYYY-MM-DD";
+    public static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT;
+    public static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF1";
 
     //Numeric
     public static final String LN = "LN";
@@ -212,7 +212,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
         //Convert
         ConvertModifier convertModifier = new ConvertModifier();
 
-        convertModifier.addTypeMapping("VARCHAR(4000)", FunctionModifier.STRING); 
+        convertModifier.addTypeMapping("VARCHAR(4000)", FunctionModifier.STRING);
         convertModifier.addTypeMapping("DECIMAL(3)", FunctionModifier.BYTE);
         convertModifier.addTypeMapping("DECIMAL(5)", FunctionModifier.SHORT);
         convertModifier.addTypeMapping("DECIMAL(18)", FunctionModifier.INTEGER);
@@ -223,7 +223,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addTypeMapping("DECIMAL(36,18)", FunctionModifier.BIGDECIMAL);
 
         convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT));
-        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIMESTAMP_FORMAT)); 
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIMESTAMP_FORMAT));
         convertModifier.addNumericBooleanConversions();
         convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.DOUBLE, new FunctionModifier() {
             @Override
@@ -306,7 +306,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
 
         return supportedFunctions;
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
             Class<?> expectedType) throws SQLException {
@@ -315,7 +315,7 @@ public class ExasolExecutionFactory extends JDBCExecutionFactory {
         }
         return super.retrieveValue(results, parameterIndex, expectedType);
     }
-    
+
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
             Class<?> expectedType) throws SQLException {

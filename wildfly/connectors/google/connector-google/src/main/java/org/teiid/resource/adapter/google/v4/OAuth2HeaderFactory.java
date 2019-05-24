@@ -32,13 +32,13 @@ public class OAuth2HeaderFactory implements AuthHeaderFactory {
 	private String refreshToken;
 	private String clientId;
 	private String clientSecret;
-	
+
 	public OAuth2HeaderFactory(String refreshToken, String clientId, String clientSecret){
 	    this.refreshToken = refreshToken;
 	    this.clientId = clientId;
 	    this.clientSecret = clientSecret;
 	}
-	
+
 	public void refreshToken() {
 		try {
 		    if (credential == null) {
@@ -55,11 +55,11 @@ public class OAuth2HeaderFactory implements AuthHeaderFactory {
                     "Error reading TokenRequest response", e);
         }
 	}
-	
+
 	public String getAuthHeader() {
 		return "Bearer "+  credential.getAccessToken(); //$NON-NLS-1$
 	}
-	
+
 	public GoogleCredential getCredential() {
         return credential;
     }

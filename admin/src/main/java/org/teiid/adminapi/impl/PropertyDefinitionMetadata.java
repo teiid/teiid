@@ -38,8 +38,8 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
     private boolean masked = false;
     private boolean modifiable = true;
     private boolean required = false;
-    private String category; 
-    
+    private String category;
+
     /**
      * @see java.lang.Object#toString()
      */
@@ -60,36 +60,36 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
         result.append(" RequiresRestart:").append(getRequiresRestart()); //$NON-NLS-1$
         return result.toString();
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getAllowedValues()
      */
     public Collection getAllowedValues() {
         return allowedValues;
     }
-    
-    /** 
+
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getDefaultValue()
      */
     public Object getDefaultValue() {
         return defaultValue;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getDescription()
      */
     public String getDescription() {
         return description;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getDisplayName()
      */
     public String getDisplayName() {
         return displayName;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getPropertyTypeClassName()
      */
     public String getPropertyTypeClassName() {
@@ -97,14 +97,14 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
     }
 
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#getRequiresRestart()
      */
     public RestartType getRequiresRestart() {
         return requiresRestart;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#isExpert()
      * @since 4.3
      */
@@ -112,93 +112,93 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
         return advanced;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#isMasked()
      */
     public boolean isMasked() {
         return masked;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#isModifiable()
      */
     public boolean isModifiable() {
         return modifiable;
     }
 
-    /** 
+    /**
      * @see org.teiid.adminapi.PropertyDefinition#isRequired()
      */
     public boolean isRequired() {
         return required;
     }
 
-    /** 
+    /**
      * @param allowedValues The allowedValues to set.
      */
     public void setAllowedValues(Collection allowedValues) {
         this.allowedValues = allowedValues;
     }
 
-    /** 
+    /**
      * @param defaultValue The defaultValue to set.
      */
     public void setDefaultValue(Serializable defaultValue) {
         this.defaultValue = defaultValue;
     }
 
-    /** 
+    /**
      * @param description The description to set.
      */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    
-    /** 
+
+    /**
      * @param displayName The displayName to set.
      */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
 
-    
-    /** 
+
+    /**
      * @param expert The value of expert to set.
      */
     public void setAdvanced(boolean expert) {
         this.advanced = expert;
     }
 
-    /** 
+    /**
      * @param masked The value of masked to set.
      */
     public void setMasked(boolean masked) {
         this.masked = masked;
     }
-    /** 
+    /**
      * @param modifiable The value of modifiable to set.
      */
     public void setModifiable(boolean modifiable) {
         this.modifiable = modifiable;
     }
 
-    /** 
+    /**
      * @param propertyTypeClassName The propertyTypeName to set.
      */
     public void setPropertyTypeClassName(String propertyTypeClassName) {
         this.propertyTypeClassName = propertyTypeClassName;
     }
-    
-    
-    /** 
+
+
+    /**
      * @param required The value of required to set.
      */
     public void setRequired(boolean required) {
         this.required = required;
     }
-    
-    /** 
+
+    /**
      * @param requiresRestart The value of requiresRestart to set.
      */
     public void setRequiresRestart(RestartType requiresRestart) {
@@ -214,7 +214,7 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
     public String getCategory() {
         return this.category;
     }
-    
+
     public void setCategory(String category) {
         this.category = category;
     }

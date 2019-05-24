@@ -30,11 +30,11 @@ class VDBRepositoryService implements Service<VDBRepository> {
 	private VDBRepository repo;
     protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
     protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
-	
+
 	public VDBRepositoryService(VDBRepository repo) {
 		this.repo = repo;
 	}
-	
+
 	@Override
 	public void start(StartContext context) throws StartException {
 	    repo.setBufferManager(this.bufferManagerInjector.getValue());

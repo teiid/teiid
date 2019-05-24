@@ -28,7 +28,7 @@ import org.teiid.test.client.TestResult;
  */
 @SuppressWarnings("nls")
 public class TestResultStat implements TestResult, Serializable {
-  
+
     /**
 	 * @since
 	 */
@@ -39,13 +39,13 @@ public class TestResultStat implements TestResult, Serializable {
     protected String errorMsg;
     protected String query;
     protected Throwable error=null;
-    
+
     private long beginTS;
     private long endTS;
-    
+
     private String errorFile;
 
-    
+
     public TestResultStat(final String querySetID, final String queryID, String query) {
     	this.querySetID = querySetID;
     	this.queryID = queryID;
@@ -62,7 +62,7 @@ public class TestResultStat implements TestResult, Serializable {
         this.error = error;
 
     }
-    
+
     public TestResultStat(final String querySetID, final String queryID, String query, final int resultStatus, long beginTS, long endTS, final Throwable error, String errorFile) {
     	this.querySetID = querySetID;
     	this.queryID = queryID;
@@ -70,7 +70,7 @@ public class TestResultStat implements TestResult, Serializable {
         this.beginTS = beginTS;
         this.endTS = endTS;
         this.error = error;
-        
+
         this.errorFile = errorFile;
     }
 
@@ -86,7 +86,7 @@ public class TestResultStat implements TestResult, Serializable {
         return RESULT_STATE_STRING.UNKNOWN;
     }
 
-    
+
 
 	@Override
 	public String getQuerySetID() {
@@ -97,7 +97,7 @@ public class TestResultStat implements TestResult, Serializable {
 	public String getQueryID() {
         return queryID;
     }
-    
+
     public String getQuery() {
         return query;
     }
@@ -105,7 +105,7 @@ public class TestResultStat implements TestResult, Serializable {
     public int getStatus() {
         return resultStatus;
     }
-    
+
     public void setStatus(int endStatus) {
 	resultStatus = endStatus;
     }
@@ -113,50 +113,50 @@ public class TestResultStat implements TestResult, Serializable {
     public String getExceptionMsg() {
         return (this.errorMsg != null ? this.errorMsg : ( error != null ? error.getMessage() : ""));
     }
-    
+
     public void setException(Throwable error){
 	this.error = error;
     }
-    
+
     public  void setExceptionMessage(String errorMsg) {
 	this.errorMsg = errorMsg;
-	
+
     }
-    
+
     public Throwable getException() {
 	return this.error;
     }
-    
+
     public long getBeginTS() {
     	return beginTS;
-   	
+
     }
-    
+
     public void setBeginTS(long beginTS) {
 	this.beginTS = beginTS;
     }
-    
+
     public long getEndTS() {
     	return endTS;
     }
-    
+
     public void setEndTS(long endts) {
 	this.endTS = endts;
     }
-    
+
     /**
      * @return Returns the errorfile.
      */
     public String getErrorfile() {
         return errorFile;
     }
-    
+
     public void setErrorFile(String errorfile) {
 	this.errorFile = errorfile;
     }
-    
-    
 
-    
-    
+
+
+
+
 }

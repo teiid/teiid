@@ -21,7 +21,7 @@ package org.teiid.language;
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class Join extends BaseLanguageObject implements TableReference {
-	
+
 	public enum JoinType {
 		INNER_JOIN,
 		CROSS_JOIN,
@@ -34,7 +34,7 @@ public class Join extends BaseLanguageObject implements TableReference {
     private TableReference rightItem;
     private JoinType joinType;
     private Condition condition;
-    
+
     public Join(TableReference left, TableReference right, JoinType joinType, Condition criteria) {
         this.leftItem = left;
         this.rightItem = right;
@@ -61,7 +61,7 @@ public class Join extends BaseLanguageObject implements TableReference {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     public void setLeftItem(TableReference item) {
         this.leftItem = item;
     }
@@ -69,7 +69,7 @@ public class Join extends BaseLanguageObject implements TableReference {
     public void setRightItem(TableReference item) {
         this.rightItem = item;
     }
-    
+
     public void setJoinType(JoinType type) {
         this.joinType = type;
     }

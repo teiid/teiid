@@ -28,11 +28,11 @@ import org.teiid.core.types.TransformationException;
 public class FixedNumberToBigDecimalTransform extends Transform {
 
 	private Class<?> sourceType;
-	
+
 	public FixedNumberToBigDecimalTransform(Class<?> sourceType) {
 		this.sourceType = sourceType;
 	}
-	
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.

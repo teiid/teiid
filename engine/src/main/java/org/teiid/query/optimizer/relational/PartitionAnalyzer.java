@@ -35,11 +35,11 @@ import org.teiid.query.sql.util.SymbolMap;
 
 /**
  * TODO: support recursive detection of partitions
- * 
+ *
  * Extracts a map of partitioning information from a union
  */
 public class PartitionAnalyzer {
-	
+
 	public static Map<ElementSymbol, List<Set<Constant>>> extractPartionInfo(SetQuery setQuery, List<ElementSymbol> projectedSymbols) {
 		List<Query> queries = new LinkedList<Query>();
     	if (!extractQueries(setQuery, queries)) {
@@ -49,9 +49,9 @@ public class PartitionAnalyzer {
 		boolean first = true;
 		for (Query query : queries) {
 			Map<ElementSymbol, Set<Constant>> info = extractPartitionInfo(query, projectedSymbols);
-			
+
 			partitions.keySet().retainAll(info.keySet());
-			
+
 			if (first) {
     			first = false;
     			for (Map.Entry<ElementSymbol, Set<Constant>> entry : info.entrySet()) {
@@ -60,9 +60,9 @@ public class PartitionAnalyzer {
 					values.add(entry.getValue());
     			}
     			continue;
-			} 
+			}
 			Set<ElementSymbol> keys = partitions.keySet();
-			
+
 			for (Iterator<ElementSymbol> iter = keys.iterator(); iter.hasNext();) {
 				ElementSymbol elementSymbol = iter.next();
 				List<Set<Constant>> values = partitions.get(elementSymbol);
@@ -78,7 +78,7 @@ public class PartitionAnalyzer {
     	}
 		return partitions;
 	}
-	
+
 	public static boolean extractQueries(QueryCommand queryCommand, List<Query> result) {
 		if (queryCommand instanceof SetQuery) {
 			SetQuery sq = (SetQuery)queryCommand;
@@ -96,7 +96,7 @@ public class PartitionAnalyzer {
 		result.add((Query)queryCommand);
 		return true;
 	}
-	
+
 	private static Map<ElementSymbol, Set<Constant>> extractPartitionInfo(Query query, List<ElementSymbol> projectedSymbols) {
 		List<Expression> projected = query.getSelect().getProjectedSymbols();
 		List<Criteria> crits = Criteria.separateCriteriaByAnd(query.getCriteria());
@@ -149,5 +149,5 @@ public class PartitionAnalyzer {
 		}
 		return result;
 	}
-	
+
 }

@@ -31,7 +31,7 @@ public class Util {
 		}
 		return id;
 	}
-	
+
 	public static String addSingleQuotes(String text) {
 		StringBuffer result = new StringBuffer();
 		if(!text.startsWith("'")) { //$NON-NLS-1$
@@ -40,16 +40,16 @@ public class Util {
 		result.append(text);
 		if(!text.endsWith("'")) { //$NON-NLS-1$
 			result.append('\'');
-		} 
+		}
 		return result.toString();
 	}
-	
+
 	private static String timeZone;
-	
+
 	public static void resetTimeZone() {
 	    timeZone = null;
 	}
-	
+
 	public static String getDefaultTimeZoneString() {
 		if (timeZone == null) {
 			String s = new SimpleDateFormat("Z").format(new Date(0)); //$NON-NLS-1$

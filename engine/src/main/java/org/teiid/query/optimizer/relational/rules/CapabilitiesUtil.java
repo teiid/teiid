@@ -59,34 +59,34 @@ public class CapabilitiesUtil {
      */
     private CapabilitiesUtil() {
     }
-    
-    static boolean supportsInlineView(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    static boolean supportsInlineView(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
         throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsSelfJoins(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSelfJoins(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-                
+
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-  
+
         return caps.supportsCapability(Capability.QUERY_FROM_JOIN_SELFJOIN) &&
                 caps.supportsCapability(Capability.QUERY_FROM_GROUP_ALIAS);
     }
 
-    public static boolean supportsGroupAliases(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsGroupAliases(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
         throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.QUERY_FROM_GROUP_ALIAS, modelID, metadata, capFinder);
     }
-        
-    public static boolean supportsJoin(Object modelID, JoinType joinType, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static boolean supportsJoin(Object modelID, JoinType joinType, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-        
+
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
@@ -97,24 +97,24 @@ public class CapabilitiesUtil {
         if (!joinType.isOuter()) {
         	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER);
         }
-        
+
         if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER)) {
             return false;
         }
-        
+
         return !joinType.equals(JoinType.JOIN_FULL_OUTER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER_FULL);
     }
 
-    public static boolean supportsAggregates(List groupCols, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsAggregates(List groupCols, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-        
+
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        
+
         if (groupCols != null && !groupCols.isEmpty()) {
         	if (!caps.supportsCapability(Capability.QUERY_GROUP_BY)) {
         		return false;
@@ -132,13 +132,13 @@ public class CapabilitiesUtil {
                 }
             }
         }
-        
+
         return true;
     }
 
-    public static boolean supportsAggregateFunction(Object modelID, AggregateSymbol aggregate, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsAggregateFunction(Object modelID, AggregateSymbol aggregate, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-        
+
         if (metadata.isVirtualModel(modelID)){
             return false;
         }
@@ -158,7 +158,7 @@ public class CapabilitiesUtil {
             } else {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT)) {
                     return false;
-                }                
+                }
             }
             break;
         case SUM:
@@ -189,7 +189,7 @@ public class CapabilitiesUtil {
         case STRING_AGG:
         	if(!caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
         	    //check for more specific list support
-                if(aggregate.getType() == DataTypeManager.DefaultDataClasses.BLOB 
+                if(aggregate.getType() == DataTypeManager.DefaultDataClasses.BLOB
                         || !caps.supportsCapability(Capability.QUERY_AGGREGATES_LIST)
                         || !EvaluatableVisitor.willBecomeConstant(aggregate.getArg(1))) {
                     return false;
@@ -233,7 +233,7 @@ public class CapabilitiesUtil {
         	}
         	break;
         default:
-        	if (aggregate.isEnhancedNumeric()) { 
+        	if (aggregate.isEnhancedNumeric()) {
         		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
         			return false;
         		}
@@ -242,32 +242,32 @@ public class CapabilitiesUtil {
         	}
         	break;
         }
-        
+
         // Check DISTINCT if necessary
         if(aggregate.isDistinct() && ! caps.supportsCapability(Capability.QUERY_AGGREGATES_DISTINCT)) {
             return false;
         }
-        
+
         if (aggregate.getCondition() != null && !caps.supportsCapability(Capability.ADVANCED_OLAP)) {
     		return false;
         }
-        
+
         // Passed all the checks!
         return true;
     }
 
-    public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-        
+
 		FunctionMethod method = function.getFunctionDescriptor().getMethod();
 		if (metadata.isVirtualModel(modelID) || method.getPushdown() == PushDown.CANNOT_PUSHDOWN){
             return false;
         }
 
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        
+
         //capabilities check is only valid for non-schema scoped functions
-        //technically the other functions are scoped to SYS or their function model, but that's 
+        //technically the other functions are scoped to SYS or their function model, but that's
         //not formally part of their metadata yet
         Schema schema = method.getParent();
         //TODO: this call should be functionDescriptor.getFullName - but legacy function models are parsed without setting the parent model as the schema
@@ -276,15 +276,15 @@ public class CapabilitiesUtil {
             if (!caps.supportsFunction(fullName)) {
                 if(SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)) {
                     //special handling for delayed rewrite of concat2
-                    return (schema == null 
+                    return (schema == null
                             && caps.supportsFunction(SourceSystemFunctions.CONCAT)
                             && caps.supportsFunction(SourceSystemFunctions.IFNULL)
                             && caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
                 } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
-                    return (schema == null 
+                    return (schema == null
                             && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPADD));
                 } else if(SourceSystemFunctions.FROM_UNIXTIME.equalsIgnoreCase(fullName)) {
-                    return (schema == null 
+                    return (schema == null
                             && caps.supportsFunction(SourceSystemFunctions.TIMESTAMPDIFF));
                 } else {
                     return false ;
@@ -298,8 +298,8 @@ public class CapabilitiesUtil {
                 }
                 return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
             }
-            if (!caps.supportsCapability(Capability.GEOGRAPHY_TYPE) 
-                    && method.getCategory() != null 
+            if (!caps.supportsCapability(Capability.GEOGRAPHY_TYPE)
+                    && method.getCategory() != null
                     && method.getCategory().equals(FunctionCategoryConstants.GEOGRAPHY)) {
                 //geometry functions can also accept geographies, but that type needs to be supported
                 for (Expression ex : function.getArgs()) {
@@ -311,26 +311,26 @@ public class CapabilitiesUtil {
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
         	return caps.supportsFunction(fullName);
         }
-        
+
         return true;
     }
 
-    public static boolean supportsSelectDistinct(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSelectDistinct(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return supports(Capability.QUERY_SELECT_DISTINCT, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsSelectExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSelectExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_ORDERBY, modelID, metadata, capFinder);   
+    	return supports(Capability.QUERY_ORDERBY, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsSetOp(Object modelID, Operation setOp, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSetOp(Object modelID, Operation setOp, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){
@@ -348,31 +348,31 @@ public class CapabilitiesUtil {
             case UNION:
                 return caps.supportsCapability(Capability.QUERY_UNION);
         }
-        
+
         return false;
     }
 
-    public static boolean supportsSetQueryOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSetQueryOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return supports(Capability.QUERY_SET_ORDER_BY, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return supports(Capability.QUERY_CASE, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsSearchedCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSearchedCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return supports(Capability.QUERY_SEARCHED_CASE, modelID, metadata, capFinder);
     }
 
-    public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return getIntProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
     }
-    
-    public static Object getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static Object getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){
@@ -383,9 +383,9 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         return caps.getSourceProperty(cap);
     }
-    	
+
     /**
-     * Values are expected to be non-negative except for unknown/invalid = -1 
+     * Values are expected to be non-negative except for unknown/invalid = -1
      * @param cap
      * @param modelID
      * @param metadata
@@ -394,32 +394,32 @@ public class CapabilitiesUtil {
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
-    public static int getIntProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static int getIntProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         Object i = getProperty(cap, modelID, metadata, capFinder);
         int value = -1;
         if(i != null) {
             value = ((Integer)i).intValue();
         }
-        
+
         // Check for invalid values and send back code for UNKNOWN
         if(value <= 0) {
             value = -1;
         }
         return value;
     }
-    
-    public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return getIntProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }
-    
-    public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
     }
-    
-    public static int getMaxProjectedColumns(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static int getMaxProjectedColumns(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return getIntProperty(Capability.MAX_QUERY_PROJECTED_COLUMNS, modelID, metadata, capFinder);
     }
@@ -435,7 +435,7 @@ public class CapabilitiesUtil {
         }
         return crits;
     }
-    
+
     public static NullOrder getDefaultNullOrder(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
         if (metadata.isVirtualModel(modelID)){
             return NullOrder.UNKNOWN;
@@ -447,28 +447,28 @@ public class CapabilitiesUtil {
         }
         return order;
     }
-    
-    public static boolean supportsRowLimit(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static boolean supportsRowLimit(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.ROW_LIMIT, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsRowOffset(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsRowOffset(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.ROW_OFFSET, modelID, metadata, capFinder);
     }
-    
-    public static boolean isSameConnector(Object modelID, Object modelID1, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+
+    public static boolean isSameConnector(Object modelID, Object modelID1, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-        
+
         if (modelID == null || modelID1 == null || metadata.isVirtualModel(modelID) || metadata.isVirtualModel(modelID1)){
             return false;
         }
-        
+
         if (modelID.equals(modelID1)) {
             return true;
         }
-        
+
         if (capFinder == null) {
         	return false;
         }
@@ -476,9 +476,9 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         SourceCapabilities caps1 = getCapabilities(modelID1, metadata, capFinder);
-        
+
         Object connectorID = caps.getSourceProperty(Capability.CONNECTOR_ID);
-        
+
         return connectorID != null && connectorID.equals(caps1.getSourceProperty(Capability.CONNECTOR_ID));
     }
 
@@ -494,12 +494,12 @@ public class CapabilitiesUtil {
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.REQUIRES_CRITERIA, modelID, metadata, capFinder);
 	}
-    
+
     public static boolean useAnsiJoin(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.QUERY_FROM_ANSI_JOIN, modelID, metadata, capFinder);
 	}
-    
+
     public static boolean supports(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
     	if (metadata.isVirtualModel(modelID)){
@@ -518,7 +518,7 @@ public class CapabilitiesUtil {
 	 * Validate that the elements are searchable and can be used in a criteria against this source.
 	 * TODO: this check is too general and not type based
 	 */
-	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType) 
+	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType)
 	throws QueryMetadataException, TeiidComponentException {
 		if (objs != null) {
 		    for (LanguageObject lo : objs) {
@@ -534,12 +534,12 @@ public class CapabilitiesUtil {
 		    	}
 		        if (!metadata.elementSupports(((ElementSymbol)lo).getMetadataID(), searchableType)) {
 		        	return false;
-		        }                
+		        }
 		    }
 		}
 	    return true;
 	}
-	
+
 	static boolean supportsNullOrdering(QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder, Object modelID, OrderByItem symbol)
 			throws QueryMetadataException, TeiidComponentException {
@@ -547,14 +547,14 @@ public class CapabilitiesUtil {
 		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
 		if (symbol.getNullOrdering() != null && !supportsNullOrdering) {
 			if (symbol.getNullOrdering() == NullOrdering.FIRST) {
-				if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW) 
+				if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW)
 						&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
 					return false;
 				}
-			} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH) 
+			} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)
 					&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
 				return false;
-			} 
+			}
 		}
 		return true;
 	}

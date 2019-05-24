@@ -22,7 +22,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 
 public class CouchbaseExecution {
-    
+
 	protected ExecutionContext executionContext;
 	protected RuntimeMetadata metadata;
 	protected CouchbaseConnection connection;

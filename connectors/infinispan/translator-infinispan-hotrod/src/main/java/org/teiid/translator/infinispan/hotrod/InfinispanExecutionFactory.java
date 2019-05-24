@@ -96,14 +96,14 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
 		return new InfinispanDirectQueryExecution(arguments, command, executionContext,
 				metadata, connection);
 	}
-    
+
     @Override
     public void getMetadata(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
         ProtobufMetadataProcessor metadataProcessor = (ProtobufMetadataProcessor)getMetadataProcessor();
         PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 
         // This block is only invoked when NATIVE metadata is defined, by the time code got here if we have
-        // tables already in schema, then user defined through other metadata repositories. In this case, 
+        // tables already in schema, then user defined through other metadata repositories. In this case,
         // a .proto file need to be generated based on schema, then use that to generate final metadata and
         // register the .proto with the Infinispan
         Schema schema = metadataFactory.getSchema();
@@ -124,7 +124,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
         }
 
         metadataProcessor.process(metadataFactory, conn);
-        
+
         // TEIID-4896: In the process of DDL->proto, the extension properties defined on the schema
         // may be not carried forward, we need to make sure we copy those back.
         for (Table oldT : removedTables) {
@@ -137,7 +137,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
             if (oldT.getAnnotation() != null) {
                 newT.setAnnotation(oldT.getAnnotation());
             }
-            
+
             List<Column> columns = oldT.getColumns();
             for (Column c : columns) {
                 Column newCol = newT.getColumnByName(c.getName());
@@ -152,7 +152,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
                     }
                 }
             }
-        }        
+        }
 
         resource = metadataProcessor.getProtobufResource();
         if(resource == null) {
@@ -288,7 +288,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public boolean supportsHaving() {
         return true;
     }
-    
+
     @TranslatorProperty(display="Supports Bulk Update", description="If true, translator can support Bulk Updates",advanced=true)
     @Override
     public boolean supportsBulkUpdate() {

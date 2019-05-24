@@ -44,19 +44,19 @@ public class TestFtpFileSystem {
         FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
         mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
         mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21); 
+        mcf.setPort(21);
         mcf.setUsername("kylin"); //$NON-NLS-1$
         mcf.setPassword("redhat"); //$NON-NLS-1$
         VirtualFile mountPoint = VFS.getChild("/home/kylin/vsftpd"); //$NON-NLS-1$
         VFS.mount(mountPoint, new FtpFileSystem(mcf.createClient()));
     }
-    
+
     @Test
     public void testGetFile() throws IOException, ResourceException {
         File file = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").getPhysicalFile(); //$NON-NLS-1$
         assertNull(file);
     }
-    
+
     @Test
     public void testOpenStream() throws IOException, ResourceException {
         InputStream in = VFS.getChild("/home/kylin/vsftpd/not-exist.txt").openStream(); //$NON-NLS-1$
@@ -65,7 +65,7 @@ public class TestFtpFileSystem {
         assertNotNull(in);
         in.close();
     }
-    
+
     @Test
     public void testDelete() throws IOException, ResourceException {
         writeFile(new File("pom.xml").getAbsolutePath()); //$NON-NLS-1$
@@ -74,54 +74,54 @@ public class TestFtpFileSystem {
         assertTrue(file.delete());
         assertFalse(file.exists());
     }
-    
+
     private void writeFile(String path) throws ResourceException, IOException {
         VirtualFile file = VFS.getChild(path);
         FtpManagedConnectionFactory mcf = new FtpManagedConnectionFactory();
         mcf.setParentDirectory("/home/kylin/vsftpd"); //$NON-NLS-1$
         mcf.setHost("10.66.192.120"); //$NON-NLS-1$
-        mcf.setPort(21); 
+        mcf.setPort(21);
         mcf.setUsername("kylin"); //$NON-NLS-1$
         mcf.setPassword("redhat"); //$NON-NLS-1$
-        FTPClient client = mcf.createClient();  
+        FTPClient client = mcf.createClient();
         client.storeFile(file.getName(), file.openStream());
         client.disconnect();
     }
-    
+
     @Test
     public void testGetSize() {
         assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getSize()); //$NON-NLS-1$
         assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getSize()); //$NON-NLS-1$
- 
+
     }
-    
+
     @Test
     public void testGetLastModified() {
-        assertEquals(1480314470000l, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getLastModified()); //$NON-NLS-1$
+        assertEquals(1480314470000L, VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").getLastModified()); //$NON-NLS-1$
         assertEquals(-1, VFS.getChild("/home/kylin/vsftpd/sub").getLastModified()); //$NON-NLS-1$
     }
-    
+
     @Test
     public void testExists(){
         assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").exists()); //$NON-NLS-1$
         assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").exists()); //$NON-NLS-1$
         assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").exists()); //$NON-NLS-1$
     }
-    
+
     @Test
     public void testIsFile() {
         assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isFile()); //$NON-NLS-1$
         assertTrue(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").isFile()); //$NON-NLS-1$
         assertFalse(VFS.getChild("/home/kylin/vsftpd/sub").isFile()); //$NON-NLS-1$
     }
-    
+
     @Test
     public void testIsDirectory() {
         assertFalse(VFS.getChild("/home/kylin/vsftpd/marketdata-price.txt").isDirectory()); //$NON-NLS-1$
         assertFalse(VFS.getChild("/home/kylin/vsftpd/marketdata-price1.txt").isDirectory()); //$NON-NLS-1$
         assertTrue(VFS.getChild("/home/kylin/vsftpd/sub").isDirectory()); //$NON-NLS-1$
     }
-    
+
     @Test
     public void testNamelist() {
         assertTrue(VFS.getChild("/home/kylin/vsftpd").getChildren().size() > 0); //$NON-NLS-1$

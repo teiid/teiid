@@ -32,14 +32,14 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     private MetadataProvider provider;
 
     private boolean useJDBC4ColumnNameAndLabelSemantics = true;
-    
+
     public ResultSetMetaDataImpl(MetadataProvider provider, String supportBackwardsCompatibility) {
     	this.provider = provider;
     	if (supportBackwardsCompatibility != null) {
     		this.useJDBC4ColumnNameAndLabelSemantics = Boolean.parseBoolean(supportBackwardsCompatibility);
     	}
-    }    
-    
+    }
+
     /**
      * Adjust from 1-based to internal 0-based representation
      * @param index External 1-based representation
@@ -48,7 +48,7 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     private int adjustColumn(int index) {
         return index-1;
     }
-    
+
     public String getVirtualDatabaseName(int index) throws SQLException {
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
     }
@@ -81,14 +81,14 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     public int isNullable(int index) throws SQLException {
         Object nullable = provider.getValue(adjustColumn(index), ResultsMetadataConstants.NULLABLE);
         if(nullable.equals(ResultsMetadataConstants.NULL_TYPES.NULLABLE)) {
-            return columnNullable;    
+            return columnNullable;
         } else if(nullable.equals(ResultsMetadataConstants.NULL_TYPES.NOT_NULL)) {
             return columnNoNulls;
         } else {
             return columnNullableUnknown;
         }
     }
-                        
+
     public boolean isSigned(int index) throws SQLException {
         return provider.getBooleanValue(adjustColumn(index), ResultsMetadataConstants.SIGNED);
     }

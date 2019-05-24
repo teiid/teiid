@@ -31,9 +31,9 @@ import org.teiid.query.processor.BatchCollector.BatchProducer;
 
 /**
  * A BatchIterator provides an iterator interface to a {@link BatchProducer}.
- * By setting {@link #setBuffer(TupleBuffer)}, 
+ * By setting {@link #setBuffer(TupleBuffer)},
  * the iterator can copy on read into a {@link TupleBuffer} for repeated reading.
- * 
+ *
  * Note that the saveOnMark buffering only lasts until the next mark is set.
  */
 public class BatchIterator extends AbstractTupleSource {
@@ -47,12 +47,12 @@ public class BatchIterator extends AbstractTupleSource {
     public BatchIterator(BatchProducer source) {
         this.source = source;
     }
-    
+
 	@Override
 	protected TupleBatch getBatch(long row) throws TeiidComponentException, TeiidProcessingException {
 		throw new UnsupportedOperationException();
 	}
-	
+
 	@Override
 	protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
 		if (this.buffer != null && this.getCurrentIndex() <= this.buffer.getRowCount()) {
@@ -73,7 +73,7 @@ public class BatchIterator extends AbstractTupleSource {
 		}
 		return getCurrentTuple();
 	}
-	
+
 	@Override
 	protected List<?> getCurrentTuple() throws TeiidComponentException,
 			BlockedException, TeiidProcessingException {
@@ -88,7 +88,7 @@ public class BatchIterator extends AbstractTupleSource {
         	this.buffer.addTuple(tuple);
         }
 	}
-	
+
 	public long available() {
 		if (batch != null && batch.containsRow(getCurrentIndex())) {
 			return batch.getEndRow() - getCurrentIndex() + 1;
@@ -99,8 +99,8 @@ public class BatchIterator extends AbstractTupleSource {
     public void setBuffer(TupleBuffer buffer, boolean saveOnMark) {
 		this.buffer = buffer;
 		this.saveOnMark = saveOnMark;
-	}   
-    
+	}
+
     @Override
     public void closeSource() {
     	if (this.buffer != null) {
@@ -108,7 +108,7 @@ public class BatchIterator extends AbstractTupleSource {
     		this.buffer = null;
     	}
     }
-    
+
     @Override
     public void reset() {
     	super.reset();
@@ -127,7 +127,7 @@ public class BatchIterator extends AbstractTupleSource {
     	mark = true;
 		saveTuple(this.currentTuple);
     }
-    
+
     @Override
     public void setPosition(long position) {
     	if (this.buffer == null && position < getCurrentIndex() && position < (this.batch != null ? batch.getBeginRow() : Long.MAX_VALUE)) {
@@ -147,7 +147,7 @@ public class BatchIterator extends AbstractTupleSource {
 		mark = true;
 		return true;
 	}
-	
+
 	public void disableSave() {
 		if (buffer != null) {
 			this.saveOnMark = true;
@@ -157,7 +157,7 @@ public class BatchIterator extends AbstractTupleSource {
 			}
 		}
 	}
-	
+
 	public void readAhead(long limit) throws TeiidComponentException, TeiidProcessingException {
 		if (buffer == null || done) {
 			return;
@@ -176,9 +176,9 @@ public class BatchIterator extends AbstractTupleSource {
 			this.buffer.close();
 		}
 	}
-	
+
 	public TupleBuffer getBuffer() {
 		return buffer;
 	}
-    
+
 }

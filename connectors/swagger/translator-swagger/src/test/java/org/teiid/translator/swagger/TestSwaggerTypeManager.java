@@ -29,11 +29,11 @@ public class TestSwaggerTypeManager {
         TimeZone tz = TimeZone.getDefault();
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
-            assertEquals("2016-04-08 10:14:23.000000006", 
+            assertEquals("2016-04-08 10:14:23.000000006",
                     SwaggerTypeManager.formTimestamp("2016-04-08T10:14:23.6Z").toString());
-            assertEquals("2016-04-08 04:14:23.0", 
+            assertEquals("2016-04-08 04:14:23.0",
                     SwaggerTypeManager.formTimestamp("2016-04-08T10:14:23+06:00").toString());
-            assertEquals("2016-04-08T04:14:23.0Z", 
+            assertEquals("2016-04-08T04:14:23.0Z",
                     SwaggerTypeManager.timestampToString(new Timestamp(1460088863000L)));
         } finally {
            TimeZone.setDefault(tz);

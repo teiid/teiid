@@ -44,7 +44,7 @@ import org.teiid.translator.SourceSystemFunctions;
  * systems (ST_Transform).
  */
 public class GeometryTransformUtils {
-    
+
     /**
      * Convert geometry to a different coordinate system. Geometry must have valid
      * SRID.
@@ -91,12 +91,12 @@ public class GeometryTransformUtils {
      * @return
      * @throws FunctionExecutionException
      */
-    public static String lookupProj4Text(CommandContext ctx, int srid) 
+    public static String lookupProj4Text(CommandContext ctx, int srid)
             throws FunctionExecutionException {
-        String projText;        
+        String projText;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
+
         try {
             TeiidConnection conn = ctx.getConnection();
             pstmt = conn.prepareStatement("select proj4text from SYS.spatial_ref_sys where srid = ?"); //$NON-NLS-1$
@@ -127,12 +127,12 @@ public class GeometryTransformUtils {
 
         return projText;
     }
-    
-    public static boolean isLatLong(CommandContext ctx, int srid) 
+
+    public static boolean isLatLong(CommandContext ctx, int srid)
             throws FunctionExecutionException {
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        
+
         try {
             TeiidConnection conn = ctx.getConnection();
             pstmt = conn.prepareStatement("select (proj4text like '%longlat%') from SYS.spatial_ref_sys where srid = ?"); //$NON-NLS-1$
@@ -172,22 +172,22 @@ public class GeometryTransformUtils {
      * @return
      * @throws FunctionExecutionException
      */
-    public static Geometry transform(Geometry geom, 
-                                     String srcParams, 
-                                     String tgtParams) 
+    public static Geometry transform(Geometry geom,
+                                     String srcParams,
+                                     String tgtParams)
             throws FunctionExecutionException {
-        
+
         CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
         CRSFactory crsFactory = new CRSFactory();
-        
+
         CoordinateReferenceSystem srcCrs = crsFactory.createFromParameters(null, srcParams);
         CoordinateReferenceSystem tgtCrs = crsFactory.createFromParameters(null, tgtParams);
-        
+
         CoordinateTransform coordTransform = ctFactory.createTransform(srcCrs, tgtCrs);
 
         return transformGeometry(coordTransform, geom);
     }
-    
+
     protected static Geometry transformGeometry(CoordinateTransform ct,
                                                 Geometry geom)
             throws FunctionExecutionException {
@@ -253,22 +253,22 @@ public class GeometryTransformUtils {
         }
         return out;
     }
-    
+
     protected static Polygon transformPolygon(CoordinateTransform ct,
                                               Polygon polygon) {
         return polygon.getFactory().createPolygon(transformCoordinates(ct, polygon.getCoordinates()));
     }
-    
+
     protected static Geometry transformPoint(CoordinateTransform ct,
                                              Point point) {
         return point.getFactory().createPoint(transformCoordinates(ct, point.getCoordinates())[0]);
     }
-    
+
     protected static Geometry transformLinearRing(CoordinateTransform ct,
                                                   LinearRing linearRing) {
         return linearRing.getFactory().createLinearRing(transformCoordinates(ct, linearRing.getCoordinates()));
     }
-    
+
     protected static Geometry transformLineString(CoordinateTransform ct,
                                                   LineString lineString) {
         return lineString.getFactory().createLineString(transformCoordinates(ct, lineString.getCoordinates()));
@@ -300,7 +300,7 @@ public class GeometryTransformUtils {
         }
         return multiLineString.getFactory().createMultiLineString(lineString);
     }
-    
+
     protected static Geometry transformGeometryCollection(CoordinateTransform ct,
                                                           GeometryCollection geometryCollection)
             throws FunctionExecutionException {

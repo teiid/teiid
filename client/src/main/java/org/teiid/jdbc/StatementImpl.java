@@ -61,9 +61,9 @@ import org.teiid.net.TeiidURL;
 
 public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	
+
 	static EnhancedTimer cancellationTimer = new EnhancedTimer("Teiid Statement Timeout"); //$NON-NLS-1$
-	
+
 	private static final class QueryTimeoutCancelTask implements Runnable {
 		private WeakReference<StatementImpl> ref;
 		private QueryTimeoutCancelTask(StatementImpl stmt) {
@@ -89,7 +89,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     // integer indicating no maximum limit - used in some metadata-ish methods.
     private static final int NO_LIMIT = 0;
-    
+
     private QueryTimeoutCancelTask cancelTask = new QueryTimeoutCancelTask(this);
 
     //######## Configuration state #############
@@ -138,30 +138,30 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     // the per-execution security payload
     private Serializable payload;
-    
+
     /** List of INSERT, UPDATE, DELETE AND SELECT INTO commands */
     private List<String> batchedUpdates;
-    
+
     /** Array of update counts as returned by executeBatch() */
     protected int[] updateCounts;
-    
+
     /** default Calendar instance for converting date/time/timestamp values */
     private Calendar defaultCalendar;
     /** Max rows to be returned by executing the statement */
     private int maxRows = NO_LIMIT;
     private int maxFieldSize = NO_LIMIT;
-    
+
     //Map<out/inout/return param index --> index in results>
     protected Map<Integer, Integer> outParamIndexMap = new HashMap<Integer, Integer>();
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
 
 	private boolean closeOnCompletion;
-    
+
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*((?:(?:commit|rollback|abort)(?:\\s+(?:transaction|work))?)|(start\\s+transaction(\\s+[^;]*)?))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s+(?:(?:to|=)\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_CHARACTERISTIC_STATEMENT = Pattern.compile("\\s*set\\s+session\\s+characteristics\\s+as\\s+transaction\\s+isolation\\s+level\\s+((?:read\\s+(?:(?:committed)|(?:uncommitted)))|(?:repeatable\\s+read)|(?:serializable))\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+((?:transaction isolation level)|(?:[a-zA-Z]\\w*)|(?:\"[^\"]*\")+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    
+
     /**
      * MMStatement Constructor.
      * @param driverConnection
@@ -173,7 +173,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.resultSetType = resultSetType;
         this.resultSetConcurrency = resultSetConcurrency;
         this.execProps = new Properties(this.driverConnection.getExecutionProperties());
-        
+
         // Set initial fetch size
         String fetchSizeStr = this.execProps.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
         if(fetchSizeStr != null) {
@@ -200,15 +200,15 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected DQP getDQP() {
     	return this.driverConnection.getDQP();
     }
-    
+
     protected ConnectionImpl getMMConnection() {
     	return this.driverConnection;
     }
-    
+
     protected TimeZone getServerTimeZone() throws SQLException {
     	return this.driverConnection.getServerConnection().getLogonResult().getTimeZone();
     }
-        
+
     /**
      * Reset all per-execution state - this should be done before executing
      * a new command.
@@ -228,7 +228,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
 
         this.serverWarnings = null;
-        
+
         this.batchedUpdates = null;
         this.updateCounts = null;
         this.outParamIndexMap.clear();
@@ -295,7 +295,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	ResultSet rs = this.resultSet;
         	resultSet = null;
             rs.close();
-            
+
         }
 
         isClosed = true;
@@ -320,13 +320,13 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Stmt_closed")); //$NON-NLS-1$
         }
     }
-    
+
     @Override
     public void submitExecute(String sql, StatementCallback callback, RequestOptions options) throws SQLException {
     	NonBlockingRowProcessor processor = new NonBlockingRowProcessor(this, callback);
     	submitExecute(sql, options).addCompletionListener(processor);
     }
-    
+
     public ResultsFuture<Boolean> submitExecute(String sql, RequestOptions options) throws SQLException {
     	return executeSql(new String[] {sql}, false, ResultsMode.EITHER, false, options);
     }
@@ -335,7 +335,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     public boolean execute(String sql) throws SQLException {
         return execute(sql, Statement.NO_GENERATED_KEYS);
     }
-    
+
 	@Override
     public int[] executeBatch() throws SQLException {
         if (batchedUpdates == null || batchedUpdates.isEmpty()) {
@@ -360,7 +360,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected boolean hasResultSet() throws SQLException {
         return updateCounts == null && resultSet != null && resultSet.getMetaData().getColumnCount() > 0;
     }
-    
+
 	protected void createResultSet(ResultsMessage resultsMsg) throws SQLException {
 		//create out/return parameter index map if there is any
 		List listOfParameters = resultsMsg.getParameters();
@@ -414,7 +414,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		resultSet = new ResultSetImpl(resultsMsg, this, metadata, outParamIndexMap.size());
 		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
-    
+
 	protected ResultsFuture<Boolean> executeSql(String[] commands, boolean isBatchedCommand, ResultsMode resultsMode, boolean synch, RequestOptions options)
 	        throws SQLException {
 		return executeSql(commands, isBatchedCommand, resultsMode, synch, options, false);
@@ -481,7 +481,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	match = SET_CHARACTERISTIC_STATEMENT.matcher(commands[0]);
         	if (match.matches()) {
         		String value = match.group(1);
-				setIsolationLevel(value);        		
+				setIsolationLevel(value);
         		this.updateCounts = new int[] {0};
         		return booleanFuture(false);
         	}
@@ -562,7 +562,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		return executeShow(match);
         	}
         }
-        
+
         final RequestMessage reqMessage = createRequestMessage(commands, isBatchedCommand, resultsMode);
         reqMessage.setReturnAutoGeneratedKeys(autoGenerateKeys);
         reqMessage.setRequestOptions(options);
@@ -616,7 +616,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         } else if (StringUtil.startsWithIgnoreCase(value, "repeatable")) { //$NON-NLS-1$
         	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
         } else if ("serializable".equalsIgnoreCase(value)) { //$NON-NLS-1$
-        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);	
+        	this.getMMConnection().setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
         }
     }
 
@@ -714,7 +714,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.currentRequestID = this.driverConnection.nextRequestID();
         // Create a request message
         if (this.payload != null) {
-        	reqMsg.setExecutionPayload(this.payload);        
+        	reqMsg.setExecutionPayload(this.payload);
         } else {
         	reqMsg.setExecutionPayload(this.getMMConnection().getPayload());
         }
@@ -728,7 +728,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         copyPropertiesToRequest(reqMsg);
 
         reqMsg.setExecutionId(this.currentRequestID);
-        
+
         ResultsFuture.CompletionListener<ResultsMessage> compeletionListener = null;
 		if (queryTimeoutMS > 0 && (!synch || this.driverConnection.getServerConnection().isLocal())) {
 			final Task c = cancellationTimer.add(cancelTask, queryTimeoutMS);
@@ -738,8 +738,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 					c.cancel();
 				}
 			};
-		} 
-        
+		}
+
     	ResultsFuture<ResultsMessage> pendingResult = null;
 		try {
 			pendingResult = this.getDQP().executeRequest(this.currentRequestID, reqMsg);
@@ -751,7 +751,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		}
     	return pendingResult;
     }
-	
+
 	boolean useCallingThread() throws SQLException {
 		if (this.getConnection().getServerConnection() == null || !this.getConnection().getServerConnection().isLocal()) {
 			return false;
@@ -765,7 +765,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		rs.getResultsReceiver().receiveResults(isTrue);
 		return rs;
 	}
-	
+
 	private synchronized void postReceiveResults(RequestMessage reqMessage,
 			ResultsMessage resultsMsg) throws TeiidSQLException, SQLException {
 		commandStatus = State.DONE;
@@ -784,10 +784,10 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
 
         resultsMsg.processResults();
-        
+
         if (resultsMsg.isUpdateResult()) {
         	List<? extends List<?>> results = resultsMsg.getResultsList();
-        	if (resultsMsg.getUpdateCount() == -1) { 
+        	if (resultsMsg.getUpdateCount() == -1) {
             	this.updateCounts = new int[results.size()];
                 for (int i = 0; i < results.size(); i++) {
                 	updateCounts[i] = (Integer)results.get(i).get(0);
@@ -806,8 +806,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 				throw TeiidSQLException.create(e);
 			} catch (TeiidComponentException e) {
 				throw TeiidSQLException.create(e);
-			}            
-            
+			}
+
             //handle a batch update exception
             if (resultsMsg.getException() != null) {
 	            TeiidSQLException exe = TeiidSQLException.create(resultsMsg.getException());
@@ -818,7 +818,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         } else {
             createResultSet(resultsMsg);
         }
-        
+
         if (logger.isLoggable(Level.FINE)) {
         	logger.fine(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
         }
@@ -860,7 +860,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             resultSet.close();
             resultSet = null;
         }
-        
+
         // indicate that there are no more results
         this.updateCounts = null;
         return false;
@@ -964,7 +964,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
         }
     }
-    
+
     void setQueryTimeoutMS(int queryTimeoutMS) {
 		this.queryTimeoutMS = queryTimeoutMS;
 	}
@@ -972,7 +972,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     /**
      * Helper method for copy the connection properties to request message.
      * @param res Request message that these properties to be copied to.
-     * @throws TeiidSQLException 
+     * @throws TeiidSQLException
      */
     protected void copyPropertiesToRequest(RequestMessage res) throws TeiidSQLException {
         // Get partial mode
@@ -986,11 +986,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		} catch (TeiidProcessingException e) {
 			throw TeiidSQLException.create(e);
 		}
-        
+
         // Get result set cache mode
         String rsCache = getExecutionProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         res.setUseResultSetCache(Boolean.valueOf(rsCache).booleanValue());
-        
+
         res.setAnsiQuotedIdentifiers(Boolean.valueOf(
                 getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS))
                 .booleanValue());
@@ -999,7 +999,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	try {
         		res.setShowPlan(ShowPlan.valueOf(showPlan.toUpperCase()));
         	} catch (IllegalArgumentException e) {
-        		
+
         	}
         }
         String noExec = getExecutionProperty(ExecutionProperties.NOEXEC);
@@ -1017,7 +1017,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	}
         logger.warning(JDBCPlugin.Util.getString("MMStatement.Timeout_ocurred_in_Statement.")); //$NON-NLS-1$
         try {
-        	cancel();        
+        	cancel();
             commandStatus = State.TIMED_OUT;
             queryTimeoutMS = NO_TIMEOUT;
             setTimeoutFromProperties();
@@ -1063,14 +1063,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     public Collection<Annotation> getAnnotations() {
         return this.annotations;
     }
-    
+
     public String getRequestIdentifier() {
         if(this.currentRequestID >= 0) {
             return Long.toString(this.currentRequestID);
         }
         return null;
     }
-    
+
     public boolean isClosed() {
         return this.isClosed;
     }
@@ -1089,18 +1089,18 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         this.driverConnection.setCurrentPlanDescription(currentPlanDescription);
         this.driverConnection.setAnnotations(annotations);
 	}
-    
+
     Calendar getDefaultCalendar() {
         if (defaultCalendar == null) {
             defaultCalendar = Calendar.getInstance();
         }
         return defaultCalendar;
     }
-    
+
     void setDefaultCalendar(Calendar cal) {
         this.defaultCalendar = cal;
     }
-            
+
 	public boolean isPoolable() throws SQLException {
 		checkStatement();
 		return false;
@@ -1109,7 +1109,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	public void setPoolable(boolean arg0) throws SQLException {
 		checkStatement();
 	}
-	
+
 	public ConnectionImpl getConnection() throws SQLException {
 		return this.driverConnection;
 	}
@@ -1121,12 +1121,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 
 	public boolean execute(String sql, int[] columnIndexes) throws SQLException {
-		return execute(sql, Statement.RETURN_GENERATED_KEYS);	
+		return execute(sql, Statement.RETURN_GENERATED_KEYS);
 	}
 
 	public boolean execute(String sql, String[] columnNames)
 			throws SQLException {
-		return execute(sql, Statement.RETURN_GENERATED_KEYS);	
+		return execute(sql, Statement.RETURN_GENERATED_KEYS);
 	}
 
 	public int executeUpdate(String sql, int autoGeneratedKeys)
@@ -1140,12 +1140,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
 	public int executeUpdate(String sql, int[] columnIndexes)
 			throws SQLException {
-		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);	
+		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
 	}
 
 	public int executeUpdate(String sql, String[] columnNames)
 			throws SQLException {
-		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);	
+		return executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException {
@@ -1156,11 +1156,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	}
 
 	public int getResultSetHoldability() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setCursorName(String name) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setMaxFieldSize(int max) throws SQLException {
@@ -1170,7 +1170,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
 		this.maxFieldSize = max;
 	}
-	
+
 	ResultSetImpl createResultSet(List records, String[] columnNames, String[] dataTypes) throws SQLException {
         Map[] metadata = createMetadataMap(columnNames, dataTypes);
 		return createResultSet(records, metadata);
@@ -1184,7 +1184,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         }
 		return metadata;
 	}
-	
+
     ResultSetImpl createResultSet(List records, Map[] columnMetadata) throws SQLException {
         ResultSetMetaData rsmd = createResultSetMetaData(columnMetadata);
 
@@ -1216,20 +1216,20 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         resultsMsg.setResults((List[])records.toArray(new List[records.size()]));
         return resultsMsg;
     }
-    
+
     static Map<Integer, Object> getColumnMetadata(String tableName, String columnName, String dataType, Integer nullable, ConnectionImpl driverConnection) throws SQLException {
         return getColumnMetadata(tableName, columnName, dataType, nullable, ResultsMetadataConstants.SEARCH_TYPES.UNSEARCHABLE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, driverConnection);
 	}
-	
+
 	static Map<Integer, Object> getColumnMetadata(String tableName, String columnName, String dataType, Integer nullable, Integer searchable, Boolean writable, Boolean signed, Boolean caseSensitive, ConnectionImpl driverConnection) throws SQLException {
-	
+
 	    // map that would contain metadata details
 	    Map<Integer, Object> metadataMap = new HashMap<Integer, Object>();
-	
+
 	    /*******************************************************
 	     HardCoding Column metadata details for the given column
 	    ********************************************************/
-	
+
 	    metadataMap.put(ResultsMetadataConstants.VIRTUAL_DATABASE_NAME, driverConnection.getVDBName());
 	    metadataMap.put(ResultsMetadataConstants.GROUP_NAME, tableName);
 	    metadataMap.put(ResultsMetadataConstants.ELEMENT_NAME, columnName);
@@ -1245,7 +1245,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	    metadataMap.put(ResultsMetadataConstants.WRITABLE, writable);
 	    metadataMap.put(ResultsMetadataConstants.CURRENCY, Boolean.FALSE);
 	    metadataMap.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.getMaxDisplaySize(dataType));
-	
+
 	    return metadataMap;
 	}
 

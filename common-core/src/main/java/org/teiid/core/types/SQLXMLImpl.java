@@ -45,18 +45,18 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-/** 
+/**
  * Default SQLXML impl
- * 
+ *
  * NOTE that this representation of XML does not become unreadable after
  * read operations.
  */
 public class SQLXMLImpl extends BaseLob implements SQLXML {
-		
+
 	public SQLXMLImpl() {
-		
+
 	}
-	
+
     /**
      * Constructs a SQLXML from bytes that are already encoded in {@link Streamable#ENCODING}
      * @param bytes
@@ -67,12 +67,12 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 			public InputStream getInputStream() throws IOException {
 				return new ByteArrayInputStream(bytes);
 			}
-			
+
 			@Override
 			public StorageMode getStorageMode() {
 				return StorageMode.MEMORY;
 			}
-			
+
 			@Override
 			public long getLength() {
 				return bytes.length;
@@ -80,15 +80,15 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 		});
     	setEncoding(Streamable.ENCODING);
 	}
-    
+
     public SQLXMLImpl(final String str) {
 		this(str.getBytes(Charset.forName(Streamable.ENCODING)));
     }
-    
+
     public SQLXMLImpl(InputStreamFactory factory) {
         super(factory);
     }
-    
+
     @Override
     public Charset getCharset() {
     	Charset cs = super.getCharset();
@@ -107,7 +107,7 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 		}
     	return super.getCharset();
     }
-    
+
     @SuppressWarnings("unchecked")
 	public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
 		if (sourceClass == null || sourceClass == StreamSource.class) {
@@ -169,5 +169,5 @@ public class SQLXMLImpl extends BaseLob implements SQLXML {
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
+
 }

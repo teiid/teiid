@@ -30,13 +30,13 @@ public class AccumuloManagedConnectionFactory extends BasicManagedConnectionFact
 	private static final long serialVersionUID = 1608787576847881344L;
 
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(AccumuloManagedConnectionFactory.class);
-	
+
 	private String instanceName;
 	private String zooKeeperServerList;
 	private String username;
 	private String password;
 	private String roles;
-	
+
 	@Override
 	public BasicConnectionFactory<AccumuloConnectionImpl> createConnectionFactory() throws ResourceException {
 		return new AccumuloConnectionFactory(this);
@@ -46,17 +46,17 @@ public class AccumuloManagedConnectionFactory extends BasicManagedConnectionFact
 		private static final long serialVersionUID = 831361159531236916L;
 		private ZooKeeperInstance instance;
 		private AccumuloManagedConnectionFactory mcf;
-		
+
 		public AccumuloConnectionFactory(AccumuloManagedConnectionFactory mcf) {
 			this.mcf = mcf;
-			this.instance = new ZooKeeperInstance(mcf.getInstanceName(), mcf.getZooKeeperServerList());		
+			this.instance = new ZooKeeperInstance(mcf.getInstanceName(), mcf.getZooKeeperServerList());
 		}
 		@Override
 		public AccumuloConnectionImpl getConnection() throws ResourceException {
 			return new AccumuloConnectionImpl(this.mcf, this.instance);
 		}
 	}
-	
+
 	public String getInstanceName() {
 		return instanceName;
 	}

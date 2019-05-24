@@ -187,7 +187,7 @@ public class BatchSerializer {
     		result.setZeroBased(in.readBoolean());
     		return result;
     	}
-		
+
 		@Override
 		public boolean usesCache(byte version) {
 			return version >= 3;
@@ -293,7 +293,7 @@ public class BatchSerializer {
     		}
 			return super.readObject(in, cache, effectiveVersion);
     	}
-		
+
 		@Override
 		public boolean usesCache(byte version) {
 			return version >= 3;
@@ -325,9 +325,9 @@ public class BatchSerializer {
     		}
     		return super.readObject(in, cache, version);
     	}
-    	
+
     }
-    
+
     private static class StringColumnSerializer3 extends StringColumnSerializer1 {
     	private static final int MAX_INLINE_STRING_LENGTH = 5;
     	private static final byte REPEATED_STRING = 0;
@@ -352,7 +352,7 @@ public class BatchSerializer {
 			}
     		return val;
     	}
-    	
+
     	@Override
     	protected void writeObject(ObjectOutput out, Object obj,
     			Map<Object, Integer> cache, byte version) throws IOException {
@@ -362,13 +362,13 @@ public class BatchSerializer {
     			out.writeByte(REPEATED_STRING);
     			out.writeInt(val);
     			return;
-    		} 
+    		}
     		if (str.length() > MAX_INLINE_STRING_LENGTH) {
     			cache.put(str, cache.size());
     		}
     		super.writeObject(out, obj, cache, version);
     	}
-    	
+
     	@Override
     	public boolean usesCache(byte version) {
     		return true;
@@ -400,7 +400,7 @@ public class BatchSerializer {
             return ct;
         }
     }
-    
+
     private static class JsonColumnSerializer extends ColumnSerializer {
         @Override
         protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
@@ -426,7 +426,7 @@ public class BatchSerializer {
             return bt;
         }
     }
-    
+
     private static class GeometryColumnSerializer extends ColumnSerializer {
         @Override
 		protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
@@ -444,7 +444,7 @@ public class BatchSerializer {
             return bt;
         }
     }
-    
+
     private static class GeographyColumnSerializer extends ColumnSerializer {
         @Override
         protected void writeObject(ObjectOutput out, Object obj, Map<Object, Integer> cache, byte version) throws IOException {
@@ -593,7 +593,7 @@ public class BatchSerializer {
         protected Object readObject(ObjectInput in, List<Object> cache, byte version) throws IOException, ClassNotFoundException {
         	return in.readObject();
         }
-        
+
         public boolean usesCache(byte version) {
         	return false;
         }
@@ -696,7 +696,7 @@ public class BatchSerializer {
                 out.write(currentByte);
             }
         }
-    	
+
     	@Override
     	public void readColumn(ObjectInput in, int col,
     			List<List<Object>> batch, byte[] isNull, List<Object> cache, byte version) throws IOException,
@@ -816,10 +816,10 @@ public class BatchSerializer {
 		c.set(1900, 0, 1, 0, 0, 0);
 		c.set(Calendar.MILLISECOND, 0);
 		MIN_DATE_32 = c.getTimeInMillis();
-		MAX_DATE_32 = MIN_DATE_32 + ((1l<<32)-1)*60000;
+		MAX_DATE_32 = MIN_DATE_32 + ((1L<<32)-1)*60000;
 		DATE_NORMALIZER = -(int)(MIN_DATE_32/60000); //support a 32 bit range starting at this value
-		MAX_TIME_32 = Integer.MAX_VALUE*1000l;
-		MIN_TIME_32 = Integer.MIN_VALUE*1000l;
+		MAX_TIME_32 = Integer.MAX_VALUE*1000L;
+		MIN_TIME_32 = Integer.MIN_VALUE*1000L;
 	}
 
     private static class DateColumnSerializer1 extends ColumnSerializer {
@@ -901,7 +901,7 @@ public class BatchSerializer {
 	            Map<Object, Integer> cache = null;
 	            for(int i = 0; i < columns; i++) {
 	            	ColumnSerializer serializer = getSerializer(types[i], version);
-	            	
+
 	            	if (cache == null && serializer.usesCache(version)) {
 	            		cache = new HashMap<Object, Integer>();
 	            	}
@@ -978,7 +978,7 @@ public class BatchSerializer {
         }
         if (clientSerializationVersion < BatchSerializer.VERSION_GEOMETRY && type.equals(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
             return DataTypeManager.DefaultDataTypes.BLOB;
-        }  
+        }
         if (clientSerializationVersion < BatchSerializer.VERSION_GEOGRAPHY) {
             if (type.equals(DataTypeManager.DefaultDataTypes.GEOGRAPHY)) {
                 return DataTypeManager.DefaultDataTypes.BLOB;

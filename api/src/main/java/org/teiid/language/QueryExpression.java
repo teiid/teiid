@@ -27,7 +27,7 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     private With with;
 
     public abstract Select getProjectedQuery();
-    
+
     /**
      * Get ORDER BY clause, may be null.
      * @return An ORDER BY object
@@ -61,7 +61,7 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     }
 
     /**
-     * Get the column types of the output columns for this query 
+     * Get the column types of the output columns for this query
      * @return a Class[] containing the column names
      * @since 4.3
      */
@@ -74,7 +74,7 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
 		}
         return columnTypes;
     }
-    
+
     /**
      * Set ORDER BY clause, may be null.
      * @param orderBy An ORDER BY object
@@ -82,7 +82,7 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     public void setOrderBy(OrderBy orderBy) {
         this.orderBy = orderBy;
     }
-    
+
     /**
      * Set LIMIT clause, may be null.
      * @param limit A LIMIT object
@@ -90,11 +90,11 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     public void setLimit(Limit limit) {
         this.limit = limit;
     }
-    
+
     public With getWith() {
 		return with;
 	}
-    
+
     public void setWith(With with) {
 		this.with = with;
 	}

@@ -54,13 +54,13 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * Handles text file processing.
- * 
+ *
  * TODO: allow for a configurable line terminator
  */
 public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private TextTable table;
-	
+
 	//initialized state
 	private int skip = 0;
 	private int header = -1;
@@ -70,7 +70,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private int lineWidth;
     private int[] projectionIndexes;
     private Map<String, List<String>> parentLines;
-	
+
     //per file state
 	private BufferedReader reader;
 	private int textLine = 0;
@@ -80,21 +80,21 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private boolean cr;
 	private boolean eof;
-	
+
 	private volatile boolean running;
 	private volatile TeiidRuntimeException asynchException;
 
 	private int limit = -1;
 
 	private boolean noTrim;
-	
+
 	private char newLine = '\n';
 	private boolean crNewLine = true;
-	
+
 	public TextTableNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
@@ -145,13 +145,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
         Map<Expression, Integer> elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
 	}
-	
+
 	@Override
 	public void closeDirect() {
 		super.closeDirect();
 		reset();
 	}
-	
+
 	@Override
 	public synchronized void reset() {
 		super.reset();
@@ -176,7 +176,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		this.asynchException = null;
 		this.limit = -1;
 	}
-	
+
 	public void setTable(TextTable table) {
 		this.table = table;
 		this.noTrim = table.isNoTrim();
@@ -189,7 +189,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		clone.setTable(table);
 		return clone;
 	}
-	
+
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
 		super.open();
@@ -204,7 +204,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		
+
 		if (reader == null) {
 			initReader();
 		}
@@ -213,21 +213,21 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			terminateBatches();
 			return pullBatch();
 		}
-		
+
 		if (isLastBatch()) {
 			return pullBatch();
 		}
-		
+
 		if (isBatchFull()) {
 			TupleBatch result = pullBatch();
 			processAsynch(); // read ahead
 			return result;
 		}
-		
+
 		unwrapException(asynchException);
-		
+
 		processAsynch();
-		
+
 		if (this.getContext().getWorkItem() == null) {
 			//this is for compatibility with engine tests that are below the level of using the work item
 			synchronized (this) {
@@ -240,7 +240,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				}
 			}
 		}
-		
+
 		throw BlockedException.block("Blocking on results from file processing."); //$NON-NLS-1$
 	}
 
@@ -280,12 +280,12 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					return;
 				}
 				StringBuilder line = readLine(lineWidth, table.isFixedWidth());
-				
+
 				if (line == null) {
 					terminateBatches();
 					break;
 				}
-				
+
 				String parentSelector = null;
 				if (table.getSelector() != null) {
 					if (line.length() < table.getSelector().length()) {
@@ -296,31 +296,31 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 							continue; //doesn't match any selector
 						}
 						parentSelector = line.substring(0, table.getSelector().length());
-						
+
 						if (!parentLines.containsKey(parentSelector)) {
 							continue; //doesn't match any selector
-						} 
+						}
 					}
 				}
-				
+
 				List<String> vals = parseLine(line);
-				
+
 				if (parentSelector != null) {
 					this.parentLines.put(parentSelector, vals);
 					continue;
 				} else if (table.getSelector() != null && !table.getSelector().equals(vals.get(0))) {
 					continue;
 				}
-				
+
 				rowNumber++;
-				
+
 				List<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
 				for (int output : projectionIndexes) {
 					TextColumn col = table.getColumns().get(output);
 					String val = null;
 					int index = output;
 					boolean missing = false;
-					
+
 					if (col.isOrdinal()) {
 						if (rowNumber > Integer.MAX_VALUE) {
 				    		throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174)));
@@ -328,7 +328,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 						tuple.add((int)rowNumber);
 						continue;
 					}
-					
+
 					if (col.getSelector() != null) {
 						vals = this.parentLines.get(col.getSelector());
 						index = col.getPosition() - 1;
@@ -344,7 +344,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 						//throw new TeiidProcessingException(QueryPlugin.Util.getString("TextTableNode.no_value", col.getName(), textLine, systemId)); //$NON-NLS-1$
 						tuple.add(null);
 						continue;
-					} 
+					}
 					val = vals.get(index);
 					try {
 						tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
@@ -353,7 +353,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 				}
 				addBatchRow(tuple);
-				
+
 				if (rowNumber == limit) {
 					terminateBatches();
 					break;
@@ -392,7 +392,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    		//we're not forcing them to fully specify the line, so just drop the rest
 		    		//TODO: there should be a max read length
 		    		while (readChar() != newLine) {
-		    			
+
 		    		}
 		    		return sb;
 		    	}
@@ -402,7 +402,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    }
 		}
 	}
-	
+
 	private char readChar() throws TeiidProcessingException {
 		try {
 			int c = reader.read();
@@ -437,13 +437,13 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 
 	private void initReader() throws ExpressionEvaluationException,
 			BlockedException, TeiidComponentException, TeiidProcessingException {
-		
+
 		setReferenceValues(this.table);
 		ClobType file = (ClobType)getEvaluator(Collections.emptyMap()).evaluate(table.getFile(), null);
 		if (file == null) {
 			return;
 		}
-		
+
 		//get the reader
 		try {
 			this.systemId = "Unknown"; //$NON-NLS-1$
@@ -452,7 +452,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				if (this.systemId == null) {
 					this.systemId = "Unknown"; //$NON-NLS-1$
 				}
-			} 
+			}
 			Reader r = file.getCharacterStream();
 			if (!(r instanceof BufferedReader)) {
 				reader = new BufferedReader(r);
@@ -462,7 +462,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		} catch (SQLException e) {
 			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30180, e);
 		}
-		
+
 		//process the skip field
 		if (skip <= 0) {
 			return;
@@ -478,7 +478,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				processHeader(parseLine(line));
 			} else {
 				while (readChar() != newLine) {
-	    			
+
 	    		}
 			}
 		}
@@ -512,7 +512,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	private List<String> parseLine(StringBuilder line) throws TeiidProcessingException {
 		if (table.isFixedWidth()) {
 			return parseFixedWidth(line);
-		} 
+		}
 		return parseDelimitedLine(line);
 	}
 
@@ -527,18 +527,18 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				if (escaped) {
 					//allow for escaped new lines
 					if (cr) {
-						builder.append('\r'); 
+						builder.append('\r');
 					}
-					builder.append(newLine); 
+					builder.append(newLine);
 					escaped = false;
 					line = readLine(lineWidth, false);
 					continue;
-				} 
+				}
 				if (!qualified) {
 					//close the last entry
 					addValue(result, wasQualified || noTrim, builder.toString());
 					return result;
-				} 
+				}
 				line = readLine(lineWidth, false);
 				if (line == null) {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30182, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30182, systemId));
@@ -554,12 +554,12 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 						addValue(result, wasQualified || noTrim, builder.toString());
 						wasQualified = false;
 						builder = new StringBuilder();  //next entry
-					} 
+					}
 				} else if (chr == quote) {
 					if (noQuote) { 	//it's the escape char
 						if (escaped) {
 							builder.append(quote);
-						} 
+						}
 						escaped = !escaped;
 					} else {
 						if (qualified) {
@@ -617,21 +617,21 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 				String val = new String(line.substring(beginIndex, Math.min(line.length(), beginIndex + col.getWidth())));
 				addValue(result, col.isNoTrim(), val);
 				beginIndex += col.getWidth();
-			}		
+			}
 		}
 		return result;
 	}
-	
+
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {
 		return Arrays.asList(this.table.getFile());
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();
         AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
         return props;
 	}
-	
+
 }

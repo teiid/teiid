@@ -51,7 +51,7 @@ public class TestModeShapeSqlTranslator {
         UTIL = new TranslationUtility(getMetadata());
         UTIL.addUDF(CoreConstants.SYSTEM_MODEL, TRANSLATOR.getPushDownFunctions());
     }
-    
+
     public static TransformationMetadata getMetadata() {
     	MetadataStore store = new MetadataStore();
     	Schema modeshape = RealMetadataFactory.createPhysicalModel("modeshape", store);
@@ -66,7 +66,7 @@ public class TestModeShapeSqlTranslator {
 		cols.get(0).setNameInSource("\"jcr:path\"");
 		cols.get(1).setNameInSource("\"mode:properties\"");
 		cols.get(2).setNameInSource("\"jcr:primaryType\"");
-		
+
     	Table nt_version = RealMetadataFactory.createPhysicalGroup("nt_version", modeshape);
     	nt_version.setNameInSource("\"nt:version\"");
 		List<Column> cols2 = RealMetadataFactory.createElements(nt_version, new String[] { "jcr_path",
@@ -77,7 +77,7 @@ public class TestModeShapeSqlTranslator {
 				TypeFacility.RUNTIME_NAMES.STRING });
 		cols2.get(0).setNameInSource("\"jcr:path\"");
 		cols2.get(1).setNameInSource("\"mode:properties\"");
-		cols2.get(2).setNameInSource("\"jcr:primaryType\"");		
+		cols2.get(2).setNameInSource("\"jcr:primaryType\"");
     	return RealMetadataFactory.createTransformationMetadata(store, "modeshape");
     }
 
@@ -85,7 +85,7 @@ public class TestModeShapeSqlTranslator {
 		Command obj = UTIL.parseCommand(input, true, true);
 		TranslationHelper.helpTestVisitor(expectedOutput, TRANSLATOR, obj);
 	}
-	
+
 	@Test
 	public void testSelectAllFromBase() throws Exception {
 		String input = "select * from nt_base"; //$NON-NLS-1$
@@ -94,7 +94,7 @@ public class TestModeShapeSqlTranslator {
 		helpTestVisitor(input, output);
 
 	}
-	
+
 	@Test
 	public void testPredicate() throws Exception {
 
@@ -123,10 +123,10 @@ public class TestModeShapeSqlTranslator {
 
 		helpTestVisitor(input, output);
 	}
-	
+
 	/**
 	 * TEIID-3102
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	@Test
 	public void testSelectJoin() throws Exception {
@@ -135,19 +135,19 @@ public class TestModeShapeSqlTranslator {
 		String output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON ISCHILDNODE(g_0, g_1)"; //$NON-NLS-1$
 
 		helpTestVisitor(input, output);
-	}		
-	
+	}
+
     @Test
     public void testOnCondition() throws Exception {
         String input = "select nt_base.jcr_path from nt_base join nt_version  ON JCR_ISCHILDNODE(nt_base.jcr_path, nt_version.jcr_path) and nt_base.jcr_path = nt_version.jcr_path"; //$NON-NLS-1$
         String output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON g_0.\"jcr:path\" = g_1.\"jcr:path\" WHERE ISCHILDNODE(g_0, g_1)"; //$NON-NLS-1$
-        
+
         helpTestVisitor(input, output);
-        
+
         input = "select nt_base.jcr_path from nt_base join nt_version  ON JCR_ISCHILDNODE(nt_base.jcr_path, nt_version.jcr_path) or nt_base.jcr_path = nt_version.jcr_path"; //$NON-NLS-1$
         output = "SELECT g_0.\"jcr:path\" FROM \"nt:base\" AS g_0 INNER JOIN \"nt:version\" AS g_1 ON ISCHILDNODE(g_0, g_1) OR g_0.\"jcr:path\" = g_1.\"jcr:path\""; //$NON-NLS-1$
 
         helpTestVisitor(input, output);
     }
-    
+
 }

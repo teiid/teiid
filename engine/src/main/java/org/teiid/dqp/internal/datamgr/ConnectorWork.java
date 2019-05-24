@@ -37,9 +37,9 @@ public interface ConnectorWork {
 	void close();
 
 	void execute() throws TranslatorException, BlockedException;
-	
+
 	boolean isDataAvailable();
-	
+
 	CacheDirective getCacheDirective() throws TranslatorException;
 
 	boolean isForkable();

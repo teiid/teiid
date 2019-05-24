@@ -32,23 +32,23 @@ import junit.framework.*;
 public class TestCommandStatement  extends TestCase {
 
 	// ################################## FRAMEWORK ################################
-	
-	public TestCommandStatement(String name) { 
+
+	public TestCommandStatement(String name) {
 		super(name);
 	}
-	
-	// ################################## TEST HELPERS ################################	
+
+	// ################################## TEST HELPERS ################################
 
 	public static final CommandStatement sample1() {
-		QueryParser parser = new QueryParser();		
+		QueryParser parser = new QueryParser();
 		try {
 			Query query = (Query) parser.parseCommand("Select x from y"); //$NON-NLS-1$
 			return new CommandStatement(query);
 		} catch(Exception e) { return null;}
 	}
 
-	public static final CommandStatement sample2() { 
-		QueryParser parser = new QueryParser();		
+	public static final CommandStatement sample2() {
+		QueryParser parser = new QueryParser();
 		try {
 			Update update = (Update) parser.parseCommand("UPDATE x SET x = 'y'"); //$NON-NLS-1$
 			return new CommandStatement(update);
@@ -56,7 +56,7 @@ public class TestCommandStatement  extends TestCase {
 	}
 
 	// ################################## ACTUAL TESTS ################################
-	
+
 	public void testSelfEquivalence(){
 		CommandStatement s1 = sample1();
 		int equals = 0;
@@ -69,7 +69,7 @@ public class TestCommandStatement  extends TestCase {
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
-	
+
 	public void testNonEquivalence(){
 		CommandStatement s1 = sample1();
 		CommandStatement s2 = sample2();

@@ -27,15 +27,15 @@ public class InlineViewCase {
 	public String optimizedQuery;
 	public Set<String> sourceQueries;
 	public List<List<Object>> expectedResults;
-	
+
 	public String getFullyQualifiedQuery() {
-		return optimizedQuery;    	
-	}		
+		return optimizedQuery;
+	}
 	public InlineViewCase(String name, String userQuery, String optimizedQuery, Set<String> sourceQueries, List expectedResults) {
 		this.name = name;
 		this.userQuery = userQuery;
 		this.optimizedQuery = optimizedQuery;
 		this.sourceQueries = sourceQueries;
 		this.expectedResults = expectedResults;
-	}	
+	}
 }

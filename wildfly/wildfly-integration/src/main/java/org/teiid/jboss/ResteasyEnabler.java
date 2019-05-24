@@ -41,38 +41,38 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
-    
+
     private static String VERSION_DELIM = PropertiesUtils.getHierarchicalProperty("org.teiid.rest.versionDelim", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-    
+
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
-	
+
 	final private RestWarGenerator generator;
-	
+
 	public ResteasyEnabler(RestWarGenerator generator) {
 		this.generator = generator;
 	}
-	
+
 	@Override
 	public void added(String name, CompositeVDB vdb) {
 	}
-	
+
 	@Override
 	public void beforeRemove(String name, CompositeVDB cvdb) {
 		if (cvdb != null) {
 			//TODO: remove the war
 		}
-	}	
-	
+	}
+
 	@Override
 	public void finishedDeployment(String name, CompositeVDB cvdb) {
 		final VDBMetaData vdb = cvdb.getVDB();
-		
+
 		if (!vdb.getStatus().equals(Status.ACTIVE)) {
 			return;
 		}
-		
+
 		final String warName = buildName(name, cvdb.getVDB().getVersion());
 		if (generator.hasRestMetadata(vdb)) {
 			final Runnable job = new Runnable() {
@@ -88,29 +88,29 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 							getAdmin().deploy(warName, new ByteArrayInputStream(warContents), false);
 						}
 					} catch (IOException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName)); 
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
+								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
 					} catch (AdminException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e, 
-								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName)); 
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
+								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
 					}
 				}
 			};
 			getExecutor().execute(job);
 		}
 	}
-	
+
 	@Override
 	public void removed(String name, CompositeVDB cvdb) {
 
 	}
-	
+
 	private String buildName(String name, String version) {
-	    
-	    
+
+
 		return name+VERSION_DELIM+version +".war"; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public Void getValue() throws IllegalStateException, IllegalArgumentException {
 		return null;
@@ -124,12 +124,12 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 	@Override
 	public void stop(StopContext arg0) {
 	}
-	
+
 	Admin getAdmin() {
 		return AdminFactory.getInstance()
-		.createAdmin(controllerValue.getValue().createClient(executorInjector.getValue()));		
+		.createAdmin(controllerValue.getValue().createClient(executorInjector.getValue()));
 	}
-	
+
 	Executor getExecutor() {
 		return executorInjector.getValue();
 	}

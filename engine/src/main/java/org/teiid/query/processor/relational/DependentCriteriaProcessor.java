@@ -46,7 +46,7 @@ import org.teiid.query.sql.util.ValueIterator;
 
 
 public class DependentCriteriaProcessor {
-	
+
     public static class SetState {
 
         Collection<Constant> replacement = new LinkedHashSet<Constant>();
@@ -58,15 +58,15 @@ public class DependentCriteriaProcessor {
         Object nextValue;
 
         boolean isNull;
-        
+
         float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
-        
+
         boolean overMax;
-        
+
         long replacementSize() {
     		return replacement.size() * valueCount;
     	}
-        
+
         long valueCount = 1;
 
         SetCriteria existingSet;
@@ -111,7 +111,7 @@ public class DependentCriteriaProcessor {
 			                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
 			                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getSchema());
 			            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
-			            	//having this sort throw a blocked exception is a problem for 
+			            	//having this sort throw a blocked exception is a problem for
 			            	//the logic that declines the source sort operation
 			            	this.sortUtility.setNonBlocking(true);
 		                }
@@ -135,7 +135,7 @@ public class DependentCriteriaProcessor {
     			}
             }
         }
-        
+
         public void close() {
         	if (this.sortUtility != null) {
         		this.sortUtility.remove();
@@ -148,13 +148,13 @@ public class DependentCriteriaProcessor {
                 dvs = null;
             }
         }
-                
+
         public List<SetState> getDepedentSetStates() {
             return dependentSetStates;
         }
-        
+
     }
-    
+
     private static final int SORT = 2;
     private static final int SET_PROCESSING = 3;
 
@@ -178,7 +178,7 @@ public class DependentCriteriaProcessor {
     private int currentIndex;
     private boolean hasNextCommand;
     protected SubqueryAwareEvaluator eval;
-	
+
 	private int totalPredicates;
 	private long maxSize;
 
@@ -188,14 +188,14 @@ public class DependentCriteriaProcessor {
         this.dependentNode = dependentNode;
         this.eval = new SubqueryAwareEvaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext(), dependentNode.getBufferManager());
         queryCriteria = Criteria.separateCriteriaByAnd(dependentCriteria);
-        
+
         Map<Expression, SetCriteria> setMap = new HashMap<Expression, SetCriteria>();
         for (int i = 0; i < queryCriteria.size(); i++) {
             Criteria criteria = queryCriteria.get(i);
             if (!(criteria instanceof AbstractSetCriteria)) {
                 continue;
             }
-            
+
             if (criteria instanceof SetCriteria) {
                 SetCriteria setCriteria = (SetCriteria)criteria;
                 if (setCriteria.isNegated() || !setCriteria.isAllConstants()) {
@@ -204,13 +204,13 @@ public class DependentCriteriaProcessor {
                 setMap.put(setCriteria.getExpression(), setCriteria);
             }
         }
-        
+
         for (int i = 0; i < queryCriteria.size(); i++) {
         	Criteria criteria = queryCriteria.get(i);
             if (!(criteria instanceof AbstractSetCriteria)) {
                 continue;
             }
-            
+
             if (criteria instanceof SetCriteria) {
                 SetCriteria setCriteria = (SetCriteria)criteria;
                 if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize || !setCriteria.isAllConstants()) {
@@ -227,7 +227,7 @@ public class DependentCriteriaProcessor {
             } else if (criteria instanceof DependentSetCriteria) {
             	DependentSetCriteria dsc = (DependentSetCriteria)criteria;
                 String source = dsc.getContextSymbol();
-                
+
                 SetState state = new SetState();
                 setStates.put(i, state);
                 SetCriteria sc = setMap.get(dsc.getExpression());
@@ -248,8 +248,8 @@ public class DependentCriteriaProcessor {
                 }
                 ts.getDepedentSetStates().add(state);
                 state.maxNdv = dsc.getMaxNdv();
-            } 
-        }        
+            }
+        }
     }
 
     public void close() {
@@ -272,7 +272,7 @@ public class DependentCriteriaProcessor {
                 	return QueryRewriter.FALSE_CRITERIA;
                 }
             }
-        	
+
         	//init total predicates and max size
         	totalPredicates = setStates.size();
         	if (this.maxPredicates > 0) {
@@ -289,7 +289,7 @@ public class DependentCriteriaProcessor {
         			maxSize = Math.max(1, maxParams/totalPredicates);
         		}
         	}
-        	
+
         	//determine push down handling
 			if (pushdown) {
 				List<Criteria> newCriteria = new ArrayList<Criteria>();
@@ -307,7 +307,7 @@ public class DependentCriteriaProcessor {
 					// check if this has more rows than we want to push
 					if ((dsc.getMaxNdv() != -1 && dvs.getTupleBuffer().getRowCount() > dsc.getMaxNdv())
 							|| (dsc.getMakeDepOptions() != null
-									&& dsc.getMakeDepOptions().getMax() != null 
+									&& dsc.getMakeDepOptions().getMax() != null
 									&& dvs.getTupleBuffer().getRowCount() > dsc.getMakeDepOptions().getMax())) {
 						continue; // don't try to pushdown
 					}
@@ -338,9 +338,9 @@ public class DependentCriteriaProcessor {
         }
 
         replaceDependentValueIterators();
-        
+
         LinkedList<Criteria> crits = new LinkedList<Criteria>();
-        
+
         for (int i = 0; i < queryCriteria.size(); i++) {
         	SetState state = this.setStates.get(i);
         	Criteria criteria = queryCriteria.get(i);
@@ -358,22 +358,22 @@ public class DependentCriteriaProcessor {
         		}
         	}
         }
-        
+
         if (crits.size() == 1) {
         	return crits.get(0);
         }
         return new CompoundCriteria(CompoundCriteria.AND, crits);
     }
-    
+
     public void consumedCriteria() {
         // flush only the value iterators starting at the restart index
         // it is only safe to do this after the super call to prepare command
         if (restartIndexes.isEmpty()) {
             return;
         }
-        
+
         int restartIndex = restartIndexes.removeLast().intValue();
-        
+
         for (int i = restartIndex; i < sources.size(); i++) {
 
             List<SetState> source = sources.get(i);
@@ -388,7 +388,7 @@ public class DependentCriteriaProcessor {
 
     /**
      * Replace the dependentSet value iterators with the next set of values from the independent tuple source
-     * 
+     *
      * @param dependentSets
      * @param replacementValueIterators
      * @throws TeiidComponentException
@@ -409,12 +409,12 @@ public class DependentCriteriaProcessor {
 	        	if (i == currentIndex) {
 	        		currentIndex++;
 		            int doneCount = 0;
-		
+
 		            while (doneCount < source.size()) {
-		
+
 		                boolean isNull = false;
 		                boolean lessThanMax = true;
-		
+
 		                for (SetState state : source) {
 		                	if (state.overMax) {
 		                		doneCount++;
@@ -430,18 +430,18 @@ public class DependentCriteriaProcessor {
 		                            continue;
 		                        }
 		                    }
-		
+
 		                    isNull |= state.isNull;
 		                    lessThanMax &= state.replacementSize() < maxSize * (run + 1);
 		                }
-		
+
 		                if (doneCount == source.size()) {
 		                    if (!restartIndexes.isEmpty() && restartIndexes.getLast().intValue() == i) {
 		                        restartIndexes.removeLast();
 		                    }
 		                    break;
 		                }
-		
+
 		                if (lessThanMax || isNull) {
 		                	for (SetState state : source) {
 		                        if (!isNull) {
@@ -459,17 +459,17 @@ public class DependentCriteriaProcessor {
 		                }
 		            }
 	        	}
-	            
+
 	            for (SetState setState : source) {
 	            	currentPredicates += setState.replacementSize()/maxSize+(setState.replacementSize()%maxSize!=0?1:0);
 				}
 	            possible+=source.size();
 	        }
-	        
+
 	        if (currentPredicates + possible > totalPredicates) {
             	break; //don't exceed the max
             }
-	        
+
             if (restartIndexes.isEmpty()) {
             	break;
             }
@@ -486,7 +486,7 @@ public class DependentCriteriaProcessor {
     protected boolean hasNextCommand() {
         return hasNextCommand;
     }
-    
+
     public Criteria replaceDependentCriteria(AbstractSetCriteria crit, SetState state) throws TeiidComponentException {
     	if (state.overMax) {
             DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(((DependentSetCriteria)crit).getContextSymbol());
@@ -505,10 +505,10 @@ public class DependentCriteriaProcessor {
     	}
     	Iterator<Constant> iter = state.replacement.iterator();
     	ArrayList<Criteria> orCrits = new ArrayList<Criteria>(numberOfSets);
-    	
+
     	for (int i = 0; i < numberOfSets; i++) {
     		if (setSize == 1 || i + 1 == state.replacement.size()) {
-				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, iter.next()));    				
+				orCrits.add(new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, iter.next()));
 			} else {
 			    //use an appropriately searchable collection - which is expected by the temp table logic
 			    Collection<Constant> vals = null;
@@ -517,12 +517,12 @@ public class DependentCriteriaProcessor {
 			    } else {
 			        vals = new LinkedHashSet<Constant>();
 			    }
-				
+
 	    		for (int j = 0; j < setSize && iter.hasNext(); j++) {
 	    		    Constant val = iter.next();
 	                vals.add(val);
 	            }
-	            
+
 	            SetCriteria sc = new SetCriteria();
 	            sc.setExpression(crit.getExpression());
 	            sc.setValues(vals);
@@ -535,7 +535,7 @@ public class DependentCriteriaProcessor {
     	}
     	return new CompoundCriteria(CompoundCriteria.OR, orCrits);
     }
-    
+
     private Constant newConstant(Object val, Expression ex) {
         Constant c;
         if (ex != null) {
@@ -555,13 +555,13 @@ public class DependentCriteriaProcessor {
 	public void setPushdown(boolean pushdown) {
 		this.pushdown = pushdown;
 	}
-	
+
 	public void setUseBindings(boolean useBindings) {
 		this.useBindings = useBindings;
 	}
-	
+
 	public void setComplexQuery(boolean complexQuery) {
 		this.complexQuery = complexQuery;
 	}
-	
+
 }

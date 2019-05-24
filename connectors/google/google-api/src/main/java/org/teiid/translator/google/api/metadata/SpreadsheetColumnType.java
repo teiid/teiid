@@ -20,7 +20,7 @@ package org.teiid.translator.google.api.metadata;
 
 public enum SpreadsheetColumnType {
 	 STRING,
-	 DATE, 
+	 DATE,
 	 TIMEOFDAY,
 	 DATETIME,
 	 BOOLEAN,

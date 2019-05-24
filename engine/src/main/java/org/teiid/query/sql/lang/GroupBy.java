@@ -146,11 +146,11 @@ public class GroupBy implements LanguageObject {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public boolean isRollup() {
 		return rollup;
 	}
-    
+
     public void setRollup(boolean rollup) {
 		this.rollup = rollup;
 	}

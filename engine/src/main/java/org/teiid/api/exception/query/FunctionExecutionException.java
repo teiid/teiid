@@ -33,7 +33,7 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
     public FunctionExecutionException() {
         super();
     }
-    
+
     /**
      * Construct an instance with the message specified.
      *
@@ -46,7 +46,7 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
     public FunctionExecutionException(Throwable e) {
         super(e);
     }
-    
+
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
@@ -56,15 +56,15 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
     public FunctionExecutionException( Throwable e, String message ) {
         super( e, message );
     }
-    
+
     public FunctionExecutionException(BundleUtil.Event event, Throwable e, String message ) {
         super( event, e, message );
     }
-    
+
     public FunctionExecutionException(BundleUtil.Event event, String message ) {
         super( event, message );
-    }    
+    }
     public FunctionExecutionException(BundleUtil.Event event, Throwable e) {
         super(event,e);
-    }    
+    }
 }

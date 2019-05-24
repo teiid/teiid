@@ -27,7 +27,7 @@ import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 
 public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunctionModifier {
-	
+
 	public LocateFunctionModifier(LanguageFactory factory) {
 		super(factory);
 	}
@@ -38,7 +38,7 @@ public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunc
 		List<Object> parts = new ArrayList<Object>();
 		List<Expression> params = function.getParameters();
 		parts.add("position("); //$NON-NLS-1$
-		parts.add(params.get(0));		
+		parts.add(params.get(0));
 		parts.add(" in "); //$NON-NLS-1$
 		boolean useSubStr = false;
 		if (params.size() == 3) {
@@ -71,5 +71,5 @@ public class LocateFunctionModifier extends org.teiid.translator.jdbc.LocateFunc
 		parts.add(")"); //$NON-NLS-1$
 		return parts;
 	}
-	
+
 }

@@ -216,7 +216,7 @@ class XMLEventStreamReader extends AbstractXMLStreamReader {
 	        }
 		}
     }
-    
+
     private XMLEvent namespacesEvent;
     List<Namespace> namespacesList;
 

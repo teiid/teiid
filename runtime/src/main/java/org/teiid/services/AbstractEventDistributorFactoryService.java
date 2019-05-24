@@ -33,14 +33,14 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class AbstractEventDistributorFactoryService implements InternalEventDistributorFactory {
-	
+
 	private EventDistributor replicatableEventDistributor;
 	private EventDistributor eventDistributorProxy;
-	
+
 	public InternalEventDistributorFactory getValue() throws IllegalStateException, IllegalArgumentException {
 		return this;
 	}
-	
+
 	protected abstract VDBRepository getVdbRepository();
 	protected abstract ObjectReplicator getObjectReplicator();
 	protected abstract DQPCore getDQPCore();
@@ -51,13 +51,13 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			public VDBRepository getVdbRepository() {
 				return AbstractEventDistributorFactoryService.this.getVdbRepository();
 			}
-			
+
 			@Override
 			public DQPCore getDQPCore() {
                 return AbstractEventDistributorFactoryService.this.getDQPCore();
 			}
 		};
-		
+
 		ObjectReplicator objectReplicator = getObjectReplicator();
 		// this instance is by use of teiid internally; only invokes the remote instances
 		if (objectReplicator != null) {
@@ -67,10 +67,10 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40088, this));
 			}
 		}
-		
+
 		// for external client to call. invokes local instance and remote ones too.
 		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
-			
+
 			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			    Replicated annotation = method.getAnnotation(Replicated.class);
@@ -78,7 +78,7 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
                 try {
 			        if (replicatableEventDistributor == null || (annotation != null && annotation.remoteOnly())) {
                         result = method.invoke(ed, args);
-                    } 
+                    }
                     if (replicatableEventDistributor != null) {
     					result = method.invoke(replicatableEventDistributor, args);
     				}
@@ -87,7 +87,7 @@ public abstract class AbstractEventDistributorFactoryService implements Internal
 			    }
 				return result;
 			}
-		});		
+		});
 	}
 
 	public void stop() {

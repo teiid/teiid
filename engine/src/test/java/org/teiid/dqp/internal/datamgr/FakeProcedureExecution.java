@@ -37,12 +37,12 @@ final class FakeProcedureExecution implements ProcedureExecution {
         this.resultSetSize = resultSetSize;
         this.paramSize = paramSize;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
-    	
+
     }
-    
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	List<Object> result = new ArrayList<Object>(paramSize);
@@ -51,13 +51,13 @@ final class FakeProcedureExecution implements ProcedureExecution {
     	}
     	return result;
     }
-    
+
     public void close() {
     }
 
     public void cancel() throws TranslatorException {
     }
-    
+
     @Override
     public List next() throws TranslatorException, DataNotAvailableException {
     	if (rowNum == 1) {

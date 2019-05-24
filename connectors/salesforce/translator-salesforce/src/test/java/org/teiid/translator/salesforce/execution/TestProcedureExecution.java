@@ -34,7 +34,7 @@ import org.teiid.translator.salesforce.execution.visitors.TestVisitors;
 
 @SuppressWarnings("nls")
 public class TestProcedureExecution {
-	
+
 	private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
 
 	@Test public void testProcedureName() throws Exception {
@@ -50,5 +50,5 @@ public class TestProcedureExecution {
 		assertNull(pepi.next());
 		pepi.close();
 	}
-	
+
 }

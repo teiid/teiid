@@ -41,24 +41,24 @@ import org.teiid.query.sql.lang.Command;
 
 public class CachedResults implements Serializable, Cachable {
 	private static final long serialVersionUID = -5603182134635082207L;
-	
+
 	private transient Command command;
 	private transient TupleBuffer results;
 
 	private String uuid;
 	private boolean hasLobs;
 	private int rowLimit;
-	
+
 	private AccessInfo accessInfo = new AccessInfo();
-	
+
 	public String getId() {
 		return this.uuid;
 	}
-	
+
 	public TupleBuffer getResults() {
 		return results;
 	}
-	
+
 	public void setResults(TupleBuffer results, ProcessorPlan plan) {
 		this.results = results;
 		this.uuid = results.getId();
@@ -67,11 +67,11 @@ public class CachedResults implements Serializable, Cachable {
 			this.accessInfo.populate(plan.getContext(), true);
 		}
 	}
-	
+
 	public void setCommand(Command command) {
 		this.command = command;
 	}
-	
+
 	public synchronized Command getCommand(String sql, QueryMetadataInterface metadata, ParseInfo info) throws QueryParserException, QueryResolverException, TeiidComponentException {
 		if (command == null) {
 			command = QueryParser.getQueryParser().parseCommand(sql, info);
@@ -97,7 +97,7 @@ public class CachedResults implements Serializable, Cachable {
 			if (buffer != null) {
 				this.results = buffer;
 			}
-			
+
 			try {
 				this.accessInfo.restore();
 			} catch (TeiidException e) {
@@ -106,19 +106,19 @@ public class CachedResults implements Serializable, Cachable {
 			}
 		}
 		return (this.results != null);
-	}	
-	
+	}
+
 	@Override
 	public AccessInfo getAccessInfo() {
 		return accessInfo;
 	}
-	
+
 	public int getRowLimit() {
 		return rowLimit;
 	}
-	
+
 	public void setRowLimit(int rowLimit) {
 		this.rowLimit = rowLimit;
 	}
-	
+
 }

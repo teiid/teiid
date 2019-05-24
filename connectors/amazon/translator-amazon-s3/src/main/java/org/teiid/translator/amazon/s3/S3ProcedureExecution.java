@@ -69,7 +69,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	private RuntimeMetadata metadata;
 	private ExecutionContext ec;
 	private String endpoint;
-	
+
 	private BinaryWSProcedureExecution execution = null;
 	boolean isText = false;
 	boolean isList = false;
@@ -87,14 +87,14 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	@Override
 	public void execute() throws TranslatorException {
 		List<Argument> arguments = this.command.getArguments();
-		
+
 		if (command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.SAVEFILE)) {
 			this.execution = saveFile(arguments);
 			this.execution.execute();
 			if (this.execution.getResponseCode() != 200) {
 				throw new TranslatorException(S3ExecutionFactory.UTIL.gs("error_writing", this.endpoint,
 						this.execution.getResponseCode(), getErrorDescription()));
-			}			
+			}
 		} else if (command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.DELETEFILE)) {
 			this.execution = deleteFile(arguments);
 			this.execution.execute();
@@ -104,7 +104,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			}
 		} else if (command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.GETFILE)
 				|| command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.GETTEXTFILE)) {
-			
+
 			if (command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.GETTEXTFILE)) {
 				this.isText = true;
 			}
@@ -120,7 +120,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			if (this.execution.getResponseCode() != 200) {
 				throw new TranslatorException(S3ExecutionFactory.UTIL.gs("error_list", this.endpoint,
 						this.execution.getResponseCode(), getErrorDescription()));
-			}			
+			}
 		}
 	}
 
@@ -134,15 +134,15 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		this.endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 		String accessKey = (String)arguments.get(4).getArgumentValue().getValue();
 		String secretKey = (String)arguments.get(5).getArgumentValue().getValue();
-		
+
 		if (bucket == null) {
 			bucket = this.ef.getBucket();
 		}
-		
+
 		if (region == null) {
 			region = this.ef.getRegion();
 		}
-		
+
 		if (endpoint == null) {
 		    if (region.equals("us-east-1")) {
 		        endpoint = "https://s3.amazonaws.com/" + bucket + "/" + name;
@@ -150,11 +150,11 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		        endpoint = "https://s3-" + region + ".amazonaws.com/" + bucket + "/"+ name;
 		    }
 		}
-		
+
 		if (accessKey == null) {
 			accessKey = this.ef.getAccesskey();
 		}
-		
+
 		if (secretKey == null) {
 			secretKey = this.ef.getSecretkey();
 		}
@@ -180,16 +180,16 @@ public class S3ProcedureExecution implements ProcedureExecution {
 	        	contents = ((String)file).getBytes();
 	        } else {
 	            throw new TranslatorException(S3ExecutionFactory.UTIL.getString("unknown_type")); //$NON-NLS-1$
-	        }		
-			
+	        }
+
 	        byte[] contentHash = AWS4SignerBase.hash(contents);
 	        String contentHashString = BinaryUtils.toHex(contentHash);
-	        
+
 	        Map<String, String> headers = new HashMap<String, String>();
 	        headers.put("x-amz-content-sha256", contentHashString);
 	        headers.put("content-length", "" + length);
 	        headers.put("x-amz-storage-class", "STANDARD");
-	        
+
 	        if (accessKey != null) {
 				AWS4SignerForAuthorizationHeader signer = new AWS4SignerForAuthorizationHeader(new URL(endpoint), "PUT",
 						"s3", region);
@@ -197,7 +197,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		        headers.put("Authorization", authorization);
 	        }
 	        headers.put("Content-Type", "application/octet-stream");
-	        
+
 			LogManager.logDetail(LogConstants.CTX_WS, "Saving", endpoint); //$NON-NLS-1$
 			return invokeHTTP("PUT", endpoint, new BlobType(contents), headers);
 		} catch (SQLException | IOException e) {
@@ -212,31 +212,31 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		this.endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 		String accessKey = (String)arguments.get(4).getArgumentValue().getValue();
 		String secretKey = (String)arguments.get(5).getArgumentValue().getValue();
-		
+
 		String encryption = (String)arguments.get(6).getArgumentValue().getValue();
 		String encryptionKey = (String)arguments.get(7).getArgumentValue().getValue();
 		Boolean isStreaming = (Boolean)arguments.get(8).getArgumentValue().getValue();
-		
+
 		if (isStreaming != null) {
 		    this.streaming = isStreaming;
 		}
-		
+
 		if (bucket == null) {
 			bucket = this.ef.getBucket();
 		}
-		
+
 		if (region == null) {
 			region = this.ef.getRegion();
 		}
-		
+
 		if (endpoint == null) {
 			endpoint = "https://s3.amazonaws.com/"+bucket+"/"+name;
 		}
-		
+
 		if (accessKey == null) {
 			accessKey = this.ef.getAccesskey();
 		}
-		
+
 		if (secretKey == null) {
 			secretKey = this.ef.getSecretkey();
 		}
@@ -244,11 +244,11 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		if (encryption == null) {
 			encryption = this.ef.getEncryption();
 		}
-		
+
 		if (encryptionKey == null) {
 			encryptionKey = this.ef.getEncryptionkey();
 		}
-		
+
 		Map<String, String> headers = new HashMap<String, String>();
 		try {
 			if (accessKey != null) {
@@ -259,7 +259,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 				headers.put("Authorization", authorization);
 				headers.put("x-amz-content-sha256", AWS4SignerBase.EMPTY_BODY_SHA256);
 			}
-			
+
 			if (encryption != null) {
 				assert encryptionKey != null;
 				headers.put("x-amz-server-side​-encryption​-customer-algorithm", encryption);
@@ -268,7 +268,7 @@ public class S3ProcedureExecution implements ProcedureExecution {
 				headers.put("x-amz-server-side​-encryption​-customer-key-MD5",
 						Base64.getEncoder().encodeToString(messageDigest.digest(encryptionKey.getBytes())));
 			}
-			
+
 			LogManager.logDetail(LogConstants.CTX_WS, "Getting", endpoint); //$NON-NLS-1$
 			return invokeHTTP("GET", endpoint, null, headers);
 		} catch (MalformedURLException | NoSuchAlgorithmException e) {
@@ -287,11 +287,11 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		if (bucket == null) {
 			bucket = this.ef.getBucket();
 		}
-		
+
 		if (region == null) {
 			region = this.ef.getRegion();
 		}
-		
+
 		if (endpoint == null) {
 		    if (region.equals("us-east-1")) {
 		        endpoint = "https://s3.amazonaws.com/" + bucket + "/" + name;
@@ -299,15 +299,15 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		        endpoint = "https://s3-" + region + ".amazonaws.com/" + bucket + "/"+ name;
 		    }
 		}
-		
+
 		if (accessKey == null) {
 			accessKey = this.ef.getAccesskey();
 		}
-		
+
 		if (secretKey == null) {
 			secretKey = this.ef.getSecretkey();
 		}
-		
+
 		try {
 			Map<String, String> headers = new HashMap<String, String>();
 			if (accessKey != null) {
@@ -325,37 +325,37 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			throw new TranslatorException(e);
 		}
 	}
-	
+
 	private BinaryWSProcedureExecution listBucket(List<Argument> arguments) throws TranslatorException {
 		String bucket = (String)arguments.get(0).getArgumentValue().getValue();
 		String region = (String)arguments.get(1).getArgumentValue().getValue();
 		String accessKey = (String)arguments.get(2).getArgumentValue().getValue();
 		String secretKey = (String)arguments.get(3).getArgumentValue().getValue();
 		String next = (String)arguments.get(4).getArgumentValue().getValue();
-				
+
 		if (bucket == null) {
 			bucket = this.ef.getBucket();
 		}
-		
+
 		if (region == null) {
 			region = this.ef.getRegion();
 		}
-		
+
 		if (endpoint == null) {
 			endpoint = "https://s3.amazonaws.com/"+bucket+"/?list-type=2";
 			if (next != null) {
 				endpoint += "&continuation-token="+next;
 			}
 		}
-		
+
 		if (accessKey == null) {
 			accessKey = this.ef.getAccesskey();
 		}
-		
+
 		if (secretKey == null) {
 			secretKey = this.ef.getSecretkey();
 		}
-		
+
 		Map<String, String> headers = new HashMap<String, String>();
 		try {
 			if (accessKey != null) {
@@ -379,15 +379,15 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		} catch (MalformedURLException e) {
 			throw new TranslatorException(e);
 		}
-	}	
-	
+	}
+
     protected BinaryWSProcedureExecution invokeHTTP(String method,
             String uri, Object payload, Map<String, String> headers)
             throws TranslatorException {
 
     	Map<String, List<String>> targetHeaders = new HashMap<String, List<String>>();
     	headers.forEach((k,v) -> targetHeaders.put(k, Arrays.asList(v)));
-    	
+
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
             try {
                 LogManager.logDetail(LogConstants.CTX_WS,
@@ -401,29 +401,29 @@ public class S3ProcedureExecution implements ProcedureExecution {
         parameters.add(new Argument(Direction.IN, new Literal(payload, TypeFacility.RUNTIME_TYPES.OBJECT), null));
         parameters.add(new Argument(Direction.IN, new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
         parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
-        //the engine currently always associates out params at resolve time even if the 
+        //the engine currently always associates out params at resolve time even if the
         // values are not directly read by the call
         parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
-        
+
         Call call = this.ef.getLanguageFactory().createCall("invokeHttp", parameters, null);
 
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.ec, null,
 				this.conn);
         execution.setUseResponseContext(true);
-        execution.setCustomHeaders(targetHeaders);        
+        execution.setCustomHeaders(targetHeaders);
         return execution;
-    }	
-	
+    }
+
 	@Override
 	public void close() {
-		
+
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-		
+
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private String getHeader(String name) {
 		ArrayList list = (ArrayList)execution.getResponseHeader(name);
@@ -439,29 +439,29 @@ public class S3ProcedureExecution implements ProcedureExecution {
 			return null;
 		} catch (NumberFormatException |IOException | SQLException e) {
 			throw new TranslatorException(e);
-		} 
+		}
 	}
-	
+
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (this.command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.SAVEFILE)
 				|| this.command.getProcedureName().equalsIgnoreCase(S3ExecutionFactory.DELETEFILE)) {
             return null;
         }
-		
+
 		if (this.execution == null || this.execution.getResponseCode() < 200
 				|| this.execution.getResponseCode() > 300) {
 			return null;
 		}
-		
+
 		Blob contents = (Blob)execution.getOutputParameterValues().get(0);
 		BlobInputStreamFactory isf = new BlobInputStreamFactory(contents);
-		
+
 		String length = getHeader("Content-Length");
 		if (length != null) {
-			isf.setLength(Long.parseLong(length));	
+			isf.setLength(Long.parseLong(length));
 		}
-		
+
 		Object value = null;
 		if (isText) {
 			ClobImpl clob = new ClobImpl(isf, -1);
@@ -477,9 +477,9 @@ public class S3ProcedureExecution implements ProcedureExecution {
 		        value = isf;
 		    }
 		}
-		
+
 		String lastModified = getHeader("Last-Modified");
-		
+
 		ArrayList<Object> result = new ArrayList<Object>(2);
 		result.add(value);
 		if (!isList) {

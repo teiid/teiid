@@ -39,7 +39,7 @@ public class HiveMetadataProcessor extends JDBCMetadataProcessor implements Meta
 
 	private boolean trimColumnNames;
 	private boolean useDatabaseMetaData;
-	
+
 	public HiveMetadataProcessor() {
 		setImportKeys(false);
 		setQuoteString("`"); //$NON-NLS-1$
@@ -53,7 +53,7 @@ public class HiveMetadataProcessor extends JDBCMetadataProcessor implements Meta
             throw new TranslatorException(e);
         }
 	}
-    
+
     @Override
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
             throws SQLException {
@@ -69,7 +69,7 @@ public class HiveMetadataProcessor extends JDBCMetadataProcessor implements Meta
             addTable(table, conn, metadataFactory);
         }
     }
-    
+
 	private List<String> getTables(Connection conn) throws SQLException {
 		ArrayList<String> tables = new ArrayList<String>();
 		Statement stmt = conn.createStatement();
@@ -152,19 +152,19 @@ public class HiveMetadataProcessor extends JDBCMetadataProcessor implements Meta
 	public void setTrimColumnNames(boolean trimColumnNames) {
 		this.trimColumnNames = trimColumnNames;
 	}
-	
+
 	@TranslatorProperty(display="Trim Columns", category=PropertyType.IMPORT, description="Trim column names read from the database")
     public boolean isTrimColumnNames() {
         return trimColumnNames;
-    }	
-	
+    }
+
 	@TranslatorProperty(display="Use DatabaseMetaData", category=PropertyType.IMPORT, description= "Use DatabaseMetaData (typical JDBC logic) for importing")
     public boolean isUseDatabaseMetaData() {
 		return useDatabaseMetaData;
 	}
-    
+
     public void setUseDatabaseMetaData(boolean useDatabaseMetaData) {
 		this.useDatabaseMetaData = useDatabaseMetaData;
 	}
-    
+
 }

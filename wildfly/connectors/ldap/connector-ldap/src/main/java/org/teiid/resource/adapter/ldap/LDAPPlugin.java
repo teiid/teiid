@@ -25,7 +25,7 @@ import org.teiid.core.BundleUtil;
 /**
  * LDAPPlugin
  */
-public class LDAPPlugin { 
+public class LDAPPlugin {
 
     public static final String PLUGIN_ID = LDAPPlugin.class.getPackage().getName();
 

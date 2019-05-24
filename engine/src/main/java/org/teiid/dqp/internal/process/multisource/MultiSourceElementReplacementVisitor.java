@@ -31,20 +31,20 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 
 public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisitor {
-    
+
     private String bindingName;
     private QueryMetadataInterface metadata;
-    
+
     public MultiSourceElementReplacementVisitor(String bindingName, QueryMetadataInterface metadata) {
         super(null);
         this.bindingName = bindingName;
         this.metadata = metadata;
     }
-    
+
     public Expression replaceExpression(Expression expr) {
         if(expr instanceof ElementSymbol) {
             ElementSymbol elem = (ElementSymbol) expr;
-            Object metadataID = elem.getMetadataID();            
+            Object metadataID = elem.getMetadataID();
             try {
 				if(metadata.isMultiSourceElement(metadataID)) {
 				    Constant bindingConst = new Constant(this.bindingName, DataTypeManager.DefaultDataClasses.STRING);
@@ -54,15 +54,15 @@ public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisit
 			} catch (TeiidComponentException e) {
 			}
         }
-        
+
         return expr;
     }
-    
+
     public static void visit(String bindingName, QueryMetadataInterface metadata, Command processingCommand) {
         MultiSourceElementReplacementVisitor visitor = new MultiSourceElementReplacementVisitor(bindingName, metadata);
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
         nav.setSkipEvaluatable(true);
         processingCommand.acceptVisitor(nav);
     }
-    
+
 }

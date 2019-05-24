@@ -30,11 +30,11 @@ import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestXMLResolving {
-    
+
     @Test public void testXmlTableWithParam() {
         helpResolve("select * from xmltable('/a' passing ?) as x", RealMetadataFactory.example1Cached());
     }
-    
+
     @Test public void testXmlQueryWithParam() {
         Query q = (Query)helpResolve("select xmlquery('/a' passing ?)", RealMetadataFactory.example1Cached());
         XMLQuery ex = (XMLQuery) SymbolMap.getExpression(q.getSelect().getSymbols().get(0));

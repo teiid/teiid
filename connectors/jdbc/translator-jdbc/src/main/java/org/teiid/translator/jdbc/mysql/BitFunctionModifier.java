@@ -34,7 +34,7 @@ public class BitFunctionModifier extends AliasModifier {
 		super(alias);
 		this.langFactory = langFactory;
 	}
-	
+
 	/**
 	 * Wrap the renamed function in a convert back to integer
 	 */

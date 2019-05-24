@@ -138,10 +138,10 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	}
 
 	@Override
-    public void visit(Comparison obj) {		
+    public void visit(Comparison obj) {
         Expression left = obj.getLeftExpression();
-        
-        if(!this.executionFactory.supportsOdataBooleanFunctionsWithComparison() 
+
+        if(!this.executionFactory.supportsOdataBooleanFunctionsWithComparison()
         		&& left instanceof Function
         		&& "boolean".equals(((Function)left).getMetadataObject().getOutputParameter().getRuntimeType())) {
         	visitComparisonWithBooleanFunction(obj);
@@ -173,7 +173,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         this.filter.append(Tokens.SPACE);
         appendRightComparison(obj);
     }
-	
+
 	public void visitComparisonWithBooleanFunction(Comparison obj) {
 		boolean truthiness = SQLConstants.Reserved.TRUE.equals(obj.getRightExpression().toString());
 		boolean isNot = !truthiness;

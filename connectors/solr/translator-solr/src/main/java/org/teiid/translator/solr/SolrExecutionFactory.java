@@ -46,7 +46,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 @Translator(name = "solr", description = "A translator for Solr search platform")
 public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, SolrConnection> {
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	
+
 	public SolrExecutionFactory() {
 		super();
 		setSourceRequiredForMetadata(true);
@@ -59,17 +59,17 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
         registerFunctionModifier(SourceSystemFunctions.POWER, new AliasModifier("pow"));//$NON-NLS-1$
 		setMaxInCriteriaSize(1024); //default for solr
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
 	}
-		
+
 	@Override
     public MetadataProcessor<SolrConnection> getMetadataProcessor() {
 	    return new SolrMetadataProcessor();
 	}
-	
+
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
     	this.functionModifiers.put(name, modifier);
     }
@@ -77,26 +77,26 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
     public Map<String, FunctionModifier> getFunctionModifiers() {
     	return this.functionModifiers;
     }
-	
+
 
     @Override
 	public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(getDefaultSupportedFunctions());
-        
+
         supportedFunctions.add(SourceSystemFunctions.MOD);
         supportedFunctions.add(SourceSystemFunctions.POWER);
         supportedFunctions.add(SourceSystemFunctions.ABS);
         supportedFunctions.add(SourceSystemFunctions.LOG);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
-        
+
         return supportedFunctions;
     }
-    
+
 	public List<String> getDefaultSupportedFunctions(){
 		return Arrays.asList(new String[] { "+", "-", "*", "/", "%"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
-    
+
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
@@ -107,19 +107,19 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SolrConnection connection) throws TranslatorException {
 		return new SolrUpdateExecution(this, command, executionContext, metadata, connection);
-	} 	
+	}
 
-	
+
 	public Object convertFromSolrType(final Object value, final Class<?> expectedType) {
 		if (value == null) {
 			return null;
 		}
-		
+
 		if (expectedType.isInstance(value)) {
 			return value;
 		}
 		try {
-			if (expectedType.isArray()) {				
+			if (expectedType.isArray()) {
 				ArrayList multiValues = (ArrayList)value;
 				Object transformed = Array.newInstance(expectedType.getComponentType(), multiValues.size());
 				for (int i = 0; i < multiValues.size(); i++) {
@@ -128,12 +128,12 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 						Array.set(transformed, i, obj);
 						continue;
 					}
-					
+
 					if (expectedType.getComponentType().isInstance(obj)) {
 						Array.set(transformed, i, obj);
 						continue;
 					}
-					
+
 					if (DataTypeManager.isTransformable(obj.getClass(), expectedType.getComponentType())) {
 						Array.set(transformed, i, DataTypeManager.transformValue(obj, expectedType.getComponentType()));
 					}
@@ -143,7 +143,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 				}
 				return transformed;
 			}
-		
+
 			if (DataTypeManager.isTransformable(value.getClass(), expectedType)) {
 				return DataTypeManager.transformValue(value, expectedType);
 			}
@@ -151,7 +151,7 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 		} catch (TransformationException e) {
 			throw new TeiidRuntimeException(e);
 		}
-	}	
+	}
 
 	@Override
 	public boolean supportsCompareCriteriaEquals() {
@@ -177,47 +177,47 @@ public class SolrExecutionFactory extends ExecutionFactory<ConnectionFactory, So
 	public boolean supportsLikeCriteria() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsOrderBy() {
 		return true;
-	}	
-	
+	}
+
 	@Override
 	public boolean supportsCompareCriteriaOrdered(){
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsOrCriteria(){
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsOnlyLiteralComparison(){
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsOrderByUnrelated(){
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsSelectExpression() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsBulkUpdate() {
 		return true;
 	}
-	
+
 	@Override
     public boolean supportsAggregatesCountStar() {
     	return true;
-    }	
-	
+    }
+
 	@Override
 	public boolean returnsSingleUpdateCount() {
 		return true;

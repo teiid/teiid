@@ -98,7 +98,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         ElementCollectorVisitor visitor = new ElementCollectorVisitor(elements);
         PreOrderNavigator.doVisit(obj, visitor);
     }
-    
+
     public static final void getElements(Collection<? extends LanguageObject> objs, Collection<ElementSymbol> elements) {
     	if(objs == null) {
     		return;
@@ -128,13 +128,13 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param removeDuplicates True to remove duplicates
      * @param useDeepIteration indicates whether or not to iterate into nested
-     * subqueries of the query 
+     * subqueries of the query
      * @return Collection of {@link org.teiid.query.sql.symbol.ElementSymbol}
      */
     public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration) {
     	return getElements(obj, removeDuplicates, useDeepIteration, false);
     }
-    
+
     public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration, boolean aggsOnly) {
         if(obj == null) {
             return Collections.emptyList();
@@ -152,10 +152,10 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         } else {
             PreOrderNavigator.doVisit(obj, visitor);
         }
-        
+
         return elements;
     }
-    
+
     public static final Collection<ElementSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {
     	return getElements(obj, removeDuplicates, false, true);
     }

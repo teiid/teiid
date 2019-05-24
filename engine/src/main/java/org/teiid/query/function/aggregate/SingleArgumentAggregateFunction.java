@@ -31,19 +31,19 @@ public abstract class SingleArgumentAggregateFunction extends AggregateFunction 
 			throws TeiidComponentException, TeiidProcessingException {
 		addInputDirect(tuple.get(argIndexes[0]), tuple, commandContext);
 	}
-	
+
 	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
 		initialize(dataType, inputTypes[0]);
 	}
-	
+
 	/**
-	 * @param dataType  
-	 * @param inputType 
+	 * @param dataType
+	 * @param inputType
 	 */
 	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?> inputType) {
-		
+
 	}
-	
+
 	public abstract void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
     throws TeiidProcessingException, TeiidComponentException;
 }

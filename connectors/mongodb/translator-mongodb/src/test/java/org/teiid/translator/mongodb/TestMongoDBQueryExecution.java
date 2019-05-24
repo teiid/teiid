@@ -91,7 +91,7 @@ public class TestMongoDBQueryExecution {
 	private DBCollection helpExecute(String query, String[] expectedCollection) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
 		return helpExecute(cmd, expectedCollection);
-	}    
+	}
 	private DBCollection helpExecute(Command cmd, String[] expectedCollection) throws TranslatorException {
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		Mockito.stub(context.getBatchSize()).toReturn(256);
@@ -1095,21 +1095,21 @@ public class TestMongoDBQueryExecution {
 
         BasicDBList values = new BasicDBList();
         values.add(0, "$e2");
-        values.add(1, false);        
-        BasicDBObject isNull = new BasicDBObject("$ifNull", values);  
-        
+        values.add(1, false);
+        BasicDBObject isNull = new BasicDBObject("$ifNull", values);
+
         BasicDBObject func = new BasicDBObject("$year", params);
         BasicDBObject expr = buildCondition(isNull, func, null);
-        
+
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", expr);
-        
+
         //{ "$cond" : [ { "$ifNull" : [ "$e2" ,  false ]} ,  { "$year" : [ "$e2"]}, null]}
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test
     public void testSubStr() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, 3) FROM Categories";
@@ -1129,7 +1129,7 @@ public class TestMongoDBQueryExecution {
         DBObject ne = buildNE("$CategoryName", null);
         BasicDBObject func = new BasicDBObject("$substr", params);
         BasicDBObject expr = buildCondition(ne, func, null);
-        
+
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", expr);
@@ -1137,7 +1137,7 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     @Test
     public void testToLower() throws Exception {
         String query = "SELECT LCASE(CategoryName) FROM Categories";
@@ -1147,29 +1147,29 @@ public class TestMongoDBQueryExecution {
         DBObject ne = buildNE("$CategoryName", null);
         BasicDBObject func = new BasicDBObject("$toLower", "$CategoryName");
         BasicDBObject expr = buildCondition(ne, func, null);
-        
+
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", expr);
 
         List<DBObject> pipeline = buildArray(new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
+    }
 
     private BasicDBObject buildCondition(Object expr, Object trueExpr, Object falseExpr) {
         BasicDBList values = new BasicDBList();
         values.add(0, expr);
         values.add(1, trueExpr);
         values.add(2, falseExpr);
-        return new BasicDBObject("$cond", values);        
+        return new BasicDBObject("$cond", values);
     }
-    
+
     private BasicDBObject buildNE(Object leftExpr, Object rightExpr) {
         BasicDBList values = new BasicDBList();
         values.add(0, leftExpr);
-        values.add(1, rightExpr);        
-        return new BasicDBObject("$ne", values);        
+        values.add(1, rightExpr);
+        return new BasicDBObject("$ne", values);
     }
-    
+
     @Test
     public void testSubStr2() throws Exception {
         String query = "SELECT SUBSTRING(CategoryName, CategoryID, 4) FROM Categories";
@@ -1188,7 +1188,7 @@ public class TestMongoDBQueryExecution {
         DBObject ne = buildNE("$CategoryName", null);
         BasicDBObject func = new BasicDBObject("$substr", params);
         BasicDBObject expr = buildCondition(ne, func, null);
-        
+
         //{ "$project" : { "_m0" : { "$substr" : [ "$CategoryName" , 1 , 4000]}}}
         BasicDBObject result = new BasicDBObject();
         result.append( "_m0", expr);
@@ -1295,7 +1295,7 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
     }
-    
+
     private FunctionMethod getFunctionMethod(String name) {
     	for (FunctionMethod fm: this.translator.getPushDownFunctions()) {
     		if (fm.getName().equalsIgnoreCase(name)) {
@@ -1308,7 +1308,7 @@ public class TestMongoDBQueryExecution {
     	}
     	return null;
     }
-    
+
     @Test
     public void testGeoFunctionInWhereWithGeometry() throws Exception {
 		Table table = this.utility.createRuntimeMetadata().getTable("northwind.Categories");
@@ -1321,14 +1321,14 @@ public class TestMongoDBQueryExecution {
 		tables.add(namedTable);
 		select.setFrom(tables);
 
-		final GeometryType geo = GeometryUtils.geometryFromClob(new ClobType(new ClobImpl("POLYGON ((1.0 2.0,3.0 4.0,5.0 6.0,1.0 2.0))")));		
+		final GeometryType geo = GeometryUtils.geometryFromClob(new ClobType(new ClobImpl("POLYGON ((1.0 2.0,3.0 4.0,5.0 6.0,1.0 2.0))")));
 		Function function = new Function("mongo.geoWithin", Arrays.asList(colRef, new Literal(geo, GeometryType.class)), //$NON-NLS-1$
 				Boolean.class); //$NON-NLS-2$
 		function.setMetadataObject(getFunctionMethod("mongo.geoWithin"));
-		
+
 		Comparison c = new Comparison(function, new Literal(true, Boolean.class), Comparison.Operator.EQ);
 		select.setWhere(c);
-		
+
         DBCollection dbCollection = helpExecute(select, new String[]{"Categories"});
 
         BasicDBObjectBuilder builder = new BasicDBObjectBuilder();
@@ -1342,7 +1342,7 @@ public class TestMongoDBQueryExecution {
                         new BasicDBObject("$match", builder.get()),
                         new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
-    }    
+    }
 
     @Test(expected=TranslatorException.class)
     public void testGeoFunctionInWhereWithFalse() throws Exception {
@@ -1371,17 +1371,17 @@ public class TestMongoDBQueryExecution {
         }
         return list;
     }
-    
+
     @Test
     public void testNextWithGroupAndOrder() throws Exception {
         String query = "select \"FirstName\" from \"TeiidArray\" group by \"FirstName\" order by \"FirstName\" limit 1000";
 
         String[] expectedCollection = new String[]{"TeiidArray"};
-        
+
         TransformationMetadata metadata = RealMetadataFactory.fromDDL("CREATE FOREIGN TABLE TeiidArray (ID String PRIMARY KEY, FirstName varchar(25), LastName varchar(25), Score object[]) OPTIONS(UPDATABLE 'TRUE');", "x", "y");
-        
+
         TranslationUtility util = new TranslationUtility(metadata);
-        
+
         Command cmd = util.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		Mockito.stub(context.getBatchSize()).toReturn(256);
@@ -1394,7 +1394,7 @@ public class TestMongoDBQueryExecution {
 		}
 
 		Cursor c = Mockito.mock(Cursor.class);
-		
+
 		Mockito.stub(c.hasNext()).toAnswer(new Answer<Boolean>() {
 			boolean next = true;
 			@Override
@@ -1406,21 +1406,21 @@ public class TestMongoDBQueryExecution {
 				return false;
 			}
 		});
-		
+
 		DBObject dbo = Mockito.mock(DBObject.class);
-		
+
 		Mockito.stub(c.next()).toReturn(dbo);
-		
+
 		Mockito.stub(dbCollection.aggregate((List<DBObject>)Mockito.anyList(), (AggregationOptions)Mockito.anyObject())).toReturn(c);
 
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
 
-		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context, 
+		ResultSetExecution execution = this.translator.createResultSetExecution((QueryExpression)cmd, context,
 				util.createRuntimeMetadata(), connection);
 		execution.execute();
 		execution.next();
-    }  
+    }
 
     @Test
     public void testNestedMergeSelect_one_2_one() throws Exception {

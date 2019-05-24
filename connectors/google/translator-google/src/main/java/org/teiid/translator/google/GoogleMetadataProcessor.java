@@ -35,9 +35,9 @@ import org.teiid.translator.google.api.metadata.Worksheet;
 import org.teiid.util.FullyQualifiedName;
 
 public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsheetConnection>{
-    
+
     private boolean allTypesUpdatable = true;
-	
+
 	/**
 	 * Creates metadata from all spreadsheets in the user account. Table name
 	 * consists of Spreadsheet name and worksheet name. Columns of the table are
@@ -52,7 +52,7 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 
 	/**
 	 * Adds new table to metadata.
-	 * 
+	 *
 	 * @param spreadsheet  Name of the spreadsheet
 	 * @param worksheet    Name of the worksheet
 	 * @throws TranslatorException
@@ -63,18 +63,18 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 		}
 		Table table = mf.addTable(worksheet.getName());
 		table.setProperty(FQN, new FullyQualifiedName("worksheet", worksheet.getName()).toString()); //$NON-NLS-1$
-		table.setNameInSource(worksheet.getName()); 
+		table.setNameInSource(worksheet.getName());
 		if (worksheet.isHeaderEnabled()) {
             table.setSupportsUpdate(true);
         }
 		addColumnsToTable(mf, table, worksheet);
 	}
-	
+
 	/**
 	 * Adds column to table
-	 * 
+	 *
 	 * @param table      Teiid table
-	 * @param worksheet  
+	 * @param worksheet
 	 * @throws TranslatorException
 	 */
 	private void addColumnsToTable(MetadataFactory mf, Table table, Worksheet worksheet) {
@@ -118,16 +118,16 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
 			}
 			c.setNameInSource(worksheet.isHeaderEnabled()?column.getLabel():column.getAlphaName());
 			c.setNativeType(column.getDataType().name());
-		}    
+		}
 	}
-	
+
     @TranslatorProperty (display="All Types Updatable", category=PropertyType.IMPORT, description="Allow all types to be updatable even those that may have formatting or locale inconsistencies.")
     public boolean isAllTypesUpdatable() {
         return allTypesUpdatable;
     }
-    
+
     public void setAllTypesUpdatable(boolean allTypesUpdatable) {
         this.allTypesUpdatable = allTypesUpdatable;
     }
-	
+
 }

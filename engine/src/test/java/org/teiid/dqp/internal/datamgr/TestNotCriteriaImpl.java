@@ -39,7 +39,7 @@ public class TestNotCriteriaImpl extends TestCase {
     public static NotCriteria helpExample() {
         return new NotCriteria(TestCompareCriteriaImpl.helpExample(CompareCriteria.GE, 100, 200));
     }
-    
+
     public static Not example() throws Exception {
         return TstLanguageBridgeFactory.factory.translate(helpExample());
     }

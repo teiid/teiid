@@ -53,7 +53,7 @@ class JTS2OlingoBridge {
             return result;
         } else if (geometry instanceof LineString) {
             LineString lineString = (LineString) geometry;
-            ArrayList<org.apache.olingo.commons.api.edm.geo.Point> points = convertLineStringToPoints(lineString.getCoordinates());            
+            ArrayList<org.apache.olingo.commons.api.edm.geo.Point> points = convertLineStringToPoints(lineString.getCoordinates());
             org.apache.olingo.commons.api.edm.geo.LineString result = new org.apache.olingo.commons.api.edm.geo.LineString(dimension, srid, points);
             return result;
         } else if (geometry instanceof Polygon) {
@@ -104,7 +104,7 @@ class JTS2OlingoBridge {
         List<org.apache.olingo.commons.api.edm.geo.Point> interior = Collections.emptyList();
         if (polygon.getNumInteriorRing() == 1) {
             interior = convertLineStringToPoints(polygon.getInteriorRingN(1).getCoordinates());
-        } 
+        }
         List<org.apache.olingo.commons.api.edm.geo.Point> exterior = convertLineStringToPoints(polygon.getExteriorRing().getCoordinates());
         return new org.apache.olingo.commons.api.edm.geo.Polygon(dimension, srid, interior, exterior);
     }

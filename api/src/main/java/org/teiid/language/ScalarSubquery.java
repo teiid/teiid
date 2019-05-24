@@ -37,7 +37,7 @@ public class ScalarSubquery extends BaseLanguageObject implements Expression, Su
     public QueryExpression getSubquery() {
         return this.query;
     }
-    
+
     @Override
     public void setSubquery(QueryExpression query) {
     	this.query = query;
@@ -46,7 +46,7 @@ public class ScalarSubquery extends BaseLanguageObject implements Expression, Su
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public Class<?> getType() {
     	return query.getProjectedQuery().getDerivedColumns().get(0).getExpression().getType();

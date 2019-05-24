@@ -27,14 +27,14 @@ public class SAXBuilderHelper {
 
 	/** System property name used to get parser class */
     public static final String PARSER_PROPERTY_NAME = "metamatrix.xmlparser.class"; //$NON-NLS-1$
-    
+
     private static String PARSER_NAME;
 
     public static String getParserClassName() {
 
         if (PARSER_NAME == null) {
             PARSER_NAME = System.getProperty(PARSER_PROPERTY_NAME);
-        }       
+        }
         return PARSER_NAME;
     }
 

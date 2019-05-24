@@ -42,8 +42,8 @@ import org.teiid.runtime.RuntimePlugin;
 
 /**
  * Implements the BufferService.  This implementation
- * may use either an all-memory model (which is typically only for testing) or 
- * a mixed disk/memory model which requires use of a directory on the disk 
+ * may use either an all-memory model (which is typically only for testing) or
+ * a mixed disk/memory model which requires use of a directory on the disk
  * for file service access.
  */
 public class BufferServiceImpl implements BufferService, Serializable {
@@ -62,27 +62,27 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAULT_MAX_OBJECT_SIZE;
     private BufferFrontedFileStoreCache fsc;
     private FileStorageManager fsm;
-    
+
     //reserve / heap properties
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
     private int maxReservedHeapKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
-    
+
     //fixed memory properties
 	private long fixedMemoryBufferSpaceMb = -1;
     private boolean fixedMemoryBufferOffHeap;
-    
+
 	//disk properties
 	private File bufferDir;
     private boolean encryptFiles = false;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private long maxDiskBufferSpace = FileStorageManager.DEFAULT_MAX_BUFFERSPACE>>20;
-       
+
     private long vmMaxMemory = Runtime.getRuntime().maxMemory();
     private SessionServiceImpl sessionService;
-	
+
     /**
-     * Clean the file storage directory on startup 
+     * Clean the file storage directory on startup
      * @param dir
      * @since 4.3
      */
@@ -100,7 +100,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setInlineLobs(inlineLobs);
             this.bufferMgr.setSessionService(sessionService);
             this.bufferMgr.initialize();
-            
+
             // If necessary, add disk storage manager
             if(useDisk) {
         		LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
@@ -127,7 +127,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc.setDirect(fixedMemoryBufferOffHeap);
                 if (fixedMemoryBufferSpaceMb < 0) {
                     //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
-                    long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10; 
+                    long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10;
 				    if (this.maxReservedHeapKb >= 0) {
 				        //if the max reserve has been - it may be too high
 				        //across most vm sizes we use about 1/4 of the remaining memory for the fixed buffer
@@ -160,14 +160,14 @@ public class BufferServiceImpl implements BufferService, Serializable {
             	this.bufferMgr.setCache(msm);
             	this.bufferMgr.setStorageManager(ssm);
             }
-            
-        } catch(TeiidComponentException e) { 
+
+        } catch(TeiidComponentException e) {
              throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40039, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40039));
         } catch(IOException e) {
              throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40039, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40039));
         }
     }
-   
+
     public void stop() {
     	LogManager.logDetail(LogConstants.CTX_DQP, "Stopping BufferManager using", bufferDir); //$NON-NLS-1$
     	if (bufferMgr != null) {
@@ -185,12 +185,12 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public BufferManagerImpl getBufferManager() {
         return this.bufferMgr;
     }
-    
+
     @Override
     public TupleBufferCache getTupleBufferCache() {
     	return this.bufferMgr;
     }
-	
+
 	public void setUseDisk(boolean flag) {
 		this.useDisk = flag;
 	}
@@ -214,7 +214,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public boolean isUseDisk() {
 		return this.useDisk;
 	}
-	
+
 	public boolean isInlineLobs() {
 		return inlineLobs;
 	}
@@ -226,11 +226,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void setMaxFileSize(long maxFileSize) {
     	this.maxFileSize = maxFileSize;
 	}
-    
+
 	public long getMaxFileSize() {
 		return maxFileSize;
 	}
-    
+
     public void setMaxOpenFiles(int maxOpenFiles) {
 		this.maxOpenFiles = maxOpenFiles;
 	}
@@ -238,32 +238,32 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public int getMaxProcessingKb() {
 		return maxProcessingKb;
 	}
-    
+
     public void setMaxReservedHeapMb(int maxReservedHeap) {
         this.maxReservedHeapKb = (int)Math.min(Integer.MAX_VALUE, ((long)maxReservedHeap)<<10);
     }
-    
+
     public int getMaxReservedHeapMb() {
         return this.maxReservedHeapKb >> 10;
     }
-    
+
     public void setMaxProcessingKb(int maxProcessingKb) {
 		this.maxProcessingKb = maxProcessingKb;
 	}
-    
+
     @Deprecated
     public void setMaxReserveKb(int maxReserveKb) {
 		this.maxReservedHeapKb = maxReserveKb;
 	}
-    
+
 	public long getMaxDiskBufferSpaceMb() {
 		return maxDiskBufferSpace;
 	}
-    
+
     public void setMaxDiskBufferSpaceMb(long maxBufferSpace) {
 		this.maxDiskBufferSpace = maxBufferSpace;
 	}
-    
+
     public void setFixedMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
 		this.fixedMemoryBufferOffHeap = memoryBufferOffHeap;
 	}
@@ -276,7 +276,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void setMaxStorageObjectSize(int maxStorageObjectSize) {
         this.maxStorageObjectSize = maxStorageObjectSize;
     }
-    
+
     public void setMaxStorageObjectSizeKb(int maxStorageObjectSize) {
         this.maxStorageObjectSize = (int)Math.min(Integer.MAX_VALUE, ((long)maxStorageObjectSize)<<10);
     }
@@ -287,7 +287,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	}
     	return 0;
     }
-    
+
     public int getTotalOutOfDiskErrors() {
         if (fsm != null) {
             return fsm.getOutOfDiskErrorCount();
@@ -302,36 +302,36 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public long getMemoryReservedByActivePlansKb() {
 		return this.bufferMgr.getMaxReserveKB() - bufferMgr.getReserveBatchBytes()/1024;
 	}
-	
+
 	public long getDiskReadCount() {
 		if (fsc != null) {
 			return fsc.getStorageReads();
 		}
 		return 0;
 	}
-	
+
     public long getDiskWriteCount() {
     	if (fsc != null) {
     		return fsc.getStorageWrites();
     	}
     	return 0;
     }
-    
+
     public long getMemoryBufferUsedKb() {
     	if (fsc != null) {
     		return fsc.getMemoryInUseBytes() >> 10;
     	}
     	return 0;
     }
-    
+
     public long getStorageReadCount() {
     	return bufferMgr.getReadCount();
     }
-    
+
     public long getStorageWriteCount() {
     	return bufferMgr.getWriteCount();
-    }    
-	
+    }
+
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
 	}
@@ -346,12 +346,12 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public boolean isFixedMemoryBufferOffHeap() {
 		return fixedMemoryBufferOffHeap;
-	}    
-    
+	}
+
     public boolean isEncryptFiles() {
 		return encryptFiles;
 	}
-    
+
     public void setEncryptFiles(boolean encryptFiles) {
 		this.encryptFiles = encryptFiles;
 	}
@@ -359,7 +359,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void setBufferManager(BufferManagerImpl bufferManager) {
         this.bufferMgr = bufferManager;
     }
-    
+
     public void setVmMaxMemory(long vmMaxMemory) {
         this.vmMaxMemory = vmMaxMemory;
     }

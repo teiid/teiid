@@ -24,12 +24,12 @@ import org.teiid.core.TeiidException;
 import org.teiid.net.ServerConnection;
 
 public interface LocalProfile extends ConnectionProfile {
-	
+
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
 	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
 	public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
 	public static final Object DQP_WORK_CONTEXT = "dqpWorkContext"; //$NON-NLS-1$
-	
+
 	public ServerConnection createServerConnection(Properties info) throws TeiidException;
-	
+
 }

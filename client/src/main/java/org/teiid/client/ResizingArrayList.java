@@ -26,25 +26,25 @@ import java.util.RandomAccess;
 
 /**
  * Modified {@link ArrayList} that resizes up and down by powers of 2.
- * 
+ *
  * @param <T>
  */
 @SuppressWarnings("unchecked")
 public class ResizingArrayList<T> extends AbstractList<T> implements RandomAccess {
 
 	public static final int MIN_SHRINK_SIZE = 32;
-	
+
 	protected Object[] elementData;
 	protected int size;
-	
+
 	public ResizingArrayList() {
 		this(MIN_SHRINK_SIZE);
 	}
-	
+
 	public ResizingArrayList(int initialCapacity) {
 		this.elementData = new Object[initialCapacity];
 	}
-	
+
     public ResizingArrayList(Collection<? extends T> c) {
     	elementData = c.toArray();
     	size = elementData.length;
@@ -52,27 +52,27 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
     	if (elementData.getClass() != Object[].class)
     	    elementData = Arrays.copyOf(elementData, size, Object[].class);
     }
-	
+
 	@Override
 	public T get(int index) {
 		rangeCheck(index, false);
 		return (T) elementData[index];
 	}
-	
+
 	public int getModCount() {
 		return modCount;
 	}
-	
+
 	public void add(int index, T element) {
 		rangeCheck(index, true);
 		modCount++;
-		ensureCapacity(size+1); 
+		ensureCapacity(size+1);
 		System.arraycopy(elementData, index, elementData, index + 1,
 				 size - index);
 		elementData[index] = element;
 		size++;
 	}
-	
+
 	protected void ensureCapacity(int capacity) {
 		if (capacity <= elementData.length) {
 			return;
@@ -91,7 +91,7 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 		elementData[index] = element;
 		return old;
 	}
-	
+
 	@Override
 	public boolean addAll(Collection<? extends T> c) {
 		return addAll(size, c);
@@ -128,13 +128,13 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 		}
 		return oldValue;
 	}
-	
+
     private void rangeCheck(int index, boolean inclusive) {
 		if (index > size || (!inclusive && index == size)) {
 		    throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size); //$NON-NLS-1$ //$NON-NLS-2$
 		}
     }
-	
+
 	@Override
 	public void clear() {
 		modCount++;
@@ -147,12 +147,12 @@ public class ResizingArrayList<T> extends AbstractList<T> implements RandomAcces
 		}
 		size = 0;
 	}
-	
+
 	@Override
 	public Object[] toArray() {
 		return Arrays.copyOf(elementData, size);
 	}
-	
+
 	public <U extends Object> U[] toArray(U[] a) {
 		if (a.length < size) {
 			return (U[]) Arrays.copyOf(elementData, size, a.getClass());

@@ -28,14 +28,14 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="ingres93", description="A translator for Ingres 9.3 or later Database")
 public class Ingres93ExecutionFactory extends IngresExecutionFactory {
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
 		convert.addTypeMapping("ansidate", FunctionModifier.DATE); //$NON-NLS-1$
 		convert.addTypeMapping("timestamp(9) with time zone", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<?> translateLimit(Limit limit, ExecutionContext context) {
@@ -44,10 +44,10 @@ public class Ingres93ExecutionFactory extends IngresExecutionFactory {
 		}
 		return super.translateLimit(limit, context);
 	}
-	
+
 	@Override
 	public boolean supportsRowOffset() {
 		return true;
 	}
-	
+
 }

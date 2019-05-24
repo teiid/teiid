@@ -34,8 +34,8 @@ public class FakeExecutionContextImpl extends ExecutionContextImpl {
 
 	public FakeExecutionContextImpl(int unique) {
 		super("VDB" + unique, //$NON-NLS-1$
-				unique, 
-				"ExecutionPayload" + unique, //$NON-NLS-1$            
+				unique,
+				"ExecutionPayload" + unique, //$NON-NLS-1$
 				"ConnectionID" + unique, //$NON-NLS-1$
 				"ConnectorID" + unique, //$NON-NLS-1$
 				unique,

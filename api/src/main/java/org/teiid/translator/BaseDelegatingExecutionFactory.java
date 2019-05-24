@@ -33,7 +33,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 
 /**
- * Base delegating translator. Will proxy all calls to another {@link ExecutionFactory}. 
+ * Base delegating translator. Will proxy all calls to another {@link ExecutionFactory}.
  * You will create a custom translator as a subclass of this class containing overrides for
  * any method you wish to intercept.
  * Given that subclass is given a {@link Translator} name of 'custom-delegator', your 'vdb.xml' file will
@@ -45,7 +45,7 @@ import org.teiid.metadata.RuntimeMetadata;
     <!-- any custom properties will also appear here -->
  </translator>}
  * </pre>
- *  
+ *
  */
 @Translator(name="delegator", description="Translator that delegates to another translator "
 		+ "with capability override certain methods/capabilities")
@@ -54,30 +54,30 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 
 	private String delegateName;
 	private ExecutionFactory<F, C> delegate;
-	
+
 	/**
 	 * For testing only
 	 */
 	protected ExecutionFactory<F, C> getDelegate() {
 		return this.delegate;
 	}
-	
+
 	/**
 	 * Sets the delegate, will be called by Teiid after {@link #start()}
 	 */
 	public void setDelegate(ExecutionFactory<F, C> delegate) {
 		this.delegate = delegate;
 	}
-	
+
 	@TranslatorProperty(display="Delegate name", required = true)
 	public String getDelegateName() {
 		return this.delegateName;
 	}
-	
+
 	public void setDelegateName(String delegateName) {
 		this.delegateName = delegateName;
 	}
-	
+
 	@Override
 	public boolean areLobsUsableAfterClose() {
 		return delegate.areLobsUsableAfterClose();
@@ -111,7 +111,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {
 		return delegate.getConnection(factory, executionContext);
 	}
-	
+
 	NullOrder defaultNullOrder;
 	@TranslatorProperty(display="Default Null Order", advanced=true)
 	@Override
@@ -124,12 +124,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setDefaultNullOrder(NullOrder nullOrder) {
 		defaultNullOrder = nullOrder;
 	}
-	
+
 	@Override
 	public LanguageFactory getLanguageFactory() {
 		return delegate.getLanguageFactory();
 	}
-	
+
 	Integer maxFromGroups;
 	@TranslatorProperty(display = "Max FROM Allowed", description = "The number of groups supported in the from clause", advanced = true)
 	@Override
@@ -142,7 +142,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setMaxFromGroups(int value) {
 		maxFromGroups = value;
 	}
-	
+
     Integer maxProjectedColumns;
     @TranslatorProperty(display = "Max projected columns allowed", description = "The number of columns supported in projected select clause", advanced = true)
     @Override
@@ -155,22 +155,22 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setMaxProjectedColumns(int value) {
         maxProjectedColumns = value;
     }
-	
+
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, C conn)
 			throws TranslatorException {
 		delegate.getMetadata(metadataFactory, conn);
 	}
-	
+
 	@Override
 	public List<FunctionMethod> getPushDownFunctions() {
 		return delegate.getPushDownFunctions();
 	}
-	
+
 	ArrayList<String> supportedFunctions;
 	@Override
 	public List<String> getSupportedFunctions() {
-	    if (supportedFunctions == null && 
+	    if (supportedFunctions == null &&
             (addSupportedFunctions != null || removeSupportedFunctions != null)) {
             supportedFunctions = new ArrayList<String>();
             List<String> baseSupportedFunctions = this.delegate.getSupportedFunctions();
@@ -189,13 +189,13 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		}
 		return delegate.getSupportedFunctions();
 	}
-	
+
 	String addSupportedFunctions;
 	@TranslatorProperty(display = "Add Supported Functions(CSV)", description = "Add comma seperated names to system functions", advanced = true)
 	public String getAddSupportedFunctions() {
         return addSupportedFunctions;
     }
-	
+
 	public void setAddSupportedFunctions(String functionNames) {
 	    this.addSupportedFunctions = functionNames;
 	}
@@ -205,16 +205,16 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public String getRemoveSupportedFunctions() {
         return removeSupportedFunctions;
     }
-	
+
 	public void setRemoveSupportedFunctions(String functionNames) {
 		this.removeSupportedFunctions = functionNames;
 	}
-	
+
 	@Override
 	public TypeFacility getTypeFacility() {
 		return delegate.getTypeFacility();
 	}
-	
+
 	@Override
 	public boolean isImmutable() {
 		return delegate.isImmutable();
@@ -222,7 +222,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setImmutable(boolean value) {
 		delegate.setImmutable(value);
 	}
-	
+
 	@TranslatorProperty(display="Is Source Required", advanced=true)
 	@Override
 	public boolean isSourceRequired() {
@@ -244,7 +244,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesAvg(boolean value) {
 		this.supportsAggregatesAvg = value;
 	}
-	
+
 	Boolean supportsAggregatesCount;
 	@TranslatorProperty(display="Supports COUNT()", advanced=true)
 	@Override
@@ -257,7 +257,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesCount(boolean value) {
 		this.supportsAggregatesCount = value;
 	}
-	
+
 	Boolean supportsAggregatesCountStar;
 	@TranslatorProperty(display="Supports Count(*)", advanced=true)
 	@Override
@@ -270,7 +270,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesCountStar(boolean value) {
 		this.supportsAggregatesCountStar = value;
 	}
-	
+
 	Boolean supportsAggregatesDistinct;
 	@TranslatorProperty(display="Supports DISTINCT", advanced=true)
 	@Override
@@ -283,7 +283,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesDistinct(boolean value) {
 		supportsAggregatesDistinct = value;
 	}
-	
+
 	Boolean supportsAggregatesEnhancedNumeric;
 	@TranslatorProperty(display="Supports Aggegate Enhanced Numeric", advanced=true)
 	@Override
@@ -296,7 +296,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesEnhancedNumeric(boolean value) {
 		supportsAggregatesEnhancedNumeric = value;
 	}
-	
+
 	Boolean supportsAggregatesMax;
 	@TranslatorProperty(display="Supports MAX", advanced=true)
 	@Override
@@ -309,7 +309,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesMax(boolean value) {
 		supportsAggregatesMax = value;
 	}
-	
+
 	Boolean supportsAggregatesMin;
 	@TranslatorProperty(display="Supports MIN", advanced=true)
 	@Override
@@ -322,7 +322,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesMin(boolean value) {
 		supportsAggregatesMin = value;
 	}
-	
+
 	Boolean supportsAggregatesSum;
 	@TranslatorProperty(display="Supports SUM", advanced=true)
 	@Override
@@ -335,7 +335,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAggregatesSum(boolean value) {
 		supportsAggregatesSum = value;
 	}
-	
+
 	Boolean supportsAliasedTable;
 	@TranslatorProperty(display="Supports Alias (ex: as A)", advanced=true)
 	@Override
@@ -348,7 +348,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsAliasedTable(boolean value) {
 		supportsAliasedTable = value;
 	}
-	
+
 	Boolean supportsBatchedUpdates;
 	@TranslatorProperty(display="Supports Batched Updates", advanced=true)
 	@Override
@@ -361,7 +361,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsBatchedUpdates(boolean value) {
 		supportsBatchedUpdates = value;
 	}
-	
+
 	Boolean supportsBulkUpdate;
 	@TranslatorProperty(display="Supports Bulk Updates", advanced=true)
 	@Override
@@ -374,7 +374,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsBulkUpdate(boolean value) {
 		supportsBulkUpdate = value;
 	}
-	
+
 	Boolean supportsCommonTableExpressions;
 	@TranslatorProperty(display="Supports Common Table Expressions", advanced=true)
 	@Override
@@ -387,7 +387,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCommonTableExpressions(boolean value) {
 		supportsCommonTableExpressions = value;
 	}
-	
+
 	Boolean supportsCompareCriteriaEquals;
 	@TranslatorProperty(display="Supports Compare Criteria Equals", advanced=true)
 	@Override
@@ -400,7 +400,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCompareCriteriaEquals(boolean value) {
 		supportsCompareCriteriaEquals = value;
 	}
-	
+
 	Boolean supportsCompareCriteriaOrdered;
 	@TranslatorProperty(display="Supports Compare Criteria Ordered", advanced=true)
 	@Override
@@ -413,7 +413,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCompareCriteriaOrdered(boolean value) {
 		supportsCompareCriteriaOrdered = value;
 	}
-	
+
 	Boolean supportsCorrelatedSubqueries;
 	@TranslatorProperty(display="Supports Correlated Subqueries", advanced=true)
 	@Override
@@ -426,7 +426,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCorrelatedSubqueries(boolean value) {
 		supportsCorrelatedSubqueries = value;
 	}
-	
+
 	Boolean supportsExcept;
 	@TranslatorProperty(display="Supports EXCEPT", advanced=true)
 	@Override
@@ -439,7 +439,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsExcept(boolean value) {
 		supportsExcept = value;
 	}
-	
+
 	Boolean supportsExistsCriteria;
 	@TranslatorProperty(display="Supports EXISTS", advanced=true)
 	@Override
@@ -452,7 +452,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsExistsCriteria(boolean value) {
 		supportsExistsCriteria = value;
 	}
-	
+
 	Boolean supportsFunctionsInGroupBy;
 	@TranslatorProperty(display="Supports Functions in GROUP BY", advanced=true)
 	@Override
@@ -465,7 +465,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsFunctionsInGroupBy(boolean value) {
 		supportsFunctionsInGroupBy = value;
 	}
-	
+
 	Boolean supportsGroupBy;
 	@TranslatorProperty(display="Supports GROUP BY", advanced=true)
 	@Override
@@ -478,7 +478,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsGroupBy(boolean value) {
 		supportsGroupBy = value;
 	}
-	
+
 	Boolean supportsHaving;
 	@TranslatorProperty(display="Supports HAVING", advanced=true)
 	@Override
@@ -491,7 +491,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsHaving(boolean value) {
 		supportsHaving = value;
 	}
-	
+
 	Boolean supportsInCriteria;
 	@TranslatorProperty(display="Supports IN", advanced=true)
 	@Override
@@ -504,7 +504,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsInCriteria(boolean value) {
 		supportsInCriteria = value;
 	}
-	
+
 	Boolean supportsInCriteriaSubquery;
 	@TranslatorProperty(display="Supports IN in Subquery", advanced=true)
 	@Override
@@ -517,7 +517,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsInCriteriaSubquery(boolean value) {
 		supportsInCriteriaSubquery = value;
 	}
-	
+
 	Boolean supportsInlineViews;
 	@TranslatorProperty(display="Supports Inline Views", advanced=true)
 	@Override
@@ -530,7 +530,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsInlineViews(boolean value) {
 		supportsInlineViews = value;
 	}
-	
+
 	Boolean supportsInsertWithQueryExpression;
 	@TranslatorProperty(display="Supports INSERT with Query Expression", advanced=true)
 	@Override
@@ -543,7 +543,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsInsertWithQueryExpression(boolean value) {
 		supportsInsertWithQueryExpression = value;
 	}
-	
+
 	Boolean supportsIntersect;
 	@TranslatorProperty(display="Supports INTERSECT", advanced=true)
 	@Override
@@ -556,7 +556,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsIntersect(boolean value) {
 		supportsIntersect = value;
 	}
-	
+
 	Boolean supportsIsNullCriteria;
 	@TranslatorProperty(display="Supports ISNULL", advanced=true)
 	@Override
@@ -569,7 +569,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsIsNullCriteria(boolean value) {
 		supportsIsNullCriteria = value;
 	}
-	
+
 	Boolean supportsLikeCriteria;
 	@TranslatorProperty(display="Supports LIKE", advanced=true)
 	@Override
@@ -582,7 +582,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsLikeCriteria(boolean value) {
 		supportsLikeCriteria = value;
 	}
-	
+
 	Boolean supportsLikeCriteriaEscapeCharacter;
 	@TranslatorProperty(display="Supports Escape Char in LIKE", advanced=true)
 	@Override
@@ -595,7 +595,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsLikeCriteriaEscapeCharacter(boolean value) {
 		supportsLikeCriteriaEscapeCharacter = value;
 	}
-	
+
 	Boolean supportsNotCriteria;
 	@TranslatorProperty(display="Supports NOT", advanced=true)
 	@Override
@@ -608,7 +608,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsNotCriteria(boolean value) {
 		supportsNotCriteria = value;
 	}
-	
+
 	Boolean supportsOrCriteria;
 	@TranslatorProperty(display="Supports OR", advanced=true)
 	@Override
@@ -621,7 +621,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOrCriteria(boolean value) {
 		supportsOrCriteria = value;
 	}
-	
+
 	Boolean supportsOrderByNullOrdering;
 	@TranslatorProperty(display="Supports ORDER BY col NULLS [FIRST|LAST|HIGH|LOW]", advanced=true)
 	@Override
@@ -634,7 +634,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOrderByNullOrdering(boolean value) {
 		supportsOrderByNullOrdering = value;
 	}
-	
+
 	Boolean supportsOrderByUnrelated;
 	@TranslatorProperty(display="Supports ORDER BY Unrelated", advanced=true)
 	@Override
@@ -647,7 +647,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOrderByUnrelated(boolean value) {
 		supportsOrderByUnrelated = value;
 	}
-	
+
 	Boolean supportsQuantifiedCompareCriteriaAll;
 	@TranslatorProperty(display="Supports ALL", advanced=true)
 	@Override
@@ -660,7 +660,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsQuantifiedCompareCriteriaAll(boolean value) {
 		supportsQuantifiedCompareCriteriaAll = value;
 	}
-	
+
 	Boolean supportsQuantifiedCompareCriteriaSome;
 	@TranslatorProperty(display="Supports SOME", advanced=true)
 	@Override
@@ -673,7 +673,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsQuantifiedCompareCriteriaSome(boolean value) {
 		supportsQuantifiedCompareCriteriaSome = value;
 	}
-	
+
 	Boolean supportsRowLimit;
 	@TranslatorProperty(display="Supports LIMIT", advanced=true)
 	@Override
@@ -686,7 +686,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsRowLimit(boolean value) {
 		supportsRowLimit = value;
 	}
-	
+
 	Boolean supportsRowOffset;
 	@TranslatorProperty(display="Supports LIMIT OFFSET", advanced=true)
 	@Override
@@ -699,7 +699,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsRowOffset(boolean value) {
 		supportsRowOffset = value;
 	}
-	
+
 	Boolean supportsScalarSubqueries;
 	@TranslatorProperty(display="Supports Scalar Sub-Queries", advanced=true)
 	@Override
@@ -712,7 +712,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsScalarSubqueries(boolean value) {
 		supportsScalarSubqueries = value;
 	}
-	
+
 	Boolean supportsSearchedCaseExpressions;
 	@TranslatorProperty(display="Supports CASE Expression", advanced=true)
 	@Override
@@ -725,7 +725,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSearchedCaseExpressions(boolean value) {
 		supportsSearchedCaseExpressions = value;
 	}
-	
+
 	Boolean supportsSelectExpression;
 	@TranslatorProperty(display="Supports SELECT expressions", advanced=true)
 	@Override
@@ -738,7 +738,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSelectExpression(boolean value) {
 		supportsSelectExpression = value;
 	}
-	
+
 	Boolean supportsSelfJoins;
 	@TranslatorProperty(display="Supports Self JOINS", advanced=true)
 	@Override
@@ -751,7 +751,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSelfJoins(boolean value) {
 		supportsSelfJoins = value;
 	}
-	
+
 	Boolean supportsSetQueryOrderBy;
 	@TranslatorProperty(display="Supports Set Query Orderby", advanced=true)
 	@Override
@@ -764,7 +764,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSetQueryOrderBy(boolean value) {
 		supportsSetQueryOrderBy = value;
 	}
-	
+
 	Boolean supportsUnions;
 	@TranslatorProperty(display="Supports UNION", advanced=true)
 	@Override
@@ -777,12 +777,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsUnions(boolean value) {
 		supportsUnions = value;
 	}
-	
+
 	@Override
 	public String toString() {
 		return delegate.toString();
 	}
-	
+
 	Boolean useAnsiJoin;
 	@TranslatorProperty(display="Supports ANSI Joins", advanced=true)
 	@Override
@@ -795,7 +795,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setUseAnsiJoin(boolean value) {
 		useAnsiJoin = value;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		return delegate.equals(obj);
@@ -804,7 +804,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public int hashCode() {
 		return delegate.hashCode();
 	}
-	
+
 	@TranslatorProperty(display="Supports Copy LOBS", advanced=true)
 	@Override
 	public boolean isCopyLobs() {
@@ -813,7 +813,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setCopyLobs(boolean value) {
 		delegate.setCopyLobs(value);
 	}
-	
+
 	Boolean supportsArrayAgg;
 	@TranslatorProperty(display="Supports Array Aggregation", advanced=true)
 	@Override
@@ -826,7 +826,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsArrayAgg(boolean value) {
 		supportsArrayAgg = value;
 	}
-	
+
 	Boolean supportsElementaryOlapOperations;
 	@TranslatorProperty(display="Supports OLAP Operations", advanced=true)
 	@Override
@@ -839,7 +839,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsElementaryOlapOperations(boolean value) {
 		supportsElementaryOlapOperations = value;
 	}
-	
+
 	Boolean supportsWindowFrameClause;
     @TranslatorProperty(display="Supports Window Frame Clause on a Window Function", advanced=true)
     @Override
@@ -852,13 +852,13 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsWindowFrameClause(boolean value) {
         supportsWindowFrameClause = value;
     }
-    
+
 	@Override
 	public boolean supportsFormatLiteral(String literal,
 			org.teiid.translator.ExecutionFactory.Format format) {
 		return delegate.supportsFormatLiteral(literal, format);
 	}
-	
+
 	Boolean supportsLikeRegex;
 	@TranslatorProperty(display="Supports REGEX in LIKE", advanced=true)
 	@Override
@@ -869,9 +869,9 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsLikeRegex();
 	}
 	public void setSupportsLikeRegex(boolean value) {
-		supportsLikeRegex = value;	
+		supportsLikeRegex = value;
 	}
-	
+
 	Boolean supportsOnlyFormatLiterals;
 	@TranslatorProperty(display="Supports only Format Literals", advanced=true)
 	@Override
@@ -884,7 +884,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOnlyFormatLiterals(boolean value) {
 		supportsOnlyFormatLiterals = value;
 	}
-	
+
 	Boolean supportsOnlySingleTableGroupBy;
 	@TranslatorProperty(display="Supports Single Table GROUP BY", advanced=true)
 	@Override
@@ -897,7 +897,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOnlySingleTableGroupBy(boolean value) {
 		supportsOnlySingleTableGroupBy = value;
 	}
-	
+
 	Boolean supportsSimilarTo;
 	@TranslatorProperty(display="Supports SIMILAR TO", advanced=true)
 	@Override
@@ -910,7 +910,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSimilarTo(boolean value) {
 		supportsSimilarTo = value;
 	}
-	
+
 	Boolean supportsWindowDistinctAggregates;
 	@TranslatorProperty(display="Supports Windowed Aggregates", advanced=true)
 	@Override
@@ -923,7 +923,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsWindowDistinctAggregates(boolean value) {
 		supportsWindowDistinctAggregates = value;
 	}
-	
+
 	Boolean supportsWindowOrderByWithAggregates;
 	@TranslatorProperty(display="Supports Order by With Windowed Aggregates", advanced=true)
 	@Override
@@ -936,7 +936,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsWindowOrderByWithAggregates(boolean value) {
 		supportsWindowOrderByWithAggregates = value;
 	}
-	
+
 	@Override
 	public int getMaxInCriteriaSize() {
 		return delegate.getMaxInCriteriaSize();
@@ -944,7 +944,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setMaxInCriteriaSize(int max) {
 		delegate.setMaxInCriteriaSize(max);
 	}
-	
+
 	@Override
 	public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
 		return delegate.getSupportedJoinCriteria();
@@ -952,7 +952,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportedJoinCriteria(org.teiid.translator.ExecutionFactory.SupportedJoinCriteria value) {
 		this.delegate.setSupportedJoinCriteria(value);
 	}
-	
+
 	@Override
 	public boolean requiresCriteria() {
 		return delegate.requiresCriteria();
@@ -960,7 +960,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setRequiresCriteria(boolean value) {
 		delegate.setRequiresCriteria(value);
 	}
-	
+
 	@Override
 	public boolean supportsFullOuterJoins() {
 		return delegate.supportsFullOuterJoins();
@@ -969,7 +969,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsFullOuterJoins(boolean supportsFullOuterJoins) {
 		delegate.setSupportsFullOuterJoins(supportsFullOuterJoins);
 	}
-	
+
 	@Override
 	public boolean supportsInnerJoins() {
 		return delegate.supportsInnerJoins();
@@ -978,17 +978,17 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsInnerJoins(boolean supportsInnerJoins) {
 		delegate.setSupportsInnerJoins(supportsInnerJoins);
 	}
-	
+
 	@Override
 	public boolean supportsOrderBy() {
 		return delegate.supportsOrderBy();
 	}
-	
+
 	@Override
 	public void setSupportsOrderBy(boolean supportsOrderBy) {
 		delegate.setSupportsOrderBy(supportsOrderBy);
 	}
-	
+
 	@Override
 	public boolean supportsOuterJoins() {
 		return delegate.supportsOuterJoins();
@@ -997,7 +997,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOuterJoins(boolean supportsOuterJoins) {
 		delegate.setSupportsOuterJoins(supportsOuterJoins);
 	}
-	
+
 	@Override
 	public boolean supportsSelectDistinct() {
 		return delegate.supportsSelectDistinct();
@@ -1006,7 +1006,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSelectDistinct(boolean supportsSelectDistinct) {
 		delegate.setSupportsSelectDistinct(supportsSelectDistinct);
 	}
-	
+
 	@Override
 	public int getMaxDependentInPredicates() {
 		return delegate.getMaxDependentInPredicates();
@@ -1015,7 +1015,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setMaxDependentInPredicates(int maxDependentInPredicates) {
 		this.delegate.setMaxDependentInPredicates(maxDependentInPredicates);
 	}
-	
+
 	Boolean supportsAdvancedOlapOperations;
 	@TranslatorProperty(display="Supports Advanced OLAP Operations", advanced=true)
 	@Override
@@ -1024,11 +1024,11 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 			return supportsAdvancedOlapOperations;
 		}
 		return delegate.supportsAdvancedOlapOperations();
-	}	
-	public void setSupportsAdvancedOlapOperations(boolean value) {
-		supportsAdvancedOlapOperations = value;	
 	}
-	
+	public void setSupportsAdvancedOlapOperations(boolean value) {
+		supportsAdvancedOlapOperations = value;
+	}
+
 	Boolean supportsSubqueryInOn;
 	@TranslatorProperty(display="Supports Subquery In ON", advanced=true)
 	@Override
@@ -1041,12 +1041,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSubqueryInOn(boolean value) {
 		supportsSubqueryInOn = value;
 	}
-	
+
 	@Override
 	public boolean supportsConvert(int fromType, int toType) {
 		return delegate.supportsConvert(fromType, toType);
 	}
-	
+
 	Boolean supportsDependentJoins;
 	@TranslatorProperty(display="Supports Dependent Joins", advanced=true)
 	@Override
@@ -1059,7 +1059,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsDependentJoins(boolean value) {
 		supportsDependentJoins = value;
 	}
-	
+
 	Boolean supportsOnlyLiteralComparison;
 	@TranslatorProperty(display="Supports Only Literal Comparision", advanced=true)
 	@Override
@@ -1072,7 +1072,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOnlyLiteralComparison(boolean value) {
 		supportsOnlyLiteralComparison = value;
 	}
-	
+
 	@Override
 	public CacheDirective getCacheDirective(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata)
@@ -1085,16 +1085,16 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	    }
 		return delegate.getCacheDirective(command, executionContext, metadata);
 	}
-	
+
 	@TranslatorProperty(display="Is Source Required For Metadata", advanced=true)
-	@Override	
+	@Override
 	public boolean isSourceRequiredForMetadata() {
 		return delegate.isSourceRequiredForMetadata();
 	}
 	public void setSourceRequiredForMetadata(boolean value) {
 		delegate.setSourceRequiredForMetadata(value);
 	}
-	
+
 	Boolean forkable;
 	@TranslatorProperty(display="Is Forkable", description="When forkable the engine may use a separate thread to interact with returned Exection", advanced=true)
 	@Override
@@ -1107,7 +1107,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setForkable(boolean value) {
 		forkable = value;
 	}
-	
+
 	Boolean supportsArrayType;
 	@TranslatorProperty(display="Supports Array Type", advanced=true)
 	@Override
@@ -1120,7 +1120,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsArrayType(boolean value) {
 		supportsArrayType = value;
 	}
-	
+
 	@Override
 	@TranslatorProperty(display="Direct Query Procedure Name", advanced=true)
 	public String getDirectQueryProcedureName() {
@@ -1129,7 +1129,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setDirectQueryProcedureName(String name) {
 		this.delegate.setDirectQueryProcedureName(name);
 	}
-	
+
 	@Override
 	public boolean supportsDirectQueryProcedure() {
 		return delegate.supportsDirectQueryProcedure();
@@ -1137,14 +1137,14 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsDirectQueryProcedure(boolean value) {
 		delegate.setSupportsDirectQueryProcedure(value);
 	}
-	
+
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,
 			Command command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 return delegate.createDirectExecution(arguments, command, executionContext, metadata, connection);
 	}
-	
+
 	Boolean supportsOnlyCorrelatedSubqueries;
 	@TranslatorProperty(display="Supports Correlated Sub Queries", advanced=true)
 	@Override
@@ -1157,7 +1157,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOnlyCorrelatedSubqueries(boolean value) {
 		supportsOnlyCorrelatedSubqueries = value;
 	}
-	
+
 	Boolean sourceRequiredForCapabilities;
 	@TranslatorProperty(display="Source required for Capabilities", advanced=true)
 	@Override
@@ -1170,12 +1170,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSourceRequiredForCapabilities(boolean value) {
 		sourceRequiredForCapabilities = value;
 	}
-	
+
 	@Override
 	public void initCapabilities(C connection) throws TranslatorException {
 		delegate.initCapabilities(connection);
 	}
-	
+
 	Boolean supportsStringAgg;
 	@TranslatorProperty(display="Supports STRING_AGG", advanced=true)
 	@Override
@@ -1188,7 +1188,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsStringAgg(boolean value) {
 		supportsStringAgg = value;
 	}
-	
+
 	Boolean supportsListAgg;
     @TranslatorProperty(display="Supports LISTAGG", advanced=true)
     @Override
@@ -1201,7 +1201,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsListAgg(boolean value) {
         supportsListAgg = value;
     }
-	
+
 	Boolean supportsFullDependentJoins;
 	@TranslatorProperty(display="Supports Full Dependent Joins", advanced=true)
 	@Override
@@ -1214,7 +1214,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsFullDependentJoins(boolean value) {
 		supportsFullDependentJoins = value;
 	}
-	
+
 	Boolean supportsSelectWithoutFrom;
 	@TranslatorProperty(display="Supports SELECT w/o FROM", advanced=true)
 	@Override
@@ -1227,7 +1227,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSelectWithoutFrom(boolean value) {
 		supportsSelectWithoutFrom = value;
 	}
-	
+
 	Boolean supportsGroupByRollup;
 	@TranslatorProperty(display="Supports GROUP BY ROLLUP", advanced=true)
 	@Override
@@ -1240,7 +1240,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsGroupByRollup(boolean value) {
 		supportsGroupByRollup = value;
 	}
-	
+
 	Boolean supportsOrderByWithExtendedGrouping;
 	@TranslatorProperty(display="Supports Orderby w/extended grouping", advanced=true)
 	@Override
@@ -1253,7 +1253,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsOrderByWithExtendedGrouping(boolean value) {
 		supportsOrderByWithExtendedGrouping = value;
 	}
-	
+
 	@Override
 	public boolean isThreadBound() {
 		return delegate.isThreadBound();
@@ -1261,7 +1261,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setThreadBound(boolean value) {
 		delegate.setThreadBound(value);
 	}
-	
+
 	@Override
 	public String getCollationLocale() {
 		return delegate.getCollationLocale();
@@ -1269,7 +1269,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setCollationLocale(String value) {
 		delegate.setCollationLocale(value);
 	}
-	
+
 	Boolean supportsRecursiveCommonTableExpressions;
 	@TranslatorProperty(display="Supports Recursive Common Table Expresions", advanced=true)
 	@Override
@@ -1282,7 +1282,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsRecursiveCommonTableExpressions(boolean value) {
 		supportsRecursiveCommonTableExpressions = value;
 	}
-	
+
 	Boolean supportsCompareCriteriaOrderedExclusive;
 	@TranslatorProperty(display="Supports Criteria Ordered Exclusive", advanced=true)
 	@Override
@@ -1299,12 +1299,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCompareCriteriaOrderedExclusive(boolean value) {
         supportsCompareCriteriaOrderedExclusive = value;
     }
-	
+
 	@Override
 	public boolean returnsSingleUpdateCount() {
 		return delegate.returnsSingleUpdateCount();
 	}
-	
+
 	Boolean supportsPartialFiltering;
 	@TranslatorProperty(display="Supports Partial Filtering", advanced=true)
 	@Override
@@ -1317,7 +1317,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsPartialFiltering(boolean value) {
 		supportsPartialFiltering = value;
 	}
-	
+
 	Boolean useBindingsForDependentJoin;
 	@TranslatorProperty(display="Use Bindings for Dependent Joins", advanced=true)
 	@Override
@@ -1330,7 +1330,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setUseBindingsForDependentJoin(boolean value) {
 		useBindingsForDependentJoin = value;
 	}
-	
+
 	Boolean supportsSubqueryCommonTableExpressions;
 	@TranslatorProperty(display="Supports Subquery Common Table Expressions", advanced=true)
 	@Override
@@ -1343,7 +1343,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsSubqueryCommonTableExpressions(boolean value) {
 		supportsSubqueryCommonTableExpressions = value;
 	}
-	
+
 	Boolean supportsCorrelatedSubqueryLimit;
 	@TranslatorProperty(display="Supports Correlated Subquery Limit", advanced=true)
 	@Override
@@ -1356,7 +1356,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsCorrelatedSubqueryLimit(boolean value) {
 		supportsCorrelatedSubqueryLimit = value;
 	}
-	
+
 	Character requiredLikeEscape;
 	@TranslatorProperty(display="Escape char for LIKE", advanced=true)
 	@Override
@@ -1369,7 +1369,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setRequiredLikeEscape(Character c) {
 		requiredLikeEscape = c;
 	}
-	
+
 	Boolean supportsScalarSubqueryProjection;
 	@TranslatorProperty(display="Supports Scalar SubQuery in SELECT", advanced=true)
 	@Override
@@ -1382,16 +1382,16 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsScalarSubqueryProjection(boolean value) {
 		supportsScalarSubqueryProjection = value;
 	}
-	
+
 	@Override
 	public org.teiid.translator.ExecutionFactory.TransactionSupport getTransactionSupport() {
 		return delegate.getTransactionSupport();
 	}
-	
+
 	public void setTransactionSupport(TransactionSupport transactionSupport) {
 		delegate.setTransactionSupport(transactionSupport);
 	}
-	
+
 	@Override
 	@TranslatorProperty(display="Excluded Common Table Expression Name", advanced=true)
 	public String getExcludedCommonTableExpressionName() {
@@ -1400,7 +1400,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setExcludedCommonTableExpressionName(String value) {
 		delegate.setExcludedCommonTableExpressionName(value);
 	}
-	
+
 	Boolean supportsLateralJoin;
 	@TranslatorProperty(display="Supports Lateral Join", advanced=true)
 	@Override
@@ -1413,7 +1413,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsLateralJoin(boolean value) {
 		supportsLateralJoin = value;
 	}
-	
+
 	Boolean supportsLateralJoinCondition;
 	@TranslatorProperty(display="Supports Lateral Join Condition", advanced=true)
 	@Override
@@ -1426,7 +1426,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsLateralJoinCondition(boolean value) {
 		supportsLateralJoinCondition = value;
 	}
-	
+
 	Boolean supportsProcedureTable;
 	@TranslatorProperty(display="Supports Procedure Table", advanced=true)
 	@Override
@@ -1439,7 +1439,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsProcedureTable(boolean value) {
 		supportsProcedureTable = value;
 	}
-	
+
 	Boolean supportsGroupByMultipleDistinctAggregates;
 	@TranslatorProperty(display="Supports GROUP By with Multiple DISTINCTS", advanced=true)
 	@Override
@@ -1452,12 +1452,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void setSupportsGroupByMultipleDistinctAggregates(boolean value) {
 		supportsGroupByMultipleDistinctAggregates = value;
 	}
-	
+
 	@Override
 	public void start() throws TranslatorException {
 		//nothing to do
 	}
-	
+
     Boolean supportsUpsert;
     @TranslatorProperty(display="Supports Upsert", advanced=true)
     @Override
@@ -1470,7 +1470,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsUpsert(boolean value) {
         supportsUpsert = value;
     }
-    
+
     Boolean supportsSelectExpressionArrayType;
     @TranslatorProperty(display="Supports SELECT array type expressions", advanced=true)
     @Override
@@ -1483,7 +1483,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsSelectExpressionArrayType(boolean value) {
         supportsSelectExpressionArrayType = value;
     }
-    
+
     Boolean supportsSetQueryLimitOffset;
     @TranslatorProperty(display="Supports SET Query OFFSET/LIMIT", advanced=true)
     @Override
@@ -1496,7 +1496,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsSetQueryLimitOffset(boolean value) {
         supportsSetQueryLimitOffset = value;
     }
-    
+
     Boolean supportsIsDistinctCriteria;
     @TranslatorProperty(display="Supports IS DISTINCT", advanced=true)
     @Override
@@ -1509,7 +1509,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
     public void setSupportsIsDistinctCriteria(boolean value) {
         supportsIsDistinctCriteria = value;
     }
-    
+
     Boolean supportsOnlyLateralJoinProcedure;
     @TranslatorProperty(display="Supports Only Lateral Join Procedure", advanced=true)
     @Override
@@ -1523,7 +1523,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             boolean supportsOnlyLateralJoinProcedure) {
         this.supportsOnlyLateralJoinProcedure = supportsOnlyLateralJoinProcedure;
     }
-    
+
     Boolean supportsOnlyTimestampAddLiteral;
     @TranslatorProperty(display="Supports Only TimestampAdd literal", advanced=true)
     @Override
@@ -1537,7 +1537,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             boolean supportsOnlyTimestampAddLiteral) {
         this.supportsOnlyTimestampAddLiteral = supportsOnlyTimestampAddLiteral;
     }
-    
+
     private Pattern cachePattern;
     @TranslatorProperty(display="Cache Pattern", advanced=true)
     public String getCachePattern() {
@@ -1546,21 +1546,21 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return null;
     }
-    
+
     public void setCachePattern(String cachePattern) {
         this.cachePattern = Pattern.compile(cachePattern);
     }
-    
+
     Long cacheTtl;
     @TranslatorProperty(display="Cache TTL", advanced=true)
     public Long getCacheTtl() {
         return cacheTtl;
     }
-    
+
     public void setCacheTtl(Long ttl) {
         this.cacheTtl = ttl;
     }
-    
+
     Boolean supportsNtile;
     @TranslatorProperty(display="Supports NTILE", advanced=true)
     @Override
@@ -1570,11 +1570,11 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsWindowFunctionNtile();
     }
-    
+
     public void setSupportsWindowFunctionNtile(boolean supportsNtile) {
         this.supportsNtile = supportsNtile;
     }
-    
+
     Boolean supportsPercentRank;
     @TranslatorProperty(display="Supports PERCENT_RANK", advanced=true)
     @Override
@@ -1584,11 +1584,11 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsWindowFunctionPercentRank();
     }
-    
+
     public void setSupportsWindowFunctionPercentRank(boolean supportsPercentRank) {
         this.supportsPercentRank = supportsPercentRank;
     }
-    
+
     Boolean supportsCumeDist;
     @TranslatorProperty(display="Supports CUME_DIST", advanced=true)
     @Override
@@ -1598,11 +1598,11 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsWindowFunctionCumeDist();
     }
-    
+
     public void setSupportsWindowFunctionCumeDist(boolean supportsCumeDist) {
         this.supportsCumeDist = supportsCumeDist;
     }
-    
+
     Boolean supportsNthValue;
     @TranslatorProperty(display="Supports NTH_VALUE", advanced=true)
     @Override
@@ -1612,11 +1612,11 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsWindowFunctionNthValue();
     }
-    
+
     public void setSupportsWindowFunctionNthValue(boolean supportsNthValue) {
         this.supportsNthValue = supportsNthValue;
     }
-    
+
     Boolean supportsMultipleOpenStatements;
     @Override
     public boolean supportsMultipleOpenExecutions() {
@@ -1625,12 +1625,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsMultipleOpenExecutions();
     }
-    
+
     public void setSupportsMultipleOpenStatements(
             boolean supportsMultipleOpenStatements) {
         this.supportsMultipleOpenStatements = supportsMultipleOpenStatements;
     }
-    
+
     Boolean supportsAggregatesCountBig;
     @Override
     public boolean supportsAggregatesCountBig() {
@@ -1639,7 +1639,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsAggregatesCountBig();
     }
-    
+
     public void setSupportsAggregatesCountBig(
             boolean supportsAggregatesCountBig) {
         this.supportsAggregatesCountBig = supportsAggregatesCountBig;
@@ -1653,7 +1653,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
         }
         return delegate.supportsGeographyType();
     }
-    
+
     public void setSupportsGeographyType(
             boolean supportsGeographyType) {
         this.supportsGeographyType = supportsGeographyType;

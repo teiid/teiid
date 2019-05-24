@@ -23,19 +23,19 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public abstract class ExtensibleBufferedOutputStream extends OutputStream {
-	
+
     protected ByteBuffer buf;
     protected int bytesWritten;
     private int startPosition;
-    
+
     public ExtensibleBufferedOutputStream() {
 	}
-    
+
     public void write(int b) throws IOException {
     	ensureBuffer();
 		buf.put((byte)b);
     }
-    
+
     public void write(byte b) throws IOException {
     	ensureBuffer();
 		buf.put(b);
@@ -76,19 +76,19 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	}
 
 	protected abstract ByteBuffer newBuffer() throws IOException;
-	
+
 	/**
 	 * Flush up to i bytes where i is the current position of the buffer
 	 */
 	protected abstract int flushDirect(int i) throws IOException;
-    
+
     @Override
     public void close() throws IOException {
 		flush();
     }
-    
+
     public int getBytesWritten() {
 		return bytesWritten;
 	}
-    
+
 }

@@ -52,7 +52,7 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * Removes optional join nodes if elements originating from that join are not used in the 
+ * Removes optional join nodes if elements originating from that join are not used in the
  * top level project symbols.
  */
 public class RuleRemoveOptionalJoins implements
@@ -90,7 +90,7 @@ public class RuleRemoveOptionalJoins implements
 		    			continue;
 		    		}
 		    		Set<GroupSymbol> required = getRequiredGroupSymbols(planNode);
-		    		
+
 		    		List<PlanNode> removed = removeJoin(required, requiredForOptional, planNode, planNode.getFirstChild(), analysisRecord, metadata);
 		    		if (removed != null) {
 		    			skipNodes.addAll(removed);
@@ -111,13 +111,13 @@ public class RuleRemoveOptionalJoins implements
 	private Set<GroupSymbol> getRequiredGroupSymbols(PlanNode planNode) {
 		return GroupsUsedByElementsVisitor.getGroups((Collection<? extends LanguageObject>)planNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
 	}
-    
+
     /**
      * remove the optional node if possible
-     * @throws QueryPlannerException 
-     * @throws TeiidComponentException 
-     * @throws QueryMetadataException 
-     */ 
+     * @throws QueryPlannerException
+     * @throws TeiidComponentException
+     * @throws QueryMetadataException
+     */
     private List<PlanNode> removeJoin(Set<GroupSymbol> required, Set<GroupSymbol> requiredForOptional, PlanNode joinNode, PlanNode optionalNode, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
     	boolean correctFrame = false;
     	boolean isOptional = optionalNode.hasBooleanProperty(NodeConstants.Info.IS_OPTIONAL);
@@ -153,14 +153,14 @@ public class RuleRemoveOptionalJoins implements
     		}
         }
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
-        
+
         boolean usesKey = false;
         boolean isRight = optionalNode == joinNode.getLastChild();
-        
+
         if (!isOptional && (jt == JoinType.JOIN_INNER || (jt == JoinType.JOIN_LEFT_OUTER && isRight))) {
             usesKey = isOptionalUsingKey(joinNode, optionalNode, metadata, isRight);
         }
-        
+
         if (!isOptional && !usesKey &&
         		(jt != JoinType.JOIN_LEFT_OUTER || !isRight || useNonDistinctRows(joinNode.getParent()))) {
         	return null;
@@ -170,7 +170,7 @@ public class RuleRemoveOptionalJoins implements
 		joinNode.removeChild(optionalNode);
 		joinNode.getFirstChild().setProperty(NodeConstants.Info.OUTPUT_COLS, joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
 		NodeEditor.removeChildNode(parentNode, joinNode);
-		joinNode.recordDebugAnnotation((isOptional?"node was marked as optional ":"node will not affect the results"), null, "Removing join node", record, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		joinNode.recordDebugAnnotation((isOptional?"node was marked as optional ":"node will not affect the results"), null, "Removing join node", record, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		while (parentNode.getType() != NodeConstants.Types.PROJECT) {
 			PlanNode current = parentNode;
 			parentNode = parentNode.getParent();
@@ -199,14 +199,14 @@ public class RuleRemoveOptionalJoins implements
 						}
 					}
 				}
-			} else if (current.getType() != NodeConstants.Types.JOIN) { 
+			} else if (current.getType() != NodeConstants.Types.JOIN) {
 				break;
 			}
-			if (current.getType() == NodeConstants.Types.JOIN) { 
+			if (current.getType() == NodeConstants.Types.JOIN) {
 				current.getGroups().removeAll(optionalNode.getGroups());
 			}
 		}
-		
+
 		return NodeEditor.findAllNodes(optionalNode, NodeConstants.Types.JOIN);
     }
 
@@ -244,7 +244,7 @@ public class RuleRemoveOptionalJoins implements
                 return false; //only allow a key join
             }
         }
-        
+
         outer: for (GroupSymbol group : left.getGroups()) {
             Collection fks = metadata.getForeignKeysInGroup(group.getMetadataID());
             for (Object fk : fks) {
@@ -266,7 +266,7 @@ public class RuleRemoveOptionalJoins implements
         }
         return false;
     }
-    
+
     static boolean useNonDistinctRows(PlanNode parent) {
 		while (parent != null) {
 			if (parent.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {

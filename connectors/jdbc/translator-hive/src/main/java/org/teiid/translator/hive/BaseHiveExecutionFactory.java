@@ -46,7 +46,7 @@ import org.teiid.translator.jdbc.JDBCUpdateExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
-	
+
 	protected ConvertModifier convert = new ConvertModifier();
 	protected boolean useDatabaseMetaData;
 
@@ -57,14 +57,14 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
             return new JDBCUpdateExecution(command, conn, executionContext, this);
         }
         throw new TranslatorException(HivePlugin.Event.TEIID24000, HivePlugin.Util.gs(HivePlugin.Event.TEIID24000, command));
-    }	
-    
+    }
+
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
             throws TranslatorException {
         throw new TranslatorException(HivePlugin.Event.TEIID24000, HivePlugin.Util.gs(HivePlugin.Event.TEIID24000, command));
-    }    
-    
+    }
+
 	@Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new HiveSQLConversionVisitor(this);
@@ -184,12 +184,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
-    
+
 	@Override
 	public boolean supportsRowLimit() {
 		return true;
 	}
-	
+
 
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -218,7 +218,7 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     protected JDBCMetadataProcessor createMetadataProcessor() {
         return getMetadataProcessor();
     }
-    
+
     @Override
     public JDBCMetadataProcessor getMetadataProcessor(){
         HiveMetadataProcessor result = new HiveMetadataProcessor();
@@ -245,7 +245,7 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     		return super.retrieveValue(results, columnIndex, TypeFacility.RUNTIME_TYPES.OBJECT);
     	}
     }
-    
+
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
     		Class<?> expectedType) throws SQLException {
@@ -266,7 +266,7 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     		return super.retrieveValue(results, parameterIndex, TypeFacility.RUNTIME_TYPES.OBJECT);
     	}
     }
-    
+
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
     		Class<?> paramType, int i) throws SQLException {
@@ -285,7 +285,7 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	}
     	super.bindValue(stmt, param, paramType, i);
     }
-    
+
     protected FunctionMethod addAggregatePushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
     	FunctionMethod method = addPushDownFunction(qualifier, name, returnType, paramTypes);
     	AggregateAttributes attr = new AggregateAttributes();
@@ -293,12 +293,12 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	method.setAggregateAttributes(attr);
     	return method;
     }
-    
+
     @Override
     public boolean supportsHaving() {
     	return false; //only having with group by
     }
-    
+
     @Override
     public boolean supportsConvert(int fromType, int toType) {
     	if (!super.supportsConvert(fromType, toType)) {
@@ -309,25 +309,25 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     	}
     	return false;
     }
-    
+
     @TranslatorProperty(display="Use DatabaseMetaData", description= "Use DatabaseMetaData (typical JDBC logic) for importing")
     public boolean isUseDatabaseMetaData() {
 		return useDatabaseMetaData;
 	}
-    
+
     public void setUseDatabaseMetaData(boolean useDatabaseMetaData) {
 		this.useDatabaseMetaData = useDatabaseMetaData;
 	}
-    
+
     public boolean requiresLeftLinearJoin() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsOrderByUnrelated() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsLikeRegex() {
         return true;
@@ -336,10 +336,10 @@ public class BaseHiveExecutionFactory extends JDBCExecutionFactory {
     public boolean rewriteBooleanFunctions() {
         return false;
     }
-    
+
     @Override
     public boolean supportsWindowFunctionNthValue() {
         return false;
     }
-    
+
 }

@@ -80,7 +80,7 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
 public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<String> {
-	
+
 	private static final String TEIID_FBI = "teiid:fbi"; //$NON-NLS-1$
 
 	public enum MatState {
@@ -89,7 +89,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		FAILED_LOAD,
 		LOADED
 	}
-	
+
 	public class MatTableInfo {
 		private long updateTime = -1;
 		private MatState state = MatState.NEEDS_LOADING;
@@ -98,9 +98,9 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		private boolean valid;
 		private boolean asynch; //sub state of loading
 		private Map<RequestID, WeakReference<RequestWorkItem>> waiters = new HashMap<RequestID, WeakReference<RequestWorkItem>>(2);
-		
+
 		protected MatTableInfo() {}
-		
+
 		private synchronized boolean shouldLoad(Serializable possibleLoadingAddress, boolean firstPass, boolean refresh, boolean invalidate) {
 			if (invalidate) {
 				LogManager.logDetail(LogConstants.CTX_MATVIEWS, this, "invalidating"); //$NON-NLS-1$
@@ -122,7 +122,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 				return false;
 			case LOADED:
 				if (!firstPass
-						|| refresh 
+						|| refresh
 						|| (ttl >= 0 && System.currentTimeMillis() - updateTime - ttl > 0)) {
 					if (firstPass) {
 						setState(MatState.NEEDS_LOADING, null);
@@ -137,7 +137,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     		}
 			throw new AssertionError();
 		}
-		
+
 		private synchronized void setState(MatState state, Boolean valid) {
 			MatState oldState = this.state;
 			long timestamp = System.currentTimeMillis();
@@ -155,36 +155,36 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			}
 			waiters.clear();
 		}
-		
+
 		public synchronized void setAsynchLoad() {
 			assert state == MatState.LOADING;
 			asynch = true;
 		}
-		
+
 		public synchronized void setTtl(long ttl) {
 			this.ttl = ttl;
 		}
-		
+
 		public synchronized long getUpdateTime() {
 			return updateTime;
 		}
-		
+
 		public synchronized MatState getState() {
 			return state;
 		}
-		
+
 		public synchronized boolean isUpToDate() {
 			return isValid() && (ttl < 0 || System.currentTimeMillis() - updateTime - ttl <= 0);
 		}
-		
+
 		public synchronized boolean isValid() {
 			return valid;
 		}
-		
+
 		public synchronized long getTtl() {
 			return ttl;
 		}
-		
+
 		public VDBMetaData getVdbMetaData() {
 			return vdbMetaData;
 		}
@@ -198,16 +198,16 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
             asynch = false;
             return result;
         }
-		
+
 	}
-	
+
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
 	private TempTableStore tableStore = new TempTableStore("SYSTEM", TransactionMode.ISOLATE_READS, false); //$NON-NLS-1$
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
 	private volatile Serializable localAddress;
 	private VDBMetaData vdbMetaData;
-	
+
 	public GlobalTableStoreImpl(BufferManager bufferManager, VDBMetaData vdbMetaData, QueryMetadataInterface metadata) {
 		this.bufferManager = bufferManager;
 		this.vdbMetaData = vdbMetaData;
@@ -222,7 +222,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		}
 		return info;
 	}
-	
+
 	@Override
 	public void failedLoad(String matTableName) {
 		MatTableInfo info = getMatTableInfo(matTableName);
@@ -232,13 +232,13 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean needsLoading(String matTableName, Serializable loadingAddress, boolean firstPass, boolean refresh, boolean invalidate) {
 		MatTableInfo info = getMatTableInfo(matTableName);
 		return info.shouldLoad(loadingAddress, firstPass, refresh, invalidate);
 	}
-			
+
 	@Override
 	public TempMetadataID getGlobalTempTableMetadataId(Object viewId)
 	throws TeiidProcessingException, TeiidComponentException {
@@ -306,7 +306,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 					id.setQueryNode(qnode);
 					id.setCardinality((int)metadata.getCardinality(viewId));
 					id.setOriginalMetadataID(viewId);
-					
+
 					Object pk = metadata.getPrimaryKey(viewId);
 					if (pk != null) {
 						ArrayList<TempMetadataID> primaryKey = resolveIndex(metadata, id, pk);
@@ -343,7 +343,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		updateCacheHint(viewId, group, id);
 		return id;
 	}
-	
+
 	@Override
 	public TempMetadataID getCodeTableMetadataId(
 			String codeTableName, String returnElementName,
@@ -357,7 +357,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     	if (id == null) {
     		synchronized (this) {
     	    	id = this.tableStore.getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
-    	    	String queryString = Reserved.SELECT + ' ' + new ElementSymbol(keyElementName) + " ," + new ElementSymbol(returnElementName) + ' ' + Reserved.FROM + ' ' + new GroupSymbol(codeTableName); //$NON-NLS-1$ 
+    	    	String queryString = Reserved.SELECT + ' ' + new ElementSymbol(keyElementName) + " ," + new ElementSymbol(returnElementName) + ' ' + Reserved.FROM + ' ' + new GroupSymbol(codeTableName); //$NON-NLS-1$
     	    	id.setQueryNode(new QueryNode(queryString));
     	    	id.setPrimaryKey(id.getElements().subList(0, 1));
     	    	CacheHint hint = new CacheHint(true, null);
@@ -366,7 +366,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     	}
 		return id;
 	}
-		
+
 	private void updateCacheHint(Object viewId, GroupSymbol group,
 			TempMetadataID id) throws TeiidComponentException,
 			QueryMetadataException, QueryResolverException,
@@ -380,7 +380,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		if (hint != null) {
 			hint = hint.clone();
 		} else {
-			hint = new CacheHint();	
+			hint = new CacheHint();
 		}
 		//overlay the properties
 		String ttlString = metadata.getExtensionProperty(viewId, MaterializationMetadataRepository.MATVIEW_TTL, false);
@@ -403,7 +403,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		}
 		id.setCacheHint(hint);
 	}
-		
+
 	static ArrayList<TempMetadataID> resolveIndex(
 			QueryMetadataInterface metadata, TempMetadataID id, Object pk)
 			throws TeiidComponentException, QueryMetadataException {
@@ -421,7 +421,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		swapTempTable(matTableName, table);
 		this.getMatTableInfo(matTableName).setState(MatState.LOADED, true);
 	}
-	
+
 	private void swapTempTable(String tempTableName, TempTable tempTable) {
     	this.tableStore.getTempTables().put(tempTableName, tempTable);
     }
@@ -450,7 +450,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	public TempTableStore getTempTableStore() {
 		return this.tableStore;
 	}
-	
+
 	@Override
 	public TempTable createMatTable(final String tableName, GroupSymbol group) throws TeiidComponentException,
 	QueryMetadataException, TeiidProcessingException {
@@ -495,7 +495,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		}
 		return create;
 	}
-	
+
 	/**
 	 * Return a list of ElementSymbols for the given index/key object
 	 */
@@ -510,17 +510,17 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	}
 
 	//begin replication methods
-	
+
 	@Override
 	public void setAddress(Serializable address) {
 		this.localAddress = address;
 	}
-	
+
 	@Override
 	public Serializable getAddress() {
 		return localAddress;
 	}
-	
+
 	@Override
 	public void getState(OutputStream ostream) {
 		try {
@@ -639,19 +639,19 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	public void droppedMembers(Collection<Serializable> addresses) {
 		for (MatTableInfo info : this.matTables.values()) {
 			synchronized (info) {
-				if (info.getState() == MatState.LOADING 
+				if (info.getState() == MatState.LOADING
 						&& addresses.contains(info.loadingAddress)) {
 					info.setState(MatState.FAILED_LOAD, null);
 				}
 			}
 		}
 	}
-	
+
 	@Override
 	public boolean hasState(String stateId) {
 		return this.tableStore.getTempTable(stateId) != null;
 	}
-	
+
 	@Override
 	public TempMetadataID getGlobalTempTableMetadataId(String matTableName) {
 		return this.tableStore.getMetadataStore().getTempGroupID(matTableName);

@@ -40,12 +40,12 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	private static final String QUERY = "query"; //$NON-NLS-1$
 	private static final String OFFEST = "offset"; //$NON-NLS-1$
 	private static final String LIMIT = "limit"; //$NON-NLS-1$
-	
+
 	private GoogleSpreadsheetConnection connection;
 	private Iterator<SheetRow> rowIterator;
 	private ExecutionContext executionContext;
 	private List<Argument> arguments;
-	
+
 	private String query;
 	private boolean returnsArray;
 
@@ -74,7 +74,7 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 		Integer limit = null;
 		Integer offset = null;
 		String toQuery = query;
-		
+
 		List<String> parts = StringUtil.tokenize(query, ';');
 		for (String var : parts) {
 			int index = var.indexOf('=');
@@ -83,14 +83,14 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 			}
 			String key = var.substring(0, index).trim();
 			String value = var.substring(index+1).trim();
-			
+
 			if (key.equalsIgnoreCase(WORKSHEET)) {
 				worksheet = value;
 			}
 			else if (key.equalsIgnoreCase(QUERY)) {
 				StringBuilder buffer = new StringBuilder();
 				SQLStringVisitor.parseNativeQueryParts(value, arguments, buffer, new SQLStringVisitor.Substitutor() {
-					
+
 					@Override
 					public void substitute(Argument arg, StringBuilder builder, int index) {
 						Literal argumentValue = arg.getArgumentValue();
@@ -108,12 +108,12 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 				offset = Integer.parseInt(value);
 			}
 		}
-		
+
 		this.rowIterator = this.connection.executeQuery(worksheet, toQuery, offset, limit, executionContext.getBatchSize()).iterator();
 	}
 
 	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {	
+	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		if (this.rowIterator != null && this.rowIterator.hasNext()) {
 			List<?> result = rowIterator.next().getRow();
 			if (returnsArray) {

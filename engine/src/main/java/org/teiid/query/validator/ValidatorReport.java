@@ -34,7 +34,7 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
     public ValidatorReport() {
         super(VALIDATOR_REPORT);
     }
-    
+
     public ValidatorReport(String name) {
     	super(name);
     }
@@ -75,13 +75,13 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
     public String toString() {
         return this.getFailureMessage();
     }
-    
+
     public void handleValidationWarning(String message) {
     	ValidatorFailure vf = new ValidatorFailure(message);
     	vf.setStatus(Status.WARNING);
         this.addItem(vf);
     }
-    
+
     public void handleValidationError(String message) {
         this.addItem(new ValidatorFailure(message));
     }

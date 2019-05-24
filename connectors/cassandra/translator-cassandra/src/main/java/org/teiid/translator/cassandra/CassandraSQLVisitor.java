@@ -40,11 +40,11 @@ import org.teiid.translator.TypeFacility;
 public class CassandraSQLVisitor extends SQLStringVisitor {
 
 	private static final String ALLOW_FILTERING = "ALLOW FILTERING";
-	
+
 	public String getTranslatedSQL() {
 		return buffer.toString();
 	}
-	
+
 	@Override
 	protected String replaceElementName(String group, String element) {
 		return element;
@@ -57,14 +57,14 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 	@Override
 	public void visit(Select obj) {
 		boolean allowFiltering = false;
-		
+
 		buffer.append(SELECT).append(Tokens.SPACE);
 		if (obj.getFrom() != null && !obj.getFrom().isEmpty()){
 			NamedTable table = (NamedTable)obj.getFrom().get(0);
-		
+
 			allowFiltering = Boolean.parseBoolean(
 			          table.getMetadataObject().getProperties().get(CassandraMetadataProcessor.ALLOWFILTERING));
-			
+
 			if(table.getMetadataObject().getColumns() !=  null){
 				append(obj.getDerivedColumns());
 			}
@@ -77,23 +77,23 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
 			append(obj.getWhere());
 		}
-		
+
 		if(obj.getOrderBy() != null){
 			buffer.append(Tokens.SPACE);
 			append(obj.getOrderBy());
 		}
-		
+
 		if(obj.getLimit() != null){
 			buffer.append(Tokens.SPACE);
 			append(obj.getLimit());
 		}
-		
+
 		if (allowFiltering) {
 		      buffer.append(Tokens.SPACE);
 		      buffer.append(ALLOW_FILTERING);
 		}
 	}
-	
+
 	@Override
 	public void visit(Literal obj) {
 		if (obj.getValue() == null) {
@@ -110,7 +110,7 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			return;
 		}
 		//TODO: only supported with Cassandra 2 or later
-		/*if (obj.isBindEligible() 
+		/*if (obj.isBindEligible()
 				|| obj.getType() == TypeFacility.RUNTIME_TYPES.OBJECT
 				|| type == TypeFacility.RUNTIME_TYPES.VARBINARY) {
 			if (values == null) {
@@ -154,8 +154,8 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			}
 			return;
 		}
-		if (!Number.class.isAssignableFrom(type) 
-				&& type != TypeFacility.RUNTIME_TYPES.BOOLEAN 
+		if (!Number.class.isAssignableFrom(type)
+				&& type != TypeFacility.RUNTIME_TYPES.BOOLEAN
 				&& type != TypeFacility.RUNTIME_TYPES.VARBINARY) {
 			//just handle as strings things like timestamp
 			type = TypeFacility.RUNTIME_TYPES.STRING;

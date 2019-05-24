@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
-/** 
+/**
  * Represents a batch of INSERT, UPDATE and DELETE commands to be executed together.
  */
 public class BatchedUpdates extends BaseLanguageObject implements Command {
@@ -30,11 +30,11 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
     private static final int MAX_COMMANDS_TOSTRING = 5;
     private List<Command> updateCommands;
     private boolean singleResult;
-    
+
     public BatchedUpdates(List<Command> updateCommands) {
         this.updateCommands = updateCommands;
     }
-    
+
     /**
      * @return a list of IInsert, IUpdate and IDelete commands in this batched update.
      */
@@ -45,7 +45,7 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     /**
      * Whether the batch represents a logical unit of work
      * It is not required that this be treated as atomic, but
@@ -55,16 +55,16 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
     public boolean isSingleResult() {
 		return singleResult;
 	}
-    
+
     public void setSingleResult(boolean atomic) {
 		this.singleResult = atomic;
 	}
-    
+
     @Override
     public String toString() {
         return toString(false);
     }
-        
+
     public String toString(boolean allCommands) {
     	StringBuffer result = new StringBuffer();
     	int toDisplay = updateCommands.size();

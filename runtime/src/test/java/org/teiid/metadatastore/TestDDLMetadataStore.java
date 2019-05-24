@@ -72,20 +72,20 @@ import org.teiid.translator.file.FileExecutionFactory;
 public class TestDDLMetadataStore {
 
     static ExtendedEmbeddedServer es;
-    
-    @Before 
+
+    @Before
     public void setup() {
         FileUtils.removeDirectoryAndChildren(new File(UnitTestUtil.getTestScratchPath()));
         es = new ExtendedEmbeddedServer();
     }
-    
-    @After 
+
+    @After
     public void teardown() {
         if (es != null) {
             es.stop();
         }
     }
-    
+
     static final class ExtendedEmbeddedServer extends EmbeddedServer {
         @Override
         public Admin getAdmin() {
@@ -95,7 +95,7 @@ public class TestDDLMetadataStore {
 
     private static class DatasourceAwareEmbeddedAdmin extends EmbeddedAdminImpl {
         HashSet<String> datasourceNames = new HashSet<String>();
-        
+
         public DatasourceAwareEmbeddedAdmin(EmbeddedServer embeddedServer) {
             super(embeddedServer);
         }
@@ -105,7 +105,7 @@ public class TestDDLMetadataStore {
                 throws AdminException {
             if (deploymentName.equals("z") && templateName.equals("custom")) { // custom name comes from ddl
                 final AtomicInteger counter = new AtomicInteger();
-                ConnectionFactoryProvider<AtomicInteger> cfp = 
+                ConnectionFactoryProvider<AtomicInteger> cfp =
                         new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
                 es.addConnectionFactoryProvider(deploymentName, cfp);
                 datasourceNames.add(deploymentName);
@@ -117,7 +117,7 @@ public class TestDDLMetadataStore {
                 throws AdminException {
             return Collections.emptyList();
         }
-        
+
         @Override
         public Properties getDataSource(String deployedName) throws AdminException {
             throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40137, "getDataSource")); //$NON-NLS-1$
@@ -141,11 +141,11 @@ public class TestDDLMetadataStore {
             HashSet<String> names = new HashSet<String>();
             names.add("custom");
             return names;
-        }                
+        }
     }
-    
+
     public static class ThreadLocalSecurityHelper implements SecurityHelper {
-        
+
         private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
 
         @Override
@@ -154,7 +154,7 @@ public class TestDDLMetadataStore {
             threadLocalContext.set((Subject)context);
             return previous;
         }
-        
+
         @Override
         public Object getSecurityContext(String securityDomain) {
             return threadLocalContext.get();
@@ -171,7 +171,7 @@ public class TestDDLMetadataStore {
                 String applicationName) throws LoginException {
             Subject subject = new Subject();
             subject.getPrincipals().add(new SimpleGroup("superuser"));
-            
+
             SimpleGroup rolesGroup = new SimpleGroup("Roles");
             rolesGroup.addMember(new SimplePrincipal("superuser"));
             rolesGroup.addMember(new SimplePrincipal("admin"));
@@ -189,9 +189,9 @@ public class TestDDLMetadataStore {
                 byte[] serviceTicket) throws LoginException {
             return null;
         }
-        
-    }    
-    
+
+    }
+
     @Test
     public void testVDBExport() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -199,28 +199,28 @@ public class TestDDLMetadataStore {
         ec.setSecurityHelper(new ThreadLocalSecurityHelper());
         es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
         es.start(ec);
-        
+
         final AtomicInteger counter = new AtomicInteger();
         ConnectionFactoryProvider<AtomicInteger> cfp = new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
         es.addConnectionFactoryProvider("z", cfp);
         es.addMetadataRepository("myrepo", Mockito.mock(MetadataRepository.class));
-        
+
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath()+"/first-db.ddl"), true);
-        
+
         Admin admin = es.getAdmin();
         VDBMetaData vdb = (VDBMetaData)admin.getVDB("empty", "2");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         VDBMetadataParser.marshell(vdb, out);
-        
+
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "first-vdb.xml"));
         assertEquals(expected, new String(out.toByteArray()));
-        
+
         String exportedDdl = admin.getSchema("empty", "2", null, null, null);
 		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("first-vdb.ddl")),
-				exportedDdl);        
+				exportedDdl);
     }
-    
+
     @Test
     public void testRoles() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
@@ -228,16 +228,16 @@ public class TestDDLMetadataStore {
         ec.setSecurityHelper(new ThreadLocalSecurityHelper());
         es.addTranslator("y", new TestEmbeddedServer.FakeTranslator(false));
         es.addTranslator("y2", new TestEmbeddedServer.FakeTranslator(false));
-        
+
         final AtomicInteger counter = new AtomicInteger();
-        ConnectionFactoryProvider<AtomicInteger> cfp = 
+        ConnectionFactoryProvider<AtomicInteger> cfp =
                 new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
         es.addConnectionFactoryProvider("z", cfp);
-        
+
         es.start(ec);
         es.addMetadataRepository("myrepo", Mockito.mock(MetadataRepository.class));
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath()+"/first-db.ddl"), true);
-        
+
         TeiidDriver td = es.getDriver();
         Connection c = td.connect("jdbc:teiid:empty", null);
         Statement s = c.createStatement();
@@ -247,7 +247,7 @@ public class TestDDLMetadataStore {
 
         s.execute("update mytable set \"my-column\" = 'a'");
         assertEquals(2, s.getUpdateCount());
-        
+
         try {
             s.execute("delete from mytable where \"my-column\" = 'a'");
             fail("should have stopped by roles");
@@ -261,30 +261,30 @@ public class TestDDLMetadataStore {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
         es.addTranslator("file", new FileExecutionFactory());
-        es.addTranslator("h2", new ExecutionFactory<>());        
-        es.start(ec);        
-        
+        es.addTranslator("h2", new ExecutionFactory<>());
+        es.start(ec);
+
         FileInputStream vdb = new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
         es.deployVDB(vdb);
-        
+
         String content = ConvertVDB.convert(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml"));
-        
+
         es.undeployVDB("Portfolio");
-        
+
         /*
         FileWriter fw = new FileWriter(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.ddl"));
         fw.write(content);
         fw.close();
         */
-        
+
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.ddl"));
         assertEquals(expected, content);
-        
+
         //make sure the output is valid
         es.deployVDB(new ByteArrayInputStream(content.getBytes("UTF-8")), true);
     }
-    
+
     @Test
     public void testMigrateVDBXML() throws Exception {
         File vdb = new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-vdb.xml");
@@ -298,7 +298,7 @@ public class TestDDLMetadataStore {
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "portfolio-converted-vdb.ddl"));
         assertEquals(expected, content);
     }
-    
+
     @Test
     public void testOverideTranslator() throws Exception {
         File vdb = new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.xml");
@@ -311,19 +311,19 @@ public class TestDDLMetadataStore {
         String expected = ObjectConverterUtil
                 .convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/" + "override-vdb.ddl"));
         assertEquals(expected, content);
-    }     
-    
+    }
+
     @Test
     public void testMultiSource() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         ec.setUseDisk(false);
-        es.start(ec); 
+        es.start(ec);
         es.addTranslator(FileExecutionFactory.class);
-        
+
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataPath() + "/" + "multisource-vdb.ddl"), true);
-        
+
         es.getAdmin().addSource("multisource", "1", "MarketData", "x", "file", "z");
-        
+
         Connection c = es.getDriver().connect("jdbc:teiid:multisource", null);
         DatabaseMetaData dmd = c.getMetaData();
         ResultSet rs = dmd.getProcedureColumns(null, null, "deleteFile", null);

@@ -30,11 +30,11 @@ public class ThreadExecutorService implements Service<TeiidExecutor> {
 
     private int threadCount;
     private ThreadReuseExecutor threadExecutor;
-    
+
     public ThreadExecutorService(int threadCount) {
         this.threadCount = threadCount;
     }
-    
+
     @Override
     public TeiidExecutor getValue() throws IllegalStateException,
             IllegalArgumentException {
@@ -48,7 +48,7 @@ public class ThreadExecutorService implements Service<TeiidExecutor> {
             protected void logWaitMessage(long warnTime, int maximumPoolSize,
                     String poolName, int highestQueueSize) {
                 LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50116, maximumPoolSize, poolName, highestQueueSize, warnTime));
-            }  
+            }
         };
     }
 

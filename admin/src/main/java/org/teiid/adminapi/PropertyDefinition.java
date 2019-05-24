@@ -31,33 +31,33 @@ public interface PropertyDefinition extends AdminObject {
 		PROCESS,
 		ALL_PROCESSES,
 		CLUSTER
-	} 
+	}
     /**
      * The value of the maximum multiplicity if the multiplicity is considered unbounded.
      */
     public static final int UNBOUNDED_VALUE = Integer.MAX_VALUE;
-    
-    
+
+
     /**
      * Get the localized display name of this property.
      * @return the displayable name for this property
      */
     String getDisplayName();
-    
+
     /**
      * Get the description of this property.
      * @return the description for this property
      */
     String getDescription();
-    
-    
+
+
     /**
      * Get the name of the java class that best represents the property type.
      * @return the name of the java class that best represents the property type.
      */
     String getPropertyTypeClassName();
 
-    
+
     /**
      * Get the default value for values of this property, or an empty String if
      * there is no default value.
@@ -78,7 +78,7 @@ public interface PropertyDefinition extends AdminObject {
      * @return true if this property requires the system to be restarted before it takes effect.
      */
     public RestartType getRequiresRestart();
-    
+
     /**
      * The modifiable flag is used to identify features that may not be changed once
      * they are set.
@@ -131,7 +131,7 @@ public interface PropertyDefinition extends AdminObject {
      * @return if null, no category exists
      */
     String getCategory();
-    
+
 }
 
 

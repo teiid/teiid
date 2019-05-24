@@ -29,18 +29,18 @@ import org.teiid.logging.MessageLevel;
  * Timer class that uses the ThreadMXBean for CPU timing
  */
 public class ThreadCpuTimer {
-	
+
 	private static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 	private int totalTime = -1;
 	private long lastTime = -1;
 	private boolean active;
-	
+
 	public ThreadCpuTimer() {
-		active = threadMXBean.isThreadCpuTimeSupported() 
+		active = threadMXBean.isThreadCpuTimeSupported()
 				&& threadMXBean.isThreadCpuTimeEnabled()
 				&& LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL);
 	}
-	
+
 	public void start() {
 		if (!active) {
 			return;
@@ -50,7 +50,7 @@ public class ThreadCpuTimer {
 		} catch (UnsupportedOperationException e) {
 			inactivate();
 		}
-		
+
 	}
 
 	private void inactivate() {
@@ -58,7 +58,7 @@ public class ThreadCpuTimer {
 		lastTime = -1;
 		totalTime = -1;
 	}
-	
+
 	public long stop() {
 		if (!active) {
 			return -1;

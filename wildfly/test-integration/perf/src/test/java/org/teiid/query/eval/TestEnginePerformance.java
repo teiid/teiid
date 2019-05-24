@@ -91,14 +91,14 @@ import org.teiid.query.util.CommandContext;
 @FixMethodOrder(MethodSorters.JVM)
 @SuppressWarnings("nls")
 public class TestEnginePerformance {
-	
+
 	private static boolean debug = false;
-	
+
 	private static BufferManagerImpl bm;
 	private static BufferFrontedFileStoreCache cache;
 	private static ExecutorService es;
 	private static Random r = new Random(0);
-	
+
 	private final class PreparedPlanTask extends Task {
 		private final List<?> preparedValues;
 		private final QueryMetadataInterface metadata;
@@ -134,7 +134,7 @@ public class TestEnginePerformance {
 			return this;
 		}
 	}
-	
+
 	private void runTask(final int iterations, int threadCount,
 			final Task task) throws InterruptedException, Exception {
 		List<Callable<Void>> tasks = new ArrayList<Callable<Void>>(threadCount);
@@ -149,7 +149,7 @@ public class TestEnginePerformance {
 					}
 					return null;
 				}
-				
+
 			});
 		}
 		List<Future<Void>> result = es.invokeAll(tasks);
@@ -159,30 +159,30 @@ public class TestEnginePerformance {
 		assertEquals(0, bm.getActiveBatchBytes());
 		assertEquals(0, bm.getMemoryCacheEntries());
 	}
-	
+
 	private void process(RelationalNode node, int expectedRows)
 	throws TeiidComponentException, TeiidProcessingException {
 		node.open();
-		
+
 		int currentRow = 1;
 		while(true) {
 			try {
 		        TupleBatch batch = node.nextBatch();
-		        currentRow += batch.getRowCount();    
+		        currentRow += batch.getRowCount();
 		        if(batch.getTerminationFlag()) {
 		            break;
 		        }
 			} catch (BlockedException e) {
-				
+
 			}
 		}
 		assertEquals(expectedRows, currentRow - 1);
 		node.close();
 	}
-	
+
 	public void helpTestSort(final BufferManager bufferManager, final int rowCount, final int iterations, int threadCount, final Mode mode) throws Exception {
 		final List<?>[] data = sampleData(rowCount);
-		
+
 		ElementSymbol elem1 = new ElementSymbol("e1");
 		elem1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		ElementSymbol elem2 = new ElementSymbol("e2");
@@ -209,28 +209,28 @@ public class TestEnginePerformance {
 		Collections.shuffle(Arrays.asList(data), r);
 		return data;
 	}
-	
+
 	public void helpTestSort(Mode mode, int expectedRowCount, List<? extends Expression> sortElements, List<?>[] data, List<? extends Expression> elems, BufferManager bufferManager) throws TeiidComponentException, TeiidProcessingException {
 		CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		BlockingFakeRelationalNode dataNode = new BlockingFakeRelationalNode(0, data);
 		dataNode.setReturnPeriod(3);
 		dataNode.setElements(elems);
 		dataNode.initialize(context, bufferManager, null);
-		
+
 		SortNode sortNode = new SortNode(1);
     	sortNode.setSortElements(new OrderBy(sortElements).getOrderByItems());
         sortNode.setMode(mode);
 		sortNode.setElements(dataNode.getElements());
-        sortNode.addChild(dataNode);        
-		sortNode.initialize(context, bufferManager, null);    
-        
+        sortNode.addChild(dataNode);
+		sortNode.initialize(context, bufferManager, null);
+
         process(sortNode, expectedRowCount);
 	}
-	
+
 	public void helpTestEquiJoin(int expectedRowCount, List<?>[] leftData, List<?>[] rightData, List<? extends Expression> elems, BufferManager bufferManager, JoinStrategy joinStrategy, JoinType joinType) throws TeiidComponentException, TeiidProcessingException {
 		CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		FakeRelationalNode dataNode1 = new FakeRelationalNode(1, leftData);
 		dataNode1.setElements(elems);
 		dataNode1.initialize(context, bufferManager, null);
@@ -246,15 +246,15 @@ public class TestEnginePerformance {
         join.setElements(elems);
         join.setJoinType(joinType);
         join.setJoinExpressions(elems.subList(0, 1), elems.subList(0, 1));
-        join.initialize(context, bufferManager, null);    
-        
+        join.initialize(context, bufferManager, null);
+
         process(join, expectedRowCount);
 	}
-	
+
 	public void helpTestEquiJoin(final BufferManager bufferManager, int leftRowCount, int rightRowCount, final int iterations, int threadCount, final JoinStrategy joinStrategy, final JoinType joinType, final int expectedRowCount) throws Exception {
 		final List<?>[] leftData = sampleData(leftRowCount);
 		final List<?>[] rightData = sampleData(rightRowCount);
-		
+
 		ElementSymbol elem1 = new ElementSymbol("e1");
 		elem1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 		ElementSymbol elem2 = new ElementSymbol("e2");
@@ -270,14 +270,14 @@ public class TestEnginePerformance {
 		};
 		runTask(iterations, threadCount, task);
 	}
-		
+
 	@BeforeClass public static void oneTimeSetup() throws TeiidComponentException {
 		bm = new BufferManagerImpl();
 
 		bm.setMaxProcessingKB(1<<12);
 		bm.setMaxReserveKB((1<<18)-(1<<16));
 		bm.setMaxActivePlans(20);
-		
+
 		cache = new BufferFrontedFileStoreCache();
 		cache.setMemoryBufferSpace(1<<26);
 		FileStorageManager fsm = new FileStorageManager();
@@ -287,16 +287,16 @@ public class TestEnginePerformance {
 		bm.setCache(cache);
 		bm.initialize();
 		bm.setMaxBatchManagerSizeEstimate(Long.MAX_VALUE);
-		
+
 		es = Executors.newCachedThreadPool();
 	}
-	
+
 	@After public void tearDown() throws Exception {
 		if (debug) {
 			showStats();
 		}
 	}
-	
+
 	private void helpTestXMLTable(int iterations, int threadCount, String file, int expectedRowCount) throws QueryParserException,
 		TeiidException, InterruptedException, Exception {
 		String sql = "select * from xmltable('/root/child' passing xmlparse(document cast(? as clob) wellformed) columns x integer path '@id', y long path 'gc2') as x"; //$NON-NLS-1$
@@ -304,28 +304,28 @@ public class TestEnginePerformance {
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 		CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
-		
+
 		ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, createCommandContext());
-		
+
 		runTask(iterations, threadCount, new PreparedPlanTask(preparedValues, metadata, plan, command, expectedRowCount));
 	}
-		
+
 	private void processPreparedPlan(List<?> values, Command command,
 			QueryMetadataInterface metadata, ProcessorDataManager dataManager,
 			ProcessorPlan plan, int rowCount) throws Exception {
 		CommandContext context = createCommandContext();
-		context.setMetadata(metadata);        
+		context.setMetadata(metadata);
 		context.setExecutor(es);
 		context.setBufferManager(bm);
 		setParameterValues(values, command, context);
 		plan.reset();
 		assertEquals(rowCount, doProcess(plan, dataManager, null, context));
 	}
-	
+
 	@Test public void runSort_1_100() throws Exception {
 		helpTestSort(bm, 100, 20000, 1, Mode.SORT);
 	}
-	
+
 	@Test public void runSort_4_5000() throws Exception {
 		helpTestSort(bm, 5000, 1000, 4, Mode.SORT);
 	}
@@ -333,15 +333,15 @@ public class TestEnginePerformance {
 	@Test public void runSort_16_250000() throws Exception {
 		helpTestSort(bm, 250000, 10, 16, Mode.SORT);
 	}
-	
+
 	@Test public void runSort_1_500000() throws Exception {
         helpTestSort(bm, 500000, 10, 1, Mode.SORT);
     }
-	
+
 	@Test public void runDupRemove_1_100() throws Exception {
 		helpTestSort(bm, 100, 20000, 1, Mode.DUP_REMOVE);
 	}
-	
+
 	@Test public void runDupRemove_4_5000() throws Exception {
 		helpTestSort(bm, 5000, 1000, 4, Mode.DUP_REMOVE);
 	}
@@ -349,11 +349,11 @@ public class TestEnginePerformance {
 	@Test public void runDupRemove_16_250000() throws Exception {
 		helpTestSort(bm, 250000, 10, 16, Mode.DUP_REMOVE);
 	}
-	
+
 	@Test public void runInnerEnhancedJoin_1_100_500() throws Exception {
 		helpTestEquiJoin(bm, 100, 500, 10000, 1, new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT), JoinType.JOIN_INNER, 100);
 	}
-	
+
 	@Test public void runInnerEnhancedJoin_4_200_15000() throws Exception {
 		helpTestEquiJoin(bm, 200, 15000, 500, 4, new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT), JoinType.JOIN_INNER, 200);
 	}
@@ -365,11 +365,11 @@ public class TestEnginePerformance {
 	@Test public void runInnerMergeJoin_1_100_100() throws Exception {
 		helpTestEquiJoin(bm, 100, 100, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 100);
 	}
-	
+
 	@Test public void runOuterMergeJoin_1_1000_1000() throws Exception {
 		helpTestEquiJoin(bm, 1000, 1000, 10000, 1, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_FULL_OUTER, 1000);
 	}
-	
+
 	@Test public void runInnerMergeJoin_4_4000_4000() throws Exception {
 		helpTestEquiJoin(bm, 4000, 4000, 500, 4, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 4000);
 	}
@@ -377,19 +377,19 @@ public class TestEnginePerformance {
 	@Test public void runInnerMergeJoin_16_100000_100000() throws Exception {
 		helpTestEquiJoin(bm, 100000, 100000, 10, 16, new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false), JoinType.JOIN_INNER, 100000);
 	}
-	
+
 	@Test public void runXMLTable_1_5mb() throws Exception {
     	helpTestXMLTable(25, 1, "test.xml", 50000);
 	}
-	
+
 	@Test public void runXMLTable_4_5mb() throws Exception {
     	helpTestXMLTable(10, 4, "test.xml", 50000);
 	}
-	
+
 	@Test public void runXMLTable_16_5mb() throws Exception {
     	helpTestXMLTable(4, 16, "test.xml", 50000);
 	}
-	
+
 	@Test public void runLike_1() throws Exception {
 		helpTestLike(200000, 1);
 	}
@@ -397,60 +397,60 @@ public class TestEnginePerformance {
 	@Test public void runLike_4() throws Exception {
 		helpTestLike(100000, 4);
 	}
-	
+
 	@Test public void runLike_16() throws Exception {
 		helpTestLike(50000, 16);
 	}
-	
+
 	@Test public void runBatchSerialization_String() throws Exception {
 		String[] types = new String[] {DataTypeManager.DefaultDataTypes.STRING};
 		int size = 1024;
-		
+
 		final List<List<?>> batch = new ArrayList<List<?>>();
 		for (int i = 0; i < size; i++) {
 			batch.add(Arrays.asList(String.valueOf(i)));
 		}
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
-	
+
 	@Test public void runBatchSerialization_StringRepeated() throws Exception {
 		String[] types = new String[] {DataTypeManager.DefaultDataTypes.STRING};
 		int size = 1024;
-		
+
 		final List<List<?>> batch = new ArrayList<List<?>>();
 		for (int i = 0; i < size; i++) {
 			batch.add(Arrays.asList("aaaaaaaa"));
 		}
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
-	
+
 	@Test public void runBatchSerialization_Time() throws Exception {
 		final String[] types = new String[] {DataTypeManager.DefaultDataTypes.TIME};
 		int size = 1024;
-		
+
 		final List<List<?>> batch = new ArrayList<List<?>>();
 		for (int i = 0; i < size; i++) {
 			batch.add(Arrays.asList(new Time(i)));
 		}
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
-	
+
 	@Test public void runBatchSerialization_Date() throws Exception {
 		final String[] types = new String[] {DataTypeManager.DefaultDataTypes.DATE};
 		int size = 1024;
-		
+
 		final List<List<?>> batch = new ArrayList<List<?>>();
 		for (int i = 0; i < size; i++) {
 			batch.add(Arrays.asList(new Date(i)));
 		}
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
-	
+
 	private void helpTestBatchSerialization(final String[] types,
 			final List<List<?>> batch, int iterations, int threadCount)
 			throws InterruptedException, Exception {
 		runTask(iterations, threadCount, new Task() {
-			
+
 			@Override
 			public Void call() throws Exception {
 				writeReadBatch(types, batch);
@@ -465,9 +465,9 @@ public class TestEnginePerformance {
 		ObjectOutputStream out = new ObjectOutputStream(baos);
 		BatchSerializer.writeBatch(out, types, batch);
         out.flush();
-        
+
         byte[] bytes = baos.getBuffer();
-        
+
         ByteArrayInputStream bytesIn = new ByteArrayInputStream(bytes, 0, baos.getCount());
         ObjectInputStream in = new ObjectInputStream(bytesIn);
         List<List<Object>> newBatch = BatchSerializer.readBatch(in, types);
@@ -488,7 +488,7 @@ public class TestEnginePerformance {
 			}
 		});
 	}
-	
+
 	private void helpTestLargeSort(int iterations, int threads, final int rows) throws InterruptedException, Exception {
 		final List<ElementSymbol> elems = new ArrayList<ElementSymbol>();
 		final int cols = 50;
@@ -497,9 +497,9 @@ public class TestEnginePerformance {
 			elem1.setType(DataTypeManager.DefaultDataClasses.STRING);
 			elems.add(elem1);
 		}
-		
+
 		final List<ElementSymbol> sortElements = Arrays.asList(elems.get(0));
-		
+
 		final Task task = new Task() {
 			@Override
 			public Void call() throws Exception {
@@ -512,7 +512,7 @@ public class TestEnginePerformance {
 					int blockingPeriod = 3;
 					int count = 0;
 					int batches = 0;
-					
+
 					@Override
 					protected TupleBatch nextBatchDirect() throws BlockedException,
 							TeiidComponentException, TeiidProcessingException {
@@ -525,16 +525,16 @@ public class TestEnginePerformance {
 						int start = batches++ * batchSize;
 						if (start + batchSize >= rows) {
 							done = true;
-							batchRows = rows - start;  
+							batchRows = rows - start;
 						}
 						ArrayList<List<?>> batch = new ArrayList<List<?>>(batchRows);
 						for (int i = 0; i < batchRows; i++) {
 							ArrayList<Object> row = new ArrayList<Object>();
 							for (int j = 0; j < cols; j++) {
 								if (j == 0) {
-									row.add(String.valueOf((i * 279470273) % 4294967291l));
+									row.add(String.valueOf((i * 279470273) % 4294967291L));
 								} else {
-									row.add(i + "abcdefghijklmnop" + j);	
+									row.add(i + "abcdefghijklmnop" + j);
 								}
 							}
 							batch.add(row);
@@ -545,15 +545,15 @@ public class TestEnginePerformance {
 						}
 						return result;
 					}
-					
+
 					@Override
 					public Object clone() {
 						return null;
 					}
 				};
 				rn.setElements(elems);
-		        sortNode.addChild(rn);        
-				sortNode.initialize(context, bm, null);    
+		        sortNode.addChild(rn);
+				sortNode.initialize(context, bm, null);
 		        rn.initialize(context, bm, null);
 		        process(sortNode, rows);
 				return null;
@@ -561,20 +561,20 @@ public class TestEnginePerformance {
 		};
 		runTask(iterations, threads, task);
 	}
-	
+
 	@Test public void runWideSort_1_100000() throws Exception {
 		helpTestLargeSort(4, 1, 100000);
 	}
-	
+
 	//tests a sort where the desired space is above 2 GB
 	@Test public void runWideSort_1_500000() throws Exception {
 		helpTestLargeSort(1, 1, 500000);
 	}
-	
+
 	@Test public void runWideSort_4_100000() throws Exception {
 		helpTestLargeSort(2, 4, 100000);
 	}
-	
+
 	@Test public void largeRandomTable() throws Exception {
 	    assertEquals(0, bm.getActiveBatchBytes());
 	    ElementSymbol e1 = new ElementSymbol("x");
@@ -583,23 +583,23 @@ public class TestEnginePerformance {
         e2.setType(String.class);
         List<ElementSymbol> elements = Arrays.asList(e1, e2);
         STree map = bm.createSTree(elements, "1", 1);
-        
+
         r.setSeed(0);
-        
+
         int rows = 3000000;
         for (int i = 0; i < rows; i++) {
             assertNull(String.valueOf(i), map.insert(Arrays.asList(r.nextLong(), String.valueOf(i)), InsertMode.NEW, -1));
         }
-        
+
         assertEquals(rows, map.getRowCount());
         r.setSeed(0);
-        
+
         for (int i = 0; i < rows; i++) {
             assertNotNull(map.remove(Arrays.asList(r.nextLong())));
         }
-        
+
         assertEquals(0, map.getRowCount());
-        
+
         assertEquals(0, bm.getActiveBatchBytes());
 	}
 
@@ -642,5 +642,5 @@ public class TestEnginePerformance {
 		xsw.close();
 		fos.close();
 	}
-	
+
 }

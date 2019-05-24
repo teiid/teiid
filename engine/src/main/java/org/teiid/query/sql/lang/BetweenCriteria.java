@@ -33,15 +33,15 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
 	private Expression expression;
     private Expression lowerExpression;
     private Expression upperExpression;
-    
+
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated = false;
-	
+
     /**
      * Constructs a default instance of this class.
      */
     public BetweenCriteria() {}
-    
+
     /**
      * Constructs an instance of this class with an expression
      * @param expression The expression to be compared to null
@@ -58,10 +58,10 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
      * Set expression.
      * @param expression Expression to compare to the upper and lower values
      */
-    public void setExpression(Expression expression) { 
+    public void setExpression(Expression expression) {
         this.expression = expression;
     }
-    
+
     /**
      * Get expression.
      * @return Expression to compare
@@ -69,15 +69,15 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     public Expression getExpression() {
         return this.expression;
     }
-    
+
     /**
      * Set the lower expression.
      * @param expression the lower expression
      */
-    public void setLowerExpression(Expression lowerExpression) { 
+    public void setLowerExpression(Expression lowerExpression) {
         this.lowerExpression = lowerExpression;
     }
-    
+
     /**
      * Get the lower expression.
      * @return the lower expression
@@ -85,15 +85,15 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     public Expression getLowerExpression() {
         return this.lowerExpression;
     }
-    
+
     /**
      * Set the upper expression.
      * @param expression the upper expression
      */
-    public void setUpperExpression(Expression upperExpression) { 
+    public void setUpperExpression(Expression upperExpression) {
         this.upperExpression = upperExpression;
     }
-    
+
     /**
      * Get the upper expression.
      * @return the upper expression
@@ -101,7 +101,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     public Expression getUpperExpression() {
         return this.upperExpression;
     }
-    
+
     /**
      * Returns whether this criteria is negated.
      * @return flag indicating whether this criteria contains a NOT
@@ -109,7 +109,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     public boolean isNegated() {
         return negated;
     }
-    
+
     /**
      * Sets the negation flag for this criteria.
      * @param negationFlag true if this criteria contains a NOT; false otherwise
@@ -119,7 +119,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     }
 
     /**
-     * Method for accepting a visitor.  It is the responsibility of the 
+     * Method for accepting a visitor.  It is the responsibility of the
      * language object to use the visitor's iterator to call acceptVisitor
      * on the "next" object, according to the iteration strategy.
      * @param visitor Visitor being used
@@ -141,21 +141,21 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
         hc = HashCodeUtil.hashCode(hc, getUpperExpression());
         return hc;
 	}
-	
+
     /**
      * Comparees this criteria to another object for equality
      * @param obj Other object
      * @return True if objects are equal
      */
     public boolean equals(Object obj) {
-		if(this == obj) { 
+		if(this == obj) {
 			return true;
 		}
-		
+
 		if(!(obj instanceof BetweenCriteria)) {
 			return false;
-		} 
-		
+		}
+
 		BetweenCriteria other = (BetweenCriteria) obj;
         if (isNegated() ^ other.isNegated()) {
             return false;
@@ -165,7 +165,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
                 EquivalenceUtil.areEqual(getUpperExpression(), other.getUpperExpression());
 
 	}
-	
+
 	/**
 	 * Deep copy of object
 	 * @return Deep copy of object
@@ -174,13 +174,13 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
         Expression copy = null;
         Expression lowerCopy = null;
         Expression upperCopy = null;
-        if(getExpression() != null) { 
+        if(getExpression() != null) {
             copy = (Expression) getExpression().clone();
         }
-        if(getLowerExpression() != null) { 
+        if(getLowerExpression() != null) {
             lowerCopy = (Expression) getLowerExpression().clone();
         }
-        if(getUpperExpression() != null) { 
+        if(getUpperExpression() != null) {
             upperCopy = (Expression) getUpperExpression().clone();
         }
         BetweenCriteria criteriaCopy = new BetweenCriteria(copy, lowerCopy, upperCopy);
@@ -190,8 +190,8 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
 
 	@Override
 	public void negate() {
-		this.negated = !this.negated;		
+		this.negated = !this.negated;
 	}
-	
+
 }
 

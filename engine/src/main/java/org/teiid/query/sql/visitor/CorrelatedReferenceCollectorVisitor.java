@@ -44,14 +44,14 @@ import org.teiid.query.sql.symbol.Reference;
 /**
  * <p>This visitor class will traverse a language object tree and collect references that
  * correspond to correlated subquery references.</p>
- * 
- * <p>The easiest way to use this visitor is to call the static method which creates the 
+ *
+ * <p>The easiest way to use this visitor is to call the static method which creates the
  * the visitor by passing it the Language Object and the variable context to be looked up.
  * The public visit() methods should NOT be called directly.</p>
  */
 public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 
-	// index of the reference on the language object    
+	// index of the reference on the language object
     private List<Reference> references;
     private ArrayList<Map<GroupSymbol,GroupSymbol>> outerGroups = new ArrayList<Map<GroupSymbol,GroupSymbol>>(2);
     private QueryMetadataInterface metadata;
@@ -70,10 +70,10 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
         return this.references;
     }
 
-	// ############### Visitor methods for language objects ##################    
+	// ############### Visitor methods for language objects ##################
 
     /**
-     * Visit a language object and collect symbols.  This method should <b>NOT</b> be 
+     * Visit a language object and collect symbols.  This method should <b>NOT</b> be
      * called directly.
      * @param obj Language object
      */
@@ -94,7 +94,7 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 					if (i == 0) {
 				        this.references.add(obj);
 					}
-					return; 
+					return;
 				}
 			} catch (TeiidComponentException e1) {
 				throw new TeiidRuntimeException(e1);

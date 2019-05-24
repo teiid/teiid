@@ -44,11 +44,11 @@ import org.teiid.core.types.Streamable;
 
 
 /**
- * Utility methods to determine the size of Java objects, particularly with 
+ * Utility methods to determine the size of Java objects, particularly with
  * respect to the Teiid runtime types.
- * 
+ *
  * The sizes are loosely based on expected heap size and are generally optimistic.
- * Actual object allocation efficiency can be quite poor.  
+ * Actual object allocation efficiency can be quite poor.
  */
 public final class SizeUtility {
 	private static final int UNKNOWN_SIZE_BYTES = 1024;
@@ -60,19 +60,19 @@ public final class SizeUtility {
 		public void write(int arg0) throws IOException {
 			bytes++;
 		}
-		
+
 		@Override
 		public void write(byte[] b, int off, int len) throws IOException {
 			bytes+=len;
 		}
-		
+
 		public int getBytes() {
 			return bytes;
 		}
 	}
 
 	public static final int REFERENCE_SIZE = 8;
-	
+
 	private static Map<Class<?>, int[]> SIZE_ESTIMATES = new HashMap<Class<?>, int[]>(128);
 	private static Set<Class<?>> VARIABLE_SIZE_TYPES = new HashSet<Class<?>>();
 	static {
@@ -103,28 +103,28 @@ public final class SizeUtility {
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.XML);
 		VARIABLE_SIZE_TYPES.add(DataTypeManager.DefaultDataClasses.GEOMETRY);
 	}
-	
+
 	private Class<?>[] types;
-	
+
 	private static class ClassStats {
 		AtomicInteger samples = new AtomicInteger();
 		volatile int averageSize = UNKNOWN_SIZE_BYTES;
 	}
-	
+
 	private static ConcurrentHashMap<String, ClassStats> objectEstimates = new ConcurrentHashMap<String, ClassStats>();
-	
+
 	public SizeUtility(Class<?>[] types) {
 		this.types = types;
 	}
-	
+
     public long getBatchSize(boolean accountForValueCache, List<? extends List<?>> data) {
         int colLength = types.length;
         int rowLength = data.size();
-    
+
         // Array overhead for row array
-        long size = 16 + alignMemory(rowLength * REFERENCE_SIZE); 
+        long size = 16 + alignMemory(rowLength * REFERENCE_SIZE);
         // array overhead for all the columns ( 8 object overhead + 4 ref + 4 int)
-        size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE))); 
+        size += (rowLength * (48 + alignMemory(colLength * REFERENCE_SIZE)));
         for (int col = 0; col < colLength; col++) {
             Class<?> type = types[col];
             int rowsSampled = 0;
@@ -145,7 +145,7 @@ public final class SizeUtility {
     public static boolean isVariableSize(Class<?> type) {
         return VARIABLE_SIZE_TYPES.contains(type) || type.isArray();
     }
-    
+
     public static int getSize(boolean isValueCacheEnabled,
 			Class<?> type) {
     	int[] vals = SIZE_ESTIMATES.get(type);
@@ -155,7 +155,7 @@ public final class SizeUtility {
     	}
     	return vals[isValueCacheEnabled?0:1];
 	}
-    
+
     /**
      * Get size of object
      * @return Size in bytes
@@ -201,8 +201,8 @@ public final class SizeUtility {
                 clazz = obj.getClass();
                 overhead += 2*REFERENCE_SIZE;
             }
-            
-        	Class<?> componentType = clazz.getComponentType(); 
+
+        	Class<?> componentType = clazz.getComponentType();
         	if (!componentType.isPrimitive()) {
 	            Object[] rows = (Object[]) obj;
 	            long total = overhead+16 + alignMemory(rows.length * REFERENCE_SIZE); // Array overhead
@@ -276,15 +276,15 @@ public final class SizeUtility {
     		        	}
     		        	return result;
     	        	} catch (Exception e) {
-    	        		
-    	        	}            		
+
+    	        	}
             	}
             	return stats.averageSize;
         	}
         }
 		return getSize(accountForValueCache, clazz);
     }
-    
+
     /**
      * Most current VMs have memory alignment that places objects into heap space that is a multiple of 8 Bytes.
      * This utility method helps with calculating the aligned size of an object.
@@ -299,5 +299,5 @@ public final class SizeUtility {
         }
         return numBytes;
     }
-    
+
 }

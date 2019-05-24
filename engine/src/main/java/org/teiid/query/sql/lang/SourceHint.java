@@ -27,7 +27,7 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 
 public class SourceHint {
-	
+
 	public static class SpecificHint {
 		LinkedHashSet<String> hints = new LinkedHashSet<String>();
 		boolean useAliases;
@@ -36,7 +36,7 @@ public class SourceHint {
 			this.hints.add(hint);
 			this.useAliases = useAliases;
 		}
-		
+
 		public String getHint() {
 			return StringUtil.join(hints, " ");
 		}
@@ -48,25 +48,25 @@ public class SourceHint {
 			return hints;
 		}
 	}
-	
+
 	private boolean useAliases;
 	private LinkedHashSet<String> generalHint;
 	private Map<String, SpecificHint> sourceHints;
-	
+
 	public String getGeneralHint() {
 		if (generalHint == null) {
 			return null;
 		}
 		return StringUtil.join(generalHint, " ");
 	}
-	
+
 	public void setGeneralHint(String generalHint) {
 		if (this.generalHint == null) {
 			this.generalHint = new LinkedHashSet<String>();
 		}
 		this.generalHint.add(generalHint);
 	}
-	
+
 	public void setSourceHint(String sourceName, String hint, boolean useAliases) {
 		if (this.sourceHints == null) {
 			this.sourceHints = new TreeMap<String, SpecificHint>(String.CASE_INSENSITIVE_ORDER);
@@ -79,7 +79,7 @@ public class SourceHint {
 			sh.hints.add(hint);
 		}
 	}
-	
+
 	public SpecificHint getSpecificHint(String sourceName) {
 		if (this.sourceHints == null) {
 			return null;
@@ -94,19 +94,19 @@ public class SourceHint {
 		}
 		return null;
 	}
-	
+
 	public Map<String, SpecificHint> getSpecificHints() {
 		return sourceHints;
 	}
-	
+
 	public boolean isUseAliases() {
 		return useAliases;
 	}
-	
+
 	public void setUseAliases(boolean useAliases) {
 		this.useAliases |= useAliases;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -116,7 +116,7 @@ public class SourceHint {
 			return false;
 		}
 		SourceHint other = (SourceHint)obj;
-		return EquivalenceUtil.areEqual(generalHint, other.generalHint) 
+		return EquivalenceUtil.areEqual(generalHint, other.generalHint)
 		&& EquivalenceUtil.areEqual(this.sourceHints, other.sourceHints);
 	}
 
@@ -157,5 +157,5 @@ public class SourceHint {
 	public Collection<String> getGeneralHints() {
 		return generalHint;
 	}
-	
+
 }

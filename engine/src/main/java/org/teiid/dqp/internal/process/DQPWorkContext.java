@@ -54,15 +54,15 @@ import org.teiid.security.SecurityHelper;
 
 
 public class DQPWorkContext implements Serializable {
-	
+
 	private static final String TEIID_VDB = "teiid-vdb"; //$NON-NLS-1$
 
 	private static final String TEIID_SESSION = "teiid-session"; //$NON-NLS-1$
 
-	private static final long serialVersionUID = -6389893410233192977L; 
-	
+	private static final long serialVersionUID = -6389893410233192977L;
+
 	private static final boolean longDatesTimes = PropertiesUtils.getHierarchicalProperty("org.teiid.longDatesTimes", false, Boolean.class); //$NON-NLS-1$
-	
+
 	public enum Version {
 		EIGHT_0("08.00", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
 		EIGHT_2("08.02", (byte)2), //$NON-NLS-1$
@@ -71,31 +71,31 @@ public class DQPWorkContext implements Serializable {
 		EIGHT_7("08.07.00.Beta2", (byte)3), //$NON-NLS-1$
 		EIGHT_10("08.10.00.Alpha3", BatchSerializer.VERSION_GEOMETRY), //$NON-NLS-1$
 	    ELEVEN_2("11.02", BatchSerializer.VERSION_GEOGRAPHY); //$NON-NLS-1$
-		
+
 		private String string;
 		private byte clientSerializationVersion;
-		
+
 		private Version(String string, byte clientSerializationVersion) {
 			this.string = string;
 			this.clientSerializationVersion = clientSerializationVersion;
 		}
-		
+
 		public byte getClientSerializationVersion() {
 			return clientSerializationVersion;
 		}
-		
+
 		@Override
 		public String toString() {
 			return string;
 		}
-		
+
 		private static TreeMap<String, Version> versionMap = new TreeMap<String, Version>();
 		static {
 			for (Version v : Version.values()) {
 				versionMap.put(v.toString(), v);
 			}
 		}
-		
+
 		public static Version getVersion(String version) {
 			Map.Entry<String, Version> v = versionMap.floorEntry(version);
 			if (v == null) {
@@ -103,12 +103,12 @@ public class DQPWorkContext implements Serializable {
 			}
 			return v.getValue();
 		}
-		
+
 		public static Version latest() {
 		    return versionMap.lastEntry().getValue();
 		}
 	}
-	
+
 	private static ThreadLocal<DQPWorkContext> CONTEXTS = new ThreadLocal<DQPWorkContext>() {
 		protected DQPWorkContext initialValue() {
 			return new DQPWorkContext();
@@ -118,7 +118,7 @@ public class DQPWorkContext implements Serializable {
 	public static DQPWorkContext getWorkContext() {
 		return CONTEXTS.get();
 	}
-	
+
 	public static void setWorkContext(DQPWorkContext context) {
 		LogManager.removeMdc(TEIID_SESSION);
 		LogManager.removeMdc(TEIID_VDB);
@@ -150,31 +150,31 @@ public class DQPWorkContext implements Serializable {
     private boolean local = true;
 
     private boolean derived;
-    
+
     public DQPWorkContext() {
 	}
 
     public boolean useCallingThread() {
 		return useCallingThread;
 	}
-    
+
     public void setUseCallingThread(boolean useCallingThread) {
 		this.useCallingThread = useCallingThread;
 	}
-    
+
     public SessionMetadata getSession() {
 		return session;
 	}
-    
+
     public void setSession(SessionMetadata session) {
 		this.session = session;
 		this.policies = null;
 	}
-    
+
     public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
-    
+
     public SecurityHelper getSecurityHelper() {
 		return securityHelper;
 	}
@@ -185,11 +185,11 @@ public class DQPWorkContext implements Serializable {
     public String getUserName() {
 		return session.getUserName();
     }
-    
+
     public Subject getSubject() {
 		return session.getSubject();
     }
-    
+
     /**
      * @return
      */
@@ -211,11 +211,11 @@ public class DQPWorkContext implements Serializable {
 	public String getAppName() {
 		return session.getApplicationName();
 	}
-	
+
 	public RequestID getRequestID(long exeuctionId) {
 		return new RequestID(this.getSessionId(), exeuctionId);
 	}
-	
+
 	public SessionToken getSessionToken() {
 		return session.getSessionToken();
 	}
@@ -243,7 +243,7 @@ public class DQPWorkContext implements Serializable {
 	public String getClientHostname() {
 		return clientHostname;
 	}
-	
+
 	public String getSecurityDomain() {
 		return this.session.getSecurityDomain();
 	}
@@ -251,15 +251,15 @@ public class DQPWorkContext implements Serializable {
 	public Object getSecurityContext() {
 		return session.getSecurityContext();
 	}
-	
+
 	public void setSecurityContext(Object securityContext) {
 		session.setSecurityContext(securityContext);
-	}	
-	
+	}
+
 	public VDBMetaData getVDB() {
 		return session.getVdb();
 	}
-	
+
 	public <V> V runInContext(Callable<V> callable) throws Throwable {
 		FutureTask<V> task = new FutureTask<V>(callable);
 		runInContext(task);
@@ -269,19 +269,19 @@ public class DQPWorkContext implements Serializable {
 			throw e.getCause();
 		}
 	}
-	
+
 	public void runInContext(final Runnable runnable) {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
 		DQPWorkContext.setWorkContext(this);
 		Object previousSecurityContext = null;
 		if (securityHelper != null) {
-			previousSecurityContext = securityHelper.associateSecurityContext(this.getSecurityContext());			
+			previousSecurityContext = securityHelper.associateSecurityContext(this.getSecurityContext());
 		}
 		try {
 			runnable.run();
 		} finally {
 			if (securityHelper != null) {
-				securityHelper.associateSecurityContext(previousSecurityContext);			
+				securityHelper.associateSecurityContext(previousSecurityContext);
 			}
 			DQPWorkContext.setWorkContext(previous);
 		}
@@ -291,13 +291,13 @@ public class DQPWorkContext implements Serializable {
 		if (this.policies == null) {
 	    	this.policies = new HashMap<String, DataPolicy>();
 	    	Set<String> userRoles = getUserRoles();
-	    	
+
 	    	// get data roles from the VDB
 	    	VDBMetaData vdb = getVDB();
 	    	TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
 	    	Collection<? extends DataPolicy> allPolicies = null;
 	    	if (metadata == null) {
-	    		allPolicies = vdb.getDataPolicies(); 
+	    		allPolicies = vdb.getDataPolicies();
 	    	} else {
 	    		allPolicies = metadata.getPolicies().values();
 	    	}
@@ -309,17 +309,17 @@ public class DQPWorkContext implements Serializable {
 		}
         return this.policies;
     }
-	
+
 	public void setPolicies(HashMap<String, DataPolicy> policies) {
 		this.policies = policies;
 	}
-    
+
 	private boolean matchesPrincipal(Set<String> userRoles, DataPolicy policy) {
 		if (policy.isAnyAuthenticated() && this.getSubject() != null) {
 			return true;
 		}
 		return !Collections.disjoint(policy.getMappedRoleNames(), userRoles);
-	}    
+	}
 
 	private Set<String> getUserRoles() {
 		return getUserRoles(getSubject());
@@ -337,25 +337,25 @@ public class DQPWorkContext implements Serializable {
 				Group g = (Group)p;
 				Enumeration<? extends Principal> rolesPrinciples = g.members();
 				while(rolesPrinciples.hasMoreElements()) {
-					roles.add(rolesPrinciples.nextElement().getName());	
+					roles.add(rolesPrinciples.nextElement().getName());
 				}
 			}
 		}
 		return roles;
 	}
-	
+
 	public Version getClientVersion() {
 		return clientVersion;
 	}
-	
+
 	public void setClientVersion(Version clientVersion) {
 		this.clientVersion = clientVersion;
 	}
-	
+
 	public void setAdmin(boolean admin) {
 		this.admin = admin;
 	}
-	
+
 	public boolean isAdmin() {
 		return admin;
 	}
@@ -370,7 +370,7 @@ public class DQPWorkContext implements Serializable {
 	public void setConnectionProfile(LocalProfile connectionProfile) {
 		this.connectionProfile = connectionProfile;
 	}
-	
+
 	public LocalProfile getConnectionProfile() {
 	    if (connectionProfile == null) {
 	        try {
@@ -387,7 +387,7 @@ public class DQPWorkContext implements Serializable {
     public boolean isLocal() {
         return this.local;
     }
-	
+
     public DQPWorkContext local(boolean b) {
         this.local = b;
         return this;
@@ -396,7 +396,7 @@ public class DQPWorkContext implements Serializable {
     public void setDerived(boolean b) {
         this.derived = b;
     }
-    
+
     /**
      * If this currently represents a sub-request off of a parent session
      * @return

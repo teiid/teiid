@@ -83,9 +83,9 @@ public class MetadataFactory extends NamespaceContainer {
     private String nameFormat;
 
     private transient ClassLoader vdbClassLoader;
-    
+
     public MetadataFactory() {
-        
+
     }
 
 	public MetadataFactory(String vdbName, Object vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
@@ -247,7 +247,7 @@ public class MetadataFactory extends NamespaceContainer {
 		setUUID(column);
 		return column;
 	}
-	
+
     public Column renameColumn(String oldName, String name, ColumnSet<?> table) {
         if (this.autoCorrectColumnNames) {
             name = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
@@ -261,12 +261,12 @@ public class MetadataFactory extends NamespaceContainer {
         if (column == null) {
             throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, table.getFullName(), oldName));
         }
-        table.removeColumn(column);        
+        table.removeColumn(column);
         column.setName(name);
         table.addColumn(column);
         return column;
     }
-    
+
     public ProcedureParameter renameParameter(String oldName, String name, Procedure procedure) {
         if (this.autoCorrectColumnNames) {
             name = name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
@@ -431,7 +431,7 @@ public class MetadataFactory extends NamespaceContainer {
 	public ForeignKey addForeignKey(String name, List<String> columnNames, String referenceTable, Table table) {
 	    return addForeignKey(name, columnNames, null, referenceTable, table);
 	}
-	
+
 	@Deprecated
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, String referenceTable, Table table) {
 		return addForeignKey(name, columnNames, null, referenceTable, table);
@@ -460,7 +460,7 @@ public class MetadataFactory extends NamespaceContainer {
         table.getForeignKeys().add(foreignKey);
         return foreignKey;
 	}
-	
+
 	@Deprecated
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) {
 	    return addForeignKey(name, columnNames, referencedColumnNames, referenceTable, table);
@@ -479,7 +479,7 @@ public class MetadataFactory extends NamespaceContainer {
             name = String.format(nameFormat, name);
         }
 		if (renameAllDuplicates) {
-		    name = checkForDuplicate(name, (s)->this.schema.getProcedure(s) != null, "Procedure"); //$NON-NLS-1$   
+		    name = checkForDuplicate(name, (s)->this.schema.getProcedure(s) != null, "Procedure"); //$NON-NLS-1$
 		}
 		procedure.setName(name);
 		setUUID(procedure);
@@ -500,7 +500,7 @@ public class MetadataFactory extends NamespaceContainer {
 	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) {
 		ProcedureParameter param = new ProcedureParameter();
 		if (renameAllDuplicates) {
-            name = checkForDuplicate(name, (s)->procedure.getParameterByName(s) != null, "Parameter"); //$NON-NLS-1$   
+            name = checkForDuplicate(name, (s)->procedure.getParameterByName(s) != null, "Parameter"); //$NON-NLS-1$
         }
 		param.setName(name);
 		setUUID(param);
@@ -560,10 +560,10 @@ public class MetadataFactory extends NamespaceContainer {
 	}
 
 	/**
-	 * Add a function with the given name to the model.  
+	 * Add a function with the given name to the model.
 	 * @param name
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public FunctionMethod addFunction(String name, String returnType, String... paramTypes) {
 		FunctionMethod function = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
@@ -583,7 +583,7 @@ public class MetadataFactory extends NamespaceContainer {
 			setDataType(param.getRuntimeType(), param, dataTypes, param.getNullType() == NullType.Nullable);
 		}
 	}
-	
+
 	/**
 	 * Adds a non-pushdown function based upon the given {@link Method}.
 	 * @param name
@@ -761,10 +761,10 @@ public class MetadataFactory extends NamespaceContainer {
         HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
         for (FunctionMethod functionMethod : getSchema().getFunctions().values()) {
             if (!functions.add(functionMethod)) {
-                throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, 
+                throw new DuplicateRecordException(DataPlugin.Event.TEIID60015,
                         DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
             }
-        }		
+        }
 	}
 
 	public void setParser(Parser parser) {
@@ -834,7 +834,7 @@ public class MetadataFactory extends NamespaceContainer {
         Grant.Permission pmd = new Grant.Permission();
         pmd.setResourceName(this.schema.getFullName());
         pmd.setResourceType(ResourceType.SCHEMA);
-		
+
 		pmd.setAllowAlter(allowAlter);
 		pmd.setAllowInsert(allowCreate);
 		pmd.setAllowDelete(allowDelete);
@@ -859,7 +859,7 @@ public class MetadataFactory extends NamespaceContainer {
 			String condition, String mask, Integer order) {
         Grant.Permission pmd = new Grant.Permission();
         pmd.setResourceType(ResourceType.COLUMN);
-	    
+
         String resourceName = null;
     	if (resource.getParent() != null && resource.getParent().getParent() instanceof Procedure) {
     		resourceName = resource.getParent().getParent().getFullName() + '.' + resource.getName();
@@ -898,53 +898,53 @@ public class MetadataFactory extends NamespaceContainer {
 		setUUID(functionMethod.getOutputParameter());
 		this.schema.addFunction(functionMethod);
 	}
-	
+
 	@TranslatorProperty (display="Auto-correct Column Names", category=PropertyType.IMPORT, description="If true replace the . character with _ in the Teiid column name, otherwise an exception will be raised.")
 	public boolean isAutoCorrectColumnNames() {
         return autoCorrectColumnNames;
     }
-	
+
 	@TranslatorProperty (display="Rename All Duplicate Names", category=PropertyType.IMPORT, description="Provide a unique Teiid name for all duplicate names (typically due to Teiid's case insensitivity).")
 	public boolean isRenameAllDuplicates() {
         return renameAllDuplicates;
     }
-	
+
 	@TranslatorProperty (display="Rename Duplicate Columns", category=PropertyType.IMPORT, description="Provide a unique Teiid name for duplicate column names (typically due to Teiid's case insensitivity).")
 	public boolean isRenameDuplicateColumns() {
         return renameDuplicateColumns;
     }
-	
+
 	@TranslatorProperty (display="Rename Duplicate Tables", category=PropertyType.IMPORT, description="Provide a unique Teiid name for duplicate table names (typically due to Teiid's case insensitivity).")
 	public boolean isRenameDuplicateTables() {
         return renameDuplicateTables;
     }
-	
+
 	public void setRenameAllDuplicates(boolean renameAllDuplicates) {
         this.renameAllDuplicates = renameAllDuplicates;
     }
-	
+
 	public void setRenameDuplicateColumns(boolean renameDuplicateColumns) {
         this.renameDuplicateColumns = renameDuplicateColumns;
     }
-	
+
 	public void setRenameDuplicateTables(boolean renameDuplicateTables) {
         this.renameDuplicateTables = renameDuplicateTables;
     }
-	
+
 	@TranslatorProperty (display="Name Format", category=PropertyType.IMPORT, description="The Java String Format to manipulate table and procedure names.")
 	public String getNameFormat() {
         return nameFormat;
     }
-	
+
 	public void setNameFormat(String nameFormat) {
         this.nameFormat = nameFormat;
     }
-	
+
 	@TranslatorProperty (display="Import Pushdown Functions", category=PropertyType.IMPORT, description="Expose translator pushdown functions on the source model, so that the functions are known to design environments.")
 	public boolean isImportPushdownFunctions() {
         return importPushdownFunctions;
     }
-	
+
 	public void setImportPushdownFunctions(boolean importPushdownFunctions) {
         this.importPushdownFunctions = importPushdownFunctions;
     }
@@ -952,7 +952,7 @@ public class MetadataFactory extends NamespaceContainer {
     public void setVDBClassLoader(ClassLoader classLoader) {
         this.vdbClassLoader = classLoader;
     }
-    
+
     public ClassLoader getVDBClassLoader() {
         return vdbClassLoader;
     }

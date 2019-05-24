@@ -38,7 +38,7 @@ import org.teiid.translator.simpledb.SimpleDBSQLVisitor;
 @SuppressWarnings("nls")
 public class TestSimpleDBSQLVisitor {
 
-    @Test 
+    @Test
     public void testSelect() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -54,8 +54,8 @@ public class TestSimpleDBSQLVisitor {
         assertEquals("SELECT `attribute` FROM `item`", visitor.toString());
         assertEquals(2, visitor.getProjectedColumns().size());
     }
-    
-    @Test 
+
+    @Test
     public void testSelectCountStar() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -66,8 +66,8 @@ public class TestSimpleDBSQLVisitor {
         assertEquals("SELECT COUNT(*) FROM `item`", visitor.toString());
         assertEquals(Arrays.asList("Count"), visitor.getProjectedColumns());
     }
-    
-    @Test 
+
+    @Test
     public void testNE() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -76,9 +76,9 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT itemName() FROM `item` WHERE itemName() != 'name'", visitor.toString());
-    }    
-    
-    @Test 
+    }
+
+    @Test
     public void testComparisionWithOR() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -87,10 +87,10 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT itemName() FROM `item` WHERE itemName() > 'name' AND `attribute` < 'name'", visitor.toString());
-        
-    }    
-    
-    @Test(expected=TranslatorException.class) 
+
+    }
+
+    @Test(expected=TranslatorException.class)
     public void testOrderBy() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -100,8 +100,8 @@ public class TestSimpleDBSQLVisitor {
         visitor.append(c);
         visitor.checkExceptions();
         assertEquals("SELECT attribute FROM `item` ORDER BY itemName()", visitor.toString());
-    } 
-    
+    }
+
     @Test
     public void testOrderByAllow() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" string, attribute string);", "x", "y");
@@ -112,9 +112,9 @@ public class TestSimpleDBSQLVisitor {
         visitor.append(c);
         visitor.checkExceptions();
         assertEquals("SELECT `attribute` FROM `item` WHERE itemName() = 'name' ORDER BY itemName()", visitor.toString());
-    }     
-    
-    @Test 
+    }
+
+    @Test
     public void testIN() throws Exception {
         TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table item (\"itemName()\" integer, attribute string);", "x", "y");
         TranslationUtility tu = new TranslationUtility(tm);
@@ -124,12 +124,12 @@ public class TestSimpleDBSQLVisitor {
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE itemName() IN ('1', '2')", visitor.toString());
     }
-    
-    @Test 
+
+    @Test
     public void testEvery() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -138,13 +138,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) = '1'", visitor.toString());
-    } 
-    
-    @Test 
+    }
+
+    @Test
     public void testEveryLike() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -153,13 +153,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) LIKE '1%'", visitor.toString());
-    }   
-    
-    @Test 
+    }
+
+    @Test
     public void testEveryNotNull() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -168,13 +168,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) IS NOT NULL", visitor.toString());
-    }     
-    
-    @Test 
+    }
+
+    @Test
     public void testEvery2() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -183,13 +183,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE SIMPLEDB.EVERY(`attribute`) IN ('2', '1')", visitor.toString());
-    }    
-    
-    @Test 
+    }
+
+    @Test
     public void testIntersection() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -198,13 +198,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' INTERSECTION `attribute` = '2'", visitor.toString());
-    }    
-    
-    @Test 
+    }
+
+    @Test
     public void testIntersection2() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -213,13 +213,13 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' INTERSECTION `attribute` = '2' INTERSECTION `attribute` = '3'", visitor.toString());
-    }    
-    
-    @Test 
+    }
+
+    @Test
     public void testArrayCompare() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, attribute string[]);", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -229,12 +229,12 @@ public class TestSimpleDBSQLVisitor {
         visitor.append(c);
         assertEquals("SELECT `attribute` FROM `item` WHERE `attribute` = '1' OR `attribute` = '2'", visitor.toString());
     }
-    
-    @Test 
+
+    @Test
     public void testNameInSource() throws Exception {
         SimpleDBExecutionFactory translator = new SimpleDBExecutionFactory();
         translator.start();
-        
+
         MetadataFactory mf = TestDDLParser.helpParse("create foreign table item (\"itemName()\" integer, \"or\" string options (nameinsource 'or')) options (nameinsource 'item-one');", "y");
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "x", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
         TranslationUtility tu = new TranslationUtility(metadata);
@@ -243,5 +243,5 @@ public class TestSimpleDBSQLVisitor {
         SimpleDBSQLVisitor visitor = new SimpleDBSQLVisitor();
         visitor.append(c);
         assertEquals("SELECT `or` FROM `item-one`", visitor.toString());
-    } 
+    }
 }

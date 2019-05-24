@@ -44,7 +44,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	private PrintWriter log;
 	private BasicResourceAdapter ra;
 	private BasicConnectionFactory cf;
-	
+
 	@Override
 	public abstract BasicConnectionFactory createConnectionFactory() throws ResourceException;
 
@@ -58,7 +58,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	public ManagedConnection createManagedConnection(Subject arg0, ConnectionRequestInfo arg1) throws ResourceException {
 		Assertion.isNotNull(this.cf);
 		ConnectionContext.setSubject(arg0);
-		
+
 		BasicConnection connection = null;
 		if (arg1 instanceof ConnectionRequestInfoWrapper) {
 			connection = this.cf.getConnection(((ConnectionRequestInfoWrapper)arg1).cs);
@@ -94,7 +94,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	public void setResourceAdapter(ResourceAdapter arg0) throws ResourceException {
 		this.ra = (BasicResourceAdapter)arg0;
 	}
-	
+
     public static <T> T getInstance(Class<T> expectedType, String className, Collection ctorObjs, Class defaultClass) throws ResourceException {
     	try {
 	    	if (className == null) {
@@ -110,7 +110,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 			throw new ResourceException(e);
 		} catch(InstantiationException e) {
 			throw new ResourceException(e);
-		}    	
+		}
     }
 
 	@Override
@@ -126,9 +126,9 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 		}
 		return result;
 	}
-	
+
 	protected static boolean checkEquals(Object left, Object right) {
 		return EquivalenceUtil.areEqual(left, right);
 	}
-	
+
 }

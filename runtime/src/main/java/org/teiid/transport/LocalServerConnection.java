@@ -62,7 +62,7 @@ import org.teiid.vdb.runtime.VDBKey;
 
 public class LocalServerConnection implements ServerConnection {
 	private static final String TEIID_RUNTIME_CONTEXT = "teiid/queryengine"; //$NON-NLS-1$
-	
+
 	private LogonResult result;
 	private boolean shutdown;
 	private ClientServiceRegistry csr;
@@ -73,23 +73,23 @@ public class LocalServerConnection implements ServerConnection {
     private static String serverVersion = new Handshake().getVersion();
     private AutoConnectListener autoConnectListener = null;
     private volatile boolean reconnect;
-    
+
     private Method cancelMethod;
-    
+
     public static String jndiNameForRuntime(String embeddedTransportName) {
     	return TEIID_RUNTIME_CONTEXT+"/"+embeddedTransportName; //$NON-NLS-1$
     }
-    
+
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry(connectionProperties.getProperty(LocalProfile.TRANSPORT_NAME, "local")); //$NON-NLS-1$
-		
+
 		DQPWorkContext context = (DQPWorkContext)connectionProperties.get(LocalProfile.DQP_WORK_CONTEXT);
 		if (context == null) {
 			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
 			String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
 			VDBKey key = new VDBKey(vdbName, vdbVersion);
-			
+
 			if (!key.isAtMost()) {
 				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, TeiidURL.CONNECTION.LOGIN_TIMEOUT, -1);
 				if (waitForLoad == -1) {
@@ -101,7 +101,7 @@ public class LocalServerConnection implements ServerConnection {
 					this.csr.waitForFinished(key, waitForLoad);
 				}
 			}
-			
+
 			workContext.setSecurityHelper(csr.getSecurityHelper());
 			workContext.setUseCallingThread(useCallingThread);
 			authenticate();
@@ -112,7 +112,7 @@ public class LocalServerConnection implements ServerConnection {
 			this.result = new LogonResult(context.getSessionToken(), context.getVdbName(), null);
 			passthrough = true;
 		}
-		
+
 		try {
 			cancelMethod = DQP.class.getMethod("cancelRequest", new Class[] {long.class}); //$NON-NLS-1$
 		} catch (SecurityException e) {
@@ -135,20 +135,20 @@ public class LocalServerConnection implements ServerConnection {
 			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
 		}
 	}
-	
+
 	public synchronized void authenticate() throws ConnectionException, CommunicationException {
 		Object previousSecurityContext = workContext.getSecurityHelper().associateSecurityContext(workContext.getSession().getSecurityContext());
 		try {
-			logoff(); 
+			logoff();
 		} finally {
 			workContext.getSecurityHelper().associateSecurityContext(previousSecurityContext);
 		}
 		workContext.setSecurityContext(previousSecurityContext);
         try {
         	this.result = this.getService(ILogon.class).logon(this.connectionProperties);
-        	
+
         	AuthenticationType type = (AuthenticationType) this.result.getProperty(ILogon.AUTH_TYPE);
-            
+
             if (type != null) {
                 //server has issued an additional challenge
                 if (type == AuthenticationType.GSS) {
@@ -164,10 +164,10 @@ public class LocalServerConnection implements ServerConnection {
                     throw new LogonException(JDBCPlugin.Event.TEIID20034, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20034, type));
                 }
             }
-        	
+
         } catch (LogonException e) {
             //TODO: above we make a special check for gss if not passthrough, we could do the same in general here or in sessionserviceimpl
-            
+
             // Propagate the original message as it contains the message we want
             // to give to the user
              throw new ConnectionException(e);
@@ -176,14 +176,14 @@ public class LocalServerConnection implements ServerConnection {
         		throw (CommunicationException)e.getCause();
         	}
              throw new CommunicationException(RuntimePlugin.Event.TEIID40069, e);
-        } 	
-	}	
-	
+        }
+	}
+
 	public <T> T getService(final Class<T> iface) {
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
 			boolean logon = iface.equals(ILogon.class);
-			
+
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (shutdown) {
 					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40074)));
@@ -193,7 +193,7 @@ public class LocalServerConnection implements ServerConnection {
 				        workContext.setDerived(true);
 				    }
 					// check to make sure the current security context same as logged one
-					if (!logon && (reconnect 
+					if (!logon && (reconnect
 					        || (passthrough
 					                && !arg1.equals(cancelMethod) // -- it's ok to use another thread to cancel
 					                && !workContext.getSession().isClosed()
@@ -205,11 +205,11 @@ public class LocalServerConnection implements ServerConnection {
 						reconnect = false;
 						authenticate();
 					}
-					
+
 					final T service = csr.getClientService(iface);
 					return workContext.runInContext(new Callable<Object>() {
 						public Object call() throws Exception {
-							return arg1.invoke(service, arg2);						
+							return arg1.invoke(service, arg2);
 						}
 					});
 				} catch (InvocationTargetException e) {
@@ -222,10 +222,10 @@ public class LocalServerConnection implements ServerConnection {
 			}
 		}));
 	}
-	
+
 	public static boolean sameSubject(DQPWorkContext workContext) {
 		Object currentContext = workContext.getSecurityHelper().getSecurityContext(workContext.getSecurityDomain());
-		
+
 		Subject currentUser = null;
 		if (currentContext != null) {
 			currentUser = workContext.getSecurityHelper().getSubjectInContext(currentContext);
@@ -241,10 +241,10 @@ public class LocalServerConnection implements ServerConnection {
 		if (currentUser == null && workContext.getSubject() == null) {
             return true; //unauthenticated
         }
-		
+
 		return false;
 	}
-	
+
 	@Override
 	public boolean isOpen(long msToTest) {
 		if (shutdown) {
@@ -265,12 +265,12 @@ public class LocalServerConnection implements ServerConnection {
 	    }
 		shutdown(true);
 	}
-	
+
 	private void shutdown(boolean logoff) {
 		if (shutdown) {
 			return;
 		}
-		
+
 		if (logoff) {
 			logoff();
 		}
@@ -300,47 +300,47 @@ public class LocalServerConnection implements ServerConnection {
 	public boolean isSameInstance(ServerConnection conn) throws CommunicationException {
 		return (conn instanceof LocalServerConnection);
 	}
-	
+
 	@Override
 	public boolean supportsContinuous() {
 		return true;
 	}
-	
+
 	public DQPWorkContext getWorkContext() {
 		return workContext;
 	}
-	
+
 	@Override
 	public boolean isLocal() {
 		return true;
 	}
-	
+
 	public void addListener(VDBLifeCycleListener listener) {
 		VDBRepository repo = csr.getVDBRepository();
 		if (repo != null) {
 			repo.addListener(listener);
 		}
 	}
-	
+
 	public void removeListener(VDBLifeCycleListener listener) {
 		VDBRepository repo = csr.getVDBRepository();
 		if (repo != null) {
 			repo.removeListener(listener);
 		}
 	}
-	
+
 	@Override
 	public String getServerVersion() {
 		return serverVersion;
 	}
-	
+
 	private class AutoConnectListener implements VDBLifeCycleListener {
         @Override
         public void finishedDeployment(String name, CompositeVDB cvdb) {
             VDBMetaData vdb = cvdb.getVDB();
             if (workContext.getSession().getVdb().getName().equals(vdb.getName())
                     && workContext.getSession().getVdb().getVersion().equals(vdb.getVersion())) {
-                reconnect = true;   
+                reconnect = true;
             }
         }
 	}

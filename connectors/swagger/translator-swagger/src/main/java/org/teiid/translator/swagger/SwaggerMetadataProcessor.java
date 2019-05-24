@@ -73,55 +73,55 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     public static final String KEY_NAME = "key_name";
     public static final String KEY_VALUE = "key_value";
 
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="URI", 
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="URI",
             description="Used to define endpoint of the procedure", required=true)
     public final static String URI = RestMetadataExtension.URI;
-    
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method", 
-            description="Http method used to execute the procedure", required=true, 
-            allowed="GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH")    
+
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method",
+            description="Http method used to execute the procedure", required=true,
+            allowed="GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH")
     public final static String METHOD = RestMetadataExtension.METHOD;
 
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Scheme", 
-            description="Scheme to use http, https etc.", 
-            allowed="HTTP,HTTPS")    
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Scheme",
+            description="Scheme to use http, https etc.",
+            allowed="HTTP,HTTPS")
     public final static String SCHEME = RestMetadataExtension.SCHEME;
-    
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Produces", 
-            description="Used to define content type produced by this procedure, default JSON assumed")    
+
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Produces",
+            description="Used to define content type produced by this procedure, default JSON assumed")
     public final static String PRODUCES = RestMetadataExtension.PRODUCES;
-    
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Consumes", 
-            description="Used to define content type consumed by this procedure with body type parameters. Default JSON assumed")        
+
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Consumes",
+            description="Used to define content type consumed by this procedure with body type parameters. Default JSON assumed")
     public final static String CONSUMES = RestMetadataExtension.CONSUMES;
 
-    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Charset", 
-            description="Encoding of the return data")            
+    @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Charset",
+            description="Encoding of the return data")
     public final static String CHARSET = RestMetadataExtension.CHARSET;
-    
-    @ExtensionMetadataProperty(applicable=ProcedureParameter.class, datatype=String.class, display="Parameter Type", 
-            description="Parameter type, as to how the parameter is being provided to the procedure", required=true, 
-            allowed="PATH,QUERY,FORM,FORMDATA,BODY,HEADER")        
-    public final static String PARAMETER_TYPE = RestMetadataExtension.PARAMETER_TYPE;  
-    
-    @ExtensionMetadataProperty(applicable=ProcedureParameter.class, datatype=String.class, display="Collection Format", 
-            description="Determines the format of the array if type array is used, like CSV,TSV etc.", 
-            allowed="CSV,SSV,TSV,PIPES,MULTI")        
-    public final static String COLLECION_FORMAT = RestMetadataExtension.COLLECION_FORMAT;    
-    
-    
-    private String swaggerFilePath;    
+
+    @ExtensionMetadataProperty(applicable=ProcedureParameter.class, datatype=String.class, display="Parameter Type",
+            description="Parameter type, as to how the parameter is being provided to the procedure", required=true,
+            allowed="PATH,QUERY,FORM,FORMDATA,BODY,HEADER")
+    public final static String PARAMETER_TYPE = RestMetadataExtension.PARAMETER_TYPE;
+
+    @ExtensionMetadataProperty(applicable=ProcedureParameter.class, datatype=String.class, display="Collection Format",
+            description="Determines the format of the array if type array is used, like CSV,TSV etc.",
+            allowed="CSV,SSV,TSV,PIPES,MULTI")
+    public final static String COLLECION_FORMAT = RestMetadataExtension.COLLECION_FORMAT;
+
+
+    private String swaggerFilePath;
     private boolean useDefaultHost = true;
-    private String preferredScheme; 
+    private String preferredScheme;
     private String preferredProduces = "application/json";
     private String preferredConsumes = "application/json";
     private SwaggerExecutionFactory ef;
-    
+
     public SwaggerMetadataProcessor(SwaggerExecutionFactory ef) {
         this.ef = ef;
     }
-    
-    @TranslatorProperty(display="Swagger metadata file path", category=PropertyType.IMPORT, 
+
+    @TranslatorProperty(display="Swagger metadata file path", category=PropertyType.IMPORT,
             description="Swagger metadata file path.")
 	public String getSwaggerFilePath() {
 		return swaggerFilePath;
@@ -129,50 +129,50 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 
 	public void setSwaggerFilePath(String swaggerFilePath) {
 		this.swaggerFilePath = swaggerFilePath;
-	}    
-    
-    @TranslatorProperty(display="Use Host from Swagger File", category=PropertyType.IMPORT, 
-            description="Use default host specified in the Swagger file; Defaults to true") 
+	}
+
+    @TranslatorProperty(display="Use Host from Swagger File", category=PropertyType.IMPORT,
+            description="Use default host specified in the Swagger file; Defaults to true")
     public boolean isUseDefaultHost() {
         return this.useDefaultHost;
     }
-    
+
     public void setUseDefaultHost(boolean useDefault) {
         this.useDefaultHost = useDefault;
     }
 
-    @TranslatorProperty(display="Preferred Scheme", category=PropertyType.IMPORT, 
+    @TranslatorProperty(display="Preferred Scheme", category=PropertyType.IMPORT,
             description="Preferred Scheme to use when Swagger file supports multiple invocation schemes like http, https etc.")
     public String getPreferredScheme() {
         return this.preferredScheme;
     }
-    
+
     public void setPreferredScheme(String scheme) {
         this.preferredScheme = scheme;
     }
-    
-    @TranslatorProperty(display="Preferred Accept Header", category=PropertyType.IMPORT, 
+
+    @TranslatorProperty(display="Preferred Accept Header", category=PropertyType.IMPORT,
             description="Preferred Accept MIME type header, this should be one of the Swagger "
                     + "'produces' types; default is application/json")
     public String getPreferredProduces() {
         return this.preferredProduces;
     }
-    
+
     public void setPreferredProduces(String accept) {
         this.preferredProduces = accept;
-    }    
-    
-    @TranslatorProperty(display="Preferred Content-type Header", category=PropertyType.IMPORT, 
+    }
+
+    @TranslatorProperty(display="Preferred Content-type Header", category=PropertyType.IMPORT,
             description="Preferred Content-type header, this should be one of the Swagger 'consume' "
                     + "types, default is application/json")
     public String getPreferredConsumes() {
         return this.preferredConsumes;
     }
-    
+
     public void setPreferredConsumes(String type) {
         this.preferredConsumes = type;
     }
-    
+
     @Override
     public void process(MetadataFactory mf, WSConnection connection) throws TranslatorException {
         Swagger swagger = getSchema(connection);
@@ -198,23 +198,23 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 scheme = "https"; //$NON-NLS-1$
             }
         }
-        
+
         String httpHost = null;
-        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) { 
+        if(swagger.getHost() != null && !swagger.getHost().trim().isEmpty()) {
             httpHost = scheme + "://" + swagger.getHost();//$NON-NLS-1$
         }
-        
+
         if (this.useDefaultHost && httpHost != null) {
             httpHost = httpHost + basePath;
         }
-        
+
         for(Entry<String, Path> entry : swagger.getPaths().entrySet()) {
             addProcedure(mf, swagger,
                     ((httpHost != null) ? httpHost : basePath), entry.getKey(),
                     entry.getValue());
         }
     }
-    
+
     private String buildURL(String basePath, String endpoint) {
         if (endpoint.startsWith("/")) {
             if (basePath.endsWith("/")) {
@@ -228,7 +228,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }
         return basePath+"/"+endpoint;
     }
-    
+
     private String getSchemes(Operation op) {
         StringBuilder sb = new StringBuilder();
         for (Scheme s:op.getSchemes()) {
@@ -239,14 +239,14 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }
         return sb.toString();
     }
-    
+
     private static <T> T nvl(T value, T ifNull) {
         if (value == null) {
             return ifNull;
         }
         return value;
     }
-    
+
     //to maintain a stable order
     public static Map<HttpMethod, Operation> getOperationMap(Path operations) {
         Map<HttpMethod, Operation> result = new LinkedHashMap<HttpMethod, Operation>();
@@ -276,13 +276,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         return result;
     }
 
-    
+
     private void addProcedure(MetadataFactory mf, Swagger swagger,
             String basePath, String endpoint, Path operations)
             throws TranslatorException {
-        
+
         for(Entry<HttpMethod, Operation> entry : getOperationMap(operations).entrySet()){
-            
+
             Operation operation = entry.getValue();
             String produces = getTypes(nvl(operation.getProduces(), swagger.getProduces()), getPreferredProduces());
             String consumes = getTypes(nvl(operation.getConsumes(), swagger.getConsumes()), getPreferredConsumes());
@@ -296,10 +296,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 name = endpoint.substring(start);
                 name = name.replaceAll("\\{([^}]*)\\}", "$1"); //$NON-NLS-1$ //$NON-NLS-2$
                 if (operations.getOperationMap().entrySet().size() > 1) {
-                    name = name + "_" + entry.getKey().name(); //$NON-NLS-1$ 
+                    name = name + "_" + entry.getKey().name(); //$NON-NLS-1$
                 }
             }
-            
+
             Procedure procedure = mf.addProcedure(name);
             procedure.setVirtual(false);
             procedure.setProperty(METHOD, entry.getKey().name());
@@ -311,11 +311,11 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             procedure.setProperty(CONSUMES, consumes);
             procedure.setAnnotation(getOperationSummary(operation));
             for (Entry<String, Object> extension:operation.getVendorExtensions().entrySet()) {
-                procedure.setProperty(extension.getKey(), extension.getValue().toString());    
+                procedure.setProperty(extension.getKey(), extension.getValue().toString());
             }
-            
+
             addProcedureParameters(mf, swagger, procedure, operation);
-            
+
             boolean returnAdded = false;
             Map<String, Response> respMap = operation.getResponses();
             for (String code : respMap.keySet()) {
@@ -330,12 +330,12 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     break;
                 }
             }
-            
+
             if (!returnAdded && respMap.get("default") != null) {
                 Response resp = respMap.get("default");
-                returnAdded = buildResponse(mf, swagger, procedure, resp);                
+                returnAdded = buildResponse(mf, swagger, procedure, resp);
             }
-            
+
         }
     }
 
@@ -349,10 +349,10 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 Column c = mf.addProcedureResultSetColumn(name, type, procedure);
                 if (!name.equalsIgnoreCase(nameInSource)) {
                     c.setNameInSource(nameInSource);
-                }                
+                }
             }
         };
-        
+
         Property schema = resp.getSchema();
         if (schema != null) {
             if (isSimple(schema)) {
@@ -360,7 +360,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 if (schema instanceof ArrayProperty) {
                     schema = ((ArrayProperty)schema).getItems();
                     array = true;
-                }                
+                }
                 if(resp.getHeaders() == null|| resp.getHeaders().isEmpty()) {
                     String type = SwaggerTypeManager.teiidType(schema.getType(), schema.getFormat(), array);
                     mf.addProcedureParameter("return", type, ProcedureParameter.Type.ReturnValue, procedure);
@@ -373,17 +373,17 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 // since the return is always a collection unwrap the array without any issues.
                 if (schema instanceof ArrayProperty) {
                     schema = ((ArrayProperty)schema).getItems();
-                } 
-                
+                }
+
                 if (schema instanceof ObjectProperty) {
-                    walkProperties(swagger, ((ObjectProperty)schema).getProperties(), 
+                    walkProperties(swagger, ((ObjectProperty)schema).getProperties(),
                             null,
                             null,
                             pa);
                 } else if (schema instanceof RefProperty) {
                     String modelName = ((RefProperty)schema).getSimpleRef();
                     Model model = swagger.getDefinitions().get(modelName);
-                    walkProperties(swagger, model.getProperties(), 
+                    walkProperties(swagger, model.getProperties(),
                             null,
                             null,
                             pa);
@@ -399,14 +399,14 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 }
             }
         }
-        
+
         Map<String, Property> headers = resp.getHeaders();
         if (headers != null && !headers.isEmpty()) {
             walkProperties(swagger, headers, null, null, pa);
         }
         return procedure.getResultSet() != null;
     }
-    
+
     private boolean isSimple(Property property) {
         if (property instanceof ArrayProperty) {
             ArrayProperty ap = (ArrayProperty)property;
@@ -426,7 +426,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         }
         return true;
     }
-    
+
     interface PropertyAction {
         void execute(String name, String nameInSource,
                     Property property, boolean array);
@@ -441,7 +441,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private void walkProperties(final Swagger swagger, Set<Property> parents,
             final Map<String,Property> properties, final String namePrefix,
             final String nisPrefix, final PropertyAction pa) {
-        
+
         if (properties == null) {
             return;
         }
@@ -449,7 +449,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         final PropertyVisitor visitor = new PropertyVisitor() {
             @Override
             public void visit(String name, Property property) {
-                pa.execute(fqn(namePrefix,name), nis(nisPrefix, name, false), property, false);                
+                pa.execute(fqn(namePrefix,name), nis(nisPrefix, name, false), property, false);
             }
             @Override
             public void visit(String name, ArrayProperty property) {
@@ -476,9 +476,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                                 pa);
                     } else {
                         walkProperties(swagger, parents,
-                                properties, fqn(namePrefix, name), 
+                                properties, fqn(namePrefix, name),
                                 nis(nisPrefix, name, true), pa);
-                    }                    
+                    }
                     parents.remove(property);
                 }
             }
@@ -506,9 +506,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         model.getProperties(), fqn(namePrefix, name),
                         nis(nisPrefix, name, false), pa);
                 parents.remove(property);
-            }           
+            }
         };
-        
+
         for (Entry<String, Property> p:properties.entrySet()) {
             if (parents.contains(p.getValue())) {
                 //we don't yet handle recursive properties
@@ -518,14 +518,14 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             visitor.accept(p.getKey(), p.getValue());
         }
     }
-    
+
     private String fqn(String prefix, String name) {
         if (name == null) {
             return prefix;
         }
         return prefix == null?name:prefix+"_"+name;
     }
-    
+
     private String nis(String prefix, String name, boolean array) {
         String nis = null;
         if (name == null) {
@@ -537,8 +537,8 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
             nis = nis+ARRAY_SUFFIX;
         }
         return nis;
-    }    
-    
+    }
+
     private static String getPropertyType(Property property,
             boolean array) {
         String type = DataTypeManager.DefaultDataTypes.STRING;
@@ -553,7 +553,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     private void addProcedureParameters(final MetadataFactory mf, final Swagger swagger,
             final Procedure procedure, final Operation operation) throws TranslatorException {
         for(final Parameter parameter : operation.getParameters()) {
-            
+
             if (parameter instanceof BodyParameter) {
                 PropertyAction pa = new PropertyAction() {
                     @Override
@@ -596,13 +596,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                         p.setAnnotation(parameter.getDescription());
                     }
                 }
-            } else {            
+            } else {
                 String name = parameter.getName();
                 ProcedureParameter pp = null;
                 String type = null;
                 Object defaultValue = null;
                 String collectionFormat = null;
-                
+
                 if(parameter instanceof AbstractSerializableParameter) {
                     AbstractSerializableParameter p  = (AbstractSerializableParameter) parameter;
                     type = p.getType();
@@ -615,17 +615,17 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                     collectionFormat = p.getCollectionFormat();
                 } else {
                     throw new MetadataException("Unknown property type" + parameter.getClass().getName()); //$NON-NLS-1$
-                } 
-                
+                }
+
                 pp = mf.addProcedureParameter(name, type, Type.In, procedure);
                 pp.setProperty(PARAMETER_TYPE, parameter.getIn());
-                
+
                 boolean required = parameter.getRequired();
                 if (!required) {
                     pp.setProperty(BaseColumn.DEFAULT_HANDLING, BaseColumn.OMIT_DEFAULT);
                 }
                 pp.setNullType(NullType.No_Nulls);
-                
+
                 pp.setAnnotation(parameter.getDescription());
                 if (defaultValue != null) {
                     pp.setDefaultValue(defaultValue.toString());
@@ -635,8 +635,8 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
                 }
                 // extended properties
                 for (Entry<String, Object> extension:parameter.getVendorExtensions().entrySet()) {
-                    pp.setProperty(extension.getKey(), extension.getValue().toString());    
-                }  
+                    pp.setProperty(extension.getKey(), extension.getValue().toString());
+                }
             }
         }
     }
@@ -645,13 +645,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         String description = operation.getDescription();
         if(description == null || description.equals("")) { //$NON-NLS-1$
             description = operation.getSummary();
-        }     
+        }
         return description;
     }
 
     private String getTypes(List<String> types, String preferred) {
         String selected = null;
-        if(types != null && !types.isEmpty()) {            
+        if(types != null && !types.isEmpty()) {
             for(String type : types){
                 if (preferred != null) {
                     if (preferred.equalsIgnoreCase(type)) {
@@ -668,21 +668,21 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 
     protected Swagger getSchema(WSConnection conn) throws TranslatorException {
     	Swagger swagger = null;
-    	
+
         try {
         	String swaggerFile = getSwaggerFilePath();
-        			
-        	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {        		 
+
+        	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {
                 File f = new File(swaggerFile);
 
                 if(!f.exists() || !f.isFile()) {
 	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
 	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
                 }
-                	
+
                 SwaggerParser parser = new SwaggerParser();
                 swagger =  parser.read(f.getAbsolutePath(), null, true);
-        	} else {        	
+        	} else {
 	            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
 	            Map<String, List<String>> headers = new HashMap<String, List<String>>();
 	            BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "swagger.json", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
@@ -691,7 +691,7 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
 	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28015,call.getResponseCode()));
 	            }
-	            
+
 	            Blob out = (Blob)call.getOutputParameterValues().get(0);
 	            ObjectMapper objectMapper = new ObjectMapper();
 	            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
@@ -699,9 +699,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
         	}
         } catch (Exception e) {
             throw new TranslatorException(SwaggerPlugin.Event.TEIID28016, e,
-                    SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28016, e));            
+                    SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28016, e));
         }
-        
+
         return swagger;
     }
 }

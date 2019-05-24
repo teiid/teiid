@@ -41,18 +41,18 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 import org.teiid.translator.ws.WSConnection;
 
 public class ODataQueryExecution extends BaseQueryExecution implements ResultSetExecution {
-    
+
     private ODataSQLVisitor visitor;
     private int countResponse = -1;
     private Class<?>[] expectedColumnTypes;
     private ODataResponse response;
     private boolean isCount;
-    
+
     public ODataQueryExecution(ODataExecutionFactory translator,
             QueryExpression command, ExecutionContext executionContext,
             RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
         super(translator, executionContext, metadata, connection);
-        
+
         this.visitor = new ODataSQLVisitor(this.translator, metadata);
         this.visitor.visitNode(command);
         if (command instanceof Select) {
@@ -64,7 +64,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
         if (!this.visitor.exceptions.isEmpty()) {
             throw visitor.exceptions.get(0);
         }
-        
+
         this.expectedColumnTypes = command.getColumnTypes();
     }
 
@@ -74,13 +74,13 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 
         if (isCount) {
             Map<String, List<String>> headers = new TreeMap<String, List<String>>();
-            headers.put("Accept", Arrays.asList("text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ 
-            
+            headers.put("Accept", Arrays.asList("text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$
+
             BinaryWSProcedureExecution execution = invokeHTTP("GET", URI, null, headers); //$NON-NLS-1$
             if (execution.getResponseCode() != HttpStatusCode.OK.getStatusCode()) {
                 throw buildError(execution);
             }
-            
+
             Blob blob = (Blob)execution.getOutputParameterValues().get(0);
             try {
                 this.countResponse = Integer.parseInt(ObjectConverterUtil.convertToString(blob.getBinaryStream()));
@@ -88,33 +88,33 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
                 throw new TranslatorException(e);
             } catch (SQLException e) {
                 throw new TranslatorException(e);
-            }            
+            }
         } else {
             InputStream payload = executeQuery(
-                    "GET", URI, null, null, ////$NON-NLS-1$ 
+                    "GET", URI, null, null, ////$NON-NLS-1$
                     new HttpStatusCode[] {
                             HttpStatusCode.OK,
-                            HttpStatusCode.NO_CONTENT,                    
-                            HttpStatusCode.NOT_FOUND                            
-                    }); 
+                            HttpStatusCode.NO_CONTENT,
+                            HttpStatusCode.NOT_FOUND
+                    });
             this.response = new ODataResponse(payload,
                     ODataType.ENTITY_COLLECTION, this.visitor.getODataQuery().getRootDocument()) {
                 @Override
                 public InputStream nextBatch(java.net.URI uri) throws TranslatorException {
-                    return executeSkipToken(uri, URI.toString(), 
+                    return executeSkipToken(uri, URI.toString(),
                             new HttpStatusCode[] {
                         HttpStatusCode.OK,
-                        HttpStatusCode.NO_CONTENT,                    
-                        HttpStatusCode.NOT_FOUND                            
-                    }); 
+                        HttpStatusCode.NO_CONTENT,
+                        HttpStatusCode.NOT_FOUND
+                    });
                 }
-            };                      
+            };
         }
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
-        
+
         if (isCount && this.countResponse != -1) {
             int count = this.countResponse;
             this.countResponse = -1;
@@ -124,19 +124,19 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
         if (this.response != null) {
             Map<String, Object> row = this.response.getNext();
             if (row != null) {
-                return buildRow(visitor.getODataQuery().getRootDocument().getTable(), 
-                        visitor.getProjectedColumns(), 
+                return buildRow(visitor.getODataQuery().getRootDocument().getTable(),
+                        visitor.getProjectedColumns(),
                         this.expectedColumnTypes, row);
             }
         }
         return null;
-    }    
-    
+    }
+
     @Override
     public void close() {
     }
 
     @Override
     public void cancel() throws TranslatorException {
-    }    
+    }
 }

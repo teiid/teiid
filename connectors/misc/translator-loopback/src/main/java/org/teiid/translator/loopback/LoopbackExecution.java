@@ -56,7 +56,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     private LoopbackExecutionFactory config;
     private Command command;
     private String staticStringValue = ""; //$NON-NLS-1$
-        
+
     // Execution state
     private Random randomNumber = new Random(0);
     private List<Object> row;
@@ -67,7 +67,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     private int rowsNeeded = 1;
 	private BigInteger rowNumber = BigInteger.ZERO;
 	private int batchSize = 256;
-    
+
     public LoopbackExecution(Command command, LoopbackExecutionFactory config, ExecutionContext context) {
         this.config = config;
         this.command = command;
@@ -76,7 +76,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         }
         staticStringValue = constructIncrementedString(config.getCharacterValuesSize());
     }
-    
+
     /**
      * Creates string "ABCD...ZABC..." of length characterValueSize
      * @param characterValuesSize
@@ -107,7 +107,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             if (rowsReturned > 0) {
                 randomTimeToWait/=2;
             }
-            
+
             // If we're asynch and the wait time was longer than the poll interval,
             // then just say we don't have results instead
             if(this.config.getPollIntervalInMilli() >= 0 && randomTimeToWait > this.config.getPollIntervalInMilli()) {
@@ -115,17 +115,17 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
                 DataNotAvailableException dnae = new DataNotAvailableException(randomTimeToWait);
                 dnae.setStrict(true);
                 throw dnae;
-            } 
+            }
             try {
                 Thread.sleep(randomTimeToWait);
             } catch(InterruptedException e) {
             }
             waited = true;
         }
-                        
+
         List<Object> resultRow = row;
         if(rowsReturned < this.rowsNeeded && resultRow.size() > 0) {
-            rowsReturned++;            
+            rowsReturned++;
             if (config.getIncrementRows()) {
             	rowNumber = rowNumber.add(BigInteger.ONE);
         		generateRow();
@@ -135,25 +135,25 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             }
             return resultRow;
         }
-        
+
         return null;
     }
 
-	
-	
+
+
 
 	@Override
     public void execute() throws TranslatorException {
-       
+
     	// Log our command
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Loopback executing command: " + command); //$NON-NLS-1$
 
         if(this.config.isThrowError()) {
             throw new TranslatorException("Failing because Error=true"); //$NON-NLS-1$
         }
-              
+
         this.rowsNeeded = this.config.getRowCount();
-        
+
         if (command instanceof QueryExpression) {
             QueryExpression queryCommand = (QueryExpression)command;
             if (queryCommand.getLimit() != null) {
@@ -164,19 +164,19 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             	this.rowNumber = BigInteger.valueOf(offset);
             }
         }
-        
-        
+
+
         // Prepare for execution
         determineOutputTypes();
         generateRow();
     }
-    
+
     @Override
     public int[] getUpdateCounts() throws DataNotAvailableException,
     		TranslatorException {
     	return new int [] {0};
     }
-    
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Call proc = (Call)this.command;
@@ -199,7 +199,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 
     }
 
-    private void determineOutputTypes() {            
+    private void determineOutputTypes() {
         // Get select columns and lookup the types in metadata
         if(command instanceof QueryExpression) {
             QueryExpression query = (QueryExpression) command;
@@ -216,7 +216,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         types = new ArrayList<Class<?>>(1);
         types.add(Integer.class);
     }
-    
+
     private static int getExpressionLength(Expression ex) {
         if (ex instanceof ColumnReference) {
             Column c = ((ColumnReference)ex).getMetadataObject();
@@ -226,10 +226,10 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         }
         return -1;
     }
-    
+
     public static final Long DAY_SECONDS=86400L;
     private static final int DATE_PERIOD = 365*(8099-1970);
-    
+
     /**
 	 * Increments value in each column. If the value is bounded type (e.g. short) it will cycle the values.
 	 */
@@ -290,7 +290,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 		}
 		return val;
 	}
-	
+
 	/**
 	 * Increments the string by appending unique number in sequence. Preserves string length.
 	 * @param number Number in the sequence of strings (which row)

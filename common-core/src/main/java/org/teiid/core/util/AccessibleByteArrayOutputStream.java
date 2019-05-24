@@ -25,25 +25,25 @@ public class AccessibleByteArrayOutputStream extends ByteArrayOutputStream {
 	public AccessibleByteArrayOutputStream() {
 		super();
 	}
-	
+
 	public AccessibleByteArrayOutputStream(int size) {
 		super(size);
 	}
-	
+
 	public byte[] getBuffer() {
 		return this.buf;
 	}
-	
+
 	public void setBuffer(byte[] buffer) {
 		this.buf = buffer;
 	}
-	
+
 	public int getCount() {
 		return this.count;
 	}
-	
+
 	public void setCount(int count) {
 		this.count = count;
 	}
-	
+
 }

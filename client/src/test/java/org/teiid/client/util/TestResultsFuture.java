@@ -33,11 +33,11 @@ public class TestResultsFuture extends TestCase {
 			future.get(-1, TimeUnit.MILLISECONDS);
 			fail("expected timeout exception"); //$NON-NLS-1$
 		} catch (TimeoutException e) {
-			
+
 		}
 		future.getResultsReceiver().receiveResults(new Object());
-		
+
 		assertNotNull(future.get(-1, TimeUnit.MILLISECONDS));
 	}
-	
+
 }

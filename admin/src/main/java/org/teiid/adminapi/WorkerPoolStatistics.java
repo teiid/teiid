@@ -18,5 +18,5 @@
 package org.teiid.adminapi;
 
 public interface WorkerPoolStatistics extends WorkerPoolStatisticsBean, AdminObject, DomainAware{
- 
+
 }

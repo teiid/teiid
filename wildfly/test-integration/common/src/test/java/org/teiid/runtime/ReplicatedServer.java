@@ -30,18 +30,18 @@ import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 
 @SuppressWarnings("nls")
 public class ReplicatedServer extends FakeServer {
-    
+
     private SimpleChannelFactory channelFactory;
     private NodeTracker nodeTracker;
-    
+
     static {
         System.setProperty("jgroups.bind_addr", "127.0.0.1");
     }
-    
+
     public ReplicatedServer(boolean start) {
         super(start);
     }
-    
+
     public static ReplicatedServer createServer(String nodeName, String ispn, String jgroups) throws Exception {
         ReplicatedServer server = new ReplicatedServer(false);
         server.channelFactory = new SimpleChannelFactory(jgroups);
@@ -56,10 +56,10 @@ public class ReplicatedServer extends FakeServer {
         config.setTransactionManager(new DummyTransactionManager());
         config.setNodeName(nodeName);
         server.start(config, true);
-        
+
         return server;
     }
-    
+
     @Override
     public synchronized void start(EmbeddedConfiguration config) {
         super.start(config);
@@ -75,19 +75,19 @@ public class ReplicatedServer extends FakeServer {
             LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
         }
     }
-    
+
     @Override
     public synchronized void stop() {
         super.stop();
         this.channelFactory.stop();
     }
-    
+
     public void setObjectReplicator(ObjectReplicator replicator) {
         this.replicator = replicator;
     }
-    
+
     public ObjectReplicator getObjectReplicator() {
         return this.replicator;
     }
-    
+
 }

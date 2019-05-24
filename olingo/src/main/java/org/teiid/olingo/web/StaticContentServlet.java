@@ -37,7 +37,7 @@ public class StaticContentServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String pathInfo = request.getPathInfo();
-        
+
         try {
             if (pathInfo.endsWith(".xml") //$NON-NLS-1$
                     && !pathInfo.endsWith("pom.xml") //$NON-NLS-1$
@@ -56,8 +56,8 @@ public class StaticContentServlet extends HttpServlet {
             ODataFilter.writeError(request, e, response, 404);
         }
     }
-    
+
     private void writeContent(HttpServletResponse response, InputStream contents) throws IOException {
         ObjectConverterUtil.write(response.getOutputStream(), contents, -1);
-    }    
+    }
 }

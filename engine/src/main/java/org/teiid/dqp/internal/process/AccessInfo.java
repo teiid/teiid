@@ -43,28 +43,28 @@ import org.teiid.query.util.CommandContext;
  * Tracks what views were used and what tables are accessed
  */
 public class AccessInfo implements Serializable {
-	
+
 	private static final long serialVersionUID = -2608267960584191359L;
-	
+
 	private transient Set<Object> objectsAccessed;
 	private boolean sensitiveToMetadataChanges = true;
 	private List<List<String>> externalNames;
-	
+
 	private long creationTime = System.currentTimeMillis();
-	
+
 	private void writeObject(java.io.ObjectOutputStream out)  throws IOException {
 		externalNames = initExternalList(externalNames, objectsAccessed);
 		out.defaultWriteObject();
 	}
-	
+
 	public boolean isSensitiveToMetadataChanges() {
 		return sensitiveToMetadataChanges;
 	}
-	
+
 	public void setSensitiveToMetadataChanges(boolean sensitiveToMetadataChanges) {
 		this.sensitiveToMetadataChanges = sensitiveToMetadataChanges;
 	}
-	
+
 	private static List<List<String>> initExternalList(List<List<String>> externalNames, Set<? extends Object> accessed) {
 		if (externalNames == null) {
 			externalNames = new ArrayList<List<String>>(accessed.size());
@@ -80,22 +80,22 @@ public class AccessInfo implements Serializable {
 		}
 		return externalNames;
 	}
-	
+
 	public void addAccessedObject(Object id) {
 		if (this.objectsAccessed == null) {
 			this.objectsAccessed = new HashSet<Object>();
 		}
 		this.objectsAccessed.add(id);
 	}
-	
+
 	public Set<Object> getObjectsAccessed() {
 		return objectsAccessed;
 	}
-	
+
 	public long getCreationTime() {
 		return creationTime;
 	}
-	
+
 	void populate(CommandContext context, boolean data) {
 		Set<Object> objects = null;
 		if (data) {
@@ -104,16 +104,16 @@ public class AccessInfo implements Serializable {
 			objects = context.getPlanningObjects();
 		}
 		if (objects == null || objects.isEmpty()) {
-			this.objectsAccessed = Collections.emptySet(); 
+			this.objectsAccessed = Collections.emptySet();
 		} else {
 			this.objectsAccessed = objects;
 		}
 	}
-	
+
 	/**
 	 * Restore reconnects to the live metadata objects
 	 * @throws TeiidComponentException
-	 * @throws TeiidProcessingException 
+	 * @throws TeiidProcessingException
 	 */
 	void restore() throws TeiidComponentException, TeiidProcessingException {
 		if (this.objectsAccessed != null) {
@@ -150,7 +150,7 @@ public class AccessInfo implements Serializable {
 		}
 		this.externalNames = null;
 	}
-	
+
 	boolean validate(boolean data, long modTime) {
 		if (this.objectsAccessed == null || modTime < 0) {
 			return true;
@@ -172,5 +172,5 @@ public class AccessInfo implements Serializable {
 		}
 		return true;
 	}
-	
+
 }

@@ -39,7 +39,7 @@ public final class StringUtil {
     /**
 	 * Join string pieces and separate with a delimiter.  Similar to the perl function of
 	 * the same name.  If strings or delimiter are null, null is returned.  Otherwise, at
-	 * least an empty string will be returned.	 
+	 * least an empty string will be returned.
 	 * @see #split
 	 *
 	 * @param strings String pieces to join
@@ -54,16 +54,16 @@ public final class StringUtil {
 		StringBuffer str = new StringBuffer();
 
 		Iterator<String> iter = strings.iterator();
-		while (iter.hasNext()) {            
+		while (iter.hasNext()) {
 			str.append(iter.next());
 			if (iter.hasNext()) {
 				str.append(delimiter);
 			}
 		}
-		
+
 		return str.toString();
 	}
-    
+
     /**
      * Return a stringified version of the array.
      * @param array the array
@@ -73,7 +73,7 @@ public final class StringUtil {
     public static String toString( final Object[] array, final String delim ) {
     	return toString(array, delim, true);
     }
-    
+
     /**
      * Return a stringified version of the array.
      * @param array the array
@@ -100,7 +100,7 @@ public final class StringUtil {
         return sb.toString();
     }
 
-    
+
     /**
      * Return a stringified version of the array, using a ',' as a delimiter
      * @param array the array
@@ -110,7 +110,7 @@ public final class StringUtil {
     public static String toString( final Object[] array ) {
         return toString(array, ",", true); //$NON-NLS-1$
     }
-    
+
 	/**
 	 * Split a string into pieces based on delimiters.  Similar to the perl function of
 	 * the same name.  The delimiters are not included in the returned strings.
@@ -128,7 +128,7 @@ public final class StringUtil {
         }
         return l;
     }
-    
+
 	/**
 	 * Replace a single occurrence of the search string with the replace string
 	 * in the source string. If any of the strings is null or the search string
@@ -146,7 +146,7 @@ public final class StringUtil {
                 return new StringBuffer(source).replace(start, start + search.length(), replace).toString();
 	        }
 	    }
-	    return source;    
+	    return source;
 	}
 
 	/**
@@ -173,7 +173,7 @@ public final class StringUtil {
 	        }
 	        return newString.toString();
         }
-	    return source;    
+	    return source;
 	}
 
     /**
@@ -193,7 +193,7 @@ public final class StringUtil {
 		}
 		return l;
     }
-    
+
 	/**
 	 * Return the last token in the string.
 	 *
@@ -212,7 +212,7 @@ public final class StringUtil {
         return str.substring(beginIndex,str.length());
     }
 
-	
+
 	/**
 	 * Return the first token in the string.
 	 *
@@ -230,7 +230,7 @@ public final class StringUtil {
         }
         return str.substring(0,endIndex);
     }
-	
+
 	public static String getStackTrace( final Throwable t ) {
         final ByteArrayOutputStream bas = new ByteArrayOutputStream();
         final PrintWriter pw = new PrintWriter(bas);
@@ -249,10 +249,10 @@ public final class StringUtil {
 	public static boolean isEmpty(final String text) {
         return (text == null  ||  text.length() == 0);
 	}
-    
+
     /**
      * Returns the index within this string of the first occurrence of the
-     * specified substring. The integer returned is the smallest value 
+     * specified substring. The integer returned is the smallest value
      * <i>k</i> such that:
      * <blockquote><pre>
      * this.startsWith(str, <i>k</i>)
@@ -264,7 +264,7 @@ public final class StringUtil {
      * @return  if the str argument occurs as a substring within text,
      *          then the index of the first character of the first
      *          such substring is returned; if it does not occur as a
-     *          substring, <code>-1</code> is returned.  If the text or 
+     *          substring, <code>-1</code> is returned.  If the text or
      *          str argument is null or empty then <code>-1</code> is returned.
      */
     public static int indexOfIgnoreCase(final String text, final String str) {
@@ -282,7 +282,7 @@ public final class StringUtil {
         }
         return -1;
     }
-    
+
     /**
      * Tests if the string starts with the specified prefix.
      *
@@ -290,11 +290,11 @@ public final class StringUtil {
      * @param   prefix   the prefix.
      * @return  <code>true</code> if the character sequence represented by the
      *          argument is a prefix of the character sequence represented by
-     *          this string; <code>false</code> otherwise.      
-     *          Note also that <code>true</code> will be returned if the 
-     *          prefix is an empty string or is equal to the text 
-     *          <code>String</code> object as determined by the 
-     *          {@link #equals(Object)} method. If the text or 
+     *          this string; <code>false</code> otherwise.
+     *          Note also that <code>true</code> will be returned if the
+     *          prefix is an empty string or is equal to the text
+     *          <code>String</code> object as determined by the
+     *          {@link #equals(Object)} method. If the text or
      *          prefix argument is null <code>false</code> is returned.
      * @since   JDK1. 0
      */
@@ -304,7 +304,7 @@ public final class StringUtil {
         }
         return text.regionMatches(true, 0, prefix, 0, prefix.length());
     }
-    
+
     /**
      * Tests if the string ends with the specified suffix.
      */
@@ -314,7 +314,7 @@ public final class StringUtil {
         }
         return text.regionMatches(true, text.length() - suffix.length(), suffix, 0, suffix.length());
     }
- 
+
     /**<p>
      * Prevents instantiation.
      * </p>
@@ -338,9 +338,9 @@ public final class StringUtil {
     private static boolean isBasicLatinDigit(char c) {
         return c >= '0' && c <= '9';
     }
-    
+
     /**
-     * Convert the given value to specified type. 
+     * Convert the given value to specified type.
      * @param value
      * @param type
      * @return
@@ -421,7 +421,7 @@ public final class StringUtil {
 		}
 		return true;
 	}
-	
+
 	public static <T extends Enum<T>> T caseInsensitiveValueOf(Class<T> enumType, String name) {
 		try {
 			return Enum.valueOf(enumType, name);
@@ -435,7 +435,7 @@ public final class StringUtil {
 			throw e;
 		}
 	}
-	
+
 	public static List<String> tokenize(String str, char delim) {
 		ArrayList<String> result = new ArrayList<String>();
 		StringBuilder current = new StringBuilder();
@@ -463,7 +463,7 @@ public final class StringUtil {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Unescape the given string
 	 * @param string
@@ -474,7 +474,7 @@ public final class StringUtil {
 	 */
     public static String unescape(CharSequence string, int quoteChar, boolean useAsciiEscapes, StringBuilder sb) {
     	boolean escaped = false;
-    	
+
     	for (int i = 0; i < string.length(); i++) {
     		char c = string.charAt(i);
     		if (escaped) {
@@ -547,5 +547,5 @@ public final class StringUtil {
 		sb.append((char)value);
 		return i;
 	}
-	
+
 }

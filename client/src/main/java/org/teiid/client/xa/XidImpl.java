@@ -32,27 +32,27 @@ import javax.transaction.xa.Xid;
  */
 public class XidImpl implements Xid, Externalizable {
     private static final long serialVersionUID = -7078441828703404308L;
-    
+
     private int formatID;
 	private byte[] globalTransactionId;
 	private byte[] branchQualifier;
 	private String toString;
-	
+
 	public XidImpl() {
 	}
-	
+
 	public XidImpl(Xid xid) {
 	    this.formatID = xid.getFormatId();
 	    this.globalTransactionId = xid.getGlobalTransactionId();
 	    this.branchQualifier = xid.getBranchQualifier();
 	}
-	
+
 	public XidImpl(int formatID, byte[] globalTransactionId, byte[] branchQualifier){
 		this.formatID = formatID;
 		this.globalTransactionId = globalTransactionId;
 		this.branchQualifier = branchQualifier;
 	}
-	
+
 	/**
 	 * @see javax.transaction.xa.Xid#getFormatId()
 	 */
@@ -73,11 +73,11 @@ public class XidImpl implements Xid, Externalizable {
 	public byte[] getBranchQualifier() {
 		return branchQualifier;
 	}
-	
+
 	public boolean equals(Object obj){
         if(obj == this) {
             return true;
-        } 
+        }
 		if(!(obj instanceof XidImpl)){
 			return false;
 		}
@@ -86,14 +86,14 @@ public class XidImpl implements Xid, Externalizable {
 				&& Arrays.equals(this.globalTransactionId, that.globalTransactionId)
 				&& Arrays.equals(this.branchQualifier, that.branchQualifier);
 	}
-	
-	/** 
+
+	/**
 	 * @see java.lang.Object#toString()
 	 */
 	public String toString() {
 	    if (toString == null) {
     	    StringBuffer sb = new StringBuffer();
-    	    
+
     	    sb.append("Teiid-Xid global:"); //$NON-NLS-1$
             sb.append(getByteArrayString(globalTransactionId));
             sb.append(" branch:"); //$NON-NLS-1$
@@ -104,22 +104,22 @@ public class XidImpl implements Xid, Externalizable {
 	    }
         return toString;
 	}
-	
+
 	static String getByteArrayString(byte[] bytes) {
 	    if (bytes == null || bytes.length == 0) {
 	        return null;
 	    }
-	    
+
 	    return new BigInteger(bytes).toString();
 	}
-	
-	/** 
+
+	/**
 	 * @see java.lang.Object#hashCode()
 	 */
 	public int hashCode() {
 	    return toString().hashCode();
 	}
-	
+
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -127,12 +127,12 @@ public class XidImpl implements Xid, Externalizable {
 		this.globalTransactionId = (byte[])in.readObject();
 		this.branchQualifier = (byte[])in.readObject();
 	}
-	
+
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeInt(this.formatID);
 		out.writeObject(this.globalTransactionId);
 		out.writeObject(this.branchQualifier);
 	}
-	
+
 }

@@ -36,7 +36,7 @@ import org.teiid.net.socket.SocketServerConnectionFactory;
  */
 
 final class SocketProfile implements ConnectionProfile {
-	
+
     /**
      * This method tries to make a connection to the given URL. This class
      * will return a null if this is not the right driver to connect to the given URL.
@@ -52,7 +52,7 @@ final class SocketProfile implements ConnectionProfile {
 			if (timeout != null) {
 				loginTimeoutSeconds = Integer.parseInt(timeout);
 			}
-			
+
 			if (loginTimeoutSeconds > 0) {
 				OioOjbectChannelFactory.TIMEOUTS.set(System.currentTimeMillis() + loginTimeoutSeconds * 1000);
 			}

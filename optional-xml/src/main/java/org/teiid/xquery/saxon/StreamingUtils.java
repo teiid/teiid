@@ -49,11 +49,11 @@ import net.sf.saxon.type.SimpleType;
 final class StreamingUtils {
 	/**
 	 * Pre-parser that adds validation and handles a default name space
-	 * 
+	 *
 	 * TODO: add support for more general paths including node tests
-	 *   this could be done as a secondary expression applied to the 
-	 *   context item 
-	 * 
+	 *   this could be done as a secondary expression applied to the
+	 *   context item
+	 *
 	 * @param locationPath
 	 * @param prefixMap
 	 * @return
@@ -61,19 +61,19 @@ final class StreamingUtils {
 	public static String getStreamingPath(String locationPath, Map<String, String> prefixMap) {
 		if (locationPath.indexOf("//") >= 0) //$NON-NLS-1$
 			throw new IllegalArgumentException("DESCENDANT axis is not supported"); //$NON-NLS-1$
-		
+
 		String path = locationPath.trim();
 		if (path.startsWith("/")) path = path.substring(1); //$NON-NLS-1$
 		if (path.endsWith("/")) path = path.substring(0, path.length() - 1); //$NON-NLS-1$
 		path = path.trim();
 		String[] localNames = path.split("/"); //$NON-NLS-1$
-		
+
 		if (localNames.length == 1) {
 			throw new IllegalArgumentException(locationPath + " refers to only the root element"); //$NON-NLS-1$
 		}
 
 		String fixedPath = ""; //$NON-NLS-1$
-				
+
 		// parse prefix:localName pairs and resolve prefixes to namespaceURIs
 		for (int i = 0; i < localNames.length; i++) {
 			fixedPath += "/"; //$NON-NLS-1$
@@ -92,7 +92,7 @@ final class StreamingUtils {
 						+ prefix + "', path='" + path + "', prefixes=" + prefixMap); //$NON-NLS-1$ //$NON-NLS-2$
 				fixedPath += prefix + ":"; //$NON-NLS-1$
 			} // end if
-			
+
 			localNames[i] = localNames[i].substring(k + 1).trim();
 			if (!localNames[i].equals("*") && !NameChecker.isValidNCName(localNames[i])) { //$NON-NLS-1$
 			    throw new IllegalArgumentException(localNames[i] + " is not a valid local name."); //$NON-NLS-1$
@@ -108,18 +108,18 @@ final class StreamingUtils {
  * An {@link XMLReader} designed to bridge between the Saxon document projection logic and the XOM/NUX streaming logic.
  */
 final class SaxonReader implements XMLReader {
-	
+
 	private ContentHandler handler;
 	private LexicalHandler lexicalHandler;
-	
+
 	private Configuration config;
 	private AugmentedSource source;
-	
+
 	public SaxonReader(Configuration config, AugmentedSource source) {
 		this.config = config;
 		this.source = source;
 	}
-	
+
 	@Override
 	public void setProperty(String name, Object value)
 			throws SAXNotRecognizedException, SAXNotSupportedException {
@@ -136,18 +136,18 @@ final class SaxonReader implements XMLReader {
 	@Override
 	public void setErrorHandler(ErrorHandler handler) {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public void setEntityResolver(EntityResolver resolver) {
 		throw new UnsupportedOperationException();
-		
+
 	}
 
 	@Override
 	public void setDTDHandler(DTDHandler handler) {
-		
+
 	}
 
 	@Override
@@ -166,7 +166,7 @@ final class SaxonReader implements XMLReader {
 		chp.setLexicalHandler(lexicalHandler);
 		chp.setUnderlyingContentHandler(handler);
 		this.source.addFilter(new FilterFactory() {
-			
+
 			@Override
 			public ProxyReceiver makeFilter(Receiver arg0) {
 				return new ContentHandlerProxyReceiver(chp, arg0);
@@ -217,15 +217,15 @@ final class SaxonReader implements XMLReader {
  * Adapts the {@link ContentHandlerProxy} to be a {@link ProxyReceiver}
  */
 final class ContentHandlerProxyReceiver extends ProxyReceiver {
-	
+
 	private Receiver reciever;
-	
+
 	public ContentHandlerProxyReceiver(Receiver receiver, Receiver next) {
 		super(next);
-		this.reciever = receiver; 
+		this.reciever = receiver;
 		this.reciever.setPipelineConfiguration(next.getPipelineConfiguration());
 	}
-	
+
 	@Override
 	public void attribute(NodeName nameCode, SimpleType typeCode,
 			CharSequence value, Location locationId, int properties)
@@ -257,11 +257,11 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 	public void endElement() throws XPathException {
 		reciever.endElement();
 	}
-	
+
 	public String getSystemId() {
 		return reciever.getSystemId();
 	}
-	
+
 	@Override
 	public void namespace(NamespaceBindingSet namespaceBindings, int properties)
 	        throws XPathException {
@@ -296,11 +296,11 @@ final class ContentHandlerProxyReceiver extends ProxyReceiver {
 		super.startDocument(properties);
 		reciever.startDocument(properties);
 	}
-	
+
 	@Override
 	public void startElement(NodeName elemName, SchemaType typeCode,
 			Location locationId, int properties) throws XPathException {
 		reciever.startElement(elemName, typeCode, locationId, properties);
 	}
-	
+
 }

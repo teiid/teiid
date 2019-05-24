@@ -29,9 +29,9 @@ import org.teiid.query.QueryPlugin;
  * Currently should be 60 bytes.
  */
 final class PhysicalInfo extends BaseCacheEntry {
-	
-	static final Exception sizeChanged = new Exception();  
-	
+
+	static final Exception sizeChanged = new Exception();
+
 	final Long gid;
 	//the memory inode and block count
 	int inode = BufferFrontedFileStoreCache.EMPTY_ADDRESS;
@@ -46,19 +46,19 @@ final class PhysicalInfo extends BaseCacheEntry {
 	boolean adding; //used to prevent double adds
 
     int sizeEstimate;
-	
+
 	PhysicalInfo(Long gid, Long id, int inode, long lastAccess, int sizeEstimate) {
 		super(new CacheKey(id, lastAccess, 0));
 		this.inode = inode;
 		this.gid = gid;
 		this.sizeEstimate = sizeEstimate;
 	}
-	
+
 	void setSize(int size) throws Exception {
 		int newMemoryBlockCount = (size>>BufferFrontedFileStoreCache.LOG_BLOCK_SIZE) + ((size&BufferFrontedFileStoreCache.BLOCK_MASK)>0?1:0);
 		if (this.memoryBlockCount != 0) {
 			if (newMemoryBlockCount != memoryBlockCount) {
-				throw sizeChanged; 
+				throw sizeChanged;
 			}
 			return; //no changes
 		}
@@ -68,7 +68,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 			newMemoryBlockCount = (newMemoryBlockCount>>1) + ((newMemoryBlockCount&0x01)==0?0:1);
 		}
 	}
-	
+
 	void await(boolean donePinning, boolean doneEvicting) {
 		while ((donePinning && pinned) || (doneEvicting && evicting)) {
 			try {
@@ -78,7 +78,7 @@ final class PhysicalInfo extends BaseCacheEntry {
 			}
 		}
 	}
-	
+
 	synchronized void lockForLoad() {
 		while (loading) {
 			try {
@@ -89,11 +89,11 @@ final class PhysicalInfo extends BaseCacheEntry {
 		}
 		loading = true;
 	}
-	
+
 	synchronized void unlockForLoad() {
 		assert loading;
 		loading = false;
 		notifyAll();
 	}
-	
+
 }

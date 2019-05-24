@@ -32,7 +32,7 @@ public class CombinedClassLoader extends ClassLoader {
     	super(parent);
         this.toSearch = toSearch;
     }
-    
+
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
     	for (ClassLoader cl : toSearch) {
@@ -42,12 +42,12 @@ public class CombinedClassLoader extends ClassLoader {
     		try {
     			return cl.loadClass(name);
     		} catch (ClassNotFoundException e) {
-    			
+
     		}
 		}
     	return super.loadClass(name);
     }
-    
+
     @Override
     protected URL findResource(String name) {
     	for (ClassLoader cl : toSearch) {
@@ -61,7 +61,7 @@ public class CombinedClassLoader extends ClassLoader {
     	}
     	return super.getResource(name);
     }
-    
+
     @Override
     protected Enumeration<URL> findResources(String name) throws IOException {
     	Vector<URL> result = new Vector<URL>();
@@ -74,5 +74,5 @@ public class CombinedClassLoader extends ClassLoader {
     	}
     	return result.elements();
     }
-    
+
 }

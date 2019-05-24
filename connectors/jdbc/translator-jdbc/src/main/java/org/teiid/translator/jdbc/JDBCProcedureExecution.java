@@ -54,7 +54,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 
         //translate command
         TranslatedCommand translatedComm = translateCommand(procedure);
-        
+
         //create statement or CallableStatement and execute
         String sql = translatedComm.getSql();
         try{
@@ -64,10 +64,10 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
             addStatementWarnings();
         }catch(SQLException e){
              throw new TranslatorException(JDBCPlugin.Event.TEIID11004, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, sql));
-        }           
-        
+        }
+
     }
-    
+
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
     	if (results == null) {
@@ -75,7 +75,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
     	}
     	return super.next();
     }
-        
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
         try {
@@ -110,5 +110,5 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 		Object value = this.executionFactory.retrieveValue((CallableStatement)this.statement, paramIndex, type);
 		result.add(value);
 	}
-    
+
 }

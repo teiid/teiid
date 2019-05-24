@@ -28,7 +28,7 @@ import javax.transaction.xa.Xid;
  * transaction.
  */
 public interface XAImporter {
-    
+
     /**
      * Provide the {@link Transaction} for the given {@link Xid}
      * @param transactionManager
@@ -38,8 +38,8 @@ public interface XAImporter {
      * @throws XAException
      */
     Transaction importTransaction(TransactionManager transactionManager, Xid xid, int transactionTimeout) throws XAException;
-    
-    /** 
+
+    /**
      * Commits the global transaction specified by xid.
      *
      * @param xid A global transaction identifier
@@ -58,7 +58,7 @@ public interface XAImporter {
      */
     void commit(Xid xid, boolean onePhase) throws XAException;
 
-    /** 
+    /**
      * Tells the resource manager to forget about a heuristically
      * completed transaction branch.
      *
@@ -69,8 +69,8 @@ public interface XAImporter {
      * XAER_PROTO.
      */
     void forget(Xid xid) throws XAException;
-    
-    /** 
+
+    /**
      * Ask the resource manager to prepare for a transaction commit
      * of the transaction specified in xid.
      *
@@ -82,15 +82,15 @@ public interface XAImporter {
      *
      * @return A value indicating the resource manager's vote on the
      * outcome of the transaction. The possible values are: XA_RDONLY
-     * or XA_OK. These constants are defined in 
-     * <code> javax.transaction.xa.XAResource</code> interface. 
+     * or XA_OK. These constants are defined in
+     * <code> javax.transaction.xa.XAResource</code> interface.
      * If the resource manager wants to roll back the
      * transaction, it should do so by raising an appropriate XAException
      * in the prepare method.
      */
     int prepare(Xid xid) throws XAException;
-    
-    /** 
+
+    /**
      * Obtains a list of prepared transaction branches from a resource
      * manager. The transaction manager calls this method during recovery
      * to obtain the list of transaction branches that are currently in
@@ -98,7 +98,7 @@ public interface XAImporter {
      *
      * @param flag One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS
      * must be used when no other flags are set in the parameter. These
-     * constants are defined in <code>javax.transaction.xa.XAResource</code> 
+     * constants are defined in <code>javax.transaction.xa.XAResource</code>
      * interface.
      *
      * @exception XAException An error has occurred. Possible values are
@@ -111,8 +111,8 @@ public interface XAImporter {
      * XAException.
      */
     Xid[] recover(int flag) throws XAException;
-    
-    /** 
+
+    /**
      * Informs the resource manager to roll back work done on behalf
      * of a transaction branch.
      *

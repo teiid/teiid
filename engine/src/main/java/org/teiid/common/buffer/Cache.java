@@ -31,11 +31,11 @@ public interface Cache<T> extends StorageManager {
 	 * Must be called prior to adding any group entries
 	 * @param gid
 	 */
-	void createCacheGroup(Long gid); 
-	
+	void createCacheGroup(Long gid);
+
 	/**
 	 * Remove an entire cache group
-	 * 
+	 *
 	 * TODO: this should use a callback on the buffermangaer to remove memory entries
 	 * without materializing all group keys
 	 * @param gid
@@ -49,7 +49,7 @@ public interface Cache<T> extends StorageManager {
 	 * @param oid
 	 * @return if the add was successful
 	 */
-	boolean addToCacheGroup(Long gid, Long oid); 
+	boolean addToCacheGroup(Long gid, Long oid);
 
 	/**
 	 * Lock the object for load and return an identifier/lock
@@ -59,7 +59,7 @@ public interface Cache<T> extends StorageManager {
 	 * @return the identifier, may be null
 	 */
 	T lockForLoad(Long oid, Serializer<?> serializer);
-	
+
 	/**
 	 * Must be called after lockForLoad
 	 * @param o
@@ -73,7 +73,7 @@ public interface Cache<T> extends StorageManager {
 	 * @throws TeiidComponentException
 	 */
 	CacheEntry get(T lock, Long oid, WeakReference<? extends Serializer<?>> ref) throws TeiidComponentException;
-	
+
 	/**
 	 * Adds an entry to the cache.
 	 * @param entry
@@ -81,7 +81,7 @@ public interface Cache<T> extends StorageManager {
 	 * @throws Exception
 	 */
 	boolean add(CacheEntry entry, Serializer<?> s) throws Exception;
-	
+
 	/**
 	 * Remove an entry from the cache, return the sizeEstimate if the entry existed
 	 * @param gid
@@ -90,9 +90,9 @@ public interface Cache<T> extends StorageManager {
 	Integer remove(Long gid, Long id);
 
 	void shutdown();
-	
+
 	long getMemoryBufferSpace();
 
     int getCacheGroupCount();
-	
+
 }

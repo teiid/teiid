@@ -54,7 +54,7 @@ public class Select implements LanguageObject {
      * Constructs a default instance of this class.
      */
     public Select() {
-        
+
     }
 
     /**
@@ -90,7 +90,7 @@ public class Select implements LanguageObject {
     public List<Expression> getSymbols() {
         return symbols;
     }
-    
+
     /**
      * Sets an ordered list of the symbols in the select.  Reuses the current symbol list.
      * @param symbols list of SelectSymbol in SELECT
@@ -98,7 +98,7 @@ public class Select implements LanguageObject {
     public void setSymbols(Collection<? extends Expression> symbols) {
     	this.symbols.clear();
     	this.addSymbols(symbols);
-    }    
+    }
 
     /**
      * Returns the select symbol at the specified index.
@@ -118,7 +118,7 @@ public class Select implements LanguageObject {
     	}
     	this.symbols.add(symbol);
     }
-    
+
     public void addSymbols( Collection<? extends Expression> toAdd) {
     	if (toAdd != null) {
     		for (Expression expression : toAdd) {
@@ -126,7 +126,7 @@ public class Select implements LanguageObject {
 			}
     	}
     }
-    
+
     /**
      * Remove all current symbols
      */
@@ -162,28 +162,28 @@ public class Select implements LanguageObject {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
 	/**
 	 * Get the ordered list of all elements returned by this select.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
-	public List<Expression> getProjectedSymbols() { 
+	public List<Expression> getProjectedSymbols() {
 		ArrayList<Expression> projectedSymbols = new ArrayList<Expression>();
 		for (Expression symbol : symbols) {
-			if(symbol instanceof MultipleElementSymbol) { 
+			if(symbol instanceof MultipleElementSymbol) {
 			    List<ElementSymbol> multiSymbols = ((MultipleElementSymbol)symbol).getElementSymbols();
-			    if(multiSymbols != null) { 
+			    if(multiSymbols != null) {
 			        projectedSymbols.addAll(multiSymbols);
 			    }
 			} else {
 				projectedSymbols.add(symbol);
 			}
-		}		
+		}
 		return projectedSymbols;
 	}
-	
+
     // =========================================================================
     //          O V E R R I D D E N     O B J E C T     M E T H O D S
     // =========================================================================
@@ -215,7 +215,7 @@ public class Select implements LanguageObject {
 		}
 
 		Select other = (Select) obj;
-        
+
         return other.isDistinct() == isDistinct() &&
                EquivalenceUtil.areEqual(getSymbols(), other.getSymbols());
 	}
@@ -238,5 +238,5 @@ public class Select implements LanguageObject {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
-        
+
 }  // END CLASS

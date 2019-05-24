@@ -47,10 +47,10 @@ import org.teiid.resource.spi.ConnectionContext;
 
 
 
-/** 
- * Represents a connection to an LDAP data source. 
+/**
+ * Represents a connection to an LDAP data source.
  */
-public class LDAPConnectionImpl extends BasicConnection implements LdapContext  {  
+public class LDAPConnectionImpl extends BasicConnection implements LdapContext  {
 
     static SearchControls VALIDATION_SEARCH_CONTROLS = new SearchControls();
     static {
@@ -59,9 +59,9 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
         VALIDATION_SEARCH_CONTROLS.setReturningAttributes(new String[] { "objectclass" }); //$NON-NLS-1$
         VALIDATION_SEARCH_CONTROLS.setTimeLimit(500);
     }
-    
+
 	private LDAPManagedConnectionFactory config;
-	
+
 	// Standard Connection data members
 	private InitialLdapContext initCtx;
 
@@ -71,27 +71,27 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 
 	public LDAPConnectionImpl(LDAPManagedConnectionFactory config) throws ResourceException {
 		this.config = config;
-			
+
 		checkProperties();
 
 		// Create initial LDAP connection.
 		this.initCtx = initializeLDAPContext();
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "LDAP Connection has been newly created."); //$NON-NLS-1$
 	}
-	
+
     /**
      * Helper method to retrieve the LDAP Connector properties.  If any properties are in error,
      * a ConnectorException is thrown.
      * @param props
      */
 	private void checkProperties() throws ResourceException {
-		// LDAP URL 
+		// LDAP URL
 		if(this.config.getLdapUrl() == null) {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.urlPropNotFound"); //$NON-NLS-1$
             throw new ResourceException(msg);
 		}
 	}
-	
+
 	/**
 	 * Setup a standard initial LDAP context using JNDI's context factory.
 	 * This method may be extended to support Sun-specific and AD-specific
@@ -106,10 +106,10 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 		connenv.put(Context.INITIAL_CONTEXT_FACTORY, this.config.getLdapContextFactory());
 		connenv.put(Context.PROVIDER_URL, this.config.getLdapUrl());
 		connenv.put(Context.REFERRAL, LDAP_REFERRAL_MODE);
-		
+
 		String userName = this.config.getLdapAdminUserDN();
 		String password = this.config.getLdapAdminUserPassword();
-		
+
 		String authType = this.config.getLdapAuthType();
 
 		// if security-domain is specified and caller identity is used; then use
@@ -119,44 +119,44 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			userName = ConnectionContext.getUserName(subject, this.config, userName);
 			password = ConnectionContext.getPassword(subject, this.config, userName, password);
 		}
-		
+
 		connenv.put(Context.SECURITY_AUTHENTICATION, authType);
 		if (!authType.equals("none")) {
 		    if (userName == null) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserDNPropNotFound"); //$NON-NLS-1$
 	            throw new ResourceException(msg);
 	        }
-	        
+
 	        if (password == null) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.adminUserPassPropNotFound"); //$NON-NLS-1$
 	            throw new ResourceException(msg);
 	        }
-		    
+
     		connenv.put(Context.SECURITY_PRINCIPAL, userName);
     		connenv.put(Context.SECURITY_CREDENTIALS, password);
 		}
-		
-		if(this.config.getLdapTxnTimeoutInMillis() != null && this.config.getLdapTxnTimeoutInMillis() != -1) { 
+
+		if(this.config.getLdapTxnTimeoutInMillis() != null && this.config.getLdapTxnTimeoutInMillis() != -1) {
 			connenv.put("com.sun.jndi.ldap.connect.timeout", this.config.getLdapTxnTimeoutInMillis().toString()); //$NON-NLS-1$
 		}
-		
+
 		// Enable connection pooling for the Initial context.
 		connenv.put("com.sun.jndi.ldap.connect.pool", "true"); //$NON-NLS-1$ //$NON-NLS-2$
 		connenv.put("com.sun.jndi.ldap.connect.pool.debug", "fine"); //$NON-NLS-1$ //$NON-NLS-2$
-		
+
 		try {
 			initContext = new InitialLdapContext(connenv, null);
-		} catch(NamingException ne){ 
+		} catch(NamingException ne){
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.directoryNamingError",ne.getExplanation()); //$NON-NLS-1$
 			throw new ResourceException(msg, ne);
-		} 
+		}
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Successfully obtained initial LDAP context."); //$NON-NLS-1$
 		return initContext;
 	}
-	
 
-	
-	/** 
+
+
+	/**
 	 * Closes LDAP context, effectively closing the connection to LDAP.
 	 * (non-Javadoc)
 	 */
@@ -180,7 +180,7 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
             }
         } catch (NamingException e) {
             return false;
-        } 
+        }
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "LDAP Connection is alive."); //$NON-NLS-1$
 		return true;
 	}
@@ -469,5 +469,5 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 	public void unbind(String name) throws NamingException {
 		initCtx.unbind(name);
 	}
-	
+
 }

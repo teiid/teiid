@@ -28,7 +28,7 @@ public abstract class AtomicCriteria extends LogicalCriteria {
 
 	/** The single sub criteria */
 	private Criteria criteria;
-	
+
 	/**
 	 * Constructs a default instance of this class.
 	 */

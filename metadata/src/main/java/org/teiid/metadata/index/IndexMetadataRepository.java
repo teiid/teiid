@@ -36,12 +36,12 @@ import org.teiid.translator.TranslatorException;
 
 
 /**
- * Loads MetadataRecords from index files.  
+ * Loads MetadataRecords from index files.
  */
 public class IndexMetadataRepository implements MetadataRepository {
 
 	private RecordFactory recordFactory = new RecordFactory() {
-		
+
 	protected AbstractMetadataRecord getMetadataRecord(char[] record) {
 		if (record == null || record.length == 0) {
 			return null;
@@ -51,10 +51,10 @@ public class IndexMetadataRepository implements MetadataRepository {
 		case MetadataConstants.RECORD_TYPE.ANNOTATION: {
 	        final List<String> tokens = RecordFactory.getStrings(record, IndexConstants.RECORD_STRING.RECORD_DELIMITER);
 
-	        // Extract the index version information from the record 
+	        // Extract the index version information from the record
 	        int indexVersion = recordFactory.getIndexVersion(record);
 	        String uuid = tokens.get(2);
-	        
+
 	        // The tokens are the standard header values
 	        int tokenIndex = 6;
 
@@ -73,7 +73,7 @@ public class IndexMetadataRepository implements MetadataRepository {
             String uuid = tokens.get(1);
 	    	LinkedHashMap<String, String> result = extensionCache.get(uuid);
 	    	if (result == null) {
-	    		result = new LinkedHashMap<String, String>(); 
+	    		result = new LinkedHashMap<String, String>();
 	    		extensionCache.put(uuid, result);
 	    	}
             // The tokens are the standard header values
@@ -124,11 +124,11 @@ public class IndexMetadataRepository implements MetadataRepository {
 	//map of type to maps of uuids
 	private Map<Character, LinkedHashMap<String, AbstractMetadataRecord>> allRecords = new HashMap<Character, LinkedHashMap<String, AbstractMetadataRecord>>();
 	private boolean loaded = false;
-	
+
 	public IndexMetadataRepository() {
-		
+
 	}
-	
+
     Map<String, AbstractMetadataRecord> getByType(char type) {
 		LinkedHashMap<String, AbstractMetadataRecord> uuidMap = allRecords.get(type);
 		if (uuidMap == null) {
@@ -137,7 +137,7 @@ public class IndexMetadataRepository implements MetadataRepository {
 		}
 		return uuidMap;
 	}
-	
+
 	<T extends AbstractMetadataRecord> List<T> getByParent(String parentId, char type, @SuppressWarnings("unused") Class<T> clazz, boolean create) {
 		Map<Character, List<AbstractMetadataRecord>> children = childRecords.get(parentId);
 		if (children == null) {
@@ -148,20 +148,20 @@ public class IndexMetadataRepository implements MetadataRepository {
 		if (typeChildren == null) {
 			if (!create) {
 				return Collections.emptyList();
-			} 
+			}
 			typeChildren = new ArrayList<AbstractMetadataRecord>(2);
 			children.put(type, typeChildren);
 		}
 		return (List<T>) typeChildren;
 	}
 
-	// there are multiple threads trying to load this, since the initial index lading is not 
+	// there are multiple threads trying to load this, since the initial index lading is not
 	// optimized for multi-thread loading this locking to sync will work
     private synchronized void loadAll(Collection<Datatype> systemDatatypes, Map<String, ? extends VDBResource> resources) throws IOException {
 		if (this.loaded) {
 			return;
 		}
-				
+
     	ArrayList<Index> tmp = new ArrayList<Index>();
 		for (VDBResource f : resources.values()) {
 			if (f.getName().endsWith(VDBResources.INDEX_EXT)) {
@@ -180,7 +180,7 @@ public class IndexMetadataRepository implements MetadataRepository {
     	}
 		//force close, since we cached the index files
 		for (Index index : tmp) {
-			index.close(); 
+			index.close();
 		}
 		Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
 		if (systemDatatypes != null) {
@@ -189,18 +189,18 @@ public class IndexMetadataRepository implements MetadataRepository {
 			}
 		}
 		this.loaded = true;
-		
+
     	//associate the annotation/extension metadata
     	for (Map<String, AbstractMetadataRecord> map : allRecords.values()) {
     		for (AbstractMetadataRecord metadataRecord : map.values()) {
 				String uuid = metadataRecord.getUUID();
-				
+
 				metadataRecord.setAnnotation(this.annotationCache.get(uuid));
 				metadataRecord.setProperties(this.extensionCache.get(uuid));
     		}
     	}
     }
-    
+
 	@Override
 	public synchronized void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory)
 			throws TranslatorException {
@@ -224,22 +224,22 @@ public class IndexMetadataRepository implements MetadataRepository {
     	}
 		throw new TranslatorException(RuntimeMetadataPlugin.Util.gs(RuntimeMetadataPlugin.Event.TEIID80004, factory.getName()));
 	}
-    
+
 	public MetadataStore load(Collection<Datatype> systemDatatypes, VDBResources vdbResources) throws IOException {
 		MetadataStore store = new MetadataStore();
 		loadAll(systemDatatypes, vdbResources.getEntriesPlusVisibilities());
-		
+
     	// the index map below is keyed by uuid not modelname, so map lookup is not possible
     	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
     	for (AbstractMetadataRecord modelRecord:modelRecords) {
     		Schema s = (Schema) modelRecord;
-    		store.addSchema(s);	
+    		store.addSchema(s);
 			getTables(s);
 			getProcedures(s);
     	}
     	return store;
     }
-	
+
 	private void setDataType(BaseColumn baseColumn) {
 	    Datatype dataType = (Datatype) getByType(MetadataConstants.RECORD_TYPE.DATATYPE).get(baseColumn.getDatatypeUUID());
         int arrayDimensions = 0;
@@ -266,14 +266,14 @@ public class IndexMetadataRepository implements MetadataRepository {
 		if (entries == null) {
 			return;
 		}
-		
+
 		List recs = entries.get(MetadataConstants.RECORD_TYPE.TABLE);
 		if (recs == null) {
 			return;
 		}
-		
+
 		List<Table> records = recs;
-		
+
 		for (Table tableRecord : records) {
 	    	List<Column> columns = new ArrayList<Column>(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.COLUMN, Column.class, false));
 	        for (Column columnRecordImpl : columns) {
@@ -339,7 +339,7 @@ public class IndexMetadataRepository implements MetadataRepository {
 		        	tableRecord.setDeletePlan(delete.getTransformation());
 		        }
 		        TransformationRecordImpl select = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM,false);
-		        // this group may be an xml document            
+		        // this group may be an xml document
 		        if(select == null) {
 			        select = (TransformationRecordImpl)getRecordByType(groupUUID, MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,false);
 		        }
@@ -363,36 +363,36 @@ public class IndexMetadataRepository implements MetadataRepository {
 		setDataType(columnRecord);
         return columnRecord;
     }
-	    
+
     private AbstractMetadataRecord getRecordByType(final String entityName, final char recordType) {
     	return getRecordByType(entityName, recordType, true);
     }
-    
+
     private AbstractMetadataRecord getRecordByType(final String entityName, final char recordType, boolean mustExist) {
     	// Query the index files
 		AbstractMetadataRecord record = getByType(recordType).get(entityName);
-    	
+
         if(record == null) {
         	if (mustExist) {
 			// there should be only one for the UUID
 	             throw new TeiidRuntimeException(RuntimeMetadataPlugin.Event.TEIID80002, entityName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-        	} 
+        	}
         	return null;
-		} 
+		}
         return record;
     }
-    
+
     private void getProcedures(Schema model) {
 		Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
 		if (entries == null) {
 			return;
 		}
-		
+
 		List recs = entries.get(MetadataConstants.RECORD_TYPE.CALLABLE);
 		if (recs == null) {
 			return;
 		}
-		
+
 		List<Procedure> records = recs;
 		for (Procedure procedureRecord : records) {
 	        // get the parameter metadata info
@@ -402,7 +402,7 @@ public class IndexMetadataRepository implements MetadataRepository {
 	            procedureRecord.getParameters().set(i, paramRecord);
 	            paramRecord.setProcedure(procedureRecord);
 	        }
-	    	
+
 	        ColumnSet<Procedure> result = procedureRecord.getResultSet();
 	        if(result != null) {
 	            ColumnSet<Procedure> resultRecord = (ColumnSet<Procedure>) getRecordByType(result.getUUID(), MetadataConstants.RECORD_TYPE.RESULT_SET, false);
@@ -412,12 +412,12 @@ public class IndexMetadataRepository implements MetadataRepository {
 		            loadColumnSetRecords(resultRecord, null);
 		            procedureRecord.setResultSet(resultRecord);
 	            }
-	            //it is ok to be null here.  it will happen when a 
+	            //it is ok to be null here.  it will happen when a
 	            //virtual stored procedure is created from a
 	            //physical stored procedure without a result set
 	            //TODO: find a better fix for this
 	        }
-	        
+
 	        if (procedureRecord.isFunction()) {
 	        	FunctionParameter outputParam = null;
 	        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
@@ -444,7 +444,7 @@ public class IndexMetadataRepository implements MetadataRepository {
 					}
 				}
 	        	if (valid && outputParam != null) {
-	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), procedureRecord.isVirtual()?PushDown.CAN_PUSHDOWN:PushDown.MUST_PUSHDOWN, 
+	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), procedureRecord.isVirtual()?PushDown.CAN_PUSHDOWN:PushDown.MUST_PUSHDOWN,
 		        			null, null, args, outputParam, false, Determinism.DETERMINISTIC);
 	        	    function.setUUID(procedureRecord.getUUID());
 		        	FunctionMethod.convertExtensionMetadata(procedureRecord, function);
@@ -466,7 +466,7 @@ public class IndexMetadataRepository implements MetadataRepository {
 			model.addProcedure(procedureRecord);
 		}
     }
-    
+
 	private void loadColumnSetRecords(ColumnSet<?> indexRecord, Map<String, Column> columns) {
 		for (int i = 0; i < indexRecord.getColumns().size(); i++) {
 			String uuid = indexRecord.getColumns().get(i).getUUID();

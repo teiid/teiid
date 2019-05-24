@@ -54,7 +54,7 @@ class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, Co
     }
 
     public Injector<T> getInjector() {
-        return injector; 
+        return injector;
     }
 
     @Override
@@ -67,5 +67,5 @@ class ReferenceFactoryService<T> implements Service<ManagedReferenceFactory>, Co
     public String getJndiViewInstanceValue() {
         final Object value = reference != null ? reference.getInstance() : null;
         return String.valueOf(value);
-    }    
+    }
 }

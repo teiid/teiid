@@ -44,7 +44,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 /**
- * Represents the messages going from PG ODBC Client --> back end Server  
+ * Represents the messages going from PG ODBC Client --> back end Server
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")
@@ -59,13 +59,13 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 	private String user;
 	private String databaseName;
 	private PgBackendProtocol pgBackendProtocol;
-	
+
 	public PgFrontendProtocol(PgBackendProtocol pgBackendProtocol, int maxObjectSize) {
-        
+
 		if (maxObjectSize <= 0) {
             throw new IllegalArgumentException("maxObjectSize: " + maxObjectSize); //$NON-NLS-1$
         }
-		
+
 		this.maxObjectSize = maxObjectSize;
 		this.pgBackendProtocol = pgBackendProtocol;
 		// the proxy is used for generating the object based message based on ServiceInvocationStruct class.
@@ -81,31 +81,31 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 			}
 		});
 	}
-	
+
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf buffer, List<Object> out) throws Exception {
-		
+
         if (this.initialized && this.messageType == null) {
 	        if (buffer.readableBytes() < 1 ) {
 	            return ;
 	        }
-	
+
 	        this.messageType = buffer.readByte();
 	        if (this.messageType < 0 ) {
 	        	this.odbcProxy.terminate();
 	        	out.add(this.message);
 	        }
         }
-        
+
         if (!this.initialized) {
         	this.messageType = 'I';
         }
-        
+
         if (this.dataLength == null) {
 	        if (buffer.readableBytes() < 4) {
 	            return ;
 	        }
-	                
+
 	        this.dataLength = buffer.readInt();
 	        if (this.dataLength <= 0) {
 	            throw new StreamCorruptedException("invalid data length: " + this.dataLength); //$NON-NLS-1$
@@ -124,7 +124,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         createRequestMessage(
                 this.messageType,
                 new NullTerminatedStringDataInputStream(data,
-                        new DataInputStream(new ByteArrayInputStream(data, 0,this.dataLength - 4)), 
+                        new DataInputStream(new ByteArrayInputStream(data, 0,this.dataLength - 4)),
                         this.pgBackendProtocol.getEncoding()), ctx.channel());
 		this.dataLength = null;
 		this.messageType = null;
@@ -133,7 +133,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 
 	private Object createRequestMessage(byte messageType, NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         switch(messageType) {
-        case 'I': 
+        case 'I':
         	this.initialized = true;
         	return buildInitialize(data, channel);
         case 'p':
@@ -157,7 +157,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         case 'H':
         	return buildFlush();
         case 'F':
-        	return buildFunctionCall(data);        	               	
+        	return buildFunctionCall(data);
         default:
         	return buildError();
         }
@@ -180,10 +180,10 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 
 	private Object buildInitialize(NullTerminatedStringDataInputStream data, Channel channel) throws IOException{
         Properties props = new Properties();
-       
+
         int version = data.readInt();
         props.setProperty("version", Integer.toString(version));
-        
+
         // SSL Request
         if (version == 80877103) {
         	this.initialized = false;
@@ -198,14 +198,14 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
             this.odbcProxy.cancel(pid, key);
             return message;
         }
-        
+
         if (this.pgBackendProtocol.secureData() && channel.pipeline().get(org.teiid.transport.PgBackendProtocol.SSL_HANDLER_KEY) == null) {
         	this.odbcProxy.unsupportedOperation(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40123));
         	return message;
         }
-        
+
         trace("StartupMessage version", version, "(", (version >> 16), ".", (version & 0xff), ")");
-        
+
         while (true) {
             String param =  data.readString();
             if (param.length() == 0) {
@@ -213,7 +213,7 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
             }
             String value =  data.readString();
             props.setProperty(param, value);
-        }        
+        }
         this.user = props.getProperty("user");
         this.databaseName = props.getProperty("database");
         String clientEncoding = props.getProperty("client_encoding", PgBackendProtocol.DEFAULT_ENCODING);
@@ -225,18 +225,18 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         this.odbcProxy.initialize(props);
         return message;
 	}
-	
+
 	private Object buildLogin(NullTerminatedStringDataInputStream data, Channel channel) {
         this.odbcProxy.logon(this.databaseName, this.user, data, channel.remoteAddress());
         return message;
-	}	
+	}
 
 	private Object buildParse(NullTerminatedStringDataInputStream data) throws IOException {
         String name = data.readString();
         String sql = data.readString();
-        
-        //The number of parameter data types specified (can be zero). Note that this is not 
-        //an indication of the number of parameters that might appear in the query string, only 
+
+        //The number of parameter data types specified (can be zero). Note that this is not
+        //an indication of the number of parameters that might appear in the query string, only
         //the number that the frontend wants to specify types for.
         int count = data.readShort();
         int[] paramType = new int[count];
@@ -246,14 +246,14 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         }
         this.odbcProxy.prepare(name, sql, paramType);
         return message;
-	}	
+	}
 
 	private Object buildBind(NullTerminatedStringDataInputStream data) throws IOException {
         String bindName = data.readString();
         String prepName = data.readString();
-        
+
         Object[] params = readParams(data);
-        
+
         int resultCodeCount = data.readShort();
         short[] resultColumnFormat = null;
         if (resultCodeCount != 0) {
@@ -278,16 +278,16 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
         for (int i = 0; i < formatCodeCount; i++) {
             formatCodes[i] = data.readShort();
         }
-        
+
         int paramCount = data.readShort();
-        
+
         Object[] params = new Object[paramCount];
         for (int i = 0; i < paramCount; i++) {
             byte[] paramdata = readByteArray(data);
             if (paramdata == null) {
                 continue;
             }
-            
+
             // the params can be either text or binary
             if (formatCodeCount == 0 || (formatCodeCount == 1 && formatCodes[0] == 0) || formatCodes[i] == 0) {
             	params[i] = new String(paramdata, this.pgBackendProtocol.getEncoding());
@@ -297,14 +297,14 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
             }
         }
         return params;
-    }	
+    }
 
 	private Object buildExecute(NullTerminatedStringDataInputStream data) throws IOException {
 		String portalName = data.readString();
         int maxRows = data.readInt();
         this.odbcProxy.execute(portalName, maxRows);
         return message;
-	}	
+	}
 
 
 	private Object buildDescribe(NullTerminatedStringDataInputStream data)  throws IOException{
@@ -322,27 +322,27 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
             return message;
         }
 	}
-	
+
 
 	private Object buildSync() {
 		this.odbcProxy.sync();
 		return message;
-	}	
+	}
 
 	private Object buildExecuteQuery(NullTerminatedStringDataInputStream data) throws IOException {
         String query = data.readString();
         this.odbcProxy.executeQuery(query);
         return message;
-	}	
-	
+	}
+
 	static byte[] createByteArray(int length) throws StreamCorruptedException{
 		try {
 			return new byte[length];
 		} catch(OutOfMemoryError e) {
-			throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$ 
+			throw new StreamCorruptedException("data too big: " + e.getMessage()); //$NON-NLS-1$
 		}
 	}
-	
+
 	private Object buildClose(NullTerminatedStringDataInputStream data) throws IOException {
 		char type = (char)data.read();
 		String name = data.readString();
@@ -356,20 +356,20 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 			this.odbcProxy.unsupportedOperation("unknown close type specified");
 		}
 		return message;
-	}	
-	
+	}
+
 	@SuppressWarnings("unused")
 	private Object buildFunctionCall(NullTerminatedStringDataInputStream data) throws IOException {
 		int funcID = data.readInt();
-		
+
 		Object[] params = readParams(data);
-		
+
 		short resultFormat = data.readShort();
-		
+
 		this.odbcProxy.functionCall(funcID, params, resultFormat);
 		return message;
-	}	
-	
+	}
+
 	private byte[] readByteArray(NullTerminatedStringDataInputStream data) throws IOException {
 		int length = data.readInt();
 		if (length == -1) {
@@ -382,15 +382,15 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 		data.readFully(content);
 		return content;
 	}
-	
+
 	public static class PGRequest {
 		ServiceInvocationStruct struct;
 	}
-	
+
 	public static class NullTerminatedStringDataInputStream extends DataInputStream{
 		private Charset encoding;
 		private byte[] rawData;
-		
+
 		public NullTerminatedStringDataInputStream(byte[] rawData, DataInputStream in, Charset encoding) {
 			super(in);
 			this.encoding = encoding;
@@ -408,12 +408,12 @@ public class PgFrontendProtocol extends ByteToMessageDecoder {
 	        }
 	        return new String(buff.toByteArray(), this.encoding);
 	    }
-	    
+
 	    public byte[] readServiceToken() {
 	    	return this.rawData;
 	    }
 	}
-	
+
 	private static void trace(Object... msg) {
 		LogManager.logTrace(LogConstants.CTX_ODBC, msg);
 	}

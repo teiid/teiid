@@ -17,21 +17,21 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class StandaloneGlobalTransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
 	private XidImpl xid;
-	
+
     public StandaloneGlobalTransaction() {
         super();
     }
-        
+
     @Override
     protected void before(TransactionQueryTestCase test) {
-        try {          
+        try {
         	xid = createXid();
         	XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
          	xaResource.setTransactionTimeout(120);
         	xaResource.start(xid, XAResource.TMNOFLAGS);
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
-        }        
+        }
     }
 
 	public static XidImpl createXid() {
@@ -41,22 +41,22 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
 		RANDOM.nextBytes(bid);
 		return new XidImpl(0, gid, bid);
 	}
-    
+
     @Override
     protected void after(TransactionQueryTestCase test) {
         boolean delistSuccessful = false;
         boolean commit = false;
         try {
             XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
-            
+
 			xaResource.end(xid, XAResource.TMSUCCESS);
-            
+
             if (!test.exceptionExpected() && xaResource.prepare(xid) == XAResource.XA_OK) {
             	commit = true;
             }
             delistSuccessful = true;
         } catch (Exception e) {
-            throw new TransactionRuntimeException(e);            
+            throw new TransactionRuntimeException(e);
         } finally {
             try {
                 if (!delistSuccessful || test.rollbackAllways()|| test.exceptionOccurred()) {
@@ -64,10 +64,10 @@ public class StandaloneGlobalTransaction extends TransactionContainer {
                  }
                 else if (commit) {
                     test.getConnectionStrategy().getXAConnection().getXAResource().commit(xid, true);
-                }            
+                }
             } catch (Exception e) {
-                throw new TransactionRuntimeException(e);            
-            } 
+                throw new TransactionRuntimeException(e);
+            }
         }
-    }    
+    }
 }

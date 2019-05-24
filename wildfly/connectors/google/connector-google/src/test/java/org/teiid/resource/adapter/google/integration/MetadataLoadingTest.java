@@ -13,7 +13,7 @@ import junit.framework.Assert;
 
 /**
  * Testing of metadata loading. For metadata loading we use GData API.
- * 
+ *
  * @author fnguyen
  *
  *
@@ -21,10 +21,10 @@ import junit.framework.Assert;
 @Ignore
 @SuppressWarnings("nls")
 public class MetadataLoadingTest extends IntegrationTest {
-	
+
 	private static GDataClientLoginAPI gdata = null;
 	private static GoogleDataProtocolAPI visualizationAPI = null;
-	
+
 	{
 		AuthHeaderFactory auth= new OAuth2HeaderFactory(refreshToken);
 		auth.refreshToken();
@@ -33,8 +33,8 @@ public class MetadataLoadingTest extends IntegrationTest {
 		visualizationAPI = new GoogleDataProtocolAPI();
 		visualizationAPI.setHeaderFactory(auth);
 	}
-	
-	@Test 
+
+	@Test
 	public void testMetadata(){
 
 		SpreadsheetMetadataExtractor extractor = new SpreadsheetMetadataExtractor();
@@ -46,8 +46,8 @@ public class MetadataLoadingTest extends IntegrationTest {
 		metadata= extractor.extractMetadata("people", false);
 		Assert.assertEquals(5,metadata.getWorksheetByName("list").getColumnCount());
 		Assert.assertEquals(4,metadata.getWorksheetByName("phones").getColumnCount());
-		
+
 	}
-	
+
 }
 

@@ -51,11 +51,11 @@ import org.xml.sax.SAXException;
  */
 class VDBParserDeployer implements DeploymentUnitProcessor {
 	private VDBRepository vdbRepo;
-	
+
 	public VDBParserDeployer(VDBRepository vdbRepo) {
 		this.vdbRepo = vdbRepo;
 	}
-	
+
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
 		final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
@@ -63,18 +63,18 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
-		
+
 		if (TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
-			parseVDBXML(file, deploymentUnit, phaseContext, true);			
+			parseVDBXML(file, deploymentUnit, phaseContext, true);
 		}
 		else if (TeiidAttachments.isVDBDDLDeployment(deploymentUnit)) {
 			parseVDBDDL(file, deploymentUnit, phaseContext, true);
 		}
 		else {
-			// scan for different files 
+			// scan for different files
 			try {
 				file.getChildrenRecursively(new VirtualFileFilter() {
-					
+
 					@Override
 					public boolean accepts(VirtualFile file) {
 						if (file.isDirectory()) {
@@ -83,24 +83,24 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 						return false;
 					}
 				});
-				
+
 				VirtualFile vdbXml = file.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
 				VirtualFile vdbDDL = file.getChild("/META-INF/vdb.ddl"); //$NON-NLS-1$
-				
+
 				if (!vdbXml.exists() && !vdbDDL.exists()) {
 					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit));
 				}
-				
+
 				if (vdbXml.exists()) {
 				    parseVDBXML(vdbXml, deploymentUnit, phaseContext, false);
 				} else {
 				    parseVDBDDL(vdbDDL, deploymentUnit, phaseContext, false);
 				}
-                
+
 				mergeMetaData(deploymentUnit);
 
 			} catch (IOException e) {
-				throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);	
+				throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 			}
 		}
 	}
@@ -147,18 +147,18 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		try {
             PropertyReplacer replacer = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_REPLACER);
             String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
-			
+
 			ObjectSerializer serializer = ObjectSerializer.class
 					.cast(phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER).getValue());
 
 			DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(vdbRepo);
 			VDBMetaData vdb = store.getVDBMetadata(vdbContents);
-			
+
 			// if there is persisted one, let that be XML version for now.
 			if (serializer.buildVdbXml(vdb).exists()) {
 				vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
 			}
-			
+
 			vdb.setStatus(Status.LOADING);
 			vdb.setXmlDeployment(xmlDeployment);
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
@@ -170,19 +170,19 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 	}
-	
+
     public void undeploy(final DeploymentUnit context) {
-    }	
-    
+    }
+
 	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) {
 		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		
+
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName())); 
+			LogManager.logError(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName()));
 			return null;
 		}
-				
+
 		LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB", file.getName(), "has been parsed."); //$NON-NLS-1$ //$NON-NLS-2$
 		return vdb;
 	}

@@ -55,7 +55,7 @@ public class TeiidDialect extends Dialect {
 	private static FloatType FLOAT = FloatType.INSTANCE;
 	private static IntegerType INTEGER = IntegerType.INSTANCE;
 	private static LongType LONG = LongType.INSTANCE;
-	private static CharacterType CHARACTER = CharacterType.INSTANCE; 
+	private static CharacterType CHARACTER = CharacterType.INSTANCE;
 	private static BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
 	private static DateType DATE = DateType.INSTANCE;
 	private static TimeType TIME = TimeType.INSTANCE;
@@ -63,7 +63,7 @@ public class TeiidDialect extends Dialect {
 	private static BlobType BLOB = BlobType.INSTANCE;
 	private static ClobType CLOB = ClobType.INSTANCE;
 	private static ObjectType OBJECT = ObjectType.INSTANCE;
-	
+
     public TeiidDialect() {
         // Register types
         registerColumnType(Types.CHAR, "char"); //$NON-NLS-1$
@@ -88,7 +88,7 @@ public class TeiidDialect extends Dialect {
         registerColumnType(Types.VARBINARY, "blob"); //$NON-NLS-1$
         registerColumnType(Types.CLOB, "clob"); //$NON-NLS-1$
         registerColumnType(Types.JAVA_OBJECT, "object"); //$NON-NLS-1$
-        
+
         registerFunction("acos", new StandardSQLFunction("acos", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("asin", new StandardSQLFunction("asin", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("atan", new StandardSQLFunction("atan", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -166,15 +166,15 @@ public class TeiidDialect extends Dialect {
         registerFunction("modifytimezone", new StandardSQLFunction("modifytimezone", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
 
         registerFunction("convert", new StandardSQLFunction("convert")); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         registerFunction("to_bytes", new StandardSQLFunction("to_bytes", BLOB)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("to_chars", new StandardSQLFunction("to_chars", CLOB)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("from_unittime", new StandardSQLFunction("from_unittime", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("session_id", new StandardSQLFunction("session_id", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         registerFunction("uuid", new StandardSQLFunction("uuid", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("unescape", new StandardSQLFunction("unescape", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         registerFunction("array_get", new StandardSQLFunction("array_get", OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("array_length", new StandardSQLFunction("array_length", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -254,8 +254,8 @@ public class TeiidDialect extends Dialect {
         ResultSet rs = ps.getResultSet();
         return rs;
     }
-    
-    /** 
+
+    /**
      * @see org.hibernate.dialect.Dialect#registerResultSetOutParameter(java.sql.CallableStatement, int)
      */
     public int registerResultSetOutParameter(CallableStatement statement,
@@ -282,22 +282,22 @@ public class TeiidDialect extends Dialect {
 	public String getForUpdateString(String aliases) {
 		return ""; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public String getSelectGUIDString() {
 		return "select uuid()"; //$NON-NLS-1$
 	}
-	
+
 	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
-	
+
 	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
-	
+
     @Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName );
@@ -306,7 +306,7 @@ public class TeiidDialect extends Dialect {
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return sequenceName + "_nextval()";
-	}	
+	}
 
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
         return new LocalTemporaryTableBulkIdStrategy(

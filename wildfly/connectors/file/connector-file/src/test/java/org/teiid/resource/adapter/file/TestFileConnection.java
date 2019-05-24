@@ -30,7 +30,7 @@ import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestFileConnection {
-	
+
 	@Test public void testFileMapping() throws Exception {
 		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
 		fmcf.setParentDirectory("foo");
@@ -42,7 +42,7 @@ public class TestFileConnection {
 		f = fc.getFile("n");
 		assertEquals("foo" + File.separator + "n", f.getPath());
 	}
-	
+
 	@Test(expected=TranslatorException.class) public void testParentPaths() throws Exception {
 		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
 		fmcf.setParentDirectory("foo");
@@ -51,7 +51,7 @@ public class TestFileConnection {
 		FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
 		fc.getFile(".." + File.separator + "x");
 	}
-	
+
 	@Test public void testParentPaths1() throws Exception {
 		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
 		fmcf.setParentDirectory("foo");
@@ -60,7 +60,7 @@ public class TestFileConnection {
 		FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
 		fc.getFile(".." + File.separator + "x");
 	}
-	
+
 	@Test public void testFileGlob() throws Exception {
 	    FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
         fmcf.setParentDirectory(UnitTestUtil.getTestDataPath());
@@ -69,11 +69,11 @@ public class TestFileConnection {
         VirtualFile[] files = fc.getFiles("*.txt");
         assertEquals(1, files.length);
         assertEquals("foo.txt", files[0].getName());
-        
+
         files = fc.getFiles("*.911");
         assertEquals(0, files.length);
     }
-	
+
 	@Test public void testFileDoesntExist() throws Exception {
         FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
         fmcf.setParentDirectory(UnitTestUtil.getTestDataPath()+"xyz");

@@ -36,25 +36,25 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * the declare statement that is used in constructing this instruction.</p>
  */
 public class ErrorInstruction extends ProgramInstruction {
-	
+
     private Expression expression;
     private boolean warning;
-    
+
 	/**
 	 * Constructor for DeclareInstruction.
 	 */
 	public ErrorInstruction() {
 	}
-	
+
 	public void setExpression(Expression expression) {
 		this.expression = expression;
 	}
-	
+
 	public void setWarning(boolean warning) {
 		this.warning = warning;
 	}
-    
-    /** 
+
+    /**
      * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
      */
     public ErrorInstruction clone() {
@@ -63,17 +63,17 @@ public class ErrorInstruction extends ProgramInstruction {
         clone.warning = warning;
         return clone;
     }
-	    
+
     public String toString() {
         return "RAISE " + (warning?"WARNING":"ERROR") +" INSTRUCTION: " + expression; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }  
-    
+    }
+
     public PlanNode getDescriptionProperties() {
     	PlanNode node = new PlanNode("RAISE " + (warning?"WARNING":"ERROR")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	node.addProperty(PROP_EXPRESSION, this.expression.toString());
     	return node;
     }
-    
+
     @Override
     public void process(ProcedurePlan env) throws TeiidComponentException,
     		TeiidProcessingException, TeiidSQLException {
@@ -88,10 +88,10 @@ public class ErrorInstruction extends ProgramInstruction {
         }
         throw TeiidSQLException.create((Exception)value);
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         return SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expression));
     }
- 
+
 }

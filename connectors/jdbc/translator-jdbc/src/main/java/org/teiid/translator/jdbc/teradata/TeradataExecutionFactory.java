@@ -43,7 +43,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 
 
-/** 
+/**
  * Teradata database Release 12
  */
 @Translator(name="teradata", description="A translator for Teradata Database")
@@ -51,13 +51,13 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
 	public static String TERADATA = "teradata"; //$NON-NLS-1$
 	protected ConvertModifier convert = new ConvertModifier();
-	
+
     public TeradataExecutionFactory() {
         setMaxDependentInPredicates(5);
         //teradata documentation does not make it clear that there is a hard limit. this value comes from hibernate
-        setMaxInCriteriaSize(1024); 
+        setMaxInCriteriaSize(1024);
     }
-    
+
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -67,7 +67,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
 
     	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new CastModifier("TIME")); //$NON-NLS-1$
-    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE")); //$NON-NLS-1$ 
+    	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE,  new CastModifier("DATE")); //$NON-NLS-1$
     	convert.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new CastModifier("TIMESTAMP")); //$NON-NLS-1$
     	convert.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP,  new CastModifier("TIMESTAMP")); //$NON-NLS-1$
 
@@ -80,31 +80,31 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	convert.addConvert(FunctionModifier.STRING, FunctionModifier.SHORT, new CastModifier("smallint"));//$NON-NLS-1$
     	convert.addConvert(FunctionModifier.STRING, FunctionModifier.DOUBLE, new CastModifier("double precision"));//$NON-NLS-1$
     	convert.addConvert(FunctionModifier.STRING, FunctionModifier.BYTE, new CastModifier("byteint")); //$NON-NLS-1$
-    	
+
     	convert.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING,  new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'Y4-MM-DDBHH:MI:SSDS(6)') AS VARCHAR(26))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}); 
+		});
     	convert.addConvert(FunctionModifier.TIME, FunctionModifier.STRING,   new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'HH:MI:SS') AS VARCHAR(9))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}); 
+		});
     	convert.addConvert(FunctionModifier.DATE, FunctionModifier.STRING,  new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("cast(cast(", function.getParameters().get(0), " AS FORMAT 'YYYY-MM-DD') AS VARCHAR(11))"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}); 
-    	
+		});
+
     	convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
     	convert.addNumericBooleanConversions();
-		
+
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$	
+		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
@@ -126,17 +126,17 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 				function.setName(SourceSystemFunctions.TAN);
 				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
 			}
-		});        
+		});
         registerFunctionModifier(SourceSystemFunctions.LTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				ArrayList<Object> target = new ArrayList<Object>();
 				target.add("TRIM(LEADING FROM ");//$NON-NLS-1$
 				target.add(function.getParameters().get(0));
-				target.add(")"); //$NON-NLS-1$				
-				return target; 
+				target.add(")"); //$NON-NLS-1$
+				return target;
 			}
-		}); 
+		});
         registerFunctionModifier(SourceSystemFunctions.RTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -144,16 +144,16 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 				target.add("TRIM(TRAILING FROM ");//$NON-NLS-1$
 				target.add(function.getParameters().get(0));
 				target.add(")"); //$NON-NLS-1$
-				return target; 
+				return target;
 			}
-		}); 
+		});
         registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), " MOD ", function.getParameters().get(1)); //$NON-NLS-1$
 			}
-		});  
-        
+		});
+
         addPushDownFunction(TERADATA, "COSH", FLOAT, FLOAT); //$NON-NLS-1$
         addPushDownFunction(TERADATA, "TANH", FLOAT, FLOAT); //$NON-NLS-1$
         addPushDownFunction(TERADATA, "ACOSH", FLOAT, FLOAT); //$NON-NLS-1$
@@ -167,7 +167,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(TERADATA, "HASHBAKAMP", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(TERADATA, "HASHBUCKET", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(TERADATA, "HASHROW", INTEGER, STRING); //$NON-NLS-1$
-        addPushDownFunction(TERADATA, "NULLIFZERO", BIG_DECIMAL, BIG_DECIMAL); //$NON-NLS-1$        
+        addPushDownFunction(TERADATA, "NULLIFZERO", BIG_DECIMAL, BIG_DECIMAL); //$NON-NLS-1$
         addPushDownFunction(TERADATA, "ZEROIFNULL", BIG_DECIMAL, BIG_DECIMAL); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
 			@Override
@@ -175,33 +175,33 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 				function.setName(SourceSystemFunctions.TAN);
 				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
 			}
-		});        
+		});
         registerFunctionModifier(SourceSystemFunctions.LTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("TRIM(LEADING FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}); 
+		});
         registerFunctionModifier(SourceSystemFunctions.RTRIM, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList("TRIM(TRAILING FROM ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-		}); 
+		});
         registerFunctionModifier(SourceSystemFunctions.MOD, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), " MOD ", function.getParameters().get(1)); //$NON-NLS-1$
 			}
-		});        
+		});
 	}
 
 	@Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new TeradataSQLConversionVisitor(this);
     }
-	
-	
+
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -217,7 +217,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.COT);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
 		supportedFunctions.add(SourceSystemFunctions.CURDATE);
-		supportedFunctions.add(SourceSystemFunctions.CURTIME); 
+		supportedFunctions.add(SourceSystemFunctions.CURTIME);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.EXP);
         supportedFunctions.add(SourceSystemFunctions.HOUR);
@@ -244,7 +244,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 
         return supportedFunctions;
     }
-    
+
     @Override
     public String translateLiteralDate(Date dateValue) {
         return "DATE '" + formatDateValue(dateValue, false) + '\''; //$NON-NLS-1$
@@ -254,12 +254,12 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     public String translateLiteralTime(Time timeValue) {
         return "TIME '" + formatDateValue(timeValue, false) + '\''; //$NON-NLS-1$
     }
-    
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP '" + formatDateValue(timestampValue, false) + '\''; //$NON-NLS-1$ 
-    }	
-    
+        return "TIMESTAMP '" + formatDateValue(timestampValue, false) + '\''; //$NON-NLS-1$
+    }
+
     // Teradata also supports MINUS & ALL set operators
     // more aggregates available
 
@@ -267,7 +267,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsScalarSubqueries() {
         return false;
     }
-    
+
     @Override
     public boolean supportsUnions() {
     	return true;
@@ -281,28 +281,28 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsExcept() {
     	return true;
-    }    
-    
+    }
+
     @Override
     public boolean supportsInlineViews() {
         return true;
-    }  
-    
+    }
+
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
     	return false;
-    }    
-    
+    }
+
     @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.FIRST;
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	if (command instanceof QueryExpression) {
@@ -325,7 +325,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     				Expression ex = ss.getExpression();
     				if (!(ex instanceof ColumnReference)) {
     					continue;
-    				} 
+    				}
     				ColumnReference cr = (ColumnReference)ex;
     				Integer position = positions.get(cr.toString());
     				if (position != null) {
@@ -336,14 +336,14 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translateCommand(command, context);
     }
-    
+
     public static class LocateModifier extends FunctionModifier {
     	ConvertModifier convertModifier;
-    	
+
     	public LocateModifier(ConvertModifier convertModifier) {
     		this.convertModifier = convertModifier;
     	}
-		
+
     	@Override
 		public List<?> translate(Function function) {
     		ArrayList<Object> target = new ArrayList<Object>();
@@ -358,7 +358,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 	    		target.add(expr2);
 	    		target.add(","); //$NON-NLS-1$
 	    		target.add(expr3);
-	    		target.add("))"); //$NON-NLS-1$	    		
+	    		target.add("))"); //$NON-NLS-1$
     		}
     		else {
 	    		target.add("position("); //$NON-NLS-1$
@@ -370,7 +370,7 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     		return target;
 		}
 	}
-    
+
 	public static class ExtractModifier extends FunctionModifier {
     	private String type;
     	public ExtractModifier(String type) {
@@ -378,10 +378,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
     	}
 		@Override
 		public List<?> translate(Function function) {
-			return Arrays.asList("extract(",this.type," from ",function.getParameters().get(0) ,")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 				
+			return Arrays.asList("extract(",this.type," from ",function.getParameters().get(0) ,")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
-    
+
     public static class CastModifier extends FunctionModifier {
     	private String target;
     	public CastModifier(String target) {
@@ -392,16 +392,16 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 			return Arrays.asList("cast(", function.getParameters().get(0), " AS "+this.target+")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 	}
-    
+
     public static class LeftOrRightFunctionModifier extends FunctionModifier {
         private LanguageFactory langFactory;
         ConvertModifier convertModifier;
-        
+
         public LeftOrRightFunctionModifier(LanguageFactory langFactory, ConvertModifier converModifier) {
             this.langFactory = langFactory;
             this.convertModifier = converModifier;
         }
-        
+
         @Override
         public List<?> translate(Function function) {
             List<Expression> args = function.getParameters();
@@ -416,10 +416,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             	target.add(args.get(1));
             	target.add(")"); //$NON-NLS-1$
             } else if (function.getName().equalsIgnoreCase("right")) { //$NON-NLS-1$
-            	//substr(case_size, character_length(case_size) -4) 
+            	//substr(case_size, character_length(case_size) -4)
             	target.add("substr("); //$NON-NLS-1$
             	target.add(args.get(0));
-            	
+
             	target.add(",(character_length("); //$NON-NLS-1$
             	target.add(args.get(0));
             	target.add(")-"); //$NON-NLS-1$
@@ -429,12 +429,12 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
             return target;
         }
     }
-    
+
     @Override
     protected boolean usesDatabaseVersion() {
         return true;
     }
-    
+
     @Override
     public String getHibernateDialectClassName() {
         if (getVersion().getMajorVersion() >= 14) {
@@ -442,10 +442,10 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         }
         return "org.hibernate.dialect.TeradataDialect"; //$NON-NLS-1$
     }
-    
+
     @Override
     protected boolean supportsBooleanExpressions() {
         return false;
     }
-    
+
 }

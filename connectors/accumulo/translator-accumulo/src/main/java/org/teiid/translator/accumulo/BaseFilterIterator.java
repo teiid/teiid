@@ -35,7 +35,7 @@ public abstract class BaseFilterIterator extends RowFilter {
 	public static final String NEGATE = "NEGATE"; //$NON-NLS-1$
 	protected AccumuloMetadataProcessor.ValueIn valueIn;
 	protected ColumnSet columnFilter;
-	private boolean negate = false; 
+	private boolean negate = false;
 
 	@Override
 	public void init(SortedKeyValueIterator<Key, Value> source,
@@ -80,7 +80,7 @@ public abstract class BaseFilterIterator extends RowFilter {
 		}
 		return accept(rowItem);
 	}
-	
+
 	private boolean accept(SortedKeyValueIterator<Key,Value> rowItem) {
 		while(rowItem.hasTop()) {
 			Key key = rowItem.getTopKey();
@@ -101,5 +101,5 @@ public abstract class BaseFilterIterator extends RowFilter {
 	@SuppressWarnings("unused")
 	public boolean accept(byte[] value) {
 		return true;
-	}	
+	}
 }

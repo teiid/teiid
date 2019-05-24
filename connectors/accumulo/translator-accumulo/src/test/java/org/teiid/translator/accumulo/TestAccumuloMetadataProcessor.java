@@ -42,13 +42,13 @@ import org.teiid.query.metadata.SystemMetadata;
 
 @SuppressWarnings("nls")
 public class TestAccumuloMetadataProcessor {
-	
+
 	private static Connector connector;
-	
+
 	@Before
 	public void setup() throws Exception {
 		MockInstance instance = new MockInstance("teiid-test");
-		
+
 		connector = instance.getConnector("root", new PasswordToken(""));
 		try {
 			connector.tableOperations().create("Customer");
@@ -71,7 +71,7 @@ public class TestAccumuloMetadataProcessor {
 		writer.addMutation(m);
 		writer.close();
 	}
-	
+
 	@Test
 	public void testDefaultImportPropertiesMetadata() throws Exception {
 		AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
@@ -100,14 +100,14 @@ public class TestAccumuloMetadataProcessor {
 		assertEquals("CompanyName",column.getProperty(AccumuloMetadataProcessor.CQ, false));
 		assertEquals("{VALUE}",column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
 	}
-	
+
 	@Test
 	public void testImportPropertiesMetadata() throws Exception {
 		Properties props = new Properties();
-		
+
 		props.put("importer.ColumnNamePattern", "{CQ}");
 		props.put("importer.ValueIn", "{ROWID}");
-		
+
 		AccumuloConnection conn = Mockito.mock(AccumuloConnection.class);
 		Mockito.stub(conn.getInstance()).toReturn(connector);
 		Mockito.stub(conn.getAuthorizations()).toReturn(new Authorizations("public"));
@@ -134,11 +134,11 @@ public class TestAccumuloMetadataProcessor {
 		assertEquals("CompanyName",column.getProperty(AccumuloMetadataProcessor.CQ, false));
 		assertEquals("{ROWID}",column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
 		assertEquals(SearchType.All_Except_Like, column.getSearchType());
-		
+
 		column = customer.getColumnByName("rowid");
 		assertEquals(SearchType.All_Except_Like, column.getSearchType());
-		
+
 		assertNotNull(customer.getPrimaryKey());
-	}	
+	}
 
 }

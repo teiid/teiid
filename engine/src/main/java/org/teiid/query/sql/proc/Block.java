@@ -43,7 +43,7 @@ public class Block extends Statement implements Labeled {
 	private List<Statement> statements;
 	private boolean atomic;
 	private String label;
-	
+
 	private String exceptionGroup;
 	private List<Statement> exceptionStatements;
 
@@ -62,11 +62,11 @@ public class Block extends Statement implements Labeled {
 		this();
 		statements.add(statement);
 	}
-	
+
 	public String getLabel() {
 		return label;
 	}
-	
+
 	public void setLabel(String label) {
 		this.label = label;
 	}
@@ -94,7 +94,7 @@ public class Block extends Statement implements Labeled {
 	public void addStatement(Statement statement) {
 		addStatement(statement, false);
 	}
-	
+
 	public void addStatement(Statement statement, boolean exception) {
 		if (statement instanceof AssignmentStatement) {
 			AssignmentStatement stmt = (AssignmentStatement)statement;
@@ -103,7 +103,7 @@ public class Block extends Statement implements Labeled {
 				internalAddStatement(new CommandStatement(cmd), exception);
 				stmt.setCommand(null);
 				stmt.setExpression(null);
-				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT) 
+				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT)
 						&& stmt.getVariable().getGroupSymbol() != null && stmt.getVariable().getGroupSymbol().getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
 					return;
 				}
@@ -124,20 +124,20 @@ public class Block extends Statement implements Labeled {
 			statements.add(statement);
 		}
 	}
-	
+
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
+
 	/**
 	 * Deep clone statement to produce a new identical block.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
-	public Block clone() {		
+	public Block clone() {
 		Block copy = new Block();
 		copy.setAtomic(atomic);
 		copy.statements = LanguageObject.Util.deepClone(statements, Statement.class);
@@ -148,7 +148,7 @@ public class Block extends Statement implements Labeled {
 		copy.setLabel(label);
 		return copy;
 	}
-	
+
     /**
      * Compare two queries for equality.  Blocks will only evaluate to equal if
      * they are IDENTICAL: statements in the block are equal and are in the same order.
@@ -161,20 +161,20 @@ public class Block extends Statement implements Labeled {
     		return true;
 		}
 
-		// Quick fail tests		
+		// Quick fail tests
     	if(!(obj instanceof Block)) {
     		return false;
 		}
-    	
+
     	Block other = (Block)obj;
-    	
+
 		// Compare the statements on the block
-        return this.atomic == other.atomic 
+        return this.atomic == other.atomic
         && StringUtil.equalsIgnoreCase(label, other.label)
         && EquivalenceUtil.areEqual(getStatements(), other.getStatements())
         && EquivalenceUtil.areEqual(exceptionGroup, other.exceptionGroup)
         && EquivalenceUtil.areEqual(exceptionStatements, exceptionStatements);
-    }    
+    }
 
     /**
      * Get hashcode for block.  WARNING: This hash code relies on the hash codes of the
@@ -186,7 +186,7 @@ public class Block extends Statement implements Labeled {
     public int hashCode() {
     	return statements.hashCode();
 	}
-      
+
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
@@ -194,32 +194,32 @@ public class Block extends Statement implements Labeled {
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
     }
-    
+
     public boolean isAtomic() {
 		return atomic;
 	}
-    
+
     public void setAtomic(boolean atomic) {
 		this.atomic = atomic;
 	}
-    
+
     @Override
     public int getType() {
     	return Statement.TYPE_COMPOUND;
     }
-    
+
     public String getExceptionGroup() {
 		return exceptionGroup;
 	}
-    
+
     public void setExceptionGroup(String exceptionGroup) {
 		this.exceptionGroup = exceptionGroup;
 	}
-    
+
     public List<Statement> getExceptionStatements() {
 		return exceptionStatements;
 	}
-    
+
     public void setExceptionStatements(List<Statement> exceptionStatements) {
 		this.exceptionStatements = exceptionStatements;
 	}

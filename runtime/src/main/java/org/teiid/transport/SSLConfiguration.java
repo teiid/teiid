@@ -36,13 +36,13 @@ public class SSLConfiguration {
     public static final String ONEWAY = "1-way"; //$NON-NLS-1$ - one way is the default
     public static final String TWOWAY = "2-way"; //$NON-NLS-1$
     public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
-    
+
     public static final String LOGIN = "login"; //$NON-NLS-1$
     public static final String DISABLED = "disabled"; //$NON-NLS-1$
     public static final String ENABLED = "enabled"; //$NON-NLS-1$
 
     private static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
-    
+
     /*
      * External SSL resource settings
      */
@@ -56,7 +56,7 @@ public class SSLConfiguration {
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
     private String[] enabledCipherSuites;
-    private String keyAlias; 
+    private String keyAlias;
     private String keyPassword;
     private boolean truststoreCheckExpired;
 
@@ -64,7 +64,7 @@ public class SSLConfiguration {
         if (!isSslEnabled()) {
         	return null;
         }
-        
+
         // Use the SSLContext to create an SSLServerSocketFactory.
         SSLContext context = null;
 
@@ -82,7 +82,7 @@ public class SSLConfiguration {
                                     keyPassword,
                                     false,
                                     truststoreCheckExpired);
-        } 
+        }
 
         SSLEngine result = context.createSSLEngine();
         result.setUseClientMode(false);
@@ -104,58 +104,58 @@ public class SSLConfiguration {
     public boolean isClientEncryptionEnabled() {
         return LOGIN.equalsIgnoreCase(mode);
     }
-    
+
     public boolean isSslEnabled() {
     	return ENABLED.equalsIgnoreCase(mode);
     }
-    
+
     public String getMode() {
 		return mode;
 	}
-    
+
     public void setMode(String mode) {
 		this.mode = mode;
 	}
-    
+
     public void setKeystoreFilename(String value) {
     	this.keyStoreFileName = value;
     }
-    
+
     public void setKeystorePassword(String value) {
     	this.keyStorePassword = value;
     }
-    
+
     public void setKeystoreType(String value) {
     	this.keyStoreType = value;
     }
-    
+
     public void setSslProtocol(String value) {
     	this.sslProtocol = value;
     }
-    
+
     public void setKeymanagementAlgorithm(String value) {
     	this.keyManagerFactoryAlgorithm = value;
     }
-    
+
     public void setTruststoreFilename(String value) {
     	this.trustStoreFileName = value;
     }
-    
+
     public void setTruststorePassword(String value) {
     	this.trustStorePassword = value;
     }
-    
+
     public void setAuthenticationMode(String value) {
     	this.authenticationMode = value;
     }
-    
+
 	public void setEnabledCipherSuites(String enabledCipherSuites) {
 		this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
 		for (int i = 0; i < this.enabledCipherSuites.length; i++) {
 			this.enabledCipherSuites[i] = this.enabledCipherSuites[i].trim();
 		}
-	}    
-	
+	}
+
 	public String[] getEnabledCipherSuitesAsArray() {
 		return enabledCipherSuites;
 	}
@@ -163,15 +163,15 @@ public class SSLConfiguration {
 	public void setKeystoreKeyAlias(String alias) {
 		this.keyAlias = alias;
 	}
-	
+
 	public void setKeystoreKeyPassword(String keyPassword) {
 		this.keyPassword = keyPassword;
 	}
-	
+
 	public boolean isTruststoreCheckExpired() {
 		return truststoreCheckExpired;
 	}
-	
+
 	public void setTruststoreCheckExpired(boolean checkExpired) {
 		this.truststoreCheckExpired = checkExpired;
 	}

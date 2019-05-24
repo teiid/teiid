@@ -30,12 +30,12 @@ import org.teiid.core.util.StringUtil;
  * Represents a comparable version
  */
 public class Version implements Comparable<Version> {
-	
-	public static Version DEFAULT_VERSION = new Version(new Integer[] {0}); 
+
+	public static Version DEFAULT_VERSION = new Version(new Integer[] {0});
 	private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+)"); //$NON-NLS-1$
 
 	private Integer[] parts;
-	
+
 	public static Version getVersion(String version) {
 		if (version == null) {
 			return null;
@@ -53,7 +53,7 @@ public class Version implements Comparable<Version> {
 			try {
 				val = Integer.parseInt(num);
 			} catch (NumberFormatException e) {
-				
+
 			}
 			versionParts.add(val == null ? 0 : val);
 		}
@@ -62,20 +62,20 @@ public class Version implements Comparable<Version> {
 		}
 		return new Version(versionParts.toArray(new Integer[versionParts.size()]));
 	}
-	
+
 	Version(Integer[] parts) {
 		this.parts = parts;
 	}
-	
+
 	@Override
 	public String toString() {
 		return StringUtil.toString(this.parts, ".", false); //$NON-NLS-1$
 	}
-	
+
 	public int getMajorVersion() {
 		return parts[0];
 	}
-	
+
 	@Override
 	public int compareTo(Version o) {
 		int length = Math.min(this.parts.length, o.parts.length);
@@ -93,7 +93,7 @@ public class Version implements Comparable<Version> {
 		}
 		return 0;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -104,7 +104,7 @@ public class Version implements Comparable<Version> {
 		}
 		return this.compareTo((Version)obj) == 0;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(parts);

@@ -40,7 +40,7 @@ import org.teiid.query.sql.symbol.Expression;
  * against a string expression match value.  The match value may contain a few
  * special characters: % represents 0 or more characters and _ represents a single
  * match character.  The escape character can be used to escape an actual % or _ within a
- * match string. 
+ * match string.
  */
 public class MatchCriteria extends PredicateCriteria implements Negatable {
 
@@ -52,30 +52,30 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 
 	/** The left-hand expression. */
 	private Expression leftExpression;
-	
+
 	/** The right-hand expression. */
 	private Expression rightExpression;
-    
+
 	/** The internal null escape character */
 	public static final char NULL_ESCAPE_CHAR = 0;
 
 	static char DEFAULT_ESCAPE_CHAR = PropertiesUtils.getHierarchicalProperty("org.teiid.backslashDefaultMatchEscape", false, Boolean.class)?'\\':NULL_ESCAPE_CHAR; //$NON-NLS-1$
-	
+
 	/** The escape character or '' if there is none */
 	private char escapeChar = DEFAULT_ESCAPE_CHAR;
-	
+
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
     private boolean negated;
     private MatchMode mode = MatchMode.LIKE;
-    
+
     /**
      * Constructs a default instance of this class.
      */
     public MatchCriteria() {}
-    
+
     /**
      * Constructs an instance of this class from a left and right expression
-     * 
+     *
      * @param leftExpression The expression to check
      * @param rightExpression The match expression
      */
@@ -87,7 +87,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     /**
      * Constructs an instance of this class from a left and right expression
      * and an escape character
-     * 
+     *
       * @param leftExpression The expression to check
      * @param rightExpression The match expression
      * @param escapeChar The escape character, to allow literal use of wildcard and single match chars
@@ -101,10 +101,10 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	 * Set left expression.
 	 * @param expression expression
 	 */
-	public void setLeftExpression(Expression expression) { 
+	public void setLeftExpression(Expression expression) {
 		this.leftExpression = expression;
 	}
-	
+
 	/**
 	 * Get left expression.
 	 * @return Left expression
@@ -117,10 +117,10 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	 * Set right expression.
 	 * @param expression expression
 	 */
-	public void setRightExpression(Expression expression) { 
+	public void setRightExpression(Expression expression) {
 		this.rightExpression = expression;
 	}
-	
+
 	/**
 	 * Get right expression.
 	 * @return right expression
@@ -134,7 +134,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	 * character in the expression to prevent it from being used as a wildcard or single
 	 * match.  The escape character must not be used elsewhere in the expression.
 	 * For example, to match "35%" without activating % as a wildcard, set the escape character
-	 * to '$' and use the expression "35$%".	 
+	 * to '$' and use the expression "35$%".
 	 * @return Escape character, if not set will return {@link #NULL_ESCAPE_CHAR}
 	 */
 	public char getEscapeChar() {
@@ -157,7 +157,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     public boolean isNegated() {
         return negated;
     }
-    
+
     /**
      * Sets the negation flag for this criteria.
      * @param negationFlag true if this criteria contains a NOT; false otherwise
@@ -165,7 +165,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
     }
-    
+
     @Override
     public void negate() {
     	this.negated = !this.negated;
@@ -174,7 +174,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-	
+
 	/**
 	 * Get hash code.  WARNING: The hash code is based on data in the criteria.
 	 * If data values are changed, the hash code will change - don't hash this
@@ -187,7 +187,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 		hc = HashCodeUtil.hashCode(hc, getRightExpression());
 		return hc;
 	}
-	
+
     /**
      * Override equals() method.
      * @param obj Other object
@@ -198,7 +198,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     	if(obj == this) {
 			return true;
 		}
-		
+
 		if(!(obj instanceof MatchCriteria)) {
     		return false;
 		}
@@ -208,11 +208,11 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
         if (isNegated() != mc.isNegated()) {
             return false;
         }
-        
+
         if (this.mode != mc.mode) {
         	return false;
         }
-        
+
         return getEscapeChar() == mc.getEscapeChar() &&
         EquivalenceUtil.areEqual(getLeftExpression(), mc.getLeftExpression()) &&
         EquivalenceUtil.areEqual(getRightExpression(), mc.getRightExpression());
@@ -224,26 +224,26 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	 */
 	public Object clone() {
 	    Expression leftCopy = null;
-	    if(getLeftExpression() != null) { 
+	    if(getLeftExpression() != null) {
 	        leftCopy = (Expression) getLeftExpression().clone();
-	    }	
+	    }
 	    Expression rightCopy = null;
-	    if(getRightExpression() != null) { 
+	    if(getRightExpression() != null) {
 	        rightCopy = (Expression) getRightExpression().clone();
-	    }	
+	    }
 	    MatchCriteria criteriaCopy = new MatchCriteria(leftCopy, rightCopy, getEscapeChar());
         criteriaCopy.setNegated(isNegated());
         criteriaCopy.mode = mode;
         return criteriaCopy;
 	}
-	
+
     private final static LRUCache<List<?>, Pattern> patternCache = new LRUCache<List<?>, Pattern>(100);
-    
+
     public static Pattern getPattern(String newPattern, String originalPattern, int flags) throws ExpressionEvaluationException {
     	List<?> key = Arrays.asList(newPattern, flags);
     	Pattern p = patternCache.get(key);
         if (p == null) {
-            try {	        
+            try {
     	        p = Pattern.compile(newPattern, Pattern.DOTALL);
     	        patternCache.put(key, p);
     		} catch(PatternSyntaxException e) {
@@ -277,7 +277,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	        this.replacements = replacements;
 	        this.flags = flags;
 	    }
-	    
+
 	    public Pattern translate(String pattern, char escape) throws ExpressionEvaluationException {
 	        List<?> key = Arrays.asList(pattern, escape);
 	        Pattern result = null;
@@ -303,12 +303,12 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 			} else {
 				newPattern.append('^');
 			}
-	        
+
 	        boolean escaped = false;
 	        boolean endsWithMatchAny = false;
 	        for (int i = startChar; i < pattern.length(); i++) {
 	            char character = pattern.charAt(i);
-	            
+
 	            if (character == escape && character != NULL_ESCAPE_CHAR) {
 	                if (escaped) {
 	                    appendCharacter(newPattern, character);
@@ -337,32 +337,32 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	            	}
 	            }
 	        }
-	        
+
 	        if (escaped) {
 	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30449, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30449, new Object[] {pattern, new Character(escape)}));
 	        }
-	        
+
 	        if (!endsWithMatchAny) {
 	        	newPattern.append('$');
 	        }
 			return newPattern.toString();
 		}
-	    
+
 	    private void appendCharacter(StringBuffer newPattern, char character) {
 	        if (Arrays.binarySearch(this.reserved, character) >= 0) {
 	            newPattern.append(this.newEscape);
-	        } 
+	        }
 	        newPattern.append(character);
 	    }
-	    
+
 	}
-	
+
 	public MatchMode getMode() {
 		return mode;
 	}
-	
+
 	public void setMode(MatchMode mode) {
 		this.mode = mode;
 	}
-	
+
 }  // END CLASS

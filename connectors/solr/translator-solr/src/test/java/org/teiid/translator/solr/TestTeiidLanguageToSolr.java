@@ -47,7 +47,7 @@ public class TestTeiidLanguageToSolr {
 	private TransformationMetadata metadata;
 	private SolrExecutionFactory translator;
 	private TranslationUtility utility;
-	
+
 	private QueryMetadataInterface setUp(String ddl, String vdbName,
 			String modelName) throws Exception {
 
@@ -87,19 +87,19 @@ public class TestTeiidLanguageToSolr {
 
 	@Test
 	public void testSelectWhereEQ() throws Exception {
-		assertEquals("fl=price,weight,popularity&q=price:1.0", 
+		assertEquals("fl=price,weight,popularity&q=price:1.0",
 				getSolrTranslation("select price,weight,popularity from example where price=1"));
 	}
-	
+
 	@Test
 	public void testSelectWhereEQNegitive() throws Exception {
-		assertEquals("fl=price,weight,popularity&q=price:\\-1.0", 
+		assertEquals("fl=price,weight,popularity&q=price:\\-1.0",
 				getSolrTranslation("select price,weight,popularity from example where price=-1"));
-	}	
+	}
 
 	@Test
 	public void testSelectWhereNE() throws Exception {
-		assertEquals("fl=price,weight,popularity&q=NOT price:1.0", 
+		assertEquals("fl=price,weight,popularity&q=NOT price:1.0",
 				getSolrTranslation("select price,weight,popularity from example where price!=1"));
 	}
 
@@ -181,7 +181,7 @@ public class TestTeiidLanguageToSolr {
 
 	@Test
 	public void testSelectWhenLike() throws Exception {
-		assertEquals("fl=price,weight,popularity&q=name:*sung", 
+		assertEquals("fl=price,weight,popularity&q=name:*sung",
 				getSolrTranslation("select price,weight,popularity from example where name like '%sung'"));
 	}
 
@@ -217,7 +217,7 @@ public class TestTeiidLanguageToSolr {
 
 	@Test
 	public void testSelectWhenOrInAnd() throws Exception {
-		assertEquals("fl=price,weight,popularity&q=((weight:1.0) OR (((popularity:(3 OR 2 OR 1)) AND (price:1.0))))", 
+		assertEquals("fl=price,weight,popularity&q=((weight:1.0) OR (((popularity:(3 OR 2 OR 1)) AND (price:1.0))))",
 				getSolrTranslation("select price,weight,popularity from example where weight = 1 or popularity in (1,2,3) and price = 1"));
 	}
 
@@ -250,14 +250,14 @@ public class TestTeiidLanguageToSolr {
 		assertEquals("fl=name,popularity&sort=popularity asc&q=*:*",
 				getSolrTranslation("select name,popularity from example order by popularity ASC"));
 	}
-	
+
 	@Test
 	public void testOrderByWithAlias() throws Exception {
 		assertEquals("fl=name,popularity&sort=popularity asc&q=*:*",
 				getSolrTranslation("select name as c_0,popularity c_1 from example order by c_1 ASC"));
 	}
-	
-	 
+
+
 	@Test
 	public void testTimestampField() throws Exception {
 	    Date d = getTestDate();
@@ -271,7 +271,7 @@ public class TestTeiidLanguageToSolr {
         assertEquals("fl=name,purchasedate&q=purchasedate:2014\\-02\\-06T08\\:00\\:00\\:000Z",
                 getSolrTranslation("select name,purchasedate from example where purchasedate = {d '"+new java.sql.Date(d.getTime())+"'}"));
     }
-	
+
     @Test
     public void testTimeField() throws Exception {
         Date d = getTestDate();
@@ -285,24 +285,24 @@ public class TestTeiidLanguageToSolr {
         c.set(2014, 1, 6, 11, 52, 07);
         return c.getTime();
     }
-	
+
 	@Test
 	public void testFunction() throws Exception {
 		assertEquals("fl=name,sum(popularity,1)&sort=popularity asc&q=*:*",
-				getSolrTranslation("select name,popularity+1 from example order by popularity ASC"));		
+				getSolrTranslation("select name,popularity+1 from example order by popularity ASC"));
 	}
-	
+
 	@Test
 	public void testNestedFunction() throws Exception {
 		assertEquals("fl=name,div(sum(popularity,1),2)&sort=popularity asc&q=*:*",
-				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));		
+				getSolrTranslation("select name,(popularity+1)/2 as x from example order by popularity ASC"));
 	}
-	
-	@Before public void setUp() { 
-		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$ 
+
+	@Before public void setUp() {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$
 	}
-	
-	@After public void tearDown() { 
+
+	@After public void tearDown() {
 		TimestampWithTimezone.resetCalendar(null);
 	}
 

@@ -76,14 +76,14 @@ import net.sf.saxon.value.StringValue;
 
 /**
  * Handles xml table processing.
- * 
+ *
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
 public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
-	
+
 	static {
 		typeMapping.put(DataTypeManager.DefaultDataClasses.TIMESTAMP, BuiltInAtomicType.DATE_TIME);
 		typeMapping.put(DataTypeManager.DefaultDataClasses.TIME, BuiltInAtomicType.TIME);
@@ -93,38 +93,38 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 		typeMapping.put(DataTypeManager.DefaultDataClasses.BLOB, BuiltInAtomicType.HEX_BINARY);
 		typeMapping.put(DataTypeManager.DefaultDataClasses.VARBINARY, BuiltInAtomicType.HEX_BINARY);
 	}
-	
+
 	private static TeiidRuntimeException EARLY_TERMINATION = new TeiidRuntimeException();
-	
+
 	private XMLTable table;
 	private SaxonXQueryExpression saxonXQueryExpression;
 	private List<XMLColumn> projectedColumns;
-	
+
 	private Result result;
 	private long rowCount = 0;
 	private Item item;
-	
+
 	private TupleBuffer buffer;
-	
+
 	private enum State {
 		BUILDING,
 		AVAILABLE,
 		DONE
 	};
-	
+
 	private State state = State.BUILDING;
 	private volatile TeiidRuntimeException asynchException;
 	private long outputRow = 1;
 	private boolean usingOutput;
-	
+
 	private int rowLimit = -1;
-	
+
 	private boolean streaming;
-	
+
 	public SaxonXMLTableNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
 	@Override
 	public synchronized void closeDirect() {
 		super.closeDirect();
@@ -136,7 +136,7 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
         }
 		reset();
 	}
-	
+
 	@Override
 	public synchronized void reset() {
 		super.reset();
@@ -153,16 +153,16 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 		this.asynchException = null;
 		this.rowLimit = -1;
 	}
-	
+
 	public void setTable(XMLTable table) {
 		this.table = table;
 		this.saxonXQueryExpression = (SaxonXQueryExpression) this.table.getXQueryExpression();
 	}
-	
+
 	public void setProjectedColumns(List<XMLColumn> projectedColumns) {
 		this.projectedColumns = projectedColumns;
 	}
-	
+
 	@Override
 	public SaxonXMLTableNode clone() {
 		SaxonXMLTableNode clone = new SaxonXMLTableNode(getID());
@@ -171,7 +171,7 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 		clone.setProjectedColumns(projectedColumns);
 		return clone;
 	}
-	
+
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
 		super.open();
@@ -187,9 +187,9 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected synchronized TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		
+
 		evaluate(false);
-		
+
 		if (streaming) {
 			while (state == State.BUILDING) {
 				try {
@@ -206,7 +206,7 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 			}
 			return batch;
 		}
-		
+
 		while (!isBatchFull() && !isLastBatch()) {
 			if (item == null) {
 				try {
@@ -266,13 +266,13 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 				public void run() {
 					try {
 						XQueryEvaluator.evaluateXQuery(saxonXQueryExpression, contextItem, parameters, new RowProcessor() {
-                            
+
                             @Override
                             public void processRow(NodeInfo row) {
                                 synchronized (SaxonXMLTableNode.this) {
                                     if (b != buffer) {
                                         //if the buffer has changed we've been reset
-                                        throw EARLY_TERMINATION; 
+                                        throw EARLY_TERMINATION;
                                     }
                                     SaxonXMLTableNode.this.processRow(row);
                                 }
@@ -308,7 +308,7 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 			unwrapException(e);
 		}
 	}
-	
+
 	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
@@ -405,7 +405,7 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 		}
 		return SequenceTool.convertToJava(value);
 	}
-	
+
 	public void processRow(NodeInfo row) {
 		if (isClosed()) {
 			throw EARLY_TERMINATION;
@@ -430,12 +430,12 @@ public class SaxonXMLTableNode extends SubqueryAwareRelationalNode {
 	private boolean hasNextBatch() {
 		return this.outputRow + this.buffer.getBatchSize() <= rowCount + 1;
 	}
-	
+
 	@Override
 	public Collection<? extends LanguageObject> getObjects() {
 		return this.table.getPassing();
 	}
-	
+
 	@Override
 	public PlanNode getDescriptionProperties() {
 		PlanNode props = super.getDescriptionProperties();

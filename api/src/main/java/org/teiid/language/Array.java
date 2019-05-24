@@ -27,12 +27,12 @@ public class Array implements Expression {
 
 	private Class<?> baseType;
 	private List<Expression> expressions;
-	
+
 	public Array(Class<?> baseType, List<Expression> expresssions) {
 		this.baseType = baseType;
 		this.expressions = expresssions;
 	}
-	
+
 	@Override
 	public Class<?> getType() {
 		return DataTypeManager.getArrayType(baseType);
@@ -42,15 +42,15 @@ public class Array implements Expression {
 	public void acceptVisitor(LanguageObjectVisitor visitor) {
 		visitor.visit(this);
 	}
-	
+
 	public Class<?> getBaseType() {
 		return baseType;
 	}
-	
+
 	public void setBaseType(Class<?> baseType) {
 		this.baseType = baseType;
 	}
-	
+
 	public List<Expression> getExpressions() {
 		return expressions;
 	}

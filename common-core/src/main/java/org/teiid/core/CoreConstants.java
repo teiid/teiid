@@ -23,15 +23,15 @@ package org.teiid.core;
  */
 public interface CoreConstants {
     public static final String SYSTEM_MODEL = "SYS"; //$NON-NLS-1$
-    
+
     public static final String SYSTEM_ADMIN_MODEL = "SYSADMIN"; //$NON-NLS-1$
-    
+
     public static final String ODBC_MODEL = "pg_catalog"; //$NON-NLS-1$
-    
+
     public static final String INFORMATION_SCHEMA = "information_schema"; //$NON-NLS-1$
-    
+
     /**
-     * Constant for the anonymous Teiid system username  
+     * Constant for the anonymous Teiid system username
      */
     public static final String DEFAULT_ANON_USERNAME = "anonymous"; //$NON-NLS-1$
 }

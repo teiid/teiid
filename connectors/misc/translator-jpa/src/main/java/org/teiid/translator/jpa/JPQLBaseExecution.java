@@ -23,9 +23,9 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 
 public class JPQLBaseExecution {
-	
+
 	protected ExecutionContext executionContext;
-	protected RuntimeMetadata metadata; 
+	protected RuntimeMetadata metadata;
 	protected EntityManager enityManager;
 
 	protected JPQLBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {

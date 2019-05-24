@@ -30,7 +30,7 @@ public class ReturnStatement extends AssignmentStatement {
 	public ReturnStatement(Expression value) {
 		super(null, value);
 	}
-	
+
 	/**
 	 * Return the type for this statement, this is one of the types
 	 * defined on the statement object.
@@ -38,19 +38,19 @@ public class ReturnStatement extends AssignmentStatement {
 	 */
 	public int getType() {
 		return Statement.TYPE_RETURN;
-	}	
+	}
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
-        
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
 	/**
 	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone 
+	 * @return Deep clone
 	 */
 	public Object clone() {
 		ReturnStatement clone = new ReturnStatement(null);
@@ -69,7 +69,7 @@ public class ReturnStatement extends AssignmentStatement {
     		return true;
 		}
 
-		// Quick fail tests		
+		// Quick fail tests
     	if(!(obj instanceof ReturnStatement)) {
     		return false;
 		}

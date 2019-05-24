@@ -47,11 +47,11 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
 	protected PlanExecutionNode() {
 		super();
 	}
-    
+
 	public PlanExecutionNode(int nodeID) {
 		super(nodeID);
 	}
-	
+
     public void reset() {
         super.reset();
 
@@ -65,31 +65,31 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
     }
 
     public void setProcessorPlan(ProcessorPlan plan) {
-        this.plan = plan;    
+        this.plan = plan;
     }
-    
-	public void open() 
+
+	public void open()
 		throws TeiidComponentException, TeiidProcessingException {
 		super.open();
         // Initialize plan for execution
         CommandContext subContext = getContext().clone();
         subContext.pushVariableContext(new VariableContext());
-        plan.initialize(subContext, getDataManager(), this.getBufferManager());        
-        
+        plan.initialize(subContext, getDataManager(), this.getBufferManager());
+
         if (openPlanImmediately() && prepareNextCommand()) {
             needsProcessing = true;
             plan.open();
             isOpen = true;
         }
 	}
-	
+
 	protected boolean openPlanImmediately() {
 		return true;
 	}
-	
+
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        
+
         if (!isOpen) {
             if (!needsProcessing) {
                 while (true) {
@@ -106,20 +106,20 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
             if (needsProcessing) {
                 plan.open();
                 isOpen = true;
-            } 
+            }
         }
-        
+
         if (!needsProcessing) {
             terminateBatches();
             return pullBatch();
         }
-        
+
 		TupleBatch batch = plan.nextBatch();
-       
+
         for (List<?> tuple : batch.getTuples()) {
             addBatchRow(tuple);
 		}
-        
+
         if(batch.getTerminationFlag()) {
         	if (hasNextCommand()) {
         		resetPlan();
@@ -127,24 +127,24 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
         		terminateBatches();
         	}
         }
-        
+
         return pullBatch();
 	}
 
     /**
-	 * @throws BlockedException  
-     * @throws TeiidComponentException 
-     * @throws TeiidProcessingException 
+	 * @throws BlockedException
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
 	 */
     protected boolean prepareNextCommand() throws BlockedException,
                                           TeiidComponentException, TeiidProcessingException {
         return true;
     }
-    
+
     protected boolean hasNextCommand() {
         return false;
     }
-    
+
 	public void closeDirect() {
         try {
         	plan.close();
@@ -152,7 +152,7 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
 			LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
 		}
 	}
-	
+
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
 	}
@@ -166,18 +166,18 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
 		copyTo(clonedNode);
         return clonedNode;
 	}
-    
+
     protected void copyTo(PlanExecutionNode target) {
         target.setProcessorPlan(plan.clone());
         super.copyTo(target);
     }
 
-    public PlanNode getDescriptionProperties() {   
+    public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
-        props.addProperty(PROP_EXECUTION_PLAN, this.plan.getDescriptionProperties());                
+        props.addProperty(PROP_EXECUTION_PLAN, this.plan.getDescriptionProperties());
         return props;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
 		return getProcessorPlan().requiresTransaction(transactionalReads);
@@ -187,5 +187,5 @@ public class PlanExecutionNode extends SubqueryAwareRelationalNode {
     public Collection<? extends LanguageObject> getObjects() {
         return Collections.emptyList();
     }
-    
+
 }

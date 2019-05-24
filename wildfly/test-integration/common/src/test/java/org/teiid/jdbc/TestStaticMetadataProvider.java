@@ -42,64 +42,64 @@ public class TestStaticMetadataProvider extends TestCase {
 
     private MetadataProvider example1() throws Exception {
     	MetaDataProcessor processor = new MetaDataProcessor(null, null, "vdb", 1); //$NON-NLS-1$
-        Map[] columnMetadata = new Map[] { 
-            processor.getDefaultColumn("table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$ 
-            processor.getDefaultColumn("table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$ 
-        };               
-        
+        Map[] columnMetadata = new Map[] {
+            processor.getDefaultColumn("table", "c1", String.class), //$NON-NLS-1$ //$NON-NLS-2$
+            processor.getDefaultColumn("table", "c2", Integer.class) //$NON-NLS-1$ //$NON-NLS-2$
+        };
+
         return new MetadataProvider(columnMetadata);
     }
-    
+
     public void testMetadata() throws Exception {
         MetadataProvider provider = example1();
         assertEquals(2, provider.getColumnCount());
-        
+
         for(int i=0; i<provider.getColumnCount(); i++) {
             assertNotNull(provider.getValue(i, ResultsMetadataConstants.VIRTUAL_DATABASE_NAME));
             assertNotNull(provider.getValue(i, ResultsMetadataConstants.VIRTUAL_DATABASE_VERSION));
             assertNotNull(provider.getValue(i, ResultsMetadataConstants.GROUP_NAME));
             assertNotNull(provider.getValue(i, ResultsMetadataConstants.ELEMENT_NAME));
-            
+
         }
     }
-    
+
     public void testGetStringValue() throws Exception {
         Integer property = ResultsMetadataConstants.VIRTUAL_DATABASE_NAME;
         String value = "vdb"; //$NON-NLS-1$
-        
+
         Map columnMetadata = new HashMap();
-        columnMetadata.put(property, value); 
+        columnMetadata.put(property, value);
 
         MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
-        
+
         String actualValue = md.getStringValue(0, property);
-        assertEquals(value, actualValue);               
+        assertEquals(value, actualValue);
     }
 
     public void testGetIntValue() throws Exception {
         Integer property = ResultsMetadataConstants.VIRTUAL_DATABASE_NAME;
-        Integer value = new Integer(10); 
-        
+        Integer value = new Integer(10);
+
         Map columnMetadata = new HashMap();
-        columnMetadata.put(property, value); 
+        columnMetadata.put(property, value);
 
         MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
-        
+
         int actualValue = md.getIntValue(0, property);
-        assertEquals(10, actualValue);               
+        assertEquals(10, actualValue);
     }
 
     public void testGetBooleanValue() throws Exception {
         Integer property = ResultsMetadataConstants.VIRTUAL_DATABASE_NAME;
-        Boolean value = Boolean.TRUE; 
-        
+        Boolean value = Boolean.TRUE;
+
         Map columnMetadata = new HashMap();
-        columnMetadata.put(property, value); 
+        columnMetadata.put(property, value);
 
         MetadataProvider md = new MetadataProvider(new Map[] {columnMetadata});
-        
+
         boolean actualValue = md.getBooleanValue(0, property);
-        assertEquals(true, actualValue);               
+        assertEquals(true, actualValue);
     }
 
 }

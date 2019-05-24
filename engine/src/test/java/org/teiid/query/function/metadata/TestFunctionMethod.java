@@ -29,24 +29,24 @@ public class TestFunctionMethod {
     @Test public void testEquivalence1() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         FunctionMethod m1 = new FunctionMethod("length", "", FunctionCategoryConstants.STRING, //$NON-NLS-1$ //$NON-NLS-2$
             "com.metamatrix.query.function.FunctionMethods", "length",  //$NON-NLS-1$ //$NON-NLS-2$
-            new FunctionParameter[] { p1 }, pout );    
-            
+            new FunctionParameter[] { p1 }, pout );
+
         UnitTestUtil.helpTestEquivalence(0, m1, m1);
     }
-    
+
     @Test public void testEquivalence11() {
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         FunctionMethod m1 = new FunctionMethod("length", "", FunctionCategoryConstants.STRING, //$NON-NLS-1$ //$NON-NLS-2$
             "com.metamatrix.query.function.FunctionMethods", "length",  //$NON-NLS-1$ //$NON-NLS-2$
-            null, pout );    
-            
+            null, pout );
+
         UnitTestUtil.helpTestEquivalence(0, m1, m1);
-    }    
-    
+    }
+
     @Test public void testEquivalence2() {
         FunctionParameter p1 = new FunctionParameter("in", "string"); //$NON-NLS-1$ //$NON-NLS-2$
         FunctionParameter pout = new FunctionParameter("out", "string"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -82,5 +82,5 @@ public class TestFunctionMethod {
 
         UnitTestUtil.helpTestEquivalence(0, m1, m2);
     }
-    
+
 }

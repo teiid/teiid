@@ -43,7 +43,7 @@ import io.swagger.jaxrs.listing.BaseApiListingResource;
 
 /**
  * Workaround for using a Resteasy Filter to make a ServletContext available
- * @see https://github.com/swagger-api/swagger-core/issues/2239 
+ * @see https://github.com/swagger-api/swagger-core/issues/2239
  */
 
 @Path("/swagger.{type:json|yaml}")
@@ -69,7 +69,7 @@ public class CustomApiListingResource extends BaseApiListingResource {
             return getListingJsonResponse(app, context, sc, headers, uriInfo);
         }
     }
-    
+
     private ServletConfig getConfig(ServletConfig sc, FilterConfig fc) {
         try {
             sc.getInitParameter("test"); //$NON-NLS-1$

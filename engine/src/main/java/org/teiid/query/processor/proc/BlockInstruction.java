@@ -38,7 +38,7 @@ public class BlockInstruction extends ProgramInstruction {
         procEnv.push(program);
     }
 
-    public Program getProgram(){ 
+    public Program getProgram(){
         return this.program;
     }
 
@@ -58,10 +58,10 @@ public class BlockInstruction extends ProgramInstruction {
         props.addProperty(PROP_PROGRAM, this.program.getDescriptionProperties());
         return props;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         return program.requiresTransaction(transactionalReads);
     }
-    
+
 }

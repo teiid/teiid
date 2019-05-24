@@ -100,12 +100,12 @@ public class CompactObjectInputStream extends ObjectInputStream {
         	Logger.getLogger("org.teiid").log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20037, name)); //$NON-NLS-1$
         	throw e;
         }
-        
+
         try {
             return Class.forName(name, false, classLoader);
         } catch (ClassNotFoundException ex) {
             return super.resolveClass(desc);
         }
     }
-	
+
 }

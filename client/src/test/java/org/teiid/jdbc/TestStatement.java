@@ -49,7 +49,7 @@ public class TestStatement {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
-		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
 		ResultsMessage rm = new ResultsMessage();
 		rm.setResults(new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
@@ -62,12 +62,12 @@ public class TestStatement {
 		statement.addBatch("delete from table1"); //$NON-NLS-1$
 		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
 	}
-	
+
 	@Test public void testWarnings() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
-		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
 		ResultsMessage rm = new ResultsMessage();
 		rm.setResults(new List<?>[] {Arrays.asList(1)});
@@ -88,12 +88,12 @@ public class TestStatement {
 		assertNotNull(warning);
 		assertNull(warning.getNextWarning());
 	}
-	
+
 	@Test public void testGetMoreResults() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
 		DQP dqp = Mockito.mock(DQP.class);
-		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>();
 		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
 		ResultsMessage rm = new ResultsMessage();
 		rm.setUpdateResult(true);
@@ -112,7 +112,7 @@ public class TestStatement {
 		assertEquals(1, statement.getUpdateCount());
 		statement.getMoreResults(Statement.CLOSE_ALL_RESULTS);
 		assertEquals(-1, statement.getUpdateCount());
-		
+
 		statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
 			@Override
             protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
@@ -124,23 +124,23 @@ public class TestStatement {
 		statement.getMoreResults();
 		assertEquals(-1, statement.getUpdateCount());
 	}
-	
+
 	@Test public void testSetStatement() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "bar");
-		
+
 		assertFalse(statement.execute("set foo 'b''ar' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'ar");
-		
+
 		assertFalse(statement.execute("set \"foo\" 'b''a1r' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'a1r");
-		
+
 	    assertFalse(statement.execute("set \"foo\" = 'bar'; ")); //$NON-NLS-1$
 	    Mockito.verify(conn).setExecutionProperty("foo", "bar");
 	}
-	
+
 	@Test public void testSetPayloadStatement() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();
@@ -148,7 +148,7 @@ public class TestStatement {
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertFalse(statement.execute("set payload foo bar")); //$NON-NLS-1$
 	}
-	
+
 	@Test public void testSetAuthorizationStatement() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();
@@ -157,7 +157,7 @@ public class TestStatement {
 		assertFalse(statement.execute("set session authorization bar")); //$NON-NLS-1$
 		Mockito.verify(conn).changeUser("bar", null);
 	}
-	
+
 	@Test public void testPropertiesOverride() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();
@@ -186,11 +186,11 @@ public class TestStatement {
         Mockito.verify(conn, Mockito.times(2)).rollback(false);
         assertFalse(statement.execute("rollback work")); //$NON-NLS-1$
         Mockito.verify(conn, Mockito.times(3)).rollback(false);
-        
+
 		assertFalse(statement.execute("start transaction isolation level repeatable read")); //$NON-NLS-1$
 		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 	}
-	
+
 	@Test public void testDisableLocalTransations() throws Exception {
 		ServerConnection mock = Mockito.mock(ServerConnection.class);
 		DQP dqp = Mockito.mock(DQP.class);
@@ -202,7 +202,7 @@ public class TestStatement {
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		conn.beginLocalTxnIfNeeded();
 		assertFalse(conn.isInLocalTxn());
-		
+
 		statement.execute("set disablelocaltxn false");
 		assertFalse(statement.execute("start transaction")); //$NON-NLS-1$
 		conn.beginLocalTxnIfNeeded();
@@ -224,7 +224,7 @@ public class TestStatement {
 		statement.submitExecute("rollback", null); //$NON-NLS-1$
 		Mockito.verify(conn).submitSetAutoCommitTrue(false);
 	}
-	
+
 	@Test public void testAsynchTimeout() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Mockito.stub(conn.getConnectionProps()).toReturn(new Properties());
@@ -259,7 +259,7 @@ public class TestStatement {
 			}
 		}
 	}
-	
+
 	@Test public void testTimeoutProperty() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();
@@ -268,7 +268,7 @@ public class TestStatement {
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertEquals(2, statement.getQueryTimeout());
 	}
-	
+
 	@Test public void testUseJDBC4ColumnNameAndLabelSemantics() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();
@@ -277,14 +277,14 @@ public class TestStatement {
 		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertEquals(Boolean.FALSE.toString(), statement.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
-		
-	}	
-	
+
+	}
+
 	@Test public void testSet() {
 		Matcher m = StatementImpl.SET_STATEMENT.matcher("set foo to 1");
 		assertTrue(m.matches());
 	}
-	
+
 	@Test public void testQuotedSet() {
 		Matcher m = StatementImpl.SET_STATEMENT.matcher("set \"foo\"\"\" to 1");
 		assertTrue(m.matches());
@@ -292,7 +292,7 @@ public class TestStatement {
 		m = StatementImpl.SHOW_STATEMENT.matcher("show \"foo\"");
 		assertTrue(m.matches());
 	}
-	
+
 	@Test public void testSetTxnIsolationLevel() throws SQLException {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -305,14 +305,14 @@ public class TestStatement {
 		assertFalse(statement.execute("set session characteristics as transaction isolation level repeatable read")); //$NON-NLS-1$
 		Mockito.verify(conn).setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 	}
-	
+
 	@Test public void testShowTxnIsolationLevel() throws SQLException {
         ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
         StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
             @Override
             protected TimeZone getServerTimeZone() throws SQLException {
                 return TimeZone.getDefault();
-            }  
+            }
         };
         Mockito.stub(conn.getTransactionIsolation()).toReturn(Connection.TRANSACTION_READ_COMMITTED);
         assertTrue(statement.execute("show transaction isolation level")); //$NON-NLS-1$
@@ -321,5 +321,5 @@ public class TestStatement {
         assertEquals("READ COMMITTED", rs.getString(1));
         assertFalse(rs.next());
     }
-	
+
 }

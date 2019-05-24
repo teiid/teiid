@@ -46,9 +46,9 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 
     private int remaining;
     private boolean foundLength;
-    
+
     private InputStream subStream = new InputStream() {
-    	
+
 		@Override
 		public int read() throws IOException {
 			if (remaining-->0) {
@@ -56,7 +56,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 			}
 			return -1;
 		}
-		
+
 		@Override
 		public int read(byte[] b, int off, int len) throws IOException {
 			if (remaining <= 0) {
@@ -82,7 +82,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
         this.classLoader = classLoader;
         this.maxObjectSize = maxObjectSize;
     }
-    
+
     @Override
     protected final Object readObjectOverride() throws IOException,
     		ClassNotFoundException {
@@ -117,18 +117,18 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 	        	final File f = File.createTempFile("teiid", null); //$NON-NLS-1$
 		        StreamFactoryReference sfr = streams.get(streamIndex);
 		        sfr.setStreamFactory(new InputStreamFactory() {
-					
+
 					@Override
 					public InputStream getInputStream() throws IOException {
 						return new BufferedInputStream(new FileInputStream(f));
 					}
-					
+
 					@Override
                     protected void finalize() throws Throwable {
                         super.finalize();
                         f.delete();
                     }
-					
+
 				});
 		        this.stream = new FileOutputStream(f);
 	        }
@@ -156,7 +156,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
         stream = null;
         return toReturn;
     }
-    
+
     void clearRemaining() throws IOException {
     	while (remaining > 0) {
     		long skipped = in.skip(remaining);
@@ -171,5 +171,5 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
     public void close() throws IOException {
     	in.close();
     }
-    
+
 }

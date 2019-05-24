@@ -61,7 +61,7 @@ public class BaseQueryExecution {
             return (String)((List<?>)value).get(0);
         }
         return (String)value;
-    }    
+    }
 
     protected BinaryWSProcedureExecution buildInvokeHTTP(String method,
             String uri, Object payload, Map<String, List<String>> headers)
@@ -76,18 +76,18 @@ public class BaseQueryExecution {
         }
 
         List<Argument> parameters = new ArrayList<Argument>();
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
-        //the engine currently always associates out params at resolve time even if the 
+        //the engine currently always associates out params at resolve time even if the
         // values are not directly read by the call
         parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
-        
+
         Call call = this.translator.getLanguageFactory().createCall("invokeHttp", parameters, null);
 
         BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(
@@ -97,7 +97,7 @@ public class BaseQueryExecution {
         execution.setCustomHeaders(headers);
         return execution;
     }
-    
+
     @SuppressWarnings("unchecked")
     List<?> buildRow(List<Column> columns, boolean isMapResponse,
             Class<?>[] expectedType, Map<String, Object> values) throws TranslatorException {
@@ -105,16 +105,16 @@ public class BaseQueryExecution {
         for (int i = 0; i < columns.size(); i++) {
             Column column = columns.get(i);
             String colName = column.getName();
-            
+
             if (column.getNameInSource() != null) {
                 colName = column.getNameInSource();
             }
-            
+
             int arrayIndex = colName.indexOf("[]/");
             if (arrayIndex !=-1) {
                 colName = colName.substring(0,arrayIndex)+colName.substring(colName.indexOf("/",arrayIndex+3));
             }
-            
+
             Object value;
 			try {
 			    if (isMapResponse) {
@@ -135,12 +135,12 @@ public class BaseQueryExecution {
             results.add(value);
         }
         return results;
-    }     
-    
+    }
+
     public String getName(AbstractMetadataRecord table) {
         if (table.getNameInSource() != null) {
             return table.getNameInSource();
         }
         return table.getName();
-    }    
+    }
 }

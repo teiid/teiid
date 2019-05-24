@@ -45,5 +45,5 @@ public class TestBatchCollector {
 		assertEquals(1, bc.getTupleBuffer().getManagedRowCount());
 		assertEquals(3, bc.collectTuples().getRowCount());
 	}
-	
+
 }

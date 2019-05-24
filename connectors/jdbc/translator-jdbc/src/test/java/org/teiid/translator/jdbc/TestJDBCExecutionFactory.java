@@ -50,16 +50,16 @@ public class TestJDBCExecutionFactory {
 		final JDBCExecutionFactory jef = new JDBCExecutionFactory();
 		jef.setDatabaseTimeZone("GMT"); //$NON-NLS-1$
 		jef.start();
-		
+
 		final Calendar[] cals = new Calendar[2];
-		
+
 		Thread t1 = new Thread() {
 			public void run() {
 				cals[0] = jef.getDatabaseCalendar();
 			}
 		};
 		t1.start();
-		
+
 		Thread t2 = new Thread() {
 			public void run() {
 				cals[1] = jef.getDatabaseCalendar();
@@ -68,21 +68,21 @@ public class TestJDBCExecutionFactory {
 		t2.start();
 		t1.join();
 		t2.join();
-		
+
 		assertNotSame(cals[0], cals[1]);
 	}
-	
+
 	@Test public void testVersion() {
 		JDBCExecutionFactory jef = new JDBCExecutionFactory();
 		jef.setDatabaseVersion("Some db 1.2.3 (some build)");
 		assertEquals("1.2.3", jef.getDatabaseVersion().toString());
 		assertEquals(new Version(new Integer[] {1, 2, 3}), jef.getVersion());
-		
+
 		Version version = Version.getVersion("10.0");
 		assertTrue(version.compareTo(Version.getVersion("9.1")) > 0);
 		assertTrue(version.compareTo(Version.getVersion("10.0.1")) < 0);
 	}
-	
+
 	@Test public void testStructRetrival() throws SQLException {
 		JDBCExecutionFactory jef = new JDBCExecutionFactory();
 		jef.setStructRetrieval(StructRetrieval.ARRAY);
@@ -91,7 +91,7 @@ public class TestJDBCExecutionFactory {
 		Mockito.stub(rs.getObject(1)).toReturn(s);
 		assertTrue(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.OBJECT) instanceof Array);
 	}
-	
+
 	@Test public void testBooleanRetrival() throws SQLException {
 		JDBCExecutionFactory jef = new JDBCExecutionFactory();
 		ResultSet rs = Mockito.mock(ResultSet.class);
@@ -99,7 +99,7 @@ public class TestJDBCExecutionFactory {
 		Mockito.stub(rs.wasNull()).toReturn(true);
 		assertNull(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.BOOLEAN));
 	}
-	
+
 	@Test public void testLiteralWithDatabaseTimezone() throws TranslatorException {
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
 		try {
@@ -111,7 +111,7 @@ public class TestJDBCExecutionFactory {
 			TimestampWithTimezone.resetCalendar(null);
 		}
 	}
-	
+
 	@Test public void testInitCaps() throws Exception {
 		JDBCExecutionFactory jef = new JDBCExecutionFactory();
 		Connection connection = Mockito.mock(Connection.class);
@@ -121,20 +121,20 @@ public class TestJDBCExecutionFactory {
 		//should still succeed even if an exception is thrown from supportsGetGeneratedKeys
 		jef.initCapabilities(connection);
 	}
-	
+
 	@Test public void testRemovePushdownCharacters() throws SQLException {
         JDBCExecutionFactory jef = new JDBCExecutionFactory();
         jef.setRemovePushdownCharacters("[\\u0000-\\u0002]");
         PreparedStatement ps = Mockito.mock(PreparedStatement.class);
         jef.bindValue(ps, "\u0000Hello\u0001World", TypeFacility.RUNTIME_TYPES.STRING, 1);
         Mockito.verify(ps).setObject(1, "HelloWorld", Types.VARCHAR);
-        
+
         SQLConversionVisitor scv = new SQLConversionVisitor(jef);
         StringBuilder sb = new StringBuilder();
         scv.translateSQLType(TypeFacility.RUNTIME_TYPES.STRING, "\u0003?\u0002", sb);
         assertEquals("'\u0003?'", sb.toString());
     }
-	
+
 	@Test public void testBindNChar() throws SQLException {
         JDBCExecutionFactory jef = new JDBCExecutionFactory() {
             public boolean useUnicodePrefix() {return true;}
@@ -143,16 +143,16 @@ public class TestJDBCExecutionFactory {
         jef.bindValue(ps, "Hello\u0128World", TypeFacility.RUNTIME_TYPES.STRING, 1);
         Mockito.verify(ps).setObject(1, "Hello\u0128World", Types.NVARCHAR);
     }
-	
+
     @Test public void testGeospatialLiterals() throws Exception {
         JDBCExecutionFactory jef = new JDBCExecutionFactory();
         List<?> result = jef.translateGeometryLiteral(new Literal(new GeometryType(), TypeFacility.RUNTIME_TYPES.GEOMETRY));
         assertTrue(result.get(0).toString().startsWith("st_geom"));
-        
+
         GeographyType value = new GeographyType();
         result = jef.translateGeographyLiteral(new Literal(value, TypeFacility.RUNTIME_TYPES.GEOGRAPHY));
         assertTrue(result.get(0).toString().startsWith("st_geog"));
-        
+
         value.setSrid(4333);
         result = jef.translateGeographyLiteral(new Literal(value, TypeFacility.RUNTIME_TYPES.GEOGRAPHY));
         assertTrue(result.get(0).toString().startsWith("st_setsrid(st_geog"));

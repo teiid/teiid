@@ -40,19 +40,19 @@ import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
 
 public class ODataSchemaBuilder {
-    
+
     //not validating length - odata specifies up to 128 chars though
     static Pattern NAME_PATTERN = Pattern.compile("[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}\\p{Cf}]{0,}"); //$NON-NLS-1$
-    
+
     public interface SchemaResolver {
         /**
          * Return the schema info or null if it is not visible
-         * @param schemaName the teiid schema name 
+         * @param schemaName the teiid schema name
          * @return
          */
         ODataSchemaInfo getSchemaInfo(String schemaName);
     }
-    
+
     public final static class ODataSchemaInfo {
         public CsdlSchema schema = new CsdlSchema();
         public Map<String, CsdlEntitySet> entitySets = new LinkedHashMap<String, CsdlEntitySet>();
@@ -69,7 +69,7 @@ public class ODataSchemaBuilder {
     public static CsdlSchema buildMetadata(String namespace, org.teiid.metadata.Schema teiidSchema) {
         ODataSchemaInfo info = buildStructuralMetadata(namespace, teiidSchema, teiidSchema.getName());
         buildNavigationProperties(teiidSchema, info.entityTypes, info.entitySets, new SchemaResolver() {
-            
+
             @Override
             public ODataSchemaInfo getSchemaInfo(String schemaName) {
                 return info;
@@ -77,7 +77,7 @@ public class ODataSchemaBuilder {
         });
         return info.schema;
     }
-    
+
     public static ODataSchemaInfo buildStructuralMetadata(String namespace, org.teiid.metadata.Schema teiidSchema, String alias) {
         try {
             ODataSchemaInfo info = new ODataSchemaInfo();
@@ -91,7 +91,7 @@ public class ODataSchemaBuilder {
         }
     }
 
-    static void buildEntityTypes(org.teiid.metadata.Schema schema, CsdlSchema csdlSchema, Map<String, 
+    static void buildEntityTypes(org.teiid.metadata.Schema schema, CsdlSchema csdlSchema, Map<String,
             CsdlEntitySet> entitySets, Map<String, CsdlEntityType> entityTypes) {
         String fullSchemaName = csdlSchema.getNamespace();
 
@@ -106,7 +106,7 @@ public class ODataSchemaBuilder {
             }
 
             String entityTypeName = table.getName();
-            
+
             CsdlEntityType entityType = new CsdlEntityType().setName(entityTypeName);
 
             // adding properties
@@ -136,12 +136,12 @@ public class ODataSchemaBuilder {
                     .setName(entityTypeName)
                     .setType(new FullQualifiedName(fullSchemaName, entityTypeName))
                     .setIncludeInServiceDocument(true);
-           
+
             // add entity types for entity schema
             entityTypes.put(entityTypeName, entityType);
             entitySets.put(entityTypeName, entitySet);
         }
-        
+
         // entity container is holder entity sets, association sets, function
         // imports
         CsdlEntityContainer entityContainer = new CsdlEntityContainer().setName(
@@ -168,11 +168,11 @@ public class ODataSchemaBuilder {
                 .setName(c.getName())
                 .setType(ODataTypeManager.odataType(c).getFullQualifiedName())
                 .setNullable(nullable);
-        
+
         if (DataTypeManager.isArrayType(runtimeType)) {
             property.setCollection(true);
         }
-        
+
         runtimeType = ODataTypeManager.teiidType(property.getType(), false);
 
         if (runtimeType.equals(DataTypeManager.DefaultDataTypes.STRING)
@@ -203,7 +203,7 @@ public class ODataSchemaBuilder {
         }
         return property;
     }
-    
+
     static boolean hasColumn(KeyRecord pk, String columnName) {
         if (pk != null) {
             for (Column column : pk.getColumns()) {
@@ -214,37 +214,37 @@ public class ODataSchemaBuilder {
         }
         return false;
     }
-    
+
     static KeyRecord getIdentifier(Table table) {
         if (table.getPrimaryKey() != null) {
             return table.getPrimaryKey();
         }
-        
+
         for (KeyRecord key:table.getUniqueKeys()) {
             return key;
         }
         return null;
     }
-    
-    static void buildNavigationProperties(org.teiid.metadata.Schema schema, 
+
+    static void buildNavigationProperties(org.teiid.metadata.Schema schema,
             Map<String, CsdlEntityType> entityTypes, Map<String, CsdlEntitySet> entitySets, SchemaResolver resolver) {
-    
+
         for (Table table : schema.getTables().values()) {
 
             // skip if the table does not have the PK or unique
             if (getIdentifier(table) == null) {
                 continue;
             }
-                       
+
             // build Associations
             for (ForeignKey fk : table.getForeignKeys()) {
-    
+
                 // check to see if fk is part of this table's pk, then it is 1 to 1 relation
                 List<Column> setOne = getIdentifier(table).getColumns();
                 List<Column> setTwo = fk.getColumns();
 
                 boolean fkPKSame = setOne.equals(setTwo);
-                
+
                 addForwardNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
                 addReverseNavigation(entityTypes, entitySets, table, fk, fkPKSame, resolver);
             }
@@ -262,7 +262,7 @@ public class ODataSchemaBuilder {
         CsdlNavigationPropertyBinding navigationBinding = buildNavigationBinding(fk, pkTable, fqn);
         CsdlNavigationProperty navigaton = buildNavigation(fk, fqn);
         String entityTypeName = table.getName();
-        
+
         if (onetoone) {
             navigaton.setNullable(false);
         } else {
@@ -281,10 +281,10 @@ public class ODataSchemaBuilder {
                     .setProperty(fk.getColumns().get(i).getName()));
         }
         navigaton.setReferentialConstraints(constraints);
-            
+
         CsdlEntityType entityType = entityTypes.get(entityTypeName);
         entityType.getNavigationProperties().add(navigaton);
-        
+
         CsdlEntitySet entitySet = entitySets.get(entityTypeName);
         entitySet.getNavigationPropertyBindings().add(navigationBinding);
     }
@@ -301,17 +301,17 @@ public class ODataSchemaBuilder {
         if (pkSchema == null) {
             return;
         }
-        
+
         String fqn = schema.schema.getAlias() + '.' + table.getName();
         CsdlNavigationPropertyBinding navigationBinding = buildReverseNavigationBinding(table, pkTable, fk, fqn);
         CsdlNavigationProperty navigaton = buildReverseNavigation(table, fk, fqn);
         String entityTypeName = fk.getReferenceTableName();
-        
+
         if (onetoone) {
             navigaton.setNullable(false);
         } else {
             navigaton.setCollection(true);
-        }                
+        }
         CsdlEntityType entityType = null;
         CsdlEntitySet entitySet = null;
         if (entitySchema.equals(table.getParent().getName())) {
@@ -324,7 +324,7 @@ public class ODataSchemaBuilder {
         entityType.getNavigationProperties().add(navigaton);
         entitySet.getNavigationPropertyBindings().add(navigationBinding);
     }
-    
+
     private static CsdlNavigationPropertyBinding buildNavigationBinding(ForeignKey fk, Table pkTable, String fqn) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(fk.getName());
@@ -335,7 +335,7 @@ public class ODataSchemaBuilder {
         }
         return navigationBinding;
     }
-    
+
     private static CsdlNavigationPropertyBinding buildReverseNavigationBinding(Table table, Table pkTable, ForeignKey fk, String fqn) {
         CsdlNavigationPropertyBinding navigationBinding = new CsdlNavigationPropertyBinding();
         navigationBinding.setPath(table.getName()+"_"+fk.getName());
@@ -350,7 +350,7 @@ public class ODataSchemaBuilder {
     private static CsdlNavigationProperty buildNavigation(ForeignKey fk, String fqn) {
         CsdlNavigationProperty navigaton = new CsdlNavigationProperty();
         navigaton.setName(fk.getName()).setType(new FullQualifiedName(fqn));
-        
+
         ArrayList<CsdlReferentialConstraint> constrainsts = new ArrayList<CsdlReferentialConstraint>();
         for (int i = 0; i < fk.getColumns().size(); i++) {
             Column c = fk.getColumns().get(i);
@@ -362,12 +362,12 @@ public class ODataSchemaBuilder {
         navigaton.setReferentialConstraints(constrainsts);
         return navigaton;
     }
-    
+
     private static CsdlNavigationProperty buildReverseNavigation(Table table, ForeignKey fk, String fqn) {
         CsdlNavigationProperty navigaton = new CsdlNavigationProperty();
         navigaton.setName(table.getName() + "_" + fk.getName()).setType(
                 new FullQualifiedName(fqn));
-        
+
         ArrayList<CsdlReferentialConstraint> constrainsts = new ArrayList<CsdlReferentialConstraint>();
         for (int i = 0; i < fk.getColumns().size(); i++) {
             Column c = fk.getColumns().get(i);
@@ -378,7 +378,7 @@ public class ODataSchemaBuilder {
         }
         navigaton.setReferentialConstraints(constrainsts);
         return navigaton;
-    }    
+    }
 
     static void buildProcedures(org.teiid.metadata.Schema schema, CsdlSchema csdlSchema) {
         // procedures
@@ -390,11 +390,11 @@ public class ODataSchemaBuilder {
 
         for (Procedure proc : schema.getProcedures().values()) {
             if (!allowedProcedure(proc)){
-                LogManager.logDetail(LogConstants.CTX_ODATA, 
+                LogManager.logDetail(LogConstants.CTX_ODATA,
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16032, proc.getFullName()));
-                continue;                
+                continue;
             }
-            
+
             if (isFuntion(proc)) {
                 buildFunction(proc, complexTypes, functions, functionImports, csdlSchema);
             }
@@ -409,7 +409,7 @@ public class ODataSchemaBuilder {
         csdlSchema.getEntityContainer().setActionImports(actionImports);
     }
 
-    private static boolean doesProcedureReturn(Procedure proc) {        
+    private static boolean doesProcedureReturn(Procedure proc) {
         for (ProcedureParameter pp : proc.getParameters()) {
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
                 return true;
@@ -425,21 +425,21 @@ public class ODataSchemaBuilder {
         int lobs = 0;
         int outs = 0;
         for (ProcedureParameter pp : proc.getParameters()) {
-            if (pp.getType().equals(ProcedureParameter.Type.Out)) { 
+            if (pp.getType().equals(ProcedureParameter.Type.Out)) {
                 continue;
             }
-        	
-            if (pp.getType().equals(ProcedureParameter.Type.In) 
+
+            if (pp.getType().equals(ProcedureParameter.Type.In)
             		|| pp.getType().equals(ProcedureParameter.Type.InOut)) {
                 inouts++;
                 if (DataTypeManager.isLOB(pp.getRuntimeType())) {
                     lobs++;
-                }                
-            } else if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) { 
+                }
+            } else if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
                 outs++;
-            }                        
+            }
         }
-        
+
         if (proc.getResultSet() != null) {
         	for (Column c : proc.getResultSet().getColumns()) {
         		if (DataTypeManager.isLOB(c.getRuntimeType())) {
@@ -448,19 +448,19 @@ public class ODataSchemaBuilder {
         	}
             outs++;
         }
-        
+
         if (outs > 1) {
             return false;
         }
-        
+
         if (inouts > 1 && lobs >= 1) {
             return false;
         }
-        
+
         return true;
     }
-    
-    private static boolean isInputParameterLob(Procedure proc) {        
+
+    private static boolean isInputParameterLob(Procedure proc) {
         for (ProcedureParameter pp : proc.getParameters()) {
             if (!pp.getType().equals(ProcedureParameter.Type.ReturnValue)
                     && !pp.getType().equals(ProcedureParameter.Type.Out)
@@ -470,14 +470,14 @@ public class ODataSchemaBuilder {
         }
         return false;
     }
-    
+
     private static boolean isFuntion(Procedure proc) {
         if (doesProcedureReturn(proc) && proc.getUpdateCount() < 1
                 && !isInputParameterLob(proc)) {
             return true;
         }
         return false;
-    }    
+    }
 
     static void buildFunction(Procedure proc,
             ArrayList<CsdlComplexType> complexTypes, ArrayList<CsdlFunction> functions,
@@ -490,18 +490,18 @@ public class ODataSchemaBuilder {
 
         ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
-            EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp);            
+            EdmPrimitiveTypeKind odataType = ODataTypeManager.odataType(pp);
             if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
                 edmFunction.setReturnType(new CsdlReturnType().setType(odataType.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
-            } 
-            
+            }
+
             if (pp.getType().equals(ProcedureParameter.Type.In)
                     || pp.getType().equals(ProcedureParameter.Type.InOut)) {
                 CsdlParameter parameter = buildParameter(pp, odataType);
                 addOperationParameterAnnotations(pp, parameter, csdlSchema);
                 params.add(parameter);
-            }           
+            }
         }
         edmFunction.setParameters(params);
 
@@ -531,9 +531,9 @@ public class ODataSchemaBuilder {
             param.setCollection(true);
         }
         param.setNullable(pp.getNullType() == NullType.Nullable);
-        
+
         String runtimeType = pp.getRuntimeType();
-        
+
         if (runtimeType.equals(DataTypeManager.DefaultDataTypes.STRING)
                 || runtimeType.equals(DataTypeManager.DefaultDataTypes.VARBINARY)) {
             //this will not be correct for a multi-dimensional or other unsupported type
@@ -569,10 +569,10 @@ public class ODataSchemaBuilder {
         edmAction.setName(procName);
         edmAction.setBound(false);
 
-        ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();        
+        ArrayList<CsdlParameter> params = new ArrayList<CsdlParameter>();
         for (ProcedureParameter pp : proc.getParameters()) {
             EdmPrimitiveTypeKind odatatype = ODataTypeManager.odataType(pp);
-            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {                 
+            if (pp.getType().equals(ProcedureParameter.Type.ReturnValue)) {
                 edmAction.setReturnType(new CsdlReturnType().setType(odatatype.getFullQualifiedName()).setCollection(DataTypeManager.isArrayType(pp.getRuntimeType())));
                 continue;
             }
@@ -621,22 +621,22 @@ public class ODataSchemaBuilder {
 
     private static void addTableAnnotations(Table table, CsdlEntityType entityType, CsdlSchema csdlSchema) {
         addCommonAnnotations(table, entityType);
-        
+
         if (table.getCardinality() != -1) {
             addIntAnnotation(entityType, "teiid.CARDINALITY", table.getCardinality());
         }
-        
+
         if (table.isMaterialized()) {
-        
+
             if (table.getMaterializedTable() != null) {
                 addStringAnnotation(entityType, "teiid.MATERIALIZED_TABLE", table.getMaterializedTable().getFullName());
             }
-            
+
             if (table.getMaterializedStageTable() != null) {
                 addStringAnnotation(entityType, "teiid.MATERIALIZED_STAGE_TABLE", table.getMaterializedStageTable().getFullName());
             }
         }
-        
+
         if (table.getAccessPatterns() != null && !table.getAccessPatterns().isEmpty()) {
             ArrayList<String> values = new ArrayList<String>();
             for (KeyRecord record:table.getAccessPatterns()) {
@@ -651,11 +651,11 @@ public class ODataSchemaBuilder {
             }
             addStringCollectionAnnotation(entityType, "teiid.ACCESS_PATTERNS", values);
         }
-        
+
         if (table.supportsUpdate()) {
             addBooleanAnnotation(entityType, "teiid.UPDATABLE", table.supportsUpdate());
         }
-        
+
         // add all custom properties
         for (String property:table.getProperties().keySet()) {
             addTerm(normalizeTermName(property), new String[] {"EntityType"}, csdlSchema);
@@ -666,70 +666,70 @@ public class ODataSchemaBuilder {
     private static void addColumnAnnotations(Column column,
             CsdlProperty property, CsdlSchema csdlSchema) {
         addCommonAnnotations(column, property);
-        
+
         if (!column.isSelectable()) {
             addBooleanAnnotation(property, "teiid.SELECTABLE", column.isSelectable());
         }
-        
+
         if(column.isUpdatable()) {
             addBooleanAnnotation(property, "teiid.UPDATABLE", column.isUpdatable());
         }
-        
+
         if (column.isCurrency()) {
             addBooleanAnnotation(property, "teiid.CURRENCY", column.isCurrency());
         }
-        
+
         if (column.isCaseSensitive()) {
             addBooleanAnnotation(property, "teiid.CASE_SENSITIVE", column.isCaseSensitive());
         }
-        
+
         if (column.isFixedLength()) {
             addBooleanAnnotation(property, "teiid.FIXED_LENGTH", column.isFixedLength());
         }
-        
+
         if (!column.isSigned()) {
             addBooleanAnnotation(property, "teiid.SIGNED", column.isSigned());
         }
-        
+
         if (column.getDistinctValues() != -1) {
             addIntAnnotation(property, "teiid.DISTINCT_VALUES", column.getDistinctValues());
         }
-        
+
         if (column.getNullValues() != -1) {
             addIntAnnotation(property, "teiid.NULL_VALUE_COUNT", column.getNullValues());
         }
-        
+
         // add all custom properties
         for (String str:column.getProperties().keySet()) {
             addTerm(normalizeTermName(str), new String[] {"Property"}, csdlSchema);
             addStringAnnotation(property, csdlSchema.getAlias()+"."+normalizeTermName(str), column.getProperties().get(str));
-        }        
+        }
     }
-    
+
     private static void addOperationAnnotations(Procedure proc,
             CsdlOperation operation, CsdlSchema csdlSchema) {
         addCommonAnnotations(proc, operation);
         if (proc.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
             addIntAnnotation(operation, "teiid.UPDATECOUNT", proc.getUpdateCount());
-        }   
+        }
         // add all custom properties
         for (String str:proc.getProperties().keySet()) {
             addTerm(normalizeTermName(str), new String[] {"Action", "Function"}, csdlSchema);
             addStringAnnotation(operation, csdlSchema.getAlias()+"."+normalizeTermName(str), proc.getProperties().get(str));
-        }         
-    }    
-    
+        }
+    }
+
 
     private static void addOperationParameterAnnotations(
             ProcedureParameter procedure, CsdlParameter parameter,
             CsdlSchema csdlSchema) {
         addCommonAnnotations(procedure, parameter);
-        
+
         // add all custom properties
         for (String str:procedure.getProperties().keySet()) {
             addTerm(normalizeTermName(str), new String[] {"Parameter"}, csdlSchema);
             addStringAnnotation(parameter, csdlSchema.getAlias()+"."+normalizeTermName(str), procedure.getProperties().get(str));
-        } 
+        }
     }
 
     private static void addCommonAnnotations(AbstractMetadataRecord rec,
@@ -737,37 +737,37 @@ public class ODataSchemaBuilder {
         if (rec.getAnnotation() != null) {
             addStringAnnotation(recipent, "Core.Description", rec.getAnnotation());
         }
-        
+
         if (rec.getNameInSource() != null) {
             addStringAnnotation(recipent, "teiid.NAMEINSOURCE", rec.getNameInSource());
         }
-        
+
         if (!NAME_PATTERN.matcher(rec.getName()).matches()) {
             LogManager.logDetail(LogConstants.CTX_ODATA,
                     ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16063,rec.getFullName()));
         }
-    }    
+    }
     private static void addStringAnnotation(CsdlAnnotatable recipent, String term, String value) {
         CsdlAnnotation annotation = new CsdlAnnotation();
         annotation.setTerm(term);
         annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.String, value));
-        recipent.getAnnotations().add(annotation);  
+        recipent.getAnnotations().add(annotation);
     }
-    
+
     private static void addIntAnnotation(CsdlAnnotatable recipent, String term, int value) {
         CsdlAnnotation annotation = new CsdlAnnotation();
         annotation.setTerm(term);
         annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.Int, String.valueOf(value)));
-        recipent.getAnnotations().add(annotation);  
-    }  
-    
+        recipent.getAnnotations().add(annotation);
+    }
+
     private static void addBooleanAnnotation(CsdlAnnotatable recipent, String term, boolean value) {
         CsdlAnnotation annotation = new CsdlAnnotation();
         annotation.setTerm(term);
         annotation.setExpression(new CsdlConstantExpression(ConstantExpressionType.Bool, String.valueOf(value)));
-        recipent.getAnnotations().add(annotation);  
+        recipent.getAnnotations().add(annotation);
     }
-    
+
     private static void addStringCollectionAnnotation(CsdlAnnotatable recipent, String term, List<String> values) {
         CsdlAnnotation annotation = new CsdlAnnotation();
         annotation.setTerm(term);
@@ -776,24 +776,24 @@ public class ODataSchemaBuilder {
             collection.getItems().add(new CsdlConstantExpression(ConstantExpressionType.String, value));
         }
         annotation.setExpression(collection);
-        recipent.getAnnotations().add(annotation);  
-    }  
-    
+        recipent.getAnnotations().add(annotation);
+    }
+
     private static void addTerm(String property, String[] appliesTo, CsdlSchema schema) {
         CsdlTerm term = schema.getTerm(property);
         if ( term == null) {
             term = new CsdlTerm();
             term.setName(property);
             term.setType("Edm.String");
-            schema.getTerms().add(term);            
+            schema.getTerms().add(term);
         }
         for (int i = 0; i < appliesTo.length; i++) {
             if (!term.getAppliesTo().contains(appliesTo[i])) {
                 term.getAppliesTo().add(appliesTo[i]);
             }
         }
-    }     
-    
+    }
+
     private static String normalizeTermName(String name) {
         if (name.startsWith("{")) {
             int end = name.indexOf("}");

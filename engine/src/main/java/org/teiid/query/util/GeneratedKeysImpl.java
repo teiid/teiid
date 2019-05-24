@@ -29,31 +29,31 @@ public class GeneratedKeysImpl implements GeneratedKeys {
 	private List<List<?>> keys = new ArrayList<List<?>>();
 	private String[] colNames;
 	private Class<?>[] types;
-	
+
 	protected GeneratedKeysImpl(String[] colNames, Class<?>[] types) {
 		this.colNames = colNames;
 		this.types = types;
 	}
-	
+
 	@Override
 	public void addKey(List<?> vals) {
 		if (vals != null) {
 			keys.add(vals);
 		}
 	}
-	
+
 	public List<List<?>> getKeys() {
 		return keys;
 	}
-	
+
 	public String[] getColumnNames() {
 		return colNames;
 	}
-	
+
 	public Class<?>[] getColumnTypes() {
 		return types;
 	}
-	
+
 	public Iterator<List<?>> getKeyIterator() {
 		return keys.iterator();
 	}

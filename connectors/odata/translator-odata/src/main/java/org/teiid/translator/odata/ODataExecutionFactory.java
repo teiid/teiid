@@ -79,25 +79,25 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		setSupportsOrderBy(true);
-		
+
 		setSupportsOdataCount(true);
 		setSupportsOdataFilter(true);
 		setSupportsOdataOrderBy(true);
 		setSupportsOdataSkip(true);
 		setSupportsOdataTop(true);
 		setSupportsOdataBooleanFunctionsWithComparison(true);
-		
+
 		setTransactionSupport(TransactionSupport.NONE);
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new FunctionModifier() {
-            
+
             @Override
             public List<?> translate(Function function) {
                 function.setName(SourceSystemFunctions.ADD_OP);
-                
+
                 Expression param1 = function.getParameters().get(0);
                 Expression param2 = function.getParameters().get(1);
-                
+
                 Function indexOf = new Function("indexof", Arrays.asList(param2, param1), TypeFacility.RUNTIME_TYPES.INTEGER); //$NON-NLS-1$
                 indexOf.setMetadataObject(function.getMetadataObject());
                 function.getParameters().set(0, indexOf);
@@ -106,15 +106,15 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
             }
         });
 		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new FunctionModifier() {
-            
+
             @Override
             public List<?> translate(Function function) {
                 if (function.getParameters().size() != 3) {
                     return null;
                 }
                 Expression param2 = function.getParameters().get(1);
-                
-                param2 = new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(param2, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)), TypeFacility.RUNTIME_TYPES.INTEGER); 
+
+                param2 = new Function(SourceSystemFunctions.ADD_OP, Arrays.asList(param2, new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER)), TypeFacility.RUNTIME_TYPES.INTEGER);
                 function.getParameters().set(1, param2);
                 return null;
             }
@@ -232,57 +232,57 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean supportsOdataFilter() {
     	return supportsOdataFilter;
     }
-	
+
 	public void setSupportsOdataFilter(boolean supports) {
 		this.supportsOdataFilter = supports;
-	}	
-	
+	}
+
 	@TranslatorProperty(display="Supports $OrderBy", description="True, $orderby is supported", advanced=true)
     public boolean supportsOdataOrderBy() {
     	return supportsOdataOrderBy;
     }
-	
+
 	public void setSupportsOdataOrderBy(boolean supports) {
 		this.supportsOdataOrderBy = supports;
 	}
-	
+
 	@TranslatorProperty(display="Supports $count", description="True, $count is supported", advanced=true)
     public boolean supportsOdataCount() {
     	return supportsOdataCount;
     }
-	
+
 	public void setSupportsOdataCount(boolean supports) {
 		this.supportsOdataCount = supports;
-	}	
-	
+	}
+
 	@TranslatorProperty(display="Supports $skip", description="True, $skip is supported", advanced=true)
     public boolean supportsOdataSkip() {
     	return supportsOdataSkip;
     }
-	
+
 	public void setSupportsOdataSkip(boolean supports) {
 		this.supportsOdataSkip = supports;
 	}
-	
+
 	@TranslatorProperty(display="Supports $top", description="True, $top is supported", advanced=true)
     public boolean supportsOdataTop() {
     	return supportsOdataTop;
     }
-	
+
 	public void setSupportsOdataTop(boolean supports) {
 		this.supportsOdataTop = supports;
 	}
-	
-	@TranslatorProperty(display="Supports boolean functions with comparison", 
+
+	@TranslatorProperty(display="Supports boolean functions with comparison",
 			description="True, you can use 'substringsof(a, b) eq true' for instance", advanced=true)
     public boolean supportsOdataBooleanFunctionsWithComparison() {
     	return supportsOdataBooleanFunctionsWithComparison;
     }
-	
+
 	public void setSupportsOdataBooleanFunctionsWithComparison(boolean supports) {
 		this.supportsOdataBooleanFunctionsWithComparison = supports;
-	}	
-	
+	}
+
 	@Override
     public boolean supportsCompareCriteriaEquals() {
     	return this.supportsOdataFilter;
@@ -323,7 +323,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean supportsOrderBy() {
     	return supportsOdataOrderBy;
     }
-	
+
 	@Override
     public boolean supportsOrderByUnrelated() {
     	return this.supportsOdataOrderBy;
@@ -379,7 +379,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		if (value instanceof UnsignedByte) {
 			return Short.valueOf(((UnsignedByte)value).shortValue());
 		}
-		
+
 		if(expectedType.isArray() && value instanceof OCollection<?>) {
 		    ArrayList<Object> result = new ArrayList<Object>();
 		    OCollection<?> arrayValues = (OCollection<?>)value;

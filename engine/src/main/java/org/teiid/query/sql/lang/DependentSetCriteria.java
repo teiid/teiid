@@ -34,21 +34,21 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 
-/** 
+/**
  * The DependentSetCriteria is missing the value set until it is filled during
  * processing.  This allows a criteria to contain a dynamic set of values provided
  * by a separate processing node.
  * @since 5.0.1
  */
 public class DependentSetCriteria extends AbstractSetCriteria implements ContextReference {
-	
+
 	public static class AttributeComparison {
-		public Expression dep; 
+		public Expression dep;
 		public Expression ind;
 		public float ndv;
 		public float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
 	}
-	
+
     /**
      * Specifies the expression whose values we want to return in the iterator
      */
@@ -59,24 +59,24 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      */
     private float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
     private float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
-    
+
     private float[] ndvs;
     private float[] maxNdvs;
-    
+
     /**
      * set only for dependent pushdown
      */
     private DependentValueSource dependentValueSource;
     private MakeDep makeDepOptions;
-    
-    /** 
-     * Construct with the left expression 
+
+    /**
+     * Construct with the left expression
      */
     public DependentSetCriteria(Expression expr, String id) {
         setExpression(expr);
         this.id = id;
-    }  
-    
+    }
+
     public void setAttributes(List<AttributeComparison> attributes) {
 		this.ndvs = new float[attributes.size()];
 		this.maxNdvs = new float[attributes.size()];
@@ -86,7 +86,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 			this.maxNdvs[i] = comp.maxNdv;
 		}
 	}
-    
+
     /**
      * There is a mismatch between the expression form and the more convenient attribute comparison,
      * so we reconstruct when needed
@@ -111,32 +111,32 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 		}
 		return result;
 	}
-    
+
     public boolean hasMultipleAttributes() {
     	return this.ndvs != null && this.ndvs.length > 1;
     }
-        
+
     public String getContextSymbol() {
     	return id;
     }
-    
+
     public float getMaxNdv() {
 		return maxNdv;
 	}
-    
+
     public void setMaxNdv(float maxNdv) {
 		this.maxNdv = maxNdv;
 	}
-    
+
     public float getNdv() {
 		return ndv;
 	}
-    
+
     public void setNdv(float ndv) {
 		this.ndv = ndv;
 	}
 
-    /** 
+    /**
      * Get the independent value expression
      * @return Returns the valueExpression.
      */
@@ -144,15 +144,15 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         return this.valueExpression;
     }
 
-    
+
     /**
-     * Set the independent value expression 
+     * Set the independent value expression
      * @param valueExpression The valueExpression to set.
      */
     public void setValueExpression(Expression valueExpression) {
         this.valueExpression = valueExpression;
     }
-    
+
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -188,14 +188,14 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         if (isNegated() != sc.isNegated()) {
             return false;
         }
-        
-        return EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) && 
+
+        return EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
                 EquivalenceUtil.areEqual(getValueExpression(), sc.getValueExpression());
     }
 
     /**
      * Deep copy of object.  The values iterator source of this object
-     * will not be cloned - it will be passed over as is and shared with 
+     * will not be cloned - it will be passed over as is and shared with
      * the original object, just like Reference.
      * @return Deep copy of object
      */
@@ -217,18 +217,18 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         criteriaCopy.makeDepOptions = this.makeDepOptions;
         return criteriaCopy;
     }
-    
+
     @Override
     public void setNegated(boolean negationFlag) {
     	if (!negationFlag) {
     		throw new UnsupportedOperationException();
     	}
     }
-    
+
     public DependentValueSource getDependentValueSource() {
 		return dependentValueSource;
 	}
-    
+
     public void setDependentValueSource(
 			DependentValueSource dependentValueSource) {
 		this.dependentValueSource = dependentValueSource;
@@ -241,9 +241,9 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 			this.maxNdv = makeDep.getMax();
 		}
 	}
-	
+
 	public MakeDep getMakeDepOptions() {
 		return makeDepOptions;
 	}
-    
+
 }

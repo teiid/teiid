@@ -35,56 +35,56 @@ import org.teiid.core.util.StringUtil;
  * AbstractMetadataRecord
  */
 public abstract class AbstractMetadataRecord implements Serializable {
-	
+
 	private static final Collection<AbstractMetadataRecord> EMPTY_INCOMING = Collections.emptyList();
-	
+
 	public interface Modifiable {
 		long getLastModified();
 	}
-	
+
 	public interface DataModifiable {
 		public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_URI + "data-ttl"; //$NON-NLS-1$
-		
+
 		long getLastDataModification();
 	}
-	
+
 	private static final long serialVersionUID = 564092984812414058L;
 
 	public final static char NAME_DELIM_CHAR = '.';
-	
+
 	private static AtomicLong UUID_SEQUENCE = new AtomicLong();
-    
+
     private String uuid; //globally unique id
     private String name; //contextually unique name
-    
+
     private String nameInSource;
-	
+
 	private volatile Map<String, String> properties;
 	private String annotation;
-	
+
 	private transient Collection<AbstractMetadataRecord> incomingObjects;
 
 	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
-	
+
 	public String getUUID() {
 		if (uuid == null) {
 			uuid = String.valueOf(UUID_SEQUENCE.getAndIncrement());
 		}
 		return uuid;
 	}
-	
+
 	public void setUUID(String uuid) {
 		this.uuid = uuid;
 	}
-	
+
 	public String getNameInSource() {
 		return nameInSource;
 	}
-	
+
 	public void setNameInSource(String nameInSource) {
 		this.nameInSource = DataTypeManager.getCanonicalString(nameInSource);
 	}
-	
+
 	/**
 	 * Get the name in source or the name if
 	 * the name in source is not set.
@@ -96,7 +96,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 		}
 		return getName();
 	}
-	
+
 	/**
      * WARNING - The name returned by this method may be ambiguous and
      * is not SQL safe - it may need quoted/escaped
@@ -118,7 +118,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
         }
 		sb.append('"').append(StringUtil.replace(name, "\"", "\"\"")).append('"'); //$NON-NLS-1$ //$NON-NLS-2$
 	}
-	
+
 	/**
 	 * Get the full name as a SQL safe string
 	 * @return
@@ -128,23 +128,23 @@ public abstract class AbstractMetadataRecord implements Serializable {
 		getSQLString(sb);
 		return sb.toString();
 	}
-	
+
 	public AbstractMetadataRecord getParent() {
 		return null;
 	}
-	
+
 	public String getName() {
 		return name;
-	}	
-	
+	}
+
 	public void setName(String name) {
 		this.name = DataTypeManager.getCanonicalString(name);
 	}
-	
+
 	public String getCanonicalName() {
 		return name.toUpperCase();
 	}
-	
+
     public String toString() {
     	StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());
@@ -156,7 +156,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
         sb.append(getUUID());
         return sb.toString();
     }
-    
+
     /**
      * Return the extension properties for this record - may be unmodifiable
      * if {@link #setProperties(Map)} or {@link #setProperty(String, String)}
@@ -169,7 +169,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
     	return properties;
 	}
-    
+
     public String getProperty(String key, boolean checkUnqualified) {
     	String value = getProperties().get(key);
     	if (value != null || !checkUnqualified) {
@@ -181,7 +181,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
     	return getProperties().get(key);
     }
-    
+
     /**
      * The preferred setter for extension properties.
      * @param key
@@ -201,7 +201,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
     	return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
-    
+
     public synchronized void setProperties(Map<String, String> properties) {
     	if (this.properties == null) {
     		this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
@@ -216,7 +216,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     public String getAnnotation() {
 		return annotation;
 	}
-    
+
     public void setAnnotation(String annotation) {
 		this.annotation = DataTypeManager.getCanonicalString(annotation);
 	}
@@ -237,7 +237,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 
         return EquivalenceUtil.areEqual(this.getUUID(), other.getUUID());
     }
-    
+
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
     	in.defaultReadObject();
     	if (this.properties != null && !(this.properties instanceof ConcurrentSkipListMap<?, ?>)) {
@@ -248,10 +248,10 @@ public abstract class AbstractMetadataRecord implements Serializable {
     public int hashCode() {
         return getUUID().hashCode();
     }
-    
+
     /**
      * Objects used to make this object.  Never null.
-     * @return 
+     * @return
      */
     public Collection<AbstractMetadataRecord> getIncomingObjects() {
     	if (incomingObjects == null) {
@@ -259,13 +259,13 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
 		return incomingObjects;
 	}
-    
+
     public void setIncomingObjects(Collection<AbstractMetadataRecord> incomingObjects) {
 		this.incomingObjects = incomingObjects;
 	}
-    
+
     public boolean isUUIDSet() {
     	return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
     }
-        
+
 }

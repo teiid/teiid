@@ -41,7 +41,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
 
 	private static Pattern truncatePattern = Pattern.compile("truncate (\\S+)");
 	private static Pattern renamePattern = Pattern.compile("rename (\\S+)\\s+(\\S+)");
-	
+
     protected int columnCount;
     private List<Argument> arguments;
     protected int updateCount = -1;
@@ -56,24 +56,24 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
         this.context = context;
         this.metadata = metadata;
     }
-    
+
     @Override
     public void execute() throws TranslatorException {
     	String command = (String) this.arguments.get(0).getArgumentValue().getValue();
     	BasicCache<String, String> aliasCache = getAliasCache(this.connection);
-    	
+
     	Matcher m = truncatePattern.matcher(command);
     	if (m.matches()) {
     		String tableName =  m.group(1);
     		clearContents(aliasCache, tableName);
     		return;
-    	} 
-        
+    	}
+
     	m = renamePattern.matcher(command);
     	if (m.matches()) {
     		String tableOne = m.group(1);
     		String tableTwo = m.group(2);
-    		
+
     		String aliasName = getAliasName(context, aliasCache, tableOne);
     		if (aliasName.equals(tableOne)) {
     			aliasCache.put(fqn(context, tableTwo), tableOne);
@@ -87,7 +87,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     		}
     		return;
     	}
-    	
+
 		throw new TranslatorException(InfinispanPlugin.Event.TEIID25016,
 				InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25016, command));
     }
@@ -126,7 +126,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
 		}
 		return metadata.getTable(table.getParent().getName(), alias);
 	}
-	
+
 	static String fqn(ExecutionContext context, String key) {
 		return context.getVdbName()+"."+context.getVdbVersion()+"."+key;
 	}
@@ -145,7 +145,7 @@ public class InfinispanDirectQueryExecution implements ProcedureExecution {
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         return null;
     }
-    
+
 	@Override
 	public List<?> getOutputParameterValues() throws TranslatorException {
 		return null;  //could support as an array of output values via given that the native procedure returns an array value

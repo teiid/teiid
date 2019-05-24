@@ -43,7 +43,7 @@ public class ComponentNotFoundException extends TeiidComponentException {
 
     public ComponentNotFoundException(BundleUtil.Event code, final String message) {
         super(code, message);
-    }    
+    }
 
     /**
      * Construct an instance from a message and an exception to chain to this one.

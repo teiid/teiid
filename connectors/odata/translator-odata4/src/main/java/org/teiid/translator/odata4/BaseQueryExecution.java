@@ -72,7 +72,7 @@ public class BaseQueryExecution {
     protected InputStream executeQuery(String method,
             String uri, String payload, String eTag, HttpStatusCode[] expectedStatus)
             throws TranslatorException {
-        
+
         Map<String, List<String>> headers = getDefaultHeaders();
         if (eTag != null) {
             headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
@@ -80,7 +80,7 @@ public class BaseQueryExecution {
 
         if (payload != null) {
             headers.put("Content-Type", Arrays.asList( //$NON-NLS-1$
-                    ContentType.APPLICATION_JSON.toContentTypeString())); 
+                    ContentType.APPLICATION_JSON.toContentTypeString()));
         }
 
         BinaryWSProcedureExecution execution;
@@ -88,7 +88,7 @@ public class BaseQueryExecution {
             execution = invokeHTTP(method, uri, payload, headers);
             for (HttpStatusCode status:expectedStatus) {
                 if (status.getStatusCode() == execution.getResponseCode()) {
-                    if (execution.getResponseCode() != HttpStatusCode.NO_CONTENT.getStatusCode() 
+                    if (execution.getResponseCode() != HttpStatusCode.NO_CONTENT.getStatusCode()
                             && execution.getResponseCode() != HttpStatusCode.NOT_FOUND.getStatusCode()) {
                         Blob blob = (Blob)execution.getOutputParameterValues().get(0);
                         return blob.getBinaryStream();
@@ -102,16 +102,16 @@ public class BaseQueryExecution {
         }
         // throw an error
         throw buildError(execution);
-        
+
     }
-    
+
     String getHeader(BinaryWSProcedureExecution execution, String header) {
         Object value = execution.getResponseHeader(header);
         if (value instanceof List) {
             return (String)((List<?>)value).get(0);
         }
         return (String)value;
-    }    
+    }
 
     protected TranslatorException buildError(BinaryWSProcedureExecution execution) {
         // do some error handling
@@ -134,7 +134,7 @@ public class BaseQueryExecution {
 	        		parser = new AtomDeserializer();
 	        	}
              	ODataError error = parser.toError(blob.getBinaryStream());
-                  
+
                 return new TranslatorException(ODataPlugin.Util.gs(
                         ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
                         error.getCode(), error.getMessage(), error.getInnerError()));
@@ -160,18 +160,18 @@ public class BaseQueryExecution {
         }
 
         List<Argument> parameters = new ArrayList<Argument>();
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(method, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(payload, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(uri, TypeFacility.RUNTIME_TYPES.STRING), null));
-        parameters.add(new Argument(Direction.IN, 
+        parameters.add(new Argument(Direction.IN,
                 new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), null));
-        //the engine currently always associates out params at resolve time even if the 
+        //the engine currently always associates out params at resolve time even if the
         // values are not directly read by the call
         parameters.add(new Argument(Direction.OUT, TypeFacility.RUNTIME_TYPES.STRING, null));
-        
+
         Call call = this.translator.getLanguageFactory().createCall(
                 ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 
@@ -188,20 +188,20 @@ public class BaseQueryExecution {
         Map<String, List<String>> headers = new HashMap<String, List<String>>();
         headers.put("Accept", Arrays.asList(ContentType.JSON.toContentTypeString())); //$NON-NLS-1$
         headers.put("Content-Type", Arrays.asList( //$NON-NLS-1$
-                ContentType.APPLICATION_JSON.toContentTypeString())); 
+                ContentType.APPLICATION_JSON.toContentTypeString()));
         if (this.executionContext != null) {
             headers.put("Prefer", Arrays.asList("odata.maxpagesize="+this.executionContext.getBatchSize())); //$NON-NLS-1$ //$NON-NLS-2$
         }
         return headers;
     }
-    
+
     protected InputStream executeSkipToken(URI nextURL, String baseURL,
             HttpStatusCode[] accepeted) throws TranslatorException {
         String next = nextURL.toString();
         int idx = next.indexOf("$skiptoken="); //$NON-NLS-1$
-        
+
         if (next.toLowerCase().startsWith("http")) { //$NON-NLS-1$
-            return executeQuery("GET", nextURL.toString(), null, null, accepeted); //$NON-NLS-1$ 
+            return executeQuery("GET", nextURL.toString(), null, null, accepeted); //$NON-NLS-1$
 
         } else if (idx != -1) {
             String skip = null;
@@ -222,24 +222,24 @@ public class BaseQueryExecution {
             return executeQuery("GET", nextUri, null, null, accepeted); //$NON-NLS-1$
         } else {
             throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17001, next));
-        }        
+        }
     }
-    
+
     @SuppressWarnings("unchecked")
     <T extends AbstractMetadataRecord> List<?> buildRow(T record, List<Column> columns,
             Class<?>[] expectedType, Map<String, Object> values) throws TranslatorException {
         List<Object> results = new ArrayList<Object>();
         for (int i = 0; i < columns.size(); i++) {
             Column column = columns.get(i);
-            T columnParent = (T)column.getParent();            
+            T columnParent = (T)column.getParent();
             String colName = column.getName();
             if (!columnParent.equals(record)) {
                 colName = getName(columnParent)+"/"+column.getName(); //$NON-NLS-1$
             }
             Object value;
 			try {
-				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i], 
-						values.get(colName), ODataMetadataProcessor.getNativeType(column), 
+				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i],
+						values.get(colName), ODataMetadataProcessor.getNativeType(column),
 						column.getProperty(BaseColumn.SPATIAL_SRID, false));
 			} catch (TeiidException e) {
 				throw new TranslatorException(e);
@@ -247,12 +247,12 @@ public class BaseQueryExecution {
             results.add(value);
         }
         return results;
-    }     
-    
+    }
+
     public String getName(AbstractMetadataRecord table) {
         if (table.getNameInSource() != null) {
             return table.getNameInSource();
         }
         return table.getName();
-    }    
+    }
 }

@@ -52,7 +52,7 @@ import org.teiid.query.validator.AbstractValidationVisitor;
 
 
 public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
-    
+
     private CommandContext commandContext;
     private PolicyDecider decider;
 
@@ -62,34 +62,34 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     }
 
     // ############### Visitor methods for language objects ##################
-    
+
     @Override
     public void visit(Create obj) {
     	validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
     }
-    
+
     @Override
     public void visit(DynamicCommand obj) {
     	if (obj.getIntoGroup() != null) {
     		validateTemp(PermissionType.CREATE, obj.getIntoGroup().getNonCorrelationName(), false, obj.getIntoGroup(), Context.CREATE);
     	}
     }
-    
+
     @Override
     public void visit(AlterProcedure obj) {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
-    
+
     @Override
     public void visit(AlterTrigger obj) {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, obj.isCreate()?Context.CREATE:Context.ALTER);
     }
-    
+
     @Override
     public void visit(AlterView obj) {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
-    
+
     @Override
     public void visit(ObjectTable objectTable) {
     	String language = ObjectTable.DEFAULT_LANGUAGE;
@@ -104,9 +104,9 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	private void validateTemp(DataPolicy.PermissionType action, String resource, boolean schema, LanguageObject object, Context context) {
 		Set<String> resources = Collections.singleton(resource);
 		logRequest(resources, context);
-        
+
     	boolean allowed = decider.isTempAccessible(action, schema?resource:null, context, commandContext);
-    	
+
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
@@ -122,12 +122,12 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	    	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
         }
 	}
-    
+
     @Override
     public void visit(Drop obj) {
     	validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.DROP);
     }
-    
+
     public void visit(Delete obj) {
     	validateEntitlements(obj);
     }
@@ -147,7 +147,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     public void visit(StoredProcedure obj) {
     	validateEntitlements(obj);
     }
-    
+
     public void visit(Function obj) {
     	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
@@ -198,7 +198,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      */
     protected void validateEntitlements(Update obj) {
         // Check that all elements used in criteria have read permission
-    	HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>(); 
+    	HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>();
     	ElementCollectorVisitor.getElements(obj.getChangeList().getClauseMap().values(), elements);
         if (obj.getCriteria() != null) {
             ElementCollectorVisitor.getElements(obj.getCriteria(), elements);
@@ -261,7 +261,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         if(entitledObjects.size() == 0) {
             return;
         }
-        
+
         validateEntitlements(entitledObjects, DataPolicy.PermissionType.READ, Context.QUERY);
     }
 
@@ -284,7 +284,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         for (LanguageObject symbol : symbols) {
             try {
                 Object metadataID = null;
-                if(symbol instanceof ElementSymbol) {                    
+                if(symbol instanceof ElementSymbol) {
                     metadataID = ((ElementSymbol)symbol).getMetadataID();
                     if (metadataID instanceof MultiSourceElement || metadataID instanceof TempMetadataID) {
                         continue;
@@ -313,7 +313,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 
         validateEntitlements(actionCode, auditContext, nameToSymbolMap);
 	}
-    
+
     static void addToNameMap(Object metadataID, LanguageObject symbol, Map<String, LanguageObject> nameToSymbolMap, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
     	String fullName = metadata.getFullName(metadataID);
         Object modelId = metadata.getModelID(metadataID);
@@ -325,7 +325,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         		if (symbol instanceof ElementSymbol) {
         			group = ((ElementSymbol)symbol).getGroupSymbol();
         		} else if (symbol instanceof GroupSymbol) {
-        			group = (GroupSymbol)symbol; 
+        			group = (GroupSymbol)symbol;
         		}
         		if (group != null && group.isTempGroupSymbol() && !group.isGlobalTable()) {
             		fullName = modelName + AbstractMetadataRecord.NAME_DELIM_CHAR + modelId;
@@ -352,12 +352,12 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 		for (String name : inaccessibleResources) {
 	        inaccessibleSymbols.add(nameToSymbolMap.get(name));
 	    }
-	    
+
 	    // CASE 2362 - do not include the names of the elements for which the user
 	    // is not authorized in the exception message
-	    
+
 	    handleValidationError(
-	        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), actionCode), //$NON-NLS-1$                    
+	        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), actionCode), //$NON-NLS-1$
 	        inaccessibleSymbols);
 	}
 
@@ -366,7 +366,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      */
     public Set<String> getInaccessibleResources(DataPolicy.PermissionType action, Set<String> resources, Context context) {
         logRequest(resources, context);
-        
+
 		Set<String> results = decider.getInaccessibleResources(action, resources, context, commandContext);
 
 		logResult(resources, context, results.isEmpty());
@@ -384,5 +384,5 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
 	        	LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 	        }
 		}
-	}    
+	}
 }

@@ -34,7 +34,7 @@ import com.google.gdata.util.ServiceException;
 
 /**
  * Creates metadata by using GData API.
- * 
+ *
  * We retrieve worksheet names and possibly headers
  * @author fnguyen
  *
@@ -58,8 +58,8 @@ public class SpreadsheetMetadataExtractor {
 	public void setGdataAPI(GDataClientLoginAPI gdataAPI) {
 		this.gdataAPI = gdataAPI;
 	}
-	
-	
+
+
 	public SpreadsheetInfo extractMetadata(String spreadsheetName, boolean isKey){
 	    SpreadsheetEntry sentry = gdataAPI.getSpreadsheetEntry(spreadsheetName, isKey);
 		SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);

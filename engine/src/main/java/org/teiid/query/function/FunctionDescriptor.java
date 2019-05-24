@@ -53,27 +53,27 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	private static final long serialVersionUID = 5374103983118037242L;
 
 	private static final boolean ALLOW_NAN_INFINITY = PropertiesUtils.getHierarchicalProperty("org.teiid.allowNanInfinity", false, Boolean.class); //$NON-NLS-1$
-	
+
 	private Class<?>[] types;
-	private Class<?> returnType;	
+	private Class<?> returnType;
     private boolean requiresContext;
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
     private boolean hasWrappedArgs;
     private boolean calledWithVarArgArrayParam; //TODO: could store this on the function and pass to invoke
-    
-    // This is transient as it would be useless to invoke this method in 
-    // a different VM.  This function descriptor can be used to look up 
+
+    // This is transient as it would be useless to invoke this method in
+    // a different VM.  This function descriptor can be used to look up
     // the real VM descriptor for execution.
     private transient Method invocationMethod;
-    
+
     private ClassLoader classLoader;
 
 	private Procedure procedure;
-	
+
     FunctionDescriptor() {
     }
-    
+
 	FunctionDescriptor(FunctionMethod method, Class<?>[] types,
 			Class<?> outputType, Method invocationMethod,
 			boolean requiresContext, ClassLoader classloader) {
@@ -84,7 +84,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.method = method;
         this.classLoader = classloader;
 	}
-	
+
 	public Object newInstance() throws FunctionExecutionException {
 	    checkMethod();
 		try {
@@ -95,85 +95,85 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 			throw new MetadataException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
 		}
 	}
-	
+
 	public void setHasWrappedArgs(boolean hasWrappedArgs) {
 		this.hasWrappedArgs = hasWrappedArgs;
 	}
-	
+
 	public String getSchema() {
 		return schema;
 	}
-	
+
 	public void setSchema(String schema) {
 		this.schema = schema;
 	}
-	
+
 	public String getName() {
-		return this.method.getName();				
+		return this.method.getName();
 	}
-	
+
 	public String getFullName() {
 		if (CoreConstants.SYSTEM_MODEL.equals(this.schema)) {
 			return getName();
 		}
 		return this.schema + AbstractMetadataRecord.NAME_DELIM_CHAR + getName();
 	}
-    
+
     public PushDown getPushdown() {
         return this.method.getPushdown();
     }
-    
+
 	public Class<?>[] getTypes() {
 		return this.types;
 	}
-	
+
 	public Class<?> getReturnType() {
 		return this.returnType;
-	}		
-	
+	}
+
     Method getInvocationMethod() {
         return this.invocationMethod;
     }
-       
+
     public boolean requiresContext() {
         return this.requiresContext;
     }
-    
+
     public Procedure getProcedure() {
 		return procedure;
 	}
-    
+
     public void setProcedure(Procedure procedure) {
 		this.procedure = procedure;
 	}
-    
+
 	@Override
 	public String toString() {
 		StringBuffer str = new StringBuffer(this.method.getName());
 		str.append("("); //$NON-NLS-1$
 		for(int i=0; i<types.length; i++) {
-			if(types[i] != null) { 
+			if(types[i] != null) {
 				str.append(types[i].getName());
 			} else {
 				str.append("null"); //$NON-NLS-1$
-			}		
+			}
 			if(i<(types.length-1)) {
 				str.append(", "); //$NON-NLS-1$
 			}
 		}
 		str.append(") : "); //$NON-NLS-1$
-        if(returnType == null) { 
+        if(returnType == null) {
             str.append("null"); //$NON-NLS-1$
-        } else {    
+        } else {
     		str.append(returnType.getName());
-        }    
+        }
 		return str.toString();
 	}
 
     public boolean isNullDependent() {
         return !this.method.isNullOnNull();
     }
-    
+
     public Determinism getDeterministic() {
         return this.method.getDeterminism();
     }
@@ -186,7 +186,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
              throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30381, e);
         }
     }
-    
+
     public FunctionMethod getMethod() {
 		return method;
 	}
@@ -200,7 +200,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	 * values provided.  Return the result of the function.
 	 * @param values Values that should match 1-to-1 with the types described in the
 	 * function descriptor
-	 * @param context 
+	 * @param context
 	 * @param functionTarget the object to invoke the function on
 	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @return Result of invoking the function
@@ -215,7 +215,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         }
 
         checkMethod();
-        
+
         // Invoke the method and return the result
         try {
         	if (hasWrappedArgs) {
@@ -336,18 +336,18 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 			}
 		}
 		return result;
-	}    
-	
+	}
+
 	public boolean isCalledWithVarArgArrayParam() {
 		return calledWithVarArgArrayParam;
 	}
-	
+
 	public void setCalledWithVarArgArrayParam(boolean calledWithVarArgArrayParam) {
 		this.calledWithVarArgArrayParam = calledWithVarArgArrayParam;
 	}
-	
+
 	public boolean isSystemFunction(String name) {
 		return this.getName().equalsIgnoreCase(name) && CoreConstants.SYSTEM_MODEL.equals(this.getSchema());
 	}
-	
+
 }

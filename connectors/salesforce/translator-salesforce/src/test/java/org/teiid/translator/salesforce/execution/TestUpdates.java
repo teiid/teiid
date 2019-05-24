@@ -36,19 +36,19 @@ import com.sforce.soap.partner.sobject.SObject;
 
 @SuppressWarnings("nls")
 public class TestUpdates {
-    
+
     private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
 
     @Test
     public void testIds() throws Exception {
         Delete delete = (Delete) translationUtility.parseCommand("delete from contacts");
-        
+
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
-        
+
         SalesForceExecutionFactory config = new SalesForceExecutionFactory();
-        
+
         DeleteExecutionImpl updateExecution = new DeleteExecutionImpl(config, delete, connection, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class));
-        
+
         ArgumentCaptor<String> queryArgument = ArgumentCaptor.forClass(String.class);
         QueryResult qr = new QueryResult();
         SObject so = new SObject();
@@ -57,10 +57,10 @@ public class TestUpdates {
         qr.setRecords(new SObject[] {so});
         qr.setSize(1);
         qr.setDone(true);
-        
+
         Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(qr);
         Mockito.stub(connection.delete(new String[] {"x"})).toReturn(1);
-        
+
         while(true) {
             try {
                 updateExecution.execute();
@@ -70,9 +70,9 @@ public class TestUpdates {
                 continue;
             }
         }
-        
+
         Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
-        
+
         String query = queryArgument.getValue();
         assertEquals("SELECT Id FROM Contact ", query);
 

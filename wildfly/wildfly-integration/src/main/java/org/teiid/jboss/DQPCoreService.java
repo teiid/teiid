@@ -55,7 +55,7 @@ import org.teiid.services.InternalEventDistributorFactory;
 
 public class DQPCoreService extends DQPConfiguration implements Serializable, Service<DQPCore>  {
 	private static final long serialVersionUID = -4676205340262775388L;
-		
+
 	private transient TransactionServerImpl transactionServerImpl = new TransactionServerImpl();
 	private transient DQPCore dqpCore = new DQPCore();
 	private transient JMXService jmx;
@@ -71,7 +71,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
-	
+
 	@Override
     public void start(final StartContext context) {
 		this.transactionServerImpl.setXaImporter(new XAImporterImpl(getXaTerminatorInjector().getValue(), getWorkManagerInjector().getValue()));
@@ -80,21 +80,21 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		setPreParser(preParserInjector.getValue());
 		setAuthorizationValidator(authorizationValidatorInjector.getValue());
 		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());
-		
+
 		this.dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
 		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getReplicatedEventDistributor());
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
 		this.dqpCore.start(this);
-		
+
 		final SessionService sessionService = (SessionService) context.getController().getServiceContainer().getService(TeiidServiceNames.SESSION).getValue();
 		ServiceController<?> repo = context.getController().getServiceContainer().getRequiredService(TeiidServiceNames.BUFFER_MGR);
 		this.jmx = new JMXService(this.dqpCore, BufferManagerService.class.cast(repo.getService()), sessionService);
 		this.jmx.registerBeans();
-		
+
     	// add vdb life cycle listeners
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
-			
+
 			@Override
 			public void removed(String name, CompositeVDB vdb) {
 				// terminate all the previous sessions
@@ -102,8 +102,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 				for (SessionMetadata session:sessions) {
 					sessionService.terminateSession(session.getSessionId(), null);
 				}
-			        
-				// dump the caches. 
+
+				// dump the caches.
 				try {
 			        SessionAwareCache<?> value = getResultSetCacheInjector().getValue();
 					if (value != null) {
@@ -117,28 +117,28 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 					//already shutdown
 				}
 			}
-			
+
 			@Override
 			public void added(String name, CompositeVDB vdb) {
 			}
 
 			@Override
 			public void finishedDeployment(String name, CompositeVDB cvdb) {
-			}			
-			
+			}
+
 			@Override
 			public void beforeRemove(String name, CompositeVDB cvdb) {
 			}
-		}); 		
+		});
 
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50001, this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString()));
-	}	
-	
+	}
+
 	@Override
 	public DQPCore getValue() throws IllegalStateException, IllegalArgumentException {
 		return this.dqpCore;
 	}
-    
+
 	@Override
     public void stop(StopContext context) {
     	try {
@@ -150,16 +150,16 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	    jmx.unregisterBeans();
     	    jmx = null;
     	}
-    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50002, new Date(System.currentTimeMillis()).toString())); 
+    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50002, new Date(System.currentTimeMillis()).toString()));
     }
-    
+
 	public InjectedValue<SessionAwareCache> getResultSetCacheInjector() {
 		return resultSetCacheInjector;
 	}
-	
+
 	public InjectedValue<SessionAwareCache> getPreparedPlanCacheInjector() {
 		return preparedPlanCacheInjector;
-	}	
+	}
 
 	public InjectedValue<TranslatorRepository> getTranslatorRepositoryInjector() {
 		return translatorRepositoryInjector;
@@ -168,15 +168,15 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	public InjectedValue<VDBRepository> getVdbRepositoryInjector() {
 		return vdbRepositoryInjector;
 	}
-	
+
 	private VDBRepository getVdbRepository() {
 		return vdbRepositoryInjector.getValue();
-	}	
+	}
 
 	public InjectedValue<AuthorizationValidator> getAuthorizationValidatorInjector() {
 		return authorizationValidatorInjector;
 	}
-	
+
 	public InjectedValue<PreParser> getPreParserInjector() {
 		return preParserInjector;
 	}

@@ -35,18 +35,18 @@ class ClientState {
 	LinkedHashSet<RequestID> requests;
 	TempTableStore sessionTables;
 	volatile SessionMetadata session;
-	
+
 	public ClientState(TempTableStore tableStoreImpl) {
 		this.sessionTables = tableStoreImpl;
 	}
-	
+
 	public synchronized void addRequest(RequestID requestID) {
 		if (requests == null) {
 			requests = new LinkedHashSet<RequestID>(2);
 		}
 		requests.add(requestID);
 	}
-	
+
 	public synchronized List<RequestID> getRequests() {
 		if (requests == null) {
 			return Collections.emptyList();

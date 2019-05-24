@@ -45,7 +45,7 @@ public class Worksheet {
 		Column column = columns.get(columnLabel);
 		if (column == null) {
 			return null;
-		} 
+		}
 		return column.getAlphaName();
 	}
 
@@ -56,7 +56,7 @@ public class Worksheet {
 	public String getName() {
 		return name;
 	}
-	
+
 	public int getColumnCount() {
 		return columns.size();
 	}

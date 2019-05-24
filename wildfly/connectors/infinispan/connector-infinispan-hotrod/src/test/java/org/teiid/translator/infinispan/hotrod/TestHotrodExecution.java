@@ -66,26 +66,26 @@ public class TestHotrodExecution {
     public static void setup() throws Exception {
         TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5"));
         SERVER = new HotRodTestServer(PORT);
-        
+
         MetadataFactory mf = TestProtobufMetadataProcessor.protoMatadata("tables.proto");
         EF = new InfinispanExecutionFactory();
         TransformationMetadata tm = TestProtobufMetadataProcessor.getTransformationMetadata(mf, EF);
         //String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         //System.out.println(ddl);
-        
+
         METADATA = new RuntimeMetadataImpl(tm);
         UTILITY = new TranslationUtility(tm);
-        
+
 
         InfinispanConnection connection = SERVER.getConnection();
 
         // only use G2 & G4 as cache only support single id
         connection.registerProtobufFile(new ProtobufResource("tables.proto",
-        ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.proto"))));	
-    	
+        ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("tables.proto"))));
+
         EC = Mockito.mock(ExecutionContext.class);
         Mockito.stub(EC.getBatchSize()).toReturn(512);
-       
+
     }
 
     @AfterClass
@@ -104,7 +104,7 @@ public class TestHotrodExecution {
         InfinispanConnection connection = getConnection("default");
 
         CACHE_NAME = connection.getCache().getName();
- 
+
         ResultSetExecution exec = null;
         Command command = null;
         UpdateExecution update = null;
@@ -212,7 +212,7 @@ public class TestHotrodExecution {
         assertArrayEquals(new Object[] {new Integer(1), "one"}, exec.next().toArray());
         assertArrayEquals(new Object[] {new Integer(3), "two"}, exec.next().toArray());
         assertNull(exec.next());
-        
+
         command = UTILITY.parseCommand("DELETE FROM G4 where e2 = 'two' AND G2_e1 = 2");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
@@ -222,7 +222,7 @@ public class TestHotrodExecution {
         exec.execute();
 
         assertArrayEquals(new Object[] {new Integer(1), "one"}, exec.next().toArray());
-        assertNull(exec.next());        
+        assertNull(exec.next());
 
         // cascade deletes G4
         command = UTILITY.parseCommand("DELETE FROM G2 where e1 = 1");
@@ -272,11 +272,11 @@ public class TestHotrodExecution {
 
         assertArrayEquals(new Object[] {new Integer(5), "upsert"}, exec.next().toArray());
         assertNull(exec.next());
-        
+
         Timestamp timestamp = new Timestamp(1504889513361L);
         Date date = new Date(1504889513361L);
         Time time = new Time(1504889513361L);
-        
+
         String sql = "UPSERT INTO G5 (e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18) "
         		+ "values (512, 'one', convert(512.34, double), 512.25, 256, 1, 't', 1504889513361, convert(123445656.12313, bigdecimal), "
         		+ "convert(1332434343, biginteger), "
@@ -285,13 +285,13 @@ public class TestHotrodExecution {
         		+ "{d '"+new SimpleDateFormat("yyyy-MM-dd").format(date)+"'}, "
         		+ "null, null, "
         		+ "convert('clob contents', clob), xmlparse(CONTENT '<a>foo</a>'), null)";
-        
+
         command = UTILITY.parseCommand(sql);
-        
-        
+
+
         update = EF.createUpdateExecution(command,EC, METADATA, connection);
-        update.execute();        
-        
+        update.execute();
+
         command = UTILITY.parseCommand("SELECT e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18 FROM G5");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
@@ -307,18 +307,18 @@ public class TestHotrodExecution {
         assertEquals(new Long(1504889513361L), results.get(7));
         assertEquals(new BigDecimal("123445656.12313").toPlainString(), ((BigDecimal)results.get(8)).toPlainString());
         assertEquals(new BigInteger("1332434343").toString(), ((BigInteger)results.get(9)).toString());
-        
-        
+
+
         assertEquals(new Time(new SimpleDateFormat("HH:mm:ss").parse(time.toString()).getTime()), results.get(10));
         assertEquals(new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-09-08 11:51:53").getTime()), results.get(11));
         assertEquals(new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2017-09-08").getTime()), results.get(12));
-        
+
         assertEquals("clob contents", ObjectConverterUtil.convertToString(((Clob)results.get(15)).getCharacterStream()));
         assertEquals("<a>foo</a>", ObjectConverterUtil.convertToString(((SQLXML)results.get(16)).getCharacterStream()));
-        assertNull(exec.next());  
-        
+        assertNull(exec.next());
+
     }
- 
+
     // TEIID-5165 - test large cache delete
     @Test
     public void testServer_Teiid_5165() throws Exception {
@@ -329,34 +329,34 @@ public class TestHotrodExecution {
         UpdateExecution update = null;
 
         InfinispanConnection connection = getConnection("foo");
-        
+
         // the below also test one-2-one relation.
         command = UTILITY.parseCommand("DELETE FROM G2");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();
-             
+
         int rows = 12000;
         for (int i=0; i < rows; i++) {
             command = UTILITY.parseCommand("INSERT INTO G2 (e1, e2, g3_e1, g3_e2) values (" + i +", 'row" + i +"', 1, 'one')");
             update = EF.createUpdateExecution(command,EC, METADATA, connection);
-            update.execute();       	
+            update.execute();
         }
-        
+
         Thread.sleep(5000);
-        
+
         command = UTILITY.parseCommand("SELECT e1, e2 FROM G2");
         exec = EF.createResultSetExecution((QueryExpression) command, EC, METADATA, connection);
         exec.execute();
-        
+
         int cnt = 0;
         while(true) {
         	List<?> results = exec.next();
         	if (results == null) break;
         	cnt++;
         }
-        
+
         assertEquals(new Integer(rows), new Integer(cnt));
- 
+
         command = UTILITY.parseCommand("DELETE FROM G2");
         update = EF.createUpdateExecution(command, EC, METADATA, connection);
         update.execute();

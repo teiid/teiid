@@ -89,7 +89,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			this.output = output;
 			this.schema = schema;
 		}
-		
+
 		@Override
 		public void initialize(CommandContext context,
 				ProcessorDataManager dataMgr, BufferManager bufferMgr) {
@@ -147,9 +147,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 
 	@SuppressWarnings("serial")
 	private final class LRUBufferCache extends LRUCache<List<?>, TupleBuffer> {
-		
+
 		private LRUCache<List<?>, TupleBuffer> spillOver;
-		
+
 		private LRUBufferCache(int maxSize, LRUCache<List<?>, TupleBuffer> spillOver) {
 			super(maxSize);
 			this.spillOver = spillOver;
@@ -166,7 +166,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			}
 			return false;
 		}
-		
+
 		@Override
 		public void clear() {
 			if (!isEmpty()) {
@@ -185,7 +185,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		List<Object> refValues;
 		boolean comparable = true;
 		public boolean blocked;
-		
+
 		void close(boolean removeBuffer) {
 			if (processor == null) {
 				return;
@@ -199,10 +199,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			processor = null;
 		}
 	}
-	
+
 	//environment
 	private BufferManager manager;
-	
+
 	//processing state
 	private Map<String, SubqueryState> subqueries = new HashMap<String, SubqueryState>();
 	private Map<Command, String> commands = new HashMap<Command, String>(); //TODO: could determine this ahead of time
@@ -210,10 +210,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	private LRUCache<List<?>, TupleBuffer> cache = new LRUBufferCache(512, smallCache);
 	private int maxTuples = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE << 4;
 	private int currentTuples = 0;
-	
+
 	private Map<Function, ScalarSubquery> functionState;
 	private Map<List<?>, QueryProcessor> procedureState;
-	
+
 	public SubqueryAwareEvaluator(Map elements, ProcessorDataManager dataMgr,
 			CommandContext context, BufferManager manager) {
 		super(elements, dataMgr, context);
@@ -224,7 +224,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		}
 		//TODO the number of cache entries and the max tuples should be based upon the reference count and types involved as well.
 	}
-	
+
 	public void reset() {
 		for (SubqueryState subQueryState : subqueries.values()) {
 			subQueryState.plan.reset();
@@ -237,13 +237,13 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			this.functionState.clear();
 		}
 	}
-	
+
 	public void close() {
 		reset();
 		commands.clear();
 		subqueries.clear();
 	}
-	
+
 	@Override
 	protected ValueIterator evaluateSubquery(SubqueryContainer<?> container,
 			List<?> tuple) throws TeiidProcessingException, BlockedException,
@@ -260,7 +260,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 				}
 			}
 		}
-		if (state == null) {	
+		if (state == null) {
 			state = new SubqueryState();
 			state.plan = container.getCommand().getProcessorPlan().clone();
 	        if (container.getCommand().getCorrelatedReferences() != null) {
@@ -294,7 +294,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
             		if (state.processor != null) {
 	    				//cache the old value
             			TupleBuffer tb = state.collector.collectTuples();
-            			//recheck determinism as the plan may not have been fully processed by the initial check 
+            			//recheck determinism as the plan may not have been fully processed by the initial check
             			Determinism determinism = state.processor.getContext().getDeterminismLevel();
             			deterministic = Determinism.COMMAND_DETERMINISTIC.compareTo(determinism) <= 0;
             			if (deterministic) {
@@ -353,7 +353,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		state.blocked = false;
 		return iter;
 	}
-	
+
 	/**
 	 * Implements procedure function handling.
 	 * TODO: cache results
@@ -364,7 +364,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		QueryProcessor qp = null;
 		List<?> key = Arrays.asList(function, Arrays.asList(values));
 		if (procedureState != null) {
-			qp = this.procedureState.get(key); 
+			qp = this.procedureState.get(key);
 		}
 		if (qp == null) {
 			String args = Collections.nCopies(values.length, '?').toString().substring(1);
@@ -377,7 +377,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			}
 			this.procedureState.put(key, qp);
 		}
-		
+
 		//just in case validate the rows being returned
 		TupleBatch tb = qp.nextBatch();
 		TupleBatch next = tb;
@@ -390,7 +390,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		if (next.getEndRow() >= 2) {
 			throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30345, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30345, function));
 		}
-		
+
 		Object result = null;
 		if (next.getRowCount() > 0) {
 			result = next.getTuples().get(0).get(0);
@@ -399,10 +399,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		qp.closeProcessing();
 	    return result;
 	}
-	
+
 	/**
 	 * Implements must pushdown function handling if supported by the source.
-	 * 
+	 *
 	 * The basic strategy is to create a dummy subquery to represent the evaluation
 	 */
 	@Override
@@ -433,7 +433,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	    	}
 	    	schema = fd.getSchema();
 	    }
-	    
+
 		ScalarSubquery ss = null;
 		if (functionState != null) {
 			ss = functionState.get(function);
@@ -441,7 +441,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		Expression[] functionArgs = new Expression[values.length];
 	    for(int i=0; i < values.length; i++) {
 	        functionArgs[i] = new Constant(values[i]);
-	    }  
+	    }
 		if (ss == null) {
 	    	final Query command = new Query();
 	    	Select select = new Select();

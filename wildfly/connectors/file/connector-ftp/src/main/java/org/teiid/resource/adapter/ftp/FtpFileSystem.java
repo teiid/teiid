@@ -32,10 +32,10 @@ import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.spi.FileSystem;
 
 public class FtpFileSystem implements FileSystem {
-    
+
     private FTPClient client;
 
-    
+
     public FtpFileSystem(FTPClient ftpClient) {
         this.client = ftpClient;
     }
@@ -85,7 +85,7 @@ public class FtpFileSystem implements FileSystem {
     }
 
     @Override
-    public boolean exists(VirtualFile mountPoint, VirtualFile target) {  
+    public boolean exists(VirtualFile mountPoint, VirtualFile target) {
         return isFile(mountPoint, target) || isDirectory(mountPoint, target);
     }
 
@@ -121,7 +121,7 @@ public class FtpFileSystem implements FileSystem {
             }
         } catch (IOException e) {
             throw new FtpOperationException(e);
-        } 
+        }
         return false;
     }
 
@@ -157,9 +157,9 @@ public class FtpFileSystem implements FileSystem {
             throw new FtpOperationException(e);
         }
     }
-    
+
     private static class FtpOperationException extends RuntimeException {
-   
+
         private static final long serialVersionUID = 2112491370833353846L;
 
         FtpOperationException(Throwable cause){

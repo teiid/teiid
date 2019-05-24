@@ -111,7 +111,7 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-		
+
     /**
      * Get hashcode for command.  WARNING: This hash code relies on the hash codes of the
      * Group and Criteria clause.  If the command changes, it's hash code will change and
@@ -152,23 +152,23 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
 		}
 
 		Delete other = (Delete) obj;
-        
+
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
         	   sameOptionAndHint(other) &&
                EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
-    
+
 	/**
 	 * Return a copy of this Delete.
 	 */
 	public Object clone() {
 	    GroupSymbol copyGroup = null;
-	    if(group != null) { 
-	    	copyGroup = group.clone();    
+	    if(group != null) {
+	    	copyGroup = group.clone();
 	    }
-	    
+
 		Criteria copyCrit = null;
-		if(criteria != null) { 
+		if(criteria != null) {
 			copyCrit = (Criteria) criteria.clone();
 		}
 
@@ -179,7 +179,7 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
 
 	/**
 	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a 
+	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
 	 * single column.
 	 * @return Ordered list of SingleElementSymbol
 	 */
@@ -193,6 +193,6 @@ public class Delete extends ProcedureContainer implements FilteredCommand {
 	public boolean areResultsCachable() {
 		return false;
 	}
-    
+
 }
 

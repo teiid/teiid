@@ -34,57 +34,57 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * select clause. <p>
  */
 public abstract class Criteria implements Expression {
-    
+
     /**
      * Constructs a default instance of this class.
      */
     public Criteria() {
     }
 
-	/** 
+	/**
 	 * Abstract clone method
 	 * @return Deep clone of this criteria
 	 */
 	public abstract Object clone();
-	
+
     /**
      * Return the parser string.
      */
     public String toString() {
     	return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 	/**
 	 * This utility method will pull apart a tree of criteria by breaking all
-	 * compound AND criteria apart.  For instance, ((A=1 AND B=2) AND C=3) 
-	 * will be broken into A=1, B=2, C=3.  
+	 * compound AND criteria apart.  For instance, ((A=1 AND B=2) AND C=3)
+	 * will be broken into A=1, B=2, C=3.
 	 * @param crit Criteria to break apart
 	 * @return List of Criteria, empty list if crit is null
-	 */		
+	 */
 	public static List<Criteria> separateCriteriaByAnd(Criteria crit) {
-		if(crit == null) { 
+		if(crit == null) {
 			return Collections.emptyList();
 		}
-		
+
 		List<Criteria> parts = new ArrayList<Criteria>();
 		separateCriteria(crit, parts);
-		return parts;			
+		return parts;
 	}
-    
+
     public static Criteria combineCriteria(List<Criteria> parts) {
-        if(parts == null || parts.isEmpty()) { 
+        if(parts == null || parts.isEmpty()) {
             return null;
         }
-        
+
         if (parts.size() == 1) {
             return parts.get(0);
         }
-        
-        return new CompoundCriteria(parts);           
+
+        return new CompoundCriteria(parts);
     }
-	
+
 	/**
-	 * Helper method for {@link #separateCriteriaByAnd(Criteria)} that 
+	 * Helper method for {@link #separateCriteriaByAnd(Criteria)} that
 	 * can be called recursively to collect parts.
 	 * @param crit Crit to break apart
 	 * @param parts Collection to add parts to
@@ -97,11 +97,11 @@ public abstract class Criteria implements Expression {
 					separateCriteria(conjunct, parts);
 				}
 			} else {
-				parts.add(crit);	
+				parts.add(crit);
 			}
 		} else {
-			parts.add(crit);		
-		}	
+			parts.add(crit);
+		}
 	}
 
 	/**
@@ -118,12 +118,12 @@ public abstract class Criteria implements Expression {
     public static Criteria combineCriteria(Criteria primaryCrit, Criteria additionalCrit) {
         return combineCriteria(primaryCrit, additionalCrit, false);
     }
-    
+
 	public static Criteria combineCriteria(Criteria primaryCrit, Criteria additionalCrit, boolean disjunctively) {
 		if(primaryCrit == null) {
 			return additionalCrit;
 		}
-		if(additionalCrit == null) { 
+		if(additionalCrit == null) {
 			return primaryCrit;
 		}
 		CompoundCriteria compCrit = new CompoundCriteria();
@@ -140,38 +140,38 @@ public abstract class Criteria implements Expression {
 		}
 		return compCrit;
 	}
-    
+
     public static Criteria applyDemorgan(Criteria input) {
 
         if (input instanceof NotCriteria) {
             NotCriteria not = (NotCriteria)input;
-            
+
             return not.getCriteria();
         }
-        
+
         if (!(input instanceof CompoundCriteria)) {
             return new NotCriteria(input);
         }
-        
+
         CompoundCriteria compCrit = (CompoundCriteria)input;
-        
+
         int operator = (compCrit.getOperator()==CompoundCriteria.OR)?CompoundCriteria.AND:CompoundCriteria.OR;
-        
+
         List<Criteria> criteria = new ArrayList<Criteria>(compCrit.getCriteria().size());
-        
+
         for (Criteria crit : compCrit.getCriteria()) {
-            
+
             crit = new NotCriteria(crit);
 
             criteria.add(crit);
         }
-        
+
         return new CompoundCriteria(operator, criteria);
     }
-    
+
     @Override
     public Class<?> getType() {
     	return DataTypeManager.DefaultDataClasses.BOOLEAN;
     }
-    
+
 }  // END CLASS

@@ -27,26 +27,26 @@ import org.teiid.language.visitor.SQLStringVisitor;
  * Defines with window frame for a window function
  */
 public class WindowFrame extends BaseLanguageObject {
-    
+
     public enum BoundMode {
         CURRENT_ROW,
         PRECEDING,
         FOLLOWING
     }
-    
+
     public enum FrameMode {
         RANGE,
         ROWS
     }
-    
+
     public static class FrameBound {
         private BoundMode boundMode;
         private Integer bound;
-        
+
         public FrameBound(BoundMode mode) {
             this.boundMode = mode;
         }
-        
+
         /**
          * Get the numeric bound.  May be null in CURRENT_ROW or to represent UNBOUNDED
          * @return
@@ -54,29 +54,29 @@ public class WindowFrame extends BaseLanguageObject {
         public Integer getBound() {
             return bound;
         }
-        
+
         public BoundMode getBoundMode() {
             return boundMode;
         }
-        
+
         public FrameBound bound(Integer i) {
             this.bound = i;
             return this;
         }
-        
+
         public void setBound(Integer bound) {
             this.bound = bound;
         }
-        
+
         public void setBoundMode(BoundMode boundMode) {
             this.boundMode = boundMode;
         }
-        
+
         @Override
         public int hashCode() {
             return HashCodeUtil.hashCode(0, bound, boundMode);
         }
-        
+
         @Override
         public boolean equals(Object obj) {
             if (obj == this) {
@@ -89,7 +89,7 @@ public class WindowFrame extends BaseLanguageObject {
             return EquivalenceUtil.areEqual(boundMode, other.boundMode)
                     && EquivalenceUtil.areEqual(bound, other.bound);
         }
-        
+
         @Override
         public FrameBound clone() {
             FrameBound clone = new FrameBound(boundMode);
@@ -97,19 +97,19 @@ public class WindowFrame extends BaseLanguageObject {
             return clone;
         }
     }
-    
+
     private FrameMode mode;
     private FrameBound start;
     private FrameBound end;
-    
+
     public WindowFrame(FrameMode mode) {
         this.mode = mode;
     }
-    
+
     public FrameBound getStart() {
         return start;
     }
-    
+
     /**
      * Return the end bound, may be null
      * @return
@@ -117,19 +117,19 @@ public class WindowFrame extends BaseLanguageObject {
     public FrameBound getEnd() {
         return end;
     }
-    
+
     public void setStart(FrameBound lowerBound) {
         this.start = lowerBound;
     }
-    
+
     public void setEnd(FrameBound upperBound) {
         this.end = upperBound;
     }
-    
+
     public FrameMode getMode() {
         return mode;
     }
-    
+
     public void setMode(FrameMode mode) {
         this.mode = mode;
     }
@@ -138,17 +138,17 @@ public class WindowFrame extends BaseLanguageObject {
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public int hashCode() {
         return HashCodeUtil.hashCode(mode.hashCode(), start, end);
     }
-    
+
     @Override
     public String toString() {
         return SQLStringVisitor.getSQLString(this);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -162,7 +162,7 @@ public class WindowFrame extends BaseLanguageObject {
                 && EquivalenceUtil.areEqual(start, other.start)
                 && EquivalenceUtil.areEqual(end, other.end);
     }
-    
+
     @Override
     public WindowFrame clone() {
         WindowFrame clone = new WindowFrame(this.mode);

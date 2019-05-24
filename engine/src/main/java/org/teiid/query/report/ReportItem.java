@@ -28,14 +28,14 @@ public class ReportItem implements Serializable {
 	private String type;
 	private String message;
 
-	public ReportItem(String type) { 
+	public ReportItem(String type) {
 		this.type = type;
 	}
-	
-	public String getType() { 
-	 	return this.type;   
+
+	public String getType() {
+	 	return this.type;
 	}
-	
+
     /**
      * Gets the message.
      * @return Returns the message
@@ -51,7 +51,7 @@ public class ReportItem implements Serializable {
     public void setMessage(String message) {
         this.message = message;
     }
-    
+
     public String toString() {
     	return getType() + ": " + getMessage();     //$NON-NLS-1$
     }

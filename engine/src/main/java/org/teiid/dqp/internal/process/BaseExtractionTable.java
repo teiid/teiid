@@ -43,7 +43,7 @@ import org.teiid.query.tempdata.BaseIndexInfo;
 import org.teiid.query.util.CommandContext;
 
 abstract class BaseExtractionTable<T> {
-	
+
 	static final class ExtractionTupleSource<T> implements TupleSource {
 		private final Criteria condition;
 		private final SimpleIterator<T> iter;
@@ -83,35 +83,35 @@ abstract class BaseExtractionTable<T> {
 					rowBuffer = null;
 					return result;
 				}
-			
+
 			}
 		}
 
 		@Override
 		public void closeSource() {
-			
+
 		}
 	}
 
 	private Evaluator eval;
 	private int cols;
-	
+
 	public BaseExtractionTable(List<ElementSymbol> columns) {
 		Map<Expression, Integer> map = RelationalNode.createLookupMap(columns);
 		this.eval = new Evaluator(map, null, null);
 		this.cols = columns.size();
 	}
-	
+
 	public TupleSource processQuery(Query query, final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
 		return new ExtractionTupleSource(query.getCriteria(), createIterator(vdb, metadata, cc), cc, vdb, metadata, this);
 	}
-	
+
 	protected SimpleIterator<T> createIterator(final VDBMetaData vdb, final TransformationMetadata metadata, final CommandContext cc) throws QueryMetadataException, TeiidComponentException {
 		return null;
 	}
 
 	protected abstract void fillRow(List<Object> row, T record, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<T> iter);
-	
+
 }
 
 abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends BaseExtractionTable<T> {
@@ -121,7 +121,7 @@ abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends B
 		super(columns);
 		this.baseTable = baseTable;
 	}
-	
+
 	@Override
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
 			TransformationMetadata metadata, CommandContext cc) {
@@ -129,7 +129,7 @@ abstract class RecordExtractionTable<T extends AbstractMetadataRecord> extends B
 		final SimpleIterator<T> iter = baseTable.processQuery(vdb, metadata.getMetadataStore(), ii, metadata, cc);
 		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), iter, cc, vdb, metadata, this);
 	}
-	
+
 }
 
 abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> extends BaseExtractionTable<T> {
@@ -139,11 +139,11 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 		super(columns);
 		this.baseTable = baseTable;
 	}
-	
+
 	protected boolean isValid(T result, CommandContext cc) {
 		return !(result instanceof AbstractMetadataRecord) || cc.getDQPWorkContext().isAdmin() || cc.getAuthorizationValidator().isAccessible((AbstractMetadataRecord)result, cc);
 	}
-	
+
 	@Override
 	public TupleSource processQuery(Query query, VDBMetaData vdb,
 			final TransformationMetadata metadata, final CommandContext cc) {
@@ -153,14 +153,14 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 			ii = ii.next;
 		}
 		return new ExtractionTupleSource<T>(ii.getNonCoveredCriteria(), new ExpandingSimpleIterator<P, T>(iter) {
-			
+
 			SimpleIteratorWrapper<T> wrapper = new SimpleIteratorWrapper<T>(null) {
 				@Override
 				protected boolean isValid(T result) {
 					return ChildRecordExtractionTable.this.isValid(result, cc);
 				}
 			};
-			
+
 			protected RecordTable.SimpleIterator<T> getChildIterator(P parent) {
 				Collection<? extends T> children = getChildren(parent, cc);
 				if (children.isEmpty()) {
@@ -169,10 +169,10 @@ abstract class ChildRecordExtractionTable<P extends AbstractMetadataRecord, T> e
 				wrapper.setIterator(children.iterator());
 				return wrapper;
 			}
-			
+
 		}, cc, vdb, metadata, this);
 	}
-	
+
 	protected abstract Collection<? extends T> getChildren(P parent, CommandContext cc);
-	
+
 }

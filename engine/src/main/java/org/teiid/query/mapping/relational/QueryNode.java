@@ -88,13 +88,13 @@ public class QueryNode {
 	public String toString() {
         return query;
 	}
-	
+
 	public UpdateInfo getUpdateInfo() {
 		return updateInfo;
 	}
-	
+
 	public void setUpdateInfo(UpdateInfo updateInfo) {
 		this.updateInfo = updateInfo;
 	}
-	
+
 }

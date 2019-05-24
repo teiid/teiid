@@ -52,7 +52,7 @@ public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
     public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
-	
+
 	private static final HashSet<String> PRECISION_DATATYPES = new HashSet<String>(
 			Arrays.asList(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
 
@@ -64,14 +64,14 @@ public class DDLStringVisitor {
 	private Map<String, String> prefixMap;
 	protected boolean usePrefixes = true;
 	private boolean namespaceAdded = false;
-	
+
 	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
 	static {
 		for (Map.Entry<String, String> entry : MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
 			BUILTIN_PREFIXES.put(entry.getValue(), entry.getKey());
 		}
 	}
-	
+
     public static String getDDLString(Schema schema, EnumSet<SchemaObjectType> types, String regexPattern) {
     	DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
         visitor.visit(schema);
@@ -83,7 +83,7 @@ public class DDLStringVisitor {
         visitor.visit(database);
         return visitor.toString();
     }
-    
+
     public DDLStringVisitor(EnumSet<SchemaObjectType> types, String regexPattern) {
     	if (types != null) {
     		this.includeTables = types.contains(SchemaObjectType.TABLES);
@@ -94,7 +94,7 @@ public class DDLStringVisitor {
     		this.filter = Pattern.compile(regexPattern);
     	}
     }
-    
+
     public void visit(Database database) {
         append(NEWLINE);
         append("/*").append(NEWLINE);
@@ -102,7 +102,7 @@ public class DDLStringVisitor {
         append("# START DATABASE ").append(database.getName()).append(NEWLINE);
         append("###########################################").append(NEWLINE);
         append("*/").append(NEWLINE);
-        
+
         append(CREATE).append(SPACE).append(DATABASE).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(database.getName())).append(SPACE).append(VERSION)
                 .append(SPACE).append(new Constant(database.getVersion()));
@@ -114,7 +114,7 @@ public class DDLStringVisitor {
         append(VERSION).append(SPACE).append(new Constant(database.getVersion()));
         append(SEMICOLON);
         append(NEWLINE);
-        
+
         if (!this.namespaceAdded) {
         	append("${NAMESPACE}");
         	this.namespaceAdded = true;
@@ -127,12 +127,12 @@ public class DDLStringVisitor {
                 break;
             }
         }
-        
+
         if (outputDt) {
             append(NEWLINE);
             append("--############ Domains ############");
             append(NEWLINE);
-            
+
             for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
                 if (dt.isBuiltin()) {
                     continue;
@@ -142,11 +142,11 @@ public class DDLStringVisitor {
                 append(NEWLINE);
             }
         }
-        
+
         if (!database.getDataWrappers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Translators ############");
-        	append(NEWLINE);        	
+        	append(NEWLINE);
             for (DataWrapper dw : database.getDataWrappers()) {
                 visit(dw);
                 append(NEWLINE);
@@ -157,19 +157,19 @@ public class DDLStringVisitor {
         if (!database.getServers().isEmpty()){
         	append(NEWLINE);
         	append("--############ Servers ############");
-        	append(NEWLINE);        	
+        	append(NEWLINE);
             for (Server server : database.getServers()) {
                 visit(server);
                 append(NEWLINE);
                 append(NEWLINE);
             }
         }
-        
+
         if (!database.getSchemas().isEmpty()) {
             append(NEWLINE);
             append("--############ Schemas ############");
-            append(NEWLINE); 
-    
+            append(NEWLINE);
+
             for (Schema schema : database.getSchemas()) {
                 append(CREATE);
                 if (!schema.isPhysical()) {
@@ -188,7 +188,7 @@ public class DDLStringVisitor {
                         append(SPACE).append(SQLStringVisitor.escapeSinglePart(s.getName()));
                     }
                 }
-                
+
                 appendOptions(schema);
                 append(SEMICOLON);
                 append(NEWLINE);
@@ -196,18 +196,18 @@ public class DDLStringVisitor {
                 createdSchmea(schema);
             }
         }
-        
+
         if (!database.getRoles().isEmpty()){
             append(NEWLINE);
             append("--############ Roles ############");
-            append(NEWLINE);            
+            append(NEWLINE);
             for (Role role:database.getRoles()) {
                 visit(role);
                 append(NEWLINE);
                 append(NEWLINE);
             }
         }
-        
+
         for (Schema schema : database.getSchemas()) {
             append(NEWLINE);
             append("--############ Schema:").append(schema.getName()).append(" ############");
@@ -216,19 +216,19 @@ public class DDLStringVisitor {
             append(SQLStringVisitor.escapeSinglePart(schema.getName())).append(SEMICOLON);
             append(NEWLINE);
             append(NEWLINE);
-            visit(schema);  
+            visit(schema);
         }
-        
+
         if (!database.getRoles().isEmpty()){
         	append(NEWLINE);
         	append("--############ Grants ############");
-        	append(NEWLINE);        	
+        	append(NEWLINE);
             for (Grant grant:database.getGrants()) {
                 visit(grant);
                 append(NEWLINE);
             }
         }
-        
+
         append(NEWLINE);
         append("/*").append(NEWLINE);
         append("###########################################").append(NEWLINE);
@@ -237,9 +237,9 @@ public class DDLStringVisitor {
         append("*/").append(NEWLINE);
         append(NEWLINE);
     }
-    
+
     protected void createdSchmea(Schema schema) {
-        
+
     }
 
     private void visit(Datatype dt) {
@@ -267,7 +267,7 @@ public class DDLStringVisitor {
     }
 
     private void visit(Grant grant) {
-        
+
         for (Permission permission : grant.getPermissions()) {
             if (permission.getResourceType() == ResourceType.DATABASE) {
                 for (Privilege p : permission.getPrivileges()) {
@@ -299,14 +299,14 @@ public class DDLStringVisitor {
             }
             append(allowance);
         }
-        if (permission.getResourceType() != ResourceType.DATABASE) { 
+        if (permission.getResourceType() != ResourceType.DATABASE) {
             append(SPACE).append(ON).append(SPACE).append(permission.getResourceType());
         }
-        
+
         if (permission.getResourceName() != null) {
             append(SPACE).append(SQLStringVisitor.escapeSinglePart(permission.getResourceName()));
         }
-        
+
         if (!revoke && permission.getMask() != null) {
             append(SPACE).append(MASK);
             if (permission.getMaskOrder() != null && permission.getMaskOrder() != -1) {
@@ -314,7 +314,7 @@ public class DDLStringVisitor {
             }
             append(SPACE).append(new Constant(permission.getMask()));
         }
-        
+
         if (!revoke && permission.getCondition() != null) {
             append(SPACE).append(CONDITION);
             if (!revoke) {
@@ -338,13 +338,13 @@ public class DDLStringVisitor {
                 append(SPACE).append(SQLStringVisitor.escapeSinglePart(str));
             }
         }
-        
+
         if (role.isAnyAuthenticated()) {
             append(SPACE).append(WITH).append(SPACE).append(ANY).append(SPACE).append(AUTHENTICATED);
         }
         append(SEMICOLON);
     }
-    
+
     private void visit(DataWrapper dw) {
         append(CREATE).append(SPACE).append(FOREIGN).append(SPACE).append(DATA).append(SPACE).append(WRAPPER)
                 .append(SPACE);
@@ -359,7 +359,7 @@ public class DDLStringVisitor {
     private void visit(Server server) {
         append(CREATE).append(SPACE).append(SERVER).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(server.getName()));
-        if (!server.isVirtual()) { 
+        if (!server.isVirtual()) {
             append(SPACE).append(TYPE).append(SPACE).append(new Constant(server.getType()));
         }
         if (server.getVersion() != null) {
@@ -372,7 +372,7 @@ public class DDLStringVisitor {
     }
 
     protected void visit(Schema schema) {
-		boolean first = true; 
+		boolean first = true;
         if (!this.namespaceAdded) {
         	append("${NAMESPACE}");
         	this.namespaceAdded = true;
@@ -430,25 +430,25 @@ public class DDLStringVisitor {
 		}
 		append(SPACE);
 		String name = addTableBody(table);
-		
+
 		if (table.getTableType() != Table.Type.TemporaryTable) {
 			if (table.isVirtual()) {
 				append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
 			}
 			append(SQLConstants.Tokens.SEMICOLON);
-			
+
 			if (table.isInsertPlanEnabled()) {
 				buildTrigger(name, null, INSERT, table.getInsertPlan(), false);
 			}
-			
+
 			if (table.isUpdatePlanEnabled()) {
 				buildTrigger(name, null, UPDATE, table.getUpdatePlan(), false);
-			}	
-			
+			}
+
 			if (table.isDeletePlanEnabled()) {
 				buildTrigger(name, null, DELETE, table.getDeletePlan(), false);
-			}	
-			
+			}
+
 			for (Trigger tr : table.getTriggers().values()) {
 			    String generated = tr.getProperty(GENERATED, false);
 			    if (generated == null || !Boolean.valueOf(generated)) {
@@ -463,11 +463,11 @@ public class DDLStringVisitor {
 	public String addTableBody(Table table) {
 		String name = SQLStringVisitor.escapeSinglePart(table.getName());
 		append(name);
-		
+
 		if (table.getColumns() != null) {
 			append(SPACE);
 			append(LPAREN);
-			boolean first = true; 
+			boolean first = true;
 			for (Column c:table.getColumns()) {
 				if (first) {
 					first = false;
@@ -479,17 +479,17 @@ public class DDLStringVisitor {
 			}
 			buildContraints(table);
 			append(NEWLINE);
-			append(RPAREN);			
+			append(RPAREN);
 		}
-		
+
 		// options
-		String options = buildTableOptions(table);		
+		String options = buildTableOptions(table);
 		if (!options.isEmpty()) {
 			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
 		return name;
 	}
-	
+
 	protected DDLStringVisitor append(Object o) {
 		buffer.append(o);
 		return this;
@@ -506,7 +506,7 @@ public class DDLStringVisitor {
 		if (isAfter) {
 		    append(AFTER);
 		} else {
-		    append(INSTEAD_OF);   
+		    append(INSTEAD_OF);
 		}
 		append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 		append(plan);
@@ -516,7 +516,7 @@ public class DDLStringVisitor {
 	private String buildTableOptions(Table table) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, table);
-		
+
 		if (table.isMaterialized()) {
 			addOption(options, MATERIALIZED, table.isMaterialized());
 			if (table.getMaterializedTable() != null) {
@@ -552,10 +552,10 @@ public class DDLStringVisitor {
 			addOption(sb, NAMEINSOURCE, record.getNameInSource());
 		}
 	}
-	
+
 	private void buildContraints(Table table) {
 		addConstraints(table.getAccessPatterns(), "AP", ACCESSPATTERN); //$NON-NLS-1$
-		
+
 		KeyRecord pk = table.getPrimaryKey();
 		if (pk != null) {
 			addConstraint("PK", PRIMARY_KEY, pk, true); //$NON-NLS-1$
@@ -596,7 +596,7 @@ public class DDLStringVisitor {
 		append(COMMA).append(NEWLINE).append(TAB);
 		boolean nameMatches = defaultName.equals(constraint.getName());
 		if (!nameMatches) {
-			append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);	
+			append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);
 		}
 		append(type);
 		addColumns(constraint.getColumns(), false);
@@ -643,8 +643,8 @@ public class DDLStringVisitor {
 			}
 			append(RPAREN);
 		}
-	}	
-	
+	}
+
 	private void visit(Table table, Column column) {
 		append(NEWLINE).append(TAB);
 		if (table.getTableType() == Table.Type.TemporaryTable && column.isAutoIncremented() && column.getNullType() == NullType.No_Nulls && column.getJavaType() == DataTypeManager.DefaultDataClasses.INTEGER) {
@@ -653,14 +653,14 @@ public class DDLStringVisitor {
 			append(SERIAL);
 		} else {
 			appendColumn(column, true, !table.isVirtual() || !Boolean.valueOf(column.getProperty(MetadataValidator.UNTYPED, false)));
-			
+
 			if (column.isAutoIncremented()) {
 				append(SPACE).append(AUTO_INCREMENT);
 			}
 		}
-		
+
 		appendDefault(column);
-		
+
 		// options
 		appendColumnOptions(column);
 	}
@@ -699,7 +699,7 @@ public class DDLStringVisitor {
     				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
     					append(LPAREN).append(column.getLength()).append(RPAREN);
     				}
-    			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
+    			} else if (PRECISION_DATATYPES.contains(runtimeTypeName)
     					&& !column.isDefaultPrecisionScale()) {
     				append(LPAREN).append(column.getPrecision());
     				if (column.getScale() != 0) {
@@ -717,53 +717,53 @@ public class DDLStringVisitor {
 				append(SPACE).append(NOT_NULL);
 			}
 		}
-	}	
-	
+	}
+
 	private void appendColumnOptions(BaseColumn column) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
-		
+
 		if (!column.getDatatype().isBuiltin() && column.getDatatype().getType() != Datatype.Type.Domain) {
 		    //an enterprise type
 			addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
-		
+
 		if (column.getDatatype().getRadix() != 0 && column.getRadix() != column.getDatatype().getRadix()) {
 			addOption(options, RADIX, column.getRadix());
 		}
-		
+
 		buildColumnOptions(column, options);
-		
+
 		if (options.length() != 0) {
 			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
 	}
 
-	private void buildColumnOptions(BaseColumn baseColumn, 
+	private void buildColumnOptions(BaseColumn baseColumn,
 			StringBuilder options) {
 		if (baseColumn instanceof Column) {
 			Column column = (Column)baseColumn;
 			if (!column.isSelectable()) {
 				addOption(options, SELECTABLE, column.isSelectable());
-			}		
-	
+			}
+
 			// if table is already updatable, then columns are implicitly updatable.
 			if (!column.isUpdatable() && column.getParent() instanceof Table && ((Table)column.getParent()).supportsUpdate()) {
 				addOption(options, UPDATABLE, column.isUpdatable());
 			}
-			
+
 			if (column.isCurrency()) {
 				addOption(options, CURRENCY, column.isCurrency());
 			}
-				
+
 			// only record if not default
 			if (!column.isCaseSensitive() && column.getDatatype().isCaseSensitive()) {
 				addOption(options, CASE_SENSITIVE, column.isCaseSensitive());
 			}
-			
+
 			if (!column.isSigned() && column.getDatatype().isSigned()) {
 				addOption(options, SIGNED, column.isSigned());
-			}		  
+			}
 			if (column.isFixedLength()) {
 				addOption(options, FIXED_LENGTH, column.isFixedLength());
 			}
@@ -771,37 +771,37 @@ public class DDLStringVisitor {
 			//TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
 			if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
 				addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
-			}	
-			
+			}
+
 			// by default the search type is default data type search, so avoid it.
 			if (column.getSearchType() != null && (!column.getSearchType().equals(column.getDatatype().getSearchType()) || column.isSearchTypeSet())) {
 				addOption(options, SEARCHABLE, column.getSearchType().name());
 			}
-			
+
 			if (column.getMinimumValue() != null) {
 				addOption(options, MIN_VALUE, column.getMinimumValue());
 			}
-			
+
 			if (column.getMaximumValue() != null) {
 				addOption(options, MAX_VALUE, column.getMaximumValue());
 			}
-			
+
 			if (column.getNullValues() != -1) {
 				addOption(options, NULL_VALUE_COUNT, column.getNullValues());
 			}
-			
+
 			if (column.getDistinctValues() != -1) {
 				addOption(options, DISTINCT_VALUES, column.getDistinctValues());
-			}		
+			}
 		}
-		
+
 		if (baseColumn.getNativeType() != null) {
 			addOption(options, NATIVE_TYPE, baseColumn.getNativeType());
 		}
-		
+
 		buildOptions(baseColumn, options);
 	}
-	
+
 	private void appendOptions(AbstractMetadataRecord record) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, record);
@@ -812,7 +812,7 @@ public class DDLStringVisitor {
 	}
 
 	private void buildOptions(AbstractMetadataRecord record, StringBuilder options) {
-		if (!record.getProperties().isEmpty()) {			
+		if (!record.getProperties().isEmpty()) {
 			for (Map.Entry<String, String> entry:record.getProperties().entrySet()) {
 				if (record instanceof Database && entry.getKey().equals("full-ddl")) {
 					continue;
@@ -823,8 +823,8 @@ public class DDLStringVisitor {
 				addOption(options, entry.getKey(), entry.getValue());
 			}
 		}
-	}	
-	
+	}
+
 	private void addOption(StringBuilder sb, String key, Object value) {
 		if (sb.length() != 0) {
 			sb.append(COMMA).append(SPACE);
@@ -834,7 +834,7 @@ public class DDLStringVisitor {
 		} else {
 			value = Constant.NULL_CONSTANT;
 		}
-		if (key != null && key.length() > 2 && key.charAt(0) == '{') { 
+		if (key != null && key.length() > 2 && key.charAt(0) == '{') {
 			String origKey = key;
 			int index = key.indexOf('}');
 			if (index > 1) {
@@ -848,7 +848,7 @@ public class DDLStringVisitor {
     				if (prefix == null) {
 					    prefix = this.prefixMap.get(uri);
     					if (prefix == null) {
-    						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$						
+    						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
     					}
     				}
                     this.prefixMap.put(uri, prefix);
@@ -862,7 +862,7 @@ public class DDLStringVisitor {
 		}
 		sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
 	}
-	
+
 	private void visit(Procedure procedure) {
 		append(CREATE).append(SPACE);
 		if (procedure.isVirtual()) {
@@ -873,7 +873,7 @@ public class DDLStringVisitor {
 		}
 		append(SPACE).append(procedure.isFunction()?FUNCTION:PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
 		append(LPAREN);
-		
+
 		boolean first = true;
 		for (ProcedureParameter pp:procedure.getParameters()) {
 			if (first) {
@@ -885,7 +885,7 @@ public class DDLStringVisitor {
 			visit(pp);
 		}
 		append(RPAREN);
-		
+
 		if (procedure.getResultSet() != null) {
 			append(SPACE).append(RETURNS);
 			appendOptions(procedure.getResultSet());
@@ -900,36 +900,36 @@ public class DDLStringVisitor {
 				break;
 			}
 		}*/
-		
+
 		//options
-		String options = buildProcedureOptions(procedure);		
+		String options = buildProcedureOptions(procedure);
 		if (!options.isEmpty()) {
 			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}		
+		}
 		//block
 		if (procedure.isVirtual()) {
 			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 			String plan = procedure.getQueryPlan();
 			append(plan);
 		}
-		
+
 		append(SEMICOLON);
 	}
 
 	private String buildProcedureOptions(Procedure procedure) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, procedure);
-		
+
 		if (procedure.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
 			addOption(options, UPDATECOUNT, procedure.getUpdateCount());
-		}	
-		
+		}
+
 		if (!procedure.getProperties().isEmpty()) {
 			for (String key:procedure.getProperties().keySet()) {
 				addOption(options, key, procedure.getProperty(key, false));
 			}
-		}		
-		
+		}
+
 		return options.toString();
 	}
 
@@ -959,7 +959,7 @@ public class DDLStringVisitor {
 		}
 		appendDefault(param);
 		appendColumnOptions(param);
-	}	
+	}
 
 	private void visit(FunctionMethod function) {
 		append(CREATE).append(SPACE);
@@ -971,7 +971,7 @@ public class DDLStringVisitor {
 		}
 		append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
 		append(LPAREN);
-		
+
 		boolean first = true;
 		for (FunctionParameter fp:function.getInputParameters()) {
 			if (first) {
@@ -983,38 +983,38 @@ public class DDLStringVisitor {
 			visit(fp);
 		}
 		append(RPAREN);
-		
+
 		append(SPACE).append(RETURNS);
 		appendOptions(function.getOutputParameter());
 		append(SPACE);
 		append(function.getOutputParameter().getType());
-		
+
 		//options
-		String options = buildFunctionOptions(function);		
+		String options = buildFunctionOptions(function);
 		if (!options.isEmpty()) {
 			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}		
-		
+		}
+
 		/*if (function.getDefinition() != null) {
 			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 			append(function.getDefinition());
 		}*/
-		
-		append(SQLConstants.Tokens.SEMICOLON);		
+
+		append(SQLConstants.Tokens.SEMICOLON);
 	}
 
 	private String buildFunctionOptions(FunctionMethod function) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, function);
-		
+
 		if (function.getCategory() != null) {
 			addOption(options, CATEGORY, function.getCategory());
-		}	
-		
+		}
+
 		if (!function.getDeterminism().equals(Determinism.DETERMINISTIC)) {
 			addOption(options, DETERMINISM, function.getDeterminism().name());
-		}		
-		
+		}
+
 		if (function.getInvocationClass() != null) {
 			addOption(options, JAVA_CLASS, function.getInvocationClass());
 		}
@@ -1022,13 +1022,13 @@ public class DDLStringVisitor {
 		if (function.getInvocationMethod() != null) {
 			addOption(options, JAVA_METHOD, function.getInvocationMethod());
 		}
-		
+
 		if (!function.getProperties().isEmpty()) {
 			for (String key:function.getProperties().keySet()) {
 				addOption(options, key, function.getProperty(key, false));
 			}
-		}		
-		
+		}
+
 		return options.toString();
 	}
 

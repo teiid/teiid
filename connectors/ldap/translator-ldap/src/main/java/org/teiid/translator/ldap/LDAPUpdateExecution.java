@@ -43,7 +43,7 @@ import org.teiid.translator.UpdateExecution;
 
 /**
  * Please see the user's guide for a full description of capabilties, etc.
- * 
+ *
  * Description/Assumptions:
  * 1. Table's name in source defines the base DN (or context) for the search.
  * Example: Table.NameInSource=ou=people,dc=gene,dc=com
@@ -65,7 +65,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		this.ldapConnection = ldapCtx;
 		this.command = command;
 	}
-	
+
 	/** execute generic update-class (either an update, delete, or insert)
 	 * operation and returns a count of affected rows.  Since underlying
 	 * LDAP operations (and this connector) can modify at most one LDAP
@@ -109,7 +109,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			throw new TranslatorException(msg);
 		}
 	}
-	
+
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
 			TranslatorException {
@@ -122,7 +122,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// DirContext.createSubContext(), so that is what is used here.
 	//
 	// The insert must include an element named "DN" (case insensitive)
-	// which will be the fully qualified LDAP distinguished name of the 
+	// which will be the fully qualified LDAP distinguished name of the
 	// entry to add.
 	//
 	// Also, while we make no effort to prevent insert operations that
@@ -161,7 +161,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			Expression literal = insertValueList.get(i);
 			if (nameInsertElement.toUpperCase().equals("DN")) {  //$NON-NLS-1$
 				Object insertValue = ((Literal)literal).getValue();
-				if (insertValue == null) { 
+				if (insertValue == null) {
 		            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.columnSourceNameDNNullError"); //$NON-NLS-1$
 					throw new TranslatorException(msg);
 				}
@@ -172,7 +172,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 				distinguishedName = (String)insertValue;
 			}
 			// for other attributes specified in the insert command,
-			// create a new 
+			// create a new
 			else {
 				Attribute insertAttr = createBasicAttribute(nameInsertElement,
 						literal, insertElement.getMetadataObject());
@@ -230,12 +230,12 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	}
 
 	// Private method to actually do a delete operation.  Per JNDI doc at
-	// http://java.sun.com/products/jndi/tutorial/ldap/models/operations.html, 
+	// http://java.sun.com/products/jndi/tutorial/ldap/models/operations.html,
 	// a good JNDI method to delete an entry to LDAP is
 	// DirContext.destroySubContext(), so that is what is used here.
 	//
 	// The delete criteria must include only an equals comparison
-	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'") 
+	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'")
 	// Note that the underlying LDAP operations here return successfully
 	// even if the named entry doesn't exist (as long as its parent does
 	// exist).
@@ -269,7 +269,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	}
 
 	// Private method to actually do an update operation.  Per JNDI doc at
-	// http://java.sun.com/products/jndi/tutorial/ldap/models/operations.html, 
+	// http://java.sun.com/products/jndi/tutorial/ldap/models/operations.html,
 	// the JNDI method to use to update an entry to LDAP is one of the
 	// DirContext.modifyAttributes() methods that takes ModificationItem[]
 	// as a parameter, so that is what is used here.
@@ -282,7 +282,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	// a ConnectorException)
 	//
 	// The update criteria must include only an equals comparison
-	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'") 
+	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'")
 	private void executeUpdate()
 			throws TranslatorException {
 
@@ -295,14 +295,14 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		// for illegal criteria, which we deliberately don't catch
 		// so it gets passed on as is.
 		String distinguishedName = getDNFromCriteria(criteria);
-		
+
 
 		// this will be the list of modifications to attempt.  Since
 		// we currently blindly try all the updates the query
 		// specifies, right now this is the same size as the updateList.
 		// When we start filtering out DN changes (which would need to
 		// be performed separately using Context.rename()), we will
-		// need to account for this in determining this list size. 
+		// need to account for this in determining this list size.
 		ModificationItem[] updateMods = new ModificationItem[updateList.size()];
 		// iterate through the supplied list of updates (each of
 		// which is an ICompareCriteria with an IElement on the left
@@ -318,7 +318,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// get right expression - if it is not a literal we
 			// can't handle that so throw an exception
 			Expression rightExpr = setClause.getValue();
-			if (!(rightExpr instanceof Literal) && !(rightExpr instanceof org.teiid.language.Array)) { 
+			if (!(rightExpr instanceof Literal) && !(rightExpr instanceof org.teiid.language.Array)) {
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new TranslatorException(msg);
 			}
@@ -352,7 +352,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 
 	// private method for extracting the distinguished name from
 	// the criteria, which must include only an equals comparison
-	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'") 
+	// on the "DN" column ("WHERE DN='cn=John Doe,ou=people,dc=company,dc=com'")
 	// most of this code is to check the criteria to make sure it is in
 	// this form and throw an appropriate exception if it is not
 	// since there is no way to specify this granularity of criteria
@@ -367,7 +367,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotSimpleError"); //$NON-NLS-1$
 			throw new TranslatorException(msg);
 		}
-		Comparison compareCriteria = (Comparison)criteria;	
+		Comparison compareCriteria = (Comparison)criteria;
 		if (compareCriteria.getOperator() != Operator.EQ) {
             final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.criteriaNotEqualsError"); //$NON-NLS-1$
 			throw new TranslatorException(msg);
@@ -432,13 +432,13 @@ public class LDAPUpdateExecution implements UpdateExecution {
 	}
 
 }
-	
 
 
 
-				
-				
-				
-				
-				
-							
+
+
+
+
+
+
+

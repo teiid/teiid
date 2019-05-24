@@ -26,7 +26,7 @@ public interface ProcedureReturnType {
      */
     Integer getSqlType();
     /**
-     * 
+     *
      * @return the return type or null, if no resultset nor return parameter
      */
     EdmReturnType getReturnType();

@@ -47,9 +47,9 @@ public class TestCriteriaCapabilityValidatorVisitor {
     public void helpTestVisitor(String sql, Object modelID, TransformationMetadata metadata, CapabilitiesFinder capFinder, boolean isValid, boolean expectException) throws Exception {
         try {
             Criteria criteria = QueryParser.getQueryParser().parseCriteria(sql);
-            
+
             QueryResolver.resolveCriteria(criteria, metadata);
-                        
+
             assertEquals("Got incorrect isValid flag", isValid, CriteriaCapabilityValidatorVisitor.canPushLanguageObject(criteria, modelID, metadata, capFinder, null)); //$NON-NLS-1$
         } catch(QueryMetadataException e) {
         	if (!expectException) {
@@ -62,9 +62,9 @@ public class TestCriteriaCapabilityValidatorVisitor {
     public void helpTestVisitorWithCommand(String sql, Object modelID, TransformationMetadata metadata, CapabilitiesFinder capFinder, boolean isValid, boolean expectException) {
         try {
             Command command = QueryParser.getQueryParser().parseCommand(sql);
-            
+
             QueryResolver.resolveCommand(command, metadata);
-                        
+
             assertEquals("Got incorrect isValid flag", isValid, CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, modelID, metadata, capFinder, null)); //$NON-NLS-1$
         } catch(QueryMetadataException e) {
         	if (!expectException) {
@@ -74,17 +74,17 @@ public class TestCriteriaCapabilityValidatorVisitor {
         	throw new RuntimeException(e);
         }
     }
-    
+
     // has all capabilities
     @Test public void testCompareCriteriaSuccess() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, true, false);         //$NON-NLS-1$
     }
 
@@ -92,234 +92,234 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testCompareCriteriaCapFail1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // does not have = capability
     @Test public void testCompareCriteriaOpCapFail1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);
     }
-    
+
     // does not have <> capability
     @Test public void testCompareCriteriaOpCapFail2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 <> 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 <> 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // does not have < capability
     @Test public void testCompareCriteriaOpCapFail3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 < 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 < 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // does not have <= capability
     @Test public void testCompareCriteriaOpCapFail4() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 <= 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 <= 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // does not have > capability
     @Test public void testCompareCriteriaOpCapFail5() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 > 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 > 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // does not have >= capability
     @Test public void testCompareCriteriaOpCapFail6() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 >= 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 >= 'x'", modelID, metadata, capFinder, false, false);
     }
-    
+
     // element not searchable
     @Test public void testCompareCriteriaSearchableFail() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
         Column e1 = metadata.getElementID("pm1.g1.e1");
         e1.setSearchType(SearchType.Like_Only);
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);         
+
+        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);
     }
 
     // no caps
     @Test public void testCompareCriteriaNoCaps() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
-        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, true, false);         
+
+        helpTestVisitor("pm1.g1.e1 = 'x'", modelID, metadata, capFinder, true, false);
     }
-    
+
     @Test public void testCompoundCriteriaAnd1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x' AND 0 = 1", modelID, metadata, capFinder, true, false);                 
+
+        helpTestVisitor("pm1.g1.e1 = 'x' AND 0 = 1", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testCompoundCriteriaAnd4() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
-        helpTestVisitor("pm1.g1.e1 = 'x' AND 0 = 1", modelID, metadata, capFinder, true, false);                 
+
+        helpTestVisitor("pm1.g1.e1 = 'x' AND 0 = 1", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testCompoundCriteriaOr1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.CRITERIA_OR, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, true, false);                 
+
+        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testCompoundCriteriaOr2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.CRITERIA_OR, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, false, false);                 
+
+        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, false, false);
     }
 
     @Test public void testCompoundCriteriaOr4() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
-        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, true, false);                 
+
+        helpTestVisitor("pm1.g1.e1 = 'x' OR 0 = 1", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testScalarFunction1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("curtime", true); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); 
-        
-        helpTestVisitor("curtime() = {t'10:00:00'}", modelID, metadata, capFinder, true, false); 
+        capFinder.addCapabilities("pm1", caps);
+
+        helpTestVisitor("curtime() = {t'10:00:00'}", modelID, metadata, capFinder, true, false);
     }
 
-    /** 
-     * Since this will always get pre-evaluated, this should also be true 
-     *  
-     */ 
+    /**
+     * Since this will always get pre-evaluated, this should also be true
+     *
+     */
     @Test public void testScalarFunction2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("+", false); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); 
-        
-        helpTestVisitor("1 + 1 = 2", modelID, metadata, capFinder, true, false); 
+        capFinder.addCapabilities("pm1", caps);
+
+        helpTestVisitor("1 + 1 = 2", modelID, metadata, capFinder, true, false);
     }
-    
+
     /**
      * since curtime is command deterministic and not supported, it will be evaluated
      */
     @Test public void testScalarFunction2a() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("curtime", false); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); 
-        
-        helpTestVisitor("curtime() = {t'10:00:00'}", modelID, metadata, capFinder, true, false); 
+        capFinder.addCapabilities("pm1", caps);
+
+        helpTestVisitor("curtime() = {t'10:00:00'}", modelID, metadata, capFinder, true, false);
     }
-    
+
     /**
      * since rand is non-deterministic and not supported, it will be evaluated for every row
      */
     @Test public void testScalarFunction2b() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("rand", false); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); 
-        
-        helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, false, false); 
+        capFinder.addCapabilities("pm1", caps);
+
+        helpTestVisitor("rand() = '1.0'", modelID, metadata, capFinder, false, false);
     }
 
     /**
@@ -328,47 +328,47 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testRandWithSeed() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.RAND, true); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); 
-        
-        helpTestVisitor("rand(5) = '1.0'", modelID, metadata, capFinder, false, false); 
+        capFinder.addCapabilities("pm1", caps);
+
+        helpTestVisitor("rand(5) = '1.0'", modelID, metadata, capFinder, false, false);
     }
-    
+
     @Test public void testIsNull1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testIsNull2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, false, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, false, false);
     }
 
     @Test public void testIsNull3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
-        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false);
     }
 
     /**
@@ -379,89 +379,89 @@ public class TestCriteriaCapabilityValidatorVisitor {
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
         Column e1 = metadata.getElementID("pm1.g1.e1");
         e1.setSearchType(SearchType.Like_Only);
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NULL", modelID, metadata, capFinder, true, false);
     }
-    
+
     @Test public void testIsNull6() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 IS NOT NULL", modelID, metadata, capFinder, true, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NOT NULL", modelID, metadata, capFinder, true, false);
     }
-    
+
     @Test public void testIsNull6fails() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 IS NOT NULL", modelID, metadata, capFinder, false, false); 
+
+        helpTestVisitor("pm1.g1.e1 IS NOT NULL", modelID, metadata, capFinder, false, false);
     }
 
     // has all capabilities
     @Test public void testMatchCriteriaSuccess() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 LIKE 'x'", modelID, metadata, capFinder, true, false);         
+
+        helpTestVisitor("pm1.g1.e1 LIKE 'x'", modelID, metadata, capFinder, true, false);
     }
 
     @Test public void testMatchCriteriaSuccess2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 LIKE 'x' ESCAPE '#'", modelID, metadata, capFinder, true, false);         
+
+        helpTestVisitor("pm1.g1.e1 LIKE 'x' ESCAPE '#'", modelID, metadata, capFinder, true, false);
     }
 
     // Test for NOT LIKE
     @Test public void testMatchCriteriaSuccess3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 NOT LIKE 'x'", modelID, metadata, capFinder, true, false);         
+
+        helpTestVisitor("pm1.g1.e1 NOT LIKE 'x'", modelID, metadata, capFinder, true, false);
     }
-    
+
     @Test public void testMatchCriteriaSuccess3fails() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 NOT LIKE 'x'", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -469,13 +469,13 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testMatchCriteriaCapFail1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, false);
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 LIKE 'x'", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -483,29 +483,29 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testMatchCriteriaCapFail2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 LIKE 'x' ESCAPE '#'", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
-        
+
     // element not searchable
     @Test public void testMatchCriteriaMatchableFail() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
         Column e1 = metadata.getElementID("pm1.g1.e1");
         e1.setSearchType(SearchType.All_Except_Like);
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
         caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 LIKE 'x'", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -513,68 +513,68 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testMatchCriteriaNoCaps() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
+
         helpTestVisitor("pm1.g1.e1 LIKE 'x'", modelID, metadata, capFinder, true, false);         //$NON-NLS-1$
-    }    
+    }
 
     @Test public void testNotCriteria1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("NOT pm1.g1.e1 = 'x'", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
     }
 
     @Test public void testNotCriteria2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, false);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("NOT pm1.g1.e1 = 'x'", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
 
     @Test public void testSetCriteria1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
     }
 
     @Test public void testSetCriteria2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
 
     @Test public void testSetCriteria3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
     }
 
@@ -583,12 +583,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
         Column elementID = metadata.getElementID("pm1.g1.e1");
         elementID.setSearchType(SearchType.Like_Only);
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
 
@@ -596,94 +596,94 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSetCriteria7() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 NOT IN ('x')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
     }
-    
+
     @Test public void testSetCriteria7fails() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 NOT IN ('x')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
-    
+
     @Test public void testSetCriteria8() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
-        
+
         caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x', 'y', 'z')", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
-    
+
     @Test public void testSetCriteria9() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(2));
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN ('x', 'y')", modelID, metadata, capFinder, true, false);                 //$NON-NLS-1$
     }
 
     @Test public void testSubquerySetCriteria() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 IN (SELECT 'xyz' FROM pm1.g1)", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
-    
+
     @Test public void testSearchCase() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitor("pm1.g1.e1 = case when pm1.g1.e2 = 1 then 1 else 2 end", modelID, metadata, capFinder, false, false);                 //$NON-NLS-1$
     }
-    
+
     // has all capabilities
     @Test public void testSubqueryCompareCriteriaSuccess() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, true, false);         //$NON-NLS-1$
     }
 
@@ -691,12 +691,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaCapFail1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -704,12 +704,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaCapFail2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -717,12 +717,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaFail3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -730,14 +730,14 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaFail4() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -745,7 +745,7 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaFail5() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -753,7 +753,7 @@ public class TestCriteriaCapabilityValidatorVisitor {
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, false);
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -761,7 +761,7 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaFail6() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -769,7 +769,7 @@ public class TestCriteriaCapabilityValidatorVisitor {
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
         caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ALL (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -777,25 +777,25 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaOpCapFail1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
-    
+
     // does not have <> capability
     @Test public void testSubqueryCompareCriteriaOpCapFail2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 <> ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -803,12 +803,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaOpCapFail3() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 < ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -816,12 +816,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaOpCapFail4() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 <= ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -829,12 +829,12 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaOpCapFail5() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 > ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
@@ -842,85 +842,85 @@ public class TestCriteriaCapabilityValidatorVisitor {
     @Test public void testSubqueryCompareCriteriaOpCapFail6() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 >= ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
-    
+
     // element not searchable
     @Test public void testSubqueryCompareCriteriaSearchableFail() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         Schema modelID = metadata.getMetadataStore().getSchema("PM1");
         Column e1 = metadata.getElementID("pm1.g1.e1");
         e1.setSearchType(SearchType.Like_Only);
-                
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE pm1.g1.e1 = ANY (SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false);         //$NON-NLS-1$
     }
 
     @Test public void testExistsCriteria1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
     }
 
     @Test public void testExistsCriteria2() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, false, false); //$NON-NLS-1$
     }
 
     @Test public void testExistsCriteria5() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1Cached();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
+
         helpTestVisitorWithCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS(SELECT e1 FROM pm1.g2)", modelID, metadata, capFinder, true, false); //$NON-NLS-1$
     }
-    
+
     @Test public void testEvaluatableCriteria() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("now() IS NULL", modelID, metadata, capFinder, true, false); 
+
+        helpTestVisitor("now() IS NULL", modelID, metadata, capFinder, true, false);
     }
-    
+
     @Test public void testEvaluatableCriteria1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         Object modelID = metadata.getMetadataStore().getSchema("PM1");
-        
+
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        helpTestVisitor("pm1.g1.e1 is null or now() IS NULL", modelID, metadata, capFinder, false, false); 
+
+        helpTestVisitor("pm1.g1.e1 is null or now() IS NULL", modelID, metadata, capFinder, false, false);
     }
 }

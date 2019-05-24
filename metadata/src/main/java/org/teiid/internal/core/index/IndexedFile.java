@@ -1,10 +1,10 @@
 /*******************************************************************************
  * Copyright (c) 2000, 2003 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials 
+ * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * https://www.eclipse.org/legal/epl-v10.html
- * 
+ *
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *     MetaMatrix, Inc - repackaging and updates for use as a metadata store
@@ -15,7 +15,7 @@ import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IQueryResult;
 
 /**
- * An indexedFile associates a number to a document path, and document properties. 
+ * An indexedFile associates a number to a document path, and document properties.
  * It is what we add into an index, and the result of a query.
  */
 

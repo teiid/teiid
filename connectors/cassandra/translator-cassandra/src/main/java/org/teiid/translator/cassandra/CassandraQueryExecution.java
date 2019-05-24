@@ -47,7 +47,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	private ResultSet resultSet;
 	private ExecutionContext executionContext;
 	protected boolean returnsArray;
-	
+
 	public CassandraQueryExecution(Command query, CassandraConnection connection, ExecutionContext context){
 		this.query = query;
 		this.connection = connection;
@@ -82,7 +82,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 		this.executionContext.logCommand(cql);
 		resultSetFuture = connection.executeQuery(cql);
 		resultSetFuture.addListener(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				executionContext.dataAvailable();
@@ -101,7 +101,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 		//TODO: use asynch for results fetching
 		return getRow(resultSet.one());
 	}
-	
+
 	/**
 	 * Iterates through all columns in the {@code row}. For each column, returns its value as Java type
 	 * that matches the CQL type in switch part. Otherwise returns the value as bytes composing the value.
@@ -191,7 +191,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 				values.add(b);
 				break;
 			}
-			
+
 		}
 		if (returnsArray) {
 			return Arrays.asList((Object)values.toArray());

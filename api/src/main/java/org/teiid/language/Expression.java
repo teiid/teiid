@@ -19,15 +19,15 @@
 package org.teiid.language;
 
 /**
- * Represents an expression in the language.  Subinterfaces define specific 
- * types of expressions, such as literal values, element references, and 
- * functions.   
+ * Represents an expression in the language.  Subinterfaces define specific
+ * types of expressions, such as literal values, element references, and
+ * functions.
  */
 public interface Expression extends LanguageObject {
 
     /**
      * Determine the type returned by this expression.
-     * 
+     *
      * @return The type, as defined by a Java class
      */
     Class<?> getType();

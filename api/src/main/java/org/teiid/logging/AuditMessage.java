@@ -27,7 +27,7 @@ import org.teiid.adminapi.Session;
  * Log format for auditing.
  */
 public class AuditMessage {
-	
+
 	/**
 	 * Contains information related to a logon attempt
 	 */
@@ -56,43 +56,43 @@ public class AuditMessage {
 			this.clientMac = clientMac;
 			this.passThrough = onlyAllowPassthrough;
 		}
-		
+
 		public String getVdbName() {
 			return vdbName;
 		}
-		
+
 		public String getVdbVersion() {
 			return vdbVersion;
 		}
-		
+
 		public String getAuthType() {
 			return authType;
 		}
-		
+
 		public String getUserName() {
 			return userName;
 		}
-		
+
 		public String getApplicationName() {
 			return applicationName;
 		}
-		
+
 		public String getClientHostName() {
 			return clientHostName;
 		}
-		
+
 		public String getClientIpAddress() {
 			return clientIpAddress;
 		}
-		
+
 		public String getClientMac() {
 			return clientMac;
 		}
-		
+
 		public boolean isPassThrough() {
 			return passThrough;
 		}
-		
+
 		@Override
 		public String toString() {
 			StringBuffer msg = new StringBuffer();
@@ -113,17 +113,17 @@ public class AuditMessage {
 	        msg.append(passThrough);
 	        return msg.toString();
 		}
-		
+
 	}
-	
+
 	private String context;
 	private String activity;
-	
+
 	private LogonInfo logonInfo;
 	private Exception exception;
-	
+
 	private Session session;
-	
+
 	private String[] resources;
 	private CommandContext commandContext;
 
@@ -133,20 +133,20 @@ public class AuditMessage {
 	    this.resources = resources;
 	    this.commandContext = commandContext;
 	}
-	
+
 	public AuditMessage(String context, String activity, LogonInfo info, Exception e) {
 		this.context = context;
 		this.activity = activity;
 		this.logonInfo = info;
 		this.exception = e;
 	}
-	
+
 	public AuditMessage(String context, String activity, Session session) {
 		this.context = context;
 		this.activity = activity;
 		this.session = session;
 	}
-	
+
 	/**
 	 * The related {@link LogonInfo} only if this is a logon related event
 	 * @return
@@ -154,9 +154,9 @@ public class AuditMessage {
 	public LogonInfo getLogonInfo() {
 		return logonInfo;
 	}
-	
+
 	/**
-	 * The {@link Session} for the event or null if one has not been established. 
+	 * The {@link Session} for the event or null if one has not been established.
 	 * @return
 	 */
 	public Session getSession() {
@@ -183,7 +183,7 @@ public class AuditMessage {
     	if (s != null) {
     		return s.getUserName();
     	}
-    	return null; 
+    	return null;
     }
 
     /**
@@ -194,11 +194,11 @@ public class AuditMessage {
 	public String[] getResources() {
 		return this.resources;
 	}
-	
+
 	public CommandContext getCommandContext() {
 		return commandContext;
 	}
-	
+
 	/**
 	 * The exception associated with a failed logon attempt.
 	 * @return
@@ -206,12 +206,12 @@ public class AuditMessage {
 	public Exception getException() {
 		return exception;
 	}
-	
+
 	public String toString() {
         StringBuffer msg = new StringBuffer();
         if (this.commandContext != null) {
         	msg.append( this.commandContext.getRequestId());
-        } 
+        }
         msg.append(" ["); //$NON-NLS-1$
         if (this.logonInfo != null) {
         	msg.append(this.logonInfo);

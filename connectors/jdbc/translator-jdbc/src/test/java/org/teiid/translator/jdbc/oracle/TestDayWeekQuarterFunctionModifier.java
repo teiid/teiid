@@ -46,30 +46,30 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
     }
 
     public void helpTestMod(Literal c, String format, String expectedStr) throws Exception {
-        Function func = LANG_FACTORY.createFunction(format,  
+        Function func = LANG_FACTORY.createFunction(format,
             Arrays.asList(c),
             String.class);
-        
+
         OracleExecutionFactory trans = new OracleExecutionFactory();
         trans.start();
-        
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(func);  
+
+        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();
+        sqlVisitor.append(func);
         assertEquals(expectedStr, sqlVisitor.toString());
     }
 
     public void test1() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
-        helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
+        helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR,
             "to_number(TO_CHAR({ts '2004-01-21 10:05:00.01'}, 'DDD'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR, 
+        helpTestMod(arg1, SourceSystemFunctions.DAYOFYEAR,
             "to_number(TO_CHAR({d '2004-01-21'}, 'DDD'))"); //$NON-NLS-1$
     }
-    
+
     public void test9() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 10000000), Timestamp.class);
         helpTestMod(arg1, SourceSystemFunctions.QUARTER,
@@ -78,7 +78,7 @@ public class TestDayWeekQuarterFunctionModifier extends TestCase {
 
     public void test10() throws Exception {
         Literal arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
-        helpTestMod(arg1, SourceSystemFunctions.QUARTER, 
+        helpTestMod(arg1, SourceSystemFunctions.QUARTER,
             "to_number(TO_CHAR({d '2004-01-21'}, 'Q'))"); //$NON-NLS-1$
     }
 }

@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.net.socket;
 
@@ -54,19 +54,19 @@ import org.teiid.net.TeiidURL;
  */
 @SuppressWarnings("nls")
 public class TestSocketServerConnection {
-	
+
 	private static final class FakeILogon implements ILogon {
-		
+
 		Throwable t;
-		
+
 		public FakeILogon(Throwable t) {
 			this.t = t;
 		}
-		
+
 		@Override
 		public void assertIdentity(SessionToken sessionId)
 				throws InvalidSessionException, TeiidComponentException {
-			
+
 		}
 
 		@Override
@@ -98,7 +98,7 @@ public class TestSocketServerConnection {
 			}
 			return ResultsFuture.NULL_FUTURE;
 		}
-		
+
 		@Override
 		public ResultsFuture<?> ping(Collection<String> sessions)
 				throws TeiidComponentException, CommunicationException {
@@ -113,29 +113,29 @@ public class TestSocketServerConnection {
 	}
 
 	/**
-	 * Validate that the client host name and IP address property in 
-	 * the connection properties object is set after a <code>SocketServerConnection</code> 
-	 * is established. 
-	 * 
-	 * <p>The expected results contains the host name and IP address 
-	 * of the local machine as returned by <code>NetUtils</code>. 
-	 * These values are not put into the initial connection object 
-	 * and it is up to <code>SocketServerConnection</code> to place 
-	 * the values into the connection properties object during the 
+	 * Validate that the client host name and IP address property in
+	 * the connection properties object is set after a <code>SocketServerConnection</code>
+	 * is established.
+	 *
+	 * <p>The expected results contains the host name and IP address
+	 * of the local machine as returned by <code>NetUtils</code>.
+	 * These values are not put into the initial connection object
+	 * and it is up to <code>SocketServerConnection</code> to place
+	 * the values into the connection properties object during the
 	 * connection process.</p>
-	 * @throws Throwable 
-	 *  
-	 * @since Westport    
+	 * @throws Throwable
+	 *
+	 * @since Westport
 	 */
 	@Test public void testSocketServerConnection_PropertiesClientHost() throws Throwable {
 		Properties p = new Properties();
-		
+
 		SocketServerConnection.updateConnectionProperties(p, InetAddress.getLocalHost(), true, null);
-       
+
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
 		assertTrue(p.containsKey(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
 	}
-	
+
 	@Test public void testLogonFailsWithMultipleHosts() throws Exception {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = Mockito.mock(SocketServerInstanceFactory.class);
@@ -148,21 +148,21 @@ public class TestSocketServerConnection {
 			assertEquals("TEIID20021 No valid host available. Attempted connections to: [host1:1, host2:2]", e.getMessage()); //$NON-NLS-1$
 		}
 	}
-	
+
 	@Test public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
-		assertEquals(String.valueOf(1), connection.getLogonResult().getSessionID()); 
+		assertEquals(String.valueOf(1), connection.getLogonResult().getSessionID());
 	}
-	
+
 	@Test public void testChangeUser() throws Exception {
 		Properties p = new Properties();
 		SocketServerConnection connection = createConnection(null, p);
-		assertEquals("fooUser", connection.getLogonResult().getUserName()); 
+		assertEquals("fooUser", connection.getLogonResult().getUserName());
 		p.setProperty(TeiidURL.CONNECTION.USER_NAME, "newUser");
 		connection.authenticate();
 		assertEquals("newUser", connection.getLogonResult().getUserName());
 	}
-	
+
 	/**
 	 * Since the original instance is still open, this will be a transparent retry
 	 */
@@ -174,13 +174,13 @@ public class TestSocketServerConnection {
 		Thread.sleep(70);
 		logon.ping();
 	}
-	
+
 	@Test(expected=CommunicationException.class) public void testImmediateFail() throws Exception {
 		SocketServerConnection connection = createConnection(new CommunicationException());
 		ILogon logon = connection.getService(ILogon.class);
 		logon.ping();
 	}
-	
+
 	@Test(expected=CommunicationException.class) public void testImmediateFail1() throws Exception {
 		SocketServerConnection connection = createConnection(new CommunicationException());
 		connection.setFailOver(true);
@@ -191,17 +191,17 @@ public class TestSocketServerConnection {
 	private SocketServerConnection createConnection(final Throwable throwException) throws CommunicationException, ConnectionException {
 		return createConnection(throwException, new Properties());
 	}
-	
+
 	private SocketServerConnection createConnection(final Throwable throwException, Properties p) throws CommunicationException, ConnectionException {
 		return createConnection(throwException, new HostInfo("0.0.0.2", 1), p); //$NON-NLS-1$
 	}
-	
+
 	private SocketServerConnection createConnection(final Throwable t, final HostInfo hostInfo, Properties p)
 			throws CommunicationException, ConnectionException {
 	    UrlServerDiscovery discovery = new UrlServerDiscovery(new TeiidURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
 			FakeILogon logon = new FakeILogon(t);
-			
+
 			@Override
 			public SocketServerInstance getServerInstance(HostInfo info)
 					throws CommunicationException, IOException {
@@ -223,27 +223,27 @@ public class TestSocketServerConnection {
 							}
 						}).when(instance).send((Message)Mockito.anyObject(), (ResultsReceiver<Object>)Mockito.anyObject(), (Serializable)Mockito.anyObject());
 					} catch (Exception e) {
-						
+
 					}
 				}
 				Mockito.stub(instance.isOpen()).toReturn(true);
 				return instance;
 			}
-			
+
 			@Override
 			public String resolveHostname(InetAddress addr) {
 			    return null;
 			}
-			
+
 		};
 		SocketServerConnection connection = new SocketServerConnection(instanceFactory, false, discovery, p);
 		return connection;
 	}
-	
+
 	@Test public void testIsSameInstance() throws Exception {
 		SocketServerConnection conn = createConnection(null, new HostInfo("0.0.0.0", 1), new Properties()); //$NON-NLS-1$
 		SocketServerConnection conn1 = createConnection(null, new HostInfo("0.0.0.1", 1), new Properties()); //$NON-NLS-1$
-		
+
 		assertFalse(conn.isSameInstance(conn1));
 		assertTrue(conn.isSameInstance(conn));
 	}

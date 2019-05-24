@@ -109,7 +109,7 @@ import org.teiid.util.CharsetUtils;
  * Static method hooks for most of the function library.
  */
 public final class FunctionMethods {
-	
+
 	private static final int ONE_BILLION = 1000000000;
 
     private static final class UpperLowerReader extends FilterReader {
@@ -120,7 +120,7 @@ public final class FunctionMethods {
             super(in);
             this.upper = upper;
         }
-        
+
         @Override
         public int read(char[] cbuf, int off, int len) throws IOException {
             if (len <= 0) {
@@ -170,7 +170,7 @@ public final class FunctionMethods {
                     return chars[0];
                 }
                 c1 = modifyChar(c1);
-                
+
             }
             return modifyChar(c);
         }
@@ -186,7 +186,7 @@ public final class FunctionMethods {
     private static final boolean CALENDAR_TIMESTAMPDIFF = PropertiesUtils.getHierarchicalProperty("org.teiid.calendarTimestampDiff", true, Boolean.class); //$NON-NLS-1$
 
 	public static final String AT = "@"; //$NON-NLS-1$
-	
+
 	// ================== Function = plus =====================
 
 	public static int plus(int x, int y) throws FunctionExecutionException {
@@ -201,7 +201,7 @@ public final class FunctionMethods {
 		}
 		return (int)result;
 	}
-	
+
 	public static long plus(long x, long y) throws FunctionExecutionException {
 		if (y > 0) {
 			if (x > Long.MAX_VALUE - y) {
@@ -212,19 +212,19 @@ public final class FunctionMethods {
 		}
 		return x + y;
 	}
-	
+
 	public static float plus(float x, float y) {
 		return x + y;
 	}
-	
+
 	public static double plus(double x, double y) {
 		return x + y;
 	}
-	
+
 	public static Object plus(BigInteger x, BigInteger y) {
 		return x.add(y);
 	}
-	
+
 	public static Object plus(BigDecimal x, BigDecimal y) {
 		return x.add(y);
 	}
@@ -235,7 +235,7 @@ public final class FunctionMethods {
 		long result = (long)x - y;
 		return integerRangeCheck(result);
 	}
-	
+
 	public static long minus(long x, long y) throws FunctionExecutionException {
 		if (y > 0) {
 			if (x < Long.MIN_VALUE + y) {
@@ -243,22 +243,22 @@ public final class FunctionMethods {
 			}
 		} else if (x > Long.MAX_VALUE + y) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(x).subtract(BigInteger.valueOf(y))));
-	    } 
+	    }
 		return x - y;
 	}
-	
+
 	public static float minus(float x, float y) {
 		return x - y;
 	}
-	
+
 	public static double minus(double x, double y) {
 		return x - y;
 	}
-	
+
 	public static Object minus(BigInteger x, BigInteger y) {
 		return x.subtract(y);
 	}
-	
+
 	public static Object minus(BigDecimal x, BigDecimal y) {
 		return x.subtract(y);
 	}
@@ -269,7 +269,7 @@ public final class FunctionMethods {
 		long result = (long)x * y;
 		return integerRangeCheck(result);
 	}
-	
+
 	public static long multiply(long x, long y) throws FunctionExecutionException {
 		if ((y > 0 && (x > Long.MAX_VALUE/y || x < Long.MIN_VALUE/y))
 				|| ((y < -1) && (x > Long.MIN_VALUE/y || x < Long.MAX_VALUE/y))
@@ -278,19 +278,19 @@ public final class FunctionMethods {
 		}
 		return x * y;
 	}
-	
+
 	public static float multiply(float x, float y) {
 		return x * y;
 	}
-	
+
 	public static double multiply(double x, double y) {
 		return x * y;
 	}
-	
+
 	public static Object multiply(BigInteger x, BigInteger y) {
 		return x.multiply(y);
 	}
-	
+
 	public static Object multiply(BigDecimal x, BigDecimal y) {
 		return x.multiply(y);
 	}
@@ -303,28 +303,28 @@ public final class FunctionMethods {
 		}
 		return x / y;
 	}
-	
+
 	public static long divide(long x, long y) throws FunctionExecutionException {
 		if (x == Long.MIN_VALUE && y == -1) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
 		}
 		return x / y;
 	}
-	
+
 	public static float divide(float x, float y) {
 		return x / y;
 	}
-	
+
 	public static double divide(double x, double y) {
 		return x / y;
 	}
-	
+
 	public static Object divide(BigInteger x, BigInteger y) {
 		return x.divide(y);
 	}
-	
+
 	private static final BigDecimal ZERO = new BigDecimal(0);
-	
+
 	public static Object divide(BigDecimal x, BigDecimal y) {
 		BigDecimal bd = x.divide(y, Math.max(16, x.scale() + y.precision() + 1), RoundingMode.HALF_UP).stripTrailingZeros();
 		bd = bd.setScale(Math.max(x.scale(), bd.scale()));
@@ -342,26 +342,26 @@ public final class FunctionMethods {
 		}
 		return Math.abs(x);
 	}
-	
+
 	public static long abs(long x) throws FunctionExecutionException {
 		if (x == Long.MIN_VALUE) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31169, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31169, BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.valueOf(1))));
 		}
 		return Math.abs(x);
 	}
-	
+
 	public static float abs(float x) {
 		return Math.abs(x);
 	}
-	
+
 	public static double abs(double x) {
 		return Math.abs(x);
 	}
-	
+
 	public static Object abs(BigInteger x) {
 		return x.abs();
 	}
-	
+
 	public static Object abs(BigDecimal x) {
 		return x.abs();
 	}
@@ -397,56 +397,56 @@ public final class FunctionMethods {
 	public static Object log10(Number x) {
 		return new Double( Math.log(x.doubleValue()) / log10baseE);
 	}
-    
+
     // ================== Function = rand=====================
-    
-    public static Object rand(CommandContext context, Integer seed) {        
+
+    public static Object rand(CommandContext context, Integer seed) {
         if(seed == null) {
             return new Double(context.getNextRand());
-        } 
+        }
         return new Double(context.getNextRand(seed.longValue()));
     }
-        
+
     public static Object rand(CommandContext context) {
         return new Double(context.getNextRand());
     }
-    
+
 	// ================== Function = mod =====================
 
 	public static int mod(int x, int y) {
 		return x % y;
 	}
-	
+
 	public static long mod(long x, long y) {
 		return x % y;
 	}
-	
+
 	public static float mod(float x, float y) {
 		return x % y;
 	}
-	
+
 	public static double mod(double x, double y) {
 		return x % y;
 	}
-	
+
 	public static Object mod(BigInteger x, BigInteger y) {
 		return x.remainder(y);
 	}
-	
+
 	public static Object mod(BigDecimal x, BigDecimal y) {
 		return x.remainder(y);
 	}
-    
+
 	// ================== Function = power =====================
-	
+
 	public static double power(double x, double y) {
 		return Math.pow(x, y);
 	}
-	
+
 	public static BigInteger power(BigInteger x, int y) {
 		return x.pow(y);
 	}
-	
+
 	public static BigDecimal power(BigDecimal x, int y) {
 		return x.pow(y);
 	}
@@ -457,15 +457,15 @@ public final class FunctionMethods {
         }
         return number;
     }
-    
+
     public static float round(float number, int places) {
     	return round(new BigDecimal(number), places).floatValue();
     }
-    
+
     public static double round(double number, int places) {
     	return round(new BigDecimal(number), places).doubleValue();
     }
-    
+
     public static BigDecimal round(BigDecimal bigDecimalNumber, int places) {
         int scale = bigDecimalNumber.scale();
         if (scale <= places) {
@@ -480,7 +480,7 @@ public final class FunctionMethods {
 	public static Object sign(int x) {
 		return Integer.signum(x);
 	}
-	
+
 	public static Object sign(long x) {
 		return Long.signum(x);
 	}
@@ -488,15 +488,15 @@ public final class FunctionMethods {
 	public static Object sign(float x) {
 		return Math.signum(x);
 	}
-	
+
 	public static Object sign(double x) {
 		return Math.signum(x);
 	}
-	
+
 	public static Object sign(BigInteger x) {
 		return new Integer(x.signum());
 	}
-	
+
 	public static Object sign(BigDecimal x) {
 		return new Integer(x.signum());
 	}
@@ -539,11 +539,11 @@ public final class FunctionMethods {
 
 	static String[] dayNames;
 	static String[] monthNames;
-	
+
 	public static Object dayName(Date x) {
 		return getDayNames()[getField(x, Calendar.DAY_OF_WEEK) - 1];
 	}
-	
+
 	private static Locale getSymbolLocale() {
 		return PropertiesUtils.getHierarchicalProperty("org.teiid.enDateNames", false, Boolean.class)?Locale.ENGLISH:Locale.getDefault(); //$NON-NLS-1$
 	}
@@ -630,7 +630,7 @@ public final class FunctionMethods {
 
 	public static Object quarter(Date date) {
 		int month = getField(date, Calendar.MONTH);
-		
+
 		if (month > 11) {
 			 throw new AssertionError("Invalid month for " + date); //$NON-NLS-1$
 		}
@@ -642,34 +642,34 @@ public final class FunctionMethods {
 	    if (count > Long.MAX_VALUE/1000 || count < Long.MIN_VALUE/1000) {
 	        throw new FunctionExecutionException(QueryPlugin.Event.TEIID31264, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31264));
 	    }
-	    String string = new Timestamp(count*1000l).toString();
+	    String string = new Timestamp(count*1000L).toString();
         return string.substring(0, string.length()-2);
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
 	public static Long unix_timestamp(String date) {
 	    return Timestamp.valueOf(date).getTime()/1000;
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
 	public static Timestamp from_millis(long millis) {
         return new Timestamp(millis);
     }
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.DATETIME, nullOnNull=true, pushdown=PushDown.CAN_PUSHDOWN)
 	public static Long to_millis(Timestamp date) {
 	    return date.getTime();
     }
-	
+
 	//	================== Function = timestampadd =====================
 
     public static Object timestampAdd(String intervalType, int count, Timestamp timestamp) throws FunctionExecutionException {
         return timestampAdd(intervalType, (long)count, timestamp);
     }
-	
+
 	public static Object timestampAdd(String intervalType, long count, Timestamp timestamp) throws FunctionExecutionException {
 	    integerRangeCheck(count); //for compatibility with pushdown only allow int values
-	    
+
 	    Calendar cal = TimestampWithTimezone.getCalendar();
 
 		long nanos = timestamp.getNanos();
@@ -685,10 +685,10 @@ public final class FunctionMethods {
 			if (Math.abs(nanos) >= ONE_BILLION) {
 				long addSecond = nanos / ONE_BILLION;
 				nanos = (int)(nanos % ONE_BILLION);
-				
+
 				cal.add(Calendar.SECOND, integerRangeCheck(addSecond));
-			} 
-            
+			}
+
 			if (nanos < 0) {
                 cal.add(Calendar.SECOND, -1);
                 nanos = ONE_BILLION + nanos;
@@ -706,7 +706,7 @@ public final class FunctionMethods {
 		ts.setNanos((int)nanos);
 		return ts;
 	}
-	
+
 	/** Helper method for timestampAdd method
 	 * @param interval Integer
 	 * @param count Integer
@@ -741,11 +741,11 @@ public final class FunctionMethods {
     public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj) throws FunctionExecutionException  {
     	return timestampDiff(intervalType, ts1Obj, ts2Obj, CALENDAR_TIMESTAMPDIFF);
     }
-	
+
     public static Long timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj, boolean calendarBased) throws FunctionExecutionException  {
         long ts1 = ts1Obj.getTime() / 1000;
         long ts2 = ts2Obj.getTime() / 1000;
-        
+
         long tsDiff = ts2 - ts1;
 
         long count = 0;
@@ -754,11 +754,11 @@ public final class FunctionMethods {
         		throw new FunctionExecutionException(QueryPlugin.Event.TEIID31144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144));
         	}
             count = tsDiff * ONE_BILLION + ts2Obj.getNanos() - ts1Obj.getNanos();
-        } else { 
+        } else {
             if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_SECOND)) {
                 count = tsDiff;
             } else if (calendarBased) {
-            	//alternative logic is needed to compute calendar differences 
+            	//alternative logic is needed to compute calendar differences
             	//which looks at elapsed date parts, not total time between
             	if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
             		count = ts2 / 60 - ts1 / 60;
@@ -768,7 +768,7 @@ public final class FunctionMethods {
             			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
             			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
             		}
-            		count = ts2 / (60*60) - ts1 / (60*60);	
+            		count = ts2 / (60*60) - ts1 / (60*60);
             	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY) || intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
             		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
             		if (tz.getDSTSavings() > 0 || tz.getRawOffset() % 3600000 != 0) {
@@ -779,7 +779,7 @@ public final class FunctionMethods {
             		count = ts2 / (60*60*24) - ts1 / (60*60*24);
                 	if (intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
                     	//TODO:  this behavior matches SQL Server - but not Derby which expects only whole week
-                		
+
                     	long days = count;
                     	//whole weeks between the two dates
                 		count = count/7;
@@ -794,7 +794,7 @@ public final class FunctionMethods {
 	                    		}
 	                    	} else if (diff < 0) {
 	                    		if (tsDiff > 0) {
-	                    			count++; 
+	                    			count++;
 	                    		}
 	                    	}
                 		}
@@ -824,7 +824,7 @@ public final class FunctionMethods {
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
                 count = tsDiff / 60;
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
-                count = tsDiff / (60*60);	
+                count = tsDiff / (60*60);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY)) {
                 count = tsDiff / (60*60*24);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
@@ -835,7 +835,7 @@ public final class FunctionMethods {
                 count = tsDiff / (60*60*24*91);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
                 count = tsDiff / (60*60*24*365);
-            }    
+            }
         }
         //TODO: long results are not consistent with other sources
     	/*if (calendarBased && ((count > 0 && count > Integer.MAX_VALUE) || (count < 0 && count < Integer.MIN_VALUE))) {
@@ -852,9 +852,9 @@ public final class FunctionMethods {
         int hour = tsCal.get(Calendar.HOUR_OF_DAY);
         int minute = tsCal.get(Calendar.MINUTE);
         int second = tsCal.get(Calendar.SECOND);
-        
+
         tsCal.setTime(date);
-        
+
         tsCal.set(Calendar.HOUR_OF_DAY, hour);
         tsCal.set(Calendar.MINUTE, minute);
         tsCal.set(Calendar.SECOND, second);
@@ -873,7 +873,7 @@ public final class FunctionMethods {
 	public static String concat(String str1, String str2) {
 		return str1 + str2;
 	}
-	
+
 	public static String concat2(String str1, String str2) {
 		if (str1 == null) {
 			if (str2 == null) {
@@ -886,13 +886,13 @@ public final class FunctionMethods {
 		}
 		return str1 + str2;
 	}
-	
+
 	public static ClobType concat(CommandContext context, ClobType str1, ClobType str2) throws IOException, SQLException {
 		BufferManager bm = context.getBufferManager();
 		FileStore fs = bm.createFileStore("clob"); //$NON-NLS-1$
 		FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 		boolean remove = true;
-		
+
 		try (Reader characterStream = str1.getCharacterStream(); Reader characterStream2 = str2.getCharacterStream();){
 		    Writer writer = fsisf.getWriter();
 		    int chars = ObjectConverterUtil.write(writer, characterStream, -1, false);
@@ -912,7 +912,7 @@ public final class FunctionMethods {
 			}
 		}
 	}
-	
+
 	public static ClobType concat2(CommandContext context, ClobType str1, ClobType str2) throws IOException, SQLException {
 		if (str1 == null) {
 			if (str2 == null) {
@@ -934,7 +934,7 @@ public final class FunctionMethods {
         } else if (startVal > 0){
             startVal--;     // Adjust to 1-based
         }
-		
+
 		if(startVal < 0 || startVal >= string.length()) {
 		    return null;
 		}
@@ -960,7 +960,7 @@ public final class FunctionMethods {
 		int countValue = count.intValue();
         if(countValue < 0) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30396, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30396, countValue));
-        } 
+        }
         if(string.length() < countValue) {
             return string;
         }
@@ -969,7 +969,7 @@ public final class FunctionMethods {
 
 	// ================== Function = right =====================
 
-	public static Object right(String string, Integer count) 
+	public static Object right(String string, Integer count)
 		throws FunctionExecutionException {
 		int countValue = count.intValue();
         if(countValue < 0) {
@@ -986,7 +986,7 @@ public final class FunctionMethods {
 	public static Object lowerCase(String str) {
 		return str.toLowerCase();
 	}
-	
+
 	public static ClobType lowerCase(ClobType str) {
 	    return new ClobType(new ClobImpl(new ClobInputStreamFactory(str) {
             @Override
@@ -1001,7 +1001,7 @@ public final class FunctionMethods {
 	public static Object upperCase(String str) {
 		return str.toUpperCase();
 	}
-	
+
     public static ClobType upperCase(ClobType str) {
         return new ClobType(new ClobImpl(new ClobInputStreamFactory(str) {
             @Override
@@ -1016,12 +1016,12 @@ public final class FunctionMethods {
 	public static Object locate(String sub, String str) {
 		return locate(sub, str, 1);
 	}
-	
+
 	// ================== Function = endsWith =====================
 
 	public static Object endsWith(String sub, String str) {
 		return str.endsWith(sub);
-	}	
+	}
 
 	/**
 	 * TODO: The treatment of negative start indexes is inconsistent here.
@@ -1031,7 +1031,7 @@ public final class FunctionMethods {
 	public static Object locate(String sub, String str, Integer start) {
 		if(str == null || sub == null) {
 			return null;
-		} 
+		}
 		if (start == null) {
 			start = 1;
 		}
@@ -1050,7 +1050,7 @@ public final class FunctionMethods {
 		}
 		return string;
 	}
-	
+
 	// ================== Function = lefttrim =====================
 
 	private static final char SPACE = ' ';
@@ -1069,8 +1069,8 @@ public final class FunctionMethods {
 		// All spaces, so trim it all
 		return ""; //$NON-NLS-1$
 	}
-	
-	
+
+
 	public static String leftTrim(String string) {
 		return leftTrim(string, SPACE);
 	}
@@ -1080,7 +1080,7 @@ public final class FunctionMethods {
 	public static String rightTrim(String string, char trimChar) {
 		return rightTrim(string, trimChar, true);
 	}
-	
+
 	public static String rightTrim(String string, char trimChar, boolean newString) {
 		for(int i=string.length()-1; i>=0; i--) {
 			if(string.charAt(i) != trimChar) {
@@ -1099,7 +1099,7 @@ public final class FunctionMethods {
 		// All spaces, so trim it all
 		return ""; //$NON-NLS-1$
 	}
-	
+
 	public static Object rightTrim(String string) {
 		return rightTrim(string, SPACE);
 	}
@@ -1157,10 +1157,10 @@ public final class FunctionMethods {
     public static Integer ascii(String ch) {
         if(ch.length() == 0) {
         	return null;
-        } 
+        }
         return (int)ch.charAt(0);
     }
-    
+
     public static Integer ascii(Character ch) {
         return (int)ch.charValue();
     }
@@ -1178,7 +1178,7 @@ public final class FunctionMethods {
 
         s.codePoints().forEachOrdered(new IntConsumer() {
             boolean checkCap = true;
-            
+
             @Override
             public void accept(int c) {
                 // Decide whether to upper case
@@ -1234,7 +1234,7 @@ public final class FunctionMethods {
 	    return new String(outStr.substring(0, length));
 	}
 
-    
+
     public static final String SPACE_CHAR = " "; //$NON-NLS-1$
 
     public static Object lpad(String inputString, Integer padLength)
@@ -1261,10 +1261,10 @@ public final class FunctionMethods {
 
     public static Object translate(String str, String in, String out)
         throws FunctionExecutionException {
-        
+
         List<Integer> inCodePoints = in.codePoints().boxed().collect(Collectors.toList());
         List<Integer> outCodePoints = out.codePoints().boxed().collect(Collectors.toList());
-        
+
         if(inCodePoints.size() != outCodePoints.size()) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30404, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30404));
         }
@@ -1306,23 +1306,23 @@ public final class FunctionMethods {
      * This function should never actually be called - it is here solely so the
      * lookup function can be resolved properly.  The actual function is
      * implemented in the ExpresionEvaluator
-     * @param codeTable 
-     * @param returnElement 
-     * @param keyElement 
-     * @param keyValue 
+     * @param codeTable
+     * @param returnElement
+     * @param keyElement
+     * @param keyValue
      * @return Same as expression
      */
     public static Object lookup(Object codeTable, Object returnElement, Object keyElement, Object keyValue) {
 
         throw new UnsupportedOperationException("This method should never be called."); //$NON-NLS-1$
     }
-	
+
     // ================== Function = nvl =====================
-    
+
     public static Object ifnull(Object value, Object ifNullValue) {
     	return coalesce(value, ifNullValue);
     }
-    
+
     public static Object coalesce(Object value, Object value1, Object... other) {
     	if (value != null) {
     		return value;
@@ -1359,7 +1359,7 @@ public final class FunctionMethods {
 			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30410, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30410, date, format));
 		}
 	}
-	
+
 	public static Timestamp parseTimestamp(CommandContext context, String timestamp, String format)
 		throws FunctionExecutionException {
         return new Timestamp(parseDateHelper(context, timestamp, format).getTime());
@@ -1496,24 +1496,24 @@ public final class FunctionMethods {
     public static Object user(CommandContext context) {
         return user(context, true);
     }
-    
+
     public static Object user(CommandContext context, boolean includeSecurityDomain) {
         if (!includeSecurityDomain || context.getSession() == null) {
             return context.getUserName();
         }
         String name = context.getUserName();
-        return escapeName(name) + AT + context.getSession().getSecurityDomain();         
+        return escapeName(name) + AT + context.getSession().getSecurityDomain();
     }
-    
+
     static String escapeName(String name) {
         if (name == null) {
             return name;
         }
-        
+
         return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
     }
 
-    
+
     public static Object current_database(CommandContext context) {
     	return context.getVdbName();
     }
@@ -1528,17 +1528,17 @@ public final class FunctionMethods {
         return payload.toString();
     }
 
-    public static Object commandPayload(CommandContext context, String param) 
+    public static Object commandPayload(CommandContext context, String param)
         throws ExpressionEvaluationException, FunctionExecutionException{
         Serializable payload = context.getCommandPayload();
         if(payload == null) {
             return null;
         }
-        
+
         // 1-arg form - assume payload is a Properties object
         if(payload instanceof Properties) {
             return ((Properties)payload).getProperty(param);
-        }            
+        }
         // Payload was bad
          throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30413, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30413, "commandPayload", payload.getClass().getName())); //$NON-NLS-1$
     }
@@ -1551,29 +1551,29 @@ public final class FunctionMethods {
         if (value == null) {
             value = System.getProperty(propertyNameNocase);
         }
-        return value;            
+        return value;
     }
-    
+
     public static Object sys_prop(String propertyName) {
         return System.getProperty(propertyName);
     }
-    
+
     // ================= Function - ENV ========================
     public static Object env_var(String propertyName) {
         return System.getenv(propertyName);
     }
-    
+
     public static Object session_id(CommandContext context) {
         return context.getConnectionId();
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS, pushdown=PushDown.CANNOT_PUSHDOWN)
     public static String node_id() {
         return System.getProperty("jboss.node.name"); //$NON-NLS-1$
     }
-    
+
     // ================= Function - MODIFYTIMEZONE ========================
-    
+
     public static Object modifyTimeZone(Timestamp value, String originalTimezoneString, String targetTimezoneString) {
         TimeZone originalTimeZone = TimeZone.getTimeZone(originalTimezoneString);
         TimeZone dbmsTimeZone = TimeZone.getTimeZone(targetTimezoneString);
@@ -1584,7 +1584,7 @@ public final class FunctionMethods {
         }
 
         Calendar cal = Calendar.getInstance(dbmsTimeZone);
-        
+
         return TimestampWithTimezone.createTimestamp(value, originalTimeZone, cal);
     }
 
@@ -1592,16 +1592,16 @@ public final class FunctionMethods {
         TimeZone dbmsTimeZone = TimeZone.getTimeZone(targetTimezoneString);
 
         Calendar cal = Calendar.getInstance(dbmsTimeZone);
-        
+
         return TimestampWithTimezone.createTimestamp(value, context.getServerTimeZone(), cal);
-    } 
-    
+    }
+
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars", nullOnNull=true)
     public static ClobType toChars(BlobType value, String encoding) throws SQLException, IOException {
     	//TODO: defaulting to true as that was the pre 8.4.1 behavior
     	return toChars(value, encoding, true);
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars")
     public static ClobType toChars(BlobType value, String encoding, boolean wellFormed) throws SQLException, IOException {
     	Charset cs = CharsetUtils.getCharset(encoding);
@@ -1614,7 +1614,7 @@ public final class FunctionMethods {
     		Reader r = clob.getCharacterStream();
     		try {
 	    		while (r.read() != -1) {
-	    			
+
 	    		}
     		} catch (IOException e) {
     			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
@@ -1628,12 +1628,12 @@ public final class FunctionMethods {
     	}
     	return new ClobType(clob);
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes", nullOnNull=true)
     public static BlobType toBytes(ClobType value, String encoding) throws IOException, SQLException {
     	return toBytes(value, encoding, true);
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes")
     public static BlobType toBytes(ClobType value, String encoding, boolean wellFormed) throws IOException, SQLException {
     	Charset cs = CharsetUtils.getCharset(encoding);
@@ -1642,12 +1642,12 @@ public final class FunctionMethods {
     	if (!wellFormed || CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
     		//validate that the binary conversion is possible
     		//TODO: cache the result in a filestore
-    		InputStream is = new ReaderInputStream(value.getCharacterStream(), 
+    		InputStream is = new ReaderInputStream(value.getCharacterStream(),
     				cs.newEncoder().onMalformedInput(CodingErrorAction.REPORT)
     				.onUnmappableCharacter(CodingErrorAction.REPORT));
     		try {
 	    		while (is.read() != -1) {
-	    			
+
 	    		}
     		} catch (IOException e) {
     			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
@@ -1661,7 +1661,7 @@ public final class FunctionMethods {
     	}
     	return new BlobType(new BlobImpl(cisf));
 	}
-    
+
     public static String unescape(String string) {
     	return StringUtil.unescape(string, -1, true, new StringBuilder());
     }
@@ -1669,7 +1669,7 @@ public final class FunctionMethods {
 	public static String uuid() {
 		return UUID.randomUUID().toString();
 	}
-	
+
 	public static Object array_get(Object array, int index) throws FunctionExecutionException, SQLException {
 		try {
 			if (array instanceof java.sql.Array) {
@@ -1683,7 +1683,7 @@ public final class FunctionMethods {
 		}
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
-	
+
 	public static int array_length(Object array) throws FunctionExecutionException, SQLException {
 		if (array instanceof java.sql.Array) {
 			return Array.getLength(((java.sql.Array)array).getArray());
@@ -1693,16 +1693,16 @@ public final class FunctionMethods {
 		}
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
-	
+
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism = Determinism.COMMAND_DETERMINISTIC, pushdown=PushDown.CANNOT_PUSHDOWN)
 	public static int mvstatus(CommandContext context, String schemaName, String viewName) throws FunctionExecutionException, SQLException, QueryMetadataException, TeiidComponentException {
 	    Object id = context.getMetadata().getGroupID(schemaName + AbstractMetadataRecord.NAME_DELIM_CHAR + viewName);
         String statusTable = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
-        
+
         if (statusTable == null) {
             throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31177, schemaName, viewName));
         }
-        
+
         //add quoting if needed, although this needs to be resolved to be fully correct
         statusTable = SQLStringVisitor.getSQLString(new GroupSymbol(statusTable)).toString();
 
@@ -1710,17 +1710,17 @@ public final class FunctionMethods {
         if (ownerVDB == null) {
             ownerVDB = context.getVdbName();
         }
-        
+
         String ownerVersion = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_OWNER_VDB_VERSION, false);
         if (ownerVersion == null) {
             ownerVersion = context.getVdbVersion();
         }
-        
+
         String scope = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
         if (scope != null && Scope.valueOf(scope) == Scope.FULL) {
             ownerVersion = "0"; //$NON-NLS-1$
         }
-        
+
         String action = context.getMetadata().getExtensionProperty(id, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
 
         Boolean validity = null;
@@ -1747,16 +1747,16 @@ public final class FunctionMethods {
                 ps.close();
             }
         }
-	    
+
 	    boolean loading = status != null && DQPWorkContext.getWorkContext().isAdmin() && status.equals("LOADING"); //$NON-NLS-1$
         String key = "mat_management_waits_" + schemaName + "." + viewName; //$NON-NLS-1$ //$NON-NLS-2$
         if (!MaterializationMetadataRepository.ErrorAction.IGNORE.name().equalsIgnoreCase(action) || loading) {
 			if (!loading && MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
 			    throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
-					
+
 			int spins = 0;
-			
+
             Object value = context.getSessionVariable(key);
 			if (value instanceof Integer) {
 			    spins = (Integer)value;
@@ -1767,8 +1767,8 @@ public final class FunctionMethods {
 		}
         context.setSessionVariable(key, null);
 		return 1;
-	}	
-	
+	}
+
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
 	public static String[] tokenize(String str, char delimiter) {
 		List<String> tokens = StringUtil.tokenize(str, delimiter);
@@ -1797,7 +1797,7 @@ public final class FunctionMethods {
             throws FunctionExecutionException {
         return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
             category=FunctionCategoryConstants.STRING,
             nullOnNull=true)
@@ -1808,7 +1808,7 @@ public final class FunctionMethods {
 	     throws FunctionExecutionException {
     	return regexpReplace(context, source, regex, replacement, ""); //$NON-NLS-1$
 	}
-    
+
     @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
             category=FunctionCategoryConstants.STRING,
             nullOnNull=true)
@@ -1820,7 +1820,7 @@ public final class FunctionMethods {
                                 		throws FunctionExecutionException {
     	return regexpReplace(context, (CharSequence)source, regex, replacement, flags);
     }
-    
+
     @TeiidFunction(name=SourceSystemFunctions.REGEXP_REPLACE,
             category=FunctionCategoryConstants.STRING,
             nullOnNull=true)
@@ -1863,7 +1863,7 @@ public final class FunctionMethods {
                                        String replacement,
                                        String flags)
             throws FunctionExecutionException {
-        
+
         // Parse regex flags into a bitmask for Pattern API.
         // Exception is the 'g' flag which makes us call replaceAll instead of
         // replaceFirst.
@@ -1885,7 +1885,7 @@ public final class FunctionMethods {
                 throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31168, c));
             }
         }
-        
+
         // Compile regex into pattern and do replacement.
         Pattern pattern;
         try {
@@ -1905,74 +1905,74 @@ public final class FunctionMethods {
     }
 
     //SHA1 | SHA2_256 | SHA2_512
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType md5(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "md5"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha1(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha2_256(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-256"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha2_512(String plainText) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         return digest(plainText.getBytes("UTF-8"), "sha-512"); //$NON-NLS-1$ //$NON-NLS-2$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType md5(BinaryType plainText) throws NoSuchAlgorithmException {
         return digest(plainText.getBytesDirect(), "md5"); //$NON-NLS-1$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha1(BinaryType plainText) throws NoSuchAlgorithmException {
         return digest(plainText.getBytesDirect(), "sha-1"); //$NON-NLS-1$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha2_256(BinaryType plainText) throws NoSuchAlgorithmException {
         return digest(plainText.getBytesDirect(), "sha-256"); //$NON-NLS-1$
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType sha2_512(BinaryType plainText) throws NoSuchAlgorithmException {
         return digest(plainText.getBytesDirect(), "sha-512"); //$NON-NLS-1$
     }
-    
+
     public static BinaryType digest(byte[] plainText, String algorithm) throws NoSuchAlgorithmException {
-        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);        
+        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         return new BinaryType(messageDigest.digest(plainText));
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
-    public static BinaryType aes_encrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {       
+    public static BinaryType aes_encrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
         try {
             byte[] encryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).encrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$
             return new BinaryType(encryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
-        }      
+        }
     }
 
     @TeiidFunction(category=FunctionCategoryConstants.SECURITY, nullOnNull=true)
     public static BinaryType aes_decrypt(BinaryType dataBytes, BinaryType keyBytes) throws FunctionExecutionException {
         try {
-            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$ 
+            byte[] decryptResult = SymmetricCryptor.getSymmectricCryptor(padkey(keyBytes.getBytesDirect()), "AES", "AES/CBC/PKCS5Padding", new IvParameterSpec(iv)).decrypt(dataBytes.getBytesDirect()); //$NON-NLS-1$ //$NON-NLS-2$
             return new BinaryType(decryptResult);
         } catch (CryptoException e) {
             throw new FunctionExecutionException(e);
         }
     }
-    
+
     private static byte iv[] = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f };
-    
+
     private static byte[] padkey(byte[] bytes) {
         byte[] padding = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         if(bytes == null || bytes.length == 0) {
@@ -1988,7 +1988,7 @@ public final class FunctionMethods {
             return padding;
         }
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
     public static Time current_time(CommandContext context, int precision) {
         if (precision != 0) {
@@ -1996,7 +1996,7 @@ public final class FunctionMethods {
         }
         return context.currentTime();
     }
-    
+
     @TeiidFunction(category=FunctionCategoryConstants.DATETIME, pushdown=PushDown.CAN_PUSHDOWN)
     public static Timestamp current_timestamp(CommandContext context, int precision) {
         if (precision > 9) {
@@ -2017,5 +2017,5 @@ public final class FunctionMethods {
         clone.setNanos((clone.getNanos()/val)*val);
         return clone;
     }
-    
+
 }

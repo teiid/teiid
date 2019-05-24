@@ -34,7 +34,7 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
     private List bindings;
     private List schemaPaths;
     private String resourcePath;
-    
+
     public String getTransformation() {
         return transformation;
     }
@@ -86,7 +86,7 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
     public void setSchemaPaths(List collection) {
         schemaPaths = collection;
     }
-    
+
     /**
      * @return
      */

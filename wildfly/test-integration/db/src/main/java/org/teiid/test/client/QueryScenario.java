@@ -36,9 +36,9 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * be executed as a scenario</li> <li>Provides the expected results that
  * correspond to a query set</li> <li>The results generator that would be used
  * when {@link RESULT_MODES#GENERATE} is specified</li>
- * 
+ *
  * @author vanhalbert
- * 
+ *
  */
 @SuppressWarnings("nls")
 public abstract class QueryScenario {
@@ -83,7 +83,7 @@ public abstract class QueryScenario {
 	}
 
 	validateResultsMode(this.props);
-	
+
 	// TODO:  deployprops.loc not needed in remote testing
 //	try {
 //		setupVDBs(this.getProperties());
@@ -100,12 +100,12 @@ public abstract class QueryScenario {
 	// property containing the location of
 	// all the vdbs
 
-//	
+//
 //	// if disabled, no configuration of the vdb is needed
 //	if (ConfigPropertyLoader.getInstance().isDataStoreDisabled()) {
 //	    return;
 //	}
-//	
+//
 //	String deployPropLoc = props.getProperty("deployprops.loc");
 //	Properties deployProperties = PropertiesUtils.load(deployPropLoc);
 //
@@ -122,7 +122,7 @@ public abstract class QueryScenario {
 //	    vdbdef.append(vdbfiles[i].getAbsolutePath() + ";");
 //	}
 //	TestLogger.log("=====  Connect to VDBs: " + vdbdef.toString());
-//	
+//
 //	deployProperties.setProperty("vdb.definition", vdbdef.toString());
 //	PropertiesUtils.print(deployPropLoc, deployProperties,"Updated for vdb.definition");
 
@@ -152,7 +152,7 @@ public abstract class QueryScenario {
     /**
      * Return the name that identifies this query set. It should use the
      * {@link TestProperties#QUERY_SET_NAME} property to obtain the name.
-     * 
+     *
      * @return String query set name;
      */
     public String getQuerySetName() {
@@ -161,7 +161,7 @@ public abstract class QueryScenario {
 
     /**
      * Return the identifier for the current scenario
-     * 
+     *
      * @return String name of scenario
      */
     public String getQueryScenarioIdentifier() {
@@ -170,7 +170,7 @@ public abstract class QueryScenario {
 
     /**
      * Return the properties defined for this scenario
-     * 
+     *
      * @return Properties
      */
     public Properties getProperties() {
@@ -182,7 +182,7 @@ public abstract class QueryScenario {
      * the value is the query. In most simple cases, the query will be a
      * <code>String</code> However, complex types (i.e., to execute prepared
      * statements or other arguments), it maybe some other type.
-     * 
+     *
      * @param querySetID
      *            identifies a set of queries
      * @return Map<String, Object>
@@ -201,7 +201,7 @@ public abstract class QueryScenario {
      * {@link QueryReader} will be providing. The <code>querySetID</code> can be
      * used to obtain it associated set of queries by call
      * {@link #getQueries(String)}
-     * 
+     *
      * @return Collection of querySetIDs
      */
     public Collection<String> getQuerySetIDs() {
@@ -211,7 +211,7 @@ public abstract class QueryScenario {
     /**
      * Return the result mode that was defined by the property
      * {@link TestProperties#PROP_RESULT_MODE}
-     * 
+     *
      * @return String result mode
      */
     public String getResultsMode() {
@@ -222,7 +222,7 @@ public abstract class QueryScenario {
      * Return the {@link ExpectedResults} for the specified
      * <code>querySetID</code>. These expected results will be used to compare
      * with the actual results in order to determine success or failure.
-     * 
+     *
      * @param querySetID
      * @return ExpectedResults
      */
@@ -238,7 +238,7 @@ public abstract class QueryScenario {
     /**
      * Return the {@link ResultsGenerator} that is to be used to create new sets
      * of expected results.
-     * 
+     *
      * @return
      */
     public ResultsGenerator getResultsGenerator() {
@@ -248,7 +248,7 @@ public abstract class QueryScenario {
     /**
      * Return the {@link QueryReader} that is to be used to obtain the queries
      * to process.
-     * 
+     *
      * @return
      */
     public QueryReader getQueryReader() {

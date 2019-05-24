@@ -61,19 +61,19 @@ public class SessionServiceException extends TeiidSecurityException {
      * Construct an instance with an error code and message specified.
      *
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public SessionServiceException(BundleUtil.Event code, String message ) {
         super(code, message );
     }
-    
+
     /**
      * Construct an instance with a linked exception, and an error code and
      * message, specified.
      *
      * @param e       An exception to chain to this exception
      * @param message The error message
-     * @param code    The error code 
+     * @param code    The error code
      */
     public SessionServiceException(BundleUtil.Event code, Throwable e,  String message ) {
         super(code, e, message );

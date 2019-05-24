@@ -33,7 +33,7 @@ public class XMLSerialize implements Expression {
 	private Class<?> type;
 	private String version;
 	private String encoding;
-	
+
 	@Override
 	public Class<?> getType() {
 		if (type == null) {
@@ -45,60 +45,60 @@ public class XMLSerialize implements Expression {
 		}
 		return type;
 	}
-	
+
 	public String getEncoding() {
 		return encoding;
 	}
-	
+
 	public void setEncoding(String encoding) {
 		this.encoding = encoding;
 	}
-	
+
 	public String getVersion() {
 		return version;
 	}
-	
+
 	public void setVersion(String version) {
 		this.version = version;
 	}
-	
+
 	public Boolean getDeclaration() {
 		return declaration;
 	}
-	
+
 	public void setDeclaration(Boolean declaration) {
 		this.declaration = declaration;
 	}
-	
+
 	public Expression getExpression() {
 		return expression;
 	}
-	
+
 	public Boolean getDocument() {
 		return document;
 	}
-	
+
 	public void setDocument(Boolean document) {
 		this.document = document;
 	}
-	
+
 	public void setExpression(Expression expression) {
 		this.expression = expression;
 	}
-	
+
 	public void setTypeString(String typeString) {
 		this.typeString = typeString;
 	}
-	
+
 	public String getTypeString() {
 		return typeString;
 	}
-	
+
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
-		
+
 	@Override
 	public XMLSerialize clone() {
 		XMLSerialize clone = new XMLSerialize();
@@ -111,16 +111,16 @@ public class XMLSerialize implements Expression {
 		clone.encoding = this.encoding;
 		return clone;
 	}
-	
+
 	public boolean isDocument() {
 		return document != null && document;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(expression.hashCode(), getType());
 	}
-	
+
 	public boolean equals(Object obj) {
 		if (obj == this) {
 			return true;
@@ -136,10 +136,10 @@ public class XMLSerialize implements Expression {
 			&& EquivalenceUtil.areEqual(this.version, other.version)
 			&& EquivalenceUtil.areEqual(this.encoding, other.encoding);
 	}
-	
+
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-	
+
 }

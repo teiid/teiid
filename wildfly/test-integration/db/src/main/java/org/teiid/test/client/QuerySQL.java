@@ -20,17 +20,17 @@ package org.teiid.test.client;
 /**
  * The QuerySQL represents a single sql statement to be executed for a given {@link QueryTest Test}.
  * The {@link #rowCnt} and {@link  #updateCnt}, when set, provide validation checks after the
- * execution of the query.  
+ * execution of the query.
  * @author vanhalbert
  *
  */
 public class QuerySQL {
-    
+
     private String sql = null;
     private Object[] parms;
     private int updateCnt=-1;
     private int rowCnt=-1;
-    
+
     public int getRowCnt() {
         return rowCnt;
     }
@@ -51,7 +51,7 @@ public class QuerySQL {
 	this.sql = sql;
 	this.parms = parms;
     }
-    
+
     public String getSql() {
         return sql;
     }

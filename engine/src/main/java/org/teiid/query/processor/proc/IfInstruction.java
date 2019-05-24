@@ -78,7 +78,7 @@ public class IfInstruction extends ProgramInstruction {
      * program stack, and break from the loop.  Regardless if whether any criteria
      * evaluate to true, this instruction will increment the program counter of the
      * current program.
-     * @throws TeiidProcessingException 
+     * @throws TeiidProcessingException
      * @see ProgramInstruction#process(ProcedurePlan)
      */
     public void process(ProcedurePlan procEnv)
@@ -94,7 +94,7 @@ public class IfInstruction extends ProgramInstruction {
             procEnv.push(ifProgram);
         } else if(elseProgram != null) {
 	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
-		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$            
+		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$
             //push the "else" Program onto the stack
             procEnv.push(elseProgram);
         }
@@ -108,7 +108,7 @@ public class IfInstruction extends ProgramInstruction {
     public Program getElseProgram(){ //Defect 13291 - made public to support changes to ProcedurePlan
         return this.elseProgram;
     }
-    
+
     /**
      * Returns a deep clone
      */
@@ -142,7 +142,7 @@ public class IfInstruction extends ProgramInstruction {
         }
         return props;
     }
-    
+
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
         Boolean conditionRequires = SubqueryAwareRelationalNode.requiresTransaction(transactionalReads, ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(condition));
@@ -167,5 +167,5 @@ public class IfInstruction extends ProgramInstruction {
         }
         return conditionRequires;
     }
-    
+
 }

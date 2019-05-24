@@ -42,26 +42,26 @@ import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.bind.XmlObject;
 
 public class DirectQueryExecution implements ProcedureExecution  {
-	
+
 	public static final String SEARCH = "search;"; //$NON-NLS-1$
 	private static final String ATTRIBUTES = "attributes"; //$NON-NLS-1$
 	private static final String TYPE = "type"; //$NON-NLS-1$
 	private static final String ID = "id"; //$NON-NLS-1$
-	
+
 	protected List<Argument> arguments;
 	protected Command command;
-	private SalesforceConnection connection; 
+	private SalesforceConnection connection;
 	protected RuntimeMetadata metadata;
 	private ExecutionContext context;
 	private QueryResult results;
 	private List<List<Object>> currentBatch;
 	private int updateCount = -1;
 	private boolean updateQuery = false;
-	private String query; 
+	private String query;
 	private boolean returnsArray = true;
-	
+
 	/**
-	 * 
+	 *
 	 * @param arguments parameter arguments only
 	 * @param command
 	 * @param connection
@@ -78,13 +78,13 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		this.query = query;
 		this.returnsArray = returnsArray;
 	}
-	
+
 	@Override
 	public void execute() throws TranslatorException {
-		if (query.startsWith(SEARCH)) { 
+		if (query.startsWith(SEARCH)) {
 			StringBuilder buffer = new StringBuilder();
 			SQLStringVisitor.parseNativeQueryParts(query, arguments, buffer, new SQLStringVisitor.Substitutor() {
-				
+
 				@Override
 				public void substitute(Argument arg, StringBuilder builder, int index) {
 					Literal argumentValue = arg.getArgumentValue();
@@ -133,7 +133,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		this.updateCount = this.connection.create(payload);
 		this.updateQuery = true;
 	}
-	
+
 	private void doUpsert(String upsert) throws TranslatorException {
         DataPayload payload = buildDataPlayload(upsert);
         this.updateCount = this.connection.upsert(payload); //$NON-NLS-1$
@@ -153,11 +153,11 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		if (returnsArray) {
 			List<Object[]> row = new ArrayList<Object[]>(1);
 			row.add(vals.toArray(new Object[vals.size()]));
-			return row;		
+			return row;
 		}
 		return vals;
 	}
-	
+
 	private List<?> getRow(QueryResult result) throws TranslatorException {
 
 		// for insert/update/delete clauses
@@ -169,30 +169,30 @@ public class DirectQueryExecution implements ProcedureExecution  {
 			}
 			return null;
 		}
-		
+
 		// select clauses
 		List<Object> row = null;
-		
+
 		if(this.currentBatch == null) {
 			this.currentBatch = loadBatch(this.results);
 		}
-		
+
 		if(!this.currentBatch.isEmpty()) {
 			row = this.currentBatch.remove(0);
-		} 
+		}
 		else {
 			if(!result.isDone()) {
 				// fetch more results
 				this.results = this.connection.queryMore(results.getQueryLocator(), context.getBatchSize());
 				this.currentBatch = loadBatch(this.results);
-				
+
 				// read next row
 				row = this.currentBatch.remove(0);
 			}
 		}
 		return row;
-	}	
-	
+	}
+
 	private List<List<Object>> loadBatch(QueryResult queryResult) {
 		List<List<Object>> batch = new ArrayList<List<Object>>();
 		for(SObject sObject : queryResult.getRecords()) {
@@ -210,7 +210,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		}
 		return batch;
 	}
-	
+
 	@Override
 	public void close() {
 	}
@@ -218,28 +218,28 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	@Override
 	public void cancel() throws TranslatorException {
 	}
-		
+
 	private DataPayload buildDataPlayload(String update) throws TranslatorException {
 		StringTokenizer st = new StringTokenizer(update, ";"); //$NON-NLS-1$
 		if (!st.hasMoreTokens()) {
 			throw new TranslatorException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13004));
 		}
-		
+
 		String type = null;
 		String id = null;
 		DataPayload payload = new DataPayload();
-		
+
 		while(st.hasMoreElements()) {
 			String var = st.nextToken();
-			
+
 			int index = var.indexOf('=');
 			if (index == -1) {
 				continue;
 			}
 			String key = var.substring(0, index).trim().toLowerCase();
 			String value = var.substring(index+1).trim();
-			
-			
+
+
 			if (key.equalsIgnoreCase(ATTRIBUTES)) {
 				StringTokenizer attrTokens = new StringTokenizer(value, ","); //$NON-NLS-1$
 				int attrCount = 0;
@@ -272,5 +272,5 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	@Override
 	public List<?> getOutputParameterValues() throws TranslatorException {
 		return null;
-	}	
+	}
 }

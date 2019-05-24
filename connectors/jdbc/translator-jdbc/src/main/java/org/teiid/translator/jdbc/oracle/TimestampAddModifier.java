@@ -32,7 +32,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class TimestampAddModifier extends FunctionModifier {
 
 	private static Map<String, String> INTERVAL_MAP = new HashMap<String, String>();
-	
+
 	static {
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
@@ -41,7 +41,7 @@ public class TimestampAddModifier extends FunctionModifier {
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
 		INTERVAL_MAP.put(NonReserved.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
 	}
-	
+
 	@Override
 	public List<?> translate(Function function) {
 	    ArrayList<Object> result = new ArrayList<Object>();
@@ -50,11 +50,11 @@ public class TimestampAddModifier extends FunctionModifier {
         //by capabilities this must be a literal integer
         int value = (Integer)((Literal)function.getParameters().get(1)).getValue();
         long adjustedValue = value;
-        
+
         //handle the year/month case
 	    if (interval.equals(NonReserved.SQL_TSI_YEAR)) {
 	        interval = NonReserved.SQL_TSI_MONTH;
-            adjustedValue = value*12l;
+            adjustedValue = value*12L;
         }
 	    if (interval.equals(NonReserved.SQL_TSI_MONTH)) {
             interval = ExtractFunctionModifier.MONTH;
@@ -65,7 +65,7 @@ public class TimestampAddModifier extends FunctionModifier {
             result.add(")"); //$NON-NLS-1$
             return result;
         }
-	    
+
 	    result.add(function.getParameters().get(2));
 	    result.add(" + (INTERVAL '"); //$NON-NLS-1$
 		String newInterval = INTERVAL_MAP.get(interval);
@@ -73,7 +73,7 @@ public class TimestampAddModifier extends FunctionModifier {
 			result.add(value);
 		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
 		    newInterval = ExtractFunctionModifier.MONTH;
-		    adjustedValue = value*3l;
+		    adjustedValue = value*3L;
 		    result.add(adjustedValue);
 		} else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
 			newInterval = ExtractFunctionModifier.SECOND;
@@ -81,7 +81,7 @@ public class TimestampAddModifier extends FunctionModifier {
 		    adjustedValue = 1;
 		} else {
 			newInterval = ExtractFunctionModifier.DAY;
-			adjustedValue = value*7l;
+			adjustedValue = value*7L;
 			result.add(adjustedValue);
 		}
 		result.add("' "); //$NON-NLS-1$
@@ -91,7 +91,7 @@ public class TimestampAddModifier extends FunctionModifier {
 		result.add("))"); //$NON-NLS-1$
 		return result;
 	}
-	
+
 	static int precision(long value) {
 	    int precision = 1;
 	    while (value >= 10) {
@@ -100,5 +100,5 @@ public class TimestampAddModifier extends FunctionModifier {
 	    }
 	    return precision;
 	}
-	
+
 }

@@ -35,7 +35,7 @@ import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.core.util.HashCodeUtil;
 
 /**
- * Provides a serializable {@link Array} implementation with minimal JDBC functionality. 
+ * Provides a serializable {@link Array} implementation with minimal JDBC functionality.
  */
 public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, Array {
 	private static final String INVALID = ""; //$NON-NLS-1$
@@ -45,19 +45,19 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	 */
 	private boolean zeroBased;
 	private Object[] values;
-	
+
 	@SuppressWarnings("serial")
 	public final static class NullException extends RuntimeException {};
 	private final static NullException ex = new NullException();
-	
+
 	public ArrayImpl(Object... values) {
 		this.values = values;
 	}
 
 	public ArrayImpl() {
-		
+
 	}
-	
+
 	private void checkValues() throws SQLException {
 		if (values == null) {
 			throw new SQLException("Already freed or invalid"); //$NON-NLS-1$
@@ -68,7 +68,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	public int compareTo(ArrayImpl o) {
 		return compareTo(o, false, null);
 	}
-		
+
 	public int compareTo(ArrayImpl o, boolean noNulls, Comparator<Object> comparator) {
 		if (zeroBased != o.zeroBased) {
 			throw new TeiidRuntimeException("Incompatible types"); //$NON-NLS-1$
@@ -109,7 +109,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 			if (object1 instanceof Object[] && object2 instanceof Object[]) {
 				comp = compare(noNulls, comparator, (Object[])object1, (Object[])object2);
 			} else if (comparator != null) {
-				comp = comparator.compare(object1, object2);				
+				comp = comparator.compare(object1, object2);
 			} else {
 				comp = ((Comparable)object1).compareTo(object2);
 			}
@@ -119,12 +119,12 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	    }
 	    return len1 - len2;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.expHashCode(0, this.values);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -140,23 +140,23 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 		    return false;
 		}
 	}
-	
+
 	public Object[] getValues() {
 		if (values == null) {
 			throw new TeiidRuntimeException("Already freed or invalid"); //$NON-NLS-1$
 		}
 		return values;
 	}
-	
+
 	@Override
 	public String toString() {
 		return Arrays.toString(this.values);
 	}
-	
+
 	public boolean isZeroBased() {
 		return zeroBased;
 	}
-	
+
 	public void setZeroBased(boolean zeroBased) {
 		this.zeroBased = zeroBased;
 	}
@@ -230,7 +230,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 			Map<String, Class<?>> map) throws SQLException {
 		throw new SQLFeatureNotSupportedException();
 	}
-	
+
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
@@ -241,16 +241,16 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 		this.values = ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
 		zeroBased = in.readBoolean();
 	}
-	
+
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		if (values == null) {
-			out.writeUTF(INVALID);  
+			out.writeUTF(INVALID);
 			return;
 		}
 		out.writeUTF(DataTypeManager.getDataTypeName(this.values.getClass().getComponentType()));
 		ExternalizeUtil.writeArray(out, values);
 		out.writeBoolean(zeroBased);
 	}
-	
+
 }

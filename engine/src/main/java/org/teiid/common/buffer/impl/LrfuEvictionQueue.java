@@ -34,7 +34,7 @@ import org.teiid.core.TeiidRuntimeException;
  * @param <V>
  */
 public class LrfuEvictionQueue<V extends BaseCacheEntry> {
-    
+
     /**
      * For testing, should only be used from asserts.
      * Waits for convergence of a value if needed
@@ -55,7 +55,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
         }
         return true;
     }
-	
+
 	private static final long DEFAULT_HALF_LIFE = 1<<16;
 	static final long MIN_INTERVAL = 1<<9;
 	protected ConcurrentSkipListMap<CacheKey, V> evictionQueue = new ConcurrentSkipListMap<CacheKey, V>();
@@ -63,7 +63,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	protected long maxInterval;
 	protected long halfLife;
 	private AtomicInteger size = new AtomicInteger();
-	
+
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
 		setHalfLife(DEFAULT_HALF_LIFE);
@@ -77,7 +77,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		}
 		return false;
 	}
-	
+
 	public boolean add(V value) {
 		if (evictionQueue.putIfAbsent(value.getKey(), value) == null) {
 			size.addAndGet(1);
@@ -85,22 +85,22 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		}
 		return false;
 	}
-	
+
 	public void touch(V value) {
 		long tick = clock.get();
 		if (tick - MIN_INTERVAL < value.getKey().getLastAccess()) {
-		    add(value);	
+		    add(value);
 		    return;
 		}
 		remove(value);
 		recordAccess(value);
 		add(value);
 	}
-		
+
 	public Collection<V> getEvictionQueue() {
 		return evictionQueue.values();
 	}
-	
+
 	public V firstEntry(boolean poll) {
 		Map.Entry<CacheKey, V> entry = null;
 		if (poll) {
@@ -131,7 +131,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		assert !this.evictionQueue.containsKey(value.getKey());
 		value.setKey(new CacheKey(key.getId(), currentClock, orderingValue));
 	}
-	
+
 	long computeNextOrderingValue(long currentTime,
 			long lastAccess, long orderingValue) {
 		long delta = currentTime - lastAccess;
@@ -140,7 +140,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		}
 		//scale the increase based upon how hot we previously were
 		long increase = orderingValue + lastAccess;
-		
+
 		if (delta > halfLife) {
 			while ((delta-=halfLife) > halfLife && (increase>>=1) > 0) {
 			}
@@ -148,16 +148,16 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		increase = Math.min(currentTime, increase);
 		return currentTime + increase;
 	}
-	
+
 	public void setHalfLife(long halfLife) {
 		this.halfLife = halfLife;
 		this.maxInterval = 62*this.halfLife;
 	}
-	
+
 	public int getSize() {
 		return size.get();
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
@@ -173,5 +173,5 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		}
 		return result.toString();
 	}
-	
+
 }

@@ -40,21 +40,21 @@ public class TestSybasePlanning extends BaseQueryTest {
     public void testQuery3() throws Exception{
         SybaseExecutionFactory ef = new SybaseExecutionFactory();
         ef.setDatabaseVersion(Version.DEFAULT_VERSION);
-        
+
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(CapabilitiesConverter.convertCapabilities(ef));
-        
+
         HardcodedDataManager dataMgr = new HardcodedDataManager();
-    
+
         List<?>[] expected =
             new List<?>[] { Arrays.asList("2002") };
 
         dataMgr.addData("SELECT g_0.TimestampValue FROM BQT1.SmallA AS g_0", //$NON-NLS-1$
                         new List<?>[] {Arrays.asList(TimestampUtil.createTimestamp(102, 1, 2, 3, 4, 5, 6))});
 
-        doProcess(RealMetadataFactory.exampleBQTCached(),  
+        doProcess(RealMetadataFactory.exampleBQTCached(),
                 "select formattimestamp(timestampvalue, 'yyyy') from bqt1.smalla", //$NON-NLS-1$
                 capFinder, dataMgr, expected, DEBUG);
-        
+
     }
-    
+
 }

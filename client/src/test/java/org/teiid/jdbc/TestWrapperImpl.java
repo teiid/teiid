@@ -30,25 +30,25 @@ import org.teiid.jdbc.WrapperImpl;
 import junit.framework.TestCase;
 @SuppressWarnings("nls")
 public class TestWrapperImpl extends TestCase {
-	
+
 	interface Foo extends Wrapper {
 		void callMe();
 	}
-	
+
 	static class FooImpl extends WrapperImpl implements Foo {
-		
+
 		boolean wasCalled;
-		
+
 		public void callMe() {
 			wasCalled = true;
 		}
-		
+
 	}
-	
+
 	public void testProxy() throws SQLException {
-		
-		final FooImpl fooImpl = new FooImpl(); 
-		
+
+		final FooImpl fooImpl = new FooImpl();
+
 		Foo proxy = (Foo)Proxy.newProxyInstance(TestWrapperImpl.class.getClassLoader(), new Class[] {Foo.class}, new InvocationHandler() {
 
 			public Object invoke(Object arg0, Method arg1, Object[] arg2)
@@ -62,17 +62,17 @@ public class TestWrapperImpl extends TestCase {
 					throw e.getTargetException();
 				}
 			}
-			
+
 		});
-		
+
 		proxy.callMe();
-		
+
 		assertFalse(fooImpl.wasCalled);
-		
+
 		proxy.unwrap(Foo.class).callMe();
-		
+
 		assertTrue(fooImpl.wasCalled);
-		
+
 		try {
 			proxy.unwrap(String.class);
 			fail("expected exception");

@@ -49,28 +49,28 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
     public void deploy(final DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         final ServiceTarget target = phaseContext.getServiceTarget();
-        
+
         if (!TeiidAttachments.isTranslator(deploymentUnit)) {
         	return;
         }
-        
+
         String moduleName = deploymentUnit.getName();
         final Module module = deploymentUnit.getAttachment(Attachments.MODULE);
         ClassLoader translatorLoader =  module.getClassLoader();
-        
+
         final ServiceLoader<ExecutionFactory> serviceLoader =  ServiceLoader.load(ExecutionFactory.class, translatorLoader);
         if (serviceLoader != null) {
         	for (ExecutionFactory ef:serviceLoader) {
-        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);        		
+        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
         		if (metadata == null) {
-        			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName)); 
+        			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName));
         		}
         		deploymentUnit.putAttachment(TeiidAttachments.TRANSLATOR_METADATA, metadata);
         		metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, moduleName);
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
-        		
+
         		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
-        		
+
         		buildService(target, metadata);
         	}
         }

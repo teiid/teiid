@@ -66,7 +66,7 @@ import org.teiid.query.sql.lang.SPParameter;
  * from the metadata object model.
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
-	
+
 	public static final String ALLOWED_LANGUAGES = "allowed-languages"; //$NON-NLS-1$
 
 	private static final class LiveQueryNode extends QueryNode {
@@ -80,7 +80,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			return p.getQueryPlan();
 		}
 	}
-	
+
 	private static final class LiveTableQueryNode extends QueryNode {
 		Table t;
 		private LiveTableQueryNode(Table t) {
@@ -105,12 +105,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		public InputStream getInputStream() throws IOException {
 			return r.openStream();
 		}
-		
+
 		@Override
 		public long getLength() {
 			return r.getSize();
 		}
-		
+
 		@Override
 		public StorageMode getStorageMode() {
 			return StorageMode.PERSISTENT;
@@ -118,16 +118,16 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 
 	private static final long serialVersionUID = 1058627332954475287L;
-	
+
 	/** Delimiter character used when specifying fully qualified entity names */
     public static final char DELIMITER_CHAR = '.';
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
-    
+
     // error message cached to avoid i18n lookup each time
     public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+QueryPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
 
     public static Properties EMPTY_PROPS = new Properties();
-    
+
     private final CompositeMetadataStore store;
     private Map<String, VDBResources.Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
@@ -141,7 +141,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private boolean useOutputNames = true;
     private boolean hiddenResolvable = true;
     private boolean designTime = false;
-    
+
     /*
      * TODO: move caching to jboss cache structure
      */
@@ -162,7 +162,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (this.vdbMetaData !=null) {
     		this.scriptEngineManager = vdbMetadata.getAttachment(ScriptEngineManager.class);
     		this.importedModels = this.vdbMetaData.getImportedModels();
-    		this.allowedLanguages = StringUtil.valueOf(vdbMetadata.getPropertyValue(ALLOWED_LANGUAGES), Set.class); 
+    		this.allowedLanguages = StringUtil.valueOf(vdbMetadata.getPropertyValue(ALLOWED_LANGUAGES), Set.class);
     		if (this.allowedLanguages == null) {
     			this.allowedLanguages = Collections.emptySet();
     		}
@@ -189,7 +189,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             this.functionLibrary = new FunctionLibrary(systemFunctions, functionTrees.toArray(new FunctionTree[functionTrees.size()]));
         }
     }
-    
+
     private void processGrants(MetadataStore store, Map<String, DataPolicyMetadata> policies) {
         if (store.getGrants() == null || store.getGrants().isEmpty() || policies == null) {
             return;
@@ -208,13 +208,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             }
         }
     }
-        
+
     private TransformationMetadata(final CompositeMetadataStore store, FunctionLibrary functionLibrary) {
         this.store = store;
     	this.vdbEntries = Collections.emptyMap();
         this.functionLibrary = functionLibrary;
     }
-    
+
     //==================================================================================
     //                     I N T E R F A C E   M E T H O D S
     //==================================================================================
@@ -245,23 +245,23 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         return t;
     }
-    
+
     public Collection<String> getGroupsForPartialName(final String partialGroupName)
         throws TeiidComponentException, QueryMetadataException {
 		ArgCheck.isNotEmpty(partialGroupName);
 
 		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
-		
+
 		if (matches == null) {
 	        matches = getMetadataStore().getGroupsForPartialName(partialGroupName);
-	        
+
         	this.partialNameToFullNameCache.put(partialGroupName, matches);
 		}
-		
+
 		if (matches.isEmpty()) {
 			return Collections.emptyList();
 		}
-		
+
 		Collection<String> filteredResult = new ArrayList<String>(matches.size());
 		for (Table table : matches) {
 			if (designTime || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
@@ -297,7 +297,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         return metadataRecord.getFullName();
     }
-    
+
     @Override
     public String getName(Object metadataID) throws TeiidComponentException,
     		QueryMetadataException {
@@ -326,14 +326,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             		return parent;
             	}
             }
-        } 
+        }
         if(elementID instanceof ProcedureParameter) {
         	ProcedureParameter columnRecord = (ProcedureParameter) elementID;
             return columnRecord.getParent();
         }
         throw createInvalidRecordTypeException(elementID);
     }
-    
+
     public boolean hasProcedure(String name) throws TeiidComponentException {
     	try {
     		return getStoredProcInfoDirect(name) != null;
@@ -345,11 +345,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String name)
         throws TeiidComponentException, QueryMetadataException {
         StoredProcedureInfo result = getStoredProcInfoDirect(name);
-        
+
 		if (result == null || !isResolvable((Schema) result.getModelID())) {
 			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30357, name+NOT_EXISTS_MESSAGE);
 		}
-    	
+
         return result;
     }
 
@@ -359,7 +359,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		ArgCheck.isNotEmpty(name);
         String canonicalName = name.toUpperCase();
         Collection<StoredProcedureInfo> results = this.procedureCache.get(canonicalName);
-        
+
         if (results == null) {
         	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName);
         	if (procRecords.isEmpty()) {
@@ -398,7 +398,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     // resultSet is the last parameter in the procedure
                     int lastParamIndex = procInfo.getParameters().size() + 1;
                     SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
-                    param.setClassType(java.sql.ResultSet.class);           
+                    param.setClassType(java.sql.ResultSet.class);
                     param.setMetadataID(resultRecord);
 
                     for (Column columnRecord : resultRecord.getColumns()) {
@@ -406,7 +406,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                         param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
                     }
 
-                    procInfo.addParameter(param);            
+                    procInfo.addParameter(param);
                 }
 
                 // if this is a virtual procedure get the procedure plan
@@ -414,15 +414,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     QueryNode queryNode = new LiveQueryNode(procRecord);
                     procInfo.setQueryPlan(queryNode);
                 }
-                
+
                 procInfo.setUpdateCount(procRecord.getUpdateCount());
 				results.add(procInfo);
 			}
-        	this.procedureCache.put(canonicalName, results);        	
+        	this.procedureCache.put(canonicalName, results);
         }
-        
+
         StoredProcedureInfo result = null;
-        
+
         for (StoredProcedureInfo storedProcedureInfo : results) {
         	Schema schema = (Schema)storedProcedureInfo.getModelID();
 	        if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || designTime || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
@@ -434,7 +434,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		return result;
 	}
-    
+
     /**
      * Method to convert the parameter type returned from a ProcedureParameterRecord
      * to the parameter type expected by StoredProcedureInfo
@@ -447,14 +447,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             case Out : return SPParameter.OUT;
             case InOut : return SPParameter.INOUT;
             case ReturnValue : return SPParameter.RETURN_VALUE;
-            default : 
+            default :
                 return -1;
         }
     }
 
     public String getElementRuntimeTypeName(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getRuntimeType();            
+            return ((Column) elementID).getRuntimeType();
         } else if(elementID instanceof ProcedureParameter){
             return ((ProcedureParameter) elementID).getRuntimeType();
         } else {
@@ -464,7 +464,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public String getDefaultValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getDefaultValue();            
+            return ((Column) elementID).getDefaultValue();
         } else if(elementID instanceof ProcedureParameter){
             return ((ProcedureParameter) elementID).getDefaultValue();
         } else {
@@ -474,7 +474,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Object getMinimumValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getMinimumValue();            
+            return ((Column) elementID).getMinimumValue();
         } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
@@ -484,7 +484,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Object getMaximumValue(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getMaximumValue();            
+            return ((Column) elementID).getMaximumValue();
         } else if(elementID instanceof ProcedureParameter){
             return null;
         } else {
@@ -504,11 +504,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public boolean isProcedure(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	if(groupID instanceof Procedure) {
-            return true;            
-        } 
+            return true;
+        }
     	if(groupID instanceof Table){
             return false;
-        } 
+        }
     	throw createInvalidRecordTypeException(groupID);
     }
 
@@ -556,7 +556,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         switch(modelConstant) {
             default:
                 throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + modelConstant); //$NON-NLS-1$
-        }        
+        }
     }
 
     public boolean groupSupports(final Object groupID, final int groupConstant)
@@ -573,9 +573,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public boolean elementSupports(final Object elementID, final int elementConstant)
         throws TeiidComponentException, QueryMetadataException {
-        
+
         if(elementID instanceof Column) {
-            Column columnRecord = (Column) elementID;            
+            Column columnRecord = (Column) elementID;
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
                     return columnRecord.getNullType() == NullType.Nullable;
@@ -607,7 +607,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
             }
         } else if(elementID instanceof ProcedureParameter) {
-            ProcedureParameter columnRecord = (ProcedureParameter) elementID;            
+            ProcedureParameter columnRecord = (ProcedureParameter) elementID;
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
                 	return columnRecord.getNullType() == NullType.Nullable;
@@ -635,12 +635,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 default:
                     throw new UnsupportedOperationException(QueryPlugin.Util.getString("TransformationMetadata.Unknown_support_constant___12") + elementConstant); //$NON-NLS-1$
             }
-            
-        } else {            
+
+        } else {
             throw createInvalidRecordTypeException(elementID);
         }
     }
-    
+
     private IllegalArgumentException createInvalidRecordTypeException(Object elementID) {
         return new IllegalArgumentException(QueryPlugin.Util.getString("TransformationMetadata.Invalid_type", elementID!=null?elementID.getClass().getName():null));         //$NON-NLS-1$
     }
@@ -697,7 +697,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return ((ColumnSet<?>)accessPattern).getColumns();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#hasMaterialization(java.lang.Object)
      * @since 4.2
      */
@@ -707,7 +707,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return tableRecord.isMaterialized();
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getMaterialization(java.lang.Object)
      * @since 4.2
      */
@@ -720,7 +720,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return null;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getMaterializationStage(java.lang.Object)
      * @since 4.2
      */
@@ -746,7 +746,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public VDBMetaData getVdbMetaData() {
 		return vdbMetaData;
 	}
-    
+
     @Override
     public float getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         return ((Table) groupID).getCardinalityAsFloat();
@@ -758,7 +758,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public int getElementLength(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getLength();            
+            return ((Column) elementID).getLength();
         } else if(elementID instanceof ProcedureParameter){
             return ((ProcedureParameter) elementID).getLength();
         } else {
@@ -770,46 +770,46 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(elementID instanceof Column) {
             return ((Column) elementID).getPosition();
         } else if(elementID instanceof ProcedureParameter) {
-            return ((ProcedureParameter) elementID).getPosition();            
+            return ((ProcedureParameter) elementID).getPosition();
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
-    
+
     public int getPrecision(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getPrecision();
         } else if(elementID instanceof ProcedureParameter) {
-            return ((ProcedureParameter) elementID).getPrecision();            
+            return ((ProcedureParameter) elementID).getPrecision();
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
-    
+
     public int getRadix(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getRadix();
         } else if(elementID instanceof ProcedureParameter) {
-            return ((ProcedureParameter) elementID).getRadix();            
+            return ((ProcedureParameter) elementID).getRadix();
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
-    
+
 	public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getFormat();
-        } 
-        throw createInvalidRecordTypeException(elementID);            
-	}       
-    
+        }
+        throw createInvalidRecordTypeException(elementID);
+	}
+
     public int getScale(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getScale();
         } else if(elementID instanceof ProcedureParameter) {
-            return ((ProcedureParameter) elementID).getScale();            
+            return ((ProcedureParameter) elementID).getScale();
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
 
@@ -818,9 +818,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(elementID instanceof Column) {
             return ((Column) elementID).getDistinctValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
-            return -1;            
+            return -1;
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
 
@@ -829,9 +829,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(elementID instanceof Column) {
             return ((Column) elementID).getNullValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
-            return -1;            
+            return -1;
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
 
@@ -839,9 +839,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         if(elementID instanceof Column) {
             return ((Column) elementID).getNativeType();
         } else if(elementID instanceof ProcedureParameter) {
-            return null;            
+            return null;
         } else {
-            throw createInvalidRecordTypeException(elementID);            
+            throw createInvalidRecordTypeException(elementID);
         }
     }
 
@@ -855,13 +855,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         p.putAll(result);
         return p;
     }
-    
+
     @Override
     public String getExtensionProperty(Object metadataID, String key, boolean checkUnqualified) {
         return ((AbstractMetadataRecord)metadataID).getProperty(key, checkUnqualified);
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.BasicQueryMetadata#getBinaryVDBResource(java.lang.String)
      * @since 4.3
      */
@@ -876,7 +876,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30365, e);
 		}
     }
-    
+
     public ClobImpl getVDBResourceAsClob(String resourcePath) {
     	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
@@ -884,7 +884,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	}
 		return new ClobImpl(new VirtualFileInputStreamFactory(f), -1);
     }
-    
+
     public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
     	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
@@ -892,7 +892,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	}
 		return new SQLXMLImpl(new VirtualFileInputStreamFactory(f));
     }
-    
+
     public BlobImpl getVDBResourceAsBlob(String resourcePath) {
     	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
@@ -900,7 +900,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	}
     	return new BlobImpl(new VirtualFileInputStreamFactory(f));
     }
-    
+
     private VDBResources.Resource getFile(String resourcePath) {
     	if (resourcePath == null) {
     		return null;
@@ -908,7 +908,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	return this.vdbEntries.get(resourcePath);
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.BasicQueryMetadata#getCharacterVDBResource(java.lang.String)
      * @since 4.3
      */
@@ -923,12 +923,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30366, e);
 		}
     }
-    
+
     public CompositeMetadataStore getMetadataStore() {
     	return this.store;
     }
 
-    /** 
+    /**
      * @see org.teiid.query.metadata.BasicQueryMetadata#getVDBResourcePaths()
      * @since 4.3
      */
@@ -939,15 +939,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	}
     	return paths.toArray(new String[paths.size()]);
     }
-    
+
 	@Override
 	public Object addToMetadataCache(Object metadataID, String key, Object value) {
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
-        	return this.groupInfoCache.put(key, value); 
+        	return this.groupInfoCache.put(key, value);
         }
-    	return this.metadataCache.put(key, value); 
+    	return this.metadataCache.put(key, value);
 	}
 
 	@Override
@@ -956,7 +956,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
-        	return this.groupInfoCache.get(key); 
+        	return this.groupInfoCache.get(key);
         }
     	return this.metadataCache.get(key);
 	}
@@ -986,13 +986,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	    }
 		return this.functionLibrary;
 	}
-	
+
 	@Override
 	public Object getPrimaryKey(Object metadataID) {
 		Table table = (Table)metadataID;
 		return table.getPrimaryKey();
 	}
-	
+
 	@Override
 	public TransformationMetadata getDesignTimeMetadata() {
 	    if (this.designTime) {
@@ -1002,7 +1002,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.groupInfoCache = this.groupInfoCache;
 		tm.metadataCache = this.metadataCache;
 		tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
-		tm.procedureCache = this.procedureCache; 
+		tm.procedureCache = this.procedureCache;
 		tm.scriptEngineManager = this.scriptEngineManager;
 		tm.importedModels = this.importedModels;
 		tm.allowedLanguages = this.allowedLanguages;
@@ -1014,12 +1014,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.designTime = true;
 		return tm;
 	}
-	
+
 	@Override
 	public Set<String> getImportedModels() {
 		return this.importedModels;
 	}
-	
+
 	@Override
 	public ScriptEngine getScriptEngineDirect(String language)
 			throws TeiidProcessingException {
@@ -1030,7 +1030,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (allowedLanguages == null || allowedLanguages.contains(language)) {
 			/*
 			 * because of state caching in the engine, we'll return a new instance for each
-			 * usage.  we can pool if needed and add a returnEngine method 
+			 * usage.  we can pool if needed and add a returnEngine method
 			 */
 			ScriptEngineFactory sef = this.scriptEngineFactories.get(language);
 			if (sef != null) {
@@ -1057,7 +1057,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		this.scriptEngineFactories.put(language, engine.getFactory());
 		return engine;
 	}
-	
+
 	@Override
 	public boolean isVariadic(Object metadataID) {
 		if (metadataID instanceof ProcedureParameter) {
@@ -1068,7 +1068,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		return false;
 	}
-	
+
 	@Override
 	public Schema getModelID(String modelName) throws TeiidComponentException,
 			QueryMetadataException {
@@ -1082,7 +1082,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private final boolean isResolvable(Schema s) {
         return hiddenResolvable || vdbMetaData == null || vdbMetaData.isVisible(s.getName());
     }
-	
+
 	@Override
 	public List<Schema> getModelIDs() {
 	    if (!hiddenResolvable && vdbMetaData != null) {
@@ -1093,37 +1093,37 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	    }
         return this.getMetadataStore().getSchemaList();
 	}
-	
+
 	public Map<String, DataPolicyMetadata> getPolicies() {
 		return policies;
 	}
-	
+
 	@Override
 	public boolean useOutputName() {
 		return useOutputNames;
 	}
-	
+
 	public void setUseOutputNames(boolean useOutputNames) {
 		this.useOutputNames = useOutputNames;
 	}
-	
+
 	@Override
 	public boolean widenComparisonToString() {
 		return widenComparisonToString;
 	}
-	
+
 	public void setWidenComparisonToString(boolean widenComparisonToString) {
 		this.widenComparisonToString = widenComparisonToString;
 	}
-	
+
 	public boolean isHiddenResolvable() {
         return hiddenResolvable;
     }
-	
+
 	public void setHiddenResolvable(boolean hiddenResolvable) {
         this.hiddenResolvable = hiddenResolvable;
     }
-	
+
 	@Override
 	public Class<?> getDataTypeClass(String typeOrDomainName)
 	        throws QueryMetadataException {
@@ -1141,7 +1141,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
         throw new QueryMetadataException(QueryPlugin.Event.TEIID31254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31254, typeOrDomainName));
 	}
-	
+
 	@Override
 	public boolean isEnvAllowed() {
 	    return this.allowEnv;
@@ -1150,12 +1150,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public void setAllowENV(boolean b) {
         this.allowEnv = b;
     }
-    
+
     @Override
     public boolean isLongRanks() {
         return longRanks;
     }
-    
+
     public void setLongRanks(boolean longRanks) {
         this.longRanks = longRanks;
     }

@@ -17,7 +17,7 @@
  */
 
 /**
- * 
+ *
  */
 package org.teiid.transport;
 
@@ -47,12 +47,12 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 
 /**
- * Main class for creating Netty Nio Channels 
+ * Main class for creating Netty Nio Channels
  */
 
 @Sharable
 public class SSLAwareChannelHandler extends ChannelDuplexHandler {
-	
+
 	public class ObjectChannelImpl implements ObjectChannel {
 		private final Channel channel;
 
@@ -67,16 +67,16 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 		public boolean isOpen() {
 			return channel.isOpen();
 		}
-		
+
 		public SocketAddress getRemoteAddress() {
 			return channel.remoteAddress();
 		}
-		
+
 		@Override
 		public InetAddress getLocalAddress() {
 			throw new UnsupportedOperationException();
 		}
-		
+
 		@Override
 		public Object read() throws IOException,
 				ClassNotFoundException {
@@ -88,7 +88,7 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 		    //    https://issues.jboss.org/browse/TEIID-5658
 		    //submit directly to the event loop to maintain ordering
 			return channel.eventLoop().submit(new Runnable() {
-                
+
                 @Override
                 public void run() {
                     final ChannelFuture future = channel.writeAndFlush(msg);
@@ -97,13 +97,13 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
             });
 		}
 	}
-	
+
 	private final ChannelListener.ChannelListenerFactory listenerFactory;
 	private Map<Channel, ChannelListener> listeners = new ConcurrentHashMap<Channel, ChannelListener>();
 	private AtomicLong objectsRead = new AtomicLong(0);
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
-	
+
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
 
 		@Override
@@ -115,13 +115,13 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 				writeExceptionCaught(arg0.channel(), arg0.cause());
 			}
 		}
-		
+
 	};
-	
+
 	public SSLAwareChannelHandler(ChannelListener.ChannelListenerFactory listenerFactory) {
 		this.listenerFactory = listenerFactory;
 	}
-	
+
 	@Override
 	public void channelActive(final ChannelHandlerContext ctx) throws Exception {
 		ChannelListener listener = this.listenerFactory.createChannelListener(new ObjectChannelImpl(ctx.channel()));
@@ -134,22 +134,22 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
                 public void operationComplete(DefaultPromise<Channel> future)
                         throws Exception {
                     onConnection(ctx.channel());
-                    
+
                 }
             });
 		} else {
 			onConnection(ctx.channel());
 		}
 	}
-	
+
 	private void onConnection(Channel channel) throws Exception {
 		ChannelListener listener = this.listeners.get(channel);
 		if (listener != null) {
 			listener.onConnection();
 		}
 	}
-	
-	
+
+
 	private void writeExceptionCaught(Channel channel,
 	        Throwable cause) {
 		ChannelListener listener = this.listeners.get(channel);
@@ -161,7 +161,7 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 			channel.close();
 		}
 	}
-	
+
 	@Override
     public void exceptionCaught(ChannelHandlerContext ctx,
             Throwable cause) throws Exception {
@@ -176,34 +176,34 @@ public class SSLAwareChannelHandler extends ChannelDuplexHandler {
 			listener.receivedMessage(msg);
 		}
 	}
-	
+
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         messageReceived(ctx, msg);
 	}
-	
+
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		ChannelListener listener = this.listeners.remove(ctx.channel());
 		if (listener != null) {
-			LogManager.logDetail(LogConstants.CTX_TRANSPORT, 
+			LogManager.logDetail(LogConstants.CTX_TRANSPORT,
 			        RuntimePlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
 			listener.disconnected();
 		}
 	}
-	
+
 	public long getObjectsRead() {
 		return this.objectsRead.get();
 	}
-	
+
 	public long getObjectsWritten() {
 		return this.objectsWritten.get();
 	}
-	
+
 	public int getConnectedChannels() {
 		return this.listeners.size();
 	}
-	
+
 	public int getMaxConnectedChannels() {
 		return this.maxChannels;
 	}

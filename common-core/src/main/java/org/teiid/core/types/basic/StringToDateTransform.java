@@ -27,10 +27,10 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToDateTransform extends Transform {
-	
+
 	private static boolean validate = true;
 	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2}"); //$NON-NLS-1$
-	
+
 	static {
 		try {
 			Date.valueOf("2000-14-01"); //$NON-NLS-1$
@@ -79,7 +79,7 @@ public class StringToDateTransform extends Transform {
 	public Class<?> getTargetType() {
 		return Date.class;
 	}
-	
+
 	@Override
 	public boolean isExplicit() {
 		return true;

@@ -38,15 +38,15 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class IdentifierFunctionModifier extends FunctionModifier {
 
     public List<?> translate(Function function) {
-    	
+
     	List<Object> objs = new ArrayList<Object>();
-    	
+
     	List<Expression> parms = function.getParameters();
-    	
-    	objs.add(function.getName().substring(function.getName().indexOf('_') + 1)); 
+
+    	objs.add(function.getName().substring(function.getName().indexOf('_') + 1));
     	objs.add(SQLConstants.Tokens.LPAREN);
-    	
-    	for (Iterator<Expression> iter = parms.iterator(); iter.hasNext();) 
+
+    	for (Iterator<Expression> iter = parms.iterator(); iter.hasNext();)
     	{
     		Expression expr = iter.next();
     		if (expr instanceof ColumnReference) {
@@ -84,7 +84,7 @@ public class IdentifierFunctionModifier extends FunctionModifier {
      	}
 
     	objs.add(SQLConstants.Tokens.RPAREN);
-        return objs; 
+        return objs;
     }
 
 }

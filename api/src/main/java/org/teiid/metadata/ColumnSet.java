@@ -26,17 +26,17 @@ import java.util.TreeMap;
 import org.teiid.connector.DataPlugin;
 
 public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
-	
+
 	private static final long serialVersionUID = -1185104601468519829L;
 
 	private List<Column> columns;
     private T parent;
     private transient Map<String, Column> columnMap;
-    
+
     public List<Column> getColumns() {
     	return columns;
     }
-    
+
     /**
      * Get the {@link Column} via a case-insensitive lookup
      * @param name
@@ -56,7 +56,7 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     	}
     	return map.get(name);
     }
-    
+
     public void addColumn(Column column) {
     	if (columns == null) {
     		columns = new ArrayList<Column>();
@@ -81,17 +81,17 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     		map.remove(column.getName());
     	}
     }
-    
+
     public void setColumns(List<Column> columns) {
 		this.columns = columns;
 		columnMap = null;
 	}
-    
+
     @Override
     public T getParent() {
     	return parent;
     }
-    
+
     public void setParent(T parent) {
 		this.parent = parent;
 	}

@@ -40,7 +40,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 @SuppressWarnings("nls")
 public class XMLQueryReader implements QueryReader {
- 
+
     private Properties props = null;
     private String queryScenarioIdentifier;
 
@@ -118,7 +118,7 @@ public class XMLQueryReader implements QueryReader {
 	    String msg = "Query file doesn't exist or cannot be read: " + queryFileName + ", ignoring and continuing";
 	    TestLogger.log(msg);
 	    throw new TransactionRuntimeException(msg); //$NON-NLS-1$ //$NON-NLS-2$
-	} 
+	}
 	    // Get query set name
 	    //			String querySet = getQuerySetName(queryFileName) ; //$NON-NLS-1$
 
@@ -174,8 +174,8 @@ public class XMLQueryReader implements QueryReader {
 		String querySetID = it.next();
 
 		List<QueryTest> queries = reader.getQueries(querySetID);
-		
-		if (queries.size() == 0l) {
+
+		if (queries.size() == 0L) {
 		    System.out.println("Failed, didn't load any queries ");
 		}
 	    }
@@ -185,7 +185,7 @@ public class XMLQueryReader implements QueryReader {
 	}
 
     }
-    
+
     /**
      * Returns a <code>File</code> array that will contain all the files that
      * exist in the directory that have the specified extension.

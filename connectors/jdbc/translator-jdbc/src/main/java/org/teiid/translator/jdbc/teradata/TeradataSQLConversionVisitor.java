@@ -40,7 +40,7 @@ public class TeradataSQLConversionVisitor extends SQLConversionVisitor {
     @Override
     public void visit(In obj) {
     	List<Expression> exprs = obj.getRightExpressions();
-    	
+
     	boolean decompose = false;
     	for (Expression expr:exprs) {
     		if (!(expr instanceof Literal)) {
@@ -48,7 +48,7 @@ public class TeradataSQLConversionVisitor extends SQLConversionVisitor {
     			break;
     		}
     	}
-    	
+
     	if (decompose) {
     		List<Expression> literals = new ArrayList<Expression>();
     		Comparison.Operator opCode = obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ;
@@ -79,5 +79,5 @@ public class TeradataSQLConversionVisitor extends SQLConversionVisitor {
     	else {
     		super.visit(obj);
     	}
-    }	
+    }
 }

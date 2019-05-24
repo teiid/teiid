@@ -32,14 +32,14 @@ public class TestWindowFrame {
         WindowFrame frame = new WindowFrame(FrameMode.RANGE);
         frame.setStart(new FrameBound(BoundMode.PRECEDING).bound(1));
         frame.setEnd(new FrameBound(BoundMode.CURRENT_ROW));
-        
+
         UnitTestUtil.helpTestEquivalence(0, frame, frame);
-        
+
         WindowFrame clone = frame.clone();
         UnitTestUtil.helpTestEquivalence(0, frame, clone);
-        
+
         clone.setEnd(null);
         UnitTestUtil.helpTestEquivalence(1, frame, clone);
     }
-        
+
 }

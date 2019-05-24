@@ -68,6 +68,6 @@ public class ReferenceCollectorVisitor extends LanguageVisitor {
 
         return visitor.getReferences();
     }
-    
+
 }
 
