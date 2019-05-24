@@ -48,7 +48,7 @@ public class TestElement extends TestCase {
     }
 
     private static String getTestVDBName() {
-    	return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
     }
 
     public static TranslationUtility createTranslationUtility(String vdbName) {
@@ -386,9 +386,9 @@ public class TestElement extends TestCase {
 
     }
 
-	@Override
-	protected void setUp() throws Exception {
+    @Override
+    protected void setUp() throws Exception {
         props = new HashMap<String, String>();
         props.put("ColProp", "defaultvalue"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 }

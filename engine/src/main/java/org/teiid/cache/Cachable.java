@@ -22,9 +22,9 @@ import org.teiid.dqp.internal.process.AccessInfo;
 
 public interface Cachable {
 
-	boolean prepare(TupleBufferCache bufferManager);
+    boolean prepare(TupleBufferCache bufferManager);
 
-	boolean restore(TupleBufferCache bufferManager);
+    boolean restore(TupleBufferCache bufferManager);
 
-	AccessInfo getAccessInfo();
+    AccessInfo getAccessInfo();
 }

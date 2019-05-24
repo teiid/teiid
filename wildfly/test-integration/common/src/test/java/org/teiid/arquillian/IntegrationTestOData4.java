@@ -55,62 +55,62 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+    private Admin admin;
 
-	@Before
-	public void setup() throws Exception {
-		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
-	}
+    @Before
+    public void setup() throws Exception {
+        admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
+    }
 
-	@After
-	public void teardown() throws AdminException {
-		AdminUtil.cleanUp(admin);
-		admin.close();
-	}
-	@Test
-	public void testOdata() throws Exception {
-		String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-				"<vdb name=\"Loopy\" version=\"1\">\n" +
-				"    <model name=\"MarketData\">\n" +
-				"        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
-				"         <metadata type=\"DDL\"><![CDATA[\n" +
-				"                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" +
-				"                CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
-				"        ]]> </metadata>\n" +
-				"    </model>\n" +
-				"</vdb>";
+    @After
+    public void teardown() throws AdminException {
+        AdminUtil.cleanUp(admin);
+        admin.close();
+    }
+    @Test
+    public void testOdata() throws Exception {
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<vdb name=\"Loopy\" version=\"1\">\n" +
+                "    <model name=\"MarketData\">\n" +
+                "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
+                "         <metadata type=\"DDL\"><![CDATA[\n" +
+                "                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" +
+                "                CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
+                "        ]]> </metadata>\n" +
+                "    </model>\n" +
+                "</vdb>";
 
-		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
 
-		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
-		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
-		Response response = client.invoke("GET", null);
+        WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
 
-		int statusCode = response.getStatus();
-		assertEquals(200, statusCode);
+        int statusCode = response.getStatus();
+        assertEquals(200, statusCode);
 
-		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:loopy@mm://localhost:31000;user=user;password=user", null);
+        Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:loopy@mm://localhost:31000;user=user;password=user", null);
 
-		PreparedStatement ps = conn.prepareCall("select t.* from xmltable('/*:Edmx/*:DataServices/*:Schema[@Alias=\"MarketData\"]' passing xmlparse(document cast(? as clob))) as t");
-		ps.setAsciiStream(1, (InputStream)response.getEntity());
+        PreparedStatement ps = conn.prepareCall("select t.* from xmltable('/*:Edmx/*:DataServices/*:Schema[@Alias=\"MarketData\"]' passing xmlparse(document cast(? as clob))) as t");
+        ps.setAsciiStream(1, (InputStream)response.getEntity());
 
-		ResultSet rs = ps.executeQuery();
-		rs.next();
+        ResultSet rs = ps.executeQuery();
+        rs.next();
 
-		assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata4-results.txt")), rs.getString(1));
+        assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("loopy-metadata4-results.txt")), rs.getString(1));
 
-		conn.close();
+        conn.close();
 
-		//try an invalid url
-		client = WebClient.create("http://localhost:8080/odata4/x/y$metadata");
-		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
-		response = client.invoke("GET", null);
-		assertEquals(404, response.getStatus());
+        //try an invalid url
+        client = WebClient.create("http://localhost:8080/odata4/x/y$metadata");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        response = client.invoke("GET", null);
+        assertEquals(404, response.getStatus());
 
-		admin.undeploy("loopy-vdb.xml");
-	}
+        admin.undeploy("loopy-vdb.xml");
+    }
 
     @Test
     public void testReadOdataMetadata() throws Exception {
@@ -196,30 +196,30 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         admin.undeploy("loopy-vdb.xml");
     }
 
-	@Test
-	public void testOdataMetadataError() throws Exception {
-		String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-				"<vdb name=\"Loopy\" version=\"1\">\n" +
-				"    <model name=\"MarketData\">\n" +
-				"        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
-				"         <metadata type=\"DDL\"><![CDATA[\n" +
-				"                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" +
-				"                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
-				"        ]]> </metadata>\n" +
-				"    </model>\n" +
-				"</vdb>";
+    @Test
+    public void testOdataMetadataError() throws Exception {
+        String vdb = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<vdb name=\"Loopy\" version=\"1\">\n" +
+                "    <model name=\"MarketData\">\n" +
+                "        <source name=\"text-connector2\" translator-name=\"loopback\" />\n" +
+                "         <metadata type=\"DDL\"><![CDATA[\n" +
+                "                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY);\n" +
+                "                CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY) OPTIONS (UPDATABLE 'true');\n" +
+                "        ]]> </metadata>\n" +
+                "    </model>\n" +
+                "</vdb>";
 
-		admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        admin.deploy("loopy-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "Loopy", 1));
 
-		WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
-		client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
-		Response response = client.invoke("GET", null);
+        WebClient client = WebClient.create("http://localhost:8080/odata4/loopy.1/MarketData/$metadata");
+        client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+        Response response = client.invoke("GET", null);
 
-		int statusCode = response.getStatus();
-		assertEquals(404, statusCode);
-	}
+        int statusCode = response.getStatus();
+        assertEquals(404, statusCode);
+    }
 
     @Test
     public void testCORS() throws Exception {
@@ -257,7 +257,7 @@ public class IntegrationTestOData4 extends AbstractMMQueryTestCase {
         */
     }
 
-	@Test
+    @Test
     public void testStaticServlet() throws Exception {
         WebClient client = WebClient.create("http://localhost:8080/odata4/static/org.apache.olingo.v1.xml");
         client.header("Authorization", "Basic " + Base64.encodeBytes(("user:user").getBytes())); //$NON-NLS-1$ //$NON-NLS-2$

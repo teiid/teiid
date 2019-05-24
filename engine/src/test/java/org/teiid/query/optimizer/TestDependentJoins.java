@@ -75,18 +75,18 @@ public class TestDependentJoins {
 
     static void getDependentGroups(RelationalNode node, Set<String> depGroups, boolean depdenent) {
         if(node instanceof AccessNode) {
-        	if (node instanceof DependentAccessNode) {
-        		if (!depdenent) {
-        			return;
-        		}
-        	} else if (depdenent) {
-        		return;
-        	}
+            if (node instanceof DependentAccessNode) {
+                if (!depdenent) {
+                    return;
+                }
+            } else if (depdenent) {
+                return;
+            }
             AccessNode accessNode = (AccessNode)node;
             Command depCommand = accessNode.getCommand();
             Collection<GroupSymbol> groupSymbols = GroupCollectorVisitor.getGroups(depCommand, true);
             for (GroupSymbol groupSymbol : groupSymbols) {
-        		depGroups.add(groupSymbol.getNonCorrelationName().toUpperCase());
+                depGroups.add(groupSymbol.getNonCorrelationName().toUpperCase());
             }
         }
 
@@ -179,7 +179,7 @@ public class TestDependentJoins {
     }
 
     @Test public void testDepJoinHintForceLeft() throws Exception {
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g1", TestOptimizer.example1(), //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * FROM vm1.g4 option makedep pm1.g1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT g_0.e1 FROM pm1.g2 AS g_0" }, TestOptimizer.getGenericFinder(false), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -289,7 +289,7 @@ public class TestDependentJoins {
         checkDependentGroups(plan, new String[] {"pm1.g2"});                             //$NON-NLS-1$
     }
 
-	@Test public void testDepJoinMultiGroupBaseline() throws Exception {
+    @Test public void testDepJoinMultiGroupBaseline() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select vm1.g4.*, pm1.g3.e1 FROM vm1.g4, pm1.g3 where pm1.g3.e1=vm1.g4.e1", TestOptimizer.example1(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2", //$NON-NLS-1$
@@ -867,7 +867,7 @@ public class TestDependentJoins {
         RealMetadataFactory.setCardinality("bqt1.smalla", 1000, metadata); //$NON-NLS-1$
         RealMetadataFactory.setCardinality("bqt2.smalla", 10000, metadata); //$NON-NLS-1$
         Column fmo = metadata.getElementID("bqt1.smalla.intnum");
-		fmo.setDistinctValues(1000);
+        fmo.setDistinctValues(1000);
         Column floatnum = metadata.getElementID("bqt1.smalla.floatnum");
         floatnum.setDistinctValues(800);
 
@@ -1027,19 +1027,19 @@ public class TestDependentJoins {
     }
 
     @Test public void testNestedLeftOuterJoin() throws TeiidComponentException, TeiidProcessingException {
-    	String sql = "select pm1.g1.e2, 'a', trim(pm1.g3.e1) from (pm1.g1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2) left outer join pm1.g3 on pm1.g3.e3 = pm1.g2.e3 and pm1.g3.e4 = pm1.g1.e4"; //$NON-NLS-1$
+        String sql = "select pm1.g1.e2, 'a', trim(pm1.g3.e1) from (pm1.g1 left outer join pm1.g2 on pm1.g1.e2 = pm1.g2.e2) left outer join pm1.g3 on pm1.g3.e3 = pm1.g2.e3 and pm1.g3.e4 = pm1.g1.e4"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g2", 6, metadata); //$NON-NLS-1$
         RealMetadataFactory.setCardinality("pm1.g1", 0, metadata); //$NON-NLS-1$
         RealMetadataFactory.setCardinality("pm1.g3", 0, metadata); //$NON-NLS-1$
 
-    	CapabilitiesFinder finder = TestOptimizer.getGenericFinder(false);
+        CapabilitiesFinder finder = TestOptimizer.getGenericFinder(false);
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata, new String[] {
-        		"SELECT g_0.e3, g_0.e4, g_0.e1 FROM pm1.g3 AS g_0",
-        		"SELECT g_0.e2, g_0.e4 FROM pm1.g1 AS g_0",
-        		"SELECT g_0.e2, g_0.e3 FROM pm1.g2 AS g_0 WHERE g_0.e2 IN (<dependent values>)"}, finder, ComparisonMode.EXACT_COMMAND_STRING);
+                "SELECT g_0.e3, g_0.e4, g_0.e1 FROM pm1.g3 AS g_0",
+                "SELECT g_0.e2, g_0.e4 FROM pm1.g1 AS g_0",
+                "SELECT g_0.e2, g_0.e3 FROM pm1.g2 AS g_0 WHERE g_0.e2 IN (<dependent values>)"}, finder, ComparisonMode.EXACT_COMMAND_STRING);
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

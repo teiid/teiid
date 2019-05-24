@@ -27,7 +27,7 @@ public abstract class ConnectionStrategy {
     private boolean useProxy = false;
 
     public ConnectionStrategy(Properties props) {
-	this.env = PropertiesUtils.clone(props);
+    this.env = PropertiesUtils.clone(props);
 
     }
 
@@ -44,11 +44,11 @@ public abstract class ConnectionStrategy {
     public abstract Connection getConnection() throws QueryTestFailedException;
 
     public boolean useProxy() {
-	return this.useProxy;
+    return this.useProxy;
     }
 
     void setUseProxy(boolean useproxy) {
-	this.useProxy = useproxy;
+    this.useProxy = useproxy;
     }
 
     /**
@@ -62,20 +62,20 @@ public abstract class ConnectionStrategy {
      * @throws QueryTestFailedException
      */
     public Connection getAdminConnection() throws QueryTestFailedException {
-	return null;
+    return null;
     }
 
     private boolean autoCommit;
 
     public boolean getAutocommit() {
-	return autoCommit;
+    return autoCommit;
     }
 
     /**
      * @throws QueryTestFailedException
      */
     public XAConnection getXAConnection() throws QueryTestFailedException {
-	return null;
+    return null;
     }
 
     /**
@@ -86,15 +86,15 @@ public abstract class ConnectionStrategy {
      * @return
      */
     public boolean isDataStoreDisabled() {
-	return ConfigPropertyLoader.getInstance().isDataStoreDisabled();
+    return ConfigPropertyLoader.getInstance().isDataStoreDisabled();
     }
 
     public Properties getEnvironment() {
-	return env;
+    return env;
     }
 
     public void setEnvironmentProperty(String key, String value) {
-	this.env.setProperty(key, value);
+    this.env.setProperty(key, value);
     }
 
     /**
@@ -102,54 +102,54 @@ public abstract class ConnectionStrategy {
      */
     void configure() throws QueryTestFailedException {
 //
-//	if (this.isDataStoreDisabled()) {
-//	    return;
-//	} else {
+//    if (this.isDataStoreDisabled()) {
+//        return;
+//    } else {
 //
-//	 // commenting out until embedded testing is made available and its required to configure
-//	 // the vdb and bindings in this mannder
+//     // commenting out until embedded testing is made available and its required to configure
+//     // the vdb and bindings in this mannder
 //
-//	    if (true)
-//		return;
-//	}
+//        if (true)
+//        return;
+//    }
 //
-//	try {
-//	    // the the driver strategy is going to be used to connection
-//	    // directly to the connector binding
-//	    // source, then no administration can be done
-//	    Admin admin = AdminFactory.getInstance().createAdmin(
-//		    this.env.getProperty("admin.user"),
-//		    this.env.getProperty("admin.password").toCharArray(),
-//		    this.env.getProperty("admin.url"));
+//    try {
+//        // the the driver strategy is going to be used to connection
+//        // directly to the connector binding
+//        // source, then no administration can be done
+//        Admin admin = AdminFactory.getInstance().createAdmin(
+//            this.env.getProperty("admin.user"),
+//            this.env.getProperty("admin.password").toCharArray(),
+//            this.env.getProperty("admin.url"));
 //
-//	    java.sql.Connection conn = getConnection();
+//        java.sql.Connection conn = getConnection();
 //
-//	    if (!(conn instanceof ConnectionImpl)) {
-//		TestLogger
-//			.log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
-//		return;
-//	    }
+//        if (!(conn instanceof ConnectionImpl)) {
+//        TestLogger
+//            .log("ConnectionStrategy configuration:  connection is not of type MMConnection and therefore no vdb setup will be performed");
+//        return;
+//        }
 //
 //
-//	    // setupVDBConnectorBindings(admin);
+//        // setupVDBConnectorBindings(admin);
 //
-//	    // admin.restart();
+//        // admin.restart();
 //
-//	    int sleep = 5;
+//        int sleep = 5;
 //
-//	    TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
-//	    Thread.sleep(1000 * sleep);
-//	    TestLogger.log("done."); //$NON-NLS-1$
+//        TestLogger.log("Bouncing the system..(wait " + sleep + " seconds)"); //$NON-NLS-1$
+//        Thread.sleep(1000 * sleep);
+//        TestLogger.log("done."); //$NON-NLS-1$
 //
-//	} catch (Throwable e) {
-//	    e.printStackTrace();
+//    } catch (Throwable e) {
+//        e.printStackTrace();
 //
-//	    throw new TransactionRuntimeException(e.getMessage());
-//	} finally {
-//	    // need to close and flush the connection after restarting
-//	    // this.shutdown();
+//        throw new TransactionRuntimeException(e.getMessage());
+//    } finally {
+//        // need to close and flush the connection after restarting
+//        // this.shutdown();
 //
-//	}
+//    }
     }
 
     // protected void setupVDBConnectorBindings(Admin api) throws
@@ -202,7 +202,7 @@ public abstract class ConnectionStrategy {
     //
     // if (ds != null) {
     //
-    //		    TestLogger.logInfo("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
+    //            TestLogger.logInfo("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":" + ds.getConnectorType()); //$NON-NLS-1$
     //
     // api.addConnectorBinding(ds.getName(),ds.getConnectorType(),
     // ds.getProperties());
@@ -232,106 +232,106 @@ public abstract class ConnectionStrategy {
     // }
 
     public synchronized Connection createDriverConnection(String identifier)
-	    throws QueryTestFailedException {
+        throws QueryTestFailedException {
 
-	DataSource ds = null;
-	if (identifier != null) {
-	    ds = DataSourceMgr.getInstance().getDataSource(identifier);
-	}
-	if (ds == null) {
-	    throw new TransactionRuntimeException(
-		    "Program Error: DataSource is not mapped to Identifier "
-			    + identifier);
-	}
+    DataSource ds = null;
+    if (identifier != null) {
+        ds = DataSourceMgr.getInstance().getDataSource(identifier);
+    }
+    if (ds == null) {
+        throw new TransactionRuntimeException(
+            "Program Error: DataSource is not mapped to Identifier "
+                + identifier);
+    }
 
-	Connection conn = ds.getConnection();
+    Connection conn = ds.getConnection();
 
-	if (conn != null)
-	    return conn;
+    if (conn != null)
+        return conn;
 
-	ConnectionStrategy cs = null;
-	if (identifier == null) {
-	    cs = new DriverConnection(ds.getProperties());
+    ConnectionStrategy cs = null;
+    if (identifier == null) {
+        cs = new DriverConnection(ds.getProperties());
 
-	} else {
-	    cs = new DriverConnection(ds.getProperties());
-	}
+    } else {
+        cs = new DriverConnection(ds.getProperties());
+    }
 
-//	conn = cs.getConnection();
+//    conn = cs.getConnection();
 //
-//	conn = (Connection) Proxy.newProxyInstance(Thread.currentThread()
-//		.getContextClassLoader(),
-//		new Class[] { java.sql.Connection.class },
-//		new CloseInterceptor(conn));
+//    conn = (Connection) Proxy.newProxyInstance(Thread.currentThread()
+//        .getContextClassLoader(),
+//        new Class[] { java.sql.Connection.class },
+//        new CloseInterceptor(conn));
 
-	ds.setConnection(cs.getConnection());
+    ds.setConnection(cs.getConnection());
 
-	return ds.getConnection();
+    return ds.getConnection();
 
     }
 
     public synchronized XAConnection createDataSourceConnection(
-	    String identifier) throws QueryTestFailedException {
+        String identifier) throws QueryTestFailedException {
 
-	DataSource ds = null;
-	if (identifier != null) {
-	    ds = DataSourceMgr.getInstance().getDataSource(identifier);
-	}
-	if (ds == null) {
-	    throw new TransactionRuntimeException(
-		    "Program Error: DataSource is not mapped to Identifier "
-			    + identifier);
-	}
+    DataSource ds = null;
+    if (identifier != null) {
+        ds = DataSourceMgr.getInstance().getDataSource(identifier);
+    }
+    if (ds == null) {
+        throw new TransactionRuntimeException(
+            "Program Error: DataSource is not mapped to Identifier "
+                + identifier);
+    }
 
-	XAConnection conn = ds.getXAConnection();
+    XAConnection conn = ds.getXAConnection();
 
-	if (conn != null)
-	    return conn;
+    if (conn != null)
+        return conn;
 
-	ConnectionStrategy cs = null;
-	if (identifier == null) {
-	    cs = new DataSourceConnection(ds.getProperties());
-	} else {
-	    cs = new DataSourceConnection(ds.getProperties());
-	}
+    ConnectionStrategy cs = null;
+    if (identifier == null) {
+        cs = new DataSourceConnection(ds.getProperties());
+    } else {
+        cs = new DataSourceConnection(ds.getProperties());
+    }
 
-//	conn = cs.getXAConnection();
+//    conn = cs.getXAConnection();
 //
-//	conn = (XAConnection) Proxy.newProxyInstance(Thread.currentThread()
-//		.getContextClassLoader(),
-//		new Class[] { javax.sql.XAConnection.class },
-//		new CloseInterceptor(conn));
+//    conn = (XAConnection) Proxy.newProxyInstance(Thread.currentThread()
+//        .getContextClassLoader(),
+//        new Class[] { javax.sql.XAConnection.class },
+//        new CloseInterceptor(conn));
 
-	ds.setXAConnection(cs.getXAConnection());
+    ds.setXAConnection(cs.getXAConnection());
 
-	return ds.getXAConnection();
+    return ds.getXAConnection();
 
     }
 
 //    class CloseInterceptor implements InvocationHandler {
 //
-//	Connection conn;
-//	XAConnection xaconn;
+//    Connection conn;
+//    XAConnection xaconn;
 //
-//	CloseInterceptor(Object conn) {
-//	    if (conn instanceof Connection) {
-//		this.conn = (Connection) conn;
-//	    } else {
-//		this.xaconn = (XAConnection) conn;
-//	    }
-//	}
+//    CloseInterceptor(Object conn) {
+//        if (conn instanceof Connection) {
+//        this.conn = (Connection) conn;
+//        } else {
+//        this.xaconn = (XAConnection) conn;
+//        }
+//    }
 //
-//	public Object invoke(Object proxy, Method method, Object[] args)
-//		throws Throwable {
-//	    if (method.getName().equals("close")) { //$NON-NLS-1$
-//		return null;
-//	    }
-//	    try {
-//		return method.invoke(this.conn, args);
-//	    } catch (InvocationTargetException e) {
-//		throw e.getTargetException();
-//	    }
-//	}
+//    public Object invoke(Object proxy, Method method, Object[] args)
+//        throws Throwable {
+//        if (method.getName().equals("close")) { //$NON-NLS-1$
+//        return null;
+//        }
+//        try {
+//        return method.invoke(this.conn, args);
+//        } catch (InvocationTargetException e) {
+//        throw e.getTargetException();
+//        }
+//    }
 //    }
 
 }

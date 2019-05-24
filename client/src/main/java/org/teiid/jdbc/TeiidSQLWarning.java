@@ -47,10 +47,10 @@ while (warning != null) {
  */
 public class TeiidSQLWarning extends SQLWarning {
 
-	private static final long serialVersionUID = -7080782561220818997L;
+    private static final long serialVersionUID = -7080782561220818997L;
 
-	private String modelName = "UNKNOWN"; // variable stores the name of the model for the atomic query //$NON-NLS-1$
-	private String sourceName = "UNKNOWN"; // variable stores name of the connector binding //$NON-NLS-1$
+    private String modelName = "UNKNOWN"; // variable stores the name of the model for the atomic query //$NON-NLS-1$
+    private String sourceName = "UNKNOWN"; // variable stores name of the connector binding //$NON-NLS-1$
 
     public TeiidSQLWarning() {
         super();
@@ -79,15 +79,15 @@ public class TeiidSQLWarning extends SQLWarning {
      * @return the source name or null if the warning is not associated with a source
      */
     public String getSourceName() {
-		return sourceName;
-	}
+        return sourceName;
+    }
 
     /**
      *
      * @return the model name or null if the warning is not associated with a model
      */
     public String getModelName() {
-		return modelName;
-	}
+        return modelName;
+    }
 
 }

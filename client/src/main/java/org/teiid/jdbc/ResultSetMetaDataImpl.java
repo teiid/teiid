@@ -34,10 +34,10 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     private boolean useJDBC4ColumnNameAndLabelSemantics = true;
 
     public ResultSetMetaDataImpl(MetadataProvider provider, String supportBackwardsCompatibility) {
-    	this.provider = provider;
-    	if (supportBackwardsCompatibility != null) {
-    		this.useJDBC4ColumnNameAndLabelSemantics = Boolean.parseBoolean(supportBackwardsCompatibility);
-    	}
+        this.provider = provider;
+        if (supportBackwardsCompatibility != null) {
+            this.useJDBC4ColumnNameAndLabelSemantics = Boolean.parseBoolean(supportBackwardsCompatibility);
+        }
     }
 
     /**
@@ -100,29 +100,29 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     public String getColumnLabel(int index) throws SQLException {
         String result = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
         if (result != null) {
-        	return result;
+            return result;
         }
         return getColumnName(index);
     }
 
     public String getColumnName(int index) throws SQLException {
 
-    	if (!useJDBC4ColumnNameAndLabelSemantics) {
+        if (!useJDBC4ColumnNameAndLabelSemantics) {
             String result = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_LABEL);
             if (result != null) {
-            	return result;
+                return result;
             }
-    	}
+        }
         return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.ELEMENT_NAME);
     }
 
     public String getSchemaName(int index) throws SQLException {
         String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
         if (name != null) {
-        	int dotIndex = name.indexOf('.');
-        	if (dotIndex != -1) {
-        		return name.substring(0, dotIndex);
-        	}
+            int dotIndex = name.indexOf('.');
+            if (dotIndex != -1) {
+                return name.substring(0, dotIndex);
+            }
         }
         return null;
     }
@@ -138,16 +138,16 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     public String getTableName(int index) throws SQLException {
         String name = provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.GROUP_NAME);
         if (name != null) {
-        	int dotIndex = name.indexOf('.');
-        	if (dotIndex != -1) {
-        		return name.substring(dotIndex + 1);
-        	}
+            int dotIndex = name.indexOf('.');
+            if (dotIndex != -1) {
+                return name.substring(dotIndex + 1);
+            }
         }
         return name;
     }
 
     public String getCatalogName(int index) throws SQLException {
-    	return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
+        return provider.getStringValue(adjustColumn(index), ResultsMetadataConstants.VIRTUAL_DATABASE_NAME);
     }
 
     public int getColumnType(int index) throws SQLException {

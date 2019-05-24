@@ -32,35 +32,35 @@ import org.teiid.core.CorePlugin;
  */
 public class ArgCheck {
 
-	/**
-	 * Can't construct - utility class
-	 */
-	private ArgCheck() {
-	}
+    /**
+     * Can't construct - utility class
+     */
+    private ArgCheck() {
+    }
 
-	/**
-	 * Check that the boolean condition is true; throw an
-	 * IllegalArgumentException if not.
-	 * @param condition The boolean condition to check
-	 * @param message Exception message if check fails
-	 * @throws IllegalArgumentException if condition is false
-	 */
-	public static final void isTrue(boolean condition, String message){
-		if(!condition) {
-			throw new IllegalArgumentException(message);
-		}
-	}
+    /**
+     * Check that the boolean condition is true; throw an
+     * IllegalArgumentException if not.
+     * @param condition The boolean condition to check
+     * @param message Exception message if check fails
+     * @throws IllegalArgumentException if condition is false
+     */
+    public static final void isTrue(boolean condition, String message){
+        if(!condition) {
+            throw new IllegalArgumentException(message);
+        }
+    }
 
-	// ########################## int METHODS ###################################
+    // ########################## int METHODS ###################################
 
     /**
      * Check that the value is non-negative (&gt;=0).
      * @param value Value
      * @throws IllegalArgumentException If value is negative (&lt;0)
      */
-	public static final void isNonNegative(int value) {
-		isNonNegative(value,null);
-	}
+    public static final void isNonNegative(int value) {
+        isNonNegative(value,null);
+    }
 
     /**
      * Check that the value is non-negative (&gt;=0).
@@ -68,23 +68,23 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is negative (&lt;0)
      */
-	public static final void isNonNegative(int value, String message) {
-		if(value < 0) {
+    public static final void isNonNegative(int value, String message) {
+        if(value < 0) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isNonNegativeInt"); //$NON-NLS-1$
-			throw new IllegalArgumentException(msg);
-		}
-	}
+            throw new IllegalArgumentException(msg);
+        }
+    }
 
     /**
      * Check that the value is non-positive (&lt;=0).
      * @param value Value
      * @throws IllegalArgumentException If value is positive (&gt;0)
      */
-	public static final void isNonPositive(int value) {
-	    isNonPositive(value,null);
-	}
+    public static final void isNonPositive(int value) {
+        isNonPositive(value,null);
+    }
 
     /**
      * Check that the value is non-positive (&lt;=0).
@@ -92,121 +92,23 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is positive (&gt;0)
      */
-	public static final void isNonPositive(int value, String message) {
-	    if(value > 0) {
+    public static final void isNonPositive(int value, String message) {
+        if(value > 0) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isNonPositiveInt"); //$NON-NLS-1$
-	        throw new IllegalArgumentException(msg);
-	    }
-	}
+            throw new IllegalArgumentException(msg);
+        }
+    }
 
     /**
      * Check that the value is negative (&lt;0).
      * @param value Value
      * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
-	public static final void isNegative(int value) {
-	    isNegative(value,null);
-	}
-
-    /**
-     * Check that the value is negative (&lt;0).
-     * @param value Value
-     * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
-     */
-	public static final void isNegative(int value, String message) {
-	    if(value >= 0) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("ArgCheck.isNegativeInt"); //$NON-NLS-1$
-	        throw new IllegalArgumentException(msg);
-	    }
-	}
-
-    /**
-     * Check that the value is positive (&gt;0).
-     * @param value Value
-     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
-     */
-	public static final void isPositive(int value) {
-	    isPositive(value,null);
-	}
-
-    /**
-     * Check that the value is positive (&gt;0).
-     * @param value Value
-     * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
-     */
-	public static final void isPositive(int value, String message) {
-	    if(value <= 0) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("ArgCheck.isPositiveInt"); //$NON-NLS-1$
-	        throw new IllegalArgumentException(msg);
-	    }
-	}
-
-	// ########################## long METHODS ###################################
-
-    /**
-     * Check that the value is non-negative (&gt;=0).
-     * @param value Value
-     * @throws IllegalArgumentException If value is negative (&lt;0)
-     */
-	public static final void isNonNegative(long value) {
-	    isNonNegative(value,null);
-	}
-
-    /**
-     * Check that the value is non-negative (&gt;=0).
-     * @param value Value
-     * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is negative (&lt;0)
-     */
-	public static final void isNonNegative(long value, String message) {
-		if(value < 0) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("ArgCheck.isNonNegativeInt"); //$NON-NLS-1$
-			throw new IllegalArgumentException(msg);
-		}
-	}
-
-    /**
-     * Check that the value is non-positive (&lt;=0).
-     * @param value Value
-     * @throws IllegalArgumentException If value is positive (&gt;0)
-     */
-	public static final void isNonPositive(long value) {
-	    isNonPositive(value,null);
-	}
-
-    /**
-     * Check that the value is non-positive (&lt;=0).
-     * @param value Value
-     * @param message Exception message if check fails
-     * @throws IllegalArgumentException If value is positive (&gt;0)
-     */
-	public static final void isNonPositive(long value, String message) {
-	    if(value > 0) {
-            final String msg = message != null ?
-                               message :
-                               CorePlugin.Util.getString("ArgCheck.isNonPositiveInt"); //$NON-NLS-1$
-	        throw new IllegalArgumentException(msg);
-	    }
-	}
-
-    /**
-     * Check that the value is negative (&lt;0).
-     * @param value Value
-     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
-     */
-	public static final void isNegative(long value) {
-	    isNegative(value,null);
-	}
+    public static final void isNegative(int value) {
+        isNegative(value,null);
+    }
 
     /**
      * Check that the value is negative (&lt;0).
@@ -214,23 +116,23 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is non-negative (&gt;=0)
      */
-	public static final void isNegative(long value, String message) {
-	    if(value >= 0) {
+    public static final void isNegative(int value, String message) {
+        if(value >= 0) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isNegativeInt"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-	    }
-	}
+        }
+    }
 
     /**
      * Check that the value is positive (&gt;0).
      * @param value Value
      * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
-	public static final void isPositive(long value) {
-	    isPositive(value,null);
-	}
+    public static final void isPositive(int value) {
+        isPositive(value,null);
+    }
 
     /**
      * Check that the value is positive (&gt;0).
@@ -238,25 +140,123 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is non-positive (&lt;=0)
      */
-	public static final void isPositive(long value, String message) {
-	    if(value <= 0) {
+    public static final void isPositive(int value, String message) {
+        if(value <= 0) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isPositiveInt"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-	    }
-	}
+        }
+    }
 
-	// ########################## String METHODS ###################################
+    // ########################## long METHODS ###################################
+
+    /**
+     * Check that the value is non-negative (&gt;=0).
+     * @param value Value
+     * @throws IllegalArgumentException If value is negative (&lt;0)
+     */
+    public static final void isNonNegative(long value) {
+        isNonNegative(value,null);
+    }
+
+    /**
+     * Check that the value is non-negative (&gt;=0).
+     * @param value Value
+     * @param message Exception message if check fails
+     * @throws IllegalArgumentException If value is negative (&lt;0)
+     */
+    public static final void isNonNegative(long value, String message) {
+        if(value < 0) {
+            final String msg = message != null ?
+                               message :
+                               CorePlugin.Util.getString("ArgCheck.isNonNegativeInt"); //$NON-NLS-1$
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    /**
+     * Check that the value is non-positive (&lt;=0).
+     * @param value Value
+     * @throws IllegalArgumentException If value is positive (&gt;0)
+     */
+    public static final void isNonPositive(long value) {
+        isNonPositive(value,null);
+    }
+
+    /**
+     * Check that the value is non-positive (&lt;=0).
+     * @param value Value
+     * @param message Exception message if check fails
+     * @throws IllegalArgumentException If value is positive (&gt;0)
+     */
+    public static final void isNonPositive(long value, String message) {
+        if(value > 0) {
+            final String msg = message != null ?
+                               message :
+                               CorePlugin.Util.getString("ArgCheck.isNonPositiveInt"); //$NON-NLS-1$
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    /**
+     * Check that the value is negative (&lt;0).
+     * @param value Value
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
+     */
+    public static final void isNegative(long value) {
+        isNegative(value,null);
+    }
+
+    /**
+     * Check that the value is negative (&lt;0).
+     * @param value Value
+     * @param message Exception message if check fails
+     * @throws IllegalArgumentException If value is non-negative (&gt;=0)
+     */
+    public static final void isNegative(long value, String message) {
+        if(value >= 0) {
+            final String msg = message != null ?
+                               message :
+                               CorePlugin.Util.getString("ArgCheck.isNegativeInt"); //$NON-NLS-1$
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    /**
+     * Check that the value is positive (&gt;0).
+     * @param value Value
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
+     */
+    public static final void isPositive(long value) {
+        isPositive(value,null);
+    }
+
+    /**
+     * Check that the value is positive (&gt;0).
+     * @param value Value
+     * @param message Exception message if check fails
+     * @throws IllegalArgumentException If value is non-positive (&lt;=0)
+     */
+    public static final void isPositive(long value, String message) {
+        if(value <= 0) {
+            final String msg = message != null ?
+                               message :
+                               CorePlugin.Util.getString("ArgCheck.isPositiveInt"); //$NON-NLS-1$
+            throw new IllegalArgumentException(msg);
+        }
+    }
+
+    // ########################## String METHODS ###################################
 
     /**
      * Check that the string is non-null and has length &gt; 0
      * @param value Value
      * @throws IllegalArgumentException If value is null or length == 0
      */
-	public static final void isNotZeroLength(String value) {
-		isNotZeroLength(value,null);
-	}
+    public static final void isNotZeroLength(String value) {
+        isNotZeroLength(value,null);
+    }
 
     /**
      * Check that the string is non-null and has length &gt; 0
@@ -264,17 +264,17 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is null or length == 0
      */
-	public static final void isNotZeroLength(String value, String message) {
-		isNotNull(value);
-		if(value.length() <= 0) {
+    public static final void isNotZeroLength(String value, String message) {
+        isNotNull(value);
+        if(value.length() <= 0) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isStringNonZeroLength"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-		}
-	}
+        }
+    }
 
-	// ########################## Object METHODS ###################################
+    // ########################## Object METHODS ###################################
 
     /**
      * Check that the object is non-null
@@ -291,14 +291,14 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is null
      */
-	public static final void isNotNull(Object value, String message) {
-	    if(value == null) {
+    public static final void isNotNull(Object value, String message) {
+        if(value == null) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isNonNull"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-	    }
-	}
+        }
+    }
 
     /**
      * Check that the object is null
@@ -330,9 +330,9 @@ public class ArgCheck {
      * @param value Value
      * @throws IllegalArgumentException If value is null
      */
-	public static final void isInstanceOf(Class theClass, Object value) {
+    public static final void isInstanceOf(Class theClass, Object value) {
         isInstanceOf(theClass,value,null);
-	}
+    }
 
     /**
      * Check that the object is an instance of the specified Class
@@ -341,17 +341,17 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If value is null
      */
-	public static final void isInstanceOf(Class theClass, Object value, String message) {
+    public static final void isInstanceOf(Class theClass, Object value, String message) {
         isNotNull(value);
-	    if( ! theClass.isInstance(value) ) {
+        if( ! theClass.isInstance(value) ) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.isInstanceOf", theClass.getName(),value.getClass().getName()); //$NON-NLS-1$
-	        throw new IllegalArgumentException(msg);
-	    }
-	}
+            throw new IllegalArgumentException(msg);
+        }
+    }
 
-	// ########################## COLLECTION METHODS ###################################
+    // ########################## COLLECTION METHODS ###################################
 
     /**
      * Check that the collection is not empty
@@ -494,14 +494,14 @@ public class ArgCheck {
      * @throws IllegalArgumentException If collection is null or doesn't contain value
      */
     public static final void contains(Collection collection, Object value, String message) {
-		isNotNull(collection);
-		if(! collection.contains(value)) {
+        isNotNull(collection);
+        if(! collection.contains(value)) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.contains"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-		}
-	}
+        }
+    }
 
     /**
      * Check that the map contains the key
@@ -509,9 +509,9 @@ public class ArgCheck {
      * @param key Key to check for, may be null
      * @throws IllegalArgumentException If map  is null or doesn't contain key
      */
-	public static final void containsKey(Map map, Object key) {
-	    containsKey(map, key, null);
-	}
+    public static final void containsKey(Map map, Object key) {
+        containsKey(map, key, null);
+    }
 
     /**
      * Check that the map contains the key
@@ -520,14 +520,14 @@ public class ArgCheck {
      * @param message Exception message if check fails
      * @throws IllegalArgumentException If map  is null or doesn't contain key
      */
-	public static final void containsKey(Map map, Object key, String message) {
-		isNotNull(map);
-		if(! map.containsKey(key)) {
+    public static final void containsKey(Map map, Object key, String message) {
+        isNotNull(map);
+        if(! map.containsKey(key)) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("ArgCheck.containsKey"); //$NON-NLS-1$
             throw new IllegalArgumentException(msg);
-		}
-	}
+        }
+    }
 
 }

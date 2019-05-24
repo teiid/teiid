@@ -40,7 +40,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     private ArrayList<VDBImportMetadata> importedVDBs = new ArrayList<VDBImportMetadata>();
 
     public DeploymentBasedDatabaseStore(VDBRepository vdbRepo) {
-    	this.vdbRepo = vdbRepo;
+        this.vdbRepo = vdbRepo;
     }
 
     @Override
@@ -49,17 +49,17 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
     }
 
     protected boolean shouldValidateDatabaseBeforeDeploy() {
-    	return false;
+        return false;
     }
 
     public VDBMetaData getVDBMetadata(String contents) {
-    	StringReader reader = new StringReader(contents);
-    	try {
+        StringReader reader = new StringReader(contents);
+        try {
             startEditing(false);
             this.setMode(Mode.DATABASE_STRUCTURE);
             QueryParser.getQueryParser().parseDDL(this, new BufferedReader(reader));
         } finally {
-        	reader.close();
+            reader.close();
             stopEditing();
         }
 
@@ -71,7 +71,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         }
 
         for (VDBImportMetadata vid : this.importedVDBs) {
-        	vdb.getVDBImports().add(vid);
+            vdb.getVDBImports().add(vid);
         }
 
         vdb.addProperty(VDBMetaData.TEIID_DDL, contents);
@@ -79,26 +79,26 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         return vdb;
     }
 
-	@Override
+    @Override
     public void importSchema(String schemaName, String serverType, String serverName, String foreignSchemaName,
             List<String> includeTables, List<String> excludeTables, Map<String, String> properties) {
-	    if (getSchema(schemaName) == null) {
-	        throw new AssertionError(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40167, schemaName));
-	    }
-	    if (!assertInEditMode(Mode.SCHEMA)) {
+        if (getSchema(schemaName) == null) {
+            throw new AssertionError(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40167, schemaName));
+        }
+        if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-	}
+    }
 
-	@Override
-	public void importDatabase(String dbName, String version, boolean importPolicies) {
-	    if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
-	        return;
-	    }
-		VDBImportMetadata db = new VDBImportMetadata();
-		db.setName(dbName);
-		db.setVersion(version);
-		db.setImportDataPolicies(importPolicies);
-		this.importedVDBs.add(db);
-	}
+    @Override
+    public void importDatabase(String dbName, String version, boolean importPolicies) {
+        if (!assertInEditMode(Mode.DATABASE_STRUCTURE)) {
+            return;
+        }
+        VDBImportMetadata db = new VDBImportMetadata();
+        db.setName(dbName);
+        db.setVersion(version);
+        db.setImportDataPolicies(importPolicies);
+        this.importedVDBs.add(db);
+    }
 }

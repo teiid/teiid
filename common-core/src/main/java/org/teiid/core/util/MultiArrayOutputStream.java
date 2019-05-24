@@ -28,79 +28,79 @@ import java.util.Arrays;
  */
 public class MultiArrayOutputStream extends OutputStream {
 
-	private byte bufferIndex;
-	private int index;
-	private int count;
-	private byte[][] bufs = new byte[15][];
+    private byte bufferIndex;
+    private int index;
+    private int count;
+    private byte[][] bufs = new byte[15][];
 
-	public MultiArrayOutputStream(int initialSize) {
-		bufs[0] = new byte[initialSize];
-	}
+    public MultiArrayOutputStream(int initialSize) {
+        bufs[0] = new byte[initialSize];
+    }
 
-	public void reset(int newIndex) {
-		Assertion.assertTrue(newIndex < bufs[0].length);
-		while (bufferIndex > 0) {
-			bufs[bufferIndex--] = null;
-		}
-		count = index = newIndex;
-	}
-
-	@Override
-	public void write(int b) throws IOException {
-		int newIndex = index + 1;
-        byte[] buf = bufs[bufferIndex];
-		if (newIndex > buf.length) {
-        	buf = bufs[++bufferIndex] = new byte[buf.length << 1];
-        	buf[0] = (byte)b;
-        	index = 1;
-        } else {
-        	buf[index] = (byte)b;
-        	index = newIndex;
+    public void reset(int newIndex) {
+        Assertion.assertTrue(newIndex < bufs[0].length);
+        while (bufferIndex > 0) {
+            bufs[bufferIndex--] = null;
         }
-		count++;
-	}
+        count = index = newIndex;
+    }
 
-	@Override
-	public void write(byte[] b, int off, int len) throws IOException {
+    @Override
+    public void write(int b) throws IOException {
+        int newIndex = index + 1;
+        byte[] buf = bufs[bufferIndex];
+        if (newIndex > buf.length) {
+            buf = bufs[++bufferIndex] = new byte[buf.length << 1];
+            buf[0] = (byte)b;
+            index = 1;
+        } else {
+            buf[index] = (byte)b;
+            index = newIndex;
+        }
+        count++;
+    }
+
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
         int newIndex = index + len;
         byte[] buf = bufs[bufferIndex];
-		if (newIndex > buf.length) {
-        	int copyLen = Math.min(buf.length - index, len);
-        	if (copyLen > 0) {
-        		System.arraycopy(b, off, buf, index, copyLen);
-        	}
-        	int to = off + len;
-        	int nextIndex = len - copyLen;
-        	int diff = (buf.length << 1) - nextIndex;
-        	if (diff > 0) {
-        		to += diff;
-        	}
-        	bufs[++bufferIndex] = Arrays.copyOfRange(b, off + copyLen, to);
-        	index = nextIndex;
+        if (newIndex > buf.length) {
+            int copyLen = Math.min(buf.length - index, len);
+            if (copyLen > 0) {
+                System.arraycopy(b, off, buf, index, copyLen);
+            }
+            int to = off + len;
+            int nextIndex = len - copyLen;
+            int diff = (buf.length << 1) - nextIndex;
+            if (diff > 0) {
+                to += diff;
+            }
+            bufs[++bufferIndex] = Arrays.copyOfRange(b, off + copyLen, to);
+            index = nextIndex;
         } else {
-        	System.arraycopy(b, off, buf, index, len);
-        	index = newIndex;
+            System.arraycopy(b, off, buf, index, len);
+            index = newIndex;
         }
-		count += len;
-	}
+        count += len;
+    }
 
-	public void writeTo(DataOutput out) throws IOException {
-		for (byte i = 0; i <= bufferIndex; i++) {
-    		byte[] b = bufs[i];
-    		out.write(b, 0, bufferIndex == i?index:b.length);
-    	}
-	}
+    public void writeTo(DataOutput out) throws IOException {
+        for (byte i = 0; i <= bufferIndex; i++) {
+            byte[] b = bufs[i];
+            out.write(b, 0, bufferIndex == i?index:b.length);
+        }
+    }
 
-	public int getCount() {
-		return count;
-	}
+    public int getCount() {
+        return count;
+    }
 
-	public byte[][] getBuffers() {
-		return bufs;
-	}
+    public byte[][] getBuffers() {
+        return bufs;
+    }
 
-	public int getIndex() {
-		return index;
-	}
+    public int getIndex() {
+        return index;
+    }
 
 }

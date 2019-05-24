@@ -33,20 +33,20 @@ import com.sforce.soap.partner.PartnerConnection;
 @SuppressWarnings("nls")
 public class TestSalesforceConnectionImpl {
 
-	@Test public void testGetDeleted() throws Exception {
-		PartnerConnection pc = Mockito.mock(PartnerConnection.class);
-		GetDeletedResult gdr = new GetDeletedResult();
-		Calendar c = Calendar.getInstance();
-		gdr.setEarliestDateAvailable(c);
-		gdr.setLatestDateCovered(c);
-		DeletedRecord dr = new DeletedRecord();
-		dr.setDeletedDate(c);
-		dr.setId("id");
-		gdr.setDeletedRecords(new DeletedRecord[] {dr});
-		Mockito.stub(pc.getDeleted("x", null, null)).toReturn(gdr);
-		SalesforceConnectionImpl sfci = new SalesforceConnectionImpl(pc);
-		DeletedResult result = sfci.getDeleted("x", null, null);
-		assertEquals(1, result.getResultRecords().size());
-	}
+    @Test public void testGetDeleted() throws Exception {
+        PartnerConnection pc = Mockito.mock(PartnerConnection.class);
+        GetDeletedResult gdr = new GetDeletedResult();
+        Calendar c = Calendar.getInstance();
+        gdr.setEarliestDateAvailable(c);
+        gdr.setLatestDateCovered(c);
+        DeletedRecord dr = new DeletedRecord();
+        dr.setDeletedDate(c);
+        dr.setId("id");
+        gdr.setDeletedRecords(new DeletedRecord[] {dr});
+        Mockito.stub(pc.getDeleted("x", null, null)).toReturn(gdr);
+        SalesforceConnectionImpl sfci = new SalesforceConnectionImpl(pc);
+        DeletedResult result = sfci.getDeleted("x", null, null);
+        assertEquals(1, result.getResultRecords().size());
+    }
 
 }

@@ -21,140 +21,140 @@ import java.util.List;
 
 public interface DataPolicy {
 
-	public enum Context {
-		CREATE,
-		DROP,
-		QUERY,
-		INSERT,
-		MERGE,
-		UPDATE,
-		DELETE,
-		FUNCTION,
-		ALTER,
-		STORED_PROCEDURE,
-		METADATA;
+    public enum Context {
+        CREATE,
+        DROP,
+        QUERY,
+        INSERT,
+        MERGE,
+        UPDATE,
+        DELETE,
+        FUNCTION,
+        ALTER,
+        STORED_PROCEDURE,
+        METADATA;
     }
 
-	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};
+    public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};
 
-	public enum ResourceType {DATABASE, SCHEMA, PROCEDURE, TABLE, FUNCTION, COLUMN, LANGUAGE};
+    public enum ResourceType {DATABASE, SCHEMA, PROCEDURE, TABLE, FUNCTION, COLUMN, LANGUAGE};
 
-	/**
-	 * Get the Name of the Data Policy
-	 * @return
-	 */
-	String getName();
+    /**
+     * Get the Name of the Data Policy
+     * @return
+     */
+    String getName();
 
-	/**
-	 * Get the description of the Data Policy
-	 * @return
-	 */
-	String getDescription();
+    /**
+     * Get the description of the Data Policy
+     * @return
+     */
+    String getDescription();
 
-	/**
-	 * Get the List of Permissions for this Data Policy.
-	 * @return
-	 */
-	List<DataPermission> getPermissions();
+    /**
+     * Get the List of Permissions for this Data Policy.
+     * @return
+     */
+    List<DataPermission> getPermissions();
 
-	/**
-	 * Mapped Container Role names for this Data Policy
-	 * @return
-	 */
-	List<String> getMappedRoleNames();
+    /**
+     * Mapped Container Role names for this Data Policy
+     * @return
+     */
+    List<String> getMappedRoleNames();
 
-	/**
-	 * If the policy applies to any authenticated user
-	 * @return
-	 */
-	boolean isAnyAuthenticated();
+    /**
+     * If the policy applies to any authenticated user
+     * @return
+     */
+    boolean isAnyAuthenticated();
 
-	/**
-	 * If the policy grants all permissions
-	 * @return
-	 */
-	boolean isGrantAll();
+    /**
+     * If the policy grants all permissions
+     * @return
+     */
+    boolean isGrantAll();
 
-	/**
-	 * If the policy allows for temporary table usage
-	 * @return
-	 */
-	Boolean isAllowCreateTemporaryTables();
+    /**
+     * If the policy allows for temporary table usage
+     * @return
+     */
+    Boolean isAllowCreateTemporaryTables();
 
-	interface DataPermission {
-		/**
-		 * Get the Resource Name that the Data Permission represents
-		 * @return
-		 */
-		String getResourceName();
+    interface DataPermission {
+        /**
+         * Get the Resource Name that the Data Permission represents
+         * @return
+         */
+        String getResourceName();
 
-		/**
-		 * Get the type of resource the Data Permission is represents
-		 * @return
-		 */
-		ResourceType getResourceType();
+        /**
+         * Get the type of resource the Data Permission is represents
+         * @return
+         */
+        ResourceType getResourceType();
 
-		/**
-		 * Is "CREATE" allowed?
-		 * @return
-		 */
-		Boolean getAllowCreate();
+        /**
+         * Is "CREATE" allowed?
+         * @return
+         */
+        Boolean getAllowCreate();
 
-		/**
-		 * Is "SELECT" allowed?
-		 * @return
-		 */
-		Boolean getAllowRead();
+        /**
+         * Is "SELECT" allowed?
+         * @return
+         */
+        Boolean getAllowRead();
 
-		/**
-		 * Is "INSERT/UPDATE" allowed?
-		 * @return
-		 */
-		Boolean getAllowUpdate();
+        /**
+         * Is "INSERT/UPDATE" allowed?
+         * @return
+         */
+        Boolean getAllowUpdate();
 
-		/**
-		 * Is "DELETE" allowed?
-		 * @return
-		 */
-		Boolean getAllowDelete();
+        /**
+         * Is "DELETE" allowed?
+         * @return
+         */
+        Boolean getAllowDelete();
 
-		/**
-		 * Is "ALTER" allowed?
-		 * @return
-		 */
-		Boolean getAllowAlter();
+        /**
+         * Is "ALTER" allowed?
+         * @return
+         */
+        Boolean getAllowAlter();
 
-		/**
-		 * Is "EXECUTE" allowed?
-		 * @return
-		 */
-		Boolean getAllowExecute();
+        /**
+         * Is "EXECUTE" allowed?
+         * @return
+         */
+        Boolean getAllowExecute();
 
-		/**
-		 * Is "LANGUAGE" allowed?
-		 * @return
-		 */
-		Boolean getAllowLanguage();
+        /**
+         * Is "LANGUAGE" allowed?
+         * @return
+         */
+        Boolean getAllowLanguage();
 
-		/**
-		 * The condition string
-		 */
-		String getCondition();
+        /**
+         * The condition string
+         */
+        String getCondition();
 
-		/**
-		 * The column mask string
-		 */
-		String getMask();
+        /**
+         * The column mask string
+         */
+        String getMask();
 
-		/**
-		 * The column mask order
-		 */
-		Integer getOrder();
+        /**
+         * The column mask order
+         */
+        Integer getOrder();
 
-		/**
-		 * If the condition acts as a constraint.
-		 */
-		Boolean getConstraint();
+        /**
+         * If the condition acts as a constraint.
+         */
+        Boolean getConstraint();
 
-	}
+    }
 }

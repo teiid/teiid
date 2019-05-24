@@ -24,10 +24,10 @@ import org.junit.Test;
 
 public class TestModeShapeCapabilities {
 
-	@Test public void testUseAnsiJoin() {
-		ModeShapeExecutionFactory msCapabilities = new ModeShapeExecutionFactory();
-		assertTrue(msCapabilities.useAnsiJoin());
-	}
+    @Test public void testUseAnsiJoin() {
+        ModeShapeExecutionFactory msCapabilities = new ModeShapeExecutionFactory();
+        assertTrue(msCapabilities.useAnsiJoin());
+    }
 
 
 }

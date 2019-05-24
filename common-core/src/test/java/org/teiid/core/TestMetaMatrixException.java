@@ -58,8 +58,8 @@ public class TestMetaMatrixException {
 
     }
     public static enum Event implements BundleUtil.Event {
-    	Code,
-    	propertyValuePhrase,
+        Code,
+        propertyValuePhrase,
     }
     @Test public void testMetaMatrixExceptionWithCodeAndMessage() {
         final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$

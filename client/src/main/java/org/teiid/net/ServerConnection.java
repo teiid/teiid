@@ -22,24 +22,24 @@ import org.teiid.client.security.LogonResult;
 
 public interface ServerConnection {
 
-	public static final int PING_INTERVAL = 120000;
+    public static final int PING_INTERVAL = 120000;
 
-	<T> T getService(Class<T> iface);
+    <T> T getService(Class<T> iface);
 
-	void close();
+    void close();
 
-	boolean isOpen(long msToTest);
+    boolean isOpen(long msToTest);
 
-	LogonResult getLogonResult();
+    LogonResult getLogonResult();
 
-	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
+    boolean isSameInstance(ServerConnection conn) throws CommunicationException;
 
-	void authenticate() throws ConnectionException, CommunicationException;
+    void authenticate() throws ConnectionException, CommunicationException;
 
-	boolean supportsContinuous();
+    boolean supportsContinuous();
 
-	boolean isLocal();
+    boolean isLocal();
 
-	String getServerVersion();
+    String getServerVersion();
 
 }

@@ -69,21 +69,21 @@ public class TestProcedureResolving {
         helpFailUpdateProcedure(procedure, userUpdateStr, procedureType, null);
     }
 
-	private void helpFailUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType, String msg) {
+    private void helpFailUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType, String msg) {
         // resolve
         try {
-    		helpResolveUpdateProcedure(procedure, userUpdateStr, procedureType);
+            helpResolveUpdateProcedure(procedure, userUpdateStr, procedureType);
             fail("Expected a QueryResolverException but got none."); //$NON-NLS-1$
         } catch(QueryResolverException ex) {
-        	if (msg != null) {
+            if (msg != null) {
                 assertEquals(msg, ex.getMessage());
             }
         } catch (TeiidComponentException e) {
-        	throw new RuntimeException(e);
-		} catch (QueryParserException e) {
-			throw new RuntimeException(e);
-		}
-	}
+            throw new RuntimeException(e);
+        } catch (QueryParserException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test public void testDefect13029_CorrectlySetUpdateProcedureTempGroupIDs() throws Exception {
         StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
@@ -120,39 +120,39 @@ public class TestProcedureResolving {
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
     }
 
-	private TriggerAction helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
+    private TriggerAction helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
-		return (TriggerAction) resolveProcedure(userUpdateStr, metadata);
-	}
+        return (TriggerAction) resolveProcedure(userUpdateStr, metadata);
+    }
 
-	private Command resolveProcedure(String userUpdateStr,
-			QueryMetadataInterface metadata) throws QueryParserException,
-			QueryResolverException, TeiidComponentException,
-			QueryMetadataException {
-		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
+    private Command resolveProcedure(String userUpdateStr,
+            QueryMetadataInterface metadata) throws QueryParserException,
+            QueryResolverException, TeiidComponentException,
+            QueryMetadataException {
+        ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
         QueryResolver.resolveCommand(userCommand, metadata);
         metadata = new TempMetadataAdapter(metadata, userCommand.getTemporaryMetadata());
         return QueryResolver.expandCommand(userCommand, metadata, null);
-	}
+    }
 
-	private void helpResolveException(String userUpdateStr, QueryMetadataInterface metadata, String msg) throws QueryParserException, TeiidComponentException {
-		try {
-			helpResolve(userUpdateStr, metadata);
-			fail();
-		} catch (QueryResolverException e) {
-			assertEquals(msg, e.getMessage());
-		}
-	}
+    private void helpResolveException(String userUpdateStr, QueryMetadataInterface metadata, String msg) throws QueryParserException, TeiidComponentException {
+        try {
+            helpResolve(userUpdateStr, metadata);
+            fail();
+        } catch (QueryResolverException e) {
+            assertEquals(msg, e.getMessage());
+        }
+    }
 
-	private Command helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
-		return resolveProcedure(userUpdateStr, metadata);
-	}
+    private Command helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
+        return resolveProcedure(userUpdateStr, metadata);
+    }
 
     /**
      *  Constants will now auto resolve if they are consistently representable in the target type
      */
     @Test public void testDefect23257() throws Exception{
-    	CreateProcedureCommand command = (CreateProcedureCommand) helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        CreateProcedureCommand command = (CreateProcedureCommand) helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
 
         CommandStatement cs = (CommandStatement)command.getBlock().getStatements().get(1);
 
@@ -212,8 +212,8 @@ public class TestProcedureResolving {
 
     }
 
-	// variable resolution, variable used in if statement, variable compared against
-	// different datatype element
+    // variable resolution, variable used in if statement, variable compared against
+    // different datatype element
     @Test public void testCreateUpdateProcedure4() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -224,11 +224,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variable used in if statement, invalid operation on variable
+    // variable resolution, variable used in if statement, invalid operation on variable
     @Test public void testCreateUpdateProcedure5() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -239,12 +239,12 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variables declared in different blocks local variables
-	// should not override
+    // variable resolution, variables declared in different blocks local variables
+    // should not override
     @Test public void testCreateUpdateProcedure6() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -258,12 +258,12 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE, "Variable var1 was previously declared."); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE, "Variable var1 was previously declared."); //$NON-NLS-1$
     }
 
-	// variable resolution, variables declared in different blocks local variables
-	// inner block using outer block variables
+    // variable resolution, variables declared in different blocks local variables
+    // inner block using outer block variables
     @Test public void testCreateUpdateProcedure7() throws Exception {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -277,12 +277,12 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variables declared in different blocks local variables
-	// outer block cannot use inner block variables
+    // variable resolution, variables declared in different blocks local variables
+    // outer block cannot use inner block variables
     @Test public void testCreateUpdateProcedure8() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -297,12 +297,12 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variables declared in different blocks local variables
-	// should override, outer block variables still valid afetr inner block is declared
+    // variable resolution, variables declared in different blocks local variables
+    // should override, outer block variables still valid afetr inner block is declared
     @Test public void testCreateUpdateProcedure9() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -317,11 +317,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using declare variable that has parts
+    // using declare variable that has parts
     @Test public void testCreateUpdateProcedure24() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -330,11 +330,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using declare variable is qualified
+    // using declare variable is qualified
     @Test public void testCreateUpdateProcedure26() throws Exception {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -343,11 +343,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using declare variable is qualified but has more parts
+    // using declare variable is qualified but has more parts
     @Test public void testCreateUpdateProcedure27() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -356,11 +356,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using a variable that has not been declared in an assignment stmt
+    // using a variable that has not been declared in an assignment stmt
     @Test public void testCreateUpdateProcedure28() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -369,11 +369,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using a variable that has not been declared in an assignment stmt
+    // using a variable that has not been declared in an assignment stmt
     @Test public void testCreateUpdateProcedure29() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -382,11 +382,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using invalid function in assignment expr
+    // using invalid function in assignment expr
     @Test public void testCreateUpdateProcedure30() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -396,11 +396,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using invalid function in assignment expr
+    // using invalid function in assignment expr
     @Test public void testCreateUpdateProcedure31() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -410,11 +410,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// using a variable being used inside a subcomand
+    // using a variable being used inside a subcomand
     @Test public void testCreateUpdateProcedure32() throws Exception {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -424,13 +424,13 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variables declared in different blocks local variables
-	// should override, outer block variables still valid afetr inner block is declared
-	// fails as variable being compared against incorrect type
+    // variable resolution, variables declared in different blocks local variables
+    // should override, outer block variables still valid afetr inner block is declared
+    // fails as variable being compared against incorrect type
     @Test public void testCreateUpdateProcedure33() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -445,11 +445,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// physical elements used on criteria of the if statement
+    // physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure34() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -462,11 +462,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE, "TEIID31119 Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE, "TEIID31119 Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
     }
 
-	// physical elements used on criteria of the if statement
+    // physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure36() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -479,11 +479,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// physical elements used on criteria of the if statement
+    // physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure39() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -496,40 +496,40 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// resolving AssignmentStatement, variable type and assigned type
-	// do not match and no implicit conversion available
-	@Test public void testCreateUpdateProcedure53() {
-		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = INPUTS.e4;"; //$NON-NLS-1$
-		procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
+    // resolving AssignmentStatement, variable type and assigned type
+    // do not match and no implicit conversion available
+    @Test public void testCreateUpdateProcedure53() {
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "var1 = INPUTS.e4;"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
 
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
+    }
 
-	// resolving AssignmentStatement, variable type and assigned type
-	// do not match, but implicit conversion available
-	@Test public void testCreateUpdateProcedure54() throws Exception {
-		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
-		procedure = procedure + "var1 = 1+1;"; //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
+    // resolving AssignmentStatement, variable type and assigned type
+    // do not match, but implicit conversion available
+    @Test public void testCreateUpdateProcedure54() throws Exception {
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "var1 = 1+1;"; //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
 
-		String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
-	}
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
+    }
 
     @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
         // Tests that the function params are resolved before the function for assignment statements
@@ -545,7 +545,7 @@ public class TestProcedureResolving {
         helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "TEIID31118 Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
     }
 
-	// addresses Cases 4624.  Before change to UpdateProcedureResolver,
+    // addresses Cases 4624.  Before change to UpdateProcedureResolver,
     // this case failed with assertion exception.
     @Test public void testCase4624() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
@@ -563,7 +563,7 @@ public class TestProcedureResolving {
         helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "Group does not exist: Bert_MAP.BERT3.RACK"); //$NON-NLS-1$
     }
 
-	// addresses Cases 5474.
+    // addresses Cases 5474.
     @Test public void testCase5474() throws Exception {
         String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -574,7 +574,7 @@ public class TestProcedureResolving {
         TestResolver.helpResolve(procedure, RealMetadataFactory.example1Cached());
     }
 
-	// addresses Cases 5474.
+    // addresses Cases 5474.
     @Test public void testProcWithReturn() throws Exception {
         String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -595,7 +595,7 @@ public class TestProcedureResolving {
         TestResolver.helpResolve(procedure, RealMetadataFactory.example1Cached());
     }
 
-	/*@Test public void testCommandUpdatingCountFromLastStatement() throws Exception {
+    /*@Test public void testCommandUpdatingCountFromLastStatement() throws Exception {
         String procedure = "CREATE VIRTUAL PROCEDURE  \n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "declare integer x = convert(pm1.sq1.in, integer) + 5;\n"; //$NON-NLS-1$
@@ -606,7 +606,7 @@ public class TestProcedureResolving {
         Command command = helpResolve(helpParse("exec pm1.sq1(1)"), metadata, null); //$NON-NLS-1$
 
         assertEquals(1, command.updatingModelCount(new TempMetadataAdapter(metadata, new TempMetadataStore())));
-	}*/
+    }*/
 
     //baseline test to ensure that a declare assignment cannot contain the declared variable
     @Test public void testDeclareStatement() {
@@ -656,7 +656,7 @@ public class TestProcedureResolving {
         helpFailUpdateProcedure(procedure.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution
+    // variable resolution
     @Test public void testCreateUpdateProcedure1() throws Exception {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -667,11 +667,11 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// variable resolution, variable used in if statement
+    // variable resolution, variable used in if statement
     @Test public void testCreateUpdateProcedure3() throws Exception {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -683,8 +683,8 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpResolveUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpResolveUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
     @Test public void testSelectIntoInProc() throws Exception {
@@ -935,23 +935,23 @@ public class TestProcedureResolving {
         helpResolveUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE);
     }
 
-	/**
-	 * delete procedures should not reference input or changing vars.
-	 */
-	@Test public void testDefect16451() {
-		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+    /**
+     * delete procedures should not reference input or changing vars.
+     */
+    @Test public void testDefect16451() {
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure += "BEGIN ATOMIC\n"; //$NON-NLS-1$
         procedure += "Select pm1.g1.e2 from pm1.g1 where e1 = NEW.e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
 
         String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.DELETE, "TEIID31119 Symbol \"NEW\".e1 is specified with an unknown group context"); //$NON-NLS-1$
-	}
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.DELETE, "TEIID31119 Symbol \"NEW\".e1 is specified with an unknown group context"); //$NON-NLS-1$
+    }
 
     @Test public void testInvalidVirtualProcedure3() throws Exception {
-    	helpResolveException("EXEC pm1.vsp18()", RealMetadataFactory.example1Cached(), "Group does not exist: temptable"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp18()", RealMetadataFactory.example1Cached(), "Group does not exist: temptable"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // variable resolution, variable compared against
@@ -965,8 +965,8 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
     }
 
     // special variable INPUT compared against invalid type
@@ -980,8 +980,8 @@ public class TestProcedureResolving {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e2' with expected type integer to expression '\"new\".e1'"); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userUpdateStr,
+                 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e2' with expected type integer to expression '\"new\".e1'"); //$NON-NLS-1$
     }
 
     @Test public void testVirtualProcedure() throws Exception {
@@ -998,7 +998,7 @@ public class TestProcedureResolving {
 
     //cursor starts with "#" Defect14924
     @Test public void testVirtualProcedureInvalid1() throws Exception {
-    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "TEIID30125 Cursor or exception group names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "TEIID30125 Cursor or exception group names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testVirtualProcedureWithOrderBy() throws Exception {
@@ -1042,8 +1042,8 @@ public class TestProcedureResolving {
     }
 
     @Test public void testOptionalParams() throws Exception {
-    	String ddl = "create foreign procedure proc (x integer, y string);\n";
-    	TransformationMetadata tm = createMetadata(ddl);
+        String ddl = "create foreign procedure proc (x integer, y string);\n";
+        TransformationMetadata tm = createMetadata(ddl);
 
         String sql = "call proc (1)"; //$NON-NLS-1$
 
@@ -1058,13 +1058,13 @@ public class TestProcedureResolving {
         assertEquals(new Constant("a", DataTypeManager.DefaultDataClasses.STRING), sp.getParameter(2).getExpression());
     }
 
-	public static TransformationMetadata createMetadata(String ddl) throws Exception {
-		return RealMetadataFactory.fromDDL(ddl, "test", "test");
-	}
+    public static TransformationMetadata createMetadata(String ddl) throws Exception {
+        return RealMetadataFactory.fromDDL(ddl, "test", "test");
+    }
 
     @Test public void testOptionalParams1() throws Exception {
-    	String ddl = "create foreign procedure proc (x integer, y string NOT NULL, z integer);\n";
-    	TransformationMetadata tm = createMetadata(ddl);
+        String ddl = "create foreign procedure proc (x integer, y string NOT NULL, z integer);\n";
+        TransformationMetadata tm = createMetadata(ddl);
 
         String sql = "call proc (1, 'a')"; //$NON-NLS-1$
 
@@ -1074,8 +1074,8 @@ public class TestProcedureResolving {
     }
 
     @Test public void testVarArgs() throws Exception {
-    	String ddl = "create foreign procedure proc (x integer, VARIADIC z integer) returns (x string);\n";
-    	TransformationMetadata tm = createMetadata(ddl);
+        String ddl = "create foreign procedure proc (x integer, VARIADIC z integer) returns (x string);\n";
+        TransformationMetadata tm = createMetadata(ddl);
         String sql = "call proc (1, 2, 3)"; //$NON-NLS-1$
 
         StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
@@ -1103,10 +1103,10 @@ public class TestProcedureResolving {
     }
 
     @Test public void testVarArgs1() throws Exception {
-    	String ddl = "create foreign procedure proc (VARIADIC z integer) returns (x string);\n";
-    	TransformationMetadata tm = createMetadata(ddl);
+        String ddl = "create foreign procedure proc (VARIADIC z integer) returns (x string);\n";
+        TransformationMetadata tm = createMetadata(ddl);
 
-    	String sql = "call proc ()"; //$NON-NLS-1$
+        String sql = "call proc ()"; //$NON-NLS-1$
         StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
         assertEquals("EXEC proc()", sp.toString());
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
@@ -1120,10 +1120,10 @@ public class TestProcedureResolving {
     }
 
     @Test public void testVarArgs2() throws Exception {
-    	String ddl = "create foreign procedure proc (VARIADIC z object) returns (x string);\n";
-    	TransformationMetadata tm = createMetadata(ddl);
+        String ddl = "create foreign procedure proc (VARIADIC z object) returns (x string);\n";
+        TransformationMetadata tm = createMetadata(ddl);
 
-    	String sql = "call proc ()"; //$NON-NLS-1$
+        String sql = "call proc ()"; //$NON-NLS-1$
         StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
         assertEquals("EXEC proc()", sp.toString());
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
@@ -1138,7 +1138,7 @@ public class TestProcedureResolving {
     }
 
     @Test public void testAnonBlock() throws Exception {
-    	String sql = "begin select 1 as something; end"; //$NON-NLS-1$
+        String sql = "begin select 1 as something; end"; //$NON-NLS-1$
         CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         assertEquals(1, sp.getResultSetColumns().size());
         assertEquals("something", Symbol.getName(sp.getResultSetColumns().get(0)));
@@ -1147,16 +1147,16 @@ public class TestProcedureResolving {
     }
 
     @Test public void testAnonBlockNoResult() throws Exception {
-    	String sql = "begin select 1 as something without return; end"; //$NON-NLS-1$
+        String sql = "begin select 1 as something without return; end"; //$NON-NLS-1$
         CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         assertEquals(0, sp.getProjectedSymbols().size());
         assertFalse(sp.returnsResultSet());
     }
 
     @Test public void testReturnAndResultSet() throws Exception {
-    	String ddl = "CREATE FOREIGN PROCEDURE proc (OUT param STRING RESULT) RETURNS TABLE (a INTEGER, b STRING);"; //$NON-NLS-1$
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
-    	StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve("exec proc()", tm);
+        String ddl = "CREATE FOREIGN PROCEDURE proc (OUT param STRING RESULT) RETURNS TABLE (a INTEGER, b STRING);"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve("exec proc()", tm);
         assertEquals(2, sp.getProjectedSymbols().size());
         assertEquals("y.proc.b", sp.getProjectedSymbols().get(1).toString());
         assertTrue(sp.returnsResultSet());

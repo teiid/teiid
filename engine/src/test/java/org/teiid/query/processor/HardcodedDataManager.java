@@ -64,12 +64,12 @@ public class HardcodedDataManager implements
     private LanguageBridgeFactory lbf;
 
     public HardcodedDataManager() {
-    	this(true);
+        this(true);
     }
 
     public HardcodedDataManager(QueryMetadataInterface metadata) {
-    	this(true);
-    	this.lbf = new LanguageBridgeFactory(metadata);
+        this(true);
+        this.lbf = new LanguageBridgeFactory(metadata);
     }
 
     public HardcodedDataManager(QueryMetadataInterface metadata, CommandContext context, SourceCapabilities capabilities) {
@@ -79,7 +79,7 @@ public class HardcodedDataManager implements
     }
 
     public HardcodedDataManager(boolean mustRegisterCommands) {
-    	this.mustRegisterCommands = mustRegisterCommands;
+        this.mustRegisterCommands = mustRegisterCommands;
     }
 
     public LanguageBridgeFactory getLanguageBridgeFactory() {
@@ -91,13 +91,13 @@ public class HardcodedDataManager implements
     }
 
     public void clearData() {
-    	this.data.clear();
-    	this.commandHistory.clear();
+        this.data.clear();
+        this.commandHistory.clear();
     }
 
     public void setBlockOnce(boolean blockOnce) {
-		this.blockOnce = blockOnce;
-	}
+        this.blockOnce = blockOnce;
+    }
 
     /**
      * Set of model names that are valid.  Invalid ones will throw an error.
@@ -118,8 +118,8 @@ public class HardcodedDataManager implements
     }
 
     public List<org.teiid.language.Command> getPushdownCommands() {
-		return pushdownCommands;
-	}
+        return pushdownCommands;
+    }
 
     /**
      * @see org.teiid.query.processor.ProcessorDataManager#lookupCodeValue(org.teiid.query.util.CommandContext, java.lang.String, java.lang.String, java.lang.String, java.lang.Object)
@@ -152,15 +152,15 @@ public class HardcodedDataManager implements
 
         String commandString = null;
         if (lbf == null) {
-        	if (command instanceof BatchedUpdateCommand && fullBatchedUpdate) {
-        		commandString = ((BatchedUpdateCommand)command).getStringForm(true);
-        	} else {
-        		commandString = command.toString();
-        	}
+            if (command instanceof BatchedUpdateCommand && fullBatchedUpdate) {
+                commandString = ((BatchedUpdateCommand)command).getStringForm(true);
+            } else {
+                commandString = command.toString();
+            }
         } else {
-        	org.teiid.language.Command cmd = lbf.translate(command);
-        	this.pushdownCommands.add(cmd);
-        	commandString = cmd.toString();
+            org.teiid.language.Command cmd = lbf.translate(command);
+            this.pushdownCommands.add(cmd);
+            commandString = cmd.toString();
         }
 
         List<?>[] rows = getData(commandString);
@@ -179,7 +179,7 @@ public class HardcodedDataManager implements
 
         FakeTupleSource source = new FakeTupleSource(projectedSymbols, rows);
         if (blockOnce) {
-        	source.setBlockOnce();
+            source.setBlockOnce();
         }
         return source;
     }
@@ -188,20 +188,20 @@ public class HardcodedDataManager implements
         this.mustRegisterCommands = mustRegisterCommands;
     }
 
-	public void clearCodeTables() {
+    public void clearCodeTables() {
 
-	}
+    }
 
-	@Override
-	public EventDistributor getEventDistributor() {
-		return null;
-	}
+    @Override
+    public EventDistributor getEventDistributor() {
+        return null;
+    }
 
-	public void setFullBatchedUpdate(boolean fullBatchedUpdate) {
-		this.fullBatchedUpdate = fullBatchedUpdate;
-	}
+    public void setFullBatchedUpdate(boolean fullBatchedUpdate) {
+        this.fullBatchedUpdate = fullBatchedUpdate;
+    }
 
-	protected List<?>[] getData(String commandString) {
-		return data.get(commandString);
-	}
+    protected List<?>[] getData(String commandString) {
+        return data.get(commandString);
+    }
 }

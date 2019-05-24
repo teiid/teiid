@@ -54,8 +54,8 @@ import org.teiid.query.util.CommandContext;
  */
 public final class RuleRaiseNull implements OptimizerRule {
 
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         List<PlanNode> nodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.NULL);
 
@@ -77,7 +77,7 @@ public final class RuleRaiseNull implements OptimizerRule {
         }
 
         return plan;
-	}
+    }
 
     /**
      * @param nullNode
@@ -182,11 +182,11 @@ public final class RuleRaiseNull implements OptimizerRule {
                 PlanNode nestedSetOp = NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
 
                 if (!isAll) { //ensure that the new child is distinct
-                	if (nestedSetOp != null) {
-                		nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
-                	} else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
-                		parentNode.getFirstChild().addAsParent(NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
-                	}
+                    if (nestedSetOp != null) {
+                        nestedSetOp.setProperty(NodeConstants.Info.USE_ALL, false);
+                    } else if (NodeEditor.findNodePreOrder(parentNode.getFirstChild(), NodeConstants.Types.DUP_REMOVE, NodeConstants.Types.SOURCE) == null) {
+                        parentNode.getFirstChild().addAsParent(NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE));
+                    }
                 }
 
                 if (grandParent == null) {
@@ -219,25 +219,25 @@ public final class RuleRaiseNull implements OptimizerRule {
                 }
                 break; //- the else case could be implemented, but it's a lot of work for little gain, since the null node can't raise higher
             }
-			case NodeConstants.Types.PROJECT:
-			{
-				// check for project into
-				PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+            case NodeConstants.Types.PROJECT:
+            {
+                // check for project into
+                PlanNode upperProject = NodeEditor.findParent(parentNode.getParent(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
 
-				if (upperProject == null
-						|| upperProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
-	                return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-				}
-				break;
-			}
-			case NodeConstants.Types.SOURCE:
-			{
-				PlanNode upperProject = parentNode.getParent();
-				if (upperProject != null && upperProject.getType() == NodeConstants.Types.PROJECT && upperProject.hasProperty(Info.INTO_GROUP)) {
-					break; //an insert plan
-				}
+                if (upperProject == null
+                        || upperProject.getProperty(NodeConstants.Info.INTO_GROUP) == null) {
+                    return raiseNullNode(rootNode, parentNode, nullNode, nodes);
+                }
+                break;
+            }
+            case NodeConstants.Types.SOURCE:
+            {
+                PlanNode upperProject = parentNode.getParent();
+                if (upperProject != null && upperProject.getType() == NodeConstants.Types.PROJECT && upperProject.hasProperty(Info.INTO_GROUP)) {
+                    break; //an insert plan
+                }
                 return raiseNullNode(rootNode, parentNode, nullNode, nodes);
-			}
+            }
             default:
             {
                 return raiseNullNode(rootNode, parentNode, nullNode, nodes);
@@ -296,7 +296,7 @@ public final class RuleRaiseNull implements OptimizerRule {
     }
 
     public String toString() {
-		return "RaiseNull"; //$NON-NLS-1$
-	}
+        return "RaiseNull"; //$NON-NLS-1$
+    }
 
 }

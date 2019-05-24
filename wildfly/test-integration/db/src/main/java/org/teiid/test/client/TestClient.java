@@ -49,8 +49,8 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * <li>based on the results of each query executed, the process will compare the results
  * to the {@link ExpectedResults }.</li>
  * <li>If the {@link TestProperties#PROP_RESULT_MODE} option is set to {@link TestProperties.RESULT_MODES#GENERATE}
- * 	then the process will not perform a comparison, but generate a new set of expected result files that
- * 	can in turn be used as the
+ *     then the process will not perform a comparison, but generate a new set of expected result files that
+ *     can in turn be used as the
  * @author vanhalbert
  *
  */
@@ -58,22 +58,22 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class TestClient  {
 
     public static final SimpleDateFormat TSFORMAT = new SimpleDateFormat(
-	    "HH:mm:ss.SSS"); //$NON-NLS-1$
+        "HH:mm:ss.SSS"); //$NON-NLS-1$
 
 
     private Properties overrides = new Properties();
 
     static {
-	if (System.getProperty(ConfigPropertyNames.CONFIG_FILE ) == null) {
-		System.setProperty(ConfigPropertyNames.CONFIG_FILE,"./ctc_tests/ctc-test.properties");
-	} else {
-	    System.out.println("Config File Set: " + System.getProperty(ConfigPropertyNames.CONFIG_FILE ));
-	}
+    if (System.getProperty(ConfigPropertyNames.CONFIG_FILE ) == null) {
+        System.setProperty(ConfigPropertyNames.CONFIG_FILE,"./ctc_tests/ctc-test.properties");
+    } else {
+        System.out.println("Config File Set: " + System.getProperty(ConfigPropertyNames.CONFIG_FILE ));
+    }
 
-	// the project.loc is used
-	if (System.getProperty("project.loc" ) == null) {
-		System.setProperty("project.loc",".");
-	}
+    // the project.loc is used
+    if (System.getProperty("project.loc" ) == null) {
+        System.setProperty("project.loc",".");
+    }
 
     }
 
@@ -84,21 +84,21 @@ public class TestClient  {
 
     public static void main(String[] args) {
 
-	TestClient tc = new TestClient();
-	tc.runTest();
+    TestClient tc = new TestClient();
+    tc.runTest();
 
 
     }
 
     public void runTest() {
 
-	try {
+    try {
 
-	    runScenario();
+        runScenario();
 
-	} catch (Throwable t) {
-	    t.printStackTrace();
-	}
+    } catch (Throwable t) {
+        t.printStackTrace();
+    }
 
     }
 
@@ -106,149 +106,149 @@ public class TestClient  {
     private void runScenario() throws Exception {
 
 
-	String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
-	if (scenario_file == null) {
-	    throw new TransactionRuntimeException(TestProperties.PROP_SCENARIO_FILE + " property was not defined");
-	}
+    String scenario_file = ConfigPropertyLoader.getInstance().getProperty(TestProperties.PROP_SCENARIO_FILE);
+    if (scenario_file == null) {
+        throw new TransactionRuntimeException(TestProperties.PROP_SCENARIO_FILE + " property was not defined");
+    }
 
-	String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenario_file);
+    String scenario_name = FileUtils.getBaseFileNameWithoutExtension(scenario_file);
 
-	TestLogger.log("Starting scenario " + scenario_name);
+    TestLogger.log("Starting scenario " + scenario_name);
 
-	Properties sc_props = PropertiesUtils.load(scenario_file);
+    Properties sc_props = PropertiesUtils.load(scenario_file);
 
-	// 1st perform substitution on the scenario file based on the config and system properties file
-	// because the next substitution is based on the scenario file
-	Properties sc_updates = getSubstitutedProperties(sc_props);
-	if (!sc_updates.isEmpty()) {
-	    sc_props.putAll(sc_updates);
-	    this.overrides.putAll(sc_props);
+    // 1st perform substitution on the scenario file based on the config and system properties file
+    // because the next substitution is based on the scenario file
+    Properties sc_updates = getSubstitutedProperties(sc_props);
+    if (!sc_updates.isEmpty()) {
+        sc_props.putAll(sc_updates);
+        this.overrides.putAll(sc_props);
 
-	}
-	ConfigPropertyLoader.getInstance().setProperties(sc_props);
+    }
+    ConfigPropertyLoader.getInstance().setProperties(sc_props);
 
-	// 2nd perform substitution on current configuration - which will be based on the config properties file
-	Properties config_updates = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
-	if (!config_updates.isEmpty()) {
-	    this.overrides.putAll(config_updates);
-	    ConfigPropertyLoader.getInstance().setProperties(config_updates);
-	}
-
-
-
-	// update the URL with the vdb that is to be used
-	String url = ConfigPropertyLoader.getInstance().getProperty(DriverConnection.DS_URL);
-	String vdb_name = ConfigPropertyLoader.getInstance().getProperty(DataSourceConnection.DS_DATABASENAME);
-
-	Assert.assertNotNull(DataSourceConnection.DS_DATABASENAME + " property not set, need it for the vdb name", vdb_name);
-	url = StringUtil.replace(url, "${vdb}", vdb_name);
-
-	ConfigPropertyLoader.getInstance().setProperty(DriverConnection.DS_URL, url);
+    // 2nd perform substitution on current configuration - which will be based on the config properties file
+    Properties config_updates = getSubstitutedProperties(ConfigPropertyLoader.getInstance().getProperties());
+    if (!config_updates.isEmpty()) {
+        this.overrides.putAll(config_updates);
+        ConfigPropertyLoader.getInstance().setProperties(config_updates);
+    }
 
 
-	QueryScenario set = ClassFactory.createQueryScenario(scenario_name);
 
-	TransactionContainer tc = getTransactionContainter();
+    // update the URL with the vdb that is to be used
+    String url = ConfigPropertyLoader.getInstance().getProperty(DriverConnection.DS_URL);
+    String vdb_name = ConfigPropertyLoader.getInstance().getProperty(DataSourceConnection.DS_DATABASENAME);
 
-	runTestCase(set,  tc);
+    Assert.assertNotNull(DataSourceConnection.DS_DATABASENAME + " property not set, need it for the vdb name", vdb_name);
+    url = StringUtil.replace(url, "${vdb}", vdb_name);
 
-	TestLogger.log("Completed scenario " + scenario_name);
+    ConfigPropertyLoader.getInstance().setProperty(DriverConnection.DS_URL, url);
+
+
+    QueryScenario set = ClassFactory.createQueryScenario(scenario_name);
+
+    TransactionContainer tc = getTransactionContainter();
+
+    runTestCase(set,  tc);
+
+    TestLogger.log("Completed scenario " + scenario_name);
     }
 
     private void runTestCase(QueryScenario queryset,  TransactionContainer tc) throws Exception {
-	String querySetID = null;
-	List<QueryTest> queryTests = null;
+    String querySetID = null;
+    List<QueryTest> queryTests = null;
 
-	TestClientTransaction userTxn = new TestClientTransaction(queryset);
+    TestClientTransaction userTxn = new TestClientTransaction(queryset);
 
-	Iterator<String> qsetIt = queryset.getQuerySetIDs().iterator();
-	TestResultsSummary summary = new TestResultsSummary(queryset.getResultsMode());
+    Iterator<String> qsetIt = queryset.getQuerySetIDs().iterator();
+    TestResultsSummary summary = new TestResultsSummary(queryset.getResultsMode());
 
-	try {
+    try {
 
-        	// iterate over the query set ID's, which there
-        	// should be 1 for each file to be processed
-        	while (qsetIt.hasNext()) {
-        	    querySetID = qsetIt.next();
+            // iterate over the query set ID's, which there
+            // should be 1 for each file to be processed
+            while (qsetIt.hasNext()) {
+                querySetID = qsetIt.next();
 
-        	    TestLogger.logInfo("Start Test Query ID [" + querySetID + "]");
+                TestLogger.logInfo("Start Test Query ID [" + querySetID + "]");
 
-        	    queryTests = queryset.getQueries(querySetID);
+                queryTests = queryset.getQueries(querySetID);
 
-        		 // the iterator to process the query tests
-        	    Iterator<QueryTest> queryTestIt = null;
-        	    queryTestIt = queryTests.iterator();
+                 // the iterator to process the query tests
+                Iterator<QueryTest> queryTestIt = null;
+                queryTestIt = queryTests.iterator();
 
-        	    ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
-
-
-        	    long beginTS = System.currentTimeMillis();
-        	    long endTS = 0;
-
-                	while (queryTestIt.hasNext()) {
-                	    QueryTest q = queryTestIt.next();
-
-                    	    userTxn.init(summary, expectedResults, q);
-
-                	    // run test
-                    	    try {
-                    	    	tc.runTransaction(userTxn);
-                    	    } catch (Throwable t) {
-                    	    	t.printStackTrace();
-                    	    }
-
-                	}
-
-                	endTS = System.currentTimeMillis();
-
-                	TestLogger.logInfo("End Test Query ID [" + querySetID + "]");
-
-                	summary.printResults(queryset, querySetID,beginTS, endTS);
-
-        	}
+                ExpectedResults expectedResults = queryset.getExpectedResults(querySetID);
 
 
-	} finally {
-	    try {
-    		summary.printTotals(queryset);
-    		summary.cleanup();
-	    } catch (Throwable t) {
-		t.printStackTrace();
-	    }
+                long beginTS = System.currentTimeMillis();
+                long endTS = 0;
 
-		// cleanup all connections created for this test.
+                    while (queryTestIt.hasNext()) {
+                        QueryTest q = queryTestIt.next();
 
-	    	DataSourceMgr.getInstance().shutdown();
-//		userTxn.getConnectionStrategy().shutdown();
-		ConfigPropertyLoader.reset();
-	}
+                            userTxn.init(summary, expectedResults, q);
+
+                        // run test
+                            try {
+                                tc.runTransaction(userTxn);
+                            } catch (Throwable t) {
+                                t.printStackTrace();
+                            }
+
+                    }
+
+                    endTS = System.currentTimeMillis();
+
+                    TestLogger.logInfo("End Test Query ID [" + querySetID + "]");
+
+                    summary.printResults(queryset, querySetID,beginTS, endTS);
+
+            }
+
+
+    } finally {
+        try {
+            summary.printTotals(queryset);
+            summary.cleanup();
+        } catch (Throwable t) {
+        t.printStackTrace();
+        }
+
+        // cleanup all connections created for this test.
+
+            DataSourceMgr.getInstance().shutdown();
+//        userTxn.getConnectionStrategy().shutdown();
+        ConfigPropertyLoader.reset();
+    }
 
 
     }
 
 
     protected TransactionContainer getTransactionContainter() {
-	try {
-	    return TransactionFactory.create(ConfigPropertyLoader.getInstance());
-	} catch (QueryTestFailedException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	    throw new TransactionRuntimeException(e);
-	}
+    try {
+        return TransactionFactory.create(ConfigPropertyLoader.getInstance());
+    } catch (QueryTestFailedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        throw new TransactionRuntimeException(e);
+    }
 
     }
 
 
     private Properties getSubstitutedProperties(Properties props) {
-	Properties or = new Properties();
+    Properties or = new Properties();
 
-	Properties configprops = ConfigPropertyLoader.getInstance().getProperties();
+    Properties configprops = ConfigPropertyLoader.getInstance().getProperties();
 
-	configprops.putAll(props);
+    configprops.putAll(props);
 
-	or = PropertiesUtils.resolveNestedProperties(configprops);
+    or = PropertiesUtils.resolveNestedProperties(configprops);
 
-	return or;
+    return or;
 
     }
 
@@ -263,41 +263,41 @@ public class TestClient  {
      * @since 4.3
      */
 //    private static final class TimestampedSynchronizationBarrier {
-//	private int expectedThreads;
-//	private int currentThreads = 0;
-//	private long leaveBarrierTimestamp = -1;
+//    private int expectedThreads;
+//    private int currentThreads = 0;
+//    private long leaveBarrierTimestamp = -1;
 //
-//	private TimestampedSynchronizationBarrier(int expectedThreads) {
-//	    this.expectedThreads = expectedThreads;
-//	}
+//    private TimestampedSynchronizationBarrier(int expectedThreads) {
+//        this.expectedThreads = expectedThreads;
+//    }
 //
-//	private synchronized void barrier(final long waitTime) {
-//	    if ((++currentThreads) == expectedThreads) {
-//		// If all the expected threads have arrived at the barrier, then
-//		// wake them all.
-//		leaveBarrierTimestamp = System.currentTimeMillis();
-//		this.notifyAll();
-//	    } else {
-//		// Otherwise, wait for other threads to arrive.
-//		try {
-//		    wait(waitTime);
-//		} catch (InterruptedException e) {
-//		    System.err
-//			    .println("A thread was unexpectedly interrupted while waiting for other threads to enter the barrier. The measurements for this test will not be accurate.");
-//		    e.printStackTrace(System.err);
-//		    // Let the thread continue on its merry way
-//		}
-//	    }
-//	}
+//    private synchronized void barrier(final long waitTime) {
+//        if ((++currentThreads) == expectedThreads) {
+//        // If all the expected threads have arrived at the barrier, then
+//        // wake them all.
+//        leaveBarrierTimestamp = System.currentTimeMillis();
+//        this.notifyAll();
+//        } else {
+//        // Otherwise, wait for other threads to arrive.
+//        try {
+//            wait(waitTime);
+//        } catch (InterruptedException e) {
+//            System.err
+//                .println("A thread was unexpectedly interrupted while waiting for other threads to enter the barrier. The measurements for this test will not be accurate.");
+//            e.printStackTrace(System.err);
+//            // Let the thread continue on its merry way
+//        }
+//        }
+//    }
 //
-//	private synchronized void decrementExpectedThreads() {
-//	    if ((--expectedThreads) == currentThreads) {
-//		// If all the remaining threads are already waiting, then wake
-//		// them all.
-//		leaveBarrierTimestamp = System.currentTimeMillis();
-//		this.notifyAll();
-//	    }
-//	}
+//    private synchronized void decrementExpectedThreads() {
+//        if ((--expectedThreads) == currentThreads) {
+//        // If all the remaining threads are already waiting, then wake
+//        // them all.
+//        leaveBarrierTimestamp = System.currentTimeMillis();
+//        this.notifyAll();
+//        }
+//    }
 //    }
 
 }

@@ -91,30 +91,30 @@ public class StoredProcedureInfo implements Serializable {
         this.query = queryNode;
     }
 
-	public boolean returnsResultSet() {
-		for (SPParameter parameter : parameters) {
-			if (parameter.getParameterType() == ParameterInfo.RESULT_SET) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean returnsResultSet() {
+        for (SPParameter parameter : parameters) {
+            if (parameter.getParameterType() == ParameterInfo.RESULT_SET) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public boolean returnsResultParameter() {
-		for (SPParameter parameter : parameters) {
-			if (parameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public boolean returnsResultParameter() {
+        for (SPParameter parameter : parameters) {
+            if (parameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public int getUpdateCount() {
-		return updateCount;
-	}
+        return updateCount;
+    }
 
-	public void setUpdateCount(int updateCount) {
-		this.updateCount = updateCount;
-	}
+    public void setUpdateCount(int updateCount) {
+        this.updateCount = updateCount;
+    }
 
 }

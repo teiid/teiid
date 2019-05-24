@@ -86,14 +86,14 @@ public class TestHiveExecutionFactory {
     }
 
     @Test public void testConvertions() throws Exception {
-    	helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(true AS boolean)");
-    	helpTest(LANG_FACTORY.createLiteral(Byte.parseByte("123"), Byte.class), TypeFacility.RUNTIME_NAMES.BYTE, "cast(123 AS tinyint)");
-    	helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.INTEGER, "cast(12345 AS int)");
-    	helpTest(LANG_FACTORY.createLiteral(Short.parseShort("1234"), Short.class), TypeFacility.RUNTIME_NAMES.SHORT, "cast(1234 AS smallint)");
-    	helpTest(LANG_FACTORY.createLiteral(new BigInteger("123451266182"), BigInteger.class), TypeFacility.RUNTIME_NAMES.BIG_INTEGER, "cast(123451266182 AS bigint)");
-    	helpTest(LANG_FACTORY.createLiteral(new String("foo-bar"), String.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('foo-bar' AS string)");
-    	helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.STRING, "cast(true AS string)");
-    	helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(12345 AS boolean)");
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(true AS boolean)");
+        helpTest(LANG_FACTORY.createLiteral(Byte.parseByte("123"), Byte.class), TypeFacility.RUNTIME_NAMES.BYTE, "cast(123 AS tinyint)");
+        helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.INTEGER, "cast(12345 AS int)");
+        helpTest(LANG_FACTORY.createLiteral(Short.parseShort("1234"), Short.class), TypeFacility.RUNTIME_NAMES.SHORT, "cast(1234 AS smallint)");
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("123451266182"), BigInteger.class), TypeFacility.RUNTIME_NAMES.BIG_INTEGER, "cast(123451266182 AS bigint)");
+        helpTest(LANG_FACTORY.createLiteral(new String("foo-bar"), String.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('foo-bar' AS string)");
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.STRING, "cast(true AS string)");
+        helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(12345 AS boolean)");
     }
 
     @Test
@@ -205,10 +205,10 @@ public class TestHiveExecutionFactory {
     }
 
     public static TransformationMetadata exampleBQT() {
-    	MetadataStore metadataStore = new MetadataStore();
-    	Schema bqt1 = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
-    	Table bqt1SmallA = RealMetadataFactory.createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$
-    	Table bqt1SmallB = RealMetadataFactory.createPhysicalGroup("SmallB", bqt1); //$NON-NLS-1$
+        MetadataStore metadataStore = new MetadataStore();
+        Schema bqt1 = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
+        Table bqt1SmallA = RealMetadataFactory.createPhysicalGroup("SmallA", bqt1); //$NON-NLS-1$
+        Table bqt1SmallB = RealMetadataFactory.createPhysicalGroup("SmallB", bqt1); //$NON-NLS-1$
         String[] elemNames = new String[] {
                 "IntKey", "StringKey",  //$NON-NLS-1$ //$NON-NLS-2$
                 "IntNum", "StringNum",  //$NON-NLS-1$ //$NON-NLS-2$
@@ -252,19 +252,19 @@ public class TestHiveExecutionFactory {
     }
 
     @Test public void testExcludeTables() throws Exception {
-    	HiveMetadataProcessor hmp = new HiveMetadataProcessor();
-    	hmp.setExcludeTables("x");
-    	Connection c = Mockito.mock(Connection.class);
-    	MetadataFactory mf = Mockito.mock(MetadataFactory.class);
-    	Statement stmt = Mockito.mock(Statement.class);
-    	Mockito.stub(c.createStatement()).toReturn(stmt);
-    	ResultSet rs = Mockito.mock(ResultSet.class);
-    	Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
-    	Mockito.stub(rs.next()).toReturn(true).toReturn(false);
-    	Mockito.stub(rs.getString(1)).toReturn("x");
+        HiveMetadataProcessor hmp = new HiveMetadataProcessor();
+        hmp.setExcludeTables("x");
+        Connection c = Mockito.mock(Connection.class);
+        MetadataFactory mf = Mockito.mock(MetadataFactory.class);
+        Statement stmt = Mockito.mock(Statement.class);
+        Mockito.stub(c.createStatement()).toReturn(stmt);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(stmt.executeQuery("SHOW TABLES")).toReturn(rs);
+        Mockito.stub(rs.next()).toReturn(true).toReturn(false);
+        Mockito.stub(rs.getString(1)).toReturn("x");
 
-    	hmp.process(mf, c);
-    	Mockito.verify(mf, Mockito.times(0)).addTable("x");
+        hmp.process(mf, c);
+        Mockito.verify(mf, Mockito.times(0)).addTable("x");
     }
 
     @Test public void testQuoting() throws Exception {
@@ -295,7 +295,7 @@ public class TestHiveExecutionFactory {
     }
 
     @Test public void testStringLiteral() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 where pm1.g1.e1 = 'a''b\\c'");
         SQLConversionVisitor sqlVisitor = hiveTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);

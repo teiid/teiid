@@ -21,25 +21,25 @@ import java.io.RandomAccessFile;
  */
 
 public abstract class Block {
-	/**
-	 * Size of the block
-	 */
-	protected int blockSize;
+    /**
+     * Size of the block
+     */
+    protected int blockSize;
 
-	/**
-	 * Field in which the information is stored
-	 */
-	protected Field field;
+    /**
+     * Field in which the information is stored
+     */
+    protected Field field;
 
-	public Block(int blockSize) {
-		this.blockSize= blockSize;
-		field= new Field(blockSize);
-	}
-	/**
-	 * Loads the block with the given number in memory, reading it from a RandomAccessFile.
-	 */
-	public void read(RandomAccessFile raf, int blockNum) throws IOException {
-		raf.seek(blockNum * (long) blockSize);
-		raf.readFully(field.buffer());
-	}
+    public Block(int blockSize) {
+        this.blockSize= blockSize;
+        field= new Field(blockSize);
+    }
+    /**
+     * Loads the block with the given number in memory, reading it from a RandomAccessFile.
+     */
+    public void read(RandomAccessFile raf, int blockNum) throws IOException {
+        raf.seek(blockNum * (long) blockSize);
+        raf.readFully(field.buffer());
+    }
 }

@@ -195,22 +195,22 @@ public class TestExpressionMappingVisitor {
      * a function.
      */
     @Test public void testRecursionDetection() {
-    	ElementSymbol e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
-    	AggregateSymbol a1 = new AggregateSymbol(NonReserved.SUM, false, e1);
-    	Function f = new Function(SourceSystemFunctions.ADD_OP, new Expression[] {a1, a1});
-    	HashMap<AggregateSymbol, AggregateSymbol> map = new HashMap<AggregateSymbol, AggregateSymbol>();
-    	map.put(a1, new AggregateSymbol(NonReserved.SUM, false, a1));
-    	ExpressionMappingVisitor.mapExpressions(f, map);
+        ElementSymbol e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
+        AggregateSymbol a1 = new AggregateSymbol(NonReserved.SUM, false, e1);
+        Function f = new Function(SourceSystemFunctions.ADD_OP, new Expression[] {a1, a1});
+        HashMap<AggregateSymbol, AggregateSymbol> map = new HashMap<AggregateSymbol, AggregateSymbol>();
+        map.put(a1, new AggregateSymbol(NonReserved.SUM, false, a1));
+        ExpressionMappingVisitor.mapExpressions(f, map);
         assertEquals("(SUM(SUM(g1.e1)) + SUM(SUM(g1.e1)))", f.toString()); //$NON-NLS-1$
     }
 
     @Test public void testArray() {
-    	Expression e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
-    	Expression e2 = new ElementSymbol("g1.e2"); //$NON-NLS-1$
-    	Map<Expression, ElementSymbol> map = new HashMap<Expression, ElementSymbol>();
-    	map.put(e1, new ElementSymbol("foo"));
-    	Array a = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList(e1, e2));
-    	ExpressionMappingVisitor.mapExpressions(a, map);
+        Expression e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
+        Expression e2 = new ElementSymbol("g1.e2"); //$NON-NLS-1$
+        Map<Expression, ElementSymbol> map = new HashMap<Expression, ElementSymbol>();
+        map.put(e1, new ElementSymbol("foo"));
+        Array a = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList(e1, e2));
+        ExpressionMappingVisitor.mapExpressions(a, map);
         assertEquals("(foo, g1.e2)", a.toString()); //$NON-NLS-1$
     }
 

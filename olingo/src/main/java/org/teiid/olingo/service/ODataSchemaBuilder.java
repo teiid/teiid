@@ -430,7 +430,7 @@ public class ODataSchemaBuilder {
             }
 
             if (pp.getType().equals(ProcedureParameter.Type.In)
-            		|| pp.getType().equals(ProcedureParameter.Type.InOut)) {
+                    || pp.getType().equals(ProcedureParameter.Type.InOut)) {
                 inouts++;
                 if (DataTypeManager.isLOB(pp.getRuntimeType())) {
                     lobs++;
@@ -441,11 +441,11 @@ public class ODataSchemaBuilder {
         }
 
         if (proc.getResultSet() != null) {
-        	for (Column c : proc.getResultSet().getColumns()) {
-        		if (DataTypeManager.isLOB(c.getRuntimeType())) {
-        			return false;
-        		}
-        	}
+            for (Column c : proc.getResultSet().getColumns()) {
+                if (DataTypeManager.isLOB(c.getRuntimeType())) {
+                    return false;
+                }
+            }
             outs++;
         }
 

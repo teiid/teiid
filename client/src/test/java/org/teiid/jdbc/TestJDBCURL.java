@@ -241,7 +241,7 @@ public class TestJDBCURL {
         }
 
         try {
-        	// in embedded situation there is no connection url
+            // in embedded situation there is no connection url
             new JDBCURL("myVDB", "  ", null); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (Exception e) {
 
@@ -303,11 +303,11 @@ public class TestJDBCURL {
 
         for ( char ch = 32; ch <= 126; ch++ ) {
             //exclude URL reserved characters
-        	if ( ch != ';' && ch != '=' && ch != '%') {
-        		password = ch+"mm"; //$NON-NLS-1$
-        		result = new JDBCURL(srcURL+URLEncoder.encode(password, "UTF-8")).getConnectionURL(); //$NON-NLS-1$
-        		assertEquals("Failed to obtain correct ServerURL when using password "+password,tgtURL, result);         //$NON-NLS-1$
-        	}
+            if ( ch != ';' && ch != '=' && ch != '%') {
+                password = ch+"mm"; //$NON-NLS-1$
+                result = new JDBCURL(srcURL+URLEncoder.encode(password, "UTF-8")).getConnectionURL(); //$NON-NLS-1$
+                assertEquals("Failed to obtain correct ServerURL when using password "+password,tgtURL, result);         //$NON-NLS-1$
+            }
         }
 
     }
@@ -318,20 +318,20 @@ public class TestJDBCURL {
     }
 
     @Test public void testBuildEmbeedURL() {
-    	JDBCURL url = new JDBCURL("vdb", "/home/foo/deploy.properties", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertEquals("jdbc:teiid:vdb@/home/foo/deploy.properties", url.getJDBCURL()); //$NON-NLS-1$
+        JDBCURL url = new JDBCURL("vdb", "/home/foo/deploy.properties", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("jdbc:teiid:vdb@/home/foo/deploy.properties", url.getJDBCURL()); //$NON-NLS-1$
 
-    	Properties p = new Properties();
-    	p.setProperty("user", "test"); //$NON-NLS-1$ //$NON-NLS-2$
-    	p.setProperty("password", "pass"); //$NON-NLS-1$ //$NON-NLS-2$
-    	p.setProperty("autoFailover", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-    	p.setProperty("any", "thing"); //$NON-NLS-1$ //$NON-NLS-2$
+        Properties p = new Properties();
+        p.setProperty("user", "test"); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty("password", "pass"); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty("autoFailover", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty("any", "thing"); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	url = new JDBCURL("vdb", "/home/foo/deploy.properties", p); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertTrue(url.getJDBCURL().startsWith("jdbc:teiid:vdb@/home/foo/deploy.properties;")); //$NON-NLS-1$
-    	assertTrue(url.getJDBCURL().indexOf("any=thing")!=-1); //$NON-NLS-1$
-    	assertTrue(url.getJDBCURL().indexOf("password=pass")!=-1); //$NON-NLS-1$
-    	assertTrue(url.getJDBCURL().indexOf("autoFailover=true")!=-1); //$NON-NLS-1$
+        url = new JDBCURL("vdb", "/home/foo/deploy.properties", p); //$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue(url.getJDBCURL().startsWith("jdbc:teiid:vdb@/home/foo/deploy.properties;")); //$NON-NLS-1$
+        assertTrue(url.getJDBCURL().indexOf("any=thing")!=-1); //$NON-NLS-1$
+        assertTrue(url.getJDBCURL().indexOf("password=pass")!=-1); //$NON-NLS-1$
+        assertTrue(url.getJDBCURL().indexOf("autoFailover=true")!=-1); //$NON-NLS-1$
 
     }
 

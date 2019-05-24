@@ -57,15 +57,15 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     static String SCHEMA_1_1 = "schema/jboss-teiid.xsd";
     static String SCHEMA_1_2 = "schema/jboss-teiid_1_2.xsd";
 
-	public TestTeiidConfiguration() {
-		super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
-	}
+    public TestTeiidConfiguration() {
+        super(TeiidExtension.TEIID_SUBSYSTEM, new TeiidExtension());
+    }
 
-	@Override
-	protected String getSubsystemXml() throws IOException {
-		String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
-		return subsystemXml;
-	}
+    @Override
+    protected String getSubsystemXml() throws IOException {
+        String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
+        return subsystemXml;
+    }
 
     @Override
     protected String getSubsystemXsdPath() throws Exception {
@@ -74,29 +74,29 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     @Test
     public void testDescribeHandler() throws Exception {
-    	standardSubsystemTest(null, true);
+        standardSubsystemTest(null, true);
     }
 
     @Override
-	protected String readResource(final String name) throws IOException {
-    	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.2\"> \n" +
-    			"</subsystem>";
+    protected String readResource(final String name) throws IOException {
+        String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.2\"> \n" +
+                "</subsystem>";
 
-    	if (name.equals("minimum")) {
-        	return minimum;
+        if (name.equals("minimum")) {
+            return minimum;
         }
-    	return null;
+        return null;
     }
 
     @Test
     public void testMinimumConfiguration() throws Exception {
-    	standardSubsystemTest("minimum");
+        standardSubsystemTest("minimum");
     }
 
     @Test
     public void testOutputPerisitence() throws Exception {
-    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
-    	ModelNode testModel = ModelNode.fromJSONString(json);
+        String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
+        ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
         KernelServices services = standardSubsystemTest(null, true);
@@ -112,8 +112,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     @Test
     public void testOutputModel() throws Exception {
-    	String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
-    	ModelNode testModel = ModelNode.fromJSONString(json);
+        String json = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-model-json_1_2.txt"));
+        ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
         KernelServices services = standardSubsystemTest(null, false);
@@ -127,8 +127,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     @Test
     public void testSchema() throws Exception {
-    	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
-    	validate(subsystemXml);
+        String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config_1_2.xml"));
+        validate(subsystemXml);
 
         KernelServices services = standardSubsystemTest(null, false);
 
@@ -136,45 +136,45 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
 
-		validate(marshalled);
+        validate(marshalled);
     }
 
-	private void validate(String marshalled) throws SAXException, IOException {
-		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource(SCHEMA_1_2);
+    private void validate(String marshalled) throws SAXException, IOException {
+        URL xsdURL = Thread.currentThread().getContextClassLoader().getResource(SCHEMA_1_2);
 
-		SchemaFactory factory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
-		Schema schema = factory.newSchema(xsdURL);
+        SchemaFactory factory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
+        Schema schema = factory.newSchema(xsdURL);
 
-		Validator validator = schema.newValidator();
-		Source source = new StreamSource(new ByteArrayInputStream(marshalled.getBytes()));
-		validator.setErrorHandler(new ErrorHandler() {
+        Validator validator = schema.newValidator();
+        Source source = new StreamSource(new ByteArrayInputStream(marshalled.getBytes()));
+        validator.setErrorHandler(new ErrorHandler() {
 
-			@Override
-			public void warning(SAXParseException exception) throws SAXException {
-				fail(exception.getMessage());
-			}
+            @Override
+            public void warning(SAXParseException exception) throws SAXException {
+                fail(exception.getMessage());
+            }
 
-			@Override
-			public void fatalError(SAXParseException exception) throws SAXException {
-				fail(exception.getMessage());
-			}
+            @Override
+            public void fatalError(SAXParseException exception) throws SAXException {
+                fail(exception.getMessage());
+            }
 
-			@Override
-			public void error(SAXParseException exception) throws SAXException {
-				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type")) {
-					fail(exception.getMessage());
-				}
-			}
-		});
+            @Override
+            public void error(SAXParseException exception) throws SAXException {
+                if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type")) {
+                    fail(exception.getMessage());
+                }
+            }
+        });
 
-		validator.validate(source);
-	}
+        validator.validate(source);
+    }
 
     @Test
     public void testParseSubsystem() throws Exception {
         //Parse the subsystem xml into operations
-    	helpTestParseSubsystem("src/test/resources/teiid-sample-config.xml");
-    	helpTestParseSubsystem("src/test/resources/teiid-sample-config_1_2.xml");
+        helpTestParseSubsystem("src/test/resources/teiid-sample-config.xml");
+        helpTestParseSubsystem("src/test/resources/teiid-sample-config_1_2.xml");
     }
 
     private List<ModelNode> helpTestParseSubsystem(String config)
@@ -201,7 +201,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     @Test
     public void testQueryOperations() throws Exception {
-    	KernelServices services = standardSubsystemTest(null, true);
+        KernelServices services = standardSubsystemTest(null, true);
 
         PathAddress addr = PathAddress.pathAddress(
                 PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
@@ -213,27 +213,27 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
 
         List<String> opNames = getList(result);
-		String[] ops = { "add", "add-anyauthenticated-role", "add-data-role", "add-source",
-		        "assign-datasource", "cache-statistics", "cache-types", "cancel-request",
-		        "change-vdb-connection-type", "clear-cache", "engine-statistics", "execute-query",
-		        "get-query-plan", "get-schema", "get-translator", "get-vdb", "list-add", "list-clear",
-		        "list-get", "list-long-running-requests", "list-remove", "list-requests",
-		        "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions",
-		        "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove",
-		        "mark-datasource-available", "query", "read-attribute", "read-attribute-group",
-		        "read-attribute-group-names", "read-children-names", "read-children-resources",
-		        "read-children-types", "read-operation-description", "read-operation-names",
-		        "read-rar-description", "read-resource", "read-resource-description",
-		        "read-translator-properties", "remove", "remove-anyauthenticated-role",
-		        "remove-data-role", "remove-source", "restart-vdb", "terminate-session",
-		        "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics",
-		        "write-attribute"};
-		Assert.assertArrayEquals(opNames.toString(), ops, opNames.toArray(new String[opNames.size()]));
+        String[] ops = { "add", "add-anyauthenticated-role", "add-data-role", "add-source",
+                "assign-datasource", "cache-statistics", "cache-types", "cancel-request",
+                "change-vdb-connection-type", "clear-cache", "engine-statistics", "execute-query",
+                "get-query-plan", "get-schema", "get-translator", "get-vdb", "list-add", "list-clear",
+                "list-get", "list-long-running-requests", "list-remove", "list-requests",
+                "list-requests-per-session", "list-requests-per-vdb", "list-sessions", "list-transactions",
+                "list-translators", "list-vdbs", "map-clear", "map-get", "map-put", "map-remove",
+                "mark-datasource-available", "query", "read-attribute", "read-attribute-group",
+                "read-attribute-group-names", "read-children-names", "read-children-resources",
+                "read-children-types", "read-operation-description", "read-operation-names",
+                "read-rar-description", "read-resource", "read-resource-description",
+                "read-translator-properties", "remove", "remove-anyauthenticated-role",
+                "remove-data-role", "remove-source", "restart-vdb", "terminate-session",
+                "terminate-transaction", "undefine-attribute", "update-source", "workerpool-statistics",
+                "write-attribute"};
+        Assert.assertArrayEquals(opNames.toString(), ops, opNames.toArray(new String[opNames.size()]));
     }
 
     @Test
     public void testAddRemoveTransport() throws Exception {
-    	KernelServices services = standardSubsystemTest(null, true);
+        KernelServices services = standardSubsystemTest(null, true);
 
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
 
@@ -286,13 +286,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 
     private static List<String> getList(ModelNode operationResult) {
         if(!operationResult.hasDefined("result")) {
-			return Collections.emptyList();
-		}
+            return Collections.emptyList();
+        }
 
         List<ModelNode> nodeList = operationResult.get("result").asList();
         if(nodeList.isEmpty()) {
-			return Collections.emptyList();
-		}
+            return Collections.emptyList();
+        }
 
         List<String> list = new ArrayList<String>(nodeList.size());
         for(ModelNode node : nodeList) {
@@ -302,15 +302,15 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     }
 
 //    private ModelNode buildProperty(String name, String value) {
-//    	ModelNode node = new ModelNode();
-//    	node.get("property-name").set(name);
-//    	node.get("property-value").set(value);
-//    	return node;
+//        ModelNode node = new ModelNode();
+//        node.get("property-name").set(name);
+//        node.get("property-value").set(value);
+//        return node;
 //    }
 
     @Test
     public void testTranslator() throws Exception {
-    	KernelServices services = standardSubsystemTest(null, true);
+        KernelServices services = standardSubsystemTest(null, true);
 
         PathAddress addr = PathAddress.pathAddress(PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM));
 

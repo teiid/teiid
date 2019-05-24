@@ -12,6 +12,6 @@
 package org.teiid.core.index;
 
 public interface IEntryResult {
-	public int[] getFileReferences();
-	public char[] getWord();
+    public int[] getFileReferences();
+    public char[] getWord();
 }

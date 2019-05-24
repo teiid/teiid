@@ -40,13 +40,13 @@ public class NullNode extends RelationalNode {
 
     @Override
     public List getOutputElements() {
-    	return Collections.emptyList();
+        return Collections.emptyList();
     }
 
-	public Object clone(){
-		NullNode clonedNode = new NullNode(super.getID());
-		super.copyTo(clonedNode);
-		return clonedNode;
-	}
+    public Object clone(){
+        NullNode clonedNode = new NullNode(super.getID());
+        super.copyTo(clonedNode);
+        return clonedNode;
+    }
 
 }

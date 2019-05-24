@@ -30,7 +30,7 @@ import org.teiid.UserDefinedAggregate;
  */
 public interface ExposedStateUserDefinedAggregate<T> extends UserDefinedAggregate<T> {
 
-	List<? extends Class<?>> getStateTypes();
+    List<? extends Class<?>> getStateTypes();
 
     void getState(List<Object> state);
 

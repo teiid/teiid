@@ -91,26 +91,26 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     }
 
     public org.teiid.query.sql.symbol.Expression getExpression(Expression expr) throws TeiidException {
-    	try {
-    		accept(expr);
-    	} catch (TeiidRuntimeException e) {
-    		if (e.getCause() instanceof TeiidException) {
-    			throw (TeiidException)e.getCause();
-    		}
-    		throw e;
-    	}
+        try {
+            accept(expr);
+        } catch (TeiidRuntimeException e) {
+            if (e.getCause() instanceof TeiidException) {
+                throw (TeiidException)e.getCause();
+            }
+            throw e;
+        }
         return this.stack.pop();
     }
 
     public org.teiid.query.sql.symbol.Expression getExpression(UriInfoResource info) throws TeiidException {
         try {
-        	visit(info);
-    	} catch (TeiidRuntimeException e) {
-    		if (e.getCause() instanceof TeiidException) {
-    			throw (TeiidException)e.getCause();
-    		}
-    		throw e;
-    	}
+            visit(info);
+        } catch (TeiidRuntimeException e) {
+            if (e.getCause() instanceof TeiidException) {
+                throw (TeiidException)e.getCause();
+            }
+            throw e;
+        }
         return this.stack.pop();
     }
 
@@ -214,7 +214,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
     @Override
     public void visit(Enumeration expr) {
-    	throw new TeiidRuntimeException(new TeiidException("unsupported option"));//$NON-NLS-1$
+        throw new TeiidRuntimeException(new TeiidException("unsupported option"));//$NON-NLS-1$
     }
 
     @Override
@@ -232,7 +232,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
             handleValue(value);
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
     }
 
@@ -509,7 +509,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             query.setCriteria(criteria);
             this.stack.add(new ScalarSubquery(query));
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
     }
 
@@ -560,7 +560,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
 
             this.ctxExpression = ctxLambda;
         } catch (TeiidException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
     }
 
@@ -582,8 +582,8 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     @Override
     public void visit(UriResourceIt info) {
         if (info.getType() instanceof SingletonPrimitiveType) {
-        	org.teiid.query.sql.symbol.Expression ex = null;
-        	if (this.ctxQuery.getIterator() == null) {
+            org.teiid.query.sql.symbol.Expression ex = null;
+            if (this.ctxQuery.getIterator() == null) {
                 String group = this.nameGenerator.getNextGroup();
                 GroupSymbol groupSymbol = new GroupSymbol(group);
 
@@ -594,8 +594,8 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 //we may need more checks here to ensure that is valid
                 Collection<ProjectedColumn> values = this.ctxQuery.getProjectedColumns().values();
                 Assertion.assertTrue(values.size() == 1);
-				ProjectedColumn projectedColumn = values.iterator().next();
-				org.teiid.query.sql.symbol.Expression projectedEs = projectedColumn.getExpression();
+                ProjectedColumn projectedColumn = values.iterator().next();
+                org.teiid.query.sql.symbol.Expression projectedEs = projectedColumn.getExpression();
                 List<SPParameter> params = new ArrayList<SPParameter>();
                 SPParameter param = new SPParameter(1, SPParameter.IN, "val");
                 param.setExpression(projectedEs);
@@ -613,7 +613,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 DocumentNode itResource = new DocumentNode();
                 org.teiid.query.sql.symbol.Expression clone = (org.teiid.query.sql.symbol.Expression) castFunction.clone();
                 AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, clone);
-				AliasSymbol expression = new AliasSymbol(Symbol.getShortName(projectedEs), symbol);
+                AliasSymbol expression = new AliasSymbol(Symbol.getShortName(projectedEs), symbol);
 
                 itResource.setFromClause(fromClause);
                 itResource.setGroupSymbol(groupSymbol);
@@ -623,12 +623,12 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                 this.ctxQuery.setIterator(itResource);
 
                 ex = castFunction;
-        	} else {
-        		GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
+            } else {
+                GroupSymbol groupSymbol = this.ctxQuery.getIterator().getGroupSymbol();
                 ElementSymbol es = new ElementSymbol("col", groupSymbol);
                 String type = ODataTypeManager.teiidType((SingletonPrimitiveType)info.getType(), false);
                 ex = new Function(CAST,new org.teiid.query.sql.symbol.Expression[] {es, new Constant(type)});
-        	}
+            }
 
             this.stack.push(ex);
         }
@@ -664,7 +664,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
                         info.getKeyPredicates(), this.metadata, this.odata, this.nameGenerator,
                         true, getUriInfo(), null);
             } catch (TeiidException e) {
-            	throw new TeiidRuntimeException(e);
+                throw new TeiidRuntimeException(e);
             }
         }
         else {

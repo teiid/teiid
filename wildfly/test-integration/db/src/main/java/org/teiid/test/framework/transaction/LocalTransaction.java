@@ -21,13 +21,13 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class LocalTransaction extends TransactionContainer {
 
     public LocalTransaction() {
-	super();
+    super();
     }
     protected void before(TransactionQueryTestCase test) {
-	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+    test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
 
         try {
-       		debug("Autocommit: " + test.getConnectionStrategy().getAutocommit());
+               debug("Autocommit: " + test.getConnectionStrategy().getAutocommit());
             test.getConnection().setAutoCommit(test.getConnectionStrategy().getAutocommit());
         } catch (SQLException e) {
             throw new TransactionRuntimeException(e);
@@ -35,7 +35,7 @@ public class LocalTransaction extends TransactionContainer {
     }
 
     protected void after(TransactionQueryTestCase test) {
-    	boolean exception = false;
+        boolean exception = false;
         try {
             if (test.rollbackAllways()|| test.exceptionOccurred()) {
                 test.getConnection().rollback();
@@ -46,26 +46,26 @@ public class LocalTransaction extends TransactionContainer {
             }
         } catch (SQLException se) {
              se.printStackTrace();
-        	exception =  true;
-        	// if exception, try to trigger the rollback
-        	try {
-        		test.getConnection().rollback();
-        	} catch (Exception e) {
-        		// do nothing
-        	}
+            exception =  true;
+            // if exception, try to trigger the rollback
+            try {
+                test.getConnection().rollback();
+            } catch (Exception e) {
+                // do nothing
+            }
             throw new TransactionRuntimeException(se);
 
 
         } finally {
-        	// if an exception occurs and the autocommit is set to true - while doing a transaction
-        	// will generate a new exception overriding the first exception
-        	if (!exception) {
-	            try {
-	                test.getConnection().setAutoCommit(true);
-	            } catch (SQLException e) {
-	                throw new TransactionRuntimeException(e);
-	            }
-        	}
+            // if an exception occurs and the autocommit is set to true - while doing a transaction
+            // will generate a new exception overriding the first exception
+            if (!exception) {
+                try {
+                    test.getConnection().setAutoCommit(true);
+                } catch (SQLException e) {
+                    throw new TransactionRuntimeException(e);
+                }
+            }
         }
     }
 

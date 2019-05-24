@@ -80,18 +80,18 @@ public class TestSimpleDBMetadataProcessor {
         String ddl = getDDL(props);
 
         String expectedDDL = "CREATE FOREIGN TABLE G1 (\n" +
-        		"\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
-        		"\te1 string,\n" +
-        		"\te2 string,\n" +
-        		"\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
-        		") OPTIONS (UPDATABLE TRUE);\n" +
-        		"\n" +
-        		"CREATE FOREIGN TABLE G2 (\n" +
-        		"\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
-        		"\te1 string,\n" +
-        		"\te2 string[],\n" +
-        		"\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
-        		") OPTIONS (UPDATABLE TRUE);";
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
+                "\te1 string,\n" +
+                "\te2 string,\n" +
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
+                ") OPTIONS (UPDATABLE TRUE);\n" +
+                "\n" +
+                "CREATE FOREIGN TABLE G2 (\n" +
+                "\tItemName string NOT NULL OPTIONS (NAMEINSOURCE 'itemName()'),\n" +
+                "\te1 string,\n" +
+                "\te2 string[],\n" +
+                "\tCONSTRAINT PK0 PRIMARY KEY(ItemName)\n" +
+                ") OPTIONS (UPDATABLE TRUE);";
 
         assertEquals(expectedDDL, ddl);
     }

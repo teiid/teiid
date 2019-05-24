@@ -64,7 +64,7 @@ public class DocumentNode {
     private LinkedHashMap<Expression, ProjectedColumn> projectedColumns = new LinkedHashMap<Expression, ProjectedColumn>();
     private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
-	private DocumentNode iterator;
+    private DocumentNode iterator;
 
     public static DocumentNode build(EdmEntityType type,
             List<UriParameter> keyPredicates, MetadataStore metadata, OData odata,
@@ -122,7 +122,7 @@ public class DocumentNode {
             UniqueNameGenerator nameGenerator, URLParseService parseService)
             throws TeiidException {
 
-    	List<Column> pk = getPKColumns(resource.getTable());
+        List<Column> pk = getPKColumns(resource.getTable());
         if (resource.getKeyPredicates().size() == 1) {
             if (pk.size() != 1) {
                 throw new TeiidException(ODataPlugin.Event.TEIID16015,
@@ -235,7 +235,7 @@ public class DocumentNode {
 
     protected void addAllColumns(boolean onlyPK) {
         if (onlyPK) {
-        	List<Column> columns = getPKColumns(getTable());
+            List<Column> columns = getPKColumns(getTable());
             for (final Column column : columns) {
                 if (column.isSelectable()) {
                     addProjectedColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
@@ -245,7 +245,7 @@ public class DocumentNode {
         else {
             for (final Column column : getTable().getColumns()) {
                 if (column.isSelectable()) {
-                	addProjectedColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
+                    addProjectedColumn(column.getName(), new ElementSymbol(column.getName(), getGroupSymbol()));
                 }
             }
         }
@@ -273,7 +273,7 @@ public class DocumentNode {
             EdmProperty property, final boolean collection) {
         ProjectedColumn pc = this.projectedColumns.get(expr);
         if (pc != null) {
-        	return pc;
+            return pc;
         }
         pc = new ProjectedColumn(expr, type, property, collection);
         pc.setOrdinal(Integer.MAX_VALUE);
@@ -309,7 +309,7 @@ public class DocumentNode {
             columns.addAll(er.getAllProjectedColumns());
         }
         if (this.iterator != null) {
-        	columns.addAll(this.iterator.getAllProjectedColumns());
+            columns.addAll(this.iterator.getAllProjectedColumns());
         }
         return columns;
     }
@@ -359,13 +359,13 @@ public class DocumentNode {
             from.addClause(sibiling.getFromClause());
         }
         if (this.iterator != null) {
-        	addProjectedColumns(select, ordinal, sortColumns(this.iterator.getProjectedColumns().values()));
-        	from.addClause(this.iterator.getFromClause());
-        	GroupBy groupBy = new GroupBy();
-        	for (String keyCol : this.getKeyColumnNames()) {
-        		groupBy.addSymbol(new ElementSymbol(keyCol, this.groupSymbol));
-        	}
-        	query.setGroupBy(groupBy);
+            addProjectedColumns(select, ordinal, sortColumns(this.iterator.getProjectedColumns().values()));
+            from.addClause(this.iterator.getFromClause());
+            GroupBy groupBy = new GroupBy();
+            for (String keyCol : this.getKeyColumnNames()) {
+                groupBy.addSymbol(new ElementSymbol(keyCol, this.groupSymbol));
+            }
+            query.setGroupBy(groupBy);
         }
 
         query.setSelect(select);
@@ -375,17 +375,17 @@ public class DocumentNode {
         return query;
     }
 
-	private List<ProjectedColumn> sortColumns(Collection<ProjectedColumn> toSort) {
-		//provide a stable sort of the columns regardless of visitation order.
-		ArrayList<ProjectedColumn> list = new ArrayList<ProjectedColumn>(toSort);
-		Collections.sort(list, new Comparator<ProjectedColumn>() {
-        	@Override
-        	public int compare(ProjectedColumn o1, ProjectedColumn o2) {
-        		return Integer.compare(o1.getOrdinal(), o2.getOrdinal());
-        	}
+    private List<ProjectedColumn> sortColumns(Collection<ProjectedColumn> toSort) {
+        //provide a stable sort of the columns regardless of visitation order.
+        ArrayList<ProjectedColumn> list = new ArrayList<ProjectedColumn>(toSort);
+        Collections.sort(list, new Comparator<ProjectedColumn>() {
+            @Override
+            public int compare(ProjectedColumn o1, ProjectedColumn o2) {
+                return Integer.compare(o1.getOrdinal(), o2.getOrdinal());
+            }
         });
-		return list;
-	}
+        return list;
+    }
 
     private void addProjectedColumns(Select select, AtomicInteger ordinal,
             List<ProjectedColumn> projected) {
@@ -523,13 +523,13 @@ public class DocumentNode {
 
     public void addCriteria(Expression filter) {
         if (filter != null) {
-        	Criteria crit = null;
-        	if (filter instanceof Criteria) {
-        		crit = (Criteria)filter;
-        	} else {
-        		crit = new ExpressionCriteria(filter);
-        	}
-        	this.criteria = Criteria.combineCriteria(this.criteria, crit);
+            Criteria crit = null;
+            if (filter instanceof Criteria) {
+                crit = (Criteria)filter;
+            } else {
+                crit = new ExpressionCriteria(filter);
+            }
+            this.criteria = Criteria.combineCriteria(this.criteria, crit);
         }
     }
 
@@ -537,11 +537,11 @@ public class DocumentNode {
         return table.getFullName();
     }
 
-	public void setIterator(DocumentNode itResource) {
-		this.iterator = itResource;
-	}
+    public void setIterator(DocumentNode itResource) {
+        this.iterator = itResource;
+    }
 
-	public DocumentNode getIterator() {
-		return this.iterator;
-	}
+    public DocumentNode getIterator() {
+        return this.iterator;
+    }
 }

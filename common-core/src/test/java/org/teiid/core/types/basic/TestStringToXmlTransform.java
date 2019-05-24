@@ -30,7 +30,7 @@ import org.teiid.core.types.XMLType;
 @SuppressWarnings("nls")
 public class TestStringToXmlTransform {
 
-	@Test public void testGoodXML() throws Exception {
+    @Test public void testGoodXML() throws Exception {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$
@@ -42,7 +42,7 @@ public class TestStringToXmlTransform {
        assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
     }
 
-	@Test public void testGoodElement() throws Exception {
+    @Test public void testGoodElement() throws Exception {
         String xml = "<customer>\n" + //$NON-NLS-1$
                         "<name>ABC</name>" + //$NON-NLS-1$
                         "<age>32</age>" + //$NON-NLS-1$

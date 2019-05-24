@@ -63,7 +63,7 @@ public final class RulePlaceAccess implements
                                   OptimizerRule {
 
     public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_URI + "conformed-sources"; //$NON-NLS-1$
-	public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
+    public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
 
     public PlanNode execute(PlanNode plan,
                             QueryMetadataInterface metadata,
@@ -111,7 +111,7 @@ public final class RulePlaceAccess implements
         }
 
         if (sourceNode.getProperty(NodeConstants.Info.TABLE_FUNCTION) != null) {
-        	return;
+            return;
         }
 
         if (req instanceof Insert) {
@@ -142,43 +142,43 @@ public final class RulePlaceAccess implements
 
             Object modelId = null;
             if (sourceNode.getGroups().size() == 1) {
-            	GroupSymbol gs = sourceNode.getGroups().iterator().next();
-            	modelId = gs.getModelMetadataId();
-            	if (modelId != null) {
-            		accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
-            	}
+                GroupSymbol gs = sourceNode.getGroups().iterator().next();
+                modelId = gs.getModelMetadataId();
+                if (modelId != null) {
+                    accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+                }
             }
             if (req instanceof Create || req instanceof Drop) {
-            	modelId = TempMetadataAdapter.TEMP_MODEL;
+                modelId = TempMetadataAdapter.TEMP_MODEL;
             } else {
-            	modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+                modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
             }
             if (modelId != null) {
-	            boolean multiSource = metadata.isMultiSource(modelId);
-	            if (multiSource) {
-	            	accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
-	            }
-	            accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
+                boolean multiSource = metadata.isMultiSource(modelId);
+                if (multiSource) {
+                    accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
+                }
+                accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
 
             if (req == null && modelId != null) {
-            	//add "conformed" sources if they exist
-            	GroupSymbol group = sourceNode.getGroups().iterator().next();
-            	Object gid = group.getMetadataID();
-            	String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false);
-            	if (sources != null) {
-            		Set<Object> conformed = new LinkedHashSet<Object>();
-            		conformed.add(modelId);
-            		for (String source : StringUtil.split(sources, ",")) { //$NON-NLS-1$
-            			Object mid = metadata.getModelID(source.trim());
-            			if (metadata.isVirtualModel(mid)) {
-            				//TODO: could validate this up-front
-            				throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31148, metadata.getName(mid), group));
-            			}
-            			conformed.add(mid);
-            		}
-            		accessNode.setProperty(Info.CONFORMED_SOURCES, conformed);
-            	}
+                //add "conformed" sources if they exist
+                GroupSymbol group = sourceNode.getGroups().iterator().next();
+                Object gid = group.getMetadataID();
+                String sources = metadata.getExtensionProperty(gid, CONFORMED_SOURCES, false);
+                if (sources != null) {
+                    Set<Object> conformed = new LinkedHashSet<Object>();
+                    conformed.add(modelId);
+                    for (String source : StringUtil.split(sources, ",")) { //$NON-NLS-1$
+                        Object mid = metadata.getModelID(source.trim());
+                        if (metadata.isVirtualModel(mid)) {
+                            //TODO: could validate this up-front
+                            throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31148, metadata.getName(mid), group));
+                        }
+                        conformed.add(mid);
+                    }
+                    accessNode.setProperty(Info.CONFORMED_SOURCES, conformed);
+                }
             }
 
             // Insert
@@ -187,15 +187,15 @@ public final class RulePlaceAccess implements
             apNode = accessNode;
 
             // set additional information
-    		for (GroupSymbol group : accessNode.getGroups()) {
-    		    if (group.getCheckMatViewStatus() != null) {
-    		        LinkedHashSet<Object> viewsToCheck = new LinkedHashSet<Object>();
-    		        viewsToCheck.add(group.getCheckMatViewStatus());
-    		        accessNode.setProperty(Info.CHECK_MAT_VIEW, viewsToCheck);
-    		    }
+            for (GroupSymbol group : accessNode.getGroups()) {
+                if (group.getCheckMatViewStatus() != null) {
+                    LinkedHashSet<Object> viewsToCheck = new LinkedHashSet<Object>();
+                    viewsToCheck.add(group.getCheckMatViewStatus());
+                    accessNode.setProperty(Info.CHECK_MAT_VIEW, viewsToCheck);
+                }
                 Object modelID = metadata.getModelID(group.getMetadataID());
                 if (CapabilitiesUtil.requiresCriteria(modelID, metadata, finder)) {
-                	additionalRules[1] = true;
+                    additionalRules[1] = true;
                 }
             }
         }
@@ -241,8 +241,8 @@ public final class RulePlaceAccess implements
         GroupSymbol group = sourceNode.getGroups().iterator().next();
 
         if (groups.add(group.getName())) {
-        	if (group.getDefinition() != null) {
-            	cc.getAliasMapping().put(group.getName(), group.getName());
+            if (group.getDefinition() != null) {
+                cc.getAliasMapping().put(group.getName(), group.getName());
             }
             return; // this is the first instance of the group
         }
@@ -257,7 +257,7 @@ public final class RulePlaceAccess implements
         GroupSymbol newGroup = recontextSymbol(group, groups);
 
         if (group.getDefinition() != null) {
-        	cc.getAliasMapping().put(newGroup.getName(), group.getName());
+            cc.getAliasMapping().put(newGroup.getName(), group.getName());
         }
 
         //the expressions in the map will all be element symbols

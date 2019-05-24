@@ -24,33 +24,33 @@ public class VDBImportMetadata extends AdminObjectImpl implements VDBImport {
 
     private static final long serialVersionUID = 8827106139518843217L;
 
-	private String name;
-	private String version;
-	private boolean importDataPolicies = true;
+    private String name;
+    private String version;
+    private boolean importDataPolicies = true;
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getVersion() {
-		return version;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	public boolean isImportDataPolicies() {
-		return importDataPolicies;
-	}
+    public boolean isImportDataPolicies() {
+        return importDataPolicies;
+    }
 
-	public void setImportDataPolicies(boolean importDataPolicies) {
-		this.importDataPolicies = importDataPolicies;
-	}
+    public void setImportDataPolicies(boolean importDataPolicies) {
+        this.importDataPolicies = importDataPolicies;
+    }
 
     @Override
     public int hashCode() {

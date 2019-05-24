@@ -55,13 +55,13 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     public Update() {
     }
 
-	/**
-	 * Return type of command.
-	 * @return TYPE_UPDATE
-	 */
-	public int getType() {
-		return Command.TYPE_UPDATE;
-	}
+    /**
+     * Return type of command.
+     * @return TYPE_UPDATE
+     */
+    public int getType() {
+        return Command.TYPE_UPDATE;
+    }
 
     /**
      * Construct with group and change list
@@ -163,21 +163,21 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      * @return Hash code
      */
     public int hashCode() {
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.group);
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.group);
         myHash = HashCodeUtil.hashCode(myHash, this.changeList);
         if (this.criteria != null) {
             myHash = HashCodeUtil.hashCode(myHash, this.criteria);
         }
-		return myHash;
-	}
+        return myHash;
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
     /**
@@ -188,17 +188,17 @@ public class Update extends ProcedureContainer implements FilteredCommand {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof Update)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof Update)) {
+            return false;
+        }
 
-		Update other = (Update) obj;
+        Update other = (Update) obj;
 
         return
             EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
@@ -207,54 +207,54 @@ public class Update extends ProcedureContainer implements FilteredCommand {
             EquivalenceUtil.areEqual(getCriteria(), other.getCriteria());
     }
 
-	/**
-	 * Return a copy of this Update.
-	 * @return Deep clone
-	 */
-	public Object clone() {
-		Update copy = new Update();
+    /**
+     * Return a copy of this Update.
+     * @return Deep clone
+     */
+    public Object clone() {
+        Update copy = new Update();
 
-	    if(group != null) {
-	        copy.setGroup(group.clone());
-	    }
+        if(group != null) {
+            copy.setGroup(group.clone());
+        }
 
-	    copy.setChangeList((SetClauseList)this.changeList.clone());
+        copy.setChangeList((SetClauseList)this.changeList.clone());
 
-		if(criteria != null) {
-			copy.setCriteria((Criteria) criteria.clone());
-		}
+        if(criteria != null) {
+            copy.setCriteria((Criteria) criteria.clone());
+        }
 
         this.copyMetadataState(copy);
         if (this.constraint != null) {
-        	copy.constraint = (Criteria) this.constraint.clone();
+            copy.constraint = (Criteria) this.constraint.clone();
         }
-		return copy;
-	}
+        return copy;
+    }
 
-	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List getProjectedSymbols(){
+    /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
-	}
+    }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable(){
-		return false;
-	}
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable(){
+        return false;
+    }
 
-	public Criteria getConstraint() {
-		return constraint;
-	}
+    public Criteria getConstraint() {
+        return constraint;
+    }
 
-	public void setConstraint(Criteria constraint) {
-		this.constraint = constraint;
-	}
+    public void setConstraint(Criteria constraint) {
+        this.constraint = constraint;
+    }
 
 }
 

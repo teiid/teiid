@@ -56,13 +56,13 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
 
     //////////////////BEGIN---STRING FUNCTIONS TESTCASES///////////////////
 
-	@Test
-	public void testLcaseUcase() throws Exception {
-		String input = "select lcase(StringKey), ucase(StringKey) FROM BQT1.SmallA";
-		String output = "SELECT lower(SmallA.StringKey), upper(SmallA.StringKey) FROM SmallA";
+    @Test
+    public void testLcaseUcase() throws Exception {
+        String input = "select lcase(StringKey), ucase(StringKey) FROM BQT1.SmallA";
+        String output = "SELECT lower(SmallA.StringKey), upper(SmallA.StringKey) FROM SmallA";
 
-		TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output,TRANSLATOR);
-	}
+        TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output,TRANSLATOR);
+    }
     @Test public void testPad() throws Exception {
         String input = "select lpad(smalla.stringkey, 18), rpad(smalla.stringkey, 12) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT lpad(SmallA.StringKey, 18), rpad(SmallA.StringKey, 12) FROM SmallA"; //$NON-NLS-1$
@@ -72,35 +72,35 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
             output, TRANSLATOR);
     }
 
-	  @Test
-	  public void testIFNull() throws Exception {
-	  String input = "SELECT ifnull(StringKey, 'otherString') FROM BQT1.SmallA";
-	  String output = "SELECT NVL(SmallA.StringKey, 'otherString') FROM SmallA";
-	  //SELECT IFNULL(GL_ACTG_APPL_ID, 'otherString') FROM ACTG_UNIT_BAL_FACT
-	  //SELECT nvl(GL_ACTG_APPL_ID, 'otherString') FROM ACTG_UNIT_BAL_FACT
+      @Test
+      public void testIFNull() throws Exception {
+      String input = "SELECT ifnull(StringKey, 'otherString') FROM BQT1.SmallA";
+      String output = "SELECT NVL(SmallA.StringKey, 'otherString') FROM SmallA";
+      //SELECT IFNULL(GL_ACTG_APPL_ID, 'otherString') FROM ACTG_UNIT_BAL_FACT
+      //SELECT nvl(GL_ACTG_APPL_ID, 'otherString') FROM ACTG_UNIT_BAL_FACT
 
-	  TranslationHelper.helpTestVisitor(getTestBQTVDB(),  input, output, TRANSLATOR);
-	}
+      TranslationHelper.helpTestVisitor(getTestBQTVDB(),  input, output, TRANSLATOR);
+    }
 
 
-	  @Test public void testSubstring1() throws Exception {
+      @Test public void testSubstring1() throws Exception {
 
-		  //////////BOTH SUBSTRING AND SUBSTR work in NETEZZA//
-		  //////////////////////////////////////////////////////
-				  String input = "SELECT substring(StringKey, 1) FROM BQT1.SmallA";
-				  String output = "SELECT substring(SmallA.StringKey, 1) FROM SmallA";
-				//SELECT substring(FDL_PMF_ACCT, 3) FROM ACTG_UNIT_BAL_FACT
-				//SELECT substr(FDL_PMF_ACCT, 3) FROM ACTG_UNIT_BAL_FACT
-				  TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
-	}
-	@Test public void testSubstring2() throws Exception {
+          //////////BOTH SUBSTRING AND SUBSTR work in NETEZZA//
+          //////////////////////////////////////////////////////
+                  String input = "SELECT substring(StringKey, 1) FROM BQT1.SmallA";
+                  String output = "SELECT substring(SmallA.StringKey, 1) FROM SmallA";
+                //SELECT substring(FDL_PMF_ACCT, 3) FROM ACTG_UNIT_BAL_FACT
+                //SELECT substr(FDL_PMF_ACCT, 3) FROM ACTG_UNIT_BAL_FACT
+                  TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
+    }
+    @Test public void testSubstring2() throws Exception {
 
-		  //////////BOTH SUBSTRING AND SUBSTR work in NETEZZA//
-		  //////////////////////////////////////////////////////
-			  String input = "SELECT substring(StringKey, 1, 5) FROM BQT1.SmallA";
-			  String output = "SELECT substring(SmallA.StringKey, 1, 5) FROM SmallA";
-			  TranslationHelper.helpTestVisitor(getTestBQTVDB(),  input, output, TRANSLATOR);
-	}
+          //////////BOTH SUBSTRING AND SUBSTR work in NETEZZA//
+          //////////////////////////////////////////////////////
+              String input = "SELECT substring(StringKey, 1, 5) FROM BQT1.SmallA";
+              String output = "SELECT substring(SmallA.StringKey, 1, 5) FROM SmallA";
+              TranslationHelper.helpTestVisitor(getTestBQTVDB(),  input, output, TRANSLATOR);
+    }
 
 
 
@@ -175,26 +175,26 @@ public class TestNetezzaTranslatorSourceSystemFunctions {
 
 
     //////////////////BEGIN---NUMERIC FUNCTIONS TESTCASES///////////////////
-	@Test public void testCeil() throws Exception {
-		//select ceiling(sqrt(MEAS_PRD_ID)) from ACTG_UNIT_BAL_FACT
-		//select ceil(sqrt(MEAS_PRD_ID)) from ACTG_UNIT_BAL_FACT
-			  String input = "SELECT ceiling(sqrt(INTKEY)) FROM BQT1.SMALLA";
-			  String output = "SELECT ceil(sqrt(SmallA.IntKey)) FROM SmallA";
-			  TranslationHelper.helpTestVisitor(getTestBQTVDB(),
-			      input,
-			      output, TRANSLATOR);
-	}
+    @Test public void testCeil() throws Exception {
+        //select ceiling(sqrt(MEAS_PRD_ID)) from ACTG_UNIT_BAL_FACT
+        //select ceil(sqrt(MEAS_PRD_ID)) from ACTG_UNIT_BAL_FACT
+              String input = "SELECT ceiling(sqrt(INTKEY)) FROM BQT1.SMALLA";
+              String output = "SELECT ceil(sqrt(SmallA.IntKey)) FROM SmallA";
+              TranslationHelper.helpTestVisitor(getTestBQTVDB(),
+                  input,
+                  output, TRANSLATOR);
+    }
 
-	@Test public void testPower() throws Exception {
+    @Test public void testPower() throws Exception {
 
-		//select power(MEAS_PRD_ID, 2) from ACTG_UNIT_BAL_FACT
-		//select pow(MEAS_PRD_ID, 2) from ACTG_UNIT_BAL_FACT
-			  String input = "SELECT power(INTKEY, 2) FROM BQT1.SMALLA";
-			  String output = "SELECT pow(SmallA.IntKey, 2) FROM SmallA";
-			  TranslationHelper.helpTestVisitor(getTestBQTVDB(),
-			      input,
-			      output, TRANSLATOR);
-	}
+        //select power(MEAS_PRD_ID, 2) from ACTG_UNIT_BAL_FACT
+        //select pow(MEAS_PRD_ID, 2) from ACTG_UNIT_BAL_FACT
+              String input = "SELECT power(INTKEY, 2) FROM BQT1.SMALLA";
+              String output = "SELECT pow(SmallA.IntKey, 2) FROM SmallA";
+              TranslationHelper.helpTestVisitor(getTestBQTVDB(),
+                  input,
+                  output, TRANSLATOR);
+    }
     //////////////////END---NUMERIC FUNCTIONS TESTCASES///////////////////
 
 

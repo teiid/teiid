@@ -113,25 +113,25 @@ public class TransactionServerImpl implements TransactionService {
     private XAImporter xaImporter;
 
     public void setDetectTransactions(boolean detectTransactions) {
-		this.detectTransactions = detectTransactions;
-	}
+        this.detectTransactions = detectTransactions;
+    }
 
     public boolean isDetectTransactions() {
-		return detectTransactions;
-	}
+        return detectTransactions;
+    }
 
     public void setXaImporter(XAImporter xaImporter) {
         this.xaImporter = xaImporter;
     }
 
     public void setTransactionManager(TransactionManager transactionManager) {
-		this.transactionManager = transactionManager;
-	}
+        this.transactionManager = transactionManager;
+    }
 
     /**
      * Global Transaction
      */
-	public int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
+    public int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
         TransactionContext tc = checkXAState(threadId, xid, true, false);
         if (!tc.getSuspendedBy().isEmpty()) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30505, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30505, xid));
@@ -139,11 +139,11 @@ public class TransactionServerImpl implements TransactionService {
 
         // In the container this pass though
         if (singleTM) {
-	    	return XAResource.XA_RDONLY;
+            return XAResource.XA_RDONLY;
         }
 
         try {
-        	return this.xaImporter.prepare(tc.getXid());
+            return this.xaImporter.prepare(tc.getXid());
         } catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30506, e);
         }
@@ -153,67 +153,67 @@ public class TransactionServerImpl implements TransactionService {
      * Global Transaction
      */
     public void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException {
-    	TransactionContext tc = checkXAState(threadId, xid, true, false);
-    	try {
-        	if (singleTM || (onePhase && XAResource.XA_RDONLY == prepare(threadId, xid, singleTM))) {
-        		return; //nothing to do
-        	}
-        	//TODO: we have no way of knowing for sure if we can safely use the onephase optimization
-        	this.xaImporter.commit(tc.getXid(), false);
-    	} catch (XAException e) {
+        TransactionContext tc = checkXAState(threadId, xid, true, false);
+        try {
+            if (singleTM || (onePhase && XAResource.XA_RDONLY == prepare(threadId, xid, singleTM))) {
+                return; //nothing to do
+            }
+            //TODO: we have no way of knowing for sure if we can safely use the onephase optimization
+            this.xaImporter.commit(tc.getXid(), false);
+        } catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30507, e);
         } finally {
-    		this.transactions.removeTransactionContext(tc);
-    	}
+            this.transactions.removeTransactionContext(tc);
+        }
     }
 
     /**
      * Global Transaction
      */
     public void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
-    	TransactionContext tc = checkXAState(threadId, xid, true, false);
-    	try {
-    		// In the case of single TM, the container directly roll backs the sources.
-        	if (!singleTM) {
-        		this.xaImporter.rollback(tc.getXid());
-        	}
-    	} catch (XAException e) {
+        TransactionContext tc = checkXAState(threadId, xid, true, false);
+        try {
+            // In the case of single TM, the container directly roll backs the sources.
+            if (!singleTM) {
+                this.xaImporter.rollback(tc.getXid());
+            }
+        } catch (XAException e) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30508, e);
         } finally {
-    		this.transactions.removeTransactionContext(tc);
-    	}
+            this.transactions.removeTransactionContext(tc);
+        }
     }
 
     /**
      * Global Transaction
      */
     public Xid[] recover(int flag, boolean singleTM) throws XATransactionException {
-    	// In case of single TM, container knows this list.
-    	if (singleTM) {
-    		return new Xid[0];
-    	}
+        // In case of single TM, container knows this list.
+        if (singleTM) {
+            return new Xid[0];
+        }
 
-    	try {
-			return this.xaImporter.recover(flag);
-		} catch (XAException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30509, e);
-		}
+        try {
+            return this.xaImporter.recover(flag);
+        } catch (XAException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30509, e);
+        }
     }
 
     /**
      * Global Transaction
      */
     public void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException {
-    	TransactionContext tc = checkXAState(threadId, xid, true, false);
+        TransactionContext tc = checkXAState(threadId, xid, true, false);
         try {
-        	if (singleTM) {
-        		return;
-        	}
+            if (singleTM) {
+                return;
+            }
             this.xaImporter.forget(xid);
         } catch (XAException err) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30510, err);
         } finally {
-        	this.transactions.removeTransactionContext(tc);
+            this.transactions.removeTransactionContext(tc);
         }
     }
 
@@ -227,30 +227,30 @@ public class TransactionServerImpl implements TransactionService {
         switch (flags) {
             case XAResource.TMNOFLAGS: {
                 try {
-					checkXAState(threadId, xid, false, false);
-					tc = transactions.getOrCreateTransactionContext(threadId);
-					if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-					     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
-					}
-					tc.setXid(xid);
-					if (singleTM) {
-						tc.setTransaction(transactionManager.getTransaction());
-						if (tc.getTransaction() == null) {
-						    //the current code currently does not handle the case of embedded connections where
-							//someone is manually initiating txns - that is there is no thread bound txn.
-							//in theory we could inflow the txn and then change all of the methods to check singleTM off of the context
-						    throw new XATransactionException(QueryPlugin.Event.TEIID30590, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30590));
-						}
-					} else {
-						Transaction txn = xaImporter.importTransaction(transactionManager, xid, timeout);
-						tc.setTransaction(txn);
-					}
-					tc.setTransactionType(TransactionContext.Scope.GLOBAL);
-				} catch (XAException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
-				} catch (SystemException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
-				}
+                    checkXAState(threadId, xid, false, false);
+                    tc = transactions.getOrCreateTransactionContext(threadId);
+                    if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
+                         throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
+                    }
+                    tc.setXid(xid);
+                    if (singleTM) {
+                        tc.setTransaction(transactionManager.getTransaction());
+                        if (tc.getTransaction() == null) {
+                            //the current code currently does not handle the case of embedded connections where
+                            //someone is manually initiating txns - that is there is no thread bound txn.
+                            //in theory we could inflow the txn and then change all of the methods to check singleTM off of the context
+                            throw new XATransactionException(QueryPlugin.Event.TEIID30590, XAException.XAER_INVAL, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30590));
+                        }
+                    } else {
+                        Transaction txn = xaImporter.importTransaction(transactionManager, xid, timeout);
+                        tc.setTransaction(txn);
+                    }
+                    tc.setTransactionType(TransactionContext.Scope.GLOBAL);
+                } catch (XAException e) {
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
+                } catch (SystemException e) {
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
+                }
                 break;
             }
             case XAResource.TMJOIN:
@@ -290,7 +290,7 @@ public class TransactionServerImpl implements TransactionService {
                     break;
                 }
                 case XAResource.TMFAIL: {
-                	cancelTransactions(threadId, false);
+                    cancelTransactions(threadId, false);
                     break;
                 }
                 default:
@@ -332,112 +332,112 @@ public class TransactionServerImpl implements TransactionService {
     }
 
     private TransactionContext checkLocalTransactionState(String threadId, boolean transactionExpected)
-    	throws XATransactionException {
+        throws XATransactionException {
 
         final TransactionContext tc = transactions.getOrCreateTransactionContext(threadId);
 
         //TODO: this check is only really needed in local mode
         if (!transactionExpected && detectTransactions) {
-        	try {
-				Transaction tx = transactionManager.getTransaction();
-				if (tx != null && tx != tc.getTransaction()) {
-					throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
-				}
-			} catch (SystemException e) {
-			} catch (IllegalStateException e) {
-			}
+            try {
+                Transaction tx = transactionManager.getTransaction();
+                if (tx != null && tx != tc.getTransaction()) {
+                    throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
+                }
+            } catch (SystemException e) {
+            } catch (IllegalStateException e) {
+            }
         }
 
         try {
-	        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-	            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL || !transactionExpected) {
-	                throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
-	            }
-	            transactionManager.resume(tc.getTransaction());
-	        } else if (transactionExpected) {
-	        	throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
-	        }
+            if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
+                if (tc.getTransactionType() != TransactionContext.Scope.LOCAL || !transactionExpected) {
+                    throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
+                }
+                transactionManager.resume(tc.getTransaction());
+            } else if (transactionExpected) {
+                throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.no_transaction", threadId)); //$NON-NLS-1$
+            }
         } catch (InvalidTransactionException e) {
-        	 throw new XATransactionException(QueryPlugin.Event.TEIID30526, e);
-		} catch (SystemException e) {
-        	 throw new XATransactionException(QueryPlugin.Event.TEIID30527, e);
-		}
+             throw new XATransactionException(QueryPlugin.Event.TEIID30526, e);
+        } catch (SystemException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30527, e);
+        }
         return tc;
     }
 
     private void beginDirect(TransactionContext tc) throws XATransactionException {
-		try {
-			transactionManager.begin();
-			Transaction tx = transactionManager.suspend();
-			tc.setTransaction(tx);
-			tc.setCreationTime(System.currentTimeMillis());
+        try {
+            transactionManager.begin();
+            Transaction tx = transactionManager.suspend();
+            tc.setTransaction(tx);
+            tc.setCreationTime(System.currentTimeMillis());
         } catch (javax.transaction.NotSupportedException err) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30528, err);
         } catch (SystemException err) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30528, err);
         }
-	}
+    }
 
-	private void commitDirect(TransactionContext context)
-			throws XATransactionException {
-		try {
-			transactionManager.commit();
-		} catch (SecurityException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
-		} catch (RollbackException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
-		} catch (HeuristicMixedException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
-		} catch (HeuristicRollbackException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
-		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
-		} finally {
-			transactions.removeTransactionContext(context);
-		}
-	}
+    private void commitDirect(TransactionContext context)
+            throws XATransactionException {
+        try {
+            transactionManager.commit();
+        } catch (SecurityException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
+        } catch (RollbackException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
+        } catch (HeuristicMixedException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
+        } catch (HeuristicRollbackException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
+        } catch (SystemException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
+        } finally {
+            transactions.removeTransactionContext(context);
+        }
+    }
 
-	private void rollbackDirect(TransactionContext tc)
-			throws XATransactionException {
-		try {
-    		this.transactionManager.rollback();
-		} catch (SecurityException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
-		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
-		} catch (IllegalStateException e) {
-			throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
-		} finally {
+    private void rollbackDirect(TransactionContext tc)
+            throws XATransactionException {
+        try {
+            this.transactionManager.rollback();
+        } catch (SecurityException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
+        } catch (SystemException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
+        } catch (IllegalStateException e) {
+            throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
+        } finally {
             transactions.removeTransactionContext(tc);
         }
-	}
+    }
 
-	public void suspend(TransactionContext context) throws XATransactionException {
-		try {
-			this.transactionManager.suspend();
-		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30537, e);
-		}
-	}
+    public void suspend(TransactionContext context) throws XATransactionException {
+        try {
+            this.transactionManager.suspend();
+        } catch (SystemException e) {
+             throw new XATransactionException(QueryPlugin.Event.TEIID30537, e);
+        }
+    }
 
-	public void resume(TransactionContext context) throws XATransactionException {
-		try {
-			//if we're already associated, just return
-			if (this.transactionManager.getTransaction() == context.getTransaction()) {
-				return;
-			}
-		} catch (SystemException e) {
-		}
-		try {
-			this.transactionManager.resume(context.getTransaction());
-		} catch (IllegalStateException e) {
-			throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
-		} catch (InvalidTransactionException e) {
-			throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
-		} catch (SystemException e) {
-			throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
-		}
-	}
+    public void resume(TransactionContext context) throws XATransactionException {
+        try {
+            //if we're already associated, just return
+            if (this.transactionManager.getTransaction() == context.getTransaction()) {
+                return;
+            }
+        } catch (SystemException e) {
+        }
+        try {
+            this.transactionManager.resume(context.getTransaction());
+        } catch (IllegalStateException e) {
+            throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
+        } catch (InvalidTransactionException e) {
+            throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
+        } catch (SystemException e) {
+            throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
+        }
+    }
 
     /**
      * Local Transaction
@@ -468,29 +468,29 @@ public class TransactionServerImpl implements TransactionService {
     public TransactionContext getOrCreateTransactionContext(final String threadId) {
         TransactionContext tc = transactions.getOrCreateTransactionContext(threadId);
         if (detectTransactions) {
-			try {
-				Transaction tx = transactionManager.getTransaction();
-				if (tx != null && tx != tc.getTransaction()) {
-					tx.registerSynchronization(new Synchronization() {
+            try {
+                Transaction tx = transactionManager.getTransaction();
+                if (tx != null && tx != tc.getTransaction()) {
+                    tx.registerSynchronization(new Synchronization() {
 
-						@Override
-						public void beforeCompletion() {
-						}
+                        @Override
+                        public void beforeCompletion() {
+                        }
 
-						@Override
-						public void afterCompletion(int status) {
-							transactions.removeTransactionContext(threadId);
-						}
-					});
-					tc.setTransaction(tx);
-					tc.setTransactionType(Scope.INHERITED);
-				}
-				//TODO: it may be appropriate to throw an up-front exception
-			} catch (SystemException e) {
-			} catch (IllegalStateException e) {
-			} catch (RollbackException e) {
-			}
-		}
+                        @Override
+                        public void afterCompletion(int status) {
+                            transactions.removeTransactionContext(threadId);
+                        }
+                    });
+                    tc.setTransaction(tx);
+                    tc.setTransactionType(Scope.INHERITED);
+                }
+                //TODO: it may be appropriate to throw an up-front exception
+            } catch (SystemException e) {
+            } catch (IllegalStateException e) {
+            } catch (RollbackException e) {
+            }
+        }
         return tc;
     }
 
@@ -512,10 +512,10 @@ public class TransactionServerImpl implements TransactionService {
     public void commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
         try {
-        	commitDirect(context);
+            commitDirect(context);
         } finally {
-        	context.setTransaction(null);
-        	context.setTransactionType(Scope.NONE);
+            context.setTransaction(null);
+            context.setTransactionType(Scope.NONE);
         }
     }
 
@@ -527,17 +527,17 @@ public class TransactionServerImpl implements TransactionService {
         try {
             rollbackDirect(context);
         } finally {
-        	context.setTransaction(null);
-        	context.setTransactionType(Scope.NONE);
+            context.setTransaction(null);
+            context.setTransactionType(Scope.NONE);
         }
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
-    	TransactionContext tc = requestOnly?transactions.getTransactionContext(threadId):transactions.removeTransactionContext(threadId);
+        TransactionContext tc = requestOnly?transactions.getTransactionContext(threadId):transactions.removeTransactionContext(threadId);
 
         if (tc == null || tc.getTransactionType() == TransactionContext.Scope.NONE
-        		|| tc.getTransactionType() == TransactionContext.Scope.INHERITED
-        		|| (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {
+                || tc.getTransactionType() == TransactionContext.Scope.INHERITED
+                || (requestOnly && tc.getTransactionType() != TransactionContext.Scope.REQUEST)) {
             return;
         }
 
@@ -546,43 +546,43 @@ public class TransactionServerImpl implements TransactionService {
             if (t != null) {
                 t.setRollbackOnly();
             }
-		} catch (SystemException e) {
-			throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
-		}
+        } catch (SystemException e) {
+            throw new XATransactionException(QueryPlugin.Event.TEIID30541, e);
+        }
     }
 
-	@Override
-	public Collection<TransactionMetadata> getTransactions() {
-		Set<TransactionContext> txnSet = Collections.newSetFromMap(new IdentityHashMap<TransactionContext, Boolean>());
-		synchronized (this.transactions) {
-			txnSet.addAll(this.transactions.threadToTransactionContext.values());
-			txnSet.addAll(this.transactions.xidToTransactionContext.values());
-		}
-		Collection<TransactionMetadata> result = new ArrayList<TransactionMetadata>(txnSet.size());
-		for (TransactionContext transactionContext : txnSet) {
-			if (transactionContext.getTransactionType() == Scope.NONE) {
-				continue;
-			}
-			TransactionMetadata txnImpl = new TransactionMetadata();
-			txnImpl.setAssociatedSession(transactionContext.getThreadId());
-			txnImpl.setCreatedTime(transactionContext.getCreationTime());
-			txnImpl.setScope(transactionContext.getTransactionType().toString());
-			txnImpl.setId(transactionContext.getTransactionId());
-			result.add(txnImpl);
-		}
-		return result;
-	}
+    @Override
+    public Collection<TransactionMetadata> getTransactions() {
+        Set<TransactionContext> txnSet = Collections.newSetFromMap(new IdentityHashMap<TransactionContext, Boolean>());
+        synchronized (this.transactions) {
+            txnSet.addAll(this.transactions.threadToTransactionContext.values());
+            txnSet.addAll(this.transactions.xidToTransactionContext.values());
+        }
+        Collection<TransactionMetadata> result = new ArrayList<TransactionMetadata>(txnSet.size());
+        for (TransactionContext transactionContext : txnSet) {
+            if (transactionContext.getTransactionType() == Scope.NONE) {
+                continue;
+            }
+            TransactionMetadata txnImpl = new TransactionMetadata();
+            txnImpl.setAssociatedSession(transactionContext.getThreadId());
+            txnImpl.setCreatedTime(transactionContext.getCreationTime());
+            txnImpl.setScope(transactionContext.getTransactionType().toString());
+            txnImpl.setId(transactionContext.getTransactionId());
+            result.add(txnImpl);
+        }
+        return result;
+    }
 
-	@Override
-	public void terminateTransaction(String threadId) throws AdminException {
-		if (threadId == null) {
-			return;
-		}
-		try {
-			cancelTransactions(threadId, false);
-		} catch (XATransactionException e) {
-			 throw new AdminProcessingException(QueryPlugin.Event.TEIID30542, e);
-		}
-	}
+    @Override
+    public void terminateTransaction(String threadId) throws AdminException {
+        if (threadId == null) {
+            return;
+        }
+        try {
+            cancelTransactions(threadId, false);
+        } catch (XATransactionException e) {
+             throw new AdminProcessingException(QueryPlugin.Event.TEIID30542, e);
+        }
+    }
 
 }

@@ -33,19 +33,19 @@ import java.util.Stack;
  */
 public class AbstractMMQueryTestCase extends AbstractQueryTest {
 
-	static {
-		new TeiidDriver();
-	}
+    static {
+        new TeiidDriver();
+    }
 
     private Stack<java.sql.Connection> contexts = new Stack<java.sql.Connection>();
 
     public void pushConnection() {
-    	this.contexts.push(this.internalConnection);
-    	this.internalConnection = null;
+        this.contexts.push(this.internalConnection);
+        this.internalConnection = null;
     }
 
     public void popConnection() {
-    	this.internalConnection = this.contexts.pop();
+        this.internalConnection = this.contexts.pop();
     }
 
      public Connection getConnection(String vdb, String propsFile){
@@ -53,14 +53,14 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
     }
 
     public Connection getConnection(String vdb, String propsFile, String addtionalStuff){
-    	closeResultSet();
-    	closeStatement();
-    	closeConnection();
+        closeResultSet();
+        closeStatement();
+        closeConnection();
         try {
-			this.internalConnection = createConnection(vdb, propsFile, addtionalStuff);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+            this.internalConnection = createConnection(vdb, propsFile, addtionalStuff);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         return this.internalConnection;
     }
 

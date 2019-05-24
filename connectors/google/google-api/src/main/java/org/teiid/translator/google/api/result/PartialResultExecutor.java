@@ -32,11 +32,11 @@ import java.util.List;
  */
 public interface PartialResultExecutor {
 
-	/**
-	 *  Returns part of the result.
-	 *
-	 * @return null or empty list if no more results are in the batch. Maximum amount of sheet rows in the result
-	 * is amount
-	 */
-	List<SheetRow> getResultsBatch(int startIndex, int amount);
+    /**
+     *  Returns part of the result.
+     *
+     * @return null or empty list if no more results are in the batch. Maximum amount of sheet rows in the result
+     * is amount
+     */
+    List<SheetRow> getResultsBatch(int startIndex, int amount);
 }

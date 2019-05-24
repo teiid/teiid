@@ -27,36 +27,36 @@ import org.teiid.core.TeiidRuntimeException;
 
 
 public class InfinispanCacheFactory implements CacheFactory, Serializable{
-	private static final long serialVersionUID = -2767452034178675653L;
-	private transient EmbeddedCacheManager cacheStore;
-	private volatile boolean destroyed = false;
-	private ClassLoader classLoader;
+    private static final long serialVersionUID = -2767452034178675653L;
+    private transient EmbeddedCacheManager cacheStore;
+    private volatile boolean destroyed = false;
+    private ClassLoader classLoader;
 
-	public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
-		this.cacheStore = cm;
-		this.classLoader = classLoader;
-	}
+    public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
+        this.cacheStore = cm;
+        this.classLoader = classLoader;
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public <K, V> Cache<K, V> get(String cacheName) {
-		if (!destroyed) {
-			org.infinispan.Cache cache = this.cacheStore.getCache(cacheName, false);
-			if (cache != null) {
-				return new InfinispanCache<K, V>(cache, cacheName, this.classLoader);
-			}
-			return null;
-		}
-		throw new TeiidRuntimeException("Cache system has been shutdown");
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K, V> Cache<K, V> get(String cacheName) {
+        if (!destroyed) {
+            org.infinispan.Cache cache = this.cacheStore.getCache(cacheName, false);
+            if (cache != null) {
+                return new InfinispanCache<K, V>(cache, cacheName, this.classLoader);
+            }
+            return null;
+        }
+        throw new TeiidRuntimeException("Cache system has been shutdown");
+    }
 
-	public void destroy() {
-		this.destroyed = true;
-		this.cacheStore.stop();
-	}
+    public void destroy() {
+        this.destroyed = true;
+        this.cacheStore.stop();
+    }
 
-	public void stop() {
-		destroy();
-	}
+    public void stop() {
+        destroy();
+    }
 
 }

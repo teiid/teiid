@@ -42,108 +42,108 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetCriteriaVisitor extends SQLStringVisitor {
 
-	protected String worksheetKey;
-	protected String criteriaQuery;
-	protected SpreadsheetInfo info;
-	protected String worksheetTitle;
+    protected String worksheetKey;
+    protected String criteriaQuery;
+    protected SpreadsheetInfo info;
+    protected String worksheetTitle;
 
-	public SpreadsheetCriteriaVisitor(SpreadsheetInfo info) {
-		this.info = info;
-	}
+    public SpreadsheetCriteriaVisitor(SpreadsheetInfo info) {
+        this.info = info;
+    }
 
-	public void visit(Literal obj) {
-	    if (!isUpdate()) {
-	        super.visit(obj);
-	        return;
-	    }
-		if (obj.getValue() == null) {
-			buffer.append(NULL);
-			return;
-		}
-		Class<?> type = obj.getType();
-		if (Number.class.isAssignableFrom(type)) {
-			buffer.append(obj.toString());
-			return;
-		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)
-		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-			buffer.append(obj.getValue().toString());
-			return;
-		} else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.TIME)
-		        || obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+    public void visit(Literal obj) {
+        if (!isUpdate()) {
+            super.visit(obj);
+            return;
+        }
+        if (obj.getValue() == null) {
+            buffer.append(NULL);
+            return;
+        }
+        Class<?> type = obj.getType();
+        if (Number.class.isAssignableFrom(type)) {
+            buffer.append(obj.toString());
+            return;
+        } else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.DATE)
+                || obj.getType().equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+            buffer.append(obj.getValue().toString());
+            return;
+        } else if (obj.getType().equals(DataTypeManager.DefaultDataClasses.TIME)
+                || obj.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
             throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("time_not_supported")); //$NON-NLS-1$
         } else {
-			buffer.append("\""); //$NON-NLS-1$
-			buffer.append(StringUtil.replace(obj.getValue().toString(), "\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
-			buffer.append("\""); //$NON-NLS-1$
-			return;
-		}
-	}
+            buffer.append("\""); //$NON-NLS-1$
+            buffer.append(StringUtil.replace(obj.getValue().toString(), "\"", "\"\"")); //$NON-NLS-1$ //$NON-NLS-2$
+            buffer.append("\""); //$NON-NLS-1$
+            return;
+        }
+    }
 
-	public void visit(Like obj) {
-	    if (isUpdate()) {
-	        throw new SpreadsheetOperationException("Like is not supported in DELETE and UPDATE queires");
-	    }
-	    super.visit(obj);
-	}
+    public void visit(Like obj) {
+        if (isUpdate()) {
+            throw new SpreadsheetOperationException("Like is not supported in DELETE and UPDATE queires");
+        }
+        super.visit(obj);
+    }
 
-	@Override
-	public void visit(Function obj) {
-	    if (isUpdate()) {
-	        throw new SpreadsheetOperationException("Function is not supported in DELETE and UPDATE queires");
-	    }
-	    super.visit(obj);
-	}
+    @Override
+    public void visit(Function obj) {
+        if (isUpdate()) {
+            throw new SpreadsheetOperationException("Function is not supported in DELETE and UPDATE queires");
+        }
+        super.visit(obj);
+    }
 
-	@Override
-	protected String replaceElementName(String group, String element) {
-		return element.toLowerCase();
-	}
+    @Override
+    protected String replaceElementName(String group, String element) {
+        return element.toLowerCase();
+    }
 
-	public String getCriteriaQuery() {
-		return criteriaQuery;
-	}
+    public String getCriteriaQuery() {
+        return criteriaQuery;
+    }
 
-	public void setCriteriaQuery(String criteriaQuery) {
-		this.criteriaQuery = criteriaQuery;
-	}
+    public void setCriteriaQuery(String criteriaQuery) {
+        this.criteriaQuery = criteriaQuery;
+    }
 
-	public String getWorksheetTitle() {
-		return worksheetTitle;
-	}
+    public String getWorksheetTitle() {
+        return worksheetTitle;
+    }
 
-	public void translateWhere(Condition condition) {
-	    if (condition != null) {
-	        StringBuilder temp = this.buffer;
-	        this.buffer = new StringBuilder();
-	        append(condition);
-	        criteriaQuery = buffer.toString();
-	        this.buffer = temp;
-	    }
-	}
+    public void translateWhere(Condition condition) {
+        if (condition != null) {
+            StringBuilder temp = this.buffer;
+            this.buffer = new StringBuilder();
+            append(condition);
+            criteriaQuery = buffer.toString();
+            this.buffer = temp;
+        }
+    }
 
-	public void visit(Comparison obj) {
-	    boolean addNot = false;
-	    if ((!isUpdate() || obj.getLeftExpression().getType() != TypeFacility.RUNTIME_TYPES.STRING)
-	            && (obj.getOperator() == Operator.NE
-	            || obj.getOperator() == Operator.LT
-	            || obj.getOperator() == Operator.LE
-	            || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal)))) {
-	        addNot = true;
-	        buffer.append("("); //$NON-NLS-1$
-	    }
-	    super.visit(obj);
-	    if (addNot) {
-    	    buffer.append(" AND "); //$NON-NLS-1$
+    public void visit(Comparison obj) {
+        boolean addNot = false;
+        if ((!isUpdate() || obj.getLeftExpression().getType() != TypeFacility.RUNTIME_TYPES.STRING)
+                && (obj.getOperator() == Operator.NE
+                || obj.getOperator() == Operator.LT
+                || obj.getOperator() == Operator.LE
+                || (obj.getOperator() == Operator.EQ && !(obj.getRightExpression() instanceof Literal)))) {
+            addNot = true;
+            buffer.append("("); //$NON-NLS-1$
+        }
+        super.visit(obj);
+        if (addNot) {
+            buffer.append(" AND "); //$NON-NLS-1$
             visitNode(obj.getLeftExpression());
             if (!isUpdate()) {
                 buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
             } else {
                 buffer.append(" <> \"\")"); //$NON-NLS-1$
             }
-	    }
-	}
+        }
+    }
 
-	protected boolean isUpdate() {
-	    return true;
-	}
+    protected boolean isUpdate() {
+        return true;
+    }
 }

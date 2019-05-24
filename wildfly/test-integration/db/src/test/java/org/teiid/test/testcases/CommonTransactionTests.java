@@ -390,9 +390,9 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
 
         // now verify the results
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1")) {
-	    protected boolean compareCaseSensitive() {
-		return false;
-	    }
+        protected boolean compareCaseSensitive() {
+        return false;
+        }
         };
         test.execute("select * from g1 where e1 >= 100 and e1 < 115");
         test.assertRowCount(15);
@@ -441,9 +441,9 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
 
         // now verify the results
         AbstractQueryTest test = new QueryExecution(userTxn.getSource("pm1")){
-	    protected boolean compareCaseSensitive() {
-		return false;
-	    }
+        protected boolean compareCaseSensitive() {
+        return false;
+        }
         };
         test.execute("select * from g1 where e1 >= 200 and e1 < 207");
         test.assertRowCount(5);
@@ -517,34 +517,34 @@ public abstract class CommonTransactionTests extends BaseAbstractTransactionTest
 
             public void after() {
                 if (!exceptionOccurred()) {
-                   	Assert.assertTrue("should have failed with time out exception", false );
+                       Assert.assertTrue("should have failed with time out exception", false );
                 }
                 else {
                     if (getLastException() != null) {
 
-                	String msg = "NA";
-                 	SQLException s = getLastException();
+                    String msg = "NA";
+                     SQLException s = getLastException();
 
-                 	Throwable t = s.getCause();
-                 	if (t instanceof TimeoutException) {
-                 	   msg = t.getMessage();
-                 	} else if (s instanceof TeiidSQLException) {
-                 		 TeiidSQLException mm = (TeiidSQLException) t;
-                 	     if (mm.getNextException() != null) {
-                 		 SQLException next = mm.getNextException();
-                 		 msg = next.getMessage();
-                 	     } else {
-                 		 msg = mm.getMessage();
-                 	     }
-                 	} else {
+                     Throwable t = s.getCause();
+                     if (t instanceof TimeoutException) {
+                        msg = t.getMessage();
+                     } else if (s instanceof TeiidSQLException) {
+                          TeiidSQLException mm = (TeiidSQLException) t;
+                          if (mm.getNextException() != null) {
+                          SQLException next = mm.getNextException();
+                          msg = next.getMessage();
+                          } else {
+                          msg = mm.getMessage();
+                          }
+                     } else {
 
-                 	    msg = s.getMessage();
-                 	}
-                 	boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
+                         msg = s.getMessage();
+                     }
+                     boolean isfound = (msg.indexOf("Operation timed out before completion") != -1 ? true : false);
 
-                 	Assert.assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
+                     Assert.assertTrue("Exception Message didnt match 'Operation timed out before completion' found: " + msg, isfound );
                     } else {
-                	Assert.assertTrue("Program Error: it indicates exception occured, but no exception is found", false );
+                    Assert.assertTrue("Program Error: it indicates exception occured, but no exception is found", false );
                     }
                 }
             }

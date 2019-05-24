@@ -131,10 +131,10 @@ public class RulePlanProcedures implements OptimizerRule {
             Criteria crit = Criteria.combineCriteria(conjuncts);
 
             if (crit != null) {
-	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_CRITERIA, crit);
-	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_INPUTS, inputReferences);
-	            accessNode.setProperty(NodeConstants.Info.PROCEDURE_DEFAULTS, defaults);
-	            accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+                accessNode.setProperty(NodeConstants.Info.PROCEDURE_CRITERIA, crit);
+                accessNode.setProperty(NodeConstants.Info.PROCEDURE_INPUTS, inputReferences);
+                accessNode.setProperty(NodeConstants.Info.PROCEDURE_DEFAULTS, defaults);
+                accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
             }
         }
 
@@ -183,22 +183,22 @@ public class RulePlanProcedures implements OptimizerRule {
 
                 public void visit(DependentSetCriteria obj) {
                     if (obj.isNegated()) {
-                    	return; //just a sanity check
+                        return; //just a sanity check
                     }
-                	if (obj.hasMultipleAttributes()) {
-                		for (AttributeComparison comp : obj.getAttributes()) {
-                			if (!checkForInput(comp.dep)) {
-                				return;
-                			}
-                		}
-                		for (AttributeComparison comp : obj.getAttributes()) {
-                			params.add(((Reference)comp.dep).getExpression());
-                		}
-                		conjuncts.add(crit);
+                    if (obj.hasMultipleAttributes()) {
+                        for (AttributeComparison comp : obj.getAttributes()) {
+                            if (!checkForInput(comp.dep)) {
+                                return;
+                            }
+                        }
+                        for (AttributeComparison comp : obj.getAttributes()) {
+                            params.add(((Reference)comp.dep).getExpression());
+                        }
+                        conjuncts.add(crit);
                         NodeEditor.removeChildNode(currentNode.getParent(), currentNode);
-                	} else if (checkForInput(obj.getExpression())) {
-                		addInputNode((Reference)obj.getExpression());
-                	}
+                    } else if (checkForInput(obj.getExpression())) {
+                        addInputNode((Reference)obj.getExpression());
+                    }
                 }
 
                 boolean checkForInput(Expression expr) {
@@ -210,8 +210,8 @@ public class RulePlanProcedures implements OptimizerRule {
                     return inputs.contains(ref.getExpression());
                 }
 
-				boolean checkForAnyInput(LanguageObject expr) {
-                	for (Reference ref : ReferenceCollectorVisitor.getReferences(expr)) {
+                boolean checkForAnyInput(LanguageObject expr) {
+                    for (Reference ref : ReferenceCollectorVisitor.getReferences(expr)) {
                         if (checkForInput(ref)) {
                             return true;
                         }
@@ -220,7 +220,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
 
                 boolean checkForAnyInput(Collection<Expression> expressions) {
-                	for (Expression expr : expressions) {
+                    for (Expression expr : expressions) {
                         if (checkForAnyInput(expr)) {
                             return true;
                         }

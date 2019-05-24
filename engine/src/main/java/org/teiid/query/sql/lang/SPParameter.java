@@ -61,8 +61,8 @@ public class SPParameter implements Cloneable {
     private List<ElementSymbol> resultSetColumns;      //contains List of columns if it is result set
     private List<Object> resultSetIDs;          // contains List of metadataIDs for each column in the result set
     private boolean usingDefault;
-	private boolean varArg;
-	private ElementSymbol parameterSymbol;
+    private boolean varArg;
+    private ElementSymbol parameterSymbol;
 
     /**
      * Constructor used when constructing a parameter during execution.  In this case we
@@ -109,9 +109,9 @@ public class SPParameter implements Cloneable {
      * @param name Parameter name
      */
     public void setName(String name) {
-    	ElementSymbol es = new ElementSymbol(name);
-    	es.setMetadataID(parameterSymbol.getMetadataID());
-    	es.setType(parameterSymbol.getType());
+        ElementSymbol es = new ElementSymbol(name);
+        es.setMetadataID(parameterSymbol.getMetadataID());
+        es.setType(parameterSymbol.getType());
         this.parameterSymbol = es;
     }
 
@@ -278,7 +278,7 @@ public class SPParameter implements Cloneable {
      * @return Element symbol representing the parameter
      */
     public ElementSymbol getParameterSymbol() {
-		return parameterSymbol;
+        return parameterSymbol;
     }
 
     /**
@@ -286,15 +286,15 @@ public class SPParameter implements Cloneable {
      * @see java.lang.Object#equals(Object)
      */
     public boolean equals(Object obj) {
-		if(obj == this) {
-			return true;
-		}
+        if(obj == this) {
+            return true;
+        }
 
-		if(!(obj instanceof SPParameter)){
-			return false;
-		}
+        if(!(obj instanceof SPParameter)){
+            return false;
+        }
 
-		//the parameters are considered equal if the indexes are the same
+        //the parameters are considered equal if the indexes are the same
         SPParameter other = (SPParameter) obj;
         if (this.getIndex() != other.getIndex()) {
             return false;
@@ -302,7 +302,7 @@ public class SPParameter implements Cloneable {
 
         // If indexes match, check associated IDs if existent
         return EquivalenceUtil.areEqual(this.expression, other.expression);
-	}
+    }
 
     /**
      * @see java.lang.Object#hashCode()
@@ -345,20 +345,20 @@ public class SPParameter implements Cloneable {
         return "?"; //$NON-NLS-1$
     }
 
-	public boolean isUsingDefault() {
-		return usingDefault;
-	}
+    public boolean isUsingDefault() {
+        return usingDefault;
+    }
 
-	public void setUsingDefault(boolean usingDefault) {
-		this.usingDefault = usingDefault;
-	}
+    public void setUsingDefault(boolean usingDefault) {
+        this.usingDefault = usingDefault;
+    }
 
-	public void setVarArg(boolean varArg) {
-		this.varArg = varArg;
-	}
+    public void setVarArg(boolean varArg) {
+        this.varArg = varArg;
+    }
 
-	public boolean isVarArg() {
-		return varArg;
-	}
+    public boolean isVarArg() {
+        return varArg;
+    }
 
 }

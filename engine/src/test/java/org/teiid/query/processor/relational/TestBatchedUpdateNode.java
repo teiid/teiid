@@ -51,11 +51,11 @@ import org.teiid.query.util.CommandContext;
 public class TestBatchedUpdateNode {
 
     private BatchedUpdateNode helpGetNode(String[] sql, QueryMetadataInterface md, ProcessorDataManager pdm) throws Exception {
-    	List<Command> commands = TestBatchedUpdatePlanner.helpGetCommands(sql, md);
-    	List<Boolean> shouldEvaluate = new ArrayList<Boolean>(commands.size());
-    	for (Command command : commands) {
-			shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
-		}
+        List<Command> commands = TestBatchedUpdatePlanner.helpGetCommands(sql, md);
+        List<Boolean> shouldEvaluate = new ArrayList<Boolean>(commands.size());
+        for (Command command : commands) {
+            shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
+        }
         BatchedUpdateNode node = new BatchedUpdateNode(1, commands, Collections.EMPTY_LIST, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
         context.setMetadata(md);
@@ -84,9 +84,9 @@ public class TestBatchedUpdateNode {
         BatchedUpdateNode node = helpOpen(commands, fakePDM);
         TupleBatch batch = null;
         try {
-        	batch = node.nextBatch();
+            batch = node.nextBatch();
         } catch (BlockedException e) {
-        	batch = node.nextBatch();
+            batch = node.nextBatch();
         }
         assertNotNull(batch);
         assertTrue(batch.getTerminationFlag());
@@ -184,7 +184,7 @@ public class TestBatchedUpdateNode {
 
     @Test public void testNextBatchSomeCommandsExecuted() throws Exception {
         String[] commands = {"DELETE FROM pm1.g2 WHERE 1 = 0", //$NON-NLS-1$
-        					 "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
+                             "UPDATE pm1.g1 SET e2 = 50 WHERE e1 = 'criteria'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE e1 = 'myrow'", //$NON-NLS-1$
                              "UPDATE pm1.g2 set e2 = 5, e3 = {b'false'}, e4 = 3.33 WHERE 1 = 0" //$NON-NLS-1$
         };
@@ -201,11 +201,11 @@ public class TestBatchedUpdateNode {
     }
 
     private static final class FakePDM implements ProcessorDataManager {
-    	private int numExecutedCommands;
+        private int numExecutedCommands;
         private List<String> commands = new ArrayList<String>();
         private List<Command> actualCommands = new ArrayList<Command>();
         private FakePDM(int numExecutedCommands) {
-        	this.numExecutedCommands = numExecutedCommands;
+            this.numExecutedCommands = numExecutedCommands;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
         public TupleSource registerRequest(CommandContext context,Command command,String modelName,RegisterRequestParameter parameterObject) throws TeiidComponentException {
@@ -215,11 +215,11 @@ public class TestBatchedUpdateNode {
             actualCommands.add(command);
             return new FakeTupleSource(numExecutedCommands);
         }
-		@Override
-		public EventDistributor getEventDistributor() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public EventDistributor getEventDistributor() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;
@@ -231,10 +231,10 @@ public class TestBatchedUpdateNode {
         public void closeSource() {}
         public List nextTuple() throws TeiidComponentException {
             if (first) {
-            	first = false;
-            	throw BlockedException.INSTANCE;
+                first = false;
+                throw BlockedException.INSTANCE;
             }
-        	if (currentTuple++ < numCommands) {
+            if (currentTuple++ < numCommands) {
                 return Arrays.asList(new Object[] {new Integer(1)});
             }
             return null;

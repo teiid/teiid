@@ -54,9 +54,9 @@ import org.teiid.query.validator.ValidatorReport;
 @SuppressWarnings("nls")
 public class TestProcedurePlanner {
 
-	// ################ getReplacementClause tests ###################
+    // ################ getReplacementClause tests ###################
 
-	private ProcessorPlan helpPlanProcedure(String userQuery,
+    private ProcessorPlan helpPlanProcedure(String userQuery,
                                             String procedure,
                                             TriggerEvent procedureType) throws TeiidComponentException,
                                                                  QueryMetadataException, TeiidProcessingException {
@@ -66,13 +66,13 @@ public class TestProcedurePlanner {
         Command userCommand = userQuery != null ? parser.parseCommand(userQuery) : parser.parseCommand(procedure);
 
         if (userCommand instanceof CreateProcedureCommand) {
-        	GroupSymbol gs = new GroupSymbol("proc");
-        	gs.setMetadataID(new TempMetadataID("proc", Collections.EMPTY_LIST));
-        	((CreateProcedureCommand)userCommand).setVirtualGroup(gs);
+            GroupSymbol gs = new GroupSymbol("proc");
+            gs.setMetadataID(new TempMetadataID("proc", Collections.EMPTY_LIST));
+            ((CreateProcedureCommand)userCommand).setVirtualGroup(gs);
         }
 
         QueryResolver.resolveCommand(userCommand, metadata);
-		ValidatorReport report = Validator.validate(userCommand, metadata);
+        ValidatorReport report = Validator.validate(userCommand, metadata);
 
         if (report.hasItems()) {
             ValidatorFailure firstFailure = report.getItems().iterator().next();
@@ -89,7 +89,7 @@ public class TestProcedurePlanner {
                 System.out.println(analysisRecord.getDebugLog());
             }
         }
-	}
+    }
 
     // =============================================================================
     // TESTS

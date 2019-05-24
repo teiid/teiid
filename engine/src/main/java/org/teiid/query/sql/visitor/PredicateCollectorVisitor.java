@@ -119,14 +119,14 @@ public class PredicateCollectorVisitor extends LanguageVisitor {
         this.predicates.add(obj);
     }
 
-	/**
-	 * Visit a language object and collect criteria.  This method should <b>NOT</b> be
-	 * called directly.
-	 * @param obj Language object
-	 */
-	public void visit(SubquerySetCriteria obj) {
-		this.predicates.add(obj);
-	}
+    /**
+     * Visit a language object and collect criteria.  This method should <b>NOT</b> be
+     * called directly.
+     * @param obj Language object
+     */
+    public void visit(SubquerySetCriteria obj) {
+        this.predicates.add(obj);
+    }
 
     /**
      * Get a collection of predicates discovered while visiting.

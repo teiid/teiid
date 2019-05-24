@@ -47,9 +47,9 @@ public class HostInfo {
      * @param addr
      */
     public HostInfo(String hostName, InetSocketAddress addr) {
-    	this.hostName = hostName;
-    	this.portNumber = addr.getPort();
-    	this.inetAddress = addr.getAddress();
+        this.hostName = hostName;
+        this.portNumber = addr.getPort();
+        this.inetAddress = addr.getAddress();
     }
 
     /**
@@ -59,21 +59,21 @@ public class HostInfo {
      * @param port
      */
     public HostInfo (String host, int port) {
-    	ArgCheck.isNotNull(host);
-		this.hostName = host.toLowerCase();
-    	this.portNumber = port;
+        ArgCheck.isNotNull(host);
+        this.hostName = host.toLowerCase();
+        this.portNumber = port;
     }
 
     public InetAddress getInetAddress() throws UnknownHostException {
-    	if (inetAddress != null) {
-    		return inetAddress;
-    	}
-    	//only cache inetaddresses if they represent the ip.
-		InetAddress addr = InetAddress.getByName(this.hostName);
-		if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
-			this.inetAddress = addr;
-		}
-		return addr;
+        if (inetAddress != null) {
+            return inetAddress;
+        }
+        //only cache inetaddresses if they represent the ip.
+        InetAddress addr = InetAddress.getByName(this.hostName);
+        if (addr.getHostAddress().equalsIgnoreCase(this.hostName)) {
+            this.inetAddress = addr;
+        }
+        return addr;
     }
 
     public String getHostName() {
@@ -84,7 +84,7 @@ public class HostInfo {
         return portNumber;
     }
 
-	public String toString() {
+    public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append(hostName).append(":").append(portNumber); //$NON-NLS-1$
         return sb.toString();
@@ -95,21 +95,21 @@ public class HostInfo {
      * @since 4.2
      */
     public boolean equals(Object obj) {
-    	if (obj == this) {
-    		return true;
-    	}
-    	if (!(obj instanceof HostInfo)) {
-    		return false;
-    	}
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof HostInfo)) {
+            return false;
+        }
         HostInfo hostInfo = (HostInfo) obj;
         if (portNumber != hostInfo.getPortNumber()) {
-        	return false;
+            return false;
         }
         if (ssl != hostInfo.ssl) {
-        	return false;
+            return false;
         }
         if (inetAddress != null && hostInfo.inetAddress != null) {
-        	return inetAddress.equals(hostInfo.inetAddress);
+            return inetAddress.equals(hostInfo.inetAddress);
         }
         return hostName.equals(hostInfo.getHostName());
     }
@@ -124,15 +124,15 @@ public class HostInfo {
     }
 
     public boolean isResolved() {
-    	return this.inetAddress != null;
+        return this.inetAddress != null;
     }
 
     public boolean isSsl() {
-		return ssl;
-	}
+        return ssl;
+    }
 
     public void setSsl(boolean ssl) {
-		this.ssl = ssl;
-	}
+        this.ssl = ssl;
+    }
 
 }

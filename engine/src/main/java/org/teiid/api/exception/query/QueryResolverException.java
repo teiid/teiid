@@ -29,8 +29,8 @@ import org.teiid.core.BundleUtil;
  */
 public class QueryResolverException extends QueryProcessingException {
 
-	private static final long serialVersionUID = 752912934870580744L;
-	private transient List<UnresolvedSymbolDescription> problems;
+    private static final long serialVersionUID = 752912934870580744L;
+    private transient List<UnresolvedSymbolDescription> problems;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -74,13 +74,13 @@ public class QueryResolverException extends QueryProcessingException {
         super(event, msg);
     }
 
-	/**
-	 * Set the list of unresolved symbols during QueryResolution
-	 * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
-	 */
-	public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
-		this.problems = unresolvedSymbols;
-	}
+    /**
+     * Set the list of unresolved symbols during QueryResolution
+     * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
+     */
+    public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
+        this.problems = unresolvedSymbols;
+    }
 
     /**
      * Add an UnresolvedSymbolDescription to the list of unresolved symbols
@@ -93,11 +93,11 @@ public class QueryResolverException extends QueryProcessingException {
         this.problems.add(symbolDesc);
     }
 
-	/**
-	 * Set the list of unresolved symbols during QueryResolution
-	 * @return List of {@link UnresolvedSymbolDescription} objects
-	 */
-	public List<UnresolvedSymbolDescription> getUnresolvedSymbols() {
-		return this.problems;
-	}
+    /**
+     * Set the list of unresolved symbols during QueryResolution
+     * @return List of {@link UnresolvedSymbolDescription} objects
+     */
+    public List<UnresolvedSymbolDescription> getUnresolvedSymbols() {
+        return this.problems;
+    }
 }

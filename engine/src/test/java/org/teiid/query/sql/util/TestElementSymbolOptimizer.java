@@ -45,12 +45,12 @@ public class TestElementSymbolOptimizer {
     }
 
     public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-    	Command command = helpResolve(sql, new BasicQueryMetadataWrapper(metadata){
-    		@Override
-    		public boolean findShortName() {
-    			return true;
-    		}
-    	});
+        Command command = helpResolve(sql, new BasicQueryMetadataWrapper(metadata){
+            @Override
+            public boolean findShortName() {
+                return true;
+            }
+        });
         String actual = command.toString();
 
         assertEquals("Expected different optimized string", expected, actual);             //$NON-NLS-1$
@@ -162,15 +162,15 @@ public class TestElementSymbolOptimizer {
     }
 
     @Test public void testOutputNames() throws Exception {
-    	String sql = "select PM1.g1.e1, e2 FROM Pm1.G1";
-    	Command command = QueryParser.getQueryParser().parseCommand(sql);
+        String sql = "select PM1.g1.e1, e2 FROM Pm1.G1";
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
 
-    	QueryMetadataInterface metadata = new BasicQueryMetadataWrapper(RealMetadataFactory.example1Cached()){
-    		public boolean useOutputName() {
-    			return false;
-    		};
-    	};
-    	QueryResolver.resolveCommand(command, metadata);
+        QueryMetadataInterface metadata = new BasicQueryMetadataWrapper(RealMetadataFactory.example1Cached()){
+            public boolean useOutputName() {
+                return false;
+            };
+        };
+        QueryResolver.resolveCommand(command, metadata);
 
         assertEquals("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", command.toString());
     }

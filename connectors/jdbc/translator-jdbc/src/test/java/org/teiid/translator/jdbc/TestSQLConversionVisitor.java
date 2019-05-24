@@ -53,16 +53,16 @@ public class TestSQLConversionVisitor {
                                                                             "ExecCount");     //$NON-NLS-1$
 
     static {
-    	context.setSession(new SessionMetadata());
+        context.setSession(new SessionMetadata());
     }
 
     private static JDBCExecutionFactory TRANSLATOR;
 
     @BeforeClass public static void oneTimeSetup() throws TranslatorException {
-    	TRANSLATOR = new JDBCExecutionFactory();
-    	TRANSLATOR.setTrimStrings(true);
-    	TRANSLATOR.setUseBindVariables(false);
-    	TRANSLATOR.start();
+        TRANSLATOR = new JDBCExecutionFactory();
+        TRANSLATOR.setTrimStrings(true);
+        TRANSLATOR.setUseBindVariables(false);
+        TRANSLATOR.start();
     }
 
     public String getTestVDB() {
@@ -74,27 +74,27 @@ public class TestSQLConversionVisitor {
     }
 
     public TranslatedCommand helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
-    	JDBCExecutionFactory trans = new JDBCExecutionFactory();
-    	trans.setUseBindVariables(usePreparedStatement);
+        JDBCExecutionFactory trans = new JDBCExecutionFactory();
+        trans.setUseBindVariables(usePreparedStatement);
         try {
-			trans.start();
-	        return TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
-		} catch (TranslatorException e) {
-			throw new RuntimeException(e);
-		}
+            trans.start();
+            return TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
+        } catch (TranslatorException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private String getStringWithContext(LanguageObject obj) throws TranslatorException {
-    	return getStringWithContext(obj, null);
+        return getStringWithContext(obj, null);
     }
 
     private String getStringWithContext(LanguageObject obj, String comment) throws TranslatorException {
-    	JDBCExecutionFactory env = new JDBCExecutionFactory();
-    	env.setUseCommentsInSourceQuery(true);
-    	env.setUseBindVariables(false);
-    	if (comment != null) {
-    		env.setCommentFormat(comment);
-    	}
+        JDBCExecutionFactory env = new JDBCExecutionFactory();
+        env.setUseCommentsInSourceQuery(true);
+        env.setUseBindVariables(false);
+        if (comment != null) {
+            env.setCommentFormat(comment);
+        }
         env.start();
 
         SQLConversionVisitor visitor = env.getSQLConversionVisitor();
@@ -413,7 +413,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testNestedSetQuery() throws Exception {
-    	String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION ALL (SELECT PARTS.PART_NAME FROM PARTS UNION SELECT rtrim(PARTS.PART_ID) FROM PARTS)"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -422,7 +422,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testNestedSetQuery1() throws Exception {
-    	String input = "select part_id id FROM parts UNION (select part_name FROM parts EXCEPT select part_id FROM parts)"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION (select part_name FROM parts EXCEPT select part_id FROM parts)"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION (SELECT PARTS.PART_NAME FROM PARTS EXCEPT SELECT rtrim(PARTS.PART_ID) FROM PARTS)"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -431,7 +431,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testNestedSetQuery2() throws Exception {
-    	String input = "select part_id id FROM parts UNION select part_name FROM parts EXCEPT select part_id FROM parts"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION select part_name FROM parts EXCEPT select part_id FROM parts"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION SELECT PARTS.PART_NAME FROM PARTS EXCEPT SELECT rtrim(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -440,7 +440,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testNestedSetQuery3() throws Exception {
-    	String input = "select part_id id FROM parts UNION (select part_name FROM parts Union ALL select part_id FROM parts)"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION (select part_name FROM parts Union ALL select part_id FROM parts)"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS UNION SELECT PARTS.PART_NAME FROM PARTS UNION SELECT rtrim(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -449,7 +449,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testUpdateTrimStrings() throws Exception {
-    	String input = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
+        String input = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
         String output = "UPDATE PARTS SET PART_ID = NULL WHERE PARTS.PART_COLOR = 'b'"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -465,7 +465,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testOrderByUnrelated() throws Exception {
-    	String input = "select part_id id FROM parts order by part_name"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts order by part_name"; //$NON-NLS-1$
         String output = "SELECT rtrim(PARTS.PART_ID) AS id FROM PARTS ORDER BY PARTS.PART_NAME"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -474,7 +474,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testVarbinary() throws Exception {
-    	String input = "select X'AB' FROM parts"; //$NON-NLS-1$
+        String input = "select X'AB' FROM parts"; //$NON-NLS-1$
         String output = "SELECT X'AB' FROM PARTS"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -497,7 +497,7 @@ public class TestSQLConversionVisitor {
     }
 
     @Test public void testFunctionNativeQuery() throws SQLException {
-    	String ddl = "create foreign table t (x integer, y integer); create foreign function bsl (arg1 integer, arg2 integer) returns integer OPTIONS (\"teiid_rel:native-query\" '$1 << $2');";
+        String ddl = "create foreign table t (x integer, y integer); create foreign function bsl (arg1 integer, arg2 integer) returns integer OPTIONS (\"teiid_rel:native-query\" '$1 << $2');";
 
         helpTestVisitor(ddl,
                         "select bsl(x, y) from t", //$NON-NLS-1$
@@ -543,9 +543,9 @@ public class TestSQLConversionVisitor {
 
     @Test public void testProcedureTable() {
         helpTestVisitor("create foreign table smallb (intkey integer, stringkey string); "
-        		+ "create foreign procedure spTest5 (param integer) returns table(stringkey string options (nameinsource 'other'), intkey integer)",
-        		"select smallb.intkey, x.stringkey, x.intkey "
-                		+ "from smallb left outer join lateral (exec spTest5(smallb.intkey)) as x on (true)",
+                + "create foreign procedure spTest5 (param integer) returns table(stringkey string options (nameinsource 'other'), intkey integer)",
+                "select smallb.intkey, x.stringkey, x.intkey "
+                        + "from smallb left outer join lateral (exec spTest5(smallb.intkey)) as x on (true)",
                         "SELECT smallb.intkey, x.other, x.intkey FROM smallb LEFT OUTER JOIN LATERAL (EXEC spTest5(smallb.intkey)) AS x ON 1 = 1", //$NON-NLS-1$
                         true);
     }

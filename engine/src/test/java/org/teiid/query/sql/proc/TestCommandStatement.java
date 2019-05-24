@@ -31,49 +31,49 @@ import junit.framework.*;
  */
 public class TestCommandStatement  extends TestCase {
 
-	// ################################## FRAMEWORK ################################
+    // ################################## FRAMEWORK ################################
 
-	public TestCommandStatement(String name) {
-		super(name);
-	}
+    public TestCommandStatement(String name) {
+        super(name);
+    }
 
-	// ################################## TEST HELPERS ################################
+    // ################################## TEST HELPERS ################################
 
-	public static final CommandStatement sample1() {
-		QueryParser parser = new QueryParser();
-		try {
-			Query query = (Query) parser.parseCommand("Select x from y"); //$NON-NLS-1$
-			return new CommandStatement(query);
-		} catch(Exception e) { return null;}
-	}
+    public static final CommandStatement sample1() {
+        QueryParser parser = new QueryParser();
+        try {
+            Query query = (Query) parser.parseCommand("Select x from y"); //$NON-NLS-1$
+            return new CommandStatement(query);
+        } catch(Exception e) { return null;}
+    }
 
-	public static final CommandStatement sample2() {
-		QueryParser parser = new QueryParser();
-		try {
-			Update update = (Update) parser.parseCommand("UPDATE x SET x = 'y'"); //$NON-NLS-1$
-			return new CommandStatement(update);
-		} catch(Exception e) { return null;}
-	}
+    public static final CommandStatement sample2() {
+        QueryParser parser = new QueryParser();
+        try {
+            Update update = (Update) parser.parseCommand("UPDATE x SET x = 'y'"); //$NON-NLS-1$
+            return new CommandStatement(update);
+        } catch(Exception e) { return null;}
+    }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
-	public void testSelfEquivalence(){
-		CommandStatement s1 = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1);
-	}
+    public void testSelfEquivalence(){
+        CommandStatement s1 = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1);
+    }
 
-	public void testEquivalence(){
-		CommandStatement s1 = sample1();
-		CommandStatement s1a = sample1();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
-	}
+    public void testEquivalence(){
+        CommandStatement s1 = sample1();
+        CommandStatement s1a = sample1();
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
+    }
 
-	public void testNonEquivalence(){
-		CommandStatement s1 = sample1();
-		CommandStatement s2 = sample2();
-		int equals = -1;
-		UnitTestUtil.helpTestEquivalence(equals, s1, s2);
-	}
+    public void testNonEquivalence(){
+        CommandStatement s1 = sample1();
+        CommandStatement s2 = sample2();
+        int equals = -1;
+        UnitTestUtil.helpTestEquivalence(equals, s1, s2);
+    }
 }

@@ -86,8 +86,8 @@ public final class MessageLevel {
         public static final String CRITICAL     = "CRITICAL"; //$NON-NLS-1$
         public static final String ERROR        = "ERROR"; //$NON-NLS-1$
         public static final String WARNING      = "WARNING"; //$NON-NLS-1$
-	    public static final String INFO         = "INFO"; //$NON-NLS-1$
-	    public static final String DETAIL       = "DETAIL"; //$NON-NLS-1$
+        public static final String INFO         = "INFO"; //$NON-NLS-1$
+        public static final String DETAIL       = "DETAIL"; //$NON-NLS-1$
         public static final String TRACE        = "TRACE"; //$NON-NLS-1$
         public static final String NONE         = "NONE"; //$NON-NLS-1$
         static final String UNKNOWN   = "UNKNOWN"; //$NON-NLS-1$
@@ -101,8 +101,8 @@ public final class MessageLevel {
         public static final String CRITICAL     = "Critical"; //$NON-NLS-1$
         public static final String ERROR        = "Error"; //$NON-NLS-1$
         public static final String WARNING      = "Warning"; //$NON-NLS-1$
-	    public static final String INFO         = "Information"; //$NON-NLS-1$
-	    public static final String DETAIL       = "Detail"; //$NON-NLS-1$
+        public static final String INFO         = "Information"; //$NON-NLS-1$
+        public static final String DETAIL       = "Detail"; //$NON-NLS-1$
         public static final String TRACE        = "Trace"; //$NON-NLS-1$
         public static final String NONE         = "None"; //$NON-NLS-1$
     }
@@ -168,7 +168,7 @@ public final class MessageLevel {
      * @see #NONE
      */
     public static int getValidLowerMessageLevel() {
-    	return MessageLevel.NONE;
+        return MessageLevel.NONE;
     }
 
     /**
@@ -178,7 +178,7 @@ public final class MessageLevel {
      * @see #TRACE
      */
     public static int getValidUpperMessageLevel() {
-    	return MessageLevel.TRACE;
+        return MessageLevel.TRACE;
     }
 
     public static String getLabelForLevel( int level ) {

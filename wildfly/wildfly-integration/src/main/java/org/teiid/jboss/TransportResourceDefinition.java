@@ -23,20 +23,20 @@ import org.jboss.as.controller.operations.common.GenericSubsystemDescribeHandler
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 class TransportResourceDefinition extends SimpleResourceDefinition {
-	public static final PathElement TRANSPORT_PATH = PathElement.pathElement(Element.TRANSPORT_ELEMENT.getLocalName());
-	/*
-	private final List<AccessConstraintDefinition> accessConstraints;
-	*/
+    public static final PathElement TRANSPORT_PATH = PathElement.pathElement(Element.TRANSPORT_ELEMENT.getLocalName());
+    /*
+    private final List<AccessConstraintDefinition> accessConstraints;
+    */
 
-	public TransportResourceDefinition() {
-		super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()),
-				TransportAdd.INSTANCE,
-				TransportRemove.INSTANCE);
-		/*
+    public TransportResourceDefinition() {
+        super(TRANSPORT_PATH, TeiidExtension.getResourceDescriptionResolver(Element.TRANSPORT_ELEMENT.getLocalName()),
+                TransportAdd.INSTANCE,
+                TransportRemove.INSTANCE);
+        /*
         ApplicationTypeConfig atc = new ApplicationTypeConfig(TeiidExtension.TEIID_SUBSYSTEM, Element.TRANSPORT_ELEMENT.getLocalName());
         this.accessConstraints = new ApplicationTypeAccessConstraintDefinition(atc).wrapAsList();
         */
-	}
+    }
 
     @Override
     public void registerOperations(ManagementResourceRegistration resourceRegistration) {
@@ -46,9 +46,9 @@ class TransportResourceDefinition extends SimpleResourceDefinition {
 
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
-		for (int i = 0; i < TransportAdd.ATTRIBUTES.length; i++) {
-			resourceRegistration.registerReadWriteAttribute(TransportAdd.ATTRIBUTES[i], null, new AttributeWrite(TransportAdd.ATTRIBUTES[i]));
-		}
+        for (int i = 0; i < TransportAdd.ATTRIBUTES.length; i++) {
+            resourceRegistration.registerReadWriteAttribute(TransportAdd.ATTRIBUTES[i], null, new AttributeWrite(TransportAdd.ATTRIBUTES[i]));
+        }
     }
 
     @Override

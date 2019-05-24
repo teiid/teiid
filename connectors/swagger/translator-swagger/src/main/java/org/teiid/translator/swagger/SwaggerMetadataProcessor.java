@@ -123,13 +123,13 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
 
     @TranslatorProperty(display="Swagger metadata file path", category=PropertyType.IMPORT,
             description="Swagger metadata file path.")
-	public String getSwaggerFilePath() {
-		return swaggerFilePath;
-	}
+    public String getSwaggerFilePath() {
+        return swaggerFilePath;
+    }
 
-	public void setSwaggerFilePath(String swaggerFilePath) {
-		this.swaggerFilePath = swaggerFilePath;
-	}
+    public void setSwaggerFilePath(String swaggerFilePath) {
+        this.swaggerFilePath = swaggerFilePath;
+    }
 
     @TranslatorProperty(display="Use Host from Swagger File", category=PropertyType.IMPORT,
             description="Use default host specified in the Swagger file; Defaults to true")
@@ -667,36 +667,36 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     }
 
     protected Swagger getSchema(WSConnection conn) throws TranslatorException {
-    	Swagger swagger = null;
+        Swagger swagger = null;
 
         try {
-        	String swaggerFile = getSwaggerFilePath();
+            String swaggerFile = getSwaggerFilePath();
 
-        	if( swaggerFile != null &&  !swaggerFile.isEmpty()) {
+            if( swaggerFile != null &&  !swaggerFile.isEmpty()) {
                 File f = new File(swaggerFile);
 
                 if(!f.exists() || !f.isFile()) {
-	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
-	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
+                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28019,
+                            SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28019, swaggerFile));
                 }
 
                 SwaggerParser parser = new SwaggerParser();
                 swagger =  parser.read(f.getAbsolutePath(), null, true);
-        	} else {
-	            BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
-	            Map<String, List<String>> headers = new HashMap<String, List<String>>();
-	            BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "swagger.json", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
-	            call.execute();
-	            if (call.getResponseCode() != 200) {
-	                throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
-	                        SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28015,call.getResponseCode()));
-	            }
+            } else {
+                BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
+                Map<String, List<String>> headers = new HashMap<String, List<String>>();
+                BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "swagger.json", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
+                call.execute();
+                if (call.getResponseCode() != 200) {
+                    throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
+                            SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28015,call.getResponseCode()));
+                }
 
-	            Blob out = (Blob)call.getOutputParameterValues().get(0);
-	            ObjectMapper objectMapper = new ObjectMapper();
-	            JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
-	            swagger =  new SwaggerParser().read(rootNode, true);
-        	}
+                Blob out = (Blob)call.getOutputParameterValues().get(0);
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(out.getBinaryStream());
+                swagger =  new SwaggerParser().read(rootNode, true);
+            }
         } catch (Exception e) {
             throw new TranslatorException(SwaggerPlugin.Event.TEIID28016, e,
                     SwaggerPlugin.Util.gs(SwaggerPlugin.Event.TEIID28016, e));

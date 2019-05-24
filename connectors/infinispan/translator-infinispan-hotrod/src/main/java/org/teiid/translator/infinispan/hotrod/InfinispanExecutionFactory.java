@@ -48,25 +48,25 @@ import org.teiid.translator.UpdateExecution;
 
 @Translator(name = "infinispan-hotrod", description = "The Infinispan Translator Using Protobuf & Hotrod")
 public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFactory, InfinispanConnection>{
-	public static final int MAX_SET_SIZE = 1024;
-	public static final String TEIID_ALIAS_NAMING_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.aliasCacheName", "teiid-alias-naming-cache"); //$NON-NLS-1$ //$NON-NLS-2$
+    public static final int MAX_SET_SIZE = 1024;
+    public static final String TEIID_ALIAS_NAMING_CACHE = PropertiesUtils.getHierarchicalProperty("org.teiid.aliasCacheName", "teiid-alias-naming-cache"); //$NON-NLS-1$ //$NON-NLS-2$
 
-	private boolean supportsCompareCriteriaOrdered = true;
-	private boolean supportsUpsert = true;
-	private boolean supportsBulkUpdates = false;
+    private boolean supportsCompareCriteriaOrdered = true;
+    private boolean supportsUpsert = true;
+    private boolean supportsBulkUpdates = false;
 
-	public InfinispanExecutionFactory() {
-		setMaxInCriteriaSize(MAX_SET_SIZE);
-		setMaxDependentInPredicates(MAX_SET_SIZE);
-		setSupportsOrderBy(true);
-		setSupportsSelectDistinct(false);
-		setSupportsInnerJoins(true);
-		setSupportsFullOuterJoins(true);
-		setSupportsOuterJoins(true);
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-		setTransactionSupport(TransactionSupport.NONE);
-		setSourceRequiredForMetadata(true);
-	}
+    public InfinispanExecutionFactory() {
+        setMaxInCriteriaSize(MAX_SET_SIZE);
+        setMaxDependentInPredicates(MAX_SET_SIZE);
+        setSupportsOrderBy(true);
+        setSupportsSelectDistinct(false);
+        setSupportsInnerJoins(true);
+        setSupportsFullOuterJoins(true);
+        setSupportsOuterJoins(true);
+        setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+        setTransactionSupport(TransactionSupport.NONE);
+        setSourceRequiredForMetadata(true);
+    }
 
     @Override
     public void start() throws TranslatorException {
@@ -77,8 +77,8 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     public ResultSetExecution createResultSetExecution(QueryExpression command,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             InfinispanConnection connection) throws TranslatorException {
-		return new InfinispanQueryExecution(this, command, executionContext, metadata, connection,
-				supportsDirectQueryProcedure());
+        return new InfinispanQueryExecution(this, command, executionContext, metadata, connection,
+                supportsDirectQueryProcedure());
     }
 
     @Override
@@ -89,13 +89,13 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
                 connection, supportsDirectQueryProcedure());
     }
 
-	@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection)
-			throws TranslatorException {
-		return new InfinispanDirectQueryExecution(arguments, command, executionContext,
-				metadata, connection);
-	}
+    @Override
+    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection)
+            throws TranslatorException {
+        return new InfinispanDirectQueryExecution(arguments, command, executionContext,
+                metadata, connection);
+    }
 
     @Override
     public void getMetadata(MetadataFactory metadataFactory, InfinispanConnection conn) throws TranslatorException {
@@ -292,7 +292,7 @@ public class InfinispanExecutionFactory extends ExecutionFactory<ConnectionFacto
     @TranslatorProperty(display="Supports Bulk Update", description="If true, translator can support Bulk Updates",advanced=true)
     @Override
     public boolean supportsBulkUpdate() {
-    	return supportsBulkUpdates;
+        return supportsBulkUpdates;
     }
 
     public boolean setSupportsBulkUpdate(boolean supports) {

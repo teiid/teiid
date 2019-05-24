@@ -51,7 +51,7 @@ public class DependentValueSource implements
     private boolean distinct;
 
     public DependentValueSource(TupleBuffer tb) {
-    	this(tb, tb.getSchema());
+        this(tb, tb.getSchema());
     }
 
     public DependentValueSource(TupleBuffer tb, List<? extends Expression> schema) {
@@ -60,112 +60,112 @@ public class DependentValueSource implements
     }
 
     public TupleBuffer getTupleBuffer() {
-		return buffer;
-	}
+        return buffer;
+    }
 
     /**
      * @throws TeiidComponentException
      * @see org.teiid.query.sql.util.ValueIteratorSource#getValueIterator(org.teiid.query.sql.symbol.Expression)
      */
     public TupleSourceValueIterator getValueIterator(Expression valueExpression) throws  TeiidComponentException {
-    	IndexedTupleSource its = buffer.createIndexedTupleSource();
-    	int index = 0;
-    	if (valueExpression != null) {
-    		if (valueExpression instanceof Array) {
-    			final Array array = (Array)valueExpression;
-    			List<Expression> exprs = array.getExpressions();
-    			final int[] indexes = new int[exprs.size()];
-    			for (int i = 0; i < exprs.size(); i++) {
-					indexes[i] = getIndex(exprs.get(i));
-				}
-    	        return new TupleSourceValueIterator(its, index) {
-    	        	@Override
-    	        	public Object next() throws TeiidComponentException {
-    	        		List<?> tuple = super.nextTuple();
-    	        		Object[] a = (Object[]) java.lang.reflect.Array.newInstance(array.getComponentType(), indexes.length);
-    	        		for (int i = 0; i < indexes.length; i++) {
-    	        			a[i] = tuple.get(indexes[i]);
-    	        			if (a[i] == null) {
-    	        				return null; //TODO: this is a hack
-    	        			}
-    	        		}
-    	        		return new ArrayImpl(a);
-    	        	}
-    	        };
-    		}
-    		index = getIndex(valueExpression);
-    	}
+        IndexedTupleSource its = buffer.createIndexedTupleSource();
+        int index = 0;
+        if (valueExpression != null) {
+            if (valueExpression instanceof Array) {
+                final Array array = (Array)valueExpression;
+                List<Expression> exprs = array.getExpressions();
+                final int[] indexes = new int[exprs.size()];
+                for (int i = 0; i < exprs.size(); i++) {
+                    indexes[i] = getIndex(exprs.get(i));
+                }
+                return new TupleSourceValueIterator(its, index) {
+                    @Override
+                    public Object next() throws TeiidComponentException {
+                        List<?> tuple = super.nextTuple();
+                        Object[] a = (Object[]) java.lang.reflect.Array.newInstance(array.getComponentType(), indexes.length);
+                        for (int i = 0; i < indexes.length; i++) {
+                            a[i] = tuple.get(indexes[i]);
+                            if (a[i] == null) {
+                                return null; //TODO: this is a hack
+                            }
+                        }
+                        return new ArrayImpl(a);
+                    }
+                };
+            }
+            index = getIndex(valueExpression);
+        }
         return new TupleSourceValueIterator(its, index);
     }
 
-	private int getIndex(Expression valueExpression) {
-		int index = schema.indexOf(valueExpression);
-		Assertion.assertTrue(index != -1);
-		return index;
-	}
+    private int getIndex(Expression valueExpression) {
+        int index = schema.indexOf(valueExpression);
+        Assertion.assertTrue(index != -1);
+        return index;
+    }
 
     public Set<Object> getCachedSet(Expression valueExpression) throws TeiidComponentException, TeiidProcessingException {
-    	Set<Object> result = null;
-    	if (cachedSets != null) {
-    		result = cachedSets.get(valueExpression);
-    	}
-    	if (result == null) {
-			if (buffer.getRowCount() > buffer.getBatchSize()) {
-				return null;
-			}
-			TupleSourceValueIterator ve = getValueIterator(valueExpression);
-        	int index = 0;
-        	Class<?> type = null;
-        	if (valueExpression instanceof Array) {
-        		type = ((Array)valueExpression).getComponentType();
-        	} else {
-        		if (valueExpression != null) {
-	        		index = schema.indexOf(valueExpression);
-	            	Assertion.assertTrue(index != -1);
-        		}
-            	type = ((Expression)schema.get(index)).getType();
-        	}
+        Set<Object> result = null;
+        if (cachedSets != null) {
+            result = cachedSets.get(valueExpression);
+        }
+        if (result == null) {
+            if (buffer.getRowCount() > buffer.getBatchSize()) {
+                return null;
+            }
+            TupleSourceValueIterator ve = getValueIterator(valueExpression);
+            int index = 0;
+            Class<?> type = null;
+            if (valueExpression instanceof Array) {
+                type = ((Array)valueExpression).getComponentType();
+            } else {
+                if (valueExpression != null) {
+                    index = schema.indexOf(valueExpression);
+                    Assertion.assertTrue(index != -1);
+                }
+                type = ((Expression)schema.get(index)).getType();
+            }
 
-        	if (!DataTypeManager.isHashable(type)) {
-        		result = new TreeSet<Object>(Constant.COMPARATOR);
-    		} else {
-    			result = new HashSet<Object>();
-    		}
-        	while (ve.hasNext()) {
-        		Object value = ve.next();
-        		if (value != null) {
-        			result.add(value);
-        		}
-        	}
-        	ve.close();
-        	if (cachedSets == null) {
-        		cachedSets = new HashMap<Expression, Set<Object>>();
-        	}
-    		cachedSets.put(valueExpression, result);
-    	}
-    	return result;
+            if (!DataTypeManager.isHashable(type)) {
+                result = new TreeSet<Object>(Constant.COMPARATOR);
+            } else {
+                result = new HashSet<Object>();
+            }
+            while (ve.hasNext()) {
+                Object value = ve.next();
+                if (value != null) {
+                    result.add(value);
+                }
+            }
+            ve.close();
+            if (cachedSets == null) {
+                cachedSets = new HashMap<Expression, Set<Object>>();
+            }
+            cachedSets.put(valueExpression, result);
+        }
+        return result;
     }
 
     @Override
     public boolean isUnused() {
-		return unused;
-	}
+        return unused;
+    }
 
     @Override
     public void setUnused(boolean unused) {
-		this.unused = unused;
-	}
+        this.unused = unused;
+    }
 
     public boolean isDistinct() {
-		return distinct;
-	}
+        return distinct;
+    }
 
     public void setDistinct(boolean distinct) {
-		this.distinct = distinct;
-	}
+        this.distinct = distinct;
+    }
 
     public List<? extends Expression> getSchema() {
-		return schema;
-	}
+        return schema;
+    }
 
 }

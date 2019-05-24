@@ -29,95 +29,95 @@ import org.teiid.translator.TranslatorException;
  */
 public interface MetadataRepository<F,C> {
 
-	/**
-	 * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
-	 * @param factory
-	 * @param executionFactory may be null if loading a virtual source
-	 * @param connectionFactory may be null if source is not available
-	 * @param text the text used to configure the load
-	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
-	 */
-	public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory, String text) throws TranslatorException {
-		loadMetadata(factory, executionFactory, connectionFactory);
-	}
+    /**
+     * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
+     * @param factory
+     * @param executionFactory may be null if loading a virtual source
+     * @param connectionFactory may be null if source is not available
+     * @param text the text used to configure the load
+     * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
+     */
+    public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory, String text) throws TranslatorException {
+        loadMetadata(factory, executionFactory, connectionFactory);
+    }
 
-	/**
-	 * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
-	 * @param factory
-	 * @param executionFactory may be null if loading a virtual source
-	 * @param connectionFactory may be null if source is not available
-	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
-	 */
-	public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
+    /**
+     * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
+     * @param factory
+     * @param executionFactory may be null if loading a virtual source
+     * @param connectionFactory may be null if source is not available
+     * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
+     */
+    public default void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
 
-	}
+    }
 
-	/**
-	 * Call back function, when "alter view" definition is called
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param table
-	 * @param viewDefinition
-	 */
-	public default void setViewDefinition(String vdbName, String vdbVersion, Table table, String viewDefinition) {}
+    /**
+     * Call back function, when "alter view" definition is called
+     * @param vdbName
+     * @param vdbVersion
+     * @param table
+     * @param viewDefinition
+     */
+    public default void setViewDefinition(String vdbName, String vdbVersion, Table table, String viewDefinition) {}
 
-	/**
-	 * Call back function, when "alter trigger" is called
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param table
-	 * @param triggerOperation
-	 * @param triggerDefinition
-	 */
-	public default void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition) {}
+    /**
+     * Call back function, when "alter trigger" is called
+     * @param vdbName
+     * @param vdbVersion
+     * @param table
+     * @param triggerOperation
+     * @param triggerDefinition
+     */
+    public default void setInsteadOfTriggerDefinition(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition) {}
 
-	/**
-	 * Callback function, when "alter trigger" is called to enable or disable a trigger
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param table
-	 * @param triggerOperation
-	 * @param enabled
-	 */
-	public default void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled) {}
-
-
-	/**
-	 * Call back function, when "alter procedure" is called to set the procedure definition
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param procedure
-	 * @param procedureDefinition
-	 */
-	public default void setProcedureDefinition(String vdbName, String vdbVersion, Procedure procedure, String procedureDefinition) {}
-
-	/**
-	 * Set the {@link TableStats} for the given table
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param table
-	 * @param tableStats
-	 */
-	public default void setTableStats(String vdbName, String vdbVersion, Table table, TableStats tableStats) {}
+    /**
+     * Callback function, when "alter trigger" is called to enable or disable a trigger
+     * @param vdbName
+     * @param vdbVersion
+     * @param table
+     * @param triggerOperation
+     * @param enabled
+     */
+    public default void setInsteadOfTriggerEnabled(String vdbName, String vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled) {}
 
 
-	/**
-	 * Set the {@link ColumnStats} for a given column
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param column
-	 * @param columnStats
-	 */
-	public default void setColumnStats(String vdbName, String vdbVersion, Column column, ColumnStats columnStats) {}
+    /**
+     * Call back function, when "alter procedure" is called to set the procedure definition
+     * @param vdbName
+     * @param vdbVersion
+     * @param procedure
+     * @param procedureDefinition
+     */
+    public default void setProcedureDefinition(String vdbName, String vdbVersion, Procedure procedure, String procedureDefinition) {}
 
-	/**
-	 * Set an extension metadata property for a given record.
-	 * @param vdbName
-	 * @param vdbVersion
-	 * @param record
-	 * @param name
-	 * @param value
-	 */
-	public default void setProperty(String vdbName, String vdbVersion, AbstractMetadataRecord record, String name, String value) {}
+    /**
+     * Set the {@link TableStats} for the given table
+     * @param vdbName
+     * @param vdbVersion
+     * @param table
+     * @param tableStats
+     */
+    public default void setTableStats(String vdbName, String vdbVersion, Table table, TableStats tableStats) {}
+
+
+    /**
+     * Set the {@link ColumnStats} for a given column
+     * @param vdbName
+     * @param vdbVersion
+     * @param column
+     * @param columnStats
+     */
+    public default void setColumnStats(String vdbName, String vdbVersion, Column column, ColumnStats columnStats) {}
+
+    /**
+     * Set an extension metadata property for a given record.
+     * @param vdbName
+     * @param vdbVersion
+     * @param record
+     * @param name
+     * @param value
+     */
+    public default void setProperty(String vdbName, String vdbVersion, AbstractMetadataRecord record, String name, String value) {}
 
 }

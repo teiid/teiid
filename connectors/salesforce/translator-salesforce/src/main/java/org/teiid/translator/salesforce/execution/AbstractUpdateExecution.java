@@ -44,95 +44,95 @@ import com.sforce.soap.partner.sobject.SObject;
  *
  */
 public abstract class AbstractUpdateExecution implements UpdateExecution {
-	protected SalesForceExecutionFactory executionFactory;
-	protected SalesforceConnection connection;
-	protected RuntimeMetadata metadata;
-	protected ExecutionContext context;
-	protected Command command;
-	protected int result;
+    protected SalesForceExecutionFactory executionFactory;
+    protected SalesforceConnection connection;
+    protected RuntimeMetadata metadata;
+    protected ExecutionContext context;
+    protected Command command;
+    protected int result;
 
-	public AbstractUpdateExecution(SalesForceExecutionFactory ef, Command command,
-			SalesforceConnection salesforceConnection,
-			RuntimeMetadata metadata, ExecutionContext context) {
-		this.executionFactory = ef;
-		this.connection = salesforceConnection;
-		this.metadata = metadata;
-		this.context = context;
-		this.command = command;
-	}
+    public AbstractUpdateExecution(SalesForceExecutionFactory ef, Command command,
+            SalesforceConnection salesforceConnection,
+            RuntimeMetadata metadata, ExecutionContext context) {
+        this.executionFactory = ef;
+        this.connection = salesforceConnection;
+        this.metadata = metadata;
+        this.context = context;
+        this.command = command;
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 
-	@Override
-	public void close() {
-	}
+    @Override
+    public void close() {
+    }
 
-	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException,
-			TranslatorException {
-		return new int[] {result};
-	}
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException,
+            TranslatorException {
+        return new int[] {result};
+    }
 
-	public RuntimeMetadata getMetadata() {
-		return metadata;
-	}
+    public RuntimeMetadata getMetadata() {
+        return metadata;
+    }
 
-	public SalesforceConnection getConnection() {
-		return connection;
-	}
+    public SalesforceConnection getConnection() {
+        return connection;
+    }
 
-	void execute(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
-	    int batchSize = 2000; //Salesforce limit
-	    int updateSize = 200; //Salesforce limit
-		String[] Ids = null;
-		if (visitor.hasOnlyIDCriteria()) {
-			try {
-				String Id = ((Comparison)criteria).getRightExpression().toString();
-				Id = Util.stripQutes(Id);
-				Ids = new String[] { Id };
-				result = processIds(Ids, visitor);
-			} catch (ClassCastException cce) {
-				throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
+    void execute(Condition criteria, IQueryProvidingVisitor visitor) throws TranslatorException {
+        int batchSize = 2000; //Salesforce limit
+        int updateSize = 200; //Salesforce limit
+        String[] Ids = null;
+        if (visitor.hasOnlyIDCriteria()) {
+            try {
+                String Id = ((Comparison)criteria).getRightExpression().toString();
+                Id = Util.stripQutes(Id);
+                Ids = new String[] { Id };
+                result = processIds(Ids, visitor);
+            } catch (ClassCastException cce) {
+                throw new RuntimeException(SalesForcePlugin.Util.gs(SalesForcePlugin.Event.TEIID13008));
             }
 
-		} else {
-			String query = visitor.getQuery();
-			context.logCommand(query);
-			QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
-			ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
+        } else {
+            String query = visitor.getQuery();
+            context.logCommand(query);
+            QueryResult results = getConnection().query(query, batchSize, Boolean.FALSE);
+            ArrayList<String> idList = new ArrayList<String>(results.getRecords().length);
             while (results != null) {
                 if (results.getSize() > 0) {
                     for (int i = 0; i < results.getRecords().length; i++) {
-						SObject sObject = results.getRecords()[i];
-						idList.add(sObject.getId());
+                        SObject sObject = results.getRecords()[i];
+                        idList.add(sObject.getId());
                         if (idList.size() == updateSize) {
                             Ids = idList.toArray(new String[0]);
                             result += processIds(Ids, visitor);
                             idList.clear();
                         }
-					}
+                    }
                 }
-				if (results.isDone()) {
-				    break;
-				}
-			    results = connection.queryMore(results.getQueryLocator(), batchSize);
-			}
+                if (results.isDone()) {
+                    break;
+                }
+                results = connection.queryMore(results.getQueryLocator(), batchSize);
+            }
             if (!idList.isEmpty()) {
                 Ids = idList.toArray(new String[0]);
                 result += processIds(Ids, visitor);
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * Process an update against the ids
-	 * @param ids
-	 * @param visitor
-	 * @return
-	 * @throws TranslatorException
-	 */
+    /**
+     * Process an update against the ids
+     * @param ids
+     * @param visitor
+     * @return
+     * @throws TranslatorException
+     */
     protected int processIds(String[] ids, IQueryProvidingVisitor visitor) throws TranslatorException {
         return 0;
     }

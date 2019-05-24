@@ -28,8 +28,8 @@ import org.teiid.query.parser.ParseException;
  */
 public class QueryParserException extends QueryProcessingException {
 
-	private static final long serialVersionUID = 7565287582917117432L;
-	private ParseException parseException;
+    private static final long serialVersionUID = 7565287582917117432L;
+    private ParseException parseException;
 
     /**
      * No-arg constructor required by Externalizable semantics.
@@ -59,12 +59,12 @@ public class QueryParserException extends QueryProcessingException {
 
 
     public ParseException getParseException() {
-		return parseException;
-	}
+        return parseException;
+    }
 
     public void setParseException(ParseException parseException) {
-		this.parseException = parseException;
-	}
+        this.parseException = parseException;
+    }
 
     public QueryParserException(BundleUtil.Event event, Throwable e) {
         super( event, e);

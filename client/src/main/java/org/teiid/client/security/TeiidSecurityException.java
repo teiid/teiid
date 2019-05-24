@@ -74,7 +74,7 @@ public class TeiidSecurityException extends TeiidProcessingException {
      * @param the detail message
      */
     public TeiidSecurityException(String message) {
-    	super(message);
+        super(message);
     }
 }
 

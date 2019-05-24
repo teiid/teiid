@@ -36,97 +36,97 @@ import org.teiid.translator.google.api.result.SheetRow;
 import org.teiid.translator.google.visitor.SpreadsheetSQLVisitor;
 
 public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
-	private static final String WORKSHEET = "worksheet"; //$NON-NLS-1$
-	private static final String QUERY = "query"; //$NON-NLS-1$
-	private static final String OFFEST = "offset"; //$NON-NLS-1$
-	private static final String LIMIT = "limit"; //$NON-NLS-1$
+    private static final String WORKSHEET = "worksheet"; //$NON-NLS-1$
+    private static final String QUERY = "query"; //$NON-NLS-1$
+    private static final String OFFEST = "offset"; //$NON-NLS-1$
+    private static final String LIMIT = "limit"; //$NON-NLS-1$
 
-	private GoogleSpreadsheetConnection connection;
-	private Iterator<SheetRow> rowIterator;
-	private ExecutionContext executionContext;
-	private List<Argument> arguments;
+    private GoogleSpreadsheetConnection connection;
+    private Iterator<SheetRow> rowIterator;
+    private ExecutionContext executionContext;
+    private List<Argument> arguments;
 
-	private String query;
-	private boolean returnsArray;
+    private String query;
+    private boolean returnsArray;
 
-	public DirectSpreadsheetQueryExecution(String query, List<Argument> arguments, ExecutionContext executionContext, GoogleSpreadsheetConnection connection, boolean returnsArray) {
-		this.executionContext = executionContext;
-		this.connection = connection;
-		this.arguments = arguments;
-		this.query = query;
-		this.returnsArray = returnsArray;
-	}
+    public DirectSpreadsheetQueryExecution(String query, List<Argument> arguments, ExecutionContext executionContext, GoogleSpreadsheetConnection connection, boolean returnsArray) {
+        this.executionContext = executionContext;
+        this.connection = connection;
+        this.arguments = arguments;
+        this.query = query;
+        this.returnsArray = returnsArray;
+    }
 
-	@Override
-	public void close() {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
-	}
+    @Override
+    public void close() {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("close_query")); //$NON-NLS-1$
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
-		this.rowIterator = null;
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, SpreadsheetExecutionFactory.UTIL.getString("cancel_query")); //$NON-NLS-1$
+        this.rowIterator = null;
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		String worksheet = null;
-		Integer limit = null;
-		Integer offset = null;
-		String toQuery = query;
+    @Override
+    public void execute() throws TranslatorException {
+        String worksheet = null;
+        Integer limit = null;
+        Integer offset = null;
+        String toQuery = query;
 
-		List<String> parts = StringUtil.tokenize(query, ';');
-		for (String var : parts) {
-			int index = var.indexOf('=');
-			if (index == -1) {
-				continue;
-			}
-			String key = var.substring(0, index).trim();
-			String value = var.substring(index+1).trim();
+        List<String> parts = StringUtil.tokenize(query, ';');
+        for (String var : parts) {
+            int index = var.indexOf('=');
+            if (index == -1) {
+                continue;
+            }
+            String key = var.substring(0, index).trim();
+            String value = var.substring(index+1).trim();
 
-			if (key.equalsIgnoreCase(WORKSHEET)) {
-				worksheet = value;
-			}
-			else if (key.equalsIgnoreCase(QUERY)) {
-				StringBuilder buffer = new StringBuilder();
-				SQLStringVisitor.parseNativeQueryParts(value, arguments, buffer, new SQLStringVisitor.Substitutor() {
+            if (key.equalsIgnoreCase(WORKSHEET)) {
+                worksheet = value;
+            }
+            else if (key.equalsIgnoreCase(QUERY)) {
+                StringBuilder buffer = new StringBuilder();
+                SQLStringVisitor.parseNativeQueryParts(value, arguments, buffer, new SQLStringVisitor.Substitutor() {
 
-					@Override
-					public void substitute(Argument arg, StringBuilder builder, int index) {
-						Literal argumentValue = arg.getArgumentValue();
-						SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
-						visitor.visit(argumentValue);
-						builder.append(visitor.getTranslatedSQL());
-					}
-				});
-				toQuery = buffer.toString();
-			}
-			else if (key.equalsIgnoreCase(LIMIT)) {
-				limit = Integer.parseInt(value);
-			}
-			else if (key.equalsIgnoreCase(OFFEST)) {
-				offset = Integer.parseInt(value);
-			}
-		}
+                    @Override
+                    public void substitute(Argument arg, StringBuilder builder, int index) {
+                        Literal argumentValue = arg.getArgumentValue();
+                        SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor(connection.getSpreadsheetInfo());
+                        visitor.visit(argumentValue);
+                        builder.append(visitor.getTranslatedSQL());
+                    }
+                });
+                toQuery = buffer.toString();
+            }
+            else if (key.equalsIgnoreCase(LIMIT)) {
+                limit = Integer.parseInt(value);
+            }
+            else if (key.equalsIgnoreCase(OFFEST)) {
+                offset = Integer.parseInt(value);
+            }
+        }
 
-		this.rowIterator = this.connection.executeQuery(worksheet, toQuery, offset, limit, executionContext.getBatchSize()).iterator();
-	}
+        this.rowIterator = this.connection.executeQuery(worksheet, toQuery, offset, limit, executionContext.getBatchSize()).iterator();
+    }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		if (this.rowIterator != null && this.rowIterator.hasNext()) {
-			List<?> result = rowIterator.next().getRow();
-			if (returnsArray) {
-				return Arrays.asList((Object)result.toArray());
-			}
-			return result;
-		}
-		this.rowIterator = null;
-		return null;
-	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        if (this.rowIterator != null && this.rowIterator.hasNext()) {
+            List<?> result = rowIterator.next().getRow();
+            if (returnsArray) {
+                return Arrays.asList((Object)result.toArray());
+            }
+            return result;
+        }
+        this.rowIterator = null;
+        return null;
+    }
 
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
-	}
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return null;
+    }
 }

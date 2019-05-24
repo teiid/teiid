@@ -19,10 +19,10 @@ package org.teiid.adminapi;
 
 public interface CacheStatistics extends AdminObject, DomainAware {
 
-	double getHitRatio();
+    double getHitRatio();
 
-	int getTotalEntries();
+    int getTotalEntries();
 
-	int getRequestCount();
+    int getRequestCount();
 
 }

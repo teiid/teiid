@@ -44,38 +44,38 @@ public class Program implements Cloneable, Labeled {
     private Program exceptionProgram;
     private boolean trappingExceptions = false;
 
-	/**
-	 * Constructor for Program.
-	 */
-	public Program(boolean atomic) {
-		this.atomic = atomic;
-	}
+    /**
+     * Constructor for Program.
+     */
+    public Program(boolean atomic) {
+        this.atomic = atomic;
+    }
 
-	public void setStartedTxn(boolean startedTxn) {
-		this.startedTxn = startedTxn;
-	}
+    public void setStartedTxn(boolean startedTxn) {
+        this.startedTxn = startedTxn;
+    }
 
-	public boolean startedTxn() {
-		return startedTxn;
-	}
+    public boolean startedTxn() {
+        return startedTxn;
+    }
 
     @Override
     public String getLabel() {
-    	return label;
+        return label;
     }
 
     @Override
     public void setLabel(String label) {
-    	this.label = label;
+        this.label = label;
     }
 
-	public boolean isAtomic() {
-		return atomic;
-	}
+    public boolean isAtomic() {
+        return atomic;
+    }
 
-	public TempTableStore getTempTableStore() {
-		return tempTables;
-	}
+    public TempTableStore getTempTableStore() {
+        return tempTables;
+    }
 
     /**
      * Returns the next instruction to be executed, or null if there are
@@ -162,18 +162,18 @@ public class Program implements Cloneable, Labeled {
         program.label = label;
         program.exceptionGroup = this.exceptionGroup;
         if (this.exceptionProgram != null) {
-        	program.exceptionProgram = this.exceptionProgram.clone();
+            program.exceptionProgram = this.exceptionProgram.clone();
         }
         return program;
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = new PlanNode("Program"); //$NON-NLS-1$
+        PlanNode props = new PlanNode("Program"); //$NON-NLS-1$
         if (label != null) {
-        	props.addProperty("Label", label); //$NON-NLS-1$
+            props.addProperty("Label", label); //$NON-NLS-1$
         }
         if(this.programInstructions != null) {
-        	for (int i = 0; i < programInstructions.size(); i++) {
+            for (int i = 0; i < programInstructions.size(); i++) {
                 ProgramInstruction inst = programInstructions.get(i);
                 PlanNode childProps = inst.getDescriptionProperties();
                 props.addProperty("Instruction " + i, childProps); //$NON-NLS-1$
@@ -181,10 +181,10 @@ public class Program implements Cloneable, Labeled {
         }
 
         if (this.exceptionGroup != null) {
-        	props.addProperty("EXCEPTION GROUP", this.exceptionGroup); //$NON-NLS-1$
-        	if (this.exceptionProgram != null) {
-        		props.addProperty("EXCEPTION HANDLER", this.exceptionProgram.getDescriptionProperties()); //$NON-NLS-1$
-        	}
+            props.addProperty("EXCEPTION GROUP", this.exceptionGroup); //$NON-NLS-1$
+            if (this.exceptionProgram != null) {
+                props.addProperty("EXCEPTION HANDLER", this.exceptionProgram.getDescriptionProperties()); //$NON-NLS-1$
+            }
         }
         return props;
     }
@@ -220,10 +220,10 @@ public class Program implements Cloneable, Labeled {
 
         programToString(str);
         if (exceptionGroup != null) {
-        	str.append("\nEXCEPTION ").append(exceptionGroup).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$
+            str.append("\nEXCEPTION ").append(exceptionGroup).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (exceptionProgram != null) {
-        	exceptionProgram.programToString(str);
+            exceptionProgram.programToString(str);
         }
         return "PROGRAM counter " + this.counter + "\n" + str.toString(); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -242,10 +242,10 @@ public class Program implements Cloneable, Labeled {
 
             printLine(instructionIndex++, inst.toString(), str);
 
-			if(instructionIndex > 1000) {
-			    printLine(instructionIndex, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
-			    break;
-			}
+            if(instructionIndex > 1000) {
+                printLine(instructionIndex, "[OUTPUT TRUNCATED...]", str); //$NON-NLS-1$
+                break;
+            }
 
             inst = getInstructionAt(instructionIndex);
         }
@@ -266,29 +266,29 @@ public class Program implements Cloneable, Labeled {
         buffer.append(counterStr + line + "\n"); //$NON-NLS-1$
     }
 
-	public void setExceptionGroup(String exceptionGroup) {
-		this.exceptionGroup = exceptionGroup;
-	}
+    public void setExceptionGroup(String exceptionGroup) {
+        this.exceptionGroup = exceptionGroup;
+    }
 
-	public void setExceptionProgram(Program exceptionBlock) {
-		this.exceptionProgram = exceptionBlock;
-	}
+    public void setExceptionProgram(Program exceptionBlock) {
+        this.exceptionProgram = exceptionBlock;
+    }
 
-	public String getExceptionGroup() {
-		return exceptionGroup;
-	}
+    public String getExceptionGroup() {
+        return exceptionGroup;
+    }
 
-	public Program getExceptionProgram() {
-		return exceptionProgram;
-	}
+    public Program getExceptionProgram() {
+        return exceptionProgram;
+    }
 
-	public boolean isTrappingExceptions() {
-		return trappingExceptions;
-	}
+    public boolean isTrappingExceptions() {
+        return trappingExceptions;
+    }
 
-	public void setTrappingExceptions(boolean trappingExceptions) {
-		this.trappingExceptions = trappingExceptions;
-	}
+    public void setTrappingExceptions(boolean trappingExceptions) {
+        this.trappingExceptions = trappingExceptions;
+    }
 
     public Boolean requiresTransaction(boolean transactionalReads) {
         return instructionsRequireTransaction(transactionalReads);

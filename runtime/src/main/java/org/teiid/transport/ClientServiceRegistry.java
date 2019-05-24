@@ -28,26 +28,26 @@ import org.teiid.vdb.runtime.VDBKey;
 
 public interface ClientServiceRegistry {
 
-	public enum Type {
-		ODBC, JDBC
-	}
+    public enum Type {
+        ODBC, JDBC
+    }
 
-	<T> T getClientService(Class<T> iface) throws ComponentNotFoundException;
+    <T> T getClientService(Class<T> iface) throws ComponentNotFoundException;
 
-	SecurityHelper getSecurityHelper();
+    SecurityHelper getSecurityHelper();
 
-	/**
-	 * Provides the authentication type for pre-8.7 JDBC clients.
-	 *
-	 * @return
-	 */
-	@Deprecated()
-	AuthenticationType getAuthenticationType();
+    /**
+     * Provides the authentication type for pre-8.7 JDBC clients.
+     *
+     * @return
+     */
+    @Deprecated()
+    AuthenticationType getAuthenticationType();
 
-	void waitForFinished(VDBKey vdbKey, int timeOutMillis) throws ConnectionException;
+    void waitForFinished(VDBKey vdbKey, int timeOutMillis) throws ConnectionException;
 
-	ClassLoader getCallerClassloader();
+    ClassLoader getCallerClassloader();
 
-	VDBRepository getVDBRepository();
+    VDBRepository getVDBRepository();
 
 }

@@ -54,39 +54,39 @@ public class TestParser {
     static void helpTest(String sql, String expectedString, Command expectedCommand) {
         helpTest(sql, expectedString, expectedCommand, new ParseInfo());
     }
-	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info) {
-		Command actualCommand = null;
-		String actualString = null;
-		try {
-			actualCommand = QueryParser.getQueryParser().parseCommand(sql, info);
-			actualString = actualCommand.toString();
-		} catch(Throwable e) {
-		    throw new RuntimeException(e);
-		}
+    static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info) {
+        Command actualCommand = null;
+        String actualString = null;
+        try {
+            actualCommand = QueryParser.getQueryParser().parseCommand(sql, info);
+            actualString = actualCommand.toString();
+        } catch(Throwable e) {
+            throw new RuntimeException(e);
+        }
 
-		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
-		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
-		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
-	}
+        assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+        assertEquals("Command objects do not match: ", expectedCommand, actualCommand);                 //$NON-NLS-1$
+        assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());                 //$NON-NLS-1$
+    }
 
-	static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
-			String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
-		Command actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, vdbName, vdbVersion,
+    static void helpTest(String sql, String expectedString, Command expectedCommand, ParseInfo info,
+            String vdbName, String vdbVersion, String schemaName) throws QueryParserException {
+        Command actualCommand = QueryParser.getQueryParser().parseCommand(sql, info, false, vdbName, vdbVersion,
                 schemaName, null);
-		String actualString = actualCommand.toString();
+        String actualString = actualCommand.toString();
 
-		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
-		assertEquals("Command objects do not match: ", expectedCommand, actualCommand);				 //$NON-NLS-1$
-		assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());				 //$NON-NLS-1$
-	}
-	public static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
-		Expression	actual = QueryParser.getQueryParser().parseExpression(sql);
-		String actualString = actual.toString();
+        assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+        assertEquals("Command objects do not match: ", expectedCommand, actualCommand);                 //$NON-NLS-1$
+        assertEquals("Cloned command objects do not match: ", expectedCommand, actualCommand.clone());                 //$NON-NLS-1$
+    }
+    public static void helpTestExpression(String sql, String expectedString, Expression expected) throws QueryParserException {
+        Expression    actual = QueryParser.getQueryParser().parseExpression(sql);
+        String actualString = actual.toString();
 
-		assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
-		assertEquals("Command objects do not match: ", expected, actual);				 //$NON-NLS-1$
-		assertEquals("Cloned command objects do not match: ", expected, actual.clone());				 //$NON-NLS-1$
-	}
+        assertEquals("Parse string does not match: ", expectedString, actualString); //$NON-NLS-1$
+        assertEquals("Command objects do not match: ", expected, actual);                 //$NON-NLS-1$
+        assertEquals("Cloned command objects do not match: ", expected, actual.clone());                 //$NON-NLS-1$
+    }
 
     static void helpException(String sql) {
         helpException(sql, null);
@@ -117,531 +117,531 @@ public class TestParser {
         assertEquals("Language objects do not match: ", expectedStmt, actualStmt);              //$NON-NLS-1$
     }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
     // ======================== Joins ===============================================
 
-	/** SELECT * FROM g1 inner join g2 on g1.a1=g2.a2 */
-	@Test public void testInnerJoin() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("g1.a1"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("g2.a2")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_INNER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** SELECT * FROM g1 inner join g2 on g1.a1=g2.a2 */
+    @Test public void testInnerJoin() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("g1.a1"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("g2.a2")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_INNER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT * FROM g1 inner join g2 on g1.a1=g2.a2",  //$NON-NLS-1$
-				 "SELECT * FROM g1 INNER JOIN g2 ON g1.a1 = g2.a2",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT * FROM g1 inner join g2 on g1.a1=g2.a2",  //$NON-NLS-1$
+                 "SELECT * FROM g1 INNER JOIN g2 ON g1.a1 = g2.a2",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1 cross join g2 */
-	@Test public void testCrossJoin() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp);
+    /** SELECT * FROM g1 cross join g2 */
+    @Test public void testCrossJoin() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM g1 cross join g2",  //$NON-NLS-1$
-				 "SELECT * FROM g1 CROSS JOIN g2",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM g1 cross join g2",  //$NON-NLS-1$
+                 "SELECT * FROM g1 CROSS JOIN g2",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM (g1 cross join g2), g3 */
-	@Test public void testFromClauses() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp);
-		from.addClause(new UnaryFromClause(new GroupSymbol("g3"))); //$NON-NLS-1$
+    /** SELECT * FROM (g1 cross join g2), g3 */
+    @Test public void testFromClauses() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2")); //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp);
+        from.addClause(new UnaryFromClause(new GroupSymbol("g3"))); //$NON-NLS-1$
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM (g1 cross join g2), g3",  //$NON-NLS-1$
-				 "SELECT * FROM g1 CROSS JOIN g2, g3",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM (g1 cross join g2), g3",  //$NON-NLS-1$
+                 "SELECT * FROM g1 CROSS JOIN g2, g3",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1 inner join g2 */
-	@Test public void testInvalidInnerJoin() {
-		helpException("SELECT * FROM g1 inner join g2");		 //$NON-NLS-1$
-	}
+    /** SELECT * FROM g1 inner join g2 */
+    @Test public void testInvalidInnerJoin() {
+        helpException("SELECT * FROM g1 inner join g2");         //$NON-NLS-1$
+    }
 
-	/** SELECT * FROM (g1 cross join g2) cross join g3 */
-	@Test public void testMultiCrossJoin() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
-		JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(new GroupSymbol("g3")), JoinType.JOIN_CROSS);		 //$NON-NLS-1$
-		From from = new From();
-		from.addClause(jp2);
+    /** SELECT * FROM (g1 cross join g2) cross join g3 */
+    @Test public void testMultiCrossJoin() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
+        JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(new GroupSymbol("g3")), JoinType.JOIN_CROSS);         //$NON-NLS-1$
+        From from = new From();
+        from.addClause(jp2);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM (g1 cross join g2) cross join g3",  //$NON-NLS-1$
-				 "SELECT * FROM (g1 CROSS JOIN g2) CROSS JOIN g3",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM (g1 cross join g2) cross join g3",  //$NON-NLS-1$
+                 "SELECT * FROM (g1 CROSS JOIN g2) CROSS JOIN g3",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM (g1 cross join g2) cross join (g3 cross join g4) */
-	@Test public void testMultiCrossJoin2() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
-		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
-		UnaryFromClause g4 = new UnaryFromClause(new GroupSymbol("g4"));		 //$NON-NLS-1$
-		JoinPredicate jp2 = new JoinPredicate(g3, g4, JoinType.JOIN_CROSS);
-		JoinPredicate jp3 = new JoinPredicate(jp, jp2, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp3);
+    /** SELECT * FROM (g1 cross join g2) cross join (g3 cross join g4) */
+    @Test public void testMultiCrossJoin2() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g1, g2, JoinType.JOIN_CROSS);
+        UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
+        UnaryFromClause g4 = new UnaryFromClause(new GroupSymbol("g4"));         //$NON-NLS-1$
+        JoinPredicate jp2 = new JoinPredicate(g3, g4, JoinType.JOIN_CROSS);
+        JoinPredicate jp3 = new JoinPredicate(jp, jp2, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp3);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM (g1 cross join g2) cross join (g3 cross join g4)",  //$NON-NLS-1$
-				 "SELECT * FROM (g1 CROSS JOIN g2) CROSS JOIN (g3 CROSS JOIN g4)",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM (g1 cross join g2) cross join (g3 cross join g4)",  //$NON-NLS-1$
+                 "SELECT * FROM (g1 CROSS JOIN g2) CROSS JOIN (g3 CROSS JOIN g4)",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1 cross join (g2 cross join g3) */
-	@Test public void testMultiCrossJoin3() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
-		JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp2);
+    /** SELECT * FROM g1 cross join (g2 cross join g3) */
+    @Test public void testMultiCrossJoin3() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
+        JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp2);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM g1 cross join (g2 cross join g3)",  //$NON-NLS-1$
-				 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3)",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM g1 cross join (g2 cross join g3)",  //$NON-NLS-1$
+                 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3)",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1 cross join (g2 cross join g3), g4 */
-	@Test public void testMixedJoin() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
-		JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp2);
-		from.addClause(new UnaryFromClause(new GroupSymbol("g4")));	 //$NON-NLS-1$
+    /** SELECT * FROM g1 cross join (g2 cross join g3), g4 */
+    @Test public void testMixedJoin() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
+        JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp2);
+        from.addClause(new UnaryFromClause(new GroupSymbol("g4")));     //$NON-NLS-1$
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM g1 cross join (g2 cross join g3), g4",  //$NON-NLS-1$
-				 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3), g4",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM g1 cross join (g2 cross join g3), g4",  //$NON-NLS-1$
+                 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3), g4",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1 cross join (g2 cross join g3), g4, g5 cross join g6 */
-	@Test public void testMixedJoin2() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
-		UnaryFromClause g4 = new UnaryFromClause(new GroupSymbol("g4")); //$NON-NLS-1$
-		UnaryFromClause g5 = new UnaryFromClause(new GroupSymbol("g5")); //$NON-NLS-1$
-		UnaryFromClause g6 = new UnaryFromClause(new GroupSymbol("g6"));		 //$NON-NLS-1$
-		JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
-		JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
-		JoinPredicate jp3 = new JoinPredicate(g5, g6, JoinType.JOIN_CROSS);
-		From from = new From();
-		from.addClause(jp2);
-		from.addClause(g4);
-		from.addClause(jp3);
+    /** SELECT * FROM g1 cross join (g2 cross join g3), g4, g5 cross join g6 */
+    @Test public void testMixedJoin2() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
+        UnaryFromClause g4 = new UnaryFromClause(new GroupSymbol("g4")); //$NON-NLS-1$
+        UnaryFromClause g5 = new UnaryFromClause(new GroupSymbol("g5")); //$NON-NLS-1$
+        UnaryFromClause g6 = new UnaryFromClause(new GroupSymbol("g6"));         //$NON-NLS-1$
+        JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_CROSS);
+        JoinPredicate jp2 = new JoinPredicate(g1, jp, JoinType.JOIN_CROSS);
+        JoinPredicate jp3 = new JoinPredicate(g5, g6, JoinType.JOIN_CROSS);
+        From from = new From();
+        from.addClause(jp2);
+        from.addClause(g4);
+        from.addClause(jp3);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT * FROM g1 cross join (g2 cross join g3), g4, g5 cross join g6",  //$NON-NLS-1$
-				 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3), g4, g5 CROSS JOIN g6",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT * FROM g1 cross join (g2 cross join g3), g4, g5 cross join g6",  //$NON-NLS-1$
+                 "SELECT * FROM g1 CROSS JOIN (g2 CROSS JOIN g3), g4, g5 CROSS JOIN g6",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT * FROM g1, g2 inner join g3 on g2.a=g3.a */
-	@Test public void testMixedJoin3() {
-		UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
-		UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));		 //$NON-NLS-1$
-		UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("g2.a"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("g3.a")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_INNER, crits);
-		From from = new From();
-		from.addClause(g1);
-		from.addClause(jp);
+    /** SELECT * FROM g1, g2 inner join g3 on g2.a=g3.a */
+    @Test public void testMixedJoin3() {
+        UnaryFromClause g1 = new UnaryFromClause(new GroupSymbol("g1")); //$NON-NLS-1$
+        UnaryFromClause g2 = new UnaryFromClause(new GroupSymbol("g2"));         //$NON-NLS-1$
+        UnaryFromClause g3 = new UnaryFromClause(new GroupSymbol("g3")); //$NON-NLS-1$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("g2.a"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("g3.a")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g2, g3, JoinType.JOIN_INNER, crits);
+        From from = new From();
+        from.addClause(g1);
+        from.addClause(jp);
 
-		MultipleElementSymbol all = new MultipleElementSymbol();
-		Select select = new Select();
-		select.addSymbol(all);
+        MultipleElementSymbol all = new MultipleElementSymbol();
+        Select select = new Select();
+        select.addSymbol(all);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT * FROM g1, g2 inner join g3 on g2.a=g3.a",  //$NON-NLS-1$
-				 "SELECT * FROM g1, g2 INNER JOIN g3 ON g2.a = g3.a",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT * FROM g1, g2 inner join g3 on g2.a=g3.a",  //$NON-NLS-1$
+                 "SELECT * FROM g1, g2 INNER JOIN g3 ON g2.a = g3.a",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select myG.a myA, myH.b from g myG right outer join h myH on myG.x=myH.x */
-	@Test public void testRightOuterJoinWithAliases() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("myG.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select myG.a myA, myH.b from g myG right outer join h myH on myG.x=myH.x */
+    @Test public void testRightOuterJoinWithAliases() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));         //$NON-NLS-1$ //$NON-NLS-2$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("myG.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("myH.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select myG.a myA, myH.b from g myG right outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
-				 "SELECT myG.a AS myA, myH.b FROM g AS myG RIGHT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select myG.a myA, myH.b from g myG right outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
+                 "SELECT myG.a AS myA, myH.b FROM g AS myG RIGHT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select myG.x myX, myH.y from g myG right join h myH on myG.x=myH.x */
-	@Test public void testRightJoinWithAliases() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("myG.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select myG.x myX, myH.y from g myG right join h myH on myG.x=myH.x */
+    @Test public void testRightJoinWithAliases() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));         //$NON-NLS-1$ //$NON-NLS-2$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("myG.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("myH.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_RIGHT_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select myG.a myA, myH.b from g myG right join h myH on myG.x=myH.x",  //$NON-NLS-1$
-				 "SELECT myG.a AS myA, myH.b FROM g AS myG RIGHT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select myG.a myA, myH.b from g myG right join h myH on myG.x=myH.x",  //$NON-NLS-1$
+                 "SELECT myG.a AS myA, myH.b FROM g AS myG RIGHT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select myG.a myA, myH.b from g myG left outer join h myH on myG.x=myH.x */
-	@Test public void testLeftOuterJoinWithAliases() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("myG.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select myG.a myA, myH.b from g myG left outer join h myH on myG.x=myH.x */
+    @Test public void testLeftOuterJoinWithAliases() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));         //$NON-NLS-1$ //$NON-NLS-2$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("myG.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("myH.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select myG.a myA, myH.b from g myG left outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
-				 "SELECT myG.a AS myA, myH.b FROM g AS myG LEFT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select myG.a myA, myH.b from g myG left outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
+                 "SELECT myG.a AS myA, myH.b FROM g AS myG LEFT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select myG.a myA, myH.b from g myG left join h myH on myG.x=myH.x */
-	@Test public void testLeftJoinWithAliases() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("myG.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select myG.a myA, myH.b from g myG left join h myH on myG.x=myH.x */
+    @Test public void testLeftJoinWithAliases() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));         //$NON-NLS-1$ //$NON-NLS-2$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("myG.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("myH.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_LEFT_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select myG.a myA, myH.b from g myG left join h myH on myG.x=myH.x",  //$NON-NLS-1$
-				 "SELECT myG.a AS myA, myH.b FROM g AS myG LEFT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select myG.a myA, myH.b from g myG left join h myH on myG.x=myH.x",  //$NON-NLS-1$
+                 "SELECT myG.a AS myA, myH.b FROM g AS myG LEFT OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select myG.a myA, myH.b from g myG full outer join h myH on myG.x=myH.x */
-	@Test public void testFullOuterJoinWithAliases() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));		 //$NON-NLS-1$ //$NON-NLS-2$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("myG.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("myH.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select myG.a myA, myH.b from g myG full outer join h myH on myG.x=myH.x */
+    @Test public void testFullOuterJoinWithAliases() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("myG", "g")); //$NON-NLS-1$ //$NON-NLS-2$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("myH", "h"));         //$NON-NLS-1$ //$NON-NLS-2$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("myG.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("myH.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("myG.a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select myG.a myA, myH.b from g myG full outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
-				 "SELECT myG.a AS myA, myH.b FROM g AS myG FULL OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select myG.a myA, myH.b from g myG full outer join h myH on myG.x=myH.x",  //$NON-NLS-1$
+                 "SELECT myG.a AS myA, myH.b FROM g AS myG FULL OUTER JOIN h AS myH ON myG.x = myH.x",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** Select g.a, h.b from g full join h on g.x=h.x */
-	@Test public void testFullJoin() {
-		UnaryFromClause g = new UnaryFromClause(new GroupSymbol("g")); //$NON-NLS-1$
-		UnaryFromClause h = new UnaryFromClause(new GroupSymbol("h"));		 //$NON-NLS-1$
-		CompareCriteria jcrit = new CompareCriteria(
-			new ElementSymbol("g.x"), //$NON-NLS-1$
-			CompareCriteria.EQ,
-			new ElementSymbol("h.x")); //$NON-NLS-1$
-		ArrayList<Criteria> crits = new ArrayList<Criteria>();
-		crits.add(jcrit);
-		JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
-		From from = new From();
-		from.addClause(jp);
+    /** Select g.a, h.b from g full join h on g.x=h.x */
+    @Test public void testFullJoin() {
+        UnaryFromClause g = new UnaryFromClause(new GroupSymbol("g")); //$NON-NLS-1$
+        UnaryFromClause h = new UnaryFromClause(new GroupSymbol("h"));         //$NON-NLS-1$
+        CompareCriteria jcrit = new CompareCriteria(
+            new ElementSymbol("g.x"), //$NON-NLS-1$
+            CompareCriteria.EQ,
+            new ElementSymbol("h.x")); //$NON-NLS-1$
+        ArrayList<Criteria> crits = new ArrayList<Criteria>();
+        crits.add(jcrit);
+        JoinPredicate jp = new JoinPredicate(g, h, JoinType.JOIN_FULL_OUTER, crits);
+        From from = new From();
+        from.addClause(jp);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("g.a")); //$NON-NLS-1$
-		select.addSymbol(new ElementSymbol("h.b")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("g.a")); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("h.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("Select g.a, h.b from g full join h on g.x=h.x",  //$NON-NLS-1$
-				 "SELECT g.a, h.b FROM g FULL OUTER JOIN h ON g.x = h.x",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("Select g.a, h.b from g full join h on g.x=h.x",  //$NON-NLS-1$
+                 "SELECT g.a, h.b FROM g FULL OUTER JOIN h ON g.x = h.x",  //$NON-NLS-1$
+                 query);
+    }
 
     // ======================= Convert ==============================================
 
-	/** SELECT CONVERT(a, string) FROM g */
-	@Test public void testConversionFunction() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT CONVERT(a, string) FROM g */
+    @Test public void testConversionFunction() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Select select = new Select();
-		select.addSymbol(f);
+        Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Select select = new Select();
+        select.addSymbol(f);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT CONVERT(a, string) FROM g",  //$NON-NLS-1$
-				 "SELECT CONVERT(a, string) FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT CONVERT(a, string) FROM g",  //$NON-NLS-1$
+                 "SELECT CONVERT(a, string) FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT CONVERT(CONVERT(a, timestamp), string) FROM g */
-	@Test public void testConversionFunction2() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT CONVERT(CONVERT(a, timestamp), string) FROM g */
+    @Test public void testConversionFunction2() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Function f2 = new Function("CONVERT", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(f2);
+        Function f = new Function("CONVERT", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Function f2 = new Function("CONVERT", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(f2);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT CONVERT(CONVERT(a, timestamp), string) FROM g",  //$NON-NLS-1$
-				 "SELECT CONVERT(CONVERT(a, timestamp), string) FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT CONVERT(CONVERT(a, timestamp), string) FROM g",  //$NON-NLS-1$
+                 "SELECT CONVERT(CONVERT(a, timestamp), string) FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
     // ======================= Functions ==============================================
 
-	/** SELECT 5 + length(concat(a, 'x')) FROM g */
-	@Test public void testMultiFunction() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 5 + length(concat(a, 'x')) FROM g */
+    @Test public void testMultiFunction() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("concat", new Expression[] {new ElementSymbol("a", false), new Constant("x")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Function f2 = new Function("length", new Expression[] {f}); //$NON-NLS-1$
-		Function f3 = new Function("+", new Expression[] {new Constant(new Integer(5)), f2}); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(f3);
+        Function f = new Function("concat", new Expression[] {new ElementSymbol("a", false), new Constant("x")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Function f2 = new Function("length", new Expression[] {f}); //$NON-NLS-1$
+        Function f3 = new Function("+", new Expression[] {new Constant(new Integer(5)), f2}); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(f3);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT 5 + length(concat(a, 'x')) FROM g",  //$NON-NLS-1$
-				 "SELECT (5 + length(concat(a, 'x'))) FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT 5 + length(concat(a, 'x')) FROM g",  //$NON-NLS-1$
+                 "SELECT (5 + length(concat(a, 'x'))) FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	@Test public void testSignedExpression() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    @Test public void testSignedExpression() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("*", new Expression[] {new Constant(-1), new ElementSymbol("x")});
-		Select select = new Select();
-		select.addSymbol(f);
-		select.addSymbol(new ElementSymbol("x"));
-		select.addSymbol(new Constant(5));
+        Function f = new Function("*", new Expression[] {new Constant(-1), new ElementSymbol("x")});
+        Select select = new Select();
+        select.addSymbol(f);
+        select.addSymbol(new ElementSymbol("x"));
+        select.addSymbol(new Constant(5));
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT -x, +x, +5 FROM g",  //$NON-NLS-1$
-				 "SELECT (-1 * x), x, 5 FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT -x, +x, +5 FROM g",  //$NON-NLS-1$
+                 "SELECT (-1 * x), x, 5 FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT REPLACE(a, 'x', 'y') AS y FROM g */
-	@Test public void testAliasedFunction() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT REPLACE(a, 'x', 'y') AS y FROM g */
+    @Test public void testAliasedFunction() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("replace", new Expression[] {new ElementSymbol("a", false), new Constant("x"), new Constant("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		AliasSymbol as = new AliasSymbol("y", f); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(as);
+        Function f = new Function("replace", new Expression[] {new ElementSymbol("a", false), new Constant("x"), new Constant("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        AliasSymbol as = new AliasSymbol("y", f); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(as);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT REPLACE(a, 'x', 'y') AS y FROM g",  //$NON-NLS-1$
-				 "SELECT REPLACE(a, 'x', 'y') AS y FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT REPLACE(a, 'x', 'y') AS y FROM g",  //$NON-NLS-1$
+                 "SELECT REPLACE(a, 'x', 'y') AS y FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT cast(a as string) FROM g */
-	@Test public void testCastFunction() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT cast(a as string) FROM g */
+    @Test public void testCastFunction() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Select select = new Select();
-		select.addSymbol(f);
+        Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Select select = new Select();
+        select.addSymbol(f);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT cast(a as string) FROM g",  //$NON-NLS-1$
-				 "SELECT cast(a AS string) FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT cast(a as string) FROM g",  //$NON-NLS-1$
+                 "SELECT cast(a AS string) FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT cast(cast(a as timestamp) as string) FROM g */
-	@Test public void testMultiCastFunction() {
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT cast(cast(a as timestamp) as string) FROM g */
+    @Test public void testMultiCastFunction() {
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		Function f2 = new Function("cast", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(f2);
+        Function f = new Function("cast", new Expression[] {new ElementSymbol("a", false), new Constant("timestamp")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        Function f2 = new Function("cast", new Expression[] {f, new Constant("string")}); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(f2);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT cast(cast(a as timestamp) as string) FROM g",  //$NON-NLS-1$
-				 "SELECT cast(cast(a AS timestamp) AS string) FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT cast(cast(a as timestamp) as string) FROM g",  //$NON-NLS-1$
+                 "SELECT cast(cast(a AS timestamp) AS string) FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT left(fullname, 3) as x FROM sys.groups */
     @Test public void testLeftFunction() {
@@ -1161,95 +1161,95 @@ public class TestParser {
 
     // ======================= Group By ==============================================
 
-	/** SELECT a FROM m.g GROUP BY b, c */
-	@Test public void testGroupBy() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a FROM m.g GROUP BY b, c */
+    @Test public void testGroupBy() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
 
-		GroupBy groupBy = new GroupBy();
-		groupBy.addSymbol(new ElementSymbol("b", false));		 //$NON-NLS-1$
-		groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
-
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setGroupBy(groupBy);
-		helpTest("SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
-				 "SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
-				 query);
-	}
-
-	@Test public void testGroupByRollup() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
-
-		GroupBy groupBy = new GroupBy();
-		groupBy.setRollup(true);
-		groupBy.addSymbol(new ElementSymbol("b", false));		 //$NON-NLS-1$
-		groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
+        GroupBy groupBy = new GroupBy();
+        groupBy.addSymbol(new ElementSymbol("b", false));         //$NON-NLS-1$
+        groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
 
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setGroupBy(groupBy);
-		helpTest("SELECT a FROM m.g GROUP BY rollup(b, c)",  //$NON-NLS-1$
-				 "SELECT a FROM m.g GROUP BY ROLLUP(b, c)",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setGroupBy(groupBy);
+        helpTest("SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
+                 "SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM m.g GROUP BY b, c HAVING b=5*/
-	@Test public void testGroupByHaving() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    @Test public void testGroupByRollup() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
 
-		GroupBy groupBy = new GroupBy();
-		groupBy.addSymbol(new ElementSymbol("b", false));		 //$NON-NLS-1$
-		groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
-
-		CompareCriteria having = new CompareCriteria(new ElementSymbol("b", false), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
-
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setGroupBy(groupBy);
-		query.setHaving(having);
-		helpTest("SELECT a FROM m.g GROUP BY b, c HAVING b=5",  //$NON-NLS-1$
-				 "SELECT a FROM m.g GROUP BY b, c HAVING b = 5",  //$NON-NLS-1$
-				 query);
-	}
-
-	/** SELECT COUNT(a) AS c FROM m.g */
-	@Test public void testAggregateFunction() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		select.addSymbol(new AliasSymbol("c",  //$NON-NLS-1$
-			new AggregateSymbol("COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        GroupBy groupBy = new GroupBy();
+        groupBy.setRollup(true);
+        groupBy.addSymbol(new ElementSymbol("b", false));         //$NON-NLS-1$
+        groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
 
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT COUNT(a) AS c FROM m.g",  //$NON-NLS-1$
-				 "SELECT COUNT(a) AS c FROM m.g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setGroupBy(groupBy);
+        helpTest("SELECT a FROM m.g GROUP BY rollup(b, c)",  //$NON-NLS-1$
+                 "SELECT a FROM m.g GROUP BY ROLLUP(b, c)",  //$NON-NLS-1$
+                 query);
+    }
+
+    /** SELECT a FROM m.g GROUP BY b, c HAVING b=5*/
+    @Test public void testGroupByHaving() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+
+        GroupBy groupBy = new GroupBy();
+        groupBy.addSymbol(new ElementSymbol("b", false));         //$NON-NLS-1$
+        groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
+
+        CompareCriteria having = new CompareCriteria(new ElementSymbol("b", false), CompareCriteria.EQ, new Constant(new Integer(5))); //$NON-NLS-1$
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setGroupBy(groupBy);
+        query.setHaving(having);
+        helpTest("SELECT a FROM m.g GROUP BY b, c HAVING b=5",  //$NON-NLS-1$
+                 "SELECT a FROM m.g GROUP BY b, c HAVING b = 5",  //$NON-NLS-1$
+                 query);
+    }
+
+    /** SELECT COUNT(a) AS c FROM m.g */
+    @Test public void testAggregateFunction() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+
+        Select select = new Select();
+        select.addSymbol(new AliasSymbol("c",  //$NON-NLS-1$
+            new AggregateSymbol("COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT COUNT(a) AS c FROM m.g",  //$NON-NLS-1$
+                 "SELECT COUNT(a) AS c FROM m.g",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT (COUNT(a)) AS c FROM m.g - this kind of query is generated by ODBC sometimes */
     @Test public void testAggregateFunctionWithParens() {
@@ -1270,80 +1270,80 @@ public class TestParser {
                  query);
     }
 
-	/** SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0*/
-	@Test public void testHavingFunction() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0*/
+    @Test public void testHavingFunction() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
 
-		GroupBy groupBy = new GroupBy();
-		groupBy.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
+        GroupBy groupBy = new GroupBy();
+        groupBy.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
 
-		Criteria having = new CompareCriteria(
-			new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			CompareCriteria.GT,
-			new Constant(new Integer(0)) );
+        Criteria having = new CompareCriteria(
+            new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            CompareCriteria.GT,
+            new Constant(new Integer(0)) );
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setGroupBy(groupBy);
-		query.setHaving(having);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setGroupBy(groupBy);
+        query.setHaving(having);
 
-		helpTest("SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0",  //$NON-NLS-1$
-				 "SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0",  //$NON-NLS-1$
+                 "SELECT a FROM m.g GROUP BY a HAVING COUNT(b) > 0",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) > 0 AND b+5 > 0 */
-	@Test public void testCompoundHaving() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) > 0 AND b+5 > 0 */
+    @Test public void testCompoundHaving() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
 
-		GroupBy groupBy = new GroupBy();
-		groupBy.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
-		groupBy.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
+        GroupBy groupBy = new GroupBy();
+        groupBy.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
+        groupBy.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
 
-		CompoundCriteria having = new CompoundCriteria();
-		having.setOperator(CompoundCriteria.AND);
-		having.addCriteria(new CompareCriteria(
-			new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			CompareCriteria.GT,
-			new Constant(new Integer(0)) ));
-		having.addCriteria(new CompareCriteria(
-			new Function("+", new Expression[] { new ElementSymbol("b", false), new Constant(new Integer(5)) }), //$NON-NLS-1$ //$NON-NLS-2$
-			CompareCriteria.GT,
-			new Constant(new Integer(0)) ));
+        CompoundCriteria having = new CompoundCriteria();
+        having.setOperator(CompoundCriteria.AND);
+        having.addCriteria(new CompareCriteria(
+            new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            CompareCriteria.GT,
+            new Constant(new Integer(0)) ));
+        having.addCriteria(new CompareCriteria(
+            new Function("+", new Expression[] { new ElementSymbol("b", false), new Constant(new Integer(5)) }), //$NON-NLS-1$ //$NON-NLS-2$
+            CompareCriteria.GT,
+            new Constant(new Integer(0)) ));
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setGroupBy(groupBy);
-		query.setHaving(having);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setGroupBy(groupBy);
+        query.setHaving(having);
 
-		helpTest("SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) > 0 AND b+5 > 0",  //$NON-NLS-1$
-				 "SELECT a FROM m.g GROUP BY a, b HAVING (COUNT(b) > 0) AND ((b + 5) > 0)",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) > 0 AND b+5 > 0",  //$NON-NLS-1$
+                 "SELECT a FROM m.g GROUP BY a, b HAVING (COUNT(b) > 0) AND ((b + 5) > 0)",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(AVG(b)) */
-	@Test public void testFailNestedAggregateInHaving() {
-		helpException("SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) AS x = 5");		 //$NON-NLS-1$
-	}
+    /** SELECT a FROM m.g GROUP BY a, b HAVING COUNT(AVG(b)) */
+    @Test public void testFailNestedAggregateInHaving() {
+        helpException("SELECT a FROM m.g GROUP BY a, b HAVING COUNT(b) AS x = 5");         //$NON-NLS-1$
+    }
 
-	/** SELECT a FROM m.g GROUP BY a, b AS x */
-	@Test public void testFailAliasInHaving() {
-		helpException("SELECT a FROM m.g GROUP BY a, b AS x");		 //$NON-NLS-1$
-	}
+    /** SELECT a FROM m.g GROUP BY a, b AS x */
+    @Test public void testFailAliasInHaving() {
+        helpException("SELECT a FROM m.g GROUP BY a, b AS x");         //$NON-NLS-1$
+    }
 
-	@Test(expected=QueryParserException.class) public void testExceptionLength() throws Exception {
+    @Test(expected=QueryParserException.class) public void testExceptionLength() throws Exception {
         String sql = "SELECT * FROM Customer where Customer.Name = (select lastname from CUSTOMER where acctid = 9"; ////$NON-NLS-1$
         QueryParser.getQueryParser().parseCommand(sql);
     }
@@ -1369,171 +1369,171 @@ public class TestParser {
 
     }
 
-	/** SELECT 5-null, a.g1.c1 FROM a.g1 */
-	@Test public void testArithmeticNullFunction() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 5-null, a.g1.c1 FROM a.g1 */
+    @Test public void testArithmeticNullFunction() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Function("-", new Expression[] { new Constant(new Integer(5)), new Constant(null) }) ); //$NON-NLS-1$
-		select.addSymbol(new ElementSymbol("a.g1.c1")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new Function("-", new Expression[] { new Constant(new Integer(5)), new Constant(null) }) ); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("a.g1.c1")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 5-null, a.g1.c1 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT (5 - null), a.g1.c1 FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 5-null, a.g1.c1 FROM a.g1",  //$NON-NLS-1$
+                 "SELECT (5 - null), a.g1.c1 FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT 'abc' FROM a.g1 */
-	@Test public void testStringLiteral() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 'abc' FROM a.g1 */
+    @Test public void testStringLiteral() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 'abc' FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 'abc' FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 'abc' FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 'abc' FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
 
-	/** SELECT 'O''Leary' FROM a.g1 */
-	@Test public void testStringLiteralEscapedTick() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 'O''Leary' FROM a.g1 */
+    @Test public void testStringLiteralEscapedTick() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant("O'Leary")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant("O'Leary")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 'O''Leary' FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 'O''Leary' FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 'O''Leary' FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 'O''Leary' FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT '''abc''' FROM a.g1 */
-	@Test public void testStringLiteralEscapedTick2() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT '''abc''' FROM a.g1 */
+    @Test public void testStringLiteralEscapedTick2() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant("'abc'")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant("'abc'")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT '''abc''' FROM a.g1",  //$NON-NLS-1$
-				 "SELECT '''abc''' FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT '''abc''' FROM a.g1",  //$NON-NLS-1$
+                 "SELECT '''abc''' FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT 'a''b''c' FROM a.g1 */
-	@Test public void testStringLiteralEscapedTick3() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 'a''b''c' FROM a.g1 */
+    @Test public void testStringLiteralEscapedTick3() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant("a'b'c")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant("a'b'c")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 'a''b''c' FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 'a''b''c' FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 'a''b''c' FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 'a''b''c' FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT " "" " FROM a.g1 */
-	@Test public void testStringLiteralEscapedTick4() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT " "" " FROM a.g1 */
+    @Test public void testStringLiteralEscapedTick4() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol(" \" ")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol(" \" ")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
-				 "SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
+                 "SELECT \" \"\" \" FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT 123456789012 FROM a.g1 */
-	@Test public void testLongLiteral() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 123456789012 FROM a.g1 */
+    @Test public void testLongLiteral() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant(new Long(123456789012L))); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new Constant(new Long(123456789012L))); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 123456789012 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 123456789012 FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 123456789012 FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 123456789012 FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT 1000000000000000000000000 FROM a.g1 */
-	@Test public void testBigIntegerLiteral() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 1000000000000000000000000 FROM a.g1 */
+    @Test public void testBigIntegerLiteral() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant(new BigInteger("1000000000000000000000000"))); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant(new BigInteger("1000000000000000000000000"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 1000000000000000000000000 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 1000000000000000000000000 FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 1000000000000000000000000 FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 1000000000000000000000000 FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT 1.3e8 FROM a.g1 */
-	@Test public void testFloatWithE() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT 1.3e8 FROM a.g1 */
+    @Test public void testFloatWithE() {
+        GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant(new Double(1.3e8))); //$NON-NLS-1$
-		select.addSymbol(new Constant(new Double(-1.3e+8))); //$NON-NLS-1$
-		select.addSymbol(new Constant(new Double(+1.3e-8))); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new Constant(new Double(1.3e8))); //$NON-NLS-1$
+        select.addSymbol(new Constant(new Double(-1.3e+8))); //$NON-NLS-1$
+        select.addSymbol(new Constant(new Double(+1.3e-8))); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 1.3e8, -1.3e+8, +1.3e-8 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 1.3E8, -1.3E8, 1.3E-8 FROM a.g1",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT 1.3e8, -1.3e+8, +1.3e-8 FROM a.g1",  //$NON-NLS-1$
+                 "SELECT 1.3E8, -1.3E8, 1.3E-8 FROM a.g1",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT {d'2002-10-02'} FROM m.g1 */
     @Test public void testDateLiteral1() {
@@ -1637,17 +1637,17 @@ public class TestParser {
 
     /** SELECT {b'true'} FROM m.g1 */
     @Test public void testBooleanLiteralTrue() {
-    	Boolean expected = Boolean.TRUE;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT {b'true'}";  //$NON-NLS-1$
-    	String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
+        Boolean expected = Boolean.TRUE;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT {b'true'}";  //$NON-NLS-1$
+        String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
-	private void helpTestLiteral(Boolean expected, Class<?> expectedType,
-			String sql, String expectedSql) {
-		Select select = new Select();
+    private void helpTestLiteral(Boolean expected, Class<?> expectedType,
+            String sql, String expectedSql) {
+        Select select = new Select();
         select.addSymbol(new Constant(expected, expectedType)); //$NON-NLS-1$
 
         Query query = new Query();
@@ -1656,72 +1656,72 @@ public class TestParser {
         helpTest(sql,
                  expectedSql,
                  query);
-	}
+    }
     /** SELECT TRUE FROM m.g1 */
     @Test public void testBooleanLiteralTrue2() {
-    	Boolean expected = Boolean.TRUE;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT TRUE";  //$NON-NLS-1$
-    	String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
+        Boolean expected = Boolean.TRUE;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT TRUE";  //$NON-NLS-1$
+        String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
     /** SELECT {b'false'} FROM m.g1 */
     @Test public void testBooleanLiteralFalse() {
-    	Boolean expected = Boolean.FALSE;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
-    	String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
+        Boolean expected = Boolean.FALSE;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT {b'false'}";  //$NON-NLS-1$
+        String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
     /** SELECT FALSE FROM m.g1 */
     @Test public void testBooleanLiteralFalse2() {
-    	Boolean expected = Boolean.FALSE;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
-    	String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
+        Boolean expected = Boolean.FALSE;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT {b'false'}";  //$NON-NLS-1$
+        String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
     @Test public void testBooleanLiteralUnknown() {
-    	Boolean expected = null;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT {b'unknown'}";  //$NON-NLS-1$
-    	String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
+        Boolean expected = null;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT {b'unknown'}";  //$NON-NLS-1$
+        String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
     @Test public void testBooleanLiteralUnknown2() {
-    	Boolean expected = null;
-    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
-    	String sql = "SELECT UNKNOWN";  //$NON-NLS-1$
-    	String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
+        Boolean expected = null;
+        Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+        String sql = "SELECT UNKNOWN";  //$NON-NLS-1$
+        String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
 
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
 
-	/** SELECT DISTINCT a FROM g */
-	@Test public void testSelectDistinct(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT DISTINCT a FROM g */
+    @Test public void testSelectDistinct(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
-		select.setDistinct(true);
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
+        select.setDistinct(true);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT DISTINCT a FROM g",  //$NON-NLS-1$
-				 "SELECT DISTINCT a FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT DISTINCT a FROM g",  //$NON-NLS-1$
+                 "SELECT DISTINCT a FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT ALL a FROM g */
     @Test public void testSelectAll(){
@@ -1743,114 +1743,114 @@ public class TestParser {
 
     //=========================Aliasing==============================================
 
-	/** SELECT a AS myA, b FROM g */
-	@Test public void testAliasInSelect(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a AS myA, b FROM g */
+    @Test public void testAliasInSelect(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT a AS myA, b FROM g",  //$NON-NLS-1$
-				 "SELECT a AS myA, b FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT a AS myA, b FROM g",  //$NON-NLS-1$
+                 "SELECT a AS myA, b FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a myA, b FROM g, h */
-	@Test public void testAliasInSelect2(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		GroupSymbol h = new GroupSymbol("h"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-		from.addGroup(h);
+    /** SELECT a myA, b FROM g, h */
+    @Test public void testAliasInSelect2(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        GroupSymbol h = new GroupSymbol("h"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+        from.addGroup(h);
 
-		AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("a")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
-		select.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
+        AliasSymbol as = new AliasSymbol("myA", new ElementSymbol("a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(as);
+        select.addSymbol(new ElementSymbol("b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT a myA, b FROM g, h",  //$NON-NLS-1$
-				 "SELECT a AS myA, b FROM g, h",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT a myA, b FROM g, h",  //$NON-NLS-1$
+                 "SELECT a AS myA, b FROM g, h",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT myG.a FROM g AS myG */
-	@Test public void testAliasInFrom(){
-		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT myG.a FROM g AS myG */
+    @Test public void testAliasInFrom(){
+        GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("myG.a")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("myG.a")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT myG.a FROM g AS myG",  //$NON-NLS-1$
-				 "SELECT myG.a FROM g AS myG",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT myG.a FROM g AS myG",  //$NON-NLS-1$
+                 "SELECT myG.a FROM g AS myG",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT myG.*, myH.b FROM g AS myG, h AS myH */
-	@Test public void testAliasesInFrom(){
-		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
-		GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
-		From from = new From();
-		from.addGroup(g);
-		from.addGroup(h);
+    /** SELECT myG.*, myH.b FROM g AS myG, h AS myH */
+    @Test public void testAliasesInFrom(){
+        GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
+        GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
+        From from = new From();
+        from.addGroup(g);
+        from.addGroup(h);
 
-		Select select = new Select();
-		MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
-		select.addSymbol(myG);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        Select select = new Select();
+        MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
+        select.addSymbol(myG);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
-				 "SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
+                 "SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT myG.a, myH.b FROM g myG, h myH */
-	@Test public void testHiddenAliasesInFrom(){
-		GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
-		GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
-		From from = new From();
-		from.addGroup(g);
-		from.addGroup(h);
+    /** SELECT myG.a, myH.b FROM g myG, h myH */
+    @Test public void testHiddenAliasesInFrom(){
+        GroupSymbol g = new GroupSymbol("myG", "g"); //$NON-NLS-1$ //$NON-NLS-2$
+        GroupSymbol h = new GroupSymbol("myH", "h"); //$NON-NLS-1$ //$NON-NLS-2$
+        From from = new From();
+        from.addGroup(g);
+        from.addGroup(h);
 
-		Select select = new Select();
-		MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
-		select.addSymbol(myG);
-		select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
+        Select select = new Select();
+        MultipleElementSymbol myG = new MultipleElementSymbol("myG"); //$NON-NLS-1$
+        select.addSymbol(myG);
+        select.addSymbol(new ElementSymbol("myH.b")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT myG.*, myH.b FROM g myG, h myH",  //$NON-NLS-1$
-				 "SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT myG.*, myH.b FROM g myG, h myH",  //$NON-NLS-1$
+                 "SELECT myG.*, myH.b FROM g AS myG, h AS myH",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a AS or FROM g */
-	@Test public void testAliasInSelectUsingKeywordFails(){
-		helpException("SELECT a AS or FROM g");		 //$NON-NLS-1$
-	}
+    /** SELECT a AS or FROM g */
+    @Test public void testAliasInSelectUsingKeywordFails(){
+        helpException("SELECT a AS or FROM g");         //$NON-NLS-1$
+    }
 
-	/** SELECT or.a FROM g AS or */
-	@Test public void testAliasInFromUsingKeywordFails(){
-		helpException("SELECT or.a FROM g AS or");		 //$NON-NLS-1$
-	}
+    /** SELECT or.a FROM g AS or */
+    @Test public void testAliasInFromUsingKeywordFails(){
+        helpException("SELECT or.a FROM g AS or");         //$NON-NLS-1$
+    }
 
     // ======================= Misc ==============================================
 
@@ -1897,48 +1897,48 @@ public class TestParser {
                  query);
     }
 
-	/** Select a From db.g Where Not a IS NULL */
-	@Test public void testNotIsNullCriteria(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** Select a From db.g Where Not a IS NULL */
+    @Test public void testNotIsNullCriteria(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit = new NotCriteria(new IsNullCriteria(a));
+        Criteria crit = new NotCriteria(new IsNullCriteria(a));
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("Select a From db.g Where Not a IS NULL",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE NOT (a IS NULL)",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("Select a From db.g Where Not a IS NULL",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE NOT (a IS NULL)",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from db.g where a <> "value" */
-	@Test public void testStringNotEqualDoubleTicks(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a <> "value" */
+    @Test public void testStringNotEqualDoubleTicks(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression ex = new ElementSymbol("value"); //$NON-NLS-1$
-		Criteria crit = new CompareCriteria(a, CompareCriteria.NE, ex);
+        Expression ex = new ElementSymbol("value"); //$NON-NLS-1$
+        Criteria crit = new CompareCriteria(a, CompareCriteria.NE, ex);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a <> \"value\"",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a <> \"value\"",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a <> \"value\"",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a <> \"value\"",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a from db.g where a != "value" */
     @Test public void testNotEquals2(){
@@ -1962,160 +1962,160 @@ public class TestParser {
                  query);
     }
 
-	/** SELECT a from db."g" where a = 5 */
-	@Test public void testPartlyQuotedGroup(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db."g" where a = 5 */
+    @Test public void testPartlyQuotedGroup(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit = new CompareCriteria(a, CompareCriteria.EQ, new Constant(new Integer(5)));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.EQ, new Constant(new Integer(5)));
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.\"g\" where a = 5",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a = 5",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.\"g\" where a = 5",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a = 5",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from "db"."g" where a = 5 */
-	@Test public void testFullyQuotedGroup(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from "db"."g" where a = 5 */
+    @Test public void testFullyQuotedGroup(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit = new CompareCriteria(a, CompareCriteria.EQ, new Constant(new Integer(5)));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.EQ, new Constant(new Integer(5)));
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from \"db\".\"g\" where a = 5",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a = 5",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from \"db\".\"g\" where a = 5",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a = 5",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT "db".g.a from db.g */
-	@Test public void testPartlyQuotedElement1(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT "db".g.a from db.g */
+    @Test public void testPartlyQuotedElement1(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \"db\".g.a from db.g",  //$NON-NLS-1$
-				 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT \"db\".g.a from db.g",  //$NON-NLS-1$
+                 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT "db"."g".a from db.g */
-	@Test public void testPartlyQuotedElement2(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT "db"."g".a from db.g */
+    @Test public void testPartlyQuotedElement2(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \"db\".\"g\".a from db.g",  //$NON-NLS-1$
-				 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT \"db\".\"g\".a from db.g",  //$NON-NLS-1$
+                 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT "db"."g"."a" from db.g */
-	@Test public void testPartlyQuotedElement3(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT "db"."g"."a" from db.g */
+    @Test public void testPartlyQuotedElement3(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("db.g.a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \"db\".\"g\".\"a\" from db.g",  //$NON-NLS-1$
-				 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT \"db\".\"g\".\"a\" from db.g",  //$NON-NLS-1$
+                 "SELECT db.g.a FROM db.g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT ""g"".""a" from db.g */
-	@Test public void testStringLiteralLikeQuotedElement(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT ""g"".""a" from db.g */
+    @Test public void testStringLiteralLikeQuotedElement(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("g\".\"a")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("g\".\"a")); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
-				 "SELECT \"g\"\"\".\"\"\"a\" FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
+                 "SELECT \"g\"\"\".\"\"\"a\" FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT ""g"".""a" from db.g */
-	@Test public void testStringLiteralLikeQuotedElement1(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT ""g"".""a" from db.g */
+    @Test public void testStringLiteralLikeQuotedElement1(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new Constant("g\".\"a")); //$NON-NLS-1$ //$NON-NLS-2$
+        Select select = new Select();
+        select.addSymbol(new Constant("g\".\"a")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		ParseInfo info = new ParseInfo();
-		info.ansiQuotedIdentifiers = false;
-		helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
-				 "SELECT 'g\".\"a' FROM g",  //$NON-NLS-1$
-				 query, info);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        ParseInfo info = new ParseInfo();
+        info.ansiQuotedIdentifiers = false;
+        helpTest("SELECT \"g\"\".\"\"a\" from g",  //$NON-NLS-1$
+                 "SELECT 'g\".\"a' FROM g",  //$NON-NLS-1$
+                 query, info);
+    }
 
-	/** SELECT g.x AS "select" FROM g */
-	@Test public void testQuotedAlias(){
-		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT g.x AS "select" FROM g */
+    @Test public void testQuotedAlias(){
+        GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		AliasSymbol a = new AliasSymbol("select", new ElementSymbol("g.x"));  //$NON-NLS-1$ //$NON-NLS-2$
-		select.addSymbol(a);
+        Select select = new Select();
+        AliasSymbol a = new AliasSymbol("select", new ElementSymbol("g.x"));  //$NON-NLS-1$ //$NON-NLS-2$
+        select.addSymbol(a);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT g.x AS \"select\" FROM g",  //$NON-NLS-1$
-				 "SELECT g.x AS \"select\" FROM g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT g.x AS \"select\" FROM g",  //$NON-NLS-1$
+                 "SELECT g.x AS \"select\" FROM g",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT g.x AS year FROM g */
     @Test public void testQuotedAlias2(){
@@ -2250,27 +2250,27 @@ public class TestParser {
                  query);
     }
 
-	/** SELECT a from db.g where a <> 'value' */
-	@Test public void testStringNotEqual(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a <> 'value' */
+    @Test public void testStringNotEqual(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression constant = new Constant("value"); //$NON-NLS-1$
-		Criteria crit = new CompareCriteria(a, CompareCriteria.NE, constant);
+        Expression constant = new Constant("value"); //$NON-NLS-1$
+        Criteria crit = new CompareCriteria(a, CompareCriteria.NE, constant);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a <> 'value'",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a <> 'value'",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a <> 'value'",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a <> 'value'",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a from db.g where a BETWEEN 1000 AND 2000 */
     @Test public void testBetween1(){
@@ -2318,137 +2318,137 @@ public class TestParser {
                  query);
     }
 
-	/** SELECT a from db.g where a < 1000 */
-	@Test public void testCompareLT(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a < 1000 */
+    @Test public void testCompareLT(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression constant = new Constant(new Integer(1000));
-		Criteria crit = new CompareCriteria(a, CompareCriteria.LT, constant);
+        Expression constant = new Constant(new Integer(1000));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.LT, constant);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a < 1000",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a < 1000",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a < 1000",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a < 1000",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from db.g where a > 1000 */
-	@Test public void testCompareGT(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a > 1000 */
+    @Test public void testCompareGT(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression constant = new Constant(new Integer(1000));
-		Criteria crit = new CompareCriteria(a, CompareCriteria.GT, constant);
+        Expression constant = new Constant(new Integer(1000));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.GT, constant);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a > 1000",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a > 1000",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a > 1000",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a > 1000",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from db.g where a <= 1000 */
-	@Test public void testCompareLE(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a <= 1000 */
+    @Test public void testCompareLE(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression constant = new Constant(new Integer(1000));
-		Criteria crit = new CompareCriteria(a, CompareCriteria.LE, constant);
+        Expression constant = new Constant(new Integer(1000));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.LE, constant);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a <= 1000",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a <= 1000",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a <= 1000",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a <= 1000",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from db.g where a >= 1000 */
-	@Test public void testCompareGE(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where a >= 1000 */
+    @Test public void testCompareGE(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression constant = new Constant(new Integer(1000));
-		Criteria crit = new CompareCriteria(a, CompareCriteria.GE, constant);
+        Expression constant = new Constant(new Integer(1000));
+        Criteria crit = new CompareCriteria(a, CompareCriteria.GE, constant);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where a >= 1000",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE a >= 1000",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where a >= 1000",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE a >= 1000",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a from db.g where b = x and a = 1000 */
-	@Test public void testCompoundCompare1(){
-	    helpTestCompoundCompare("SELECT a from db.g where b = x and a = 1000"); //$NON-NLS-1$
-	}
+    /** SELECT a from db.g where b = x and a = 1000 */
+    @Test public void testCompoundCompare1(){
+        helpTestCompoundCompare("SELECT a from db.g where b = x and a = 1000"); //$NON-NLS-1$
+    }
 
-	/** SELECT a from db.g where (b = x and a = 1000) */
-	@Test public void testCompoundCompare2(){
-	    helpTestCompoundCompare("SELECT a from db.g where (b = x and a = 1000)"); //$NON-NLS-1$
-	}
+    /** SELECT a from db.g where (b = x and a = 1000) */
+    @Test public void testCompoundCompare2(){
+        helpTestCompoundCompare("SELECT a from db.g where (b = x and a = 1000)"); //$NON-NLS-1$
+    }
 
-	/** SELECT a from db.g where ((b = x) and (a = 1000)) */
-	@Test public void testCompoundCompare3(){
-	    helpTestCompoundCompare("SELECT a from db.g where ((b = x) and (a = 1000))"); //$NON-NLS-1$
-	}
+    /** SELECT a from db.g where ((b = x) and (a = 1000)) */
+    @Test public void testCompoundCompare3(){
+        helpTestCompoundCompare("SELECT a from db.g where ((b = x) and (a = 1000))"); //$NON-NLS-1$
+    }
 
-	/** SELECT a from db.g where (((b = x) and (a = 1000))) */
-	@Test public void testCompoundCompare4(){
-	    helpTestCompoundCompare("SELECT a from db.g where (((b = x) and (a = 1000)))"); //$NON-NLS-1$
-	}
+    /** SELECT a from db.g where (((b = x) and (a = 1000))) */
+    @Test public void testCompoundCompare4(){
+        helpTestCompoundCompare("SELECT a from db.g where (((b = x) and (a = 1000)))"); //$NON-NLS-1$
+    }
 
-	/** SELECT a FROM db.g WHERE (b = x) AND (a = 1000) */
-	private void helpTestCompoundCompare(String testSQL){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a FROM db.g WHERE (b = x) AND (a = 1000) */
+    private void helpTestCompoundCompare(String testSQL){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit1 = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
-		Expression constant = new Constant(new Integer(1000));
-		Criteria crit2 = new CompareCriteria(a, CompareCriteria.EQ, constant);
-		Criteria crit = new CompoundCriteria(CompoundCriteria.AND, crit1, crit2);
+        Criteria crit1 = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        Expression constant = new Constant(new Integer(1000));
+        Criteria crit2 = new CompareCriteria(a, CompareCriteria.EQ, constant);
+        Criteria crit = new CompoundCriteria(CompoundCriteria.AND, crit1, crit2);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest(testSQL,
-				 "SELECT a FROM db.g WHERE (b = x) AND (a = 1000)",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest(testSQL,
+                 "SELECT a FROM db.g WHERE (b = x) AND (a = 1000)",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a FROM db.g WHERE b IN (1000,5000)*/
     @Test public void testSetCriteria0(){
@@ -2500,119 +2500,119 @@ public class TestParser {
                  query);
     }
 
-	// ================================== order by ==================================
+    // ================================== order by ==================================
 
-	/** SELECT a FROM db.g WHERE b = aString order by c*/
-	@Test public void testOrderBy(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a FROM db.g WHERE b = aString order by c*/
+    @Test public void testOrderBy(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
+        Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		OrderBy orderBy = new OrderBy(elements);
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        elements.add(new ElementSymbol("c")); //$NON-NLS-1$
+        OrderBy orderBy = new OrderBy(elements);
 
-		Query query = new Query(select, from, crit, orderBy, null);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query(select, from, crit, orderBy, null);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM db.g WHERE b = aString order by c desc*/
-	@Test public void testOrderByDesc(){
-		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
-		orderTypes.add(Boolean.FALSE);
-		OrderBy orderBy = new OrderBy(elements, orderTypes);
+    /** SELECT a FROM db.g WHERE b = aString order by c desc*/
+    @Test public void testOrderByDesc(){
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        elements.add(new ElementSymbol("c")); //$NON-NLS-1$
+        ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
+        orderTypes.add(Boolean.FALSE);
+        OrderBy orderBy = new OrderBy(elements, orderTypes);
 
-		Query query = getOrderByQuery(orderBy);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC",  //$NON-NLS-1$
-				 query);
-	}
-	private Query getOrderByQuery(OrderBy orderBy) {
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+        Query query = getOrderByQuery(orderBy);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC",  //$NON-NLS-1$
+                 query);
+    }
+    private Query getOrderByQuery(OrderBy orderBy) {
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
+        Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Query query = new Query(select, from, crit, orderBy, null);
-		return query;
-	}
+        Query query = new Query(select, from, crit, orderBy, null);
+        return query;
+    }
 
-	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
-	@Test public void testOrderBys(){
-		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
-		OrderBy orderBy = new OrderBy(elements);
+    /** SELECT a FROM db.g WHERE b = aString order by c,d*/
+    @Test public void testOrderBys(){
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        elements.add(new ElementSymbol("c")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("d")); //$NON-NLS-1$
+        OrderBy orderBy = new OrderBy(elements);
 
-		Query query = getOrderByQuery(orderBy);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c,d",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c, d",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = getOrderByQuery(orderBy);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c,d",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c, d",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM db.g WHERE b = aString order by c desc,d desc*/
-	@Test public void testOrderBysDesc(){
-		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
-		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
-		orderTypes.add(Boolean.FALSE);
-		orderTypes.add(Boolean.FALSE);
-		OrderBy orderBy = new OrderBy(elements, orderTypes);
+    /** SELECT a FROM db.g WHERE b = aString order by c desc,d desc*/
+    @Test public void testOrderBysDesc(){
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        elements.add(new ElementSymbol("c")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("d")); //$NON-NLS-1$
+        ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
+        orderTypes.add(Boolean.FALSE);
+        orderTypes.add(Boolean.FALSE);
+        OrderBy orderBy = new OrderBy(elements, orderTypes);
 
-		Query query = getOrderByQuery(orderBy);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d desc",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d DESC",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = getOrderByQuery(orderBy);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d desc",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d DESC",  //$NON-NLS-1$
+                 query);
+    }
 
-	/** SELECT a FROM db.g WHERE b = aString order by c desc,d*/
-	@Test public void testMixedOrderBys(){
-		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
-		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
-		orderTypes.add(Boolean.FALSE);
-		orderTypes.add(Boolean.TRUE);
-		OrderBy orderBy = new OrderBy(elements, orderTypes);
+    /** SELECT a FROM db.g WHERE b = aString order by c desc,d*/
+    @Test public void testMixedOrderBys(){
+        ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        elements.add(new ElementSymbol("c")); //$NON-NLS-1$
+        elements.add(new ElementSymbol("d")); //$NON-NLS-1$
+        ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
+        orderTypes.add(Boolean.FALSE);
+        orderTypes.add(Boolean.TRUE);
+        OrderBy orderBy = new OrderBy(elements, orderTypes);
 
-		Query query = getOrderByQuery(orderBy);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = getOrderByQuery(orderBy);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c desc,d",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c DESC, d",  //$NON-NLS-1$
+                 query);
+    }
 
-	@Test public void testOrderByNullOrdering(){
-		OrderBy orderBy = new OrderBy();
-		OrderByItem item = new OrderByItem(new ElementSymbol("c"), true);
-		item.setNullOrdering(NullOrdering.FIRST);
-		orderBy.getOrderByItems().add(item);
-		item = new OrderByItem(new ElementSymbol("d"), false);
-		item.setNullOrdering(NullOrdering.LAST);
-		orderBy.getOrderByItems().add(item);
+    @Test public void testOrderByNullOrdering(){
+        OrderBy orderBy = new OrderBy();
+        OrderByItem item = new OrderByItem(new ElementSymbol("c"), true);
+        item.setNullOrdering(NullOrdering.FIRST);
+        orderBy.getOrderByItems().add(item);
+        item = new OrderByItem(new ElementSymbol("d"), false);
+        item.setNullOrdering(NullOrdering.LAST);
+        orderBy.getOrderByItems().add(item);
 
-		Query query = getOrderByQuery(orderBy);
-		helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST,d desc nulls last",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST, d DESC NULLS LAST",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = getOrderByQuery(orderBy);
+        helpTest("SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST,d desc nulls last",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b = aString ORDER BY c NULLS FIRST, d DESC NULLS LAST",  //$NON-NLS-1$
+                 query);
+    }
 
-	// ================================== match ====================================
+    // ================================== match ====================================
 
     /** SELECT a FROM db.g WHERE b LIKE 'aString'*/
     @Test public void testLike0(){
@@ -2679,50 +2679,50 @@ public class TestParser {
                  query);
     }
 
-	/** SELECT a from db.g where b like '#String' escape '#'*/
-	@Test public void testLikeWithEscape(){
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT a from db.g where b like '#String' escape '#'*/
+    @Test public void testLikeWithEscape(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Expression string1 = new Constant("#String"); //$NON-NLS-1$
-		Criteria crit = new MatchCriteria(new ElementSymbol("b"), string1, '#'); //$NON-NLS-1$
+        Expression string1 = new Constant("#String"); //$NON-NLS-1$
+        Criteria crit = new MatchCriteria(new ElementSymbol("b"), string1, '#'); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
-		helpTest("SELECT a from db.g where b like '#String' escape '#'",  //$NON-NLS-1$
-				 "SELECT a FROM db.g WHERE b LIKE '#String' ESCAPE '#'",  //$NON-NLS-1$
-				 query);
-	}
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a from db.g where b like '#String' escape '#'",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b LIKE '#String' ESCAPE '#'",  //$NON-NLS-1$
+                 query);
+    }
 
     @Test public void testLikeWithEscapeException(){
         helpException("SELECT a from db.g where b like '#String' escape '#1'", "TEIID31100 Parsing error: Encountered \"like '#String' escape [*]'#1'[*]\" at line 1, column 50.\nTEIID30398 LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	/** SELECT "date"."time" from db.g */
-	@Test public void testReservedWordsInElement() {
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** SELECT "date"."time" from db.g */
+    @Test public void testReservedWordsInElement() {
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		ElementSymbol a = new ElementSymbol("date.time");  //$NON-NLS-1$
-		select.addSymbol(a);
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("date.time");  //$NON-NLS-1$
+        select.addSymbol(a);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		helpTest("SELECT \"date\".\"time\" from db.g",  //$NON-NLS-1$
-				 "SELECT \"date\".\"time\" FROM db.g",  //$NON-NLS-1$
-				 query);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        helpTest("SELECT \"date\".\"time\" from db.g",  //$NON-NLS-1$
+                 "SELECT \"date\".\"time\" FROM db.g",  //$NON-NLS-1$
+                 query);
 
-	}
+    }
 
     /** SELECT a */
     @Test public void testNoFromClause(){
@@ -2735,40 +2735,40 @@ public class TestParser {
         helpTest("SELECT a, 5", "SELECT a, 5", query);       //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	// ==================== misc queries that should fail ===========================
+    // ==================== misc queries that should fail ===========================
 
-	/** FROM g WHERE a = 'aString' */
-	@Test public void testFailsNoSelectClause(){
-		helpException("FROM g WHERE a = 'aString'");		 //$NON-NLS-1$
-	}
+    /** FROM g WHERE a = 'aString' */
+    @Test public void testFailsNoSelectClause(){
+        helpException("FROM g WHERE a = 'aString'");         //$NON-NLS-1$
+    }
 
-	/** SELECT a WHERE a = 'aString' */
-	@Test public void testFailsNoFromClause(){
-		helpException("SELECT a WHERE a = 'aString'");		 //$NON-NLS-1$
-	}
+    /** SELECT a WHERE a = 'aString' */
+    @Test public void testFailsNoFromClause(){
+        helpException("SELECT a WHERE a = 'aString'");         //$NON-NLS-1$
+    }
 
-	/** SELECT xx.yy%.a from xx.yy */
-	@Test public void testFailsWildcardInSelect(){
-		helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy[*]%[*].a\" at line 1, column 13.\nLexical error. Character is not a valid token: %");		 //$NON-NLS-1$
-	}
+    /** SELECT xx.yy%.a from xx.yy */
+    @Test public void testFailsWildcardInSelect(){
+        helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy[*]%[*].a\" at line 1, column 13.\nLexical error. Character is not a valid token: %");         //$NON-NLS-1$
+    }
 
-	@Test public void testFailsWildcardInSelect1(){
-		helpException("SELECT % from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT [*]%[*] from xx.yy\" at line 1, column 8.\nLexical error. Character is not a valid token: %");		 //$NON-NLS-1$
-	}
+    @Test public void testFailsWildcardInSelect1(){
+        helpException("SELECT % from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT [*]%[*] from xx.yy\" at line 1, column 8.\nLexical error. Character is not a valid token: %");         //$NON-NLS-1$
+    }
 
-	@Test public void testInvalidToken(){
-		helpException("%", "TEIID31100 Parsing error: Encountered \"[*]%[*]\" at line 1, column 1.\nLexical error. Character is not a valid token: %");
-	}
+    @Test public void testInvalidToken(){
+        helpException("%", "TEIID31100 Parsing error: Encountered \"[*]%[*]\" at line 1, column 1.\nLexical error. Character is not a valid token: %");
+    }
 
-	/** SELECT a or b from g */
-	@Test public void testOrInSelect(){
-		Query query = new Query();
-		query.setSelect(new Select(Arrays.asList(new CompoundCriteria(CompoundCriteria.OR, Arrays.asList(new ExpressionCriteria(new ElementSymbol("a")), new ExpressionCriteria(new ElementSymbol("b")))))));
-		helpTest("select a or b", "SELECT (a) OR (b)", query);
-	}
+    /** SELECT a or b from g */
+    @Test public void testOrInSelect(){
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new CompoundCriteria(CompoundCriteria.OR, Arrays.asList(new ExpressionCriteria(new ElementSymbol("a")), new ExpressionCriteria(new ElementSymbol("b")))))));
+        helpTest("select a or b", "SELECT (a) OR (b)", query);
+    }
 
-	/** SELECT a FROM g WHERE a LIKE x*/
-	@Test public void testLikeWOConstant(){
+    /** SELECT a FROM g WHERE a LIKE x*/
+    @Test public void testLikeWOConstant(){
         GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
@@ -2787,34 +2787,34 @@ public class TestParser {
         helpTest("SELECT a FROM g WHERE a LIKE x",  //$NON-NLS-1$
                  "SELECT a FROM g WHERE a LIKE x",  //$NON-NLS-1$
                  query);
-	}
+    }
 
-	/** SELECT a from g ORDER BY b DSC*/
-	@Test public void testFailsDSCMisspelled(){
-		helpException("SELECT a from g ORDER BY b DSC");		 //$NON-NLS-1$
-	}
+    /** SELECT a from g ORDER BY b DSC*/
+    @Test public void testFailsDSCMisspelled(){
+        helpException("SELECT a from g ORDER BY b DSC");         //$NON-NLS-1$
+    }
 
-	/** Test reusability of parser */
-	@Test public void testReusabilityOfParserObject() {
-		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
+    /** Test reusability of parser */
+    @Test public void testReusabilityOfParserObject() {
+        GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT a FROM m.g",  //$NON-NLS-1$
-				 "SELECT a FROM m.g",  //$NON-NLS-1$
-				 query);
+        helpTest("SELECT a FROM m.g",  //$NON-NLS-1$
+                 "SELECT a FROM m.g",  //$NON-NLS-1$
+                 query);
 
-		helpTest("SELECT a FROM m.g",  //$NON-NLS-1$
-				 "SELECT a FROM m.g",  //$NON-NLS-1$
-				 query);
-	}
+        helpTest("SELECT a FROM m.g",  //$NON-NLS-1$
+                 "SELECT a FROM m.g",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a from db.g where b LIKE ? */
     @Test public void testParameter1() {
@@ -2958,10 +2958,10 @@ public class TestParser {
                  query2);
     }
 
-	/** SELECT a, b FROM (SELECT c FROM m.g2) */
-	@Test public void testSubqueryInvalid() {
-		helpException("SELECT a, b FROM (SELECT c FROM m.g2)"); //$NON-NLS-1$
-	}
+    /** SELECT a, b FROM (SELECT c FROM m.g2) */
+    @Test public void testSubqueryInvalid() {
+        helpException("SELECT a, b FROM (SELECT c FROM m.g2)"); //$NON-NLS-1$
+    }
 
     /** INSERT INTO m.g (a) VALUES (?) */
     @Test public void testInsertWithReference() {
@@ -2979,15 +2979,15 @@ public class TestParser {
     }
 
     @Test public void testStoredQueryWithNoParameter(){
-    	StoredProcedure storedQuery = new StoredProcedure();
-    	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
-    	helpTest("exec proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
-    	helpTest("execute proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        StoredProcedure storedQuery = new StoredProcedure();
+        storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
+        helpTest("exec proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("execute proc1()", "EXEC proc1()", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testStoredQueryWithNoParameter2(){
-    	StoredProcedure storedQuery = new StoredProcedure();
-    	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
+        StoredProcedure storedQuery = new StoredProcedure();
+        storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
 
         From from = new From();
         SubqueryFromClause sfc = new SubqueryFromClause("x", storedQuery); //$NON-NLS-1$
@@ -2999,25 +2999,25 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-    	helpTest("SELECT X.A FROM (exec proc1()) AS X", "SELECT X.A FROM (EXEC proc1()) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("SELECT X.A FROM (exec proc1()) AS X", "SELECT X.A FROM (EXEC proc1()) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testStoredQuery(){
-    	StoredProcedure storedQuery = new StoredProcedure();
-    	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
-    	SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
+        StoredProcedure storedQuery = new StoredProcedure();
+        storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
+        SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
         parameter.setParameterType(ParameterInfo.IN);
-    	storedQuery.setParameter(parameter);
-    	helpTest("Exec proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
-    	helpTest("execute proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        storedQuery.setParameter(parameter);
+        helpTest("Exec proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("execute proc1('param1')", "EXEC proc1('param1')", storedQuery); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testStoredQuery2(){
-    	StoredProcedure storedQuery = new StoredProcedure();
-    	storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
-    	SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
-    	storedQuery.setParameter(parameter);
-    	From from = new From();
+        StoredProcedure storedQuery = new StoredProcedure();
+        storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
+        SPParameter parameter = new SPParameter(1, new Constant("param1")); //$NON-NLS-1$
+        storedQuery.setParameter(parameter);
+        From from = new From();
         SubqueryFromClause sfc = new SubqueryFromClause("x", storedQuery); //$NON-NLS-1$
         from.addClause(sfc);
 
@@ -3027,7 +3027,7 @@ public class TestParser {
         Query query = new Query();
         query.setSelect(select);
         query.setFrom(from);
-    	helpTest("SELECT X.A FROM (exec proc1('param1')) AS X", "SELECT X.A FROM (EXEC proc1('param1')) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("SELECT X.A FROM (exec proc1('param1')) AS X", "SELECT X.A FROM (EXEC proc1('param1')) AS X", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testStoredQuery2SanityCheck(){
@@ -3068,8 +3068,8 @@ public class TestParser {
     }
 
     @Test public void testErrorStatement() throws Exception {
-    	ExceptionExpression ee = new ExceptionExpression();
-    	ee.setMessage(new Constant("Test only"));
+        ExceptionExpression ee = new ExceptionExpression();
+        ee.setMessage(new Constant("Test only"));
         RaiseStatement errStmt = new RaiseStatement(ee);
 
         helpStmtTest("ERROR 'Test only';", "RAISE SQLEXCEPTION 'Test only';", //$NON-NLS-1$ //$NON-NLS-2$
@@ -3077,10 +3077,10 @@ public class TestParser {
     }
 
     @Test public void testRaiseErrorStatement() throws Exception {
-    	ExceptionExpression ee = new ExceptionExpression();
-    	ee.setMessage(new Constant("Test only"));
-    	ee.setSqlState(new Constant("100"));
-    	ee.setParent(new ElementSymbol("e"));
+        ExceptionExpression ee = new ExceptionExpression();
+        ee.setMessage(new Constant("Test only"));
+        ee.setSqlState(new Constant("100"));
+        ee.setParent(new ElementSymbol("e"));
         RaiseStatement errStmt = new RaiseStatement(ee, true);
 
         helpStmtTest("RAISE SQLWARNING SQLEXCEPTION 'Test only' SQLSTATE '100' chain e;", "RAISE SQLWARNING SQLEXCEPTION 'Test only' SQLSTATE '100' CHAIN e;", //$NON-NLS-1$ //$NON-NLS-2$
@@ -3311,8 +3311,8 @@ public class TestParser {
              outer);
     }
 
-	static Query exampleIn(boolean semiJoin) {
-		GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+    static Query exampleIn(boolean semiJoin) {
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
         From from = new From();
         from.addGroup(g);
 
@@ -3334,8 +3334,8 @@ public class TestParser {
         outer.setSelect(select);
         outer.setFrom(from);
         outer.setCriteria(subCrit);
-		return outer;
-	}
+        return outer;
+    }
 
     @Test public void testSubquerySetCriteria1() {
 
@@ -3501,32 +3501,32 @@ public class TestParser {
         helpTest(sql, query.toString(), query);
     }
 
-	@Test public void testUnicode3() {
-		String sql = "SELECT '\u05e0'";  //$NON-NLS-1$
+    @Test public void testUnicode3() {
+        String sql = "SELECT '\u05e0'";  //$NON-NLS-1$
 
-		Query query = new Query();
-		Select select = new Select();
-		Constant c = new Constant("\u05e0"); //$NON-NLS-1$
-		select.addSymbol(c); //$NON-NLS-1$
-		query.setSelect(select);
+        Query query = new Query();
+        Select select = new Select();
+        Constant c = new Constant("\u05e0"); //$NON-NLS-1$
+        select.addSymbol(c); //$NON-NLS-1$
+        query.setSelect(select);
 
-		helpTest(sql, query.toString(), query);
-	}
+        helpTest(sql, query.toString(), query);
+    }
 
-	@Test public void testUnicode4() {
-		String sql = "SELECT \u05e0 FROM g";  //$NON-NLS-1$
+    @Test public void testUnicode4() {
+        String sql = "SELECT \u05e0 FROM g";  //$NON-NLS-1$
 
-		Query query = new Query();
-		Select select = new Select();
-		ElementSymbol e = new ElementSymbol("\u05e0"); //$NON-NLS-1$
-		select.addSymbol(e);
-		From from = new From();
-		from.addGroup(new GroupSymbol("g")); //$NON-NLS-1$
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        Select select = new Select();
+        ElementSymbol e = new ElementSymbol("\u05e0"); //$NON-NLS-1$
+        select.addSymbol(e);
+        From from = new From();
+        from.addGroup(new GroupSymbol("g")); //$NON-NLS-1$
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest(sql, query.toString(), query);
-	}
+        helpTest(sql, query.toString(), query);
+    }
 
     @Test public void testEscapedFunction1() {
         String sql = "SELECT * FROM a.thing WHERE e1 = {fn concat('a', 'b')}"; //$NON-NLS-1$
@@ -3856,13 +3856,13 @@ public class TestParser {
     }
 
     @Test public void testContinueStatement() throws Exception {
-    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
+        BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
         helpStmtTest("continue;", "CONTINUE;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testContinueStatement1() throws Exception {
-    	BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
-	    contStmt.setLabel("x");
+        BranchingStatement contStmt = new BranchingStatement(BranchingMode.CONTINUE);
+        contStmt.setLabel("x");
         helpStmtTest("continue x;", "CONTINUE x;", contStmt); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -4093,8 +4093,8 @@ public class TestParser {
                  "SELECT e1 FROM m.g2 WHERE EXISTS (SELECT e1 FROM m.g1)", //$NON-NLS-1$
                  q2);
     }
-	static Query exampleExists(boolean semiJoin) {
-		Select s1 = new Select();
+    static Query exampleExists(boolean semiJoin) {
+        Select s1 = new Select();
         s1.addSymbol(new ElementSymbol("e1")); //$NON-NLS-1$
         From f1 = new From();
         f1.addGroup(new GroupSymbol("m.g1"));        //$NON-NLS-1$
@@ -4112,8 +4112,8 @@ public class TestParser {
         q2.setSelect(s2);
         q2.setFrom(f2);
         q2.setCriteria(existsCrit);
-		return q2;
-	}
+        return q2;
+    }
 
     @Test public void testAnyQuantifierSubqueryComparePredicate(){
 
@@ -4519,16 +4519,16 @@ public class TestParser {
         from.addGroup(g);
 
         ElementSymbol e =  new ElementSymbol("foo"); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(e);
+        Select select = new Select();
+        select.addSymbol(e);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT \"foo\" FROM x",  //$NON-NLS-1$
-				 "SELECT foo FROM x",  //$NON-NLS-1$
-				 query);
+        helpTest("SELECT \"foo\" FROM x",  //$NON-NLS-1$
+                 "SELECT foo FROM x",  //$NON-NLS-1$
+                 query);
     }
 
     @Test public void testElementInDoubleQuotes_Insert() throws Exception {
@@ -4582,16 +4582,16 @@ public class TestParser {
         from.addGroup(g);
 
         AliasSymbol as = new AliasSymbol("fooAlias", new ElementSymbol("fooKey")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
+        Select select = new Select();
+        select.addSymbol(as);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT fooKey AS \"fooAlias\" FROM x",  //$NON-NLS-1$
-				 "SELECT fooKey AS fooAlias FROM x",  //$NON-NLS-1$
-				 query);
+        helpTest("SELECT fooKey AS \"fooAlias\" FROM x",  //$NON-NLS-1$
+                 "SELECT fooKey AS fooAlias FROM x",  //$NON-NLS-1$
+                 query);
     }
 
     @Test public void testAliasInDoubleQuotesWithQuotedGroup() throws Exception {
@@ -4601,21 +4601,21 @@ public class TestParser {
         from.addGroup(g);
 
         AliasSymbol as = new AliasSymbol("fooAlias", new ElementSymbol("fooKey")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
+        Select select = new Select();
+        select.addSymbol(as);
 
-		ElementSymbol a = new ElementSymbol("x.y.z.id");         //$NON-NLS-1$
-		Constant c = new Constant(new Integer(10));
+        ElementSymbol a = new ElementSymbol("x.y.z.id");         //$NON-NLS-1$
+        Constant c = new Constant(new Integer(10));
         Criteria crit = new CompareCriteria(a, CompareCriteria.EQ, c);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setCriteria(crit);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
 
-		helpTest("SELECT fooKey AS \"fooAlias\" FROM \"x.y\".z where x.\"y.z\".id = 10",  //$NON-NLS-1$
-		         "SELECT fooKey AS fooAlias FROM x.y.z WHERE x.y.z.id = 10",  //$NON-NLS-1$
-				 query);
+        helpTest("SELECT fooKey AS \"fooAlias\" FROM \"x.y\".z where x.\"y.z\".id = 10",  //$NON-NLS-1$
+                 "SELECT fooKey AS fooAlias FROM x.y.z WHERE x.y.z.id = 10",  //$NON-NLS-1$
+                 query);
     }
 
     @Test public void testSingleQuotedConstant() throws Exception {
@@ -4625,16 +4625,16 @@ public class TestParser {
         from.addGroup(g);
 
         Constant as = new Constant("fooString"); //$NON-NLS-1$
-		Select select = new Select();
-		select.addSymbol(as); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(as); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
-		helpTest("SELECT 'fooString' FROM \"x.y.z\"",  //$NON-NLS-1$
-		        "SELECT 'fooString' FROM x.y.z",  //$NON-NLS-1$
-				 query);
+        helpTest("SELECT 'fooString' FROM \"x.y.z\"",  //$NON-NLS-1$
+                "SELECT 'fooString' FROM x.y.z",  //$NON-NLS-1$
+                 query);
     }
 
     @Test public void testAliasInSingleQuotes() throws Exception {
@@ -4644,12 +4644,12 @@ public class TestParser {
         from.addGroup(g);
 
         AliasSymbol as = new AliasSymbol("fooAlias", new ElementSymbol("fooKey")); //$NON-NLS-1$ //$NON-NLS-2$
-		Select select = new Select();
-		select.addSymbol(as);
+        Select select = new Select();
+        select.addSymbol(as);
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
 
         helpException("SELECT fooKey 'fooAlias' FROM x.\"y\".z"); //$NON-NLS-1$
     }
@@ -4679,19 +4679,19 @@ public class TestParser {
         From from = new From();
         from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("x")); //$NON-NLS-1$
-		select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("x")); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
 
-		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new ElementSymbol("1"), true); //$NON-NLS-1$
+        OrderBy orderby = new OrderBy();
+        orderby.addVariable(new ElementSymbol("1"), true); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setOrderBy(orderby);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setOrderBy(orderby);
 
-		helpTest("SELECT x, y from z order by \"1\"", "SELECT x, y FROM z ORDER BY \"1\"", query); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("SELECT x, y from z order by \"1\"", "SELECT x, y FROM z ORDER BY \"1\"", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testOrderByWithNumbers_AsInt() throws Exception {
@@ -4699,19 +4699,19 @@ public class TestParser {
         From from = new From();
         from.addGroup(g);
 
-		Select select = new Select();
-		select.addSymbol(new ElementSymbol("x")); //$NON-NLS-1$
-		select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("x")); //$NON-NLS-1$
+        select.addSymbol(new ElementSymbol("y")); //$NON-NLS-1$
 
-		OrderBy orderby = new OrderBy();
-		orderby.addVariable(new Constant(1), true); //$NON-NLS-1$
+        OrderBy orderby = new OrderBy();
+        orderby.addVariable(new Constant(1), true); //$NON-NLS-1$
 
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		query.setOrderBy(orderby);
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setOrderBy(orderby);
 
-		helpTest("SELECT x, y FROM z order by 1", "SELECT x, y FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("SELECT x, y FROM z order by 1", "SELECT x, y FROM z ORDER BY 1", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test(expected=QueryParserException.class) public void testOrderByWithNumbers_AsNegitiveInt() throws Exception {
@@ -4767,7 +4767,7 @@ public class TestParser {
     }
 
     @Test public void testCase3281QuotedNamedVariableFails2() {
-    	StoredProcedure storedQuery = new StoredProcedure();
+        StoredProcedure storedQuery = new StoredProcedure();
         storedQuery.setProcedureName("proc1"); //$NON-NLS-1$
         SPParameter param1 = new SPParameter(1, new CompareCriteria(new Constant("a"), CompareCriteria.EQ, new Constant("b"))); //$NON-NLS-1$
         param1.setParameterType(ParameterInfo.IN);
@@ -4913,35 +4913,35 @@ public class TestParser {
     }
 
     @Test public void testXmlElement() throws Exception {
-    	XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
-    	helpTestExpression("xmlelement(name \"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
+        XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
+        helpTestExpression("xmlelement(name \"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
     }
 
     @Test public void testXmlElement1() throws Exception {
-    	XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
-    	helpTestExpression("xmlelement(\"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
+        XMLElement f = new XMLElement("table", Arrays.asList((Expression)new Constant("x")));
+        helpTestExpression("xmlelement(\"table\", 'x')", "XMLELEMENT(NAME \"table\", 'x')", f);
     }
 
     @Test public void testXmlElementWithAttributes() throws Exception {
-    	XMLElement f = new XMLElement("y", new ArrayList<Expression>());
-    	f.setAttributes(new XMLAttributes(Arrays.asList(new DerivedColumn("val", new Constant("a")))));
-    	helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "XMLELEMENT(NAME y, XMLATTRIBUTES('a' AS val))", f);
+        XMLElement f = new XMLElement("y", new ArrayList<Expression>());
+        f.setAttributes(new XMLAttributes(Arrays.asList(new DerivedColumn("val", new Constant("a")))));
+        helpTestExpression("xmlelement(y, xmlattributes('a' as val))", "XMLELEMENT(NAME y, XMLATTRIBUTES('a' AS val))", f);
     }
 
     @Test public void testXmlForest() throws Exception {
-    	XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
-    	helpTestExpression("xmlforest(a as \"table\")", "XMLFOREST(a AS \"table\")", f);
+        XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
+        helpTestExpression("xmlforest(a as \"table\")", "XMLFOREST(a AS \"table\")", f);
     }
 
     @Test public void testXmlPi() throws Exception {
-    	Function f = new Function("xmlpi", new Expression[] {new Constant("a"), new ElementSymbol("val")});
-    	helpTestExpression("xmlpi(NAME a, val)", "xmlpi(NAME a, val)", f);
+        Function f = new Function("xmlpi", new Expression[] {new Constant("a"), new ElementSymbol("val")});
+        helpTestExpression("xmlpi(NAME a, val)", "xmlpi(NAME a, val)", f);
     }
 
     @Test public void testXmlNamespaces() throws Exception {
-    	XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
-    	f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("http://foo", "x"))));
-    	helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
+        XMLForest f = new XMLForest(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
+        f.setNamespaces(new XMLNamespaces(Arrays.asList(new XMLNamespaces.NamespaceItem(), new XMLNamespaces.NamespaceItem("http://foo", "x"))));
+        helpTestExpression("xmlforest(xmlnamespaces(no default, 'http://foo' as x), a as \"table\")", "XMLFOREST(XMLNAMESPACES(NO DEFAULT, 'http://foo' AS x), a AS \"table\")", f);
     }
 
     @Test public void testXmlAggWithOrderBy() throws Exception {
@@ -4954,9 +4954,9 @@ public class TestParser {
     }
 
     @Test public void testTextAggWithOrderBy() throws Exception {
-    	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
-    	expressions.add(new DerivedColumn("col1", new ElementSymbol("e1")));
-    	expressions.add(new DerivedColumn("col2", new ElementSymbol("e2")));
+        List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
+        expressions.add(new DerivedColumn("col1", new ElementSymbol("e1")));
+        expressions.add(new DerivedColumn("col2", new ElementSymbol("e2")));
 
         TextLine tf = new TextLine();
         tf.setExpressions(expressions);
@@ -5003,7 +5003,7 @@ public class TestParser {
     }
 
     @Test public void testTextTable() throws Exception {
-    	String sql = "SELECT * from texttable(file columns x string WIDTH 1, y date width 10 skip 10) as x"; //$NON-NLS-1$
+        String sql = "SELECT * from texttable(file columns x string WIDTH 1, y date width 10 skip 10) as x"; //$NON-NLS-1$
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         TextTable tt = new TextTable();
@@ -5023,8 +5023,8 @@ public class TestParser {
         tt.setEscape(true);
         tt.setHeader(1);
         for (TextColumn textColumn : columns) {
-			textColumn.setWidth(null);
-		}
+            textColumn.setWidth(null);
+        }
         helpTest(sql, "SELECT * FROM TEXTTABLE(file COLUMNS x string, y date DELIMITER ',' ESCAPE '\"' HEADER SKIP 10) AS x", query);
     }
 
@@ -5033,7 +5033,7 @@ public class TestParser {
     }
 
     @Test public void testXMLTable() throws Exception {
-    	String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date default {d'2000-01-01'} path '@date') as x"; //$NON-NLS-1$
+        String sql = "SELECT * from xmltable(xmlnamespaces(no default), '/' columns x for ordinality, y date default {d'2000-01-01'} path '@date') as x"; //$NON-NLS-1$
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         XMLTable xt = new XMLTable();
@@ -5049,91 +5049,91 @@ public class TestParser {
     }
 
     @Test public void testObjectTable() throws Exception {
-    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT * from objecttable(LANGUAGE 'foo' 'x' columns y date 'row.date' default {d'2000-01-01'}) as x", new ParseInfo());
-		assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'foo' 'x' COLUMNS y date 'row.date' DEFAULT {d'2000-01-01'}) AS x", actualCommand.toString());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT * from objecttable(LANGUAGE 'foo' 'x' columns y date 'row.date' default {d'2000-01-01'}) as x", new ParseInfo());
+        assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'foo' 'x' COLUMNS y date 'row.date' DEFAULT {d'2000-01-01'}) AS x", actualCommand.toString());
     }
 
     @Test public void testObjectTable1() throws Exception {
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
-    	ObjectTable objectTable = new ObjectTable();
-    	objectTable.setRowScript("y");
-    	objectTable.setPassing(Arrays.asList(new DerivedColumn("y", new ElementSymbol("e1"))));
-    	objectTable.setColumns(Arrays.asList(new ObjectTable.ObjectColumn("z", "time", "now()", null)));
-    	objectTable.setName("x");
-		query.setFrom(new From(Arrays.asList(objectTable)));
-    	helpTest("select * from objecttable('y' passing e1 as y columns z time 'now()') as x", "SELECT * FROM OBJECTTABLE('y' PASSING e1 AS y COLUMNS z time 'now()') AS x", query);
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
+        ObjectTable objectTable = new ObjectTable();
+        objectTable.setRowScript("y");
+        objectTable.setPassing(Arrays.asList(new DerivedColumn("y", new ElementSymbol("e1"))));
+        objectTable.setColumns(Arrays.asList(new ObjectTable.ObjectColumn("z", "time", "now()", null)));
+        objectTable.setName("x");
+        query.setFrom(new From(Arrays.asList(objectTable)));
+        helpTest("select * from objecttable('y' passing e1 as y columns z time 'now()') as x", "SELECT * FROM OBJECTTABLE('y' PASSING e1 AS y COLUMNS z time 'now()') AS x", query);
     }
 
     @Test public void testXmlSerialize() throws Exception {
-    	XMLSerialize f = new XMLSerialize();
-    	f.setDocument(true);
-    	f.setExpression(new ElementSymbol("x"));
-    	f.setTypeString("CLOB");
-    	helpTestExpression("xmlserialize(document x as CLOB)", "XMLSERIALIZE(DOCUMENT x AS CLOB)", f);
+        XMLSerialize f = new XMLSerialize();
+        f.setDocument(true);
+        f.setExpression(new ElementSymbol("x"));
+        f.setTypeString("CLOB");
+        helpTestExpression("xmlserialize(document x as CLOB)", "XMLSERIALIZE(DOCUMENT x AS CLOB)", f);
     }
 
     @Test public void testXmlQuery() throws Exception {
-    	XMLQuery f = new XMLQuery();
-    	f.setXquery("/x");
-    	f.setEmptyOnEmpty(false);
-    	f.setPassing(Arrays.asList(new DerivedColumn(null, new ElementSymbol("foo"))));
-    	helpTestExpression("xmlquery('/x' passing foo null on empty)", "XMLQUERY('/x' PASSING foo NULL ON EMPTY)", f);
+        XMLQuery f = new XMLQuery();
+        f.setXquery("/x");
+        f.setEmptyOnEmpty(false);
+        f.setPassing(Arrays.asList(new DerivedColumn(null, new ElementSymbol("foo"))));
+        helpTestExpression("xmlquery('/x' passing foo null on empty)", "XMLQUERY('/x' PASSING foo NULL ON EMPTY)", f);
     }
 
     @Test public void testXmlParse() throws Exception {
-    	XMLParse f = new XMLParse();
-    	f.setDocument(true);
-    	f.setExpression(new ElementSymbol("x"));
-    	f.setWellFormed(true);
-    	helpTestExpression("xmlparse(document x wellformed)", "XMLPARSE(DOCUMENT x WELLFORMED)", f);
+        XMLParse f = new XMLParse();
+        f.setDocument(true);
+        f.setExpression(new ElementSymbol("x"));
+        f.setWellFormed(true);
+        helpTestExpression("xmlparse(document x wellformed)", "XMLPARSE(DOCUMENT x WELLFORMED)", f);
     }
 
     @Test public void testXmlSerialize1() throws Exception {
-    	XMLSerialize f = new XMLSerialize();
-    	f.setExpression(new ElementSymbol("x"));
-    	f.setTypeString("CLOB");
-    	helpTestExpression("xmlserialize(x as CLOB)", "XMLSERIALIZE(x AS CLOB)", f);
+        XMLSerialize f = new XMLSerialize();
+        f.setExpression(new ElementSymbol("x"));
+        f.setTypeString("CLOB");
+        helpTestExpression("xmlserialize(x as CLOB)", "XMLSERIALIZE(x AS CLOB)", f);
     }
 
     @Test public void testXmlSerialize2() throws Exception {
-    	XMLSerialize f = new XMLSerialize();
-    	f.setExpression(new ElementSymbol("x"));
-    	f.setTypeString("BLOB");
-    	f.setDeclaration(Boolean.TRUE);
-    	f.setVersion("1.0");
-    	f.setEncoding("UTF-8");
-    	helpTestExpression("xmlserialize(x as BLOB encoding \"UTF-8\" version '1.0' INCLUDING xmldeclaration)", "XMLSERIALIZE(x AS BLOB ENCODING \"UTF-8\" VERSION '1.0' INCLUDING XMLDECLARATION)", f);
+        XMLSerialize f = new XMLSerialize();
+        f.setExpression(new ElementSymbol("x"));
+        f.setTypeString("BLOB");
+        f.setDeclaration(Boolean.TRUE);
+        f.setVersion("1.0");
+        f.setEncoding("UTF-8");
+        helpTestExpression("xmlserialize(x as BLOB encoding \"UTF-8\" version '1.0' INCLUDING xmldeclaration)", "XMLSERIALIZE(x AS BLOB ENCODING \"UTF-8\" VERSION '1.0' INCLUDING XMLDECLARATION)", f);
     }
 
     @Test public void testExpressionCriteria() throws Exception {
-    	SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new ExpressionCriteria(new ElementSymbol("x"))), Arrays.asList(new ElementSymbol("y")));
-    	helpTestExpression("case when x then y end", "CASE WHEN x THEN y END", sce);
+        SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new ExpressionCriteria(new ElementSymbol("x"))), Arrays.asList(new ElementSymbol("y")));
+        helpTestExpression("case when x then y end", "CASE WHEN x THEN y END", sce);
     }
 
     @Test public void testExpressionCriteria1() throws Exception {
-    	SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new NotCriteria(new ExpressionCriteria(new ElementSymbol("x")))), Arrays.asList(new ElementSymbol("y")));
-    	helpTestExpression("case when not x then y end", "CASE WHEN NOT (x) THEN y END", sce);
+        SearchedCaseExpression sce = new SearchedCaseExpression(Arrays.asList(new NotCriteria(new ExpressionCriteria(new ElementSymbol("x")))), Arrays.asList(new ElementSymbol("y")));
+        helpTestExpression("case when not x then y end", "CASE WHEN NOT (x) THEN y END", sce);
     }
 
     @Test public void testWithClause() throws Exception {
-    	Query query = getOrderByQuery(null);
-    	query.setWith(Arrays.asList(new WithQueryCommand(new GroupSymbol("x"), null, getOrderByQuery(null))));
+        Query query = getOrderByQuery(null);
+        query.setWith(Arrays.asList(new WithQueryCommand(new GroupSymbol("x"), null, getOrderByQuery(null))));
         helpTest("WITH x AS (SELECT a FROM db.g WHERE b = aString) SELECT a FROM db.g WHERE b = aString", "WITH x AS (SELECT a FROM db.g WHERE b = aString) SELECT a FROM db.g WHERE b = aString", query); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testExplicitTable() throws Exception {
-    	Query query = new Query();
+        Query query = new Query();
         Select select = new Select();
         query.setSelect(select);
         select.addSymbol(new MultipleElementSymbol());
         From from = new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("X"))));
         query.setFrom(from);
-    	helpTest("TABLE X", "SELECT * FROM X", query);
+        helpTest("TABLE X", "SELECT * FROM X", query);
     }
 
     @Test public void testArrayTable() throws Exception {
-    	String sql = "SELECT * from arraytable(null columns x string, y date) as x"; //$NON-NLS-1$
+        String sql = "SELECT * from arraytable(null columns x string, y date) as x"; //$NON-NLS-1$
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
         ArrayTable tt = new ArrayTable();
@@ -5148,26 +5148,26 @@ public class TestParser {
     }
 
     @Test public void testPositionalReference() throws Exception {
-    	String sql = "select $1";
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new Reference(0))));
+        String sql = "select $1";
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new Reference(0))));
         helpTest(sql, "SELECT ?", query);
     }
 
     @Test public void testNonReserved() throws Exception {
-    	String sql = "select count";
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new ElementSymbol("count"))));
+        String sql = "select count";
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new ElementSymbol("count"))));
         helpTest(sql, "SELECT count", query);
     }
 
     @Test public void testAggFilter() throws Exception {
-    	String sql = "select count(*) filter (where x = 1) from g";
-    	Query query = new Query();
-    	AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
-    	aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
-    	query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
-    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        String sql = "select count(*) filter (where x = 1) from g";
+        Query query = new Query();
+        AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
+        aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
+        query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
+        query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
         helpTest(sql, "SELECT COUNT(*) FILTER(WHERE x = 1) FROM g", query);
     }
 
@@ -5182,16 +5182,16 @@ public class TestParser {
     }
 
     @Test public void testWindowFunction() throws Exception {
-    	String sql = "select row_number() over (partition by x order by y) from g";
-    	Query query = new Query();
-    	WindowFunction wf = new WindowFunction();
-    	wf.setFunction(new AggregateSymbol("ROW_NUMBER", false, null));
-    	WindowSpecification ws = new WindowSpecification();
-    	ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
-    	ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
-    	wf.setWindowSpecification(ws);
-    	query.setSelect(new Select(Arrays.asList(wf)));
-    	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
+        String sql = "select row_number() over (partition by x order by y) from g";
+        Query query = new Query();
+        WindowFunction wf = new WindowFunction();
+        wf.setFunction(new AggregateSymbol("ROW_NUMBER", false, null));
+        WindowSpecification ws = new WindowSpecification();
+        ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
+        ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));
+        wf.setWindowSpecification(ws);
+        query.setSelect(new Select(Arrays.asList(wf)));
+        query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
         helpTest(sql, "SELECT ROW_NUMBER() OVER (PARTITION BY x ORDER BY y) FROM g", query);
     }
 
@@ -5213,43 +5213,43 @@ public class TestParser {
     }
 
     @Test public void testTrim1() {
-    	helpException("select trim('xy' from e1) from pm1.g1");
+        helpException("select trim('xy' from e1) from pm1.g1");
     }
 
     @Test public void testSubString() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", new ParseInfo());
-		String actualString = actualCommand.toString();
-		assertEquals("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", actualString);
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", new ParseInfo());
+        String actualString = actualCommand.toString();
+        assertEquals("SELECT substring(RTRIM(MED.BATDAT), 4, 4) FROM FCC.MEDMAS AS MED", actualString);
     }
 
     @Test public void testExactFixedPoint() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT 1.1", new ParseInfo());
-		assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, actualCommand.getSelect().getSymbol(0).getType());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT 1.1", new ParseInfo());
+        assertEquals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL, actualCommand.getSelect().getSymbol(0).getType());
     }
 
     @Test public void testBinaryStringLiteral() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT x'AABBCC0a'", new ParseInfo());
-		assertEquals(DataTypeManager.DefaultDataClasses.VARBINARY, actualCommand.getSelect().getSymbol(0).getType());
-		assertEquals("SELECT X'AABBCC0A'", actualCommand.toString());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT x'AABBCC0a'", new ParseInfo());
+        assertEquals(DataTypeManager.DefaultDataClasses.VARBINARY, actualCommand.getSelect().getSymbol(0).getType());
+        assertEquals("SELECT X'AABBCC0A'", actualCommand.toString());
     }
 
     @Test public void testUserDefinedAggregateParsing() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(ALL x, y)", new ParseInfo());
-		assertEquals("SELECT foo(ALL x, y)", actualCommand.toString());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(ALL x, y)", new ParseInfo());
+        assertEquals("SELECT foo(ALL x, y)", actualCommand.toString());
     }
 
     @Test public void testUserDefinedAggregateParsing1() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(x, y order by e1)", new ParseInfo());
-		assertEquals("SELECT foo(ALL x, y ORDER BY e1)", actualCommand.toString());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(x, y order by e1)", new ParseInfo());
+        assertEquals("SELECT foo(ALL x, y ORDER BY e1)", actualCommand.toString());
     }
 
     @Test public void testWindowedExpression() throws QueryParserException {
-		QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());
+        QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());
     }
 
     @Test public void testWindowedExpression1() throws QueryParserException {
-		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(distinct x, y) over ()", new ParseInfo());
-		assertEquals("SELECT foo(DISTINCT x, y) OVER ()", actualCommand.toString());
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(distinct x, y) over ()", new ParseInfo());
+        assertEquals("SELECT foo(DISTINCT x, y) OVER ()", actualCommand.toString());
     }
 
     @Test public void testInvalidLimit() {
@@ -5257,53 +5257,53 @@ public class TestParser {
     }
 
     @Test public void testInvalidLimit_Offset() {
-    	helpException("SELECT * FROM pm1.g1 LIMIT -1, 100");
+        helpException("SELECT * FROM pm1.g1 LIMIT -1, 100");
     }
 
     @Test public void testTextTableNegativeWidth() {
         helpException("SELECT * from texttable(null columns x string width -1) as x");
-	}
+    }
 
     @Test public void testBlockExceptionHandling() throws ParseException {
-    	CommandStatement cmdStmt =	new CommandStatement(new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("x")))), null, null, null));
-    	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
-    	Block b = new Block();
-    	b.setExceptionGroup("e");
-    	b.addStatement(cmdStmt);
-    	b.addStatement(assigStmt);
-    	b.addStatement(errStmt, true);
-    	helpStmtTest("BEGIN\nselect * from x;\na = 1;\nexception e\nERROR 'My Error';\nEND", "BEGIN\nSELECT * FROM x;\na = 1;\nEXCEPTION e\nRAISE SQLEXCEPTION 'My Error';\nEND", b); //$NON-NLS-1$
+        CommandStatement cmdStmt =    new CommandStatement(new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("x")))), null, null, null));
+        AssignmentStatement assigStmt =    new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
+        RaiseStatement errStmt =    new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
+        Block b = new Block();
+        b.setExceptionGroup("e");
+        b.addStatement(cmdStmt);
+        b.addStatement(assigStmt);
+        b.addStatement(errStmt, true);
+        helpStmtTest("BEGIN\nselect * from x;\na = 1;\nexception e\nERROR 'My Error';\nEND", "BEGIN\nSELECT * FROM x;\na = 1;\nEXCEPTION e\nRAISE SQLEXCEPTION 'My Error';\nEND", b); //$NON-NLS-1$
     }
 
     @Test public void testJSONObject() throws Exception {
-    	JSONObject f = new JSONObject(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
-    	helpTestExpression("jsonObject(a as \"table\")", "JSONOBJECT(a AS \"table\")", f);
+        JSONObject f = new JSONObject(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
+        helpTestExpression("jsonObject(a as \"table\")", "JSONOBJECT(a AS \"table\")", f);
     }
 
     @Test public void testLineComment() {
-    	String sql = "select 1 -- some comment";
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new Constant(1))));
+        String sql = "select 1 -- some comment";
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new Constant(1))));
         helpTest(sql, "SELECT 1", query);
     }
 
     @Test public void testTrimExpression() throws QueryParserException {
-    	String sql = "select trim(substring(Description, pos1+1))";
-    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
-		assertEquals("SELECT trim(' ' FROM substring(Description, (pos1 + 1)))", actualCommand.toString());
+        String sql = "select trim(substring(Description, pos1+1))";
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
+        assertEquals("SELECT trim(' ' FROM substring(Description, (pos1 + 1)))", actualCommand.toString());
     }
 
     @Test public void testDateTimeKeywordLiterals() throws QueryParserException {
-    	String sql = "select DATE '1970-01-02', TIME '00:01:02', TIMESTAMP '2001-01-01 02:03:04.1'";
-    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
-		assertEquals("SELECT {d'1970-01-02'}, {t'00:01:02'}, {ts'2001-01-01 02:03:04.1'}", actualCommand.toString());
+        String sql = "select DATE '1970-01-02', TIME '00:01:02', TIMESTAMP '2001-01-01 02:03:04.1'";
+        Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand(sql, new ParseInfo());
+        assertEquals("SELECT {d'1970-01-02'}, {t'00:01:02'}, {ts'2001-01-01 02:03:04.1'}", actualCommand.toString());
     }
 
     @Test public void testDoubleAmp() {
-    	String sql = "select 1 && 2";
-    	Query query = new Query();
-    	query.setSelect(new Select(Arrays.asList(new Function(SQLConstants.Tokens.DOUBLE_AMP, new Expression[] {new Constant(1), new Constant(2)}))));
+        String sql = "select 1 && 2";
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new Function(SQLConstants.Tokens.DOUBLE_AMP, new Expression[] {new Constant(1), new Constant(2)}))));
         helpTest(sql, "SELECT (1 && 2)", query);
     }
 

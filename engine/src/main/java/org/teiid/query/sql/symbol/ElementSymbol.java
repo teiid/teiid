@@ -41,7 +41,7 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
 
     private GroupSymbol groupSymbol;
     private Object metadataID;
-	private Class<?> type;
+    private Class<?> type;
     private boolean isExternalReference;
     private boolean isAggregate;
 
@@ -56,13 +56,13 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     }
 
     public ElementSymbol(String shortName, GroupSymbol group) {
-    	this(shortName, group, null);
+        this(shortName, group, null);
     }
 
     public ElementSymbol(String shortName, GroupSymbol group, Class<?> type) {
-    	this.setShortName(shortName);
-    	this.groupSymbol = group;
-    	this.type = type;
+        this.setShortName(shortName);
+        this.groupSymbol = group;
+        this.type = type;
     }
 
     /**
@@ -72,41 +72,41 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
      */
     public ElementSymbol(String name, boolean displayFullyQualified) {
         super(name);
-		setDisplayFullyQualified(displayFullyQualified);
+        setDisplayFullyQualified(displayFullyQualified);
     }
 
     @Override
     public String getName() {
-    	if (this.groupSymbol != null) {
-    		return this.groupSymbol.getName() + Symbol.SEPARATOR + this.getShortName();
-    	}
-    	return super.getName();
+        if (this.groupSymbol != null) {
+            return this.groupSymbol.getName() + Symbol.SEPARATOR + this.getShortName();
+        }
+        return super.getName();
     }
 
     @Override
     public boolean equals(Object obj) {
-    	if (this.groupSymbol == null) {
-        	return super.equals(obj);
-    	}
-    	if (obj == this) {
-    		return true;
-    	}
-    	if (!(obj instanceof ElementSymbol)) {
-    		return false;
-    	}
-    	ElementSymbol other = (ElementSymbol)obj;
-    	if (other.groupSymbol == null) {
-        	return super.equals(obj);
-    	}
-    	return this.groupSymbol.equals(other.groupSymbol) && this.getShortName().equals(other.getShortName());
+        if (this.groupSymbol == null) {
+            return super.equals(obj);
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ElementSymbol)) {
+            return false;
+        }
+        ElementSymbol other = (ElementSymbol)obj;
+        if (other.groupSymbol == null) {
+            return super.equals(obj);
+        }
+        return this.groupSymbol.equals(other.groupSymbol) && this.getShortName().equals(other.getShortName());
     }
 
     @Override
     public int hashCode() {
-    	if (this.groupSymbol != null) {
-    		return HashCodeUtil.hashCode(this.groupSymbol.hashCode(), this.getShortName().hashCode());
-    	}
-    	return super.hashCode();
+        if (this.groupSymbol != null) {
+            return HashCodeUtil.hashCode(this.groupSymbol.hashCode(), this.getShortName().hashCode());
+        }
+        return super.hashCode();
     }
 
     public void setDisplayMode(DisplayMode displayMode) {
@@ -120,21 +120,21 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
         return displayMode;
     }
 
-	/**
-	 * Set whether this element will be displayed as fully qualified
-	 * @param displayFullyQualified True if should display fully qualified
-	 */
-	public void setDisplayFullyQualified(boolean displayFullyQualified) {
-		this.displayMode = displayFullyQualified?DisplayMode.FULLY_QUALIFIED:DisplayMode.SHORT_OUTPUT_NAME;
-	}
+    /**
+     * Set whether this element will be displayed as fully qualified
+     * @param displayFullyQualified True if should display fully qualified
+     */
+    public void setDisplayFullyQualified(boolean displayFullyQualified) {
+        this.displayMode = displayFullyQualified?DisplayMode.FULLY_QUALIFIED:DisplayMode.SHORT_OUTPUT_NAME;
+    }
 
-	/**
-	 * Get whether this element will be displayed as fully qualified
-	 * @return True if should display fully qualified
-	 */
-	public boolean getDisplayFullyQualified() {
-		return this.displayMode.equals(DisplayMode.FULLY_QUALIFIED);
-	}
+    /**
+     * Get whether this element will be displayed as fully qualified
+     * @return True if should display fully qualified
+     */
+    public boolean getDisplayFullyQualified() {
+        return this.displayMode.equals(DisplayMode.FULLY_QUALIFIED);
+    }
 
     /**
      * Set whether this element is an external reference.  An external
@@ -165,18 +165,18 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     }
 
     protected void setName(String name) {
-    	int index = name.lastIndexOf('.');
-    	if (index > 0) {
-    		if (this.groupSymbol != null) {
-    			throw new AssertionError("Attempt to set an invalid name"); //$NON-NLS-1$
-    		}
-    		GroupSymbol gs = new GroupSymbol(new String(name.substring(0, index)));
-    		this.setGroupSymbol(gs);
-    		name = new String(name.substring(index + 1));
-    	} else {
-    		this.groupSymbol = null;
-    	}
-    	super.setShortName(name);
+        int index = name.lastIndexOf('.');
+        if (index > 0) {
+            if (this.groupSymbol != null) {
+                throw new AssertionError("Attempt to set an invalid name"); //$NON-NLS-1$
+            }
+            GroupSymbol gs = new GroupSymbol(new String(name.substring(0, index)));
+            this.setGroupSymbol(gs);
+            name = new String(name.substring(index + 1));
+        } else {
+            this.groupSymbol = null;
+        }
+        super.setShortName(name);
     }
 
     /**
@@ -203,50 +203,50 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
         this.metadataID = metadataID;
     }
 
-	/**
-	 * Get the type of the symbol
-	 * @return Type of the symbol, may be null before resolution
-	 */
-	public Class<?> getType() {
-		return this.type;
-	}
+    /**
+     * Get the type of the symbol
+     * @return Type of the symbol, may be null before resolution
+     */
+    public Class<?> getType() {
+        return this.type;
+    }
 
-	/**
-	 * Set the type of the symbol
-	 * @param type New type
-	 */
-	public void setType(Class<?> type) {
-		this.type = type;
-	}
+    /**
+     * Set the type of the symbol
+     * @param type New type
+     */
+    public void setType(Class<?> type) {
+        this.type = type;
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Return a deep copy of this object.
-	 * @return Deep copy of this object
-	 */
-	public ElementSymbol clone() {
-		ElementSymbol copy = new ElementSymbol(getShortName(), null);
-		if(getGroupSymbol() != null) {
-			copy.setGroupSymbol(getGroupSymbol().clone());
-		}
-		copy.setMetadataID(getMetadataID());
-		copy.setType(getType());
-		copy.setIsExternalReference(isExternalReference());
-		copy.outputName = this.outputName;
-		copy.setDisplayMode(this.getDisplayMode());
-		copy.isAggregate = isAggregate;
-		return copy;
-	}
+    /**
+     * Return a deep copy of this object.
+     * @return Deep copy of this object
+     */
+    public ElementSymbol clone() {
+        ElementSymbol copy = new ElementSymbol(getShortName(), null);
+        if(getGroupSymbol() != null) {
+            copy.setGroupSymbol(getGroupSymbol().clone());
+        }
+        copy.setMetadataID(getMetadataID());
+        copy.setType(getType());
+        copy.setIsExternalReference(isExternalReference());
+        copy.outputName = this.outputName;
+        copy.setDisplayMode(this.getDisplayMode());
+        copy.isAggregate = isAggregate;
+        return copy;
+    }
 
-	public boolean isAggregate() {
-		return isAggregate;
-	}
+    public boolean isAggregate() {
+        return isAggregate;
+    }
 
-	public void setAggregate(boolean isAggregate) {
-		this.isAggregate = isAggregate;
-	}
+    public void setAggregate(boolean isAggregate) {
+        this.isAggregate = isAggregate;
+    }
 
 }

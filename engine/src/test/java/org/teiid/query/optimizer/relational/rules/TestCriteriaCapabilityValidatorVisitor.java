@@ -52,9 +52,9 @@ public class TestCriteriaCapabilityValidatorVisitor {
 
             assertEquals("Got incorrect isValid flag", isValid, CriteriaCapabilityValidatorVisitor.canPushLanguageObject(criteria, modelID, metadata, capFinder, null)); //$NON-NLS-1$
         } catch(QueryMetadataException e) {
-        	if (!expectException) {
-        		throw new RuntimeException(e);
-        	}
+            if (!expectException) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -67,11 +67,11 @@ public class TestCriteriaCapabilityValidatorVisitor {
 
             assertEquals("Got incorrect isValid flag", isValid, CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, modelID, metadata, capFinder, null)); //$NON-NLS-1$
         } catch(QueryMetadataException e) {
-        	if (!expectException) {
-        		throw new RuntimeException(e);
-        	}
+            if (!expectException) {
+                throw new RuntimeException(e);
+            }
         } catch(TeiidException e) {
-        	throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 

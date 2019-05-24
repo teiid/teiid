@@ -47,8 +47,8 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
     /** Constant indicating the first operand is greater than or equal to the second. */
     public static final int GE = 6;
 
-	/** The left-hand expression. */
-	private Expression leftExpression;
+    /** The left-hand expression. */
+    private Expression leftExpression;
 
     /**
      * The operator used in the clause.
@@ -96,21 +96,21 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
         else return -1;
     }
 
-	/**
-	 * Set left expression.
-	 * @param expression Left expression
-	 */
-	public void setLeftExpression(Expression expression) {
-		this.leftExpression = expression;
-	}
+    /**
+     * Set left expression.
+     * @param expression Left expression
+     */
+    public void setLeftExpression(Expression expression) {
+        this.leftExpression = expression;
+    }
 
-	/**
-	 * Get left expression.
-	 * @return Left expression
-	 */
-	public Expression getLeftExpression() {
-		return this.leftExpression;
-	}
+    /**
+     * Get left expression.
+     * @return Left expression
+     */
+    public Expression getLeftExpression() {
+        return this.leftExpression;
+    }
 
     /**
      * Returns the operator as a string.
@@ -130,11 +130,11 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
 
     @Override
     public void negate() {
-    	this.setOperator(getInverseOperator(this.getOperator()));
+        this.setOperator(getInverseOperator(this.getOperator()));
     }
 
     public static int getInverseOperator(int op) {
-    	switch ( op ) {
+        switch ( op ) {
         case EQ: return NE;
         case NE: return EQ;
         case LT: return GE;
@@ -142,7 +142,7 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria implemen
         case LE: return GT;
         case GE: return LT;
         default: return -1;
-    	}
+        }
     }
 
 }  // END CLASS

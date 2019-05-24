@@ -31,9 +31,9 @@ import org.teiid.core.BundleUtil;
  */
 public final class AdminProcessingException extends AdminException {
 
-	private static final long serialVersionUID = -878521636838205857L;
+    private static final long serialVersionUID = -878521636838205857L;
 
-	/**
+    /**
      * No-arg ctor.
      *
      * @since 4.3
@@ -52,7 +52,7 @@ public final class AdminProcessingException extends AdminException {
     }
 
     public AdminProcessingException(Throwable cause) {
-    	super(cause);
+        super(cause);
     }
 
     /**
@@ -70,10 +70,10 @@ public final class AdminProcessingException extends AdminException {
     }
 
     public AdminProcessingException(BundleUtil.Event code, Throwable cause, String msg) {
-    	super(code, cause, msg);
+        super(code, cause, msg);
     }
 
     public AdminProcessingException(BundleUtil.Event code, Throwable cause) {
-    	super(code, cause);
+        super(code, cause);
     }
 }

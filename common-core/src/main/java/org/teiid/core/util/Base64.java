@@ -133,8 +133,8 @@ public class Base64
 /* ********  S T A N D A R D   B A S E 6 4   A L P H A B E T  ******** */
 
     /** The 64 valid Base64 values. */
-	/* Host platform me be something funny like EBCDIC, so we hardcode these values. */
-	private final static byte[] _STANDARD_ALPHABET =
+    /* Host platform me be something funny like EBCDIC, so we hardcode these values. */
+    private final static byte[] _STANDARD_ALPHABET =
     {
         (byte)'A', (byte)'B', (byte)'C', (byte)'D', (byte)'E', (byte)'F', (byte)'G',
         (byte)'H', (byte)'I', (byte)'J', (byte)'K', (byte)'L', (byte)'M', (byte)'N',
@@ -207,8 +207,8 @@ public class Base64
      * the <var>destination</var> array.
      * The actual number of significant bytes in your array is
      * given by <var>numSigBytes</var>.</p>
-	 * <p>This is the lowest level of the encoding methods with
-	 * all possible parameters.</p>
+     * <p>This is the lowest level of the encoding methods with
+     * all possible parameters.</p>
      *
      * @param source the array to convert
      * @param srcOffset the index where conversion begins
@@ -222,7 +222,7 @@ public class Base64
      byte[] source, int srcOffset, int numSigBytes,
      byte[] destination, int destOffset )
     {
-		byte[] ALPHABET = _STANDARD_ALPHABET;
+        byte[] ALPHABET = _STANDARD_ALPHABET;
 
         //           1         2         3
         // 01234567890123456789012345678901 Bit position
@@ -338,20 +338,20 @@ public class Base64
      * the <var>destination</var> array.
      * This method returns the actual number of bytes that
      * were converted from the Base64 encoding.
-	 * <p>This is the lowest level of the decoding methods with
-	 * all possible parameters.</p>
+     * <p>This is the lowest level of the decoding methods with
+     * all possible parameters.</p>
      *
      *
      * @param source the array to convert
      * @param srcOffset the index where conversion begins
      * @param destination the array to hold the conversion
-	 * @param options alphabet type is pulled from this (standard, url-safe, ordered)
+     * @param options alphabet type is pulled from this (standard, url-safe, ordered)
      * @return the number of decoded bytes converted
      * @since 1.3
      */
     private static int decode4to3( byte[] source, int srcOffset, byte[] destination, int destOffset )
     {
-		byte[] DECODABET = _STANDARD_DECODABET;
+        byte[] DECODABET = _STANDARD_DECODABET;
 
         // Example: Dk==
         if( source[ srcOffset + 2] == EQUALS_SIGN )
@@ -412,12 +412,12 @@ public class Base64
      * @since 1.4
      */
     public static byte[] decode( CharSequence s )
-	{
+    {
         if (s.length() % 4 != 0) {
-        	throw new IllegalArgumentException("Source bytes are not valid"); //$NON-NLS-1$
+            throw new IllegalArgumentException("Source bytes are not valid"); //$NON-NLS-1$
         }
         byte[] DECODABET = _STANDARD_DECODABET;
-    	int len = s.length();
+        int len = s.length();
         byte[] outBuff = new byte[ len * 3 / 4 ]; // Upper limit on size of output
         int    outBuffPosn = 0;
 

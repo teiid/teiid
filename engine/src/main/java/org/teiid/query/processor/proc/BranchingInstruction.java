@@ -30,13 +30,13 @@ import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
  */
 public class BranchingInstruction extends ProgramInstruction {
 
-	private BranchingStatement bs;
+    private BranchingStatement bs;
 
     public BranchingInstruction(BranchingStatement bs) {
-    	this.bs = bs;
-	}
+        this.bs = bs;
+    }
 
-	public String toString() {
+    public String toString() {
         return bs.toString();
     }
 
@@ -45,25 +45,25 @@ public class BranchingInstruction extends ProgramInstruction {
 
         //find the parent program that contains the loop/while instruction
         while(true){
-        	if (bs.getMode() == BranchingMode.LEAVE && bs.getLabel().equalsIgnoreCase(parentProgram.getLabel())) {
-        		env.pop(true);
-        		break;
-        	}
+            if (bs.getMode() == BranchingMode.LEAVE && bs.getLabel().equalsIgnoreCase(parentProgram.getLabel())) {
+                env.pop(true);
+                break;
+            }
             if(parentProgram.getCurrentInstruction() instanceof RepeatedInstruction){
-            	if (bs.getLabel() == null) {
-            		break;
-            	}
-            	RepeatedInstruction ri = (RepeatedInstruction)parentProgram.getCurrentInstruction();
-            	if (bs.getLabel().equalsIgnoreCase(ri.getLabel())) {
-            		break;
-            	}
+                if (bs.getLabel() == null) {
+                    break;
+                }
+                RepeatedInstruction ri = (RepeatedInstruction)parentProgram.getCurrentInstruction();
+                if (bs.getLabel().equalsIgnoreCase(ri.getLabel())) {
+                    break;
+                }
             }
             env.pop(true);
             parentProgram = env.peek();
         }
 
         if (bs.getMode() != BranchingMode.CONTINUE) {
-        	env.incrementProgramCounter();
+            env.incrementProgramCounter();
         }
     }
 

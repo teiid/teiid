@@ -47,7 +47,7 @@ public class TestResultSet {
 
     private static final int BATCH_SIZE = 400;
 
-	/** test next() without walking through */
+    /** test next() without walking through */
     @Test public void testNext1() throws SQLException {
         ResultSet cs =  helpExecuteQuery();
         assertEquals(" Actual doesn't match with expected. ", new Integer(0), new Integer(cs.getRow())); //$NON-NLS-1$
@@ -677,12 +677,12 @@ public class TestResultSet {
         ResultSetImpl cs = helpExecuteQuery(400, 1300, ResultSet.TYPE_FORWARD_ONLY);
         int i = 0;
         while (cs.next()) {
-        	i++;
-        	if (i <= 1200) {
-        		assertNotNull(cs.getPrefetch());
-        	} else {
-        		assertNull(cs.getPrefetch());
-        	}
+            i++;
+            if (i <= 1200) {
+                assertNotNull(cs.getPrefetch());
+            } else {
+                assertNull(cs.getPrefetch());
+            }
             cs.getObject(1);
         }
 
@@ -691,10 +691,10 @@ public class TestResultSet {
     }
 
     @Test public void testForwardOnlyPrefetchSmallFetchSize() throws Exception {
-    	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
-    	ResultSetImpl cs = TestAllResultsImpl.helpTestBatching(statement, 10, 128, 256, true);
-		for (int i = 0; i < 256; i++) {
-			cs.next();
+        StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
+        ResultSetImpl cs = TestAllResultsImpl.helpTestBatching(statement, 10, 128, 256, true);
+        for (int i = 0; i < 256; i++) {
+            cs.next();
             cs.getObject(1);
         }
         Mockito.verify(statement.getDQP(), Mockito.atMost(1)).processCursorRequest(TestAllResultsImpl.REQUEST_ID, 11, 10);
@@ -726,11 +726,11 @@ public class TestResultSet {
     }
 
     @Test public void testXML() throws Exception {
-    	StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
-    	ResultsFuture<LobChunk> future = new ResultsFuture<LobChunk>();
-    	future.getResultsReceiver().receiveResults(new LobChunk("<a/>".getBytes(Charset.forName("UTF-8")), true));
-    	XMLType result = new XMLType();
-    	Mockito.stub(statement.getDQP().requestNextLobChunk(0, 0, result.getReferenceStreamId())).toReturn(future);
+        StatementImpl statement = createMockStatement(ResultSet.TYPE_FORWARD_ONLY);
+        ResultsFuture<LobChunk> future = new ResultsFuture<LobChunk>();
+        future.getResultsReceiver().receiveResults(new LobChunk("<a/>".getBytes(Charset.forName("UTF-8")), true));
+        XMLType result = new XMLType();
+        Mockito.stub(statement.getDQP().requestNextLobChunk(0, 0, result.getReferenceStreamId())).toReturn(future);
         ResultsMessage resultsMsg = new ResultsMessage();
         result.setEncoding("UTF-8");
         resultsMsg.setResults(new List<?>[] {Arrays.asList(result)});
@@ -748,32 +748,32 @@ public class TestResultSet {
 
     private ResultSetImpl helpExecuteQuery() {
         try {
-			return helpExecuteQuery(BATCH_SIZE, 1000, ResultSet.TYPE_SCROLL_INSENSITIVE);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+            return helpExecuteQuery(BATCH_SIZE, 1000, ResultSet.TYPE_SCROLL_INSENSITIVE);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, TeiidProcessingException {
         StatementImpl statement = createMockStatement(cursorType, withSettings().stubOnly());
-		return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
+        return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
     }
 
     static StatementImpl createMockStatement(int cursorType) throws SQLException {
         return createMockStatement(cursorType, withSettings());
     }
 
-	static StatementImpl createMockStatement(int cursorType, MockSettings mockSetting) throws SQLException {
-		StatementImpl statement = mock(StatementImpl.class, mockSetting);
-		DQP dqp = mock(DQP.class);
-		stub(statement.getDQP()).toReturn(dqp);
-		stub(statement.getResultSetType()).toReturn(cursorType);
-		TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
-		TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$
-		stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance(tz));
-		stub(statement.getServerTimeZone()).toReturn(serverTz);
-		return statement;
-	}
+    static StatementImpl createMockStatement(int cursorType, MockSettings mockSetting) throws SQLException {
+        StatementImpl statement = mock(StatementImpl.class, mockSetting);
+        DQP dqp = mock(DQP.class);
+        stub(statement.getDQP()).toReturn(dqp);
+        stub(statement.getResultSetType()).toReturn(cursorType);
+        TimeZone tz = TimeZone.getTimeZone("GMT-06:00"); //$NON-NLS-1$
+        TimeZone serverTz = TimeZone.getTimeZone("GMT-05:00"); //$NON-NLS-1$
+        stub(statement.getDefaultCalendar()).toReturn(Calendar.getInstance(tz));
+        stub(statement.getServerTimeZone()).toReturn(serverTz);
+        return statement;
+    }
 
     ////////////////////////Expected Results////////////////
     /** column name */

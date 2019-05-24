@@ -30,15 +30,15 @@ import org.teiid.core.TeiidRuntimeException;
 
 public class TransactionContext implements Serializable, Cloneable{
 
-	private static final long serialVersionUID = -8689401273499649058L;
+    private static final long serialVersionUID = -8689401273499649058L;
 
-	public enum Scope {
-		GLOBAL,
-		LOCAL,
-		NONE,
-		REQUEST,
-		INHERITED
-	}
+    public enum Scope {
+        GLOBAL,
+        LOCAL,
+        NONE,
+        REQUEST,
+        INHERITED
+    }
 
     private String threadId;
     private Scope transactionType = Scope.NONE;
@@ -49,20 +49,20 @@ public class TransactionContext implements Serializable, Cloneable{
     private Xid xid;
 
     public int getIsolationLevel() {
-		return isolationLevel;
-	}
+        return isolationLevel;
+    }
 
     public void setIsolationLevel(int isolationLevel) {
-		this.isolationLevel = isolationLevel;
-	}
+        this.isolationLevel = isolationLevel;
+    }
 
     public long getCreationTime() {
-		return creationTime;
-	}
+        return creationTime;
+    }
 
     public void setCreationTime(long time) {
-		this.creationTime = time;
-	}
+        this.creationTime = time;
+    }
 
     public void setTransactionType(Scope transactionType) {
         this.transactionType = transactionType;
@@ -81,24 +81,24 @@ public class TransactionContext implements Serializable, Cloneable{
     }
 
     public Transaction getTransaction() {
-		return transaction;
-	}
+        return transaction;
+    }
 
     public void setTransaction(Transaction transaction) {
-		this.transaction = transaction;
-	}
+        this.transaction = transaction;
+    }
 
     public String toString() {
-    	return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$
+        return threadId + " " + transactionType + " ID:" + getTransactionId(); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public String getTransactionId() {
-    	if (this.transaction != null) {
-    		return this.transaction.toString();
-    	} else if (this.getXid() != null) {
-    		return this.getXid().toString();
-    	}
-    	return "NONE"; //$NON-NLS-1$
+        if (this.transaction != null) {
+            return this.transaction.toString();
+        } else if (this.getXid() != null) {
+            return this.getXid().toString();
+        }
+        return "NONE"; //$NON-NLS-1$
     }
 
     public Set<String> getSuspendedBy() {

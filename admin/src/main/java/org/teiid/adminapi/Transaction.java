@@ -21,30 +21,30 @@ package org.teiid.adminapi;
 
 public interface Transaction extends AdminObject, DomainAware {
 
-	/**
-	 * Get the session associated with the this transaction.
-	 * May be null for an unassociated Global transaction.
-	 * @return
-	 */
-	String getAssociatedSession();
+    /**
+     * Get the session associated with the this transaction.
+     * May be null for an unassociated Global transaction.
+     * @return
+     */
+    String getAssociatedSession();
 
-	/**
-	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, REQUEST or INHERITED
-	 * @return
-	 */
-	String getScope();
+    /**
+     * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, REQUEST or INHERITED
+     * @return
+     */
+    String getScope();
 
-	/**
-	 * Returns the Xid string for GLOBAL transactions or the Transaction id string LOCAL/REQUEST.
-	 * @return
-	 */
-	String getId();
+    /**
+     * Returns the Xid string for GLOBAL transactions or the Transaction id string LOCAL/REQUEST.
+     * @return
+     */
+    String getId();
 
 
-	/**
-	 * Get the local creation time.
-	 * @return
-	 */
-	long getCreatedTime();
+    /**
+     * Get the local creation time.
+     * @return
+     */
+    long getCreatedTime();
 
 }

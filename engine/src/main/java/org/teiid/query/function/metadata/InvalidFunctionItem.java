@@ -28,14 +28,14 @@ import org.teiid.query.validator.ValidatorFailure;
  */
 public class InvalidFunctionItem extends ValidatorFailure {
 
-	private static final long serialVersionUID = 5679334286895174700L;
+    private static final long serialVersionUID = 5679334286895174700L;
 
-	/**
-	 * Report item type
-	 */
-	public static final String INVALID_FUNCTION = "InvalidFunction"; //$NON-NLS-1$
+    /**
+     * Report item type
+     */
+    public static final String INVALID_FUNCTION = "InvalidFunction"; //$NON-NLS-1$
 
-	private FunctionMethod method;
+    private FunctionMethod method;
 
     /**
      * Constructor for InvalidFunctionItem.

@@ -46,13 +46,13 @@ public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisit
             ElementSymbol elem = (ElementSymbol) expr;
             Object metadataID = elem.getMetadataID();
             try {
-				if(metadata.isMultiSourceElement(metadataID)) {
-				    Constant bindingConst = new Constant(this.bindingName, DataTypeManager.DefaultDataClasses.STRING);
-				    return bindingConst;
-				}
-			} catch (QueryMetadataException e) {
-			} catch (TeiidComponentException e) {
-			}
+                if(metadata.isMultiSourceElement(metadataID)) {
+                    Constant bindingConst = new Constant(this.bindingName, DataTypeManager.DefaultDataClasses.STRING);
+                    return bindingConst;
+                }
+            } catch (QueryMetadataException e) {
+            } catch (TeiidComponentException e) {
+            }
         }
 
         return expr;

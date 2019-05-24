@@ -22,5 +22,5 @@ import org.teiid.resource.api.Connection;
 import com.mongodb.DB;
 
 public interface MongoDBConnection extends Connection {
-	public DB getDatabase();
+    public DB getDatabase();
 }

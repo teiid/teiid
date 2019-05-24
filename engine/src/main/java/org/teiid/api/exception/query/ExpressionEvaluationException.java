@@ -26,9 +26,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class ExpressionEvaluationException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = 4955469005442543688L;
+    private static final long serialVersionUID = 4955469005442543688L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public ExpressionEvaluationException() {

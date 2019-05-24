@@ -49,7 +49,7 @@ public class TestLocateFunctionModifier {
      * @throws Exception
      */
     public void helpTestLocate(Expression[] args, String expectedStr) throws Exception {
-    	this.helpTestLocate(LocateFunctionModifier.LOCATE, false, args, expectedStr);
+        this.helpTestLocate(LocateFunctionModifier.LOCATE, false, args, expectedStr);
     }
 
     /**
@@ -72,32 +72,32 @@ public class TestLocateFunctionModifier {
      * @throws Exception
      */
     public void helpTestLocate(final String locateFunctionName, final boolean parameterOrder, Expression[] args, String expectedStr) throws Exception {
-    	Expression param1 = null;
-    	Expression param2 = null;
-    	Expression param3 = null;
+        Expression param1 = null;
+        Expression param2 = null;
+        Expression param3 = null;
 
-    	if (args.length > 0 ) param1 = args[0];
-    	if (args.length > 1 ) param2 = args[1];
-    	if (args.length > 2 ) param3 = args[2];
+        if (args.length > 0 ) param1 = args[0];
+        if (args.length > 1 ) param2 = args[1];
+        if (args.length > 2 ) param3 = args[2];
 
-    	Function func = null;
+        Function func = null;
 
-    	if (param3 != null) {
-    		func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE,
-    	            Arrays.asList(param1, param2, param3), Integer.class);
-    	} else {
-    		func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE,
-    	            Arrays.asList(param1, param2), Integer.class);
-    	}
+        if (param3 != null) {
+            func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE,
+                    Arrays.asList(param1, param2, param3), Integer.class);
+        } else {
+            func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE,
+                    Arrays.asList(param1, param2), Integer.class);
+        }
 
-    	JDBCExecutionFactory trans = new JDBCExecutionFactory() {
-			@Override
-			public void start() throws TranslatorException {
-				super.start();
-				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
-			}
-    	};
-    	trans.setUseBindVariables(false);
+        JDBCExecutionFactory trans = new JDBCExecutionFactory() {
+            @Override
+            public void start() throws TranslatorException {
+                super.start();
+                registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
+            }
+        };
+        trans.setUseBindVariables(false);
         trans.start();
 
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor();

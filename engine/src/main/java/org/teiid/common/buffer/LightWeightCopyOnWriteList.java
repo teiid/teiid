@@ -33,82 +33,82 @@ import org.teiid.client.ResizingArrayList;
  */
 public class LightWeightCopyOnWriteList<T> extends AbstractList<T> implements RandomAccess {
 
-	private List<T> list;
-	private boolean modified;
+    private List<T> list;
+    private boolean modified;
 
-	public LightWeightCopyOnWriteList(List<T> list) {
-		this.list = list;
-	}
+    public LightWeightCopyOnWriteList(List<T> list) {
+        this.list = list;
+    }
 
-	@Override
-	public T get(int index) {
-		return list.get(index);
-	}
+    @Override
+    public T get(int index) {
+        return list.get(index);
+    }
 
-	public List<T> getList() {
-		return list;
-	}
+    public List<T> getList() {
+        return list;
+    }
 
-	public void add(int index, T element) {
-		if (!modified) {
-			List<T> next = new ArrayList<T>(list.size() + 1);
-			next.addAll(list);
-			list = next;
-			modified = true;
-		}
-		list.add(index, element);
-	}
+    public void add(int index, T element) {
+        if (!modified) {
+            List<T> next = new ArrayList<T>(list.size() + 1);
+            next.addAll(list);
+            list = next;
+            modified = true;
+        }
+        list.add(index, element);
+    }
 
-	public T set(int index, T element) {
-		checkModified();
-		return list.set(index, element);
-	}
+    public T set(int index, T element) {
+        checkModified();
+        return list.set(index, element);
+    }
 
-	private void checkModified() {
-		if (!modified) {
-			list = new ArrayList<T>(list);
-			modified = true;
-		}
-	}
+    private void checkModified() {
+        if (!modified) {
+            list = new ArrayList<T>(list);
+            modified = true;
+        }
+    }
 
-	public boolean addAll(Collection<? extends T> c) {
-		return addAll(size(), c);
-	}
+    public boolean addAll(Collection<? extends T> c) {
+        return addAll(size(), c);
+    }
 
-	@Override
-	public boolean addAll(int index, Collection<? extends T> c) {
-		checkModified();
-		return list.addAll(index, c);
-	}
+    @Override
+    public boolean addAll(int index, Collection<? extends T> c) {
+        checkModified();
+        return list.addAll(index, c);
+    }
 
-	@Override
-	public T remove(int index) {
-		checkModified();
-		return list.remove(index);
-	}
+    @Override
+    public T remove(int index) {
+        checkModified();
+        return list.remove(index);
+    }
 
-	@Override
-	public Object[] toArray() {
-		return list.toArray();
-	}
+    @Override
+    public Object[] toArray() {
+        return list.toArray();
+    }
 
-	public <U extends Object> U[] toArray(U[] a) {
-		return list.toArray(a);
-	}
+    public <U extends Object> U[] toArray(U[] a) {
+        return list.toArray(a);
+    }
 
-	@Override
-	public void clear() {
-		if (!modified) {
-			list = new ResizingArrayList<T>();
-			modified = true;
-		} else {
-			list.clear();
-		}
-	}
+    @Override
+    public void clear() {
+        if (!modified) {
+            list = new ResizingArrayList<T>();
+            modified = true;
+        } else {
+            list.clear();
+        }
+    }
 
-	@Override
-	public int size() {
-		return list.size();
-	}
+    @Override
+    public int size() {
+        return list.size();
+    }
 
 }

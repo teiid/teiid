@@ -57,12 +57,12 @@ public class ColumnReference extends BaseLanguageObject implements MetadataRefer
 
     @Override
     public Column getMetadataObject() {
-    	return this.metadataObject;
+        return this.metadataObject;
     }
 
     public void setMetadataObject(Column metadataObject) {
-		this.metadataObject = metadataObject;
-	}
+        this.metadataObject = metadataObject;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

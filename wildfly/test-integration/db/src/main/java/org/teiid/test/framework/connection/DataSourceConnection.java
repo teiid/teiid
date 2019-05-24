@@ -56,128 +56,128 @@ public class DataSourceConnection extends ConnectionStrategy {
     private XAConnection xaConnection;
 
     public DataSourceConnection(Properties props) throws QueryTestFailedException {
-	super(props);
+    super(props);
     }
 
     public void validate() {
-	databaseName = this.getEnvironment().getProperty(DS_DATABASENAME);
-	if (databaseName == null || databaseName.length() == 0) {
-	    throw new TransactionRuntimeException("Property " + DS_DATABASENAME
-		    + " was not specified");
-	}
+    databaseName = this.getEnvironment().getProperty(DS_DATABASENAME);
+    if (databaseName == null || databaseName.length() == 0) {
+        throw new TransactionRuntimeException("Property " + DS_DATABASENAME
+            + " was not specified");
+    }
 
-	serverName = this.getEnvironment().getProperty(DS_SERVERNAME);
-	if (serverName == null || serverName.length() == 0) {
-	    throw new TransactionRuntimeException("Property " + DS_SERVERNAME
-		    + " was not specified");
-	}
+    serverName = this.getEnvironment().getProperty(DS_SERVERNAME);
+    if (serverName == null || serverName.length() == 0) {
+        throw new TransactionRuntimeException("Property " + DS_SERVERNAME
+            + " was not specified");
+    }
 
-	this.portNumber = this.getEnvironment().getProperty(DS_SERVERPORT);
+    this.portNumber = this.getEnvironment().getProperty(DS_SERVERPORT);
 
-	this.applName = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
+    this.applName = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
 
-	if (this.getEnvironment().getProperty(DS_DATASOURCE) != null) {
-            	this.driver = this.getEnvironment().getProperty(DS_DATASOURCE);
-        	if (this.driver == null || this.driver.length() == 0) {
-        	    throw new TransactionRuntimeException("Property " + DS_DATASOURCE
-        		    + " was null");
-        	}
+    if (this.getEnvironment().getProperty(DS_DATASOURCE) != null) {
+                this.driver = this.getEnvironment().getProperty(DS_DATASOURCE);
+            if (this.driver == null || this.driver.length() == 0) {
+                throw new TransactionRuntimeException("Property " + DS_DATASOURCE
+                    + " was null");
+            }
 
-	} else {
-        	this.driver = this.getEnvironment().getProperty(DS_DRIVER);
-        	if (this.driver == null || this.driver.length() == 0) {
-        	    throw new TransactionRuntimeException("Property " + DS_DRIVER
-        		    + " was not specified");
-        	}
-	}
+    } else {
+            this.driver = this.getEnvironment().getProperty(DS_DRIVER);
+            if (this.driver == null || this.driver.length() == 0) {
+                throw new TransactionRuntimeException("Property " + DS_DRIVER
+                    + " was not specified");
+            }
+    }
 
-	this.url = this.getEnvironment().getProperty(DS_URL);
+    this.url = this.getEnvironment().getProperty(DS_URL);
 
-	this.username = this.getEnvironment().getProperty(DS_USER);
-	if (username == null) {
-	    this.username = this.getEnvironment().getProperty(DS_USERNAME);
-	}
-	this.pwd = this.getEnvironment().getProperty(DS_PASSWORD);
+    this.username = this.getEnvironment().getProperty(DS_USER);
+    if (username == null) {
+        this.username = this.getEnvironment().getProperty(DS_USERNAME);
+    }
+    this.pwd = this.getEnvironment().getProperty(DS_PASSWORD);
 
     }
 
     @Override
     public Connection getConnection() throws QueryTestFailedException {
-	try {
-		return getXAConnection().getConnection();
-	} catch (QueryTestFailedException qtf) {
-	    throw qtf;
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new QueryTestFailedException(e);
-	}
+    try {
+        return getXAConnection().getConnection();
+    } catch (QueryTestFailedException qtf) {
+        throw qtf;
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new QueryTestFailedException(e);
+    }
     }
 
     @Override
     public synchronized XAConnection getXAConnection()
-	    throws QueryTestFailedException {
-	if (xaConnection == null) {
-	    validate();
-	    try {
-		xaConnection = createConnection();
-	    } catch (Exception e) {
-		throw new QueryTestFailedException(e);
-	    }
-	}
-	return xaConnection;
+        throws QueryTestFailedException {
+    if (xaConnection == null) {
+        validate();
+        try {
+        xaConnection = createConnection();
+        } catch (Exception e) {
+        throw new QueryTestFailedException(e);
+        }
+    }
+    return xaConnection;
     }
 
-	private XAConnection createConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+    private XAConnection createConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
 
-		TestLogger.log("Creating Datasource Connection: \"" + this.serverName + " - " + this.databaseName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+        TestLogger.log("Creating Datasource Connection: \"" + this.serverName + " - " + this.databaseName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
 
-		DataSource ds = (DataSource) Class.forName(this.driver).newInstance();
+        DataSource ds = (DataSource) Class.forName(this.driver).newInstance();
 
-		if (ds instanceof BaseDataSource) {
+        if (ds instanceof BaseDataSource) {
 
-			BaseDataSource dataSource = (BaseDataSource) ds;
+            BaseDataSource dataSource = (BaseDataSource) ds;
 
-			dataSource.setDatabaseName(this.databaseName);
-			if (this.applName != null) {
-				dataSource.setApplicationName(this.applName);
-			}
+            dataSource.setDatabaseName(this.databaseName);
+            if (this.applName != null) {
+                dataSource.setApplicationName(this.applName);
+            }
 
-			((TeiidDataSource) dataSource).setServerName(this.serverName);
-			((TeiidDataSource) dataSource).setPortNumber(Integer.parseInt(this.portNumber));
+            ((TeiidDataSource) dataSource).setServerName(this.serverName);
+            ((TeiidDataSource) dataSource).setPortNumber(Integer.parseInt(this.portNumber));
 
-			if (this.username != null) {
-				dataSource.setUser(this.username);
-				dataSource.setPassword(this.pwd);
-			}
+            if (this.username != null) {
+                dataSource.setUser(this.username);
+                dataSource.setPassword(this.pwd);
+            }
 
-			return ((XADataSource) dataSource).getXAConnection(this.username,
-					this.pwd);
-		}
-		Properties props = new Properties();
-		props.setProperty(DS_DATABASENAME, this.databaseName);
-		props.setProperty(DS_SERVERPORT, this.portNumber);
-		props.setProperty(DS_URL, this.url);
-		props.setProperty(DS_SERVERNAME, this.serverName);
-		if (this.username != null) {
-			props.setProperty(DS_USERNAME, this.username);
-			props.setProperty(DS_USER, this.username);
-			props.setProperty(DS_PASSWORD, this.pwd);
-		}
+            return ((XADataSource) dataSource).getXAConnection(this.username,
+                    this.pwd);
+        }
+        Properties props = new Properties();
+        props.setProperty(DS_DATABASENAME, this.databaseName);
+        props.setProperty(DS_SERVERPORT, this.portNumber);
+        props.setProperty(DS_URL, this.url);
+        props.setProperty(DS_SERVERNAME, this.serverName);
+        if (this.username != null) {
+            props.setProperty(DS_USERNAME, this.username);
+            props.setProperty(DS_USER, this.username);
+            props.setProperty(DS_PASSWORD, this.pwd);
+        }
 
-		PropertiesUtils.setBeanProperties(ds, props, null);
-		return ((XADataSource) ds).getXAConnection();
-	}
+        PropertiesUtils.setBeanProperties(ds, props, null);
+        return ((XADataSource) ds).getXAConnection();
+    }
 
-	public void shutdown() {
-		super.shutdown();
-		try {
+    public void shutdown() {
+        super.shutdown();
+        try {
 
-			if (this.xaConnection != null) {
-				this.xaConnection.close();
-			}
-		} catch (Exception e) {
-			// ignore..
-		}
-		this.xaConnection = null;
-	}
+            if (this.xaConnection != null) {
+                this.xaConnection.close();
+            }
+        } catch (Exception e) {
+            // ignore..
+        }
+        this.xaConnection = null;
+    }
 }

@@ -28,28 +28,28 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 
 class CacheFactoryService implements Service<CacheFactory> {
-	protected InjectedValue<EmbeddedCacheManager> cacheContainerInjector = new InjectedValue<EmbeddedCacheManager>();
-	private CacheFactory cacheFactory;
+    protected InjectedValue<EmbeddedCacheManager> cacheContainerInjector = new InjectedValue<EmbeddedCacheManager>();
+    private CacheFactory cacheFactory;
 
-	@Override
-	public void start(StartContext context) throws StartException {
-		EmbeddedCacheManager cc = cacheContainerInjector.getValue();
-		if (cc != null) {
-			this.cacheFactory = new InfinispanCacheFactory(cc, Module.getCallerModule().getClassLoader());
-		}
-		else {
-			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50093));
-		}
-	}
+    @Override
+    public void start(StartContext context) throws StartException {
+        EmbeddedCacheManager cc = cacheContainerInjector.getValue();
+        if (cc != null) {
+            this.cacheFactory = new InfinispanCacheFactory(cc, Module.getCallerModule().getClassLoader());
+        }
+        else {
+            throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50093));
+        }
+    }
 
-	@Override
-	public void stop(StopContext context) {
-		this.cacheFactory.destroy();
-		this.cacheFactory = null;
-	}
+    @Override
+    public void stop(StopContext context) {
+        this.cacheFactory.destroy();
+        this.cacheFactory = null;
+    }
 
-	@Override
-	public CacheFactory getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.cacheFactory;
-	}
+    @Override
+    public CacheFactory getValue() throws IllegalStateException, IllegalArgumentException {
+        return this.cacheFactory;
+    }
 }

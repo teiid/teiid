@@ -28,39 +28,39 @@ import org.teiid.translator.google.api.SpreadsheetAuthException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 
 public class OAuth2HeaderFactory implements AuthHeaderFactory {
-	private GoogleCredential credential = null;
-	private String refreshToken;
-	private String clientId;
-	private String clientSecret;
+    private GoogleCredential credential = null;
+    private String refreshToken;
+    private String clientId;
+    private String clientSecret;
 
-	public OAuth2HeaderFactory(String refreshToken, String clientId, String clientSecret){
-	    this.refreshToken = refreshToken;
-	    this.clientId = clientId;
-	    this.clientSecret = clientSecret;
-	}
+    public OAuth2HeaderFactory(String refreshToken, String clientId, String clientSecret){
+        this.refreshToken = refreshToken;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
 
-	public void refreshToken() {
-		try {
-		    if (credential == null) {
-		        credential = new GoogleCredential.Builder()
-	                .setClientSecrets(clientId, clientSecret)
-	                .setTransport(HTTP_TRANSPORT)
-	                .setJsonFactory(JSON_FACTORY)
-	                .build();
-	            credential.setRefreshToken(refreshToken);
-		    }
-		    credential.refreshToken();
+    public void refreshToken() {
+        try {
+            if (credential == null) {
+                credential = new GoogleCredential.Builder()
+                    .setClientSecrets(clientId, clientSecret)
+                    .setTransport(HTTP_TRANSPORT)
+                    .setJsonFactory(JSON_FACTORY)
+                    .build();
+                credential.setRefreshToken(refreshToken);
+            }
+            credential.refreshToken();
         } catch (IOException e) {
             throw new SpreadsheetAuthException(
                     "Error reading TokenRequest response", e);
         }
-	}
+    }
 
-	public String getAuthHeader() {
-		return "Bearer "+  credential.getAccessToken(); //$NON-NLS-1$
-	}
+    public String getAuthHeader() {
+        return "Bearer "+  credential.getAccessToken(); //$NON-NLS-1$
+    }
 
-	public GoogleCredential getCredential() {
+    public GoogleCredential getCredential() {
         return credential;
     }
 

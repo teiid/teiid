@@ -64,9 +64,9 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     }
 
     public void visit(SubqueryCompareCriteria obj) {
-    	if (obj.getCommand() != null) {
-    		this.commands.add(obj.getCommand());
-    	}
+        if (obj.getCommand() != null) {
+            this.commands.add(obj.getCommand());
+        }
     }
 
     /**
@@ -111,21 +111,21 @@ public class CommandCollectorVisitor extends LanguageVisitor {
 
     @Override
     public void visit(WithQueryCommand obj) {
-    	this.commands.add(obj.getCommand());
+        this.commands.add(obj.getCommand());
     }
 
     @Override
     public void visit(Insert obj) {
-    	if (obj.getQueryExpression() != null) {
-    		this.commands.add(obj.getQueryExpression());
-    	}
+        if (obj.getQueryExpression() != null) {
+            this.commands.add(obj.getQueryExpression());
+        }
     }
 
     @Override
     public void visit(UnaryFromClause obj) {
-    	if (collectExpanded && obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
-    		this.commands.add(obj.getExpandedCommand());
-    	}
+        if (collectExpanded && obj.getExpandedCommand() != null && !obj.getGroup().isProcedure()) {
+            this.commands.add(obj.getExpandedCommand());
+        }
     }
 
     /**
@@ -134,22 +134,22 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to collect commands in
      */
     public static final List<Command> getCommands(Command command) {
-    	return getCommands(command, false);
+        return getCommands(command, false);
     }
 
-	public static final List<Command> getCommands(Command command, boolean includeExpanded) {
+    public static final List<Command> getCommands(Command command, boolean includeExpanded) {
         CommandCollectorVisitor visitor = new CommandCollectorVisitor();
         visitor.collectExpanded = includeExpanded;
         final boolean visitCommands = command instanceof SetQuery;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 
-        	@Override
-        	protected void visitNode(LanguageObject obj) {
-        		if (!visitCommands && obj instanceof Command) {
-    				return;
-        		}
-        		super.visitNode(obj);
-        	}
+            @Override
+            protected void visitNode(LanguageObject obj) {
+                if (!visitCommands && obj instanceof Command) {
+                    return;
+                }
+                super.visitNode(obj);
+            }
 
         };
         command.acceptVisitor(navigator);

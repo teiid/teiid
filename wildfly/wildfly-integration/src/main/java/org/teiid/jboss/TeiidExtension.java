@@ -29,8 +29,8 @@ import org.teiid.runtime.JBossLogger;
 
 public class TeiidExtension implements Extension {
 
-	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
-	public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 2);
+    public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
+    public static ModelVersion TEIID_VERSION = ModelVersion.create(1, 2);
 
     public static ResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
         return new StandardResourceDescriptionResolver(keyPrefix,
@@ -38,21 +38,21 @@ public class TeiidExtension implements Extension {
                 TeiidExtension.class.getClassLoader(), true, false);
     }
 
-	@Override
-	public void initialize(ExtensionContext context) {
-		final SubsystemRegistration subsystem = context.registerSubsystem(TEIID_SUBSYSTEM, TEIID_VERSION);
+    @Override
+    public void initialize(ExtensionContext context) {
+        final SubsystemRegistration subsystem = context.registerSubsystem(TEIID_SUBSYSTEM, TEIID_VERSION);
 
-		LogManager.setLogListener(new JBossLogger());
+        LogManager.setLogListener(new JBossLogger());
 
-		subsystem.registerXMLElementWriter(TeiidSubsystemParser.INSTANCE);
+        subsystem.registerXMLElementWriter(TeiidSubsystemParser.INSTANCE);
 
-		// Main Teiid system, with children query engine and translators, register only if this is a server
-		subsystem.registerSubsystemModel(new TeiidSubsytemResourceDefinition(context.getProcessType().isServer()));
-	}
+        // Main Teiid system, with children query engine and translators, register only if this is a server
+        subsystem.registerSubsystemModel(new TeiidSubsytemResourceDefinition(context.getProcessType().isServer()));
+    }
 
-	@Override
-	public void initializeParsers(ExtensionParsingContext context) {
-		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.CURRENT.getUri(), TeiidSubsystemParser.INSTANCE);
-		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.TEIID_1_1.getUri(), TeiidSubsystemParser.INSTANCE);
-	}
+    @Override
+    public void initializeParsers(ExtensionParsingContext context) {
+        context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.CURRENT.getUri(), TeiidSubsystemParser.INSTANCE);
+        context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.TEIID_1_1.getUri(), TeiidSubsystemParser.INSTANCE);
+    }
 }

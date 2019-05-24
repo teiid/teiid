@@ -34,11 +34,11 @@ public abstract class JoinStrategy {
     protected int reserved;
 
     public void close() {
-    	if (joinNode == null) {
-    		return;
-    	}
-    	joinNode.getBufferManager().releaseBuffers(reserved);
-		reserved = 0;
+        if (joinNode == null) {
+            return;
+        }
+        joinNode.getBufferManager().releaseBuffers(reserved);
+        reserved = 0;
         try {
             if (leftSource != null) {
                 leftSource.close();
@@ -94,13 +94,13 @@ public abstract class JoinStrategy {
     }
 
     protected void openRight() throws TeiidComponentException, TeiidProcessingException {
-    	if (!this.rightSource.open) {
-			if (reserved == 0) {
-				reserved = joinNode.getBufferManager().reserveBuffers(joinNode.getBufferManager().getSchemaSize(joinNode.getOutputElements()), BufferReserveMode.FORCE);
-			}
-			rightSource.getSource().open();
-			this.rightSource.open = true;
-		}
+        if (!this.rightSource.open) {
+            if (reserved == 0) {
+                reserved = joinNode.getBufferManager().reserveBuffers(joinNode.getBufferManager().getSchemaSize(joinNode.getOutputElements()), BufferReserveMode.FORCE);
+            }
+            rightSource.getSource().open();
+            this.rightSource.open = true;
+        }
     }
 
 }

@@ -37,60 +37,60 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
 
-	@Test
-	public void testMarshellUnmarshellDirectParsing() throws Exception {
+    @Test
+    public void testMarshellUnmarshellDirectParsing() throws Exception {
 
-		VDBMetaData vdb = TestVDBUtility.buildVDB();
+        VDBMetaData vdb = TestVDBUtility.buildVDB();
 
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		VDBMetadataParser.marshell(vdb, out);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        VDBMetadataParser.marshell(vdb, out);
 
-		//System.out.println(new String(out.toByteArray()));
+        //System.out.println(new String(out.toByteArray()));
 
-		// UnMarshell
-		vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(out.toByteArray()));
+        // UnMarshell
+        vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(out.toByteArray()));
 
-		TestVDBUtility.validateVDB(vdb);
-	}
+        TestVDBUtility.validateVDB(vdb);
+    }
 
 
 
-	@Test
-	public void testAdminMOCreation() {
-		VDBMetaData vdb = new VDBMetaData();
+    @Test
+    public void testAdminMOCreation() {
+        VDBMetaData vdb = new VDBMetaData();
 
-		PropertiesUtils.setBeanProperty(vdb, "name", "x");
+        PropertiesUtils.setBeanProperty(vdb, "name", "x");
 
-		assertEquals("x", vdb.getName());
-	}
+        assertEquals("x", vdb.getName());
+    }
 
-	@Test public void testVDBMetaDataMapper() {
-		VDBMetaData vdb = TestVDBUtility.buildVDB();
+    @Test public void testVDBMetaDataMapper() {
+        VDBMetaData vdb = TestVDBUtility.buildVDB();
 
-		ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
+        ModelNode node = VDBMetadataMapper.INSTANCE.wrap(vdb, new ModelNode());
 
-		vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
-		TestVDBUtility.validateVDB(vdb);
-	}
+        vdb = VDBMetadataMapper.INSTANCE.unwrap(node);
+        TestVDBUtility.validateVDB(vdb);
+    }
 
-	@Test
-	public void testVDBMetaDataDescribe() throws Exception {
-	    ModelNode node = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
-		String actual = node.toJSONString(false);
+    @Test
+    public void testVDBMetaDataDescribe() throws Exception {
+        ModelNode node = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
+        String actual = node.toJSONString(false);
 
-		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
-	}
+        assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
+    }
 
-	@Test
-	public void testClone() {
-		VDBMetaData vdb = TestVDBUtility.buildVDB();
-		vdb.setXmlDeployment(true);
-		VDBMetaData clone = vdb.clone();
-		assertTrue(clone.isXmlDeployment());
-		assertEquals(1, vdb.getVDBImports().size());
-		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
-		//assertNotSame(clone.getDataPolicyMap(), vdb.getDataPolicyMap());
-	}
+    @Test
+    public void testClone() {
+        VDBMetaData vdb = TestVDBUtility.buildVDB();
+        vdb.setXmlDeployment(true);
+        VDBMetaData clone = vdb.clone();
+        assertTrue(clone.isXmlDeployment());
+        assertEquals(1, vdb.getVDBImports().size());
+        assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
+        //assertNotSame(clone.getDataPolicyMap(), vdb.getDataPolicyMap());
+    }
 
     public static ModelNode describe(ModelNode node, AttributeDefinition[] attributes) {
         for (AttributeDefinition ad : attributes) {

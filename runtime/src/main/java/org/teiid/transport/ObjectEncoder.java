@@ -54,22 +54,22 @@ import io.netty.handler.stream.ChunkedStream;
  */
 public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
 
-	public static class FailedWriteException extends Exception {
-		private static final long serialVersionUID = -998903582526732966L;
-		private Object object;
+    public static class FailedWriteException extends Exception {
+        private static final long serialVersionUID = -998903582526732966L;
+        private Object object;
 
-		FailedWriteException(Object object, Throwable t) {
-			super(t);
-			this.object = object;
-		}
+        FailedWriteException(Object object, Throwable t) {
+            super(t);
+            this.object = object;
+        }
 
-		public Object getObject() {
-			return object;
-		}
-	}
+        public Object getObject() {
+            return object;
+        }
+    }
 
     private static final byte[] LENGTH_PLACEHOLDER = new byte[4];
-	private static final int CHUNK_SIZE = (1 << 16) - 1;
+    private static final int CHUNK_SIZE = (1 << 16) - 1;
 
     private final int estimatedLength;
     private final boolean preferDirect;
@@ -109,27 +109,27 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
         bout.write(LENGTH_PLACEHOLDER);
         final CompactObjectOutputStream oout = new CompactObjectOutputStream(bout);
         try {
-	        oout.writeObject(msg);
-	        ExternalizeUtil.writeCollection(oout, oout.getReferences());
-	        oout.flush();
-	        oout.close();
+            oout.writeObject(msg);
+            ExternalizeUtil.writeCollection(oout, oout.getReferences());
+            oout.flush();
+            oout.close();
 
-	        int endIdx = out.writerIndex();
-	        out.setInt(startIdx, endIdx - startIdx - 4);
+            int endIdx = out.writerIndex();
+            out.setInt(startIdx, endIdx - startIdx - 4);
 
-	        if (out.isReadable()) {
-	            ctx.write(out, promise);
-	            for (InputStream is : oout.getStreams()) {
-	                ctx.write(new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)), promise);
-	            }
-	        } else {
-	            out.release();
-	            ctx.write(Unpooled.EMPTY_BUFFER, promise);
-	        }
-	        ctx.flush();
-	        out = null;
+            if (out.isReadable()) {
+                ctx.write(out, promise);
+                for (InputStream is : oout.getStreams()) {
+                    ctx.write(new AnonymousChunkedStream(new BufferedInputStream(is, CHUNK_SIZE)), promise);
+                }
+            } else {
+                out.release();
+                ctx.write(Unpooled.EMPTY_BUFFER, promise);
+            }
+            ctx.flush();
+            out = null;
         } catch (Throwable t) {
-        	throw new FailedWriteException(msg, t);
+            throw new FailedWriteException(msg, t);
         } finally {
             if (out != null) {
                 out.release();
@@ -149,22 +149,22 @@ public class ObjectEncoder extends ChannelOutboundHandlerAdapter {
 
     static class AnonymousChunkedStream extends ChunkedStream {
 
-		public AnonymousChunkedStream(InputStream in) {
-			super(in, CHUNK_SIZE);
-		}
+        public AnonymousChunkedStream(InputStream in) {
+            super(in, CHUNK_SIZE);
+        }
 
-		@Override
-		public ByteBuf readChunk(ByteBufAllocator allocator) throws Exception {
-		    ByteBuf cb = super.readChunk(allocator);
-			int length = cb.capacity();
-			ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
-			prefix.setShort(0, (short)length);
-			if (isEndOfInput()) {
-				//append a 0 short
-				return Unpooled.wrappedBuffer(prefix, cb, Unpooled.wrappedBuffer(new byte[2]));
-			}
-			return Unpooled.wrappedBuffer(prefix, cb);
-		}
+        @Override
+        public ByteBuf readChunk(ByteBufAllocator allocator) throws Exception {
+            ByteBuf cb = super.readChunk(allocator);
+            int length = cb.capacity();
+            ByteBuf prefix = Unpooled.wrappedBuffer(new byte[2]);
+            prefix.setShort(0, (short)length);
+            if (isEndOfInput()) {
+                //append a 0 short
+                return Unpooled.wrappedBuffer(prefix, cb, Unpooled.wrappedBuffer(new byte[2]));
+            }
+            return Unpooled.wrappedBuffer(prefix, cb);
+        }
 
     }
 

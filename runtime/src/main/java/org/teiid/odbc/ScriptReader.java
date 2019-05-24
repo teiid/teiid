@@ -45,7 +45,7 @@ public class ScriptReader {
     }
 
     public ScriptReader(String string) {
-    	this.reader = new StringReader(string);
+        this.reader = new StringReader(string);
         this.builder = new StringBuilder(string.length());
     }
 
@@ -53,7 +53,7 @@ public class ScriptReader {
      * Close the underlying reader.
      */
     public void close() throws IOException{
-    	reader.close();
+        reader.close();
     }
 
     /**
@@ -67,10 +67,10 @@ public class ScriptReader {
             return null;
         }
         while (true) {
-        	String result = readStatementLoop();
-        	if (result != null || endOfFile) {
-        		return result;
-        	}
+            String result = readStatementLoop();
+            if (result != null || endOfFile) {
+                return result;
+            }
         }
 
     }
@@ -82,7 +82,7 @@ public class ScriptReader {
                 endOfFile = true;
                 break;
             } else if (c == ';') {
-            	builder.setLength(builder.length()-1);
+                builder.setLength(builder.length()-1);
                 break;
             }
             switch (c) {
@@ -131,11 +131,11 @@ public class ScriptReader {
                 break;
             }
             case '\'':
-            	//TODO: in rewrite mode could handle the E' logic here rather than in the parser
-            	//however the parser now uses E' with like to detect pg specific handling
-            	if (expressionEnd != builder.length() - 1) {
-            		expressionStart = builder.length() - 1;
-            	}
+                //TODO: in rewrite mode could handle the E' logic here rather than in the parser
+                //however the parser now uses E' with like to detect pg specific handling
+                if (expressionEnd != builder.length() - 1) {
+                    expressionStart = builder.length() - 1;
+                }
                 while (true) {
                     c = read();
                     if (c < 0 || c == '\'') {
@@ -216,81 +216,81 @@ public class ScriptReader {
                 break;
             }
             case ':': {
-            	if (rewrite) {
-                	int start = builder.length();
-                	c = read();
-                	if (c == ':') {
+                if (rewrite) {
+                    int start = builder.length();
+                    c = read();
+                    if (c == ':') {
                         while (true) {
                             c = read();
                             if (c < 0 || !Character.isLetterOrDigit(c)) {
-                            	String type = builder.substring(start+1, builder.length() - (c<0?0:1));
-                            	builder.setLength(start-1);
-                            	if (expressionStart != -1 && expressionEnd == start -1) {
-                            		//special handling for regclass cast - it won't always work
-                            		if ("regclass".equalsIgnoreCase(type)) { //$NON-NLS-1$
-                            			builder.insert(expressionStart, "regclass("); //$NON-NLS-1$
-                            			builder.append(")"); //$NON-NLS-1$
-                            		} else if ("regproc".equalsIgnoreCase(type)) { //$NON-NLS-1$
-                            			String name = builder.substring(expressionStart);
-                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$
-                            				name = name.substring(2, name.length()-2);
-                            				name = '\''+ name + '\'';
-                            			}
-                        				if (name.startsWith("'")) { //$NON-NLS-1$
-                        					builder.setLength(expressionStart);
-                            				builder.append(name.toUpperCase());
-                        				}
-                            			builder.insert(expressionStart, "(SELECT oid FROM pg_catalog.pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
-                            			builder.append(")"); //$NON-NLS-1$
-                            		} else {
-	                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
-	                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
-                            		}
-                            	}
-                            	if (c != -1) {
-                            		builder.append((char)c);
-                            	}
-                            	break;
+                                String type = builder.substring(start+1, builder.length() - (c<0?0:1));
+                                builder.setLength(start-1);
+                                if (expressionStart != -1 && expressionEnd == start -1) {
+                                    //special handling for regclass cast - it won't always work
+                                    if ("regclass".equalsIgnoreCase(type)) { //$NON-NLS-1$
+                                        builder.insert(expressionStart, "regclass("); //$NON-NLS-1$
+                                        builder.append(")"); //$NON-NLS-1$
+                                    } else if ("regproc".equalsIgnoreCase(type)) { //$NON-NLS-1$
+                                        String name = builder.substring(expressionStart);
+                                        if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$
+                                            name = name.substring(2, name.length()-2);
+                                            name = '\''+ name + '\'';
+                                        }
+                                        if (name.startsWith("'")) { //$NON-NLS-1$
+                                            builder.setLength(expressionStart);
+                                            builder.append(name.toUpperCase());
+                                        }
+                                        builder.insert(expressionStart, "(SELECT oid FROM pg_catalog.pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
+                                        builder.append(")"); //$NON-NLS-1$
+                                    } else {
+                                        builder.insert(expressionStart, "cast("); //$NON-NLS-1$
+                                        builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
+                                    }
+                                }
+                                if (c != -1) {
+                                    builder.append((char)c);
+                                }
+                                break;
                             }
                         }
-                	}
-                	break;
-            	}
-            	c = read();
-            	break;
+                    }
+                    break;
+                }
+                c = read();
+                break;
             }
             case '~': {
-            	if (rewrite) {
-            		int start = builder.length() - 1;
-            		boolean not = false;
-            		if (start > 0 && builder.charAt(start - 1) == '!') {
-        				not = true;
-        				start -= 1;
-            		}
-            		c = read();
-            		boolean like = false;
-            		if (c == '~') {
-            			like = true;
-            			c = read();
-            		}
-            		if (c == '*') {
-            			break; //can't handle
-            		}
-            		builder.setLength(start);
-            		if (not) {
-            			builder.append(" NOT"); //$NON-NLS-1$
-            		}
-            		if (like) {
-            			builder.append(" LIKE "); //$NON-NLS-1$
-            		} else {
-            			builder.append(" LIKE_REGEX "); //$NON-NLS-1$
-            		}
-            		if (c != -1) {
-                		builder.append((char)c);
-                	}
-            	}
-            	c = read();
-            	break;
+                if (rewrite) {
+                    int start = builder.length() - 1;
+                    boolean not = false;
+                    if (start > 0 && builder.charAt(start - 1) == '!') {
+                        not = true;
+                        start -= 1;
+                    }
+                    c = read();
+                    boolean like = false;
+                    if (c == '~') {
+                        like = true;
+                        c = read();
+                    }
+                    if (c == '*') {
+                        break; //can't handle
+                    }
+                    builder.setLength(start);
+                    if (not) {
+                        builder.append(" NOT"); //$NON-NLS-1$
+                    }
+                    if (like) {
+                        builder.append(" LIKE "); //$NON-NLS-1$
+                    } else {
+                        builder.append(" LIKE_REGEX "); //$NON-NLS-1$
+                    }
+                    if (c != -1) {
+                        builder.append((char)c);
+                    }
+                }
+                c = read();
+                break;
             }
             default: {
                 c = read();
@@ -300,7 +300,7 @@ public class ScriptReader {
         String result = builder.toString();
         builder.setLength(0);
         if (result.length() == 0) {
-        	return null;
+            return null;
         }
         return result;
     }
@@ -317,7 +317,7 @@ public class ScriptReader {
     private int read() throws IOException {
        int c = reader.read();
        if (c != -1) {
-    	   builder.append((char)c);
+           builder.append((char)c);
        }
        return c;
     }
@@ -343,7 +343,7 @@ public class ScriptReader {
     }
 
     public void setRewrite(boolean rewrite) {
-		this.rewrite = rewrite;
-	}
+        this.rewrite = rewrite;
+    }
 
 }

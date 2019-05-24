@@ -65,12 +65,12 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testConversionSupport() {
-    	assertFalse(impalaTranslator.supportsConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME));
-    	assertTrue(impalaTranslator.supportsConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP));
+        assertFalse(impalaTranslator.supportsConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME));
+        assertTrue(impalaTranslator.supportsConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP));
     }
 
     @Test public void testJoin() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select pm1.g1.e1 from pm1.g1 inner join pm1.g2 inner join pm1.g3 on pm1.g2.e2 = pm1.g3.e2 on pm1.g1.e1 = pm1.g2.e1");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -78,7 +78,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testStringLiteral() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 where pm1.g1.e1 = 'a''b\\c'");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -86,7 +86,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testMultipleDistinctAggregates() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select count(distinct pm1.g1.e1), 1, count(distinct pm1.g1.e2), avg(distinct pm1.g1.e4) from pm1.g1");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -99,7 +99,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testOffset() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.example1Cached());
         Command obj = commandBuilder.getCommand("select pm1.g1.e2 from pm1.g1 limit 1, 2");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -112,7 +112,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testOrderedUnion() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand("SELECT g_1.StringNum AS c_0 FROM bqt1.SmallA AS g_1 WHERE g_1.IntKey <= 50 UNION ALL SELECT g_0.StringNum AS c_0 FROM bqt1.SmallB AS g_0 WHERE g_0.IntKey > 50 ORDER BY c_0 limit 10");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -120,7 +120,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testDistinctAggregate() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand("SELECT distinct max(StringNum) FROM bqt1.SmallA group by stringkey");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);
@@ -128,7 +128,7 @@ public class TestImpalaExecutionFactory {
     }
 
     @Test public void testWith() {
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Select obj = (Select) commandBuilder.getCommand("with x as /*+ no_inline */ (SELECT max(StringNum) as a FROM bqt1.SmallA group by stringkey) select * from x");
         SQLConversionVisitor sqlVisitor = impalaTranslator.getSQLConversionVisitor();
         sqlVisitor.append(obj);

@@ -30,7 +30,7 @@ import org.teiid.core.BundleUtil;
  */
 public final class AdminComponentException extends AdminException {
 
-	private static final long serialVersionUID = 7117721841515240902L;
+    private static final long serialVersionUID = 7117721841515240902L;
 
 
     public AdminComponentException() {
@@ -47,7 +47,7 @@ public final class AdminComponentException extends AdminException {
     }
 
     public AdminComponentException(Throwable cause) {
-    	super(cause);
+        super(cause);
     }
 
     /**

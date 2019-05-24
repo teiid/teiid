@@ -24,12 +24,12 @@ package org.teiid.translator.google.api.metadata;
  */
 public class Util {
 
-	/**
-	 * Converts spreadsheet column name to position number.
-	 *
-	 * @param id   Name of the column
-	 * @return     Position of the column
-	 */
+    /**
+     * Converts spreadsheet column name to position number.
+     *
+     * @param id   Name of the column
+     * @return     Position of the column
+     */
     public static int convertColumnIDtoInt(String id) {
         String normID=id.toUpperCase().trim();
         int result=0;
@@ -40,12 +40,12 @@ public class Util {
         return result;
     }
 
-	/**
-	 * Converts spreadsheet column position to String.
-	 *
-	 * @param id   Position of the column
-	 * @return     Name of the column
-	 */
+    /**
+     * Converts spreadsheet column position to String.
+     *
+     * @param id   Position of the column
+     * @return     Name of the column
+     */
     public static String convertColumnIDtoString(int id) {
         StringBuilder result=new StringBuilder();
         int mod;

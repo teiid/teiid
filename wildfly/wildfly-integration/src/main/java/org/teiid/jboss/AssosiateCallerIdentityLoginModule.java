@@ -39,49 +39,49 @@ import org.teiid.logging.LogManager;
  */
 public class AssosiateCallerIdentityLoginModule extends AbstractServerLoginModule {
 
-	private Principal principal;
+    private Principal principal;
 
-	public void initialize(Subject subject, CallbackHandler handler,
-			Map sharedState, Map options) {
-		super.initialize(subject, handler, sharedState, options);
-	}
+    public void initialize(Subject subject, CallbackHandler handler,
+            Map sharedState, Map options) {
+        super.initialize(subject, handler, sharedState, options);
+    }
 
-	/**
-	 * Performs the login association between the caller and the resource for a
-	 * 1 to 1 mapping. This acts as a login propagation strategy and is useful
-	 * for single-sign on requirements
-	 *
-	 * @return True if authentication succeeds
-	 * @throws LoginException
-	 */
-	public boolean login() throws LoginException {
+    /**
+     * Performs the login association between the caller and the resource for a
+     * 1 to 1 mapping. This acts as a login propagation strategy and is useful
+     * for single-sign on requirements
+     *
+     * @return True if authentication succeeds
+     * @throws LoginException
+     */
+    public boolean login() throws LoginException {
 
-		SecurityContext sc = SecurityActions.getSecurityContext();
-		SubjectInfo si = sc.getSubjectInfo();
-		Subject subject = si.getAuthenticatedSubject();
+        SecurityContext sc = SecurityActions.getSecurityContext();
+        SubjectInfo si = sc.getSubjectInfo();
+        Subject subject = si.getAuthenticatedSubject();
 
-		Set<Principal> principals = subject.getPrincipals();
-		this.principal = principals.iterator().next();
+        Set<Principal> principals = subject.getPrincipals();
+        this.principal = principals.iterator().next();
 
-		if (super.login() == true) {
-			return true;
-		}
+        if (super.login() == true) {
+            return true;
+        }
 
-		LogManager.logDetail(LogConstants.CTX_SECURITY, "Adding Passthrough principal="+principal.getName()); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_SECURITY, "Adding Passthrough principal="+principal.getName()); //$NON-NLS-1$
 
-		// Put the principal name into the sharedState map
-		sharedState.put("javax.security.auth.login.name", principal.getName()); //$NON-NLS-1$
-		sharedState.put("javax.security.auth.login.password", ""); //$NON-NLS-1$ //$NON-NLS-2$
-		super.loginOk = true;
+        // Put the principal name into the sharedState map
+        sharedState.put("javax.security.auth.login.name", principal.getName()); //$NON-NLS-1$
+        sharedState.put("javax.security.auth.login.password", ""); //$NON-NLS-1$ //$NON-NLS-2$
+        super.loginOk = true;
 
-		return true;
-	}
+        return true;
+    }
 
-	protected Principal getIdentity() {
-		return principal;
-	}
+    protected Principal getIdentity() {
+        return principal;
+    }
 
-	protected Group[] getRoleSets() throws LoginException {
-		return new Group[] {};
-	}
+    protected Group[] getRoleSets() throws LoginException {
+        return new Group[] {};
+    }
 }

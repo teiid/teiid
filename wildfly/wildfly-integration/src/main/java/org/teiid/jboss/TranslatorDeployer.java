@@ -45,13 +45,13 @@ import org.teiid.translator.ExecutionFactory;
  */
 public final class TranslatorDeployer implements DeploymentUnitProcessor {
 
-	@Override
+    @Override
     public void deploy(final DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         final ServiceTarget target = phaseContext.getServiceTarget();
 
         if (!TeiidAttachments.isTranslator(deploymentUnit)) {
-        	return;
+            return;
         }
 
         String moduleName = deploymentUnit.getName();
@@ -60,45 +60,45 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
 
         final ServiceLoader<ExecutionFactory> serviceLoader =  ServiceLoader.load(ExecutionFactory.class, translatorLoader);
         if (serviceLoader != null) {
-        	for (ExecutionFactory ef:serviceLoader) {
-        		VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
-        		if (metadata == null) {
-        			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName));
-        		}
-        		deploymentUnit.putAttachment(TeiidAttachments.TRANSLATOR_METADATA, metadata);
-        		metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, moduleName);
-        		metadata.addAttchment(ClassLoader.class, translatorLoader);
+            for (ExecutionFactory ef:serviceLoader) {
+                VDBTranslatorMetaData metadata = TranslatorUtil.buildTranslatorMetadata(ef, moduleName);
+                if (metadata == null) {
+                    throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName));
+                }
+                deploymentUnit.putAttachment(TeiidAttachments.TRANSLATOR_METADATA, metadata);
+                metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, moduleName);
+                metadata.addAttchment(ClassLoader.class, translatorLoader);
 
-        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
+                LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
 
-        		buildService(target, metadata);
-        	}
+                buildService(target, metadata);
+            }
         }
     }
 
-	static void buildService(final ServiceTarget target,
-			VDBTranslatorMetaData metadata) {
-		TranslatorService translatorService = new TranslatorService(metadata);
-		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
-		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
-		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
-		builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
-	}
+    static void buildService(final ServiceTarget target,
+            VDBTranslatorMetaData metadata) {
+        TranslatorService translatorService = new TranslatorService(metadata);
+        ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
+        builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
+        builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
+        builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+    }
 
     @Override
     public void undeploy(final DeploymentUnit context) {
-    	if (!TeiidAttachments.isTranslator(context)) {
-        	return;
+        if (!TeiidAttachments.isTranslator(context)) {
+            return;
         }
-    	VDBTranslatorMetaData metadata = context.getAttachment(TeiidAttachments.TRANSLATOR_METADATA);
-    	if (metadata == null) {
-    		return;
-    	}
-    	final ServiceRegistry registry = context.getServiceRegistry();
+        VDBTranslatorMetaData metadata = context.getAttachment(TeiidAttachments.TRANSLATOR_METADATA);
+        if (metadata == null) {
+            return;
+        }
+        final ServiceRegistry registry = context.getServiceRegistry();
         final ServiceName serviceName = TeiidServiceNames.translatorServiceName(metadata.getName());
         final ServiceController<?> controller = registry.getService(serviceName);
         if (controller != null) {
-        	controller.setMode(Mode.REMOVE);
+            controller.setMode(Mode.REMOVE);
         }
     }
 }

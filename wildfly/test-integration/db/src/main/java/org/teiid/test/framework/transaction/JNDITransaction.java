@@ -20,12 +20,12 @@ public class JNDITransaction extends TransactionContainer {
 
 
     public JNDITransaction() {
-	super();
+    super();
     }
 
     protected void before(TransactionQueryTestCase test) {
-	String jndi = test.getConnectionStrategy().getEnvironment().getProperty(ConfigPropertyNames.CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN);
-	if (jndi == null) {
+    String jndi = test.getConnectionStrategy().getEnvironment().getProperty(ConfigPropertyNames.CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN);
+    if (jndi == null) {
             throw new TransactionRuntimeException("No JNDI name found for the User Transaction to look up in application server");
         }
 

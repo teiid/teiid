@@ -37,7 +37,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class SortingFilter extends AggregateFunction {
 
-	// Initial setup - can be reused
+    // Initial setup - can be reused
     private AggregateFunction proxy;
     private BufferManager mgr;
     private String groupName;
@@ -64,20 +64,20 @@ public class SortingFilter extends AggregateFunction {
     }
 
     public List<ElementSymbol> getElements() {
-		return elements;
-	}
+        return elements;
+    }
 
-	public void setElements(List<ElementSymbol> elements) {
-		this.elements = elements;
-	}
+    public void setElements(List<ElementSymbol> elements) {
+        this.elements = elements;
+    }
 
     public void setSortItems(List<OrderByItem> sortItems) {
-		this.sortItems = sortItems;
-	}
+        this.sortItems = sortItems;
+    }
 
     @Override
     public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
-    	this.proxy.initialize(dataType, inputTypes);
+        this.proxy.initialize(dataType, inputTypes);
     }
 
     public void reset() {
@@ -85,32 +85,32 @@ public class SortingFilter extends AggregateFunction {
         close();
     }
 
-	private void close() {
-		if (this.collectionBuffer != null) {
-        	collectionBuffer.remove();
+    private void close() {
+        if (this.collectionBuffer != null) {
+            collectionBuffer.remove();
             this.collectionBuffer = null;
         }
-		if (this.sortUtility != null) {
-			sortUtility.remove();
-	        this.sortUtility = null;
-		}
-	}
+        if (this.sortUtility != null) {
+            sortUtility.remove();
+            this.sortUtility = null;
+        }
+    }
 
-	@Override
-	public void addInputDirect(List<?> tuple, CommandContext commandContext)
-			throws TeiidComponentException, TeiidProcessingException {
+    @Override
+    public void addInputDirect(List<?> tuple, CommandContext commandContext)
+            throws TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
         }
         List<Object> row = new ArrayList<Object>(argIndexes.length);
         //TODO remove overlap
         for (int i = 0; i < argIndexes.length; i++) {
-			row.add(tuple.get(argIndexes[i]));
-		}
+            row.add(tuple.get(argIndexes[i]));
+        }
         if (!this.proxy.filter(row)) {
             this.collectionBuffer.addTuple(row);
         }
-	}
+    }
 
     /**
      * @throws TeiidProcessingException
@@ -124,25 +124,25 @@ public class SortingFilter extends AggregateFunction {
 
             // Sort
             if (sortUtility == null) {
-            	sortUtility = new SortUtility(null, sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
-            	collectionBuffer.setForwardOnly(true);
-            	this.sortUtility.setWorkingBuffer(collectionBuffer);
+                sortUtility = new SortUtility(null, sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
+                collectionBuffer.setForwardOnly(true);
+                this.sortUtility.setWorkingBuffer(collectionBuffer);
             }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);
             try {
-	            // Add all input to proxy
-	            TupleSource sortedSource = sorted.createIndexedTupleSource();
-	            while(true) {
-	                List<?> tuple = sortedSource.nextTuple();
-	                if(tuple == null) {
-	                    break;
-	                }
-	                //TODO should possibly remove the order by columns from this tuple
-	                this.proxy.addInputDirect(tuple, commandContext);
-	            }
+                // Add all input to proxy
+                TupleSource sortedSource = sorted.createIndexedTupleSource();
+                while(true) {
+                    List<?> tuple = sortedSource.nextTuple();
+                    if(tuple == null) {
+                        break;
+                    }
+                    //TODO should possibly remove the order by columns from this tuple
+                    this.proxy.addInputDirect(tuple, commandContext);
+                }
             } finally {
-            	sorted.remove();
+                sorted.remove();
             }
 
             close();
@@ -153,6 +153,6 @@ public class SortingFilter extends AggregateFunction {
     }
 
     public boolean respectsNull() {
-    	return true;
+        return true;
     }
 }

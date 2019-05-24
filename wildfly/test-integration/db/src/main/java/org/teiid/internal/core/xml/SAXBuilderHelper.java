@@ -25,7 +25,7 @@ import org.jdom.input.SAXBuilder;
  */
 public class SAXBuilderHelper {
 
-	/** System property name used to get parser class */
+    /** System property name used to get parser class */
     public static final String PARSER_PROPERTY_NAME = "metamatrix.xmlparser.class"; //$NON-NLS-1$
 
     private static String PARSER_NAME;
@@ -38,35 +38,35 @@ public class SAXBuilderHelper {
         return PARSER_NAME;
     }
 
-	/**
-	 * Returns a SAXBuilder using the Parser class defined by the metamatrix.xmlparser.class
-	 *         System property. If the System property does not exist, returns a SAXBuilder using
-	 *          the org.apache.xerces.parsers.SAXParser.
-	 * @param boolean validate
-	 * @return org.jdom.input.SAXBuilder
-	 */
-	public static SAXBuilder createSAXBuilder() {
-		return createSAXBuilder(false);
-	}
+    /**
+     * Returns a SAXBuilder using the Parser class defined by the metamatrix.xmlparser.class
+     *         System property. If the System property does not exist, returns a SAXBuilder using
+     *          the org.apache.xerces.parsers.SAXParser.
+     * @param boolean validate
+     * @return org.jdom.input.SAXBuilder
+     */
+    public static SAXBuilder createSAXBuilder() {
+        return createSAXBuilder(false);
+    }
 
-	/**
-	 * Returns a SAXBuilder using the Parser class defined by the metamatrix.xmlparser.class
-	 *         System property. If the System property does not exist, returns a SAXBuilder using
-	 *          the org.apache.xerces.parsers.SAXParser.
-	 * @param boolean validate
-	 * @return org.jdom.input.SAXBuilder
-	 */
-	public static SAXBuilder createSAXBuilder(boolean validate) {
-		return new SAXBuilder(getParserClassName(), validate);
-	}
+    /**
+     * Returns a SAXBuilder using the Parser class defined by the metamatrix.xmlparser.class
+     *         System property. If the System property does not exist, returns a SAXBuilder using
+     *          the org.apache.xerces.parsers.SAXParser.
+     * @param boolean validate
+     * @return org.jdom.input.SAXBuilder
+     */
+    public static SAXBuilder createSAXBuilder(boolean validate) {
+        return new SAXBuilder(getParserClassName(), validate);
+    }
 
-	/**
-	 * Returns a SAXBuilder
-	 * @param boolean validate
-	 * @return org.jdom.input.SAXBuilder
-	 */
-	public static SAXBuilder createSAXBuilder(String saxDriverClass, boolean validate) {
-		return new SAXBuilder(saxDriverClass, validate);
-	}
+    /**
+     * Returns a SAXBuilder
+     * @param boolean validate
+     * @return org.jdom.input.SAXBuilder
+     */
+    public static SAXBuilder createSAXBuilder(String saxDriverClass, boolean validate) {
+        return new SAXBuilder(saxDriverClass, validate);
+    }
 
 }

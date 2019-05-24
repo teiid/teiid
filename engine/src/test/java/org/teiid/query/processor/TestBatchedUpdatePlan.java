@@ -74,7 +74,7 @@ public class TestBatchedUpdatePlan {
         for (int i = 0; i < plans.length; i++) {
             TupleBatch last = new TupleBatch(2, Arrays.asList(Arrays.asList(1)));
             last.setTerminationFlag(true);
-			plans[i] = new FakeProcessorPlan(Arrays.asList(Command.getUpdateCommandSymbol()), Arrays.asList(new TupleBatch(1, Arrays.asList(Arrays.asList(1))), BlockedException.INSTANCE, last));
+            plans[i] = new FakeProcessorPlan(Arrays.asList(Command.getUpdateCommandSymbol()), Arrays.asList(new TupleBatch(1, Arrays.asList(Arrays.asList(1))), BlockedException.INSTANCE, last));
         }
         BatchedUpdatePlan plan = new BatchedUpdatePlan(Arrays.asList(plans), plans.length*2, null, false);
         plan.initialize(new CommandContext(), null, null);
@@ -84,11 +84,11 @@ public class TestBatchedUpdatePlan {
             assertFalse(plans[i].isOpened());
         }
         for (int i = 0; i < 4; i++) {
-        	try {
-        		plan.nextBatch();
-        		fail();
-        	} catch (BlockedException e) {
-        	}
+            try {
+                plan.nextBatch();
+                fail();
+            } catch (BlockedException e) {
+            }
         }
         TupleBatch batch = plan.nextBatch();
         assertEquals(8, batch.getRowCount());

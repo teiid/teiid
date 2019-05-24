@@ -23,6 +23,6 @@ import org.teiid.events.EventDistributorFactory;
 
 public interface InternalEventDistributorFactory extends EventDistributorFactory {
 
-	EventDistributor getReplicatedEventDistributor();
+    EventDistributor getReplicatedEventDistributor();
 
 }

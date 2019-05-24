@@ -54,13 +54,13 @@ import org.teiid.net.socket.SocketServerConnection;
  * Teiid's Connection implementation.
  */
 public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
-	private static final int MAX_OPEN_STATEMENTS = PropertiesUtils.getHierarchicalProperty("org.teiid.maxOpenStatements", 1000, Integer.class); //$NON-NLS-1$
+    private static final int MAX_OPEN_STATEMENTS = PropertiesUtils.getHierarchicalProperty("org.teiid.maxOpenStatements", 1000, Integer.class); //$NON-NLS-1$
 
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
-	public static final int DEFAULT_ISOLATION = Connection.TRANSACTION_READ_COMMITTED;
+    public static final int DEFAULT_ISOLATION = Connection.TRANSACTION_READ_COMMITTED;
 
-	// constant value giving product name
+    // constant value giving product name
     private final static String SERVER_NAME = "Teiid Server"; //$NON-NLS-1$
     private final static String EMBEDDED_NAME = "Teiid Embedded"; //$NON-NLS-1$
 
@@ -108,100 +108,100 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     private int savedIsolationLevel;
 
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) {
-    	this.connectionProps = info;
-    	this.serverConn = serverConn;
+        this.connectionProps = info;
+        this.serverConn = serverConn;
         this.url = url;
         this.dqp = serverConn.getService(DQP.class);
 
         if (logger.isLoggable(Level.FINE)) {
-	        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
-	        logConnectionProperties(url, info);
+            logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
+            logConnectionProperties(url, info);
         }
 
         setExecutionProperties(info);
     }
 
     boolean isInLocalTxn() {
-		return inLocalTxn;
-	}
+        return inLocalTxn;
+    }
 
-	private void setExecutionProperties(Properties info) {
-		this.propInfo = new Properties();
+    private void setExecutionProperties(Properties info) {
+        this.propInfo = new Properties();
 
         String defaultFetchSize = info.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
         if (defaultFetchSize != null) {
-        	propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, defaultFetchSize);
+            propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, defaultFetchSize);
         } else {
-        	propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(BaseDataSource.DEFAULT_FETCH_SIZE));
+            propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, String.valueOf(BaseDataSource.DEFAULT_FETCH_SIZE));
         }
 
         String partialResultsMode = info.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE);
         if (partialResultsMode != null) {
-        	propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, partialResultsMode);
+            propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, partialResultsMode);
         } else {
-        	propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, BaseDataSource.DEFAULT_PARTIAL_RESULTS_MODE);
+            propInfo.put(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE, BaseDataSource.DEFAULT_PARTIAL_RESULTS_MODE);
         }
 
         String resultSetCacheMode = info.getProperty(ExecutionProperties.RESULT_SET_CACHE_MODE);
         if (resultSetCacheMode != null) {
-        	propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, resultSetCacheMode);
+            propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, resultSetCacheMode);
         } else {
-        	propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, BaseDataSource.DEFAULT_RESULT_SET_CACHE_MODE);
+            propInfo.put(ExecutionProperties.RESULT_SET_CACHE_MODE, BaseDataSource.DEFAULT_RESULT_SET_CACHE_MODE);
         }
 
         String ansiQuotes = info.getProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS);
         if (ansiQuotes != null) {
-        	propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, ansiQuotes);
+            propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, ansiQuotes);
         } else {
-        	propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
+            propInfo.put(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS, Boolean.TRUE.toString());
         }
 
         for (String key : info.stringPropertyNames()) {
-        	String actualKey = JDBCURL.EXECUTION_PROPERTIES.get(key);
-        	if (actualKey != null) {
-        		propInfo.setProperty(actualKey, info.getProperty(key));
-        	}
-		}
-	}
+            String actualKey = JDBCURL.EXECUTION_PROPERTIES.get(key);
+            if (actualKey != null) {
+                propInfo.setProperty(actualKey, info.getProperty(key));
+            }
+        }
+    }
 
     public Collection<Annotation> getAnnotations() {
-		return annotations;
-	}
+        return annotations;
+    }
 
     public void setAnnotations(Collection<Annotation> annotations) {
-		this.annotations = annotations;
-	}
+        this.annotations = annotations;
+    }
 
     public String getDebugLog() {
-		return debugLog;
-	}
+        return debugLog;
+    }
 
     public void setDebugLog(String debugLog) {
-		this.debugLog = debugLog;
-	}
+        this.debugLog = debugLog;
+    }
 
     public PlanNode getCurrentPlanDescription() {
-		return currentPlanDescription;
-	}
+        return currentPlanDescription;
+    }
 
     public void setCurrentPlanDescription(PlanNode currentPlanDescription) {
-		this.currentPlanDescription = currentPlanDescription;
-	}
+        this.currentPlanDescription = currentPlanDescription;
+    }
 
     protected Properties getExecutionProperties() {
         return this.propInfo;
     }
 
     public void setExecutionProperty(String key, String value) {
-    	JDBCURL.addNormalizedProperty(key, value, getExecutionProperties());
+        JDBCURL.addNormalizedProperty(key, value, getExecutionProperties());
     }
 
     public String getExecutionProperty(String key) {
-    	return this.getExecutionProperties().getProperty(JDBCURL.getValidKey(key));
+        return this.getExecutionProperties().getProperty(JDBCURL.getValidKey(key));
     }
 
     DQP getDQP() {
-    	return this.dqp;
+        return this.dqp;
     }
 
     /**
@@ -214,17 +214,17 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
         // If we have valid URL
         if (connUrl != null) {
-	        // We need wipe out the password here, before we write to the log
-	        int startIndex = connUrl.indexOf("password="); //$NON-NLS-1$
-	        if (startIndex != -1) {
-	            modifiedUrl.append(connUrl.substring(0, startIndex));
-	            modifiedUrl.append("password=***"); //$NON-NLS-1$
-	            int endIndex = connUrl.indexOf(";", startIndex+9); //$NON-NLS-1$
-	            if (endIndex != -1) {
-	                modifiedUrl.append(";").append(connUrl.substring(endIndex)); //$NON-NLS-1$
-	            }
-	        }
-	        logger.fine("Connection Url="+modifiedUrl); //$NON-NLS-1$
+            // We need wipe out the password here, before we write to the log
+            int startIndex = connUrl.indexOf("password="); //$NON-NLS-1$
+            if (startIndex != -1) {
+                modifiedUrl.append(connUrl.substring(0, startIndex));
+                modifiedUrl.append("password=***"); //$NON-NLS-1$
+                int endIndex = connUrl.indexOf(";", startIndex+9); //$NON-NLS-1$
+                if (endIndex != -1) {
+                    modifiedUrl.append(";").append(connUrl.substring(endIndex)); //$NON-NLS-1$
+                }
+            }
+            logger.fine("Connection Url="+modifiedUrl); //$NON-NLS-1$
         }
 
         // Now clone the properties object and remove password and trusted token
@@ -251,7 +251,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws SQLException
      */
     public String getConnectionId() {
-    	return this.serverConn.getLogonResult().getSessionID();
+        return this.serverConn.getLogonResult().getSessionID();
     }
 
     /**
@@ -277,23 +277,23 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public void close() throws SQLException {
-    	Throwable firstException = null;
+        Throwable firstException = null;
 
-    	if(closed) {
+        if(closed) {
             return;
         }
 
         try {
             // close any statements that were created on this connection
-        	try {
-        		closeStatements();
-        	} catch (SQLException se) {
-        		firstException = se;
-        	} finally {
-        		this.serverConn.close();
+            try {
+                closeStatements();
+            } catch (SQLException se) {
+                firstException = se;
+            } finally {
+                this.serverConn.close();
                 if ( firstException != null )
-                	throw (SQLException)firstException;
-        	}
+                    throw (SQLException)firstException;
+            }
         } catch (SQLException se) {
             throw TeiidSQLException.create(se, JDBCPlugin.Util.getString("MMConnection.Err_connection_close", se.getMessage())); //$NON-NLS-1$
         } finally {
@@ -320,9 +320,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         SQLException ex = null;
         for (StatementImpl statement : statementsSafe) {
             try {
-            	statement.close();
+                statement.close();
             } catch (SQLException e) {
-            	ex = e;
+                ex = e;
             }
         }
         if (ex != null) {
@@ -358,27 +358,27 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     private void directCommit() throws SQLException {
-    	if (inLocalTxn) {
-	        try {
-				ResultsFuture<?> future = this.dqp.commit();
-				future.get();
-			} catch (Exception e) {
-				throw TeiidSQLException.create(e);
-			}
-	        logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
-    	}
+        if (inLocalTxn) {
+            try {
+                ResultsFuture<?> future = this.dqp.commit();
+                future.get();
+            } catch (Exception e) {
+                throw TeiidSQLException.create(e);
+            }
+            logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
+        }
     }
 
     void beginLocalTxnIfNeeded() throws SQLException {
         if (this.transactionXid != null || inLocalTxn || this.autoCommitFlag || isDisableLocalTxn()) {
-        	return;
+            return;
         }
         try {
-        	try {
-        		this.dqp.begin();
-    		} catch (XATransactionException e) {
-    			throw TeiidSQLException.create(e);
-    		}
+            try {
+                this.dqp.begin();
+            } catch (XATransactionException e) {
+                throw TeiidSQLException.create(e);
+            }
             inLocalTxn = true;
         } finally {
             if (!inLocalTxn) {
@@ -387,10 +387,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         }
     }
 
-	private boolean isDisableLocalTxn() {
-		String prop = this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS);
+    private boolean isDisableLocalTxn() {
+        String prop = this.propInfo.getProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS);
         return prop != null && Boolean.valueOf(prop);
-	}
+    }
 
     public StatementImpl createStatement() throws SQLException {
         return createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
@@ -404,7 +404,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return Statement object.
      */
     public StatementImpl createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-    	return createStatement(resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        return createStatement(resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     /**
@@ -469,7 +469,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws SQLException
      */
     public int getVDBVersion() throws SQLException {
-    	checkConnection();
+        checkConnection();
         return this.serverConn.getLogonResult().getVdbVersion();
     }
 
@@ -499,10 +499,10 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return String name of the database
      */
     public String getDatabaseName() {
-    	if (this.serverConn instanceof SocketServerConnection) {
-    		return SERVER_NAME;
-    	}
-    	return EMBEDDED_NAME;
+        if (this.serverConn instanceof SocketServerConnection) {
+            return SERVER_NAME;
+        }
+        return EMBEDDED_NAME;
     }
 
     /**
@@ -516,12 +516,12 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public int getTransactionIsolation() throws SQLException {
-    	return this.transactionIsolation;
+        return this.transactionIsolation;
     }
 
     @Override
     public Map<String, Class<?>> getTypeMap() throws SQLException {
-    	return Collections.emptyMap();
+        return Collections.emptyMap();
     }
 
     /**
@@ -546,8 +546,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public boolean isReadOnly() throws SQLException {
-    	checkConnection();
-    	return readOnly;
+        checkConnection();
+        return readOnly;
     }
 
     public String nativeSQL(String sql) throws SQLException {
@@ -565,8 +565,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws SQLException if there is an error creating the callable statement object
      */
     public CallableStatementImpl prepareCall(String sql) throws SQLException {
-    	//there is a problem setting the result set type to be non-scrollable
-    	//See defect 17768
+        //there is a problem setting the result set type to be non-scrollable
+        //See defect 17768
         return prepareCall(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
     }
 
@@ -581,7 +581,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return CallableStatement object that can be used to execute the storedProcedure
      */
     public CallableStatementImpl prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-    	return prepareCall(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        return prepareCall(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     /**
@@ -601,7 +601,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-    	return prepareStatement(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+        return prepareStatement(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
@@ -620,9 +620,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         return newStatement;
     }
 
-	public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-	        int resultSetHoldability ) throws SQLException {
-		return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, Statement.NO_GENERATED_KEYS);
+    public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
+            int resultSetHoldability ) throws SQLException {
+        return prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability, Statement.NO_GENERATED_KEYS);
     }
 
     public void rollback() throws SQLException {
@@ -639,20 +639,20 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         //Check to see the connection is open
         checkConnection();
         if (!autoCommitFlag) {
-        	if (this.transactionXid != null) {
+            if (this.transactionXid != null) {
                 throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.In_XA_Transaction"));//$NON-NLS-1$
             }
             try {
-            	if (this.inLocalTxn) {
-            		this.inLocalTxn = false;
-	            	try {
-	            		ResultsFuture<?> future = this.dqp.rollback();
-	            		future.get();
-	        		} catch (Exception e) {
-	        			throw TeiidSQLException.create(e);
-	        		}
-	                logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
-            	}
+                if (this.inLocalTxn) {
+                    this.inLocalTxn = false;
+                    try {
+                        ResultsFuture<?> future = this.dqp.rollback();
+                        future.get();
+                    } catch (Exception e) {
+                        throw TeiidSQLException.create(e);
+                    }
+                    logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
+                }
             } finally {
                 restoreTransactionCharacteristics();
                 if (startTxn) {
@@ -665,8 +665,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         }
     }
 
-	public ResultsFuture<?> submitSetAutoCommitTrue(boolean commit) throws SQLException {
-    	//Check to see the connection is open
+    public ResultsFuture<?> submitSetAutoCommitTrue(boolean commit) throws SQLException {
+        //Check to see the connection is open
         checkConnection();
 
         if (this.autoCommitFlag) {
@@ -676,16 +676,16 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         this.autoCommitFlag = true;
 
         if (isDisableLocalTxn()) {
-        	return ResultsFuture.NULL_FUTURE;
+            return ResultsFuture.NULL_FUTURE;
         }
 
         try {
-	        if (commit) {
-	        	return dqp.commit();
-	        }
-	        return dqp.rollback();
+            if (commit) {
+                return dqp.commit();
+            }
+            return dqp.rollback();
         } catch (XATransactionException e) {
-        	throw TeiidSQLException.create(e);
+            throw TeiidSQLException.create(e);
         }
     }
 
@@ -706,7 +706,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         if (autoCommit) {
             directCommit();
         } else {
-        	inLocalTxn = false;
+            inLocalTxn = false;
         }
     }
 
@@ -725,7 +725,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @throws throws SQLException.
      */
     public void setReadOnly(boolean readOnly) throws SQLException {
-    	checkConnection();
+        checkConnection();
         // During transaction do not allow to change this flag
         if (isInLocalTxn() || this.transactionXid != null) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_During_Transaction", "setReadOnly(" + readOnly + ")"));//$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
@@ -750,53 +750,53 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         transactionXid = null;
         this.autoCommitFlag = true;
         try {
-        	ResultsFuture<?> future = this.dqp.commit(arg0, arg1);
-        	future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<?> future = this.dqp.commit(arg0, arg1);
+            future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected void endTransaction(XidImpl arg0, int arg1) throws SQLException {
         checkConnection();
         this.autoCommitFlag = true;
         try {
-        	ResultsFuture<?> future = this.dqp.end(arg0, arg1);
-        	future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<?> future = this.dqp.end(arg0, arg1);
+            future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected void forgetTransaction(XidImpl arg0) throws SQLException {
         checkConnection();
         try {
-        	ResultsFuture<?> future = this.dqp.forget(arg0);
-        	future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<?> future = this.dqp.forget(arg0);
+            future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected int prepareTransaction(XidImpl arg0) throws SQLException  {
         checkConnection();
         transactionXid = null;
         try {
-        	ResultsFuture<Integer> future = this.dqp.prepare(arg0);
-        	return future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<Integer> future = this.dqp.prepare(arg0);
+            return future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected Xid[] recoverTransaction(int arg0) throws SQLException  {
         checkConnection();
         try {
-			ResultsFuture<Xid[]> future = this.dqp.recover(arg0);
-			return future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<Xid[]> future = this.dqp.recover(arg0);
+            return future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected void rollbackTransaction(XidImpl arg0) throws SQLException {
@@ -804,21 +804,21 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         transactionXid = null;
         this.autoCommitFlag = true;
         try {
-        	ResultsFuture<?> future = this.dqp.rollback(arg0);
-        	future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<?> future = this.dqp.rollback(arg0);
+            future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected void startTransaction(XidImpl arg0, int arg1, int timeout) throws SQLException {
         checkConnection();
         try {
-        	ResultsFuture<?> future = this.dqp.start(arg0, arg1, timeout);
-        	future.get();
-		} catch (Exception e) {
-			throw TeiidSQLException.create(e);
-		}
+            ResultsFuture<?> future = this.dqp.start(arg0, arg1, timeout);
+            future.get();
+        } catch (Exception e) {
+            throw TeiidSQLException.create(e);
+        }
         transactionXid = arg0;
         this.autoCommitFlag = false;
     }
@@ -827,15 +827,15 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         return transactionXid;
     }
 
-	public boolean isValid(int timeout) throws SQLException {
-		return this.getServerConnection().isOpen(timeout * 1000);
-	}
+    public boolean isValid(int timeout) throws SQLException {
+        return this.getServerConnection().isOpen(timeout * 1000);
+    }
 
-	public void recycleConnection() {
-		this.payload = null;
+    public void recycleConnection() {
+        this.payload = null;
         try {
-        	//close all open statements
-        	this.closeStatements();
+            //close all open statements
+            this.closeStatements();
         } catch (SQLException e) {
             logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
         }
@@ -847,58 +847,58 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
                 if (this.getTransactionXid() == null) {
                     this.rollback(false);
                 } else {
-                	this.rollbackTransaction(getTransactionXid());
+                    this.rollbackTransaction(getTransactionXid());
                 }
             }
         } catch (SQLException e) {
-        	logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
+            logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
         }
-	}
+    }
 
-	public boolean isSameProcess(ConnectionImpl conn) throws CommunicationException {
-		return this.serverConn.isSameInstance(conn.serverConn);
-	}
+    public boolean isSameProcess(ConnectionImpl conn) throws CommunicationException {
+        return this.serverConn.isSameInstance(conn.serverConn);
+    }
 
-	public void setClientInfo(Properties properties)
-		throws SQLClientInfoException {
-	}
+    public void setClientInfo(Properties properties)
+        throws SQLClientInfoException {
+    }
 
-	public void setClientInfo(String name, String value)
-		throws SQLClientInfoException {
-	}
+    public void setClientInfo(String name, String value)
+        throws SQLClientInfoException {
+    }
 
-	public Properties getClientInfo() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Properties getClientInfo() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public String getClientInfo(String name) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public String getClientInfo(String name) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public Array createArrayOf(String typeName, Object[] elements)
-			throws SQLException {
-		return new ArrayImpl(elements);
-	}
+    public Array createArrayOf(String typeName, Object[] elements)
+            throws SQLException {
+        return new ArrayImpl(elements);
+    }
 
-	public Blob createBlob() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Blob createBlob() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public Clob createClob() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Clob createClob() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public NClob createNClob() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public NClob createNClob() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public SQLXML createSQLXML() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public SQLXML createSQLXML() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public StatementImpl createStatement(int resultSetType,
-			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
+    public StatementImpl createStatement(int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         //Check to see the connection is open
         checkConnection();
 
@@ -911,24 +911,24 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         addStatement(newStatement);
 
         return newStatement;
-	}
+    }
 
-	private void addStatement(StatementImpl newStatement) throws SQLException {
-		if (statements.size() >= MAX_OPEN_STATEMENTS) {
-			this.close();
-			throw new TeiidSQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20036, MAX_OPEN_STATEMENTS));
-		}
-		statements.add(newStatement);
-	}
+    private void addStatement(StatementImpl newStatement) throws SQLException {
+        if (statements.size() >= MAX_OPEN_STATEMENTS) {
+            this.close();
+            throw new TeiidSQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20036, MAX_OPEN_STATEMENTS));
+        }
+        statements.add(newStatement);
+    }
 
-	public Struct createStruct(String typeName, Object[] attributes)
-			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Struct createStruct(String typeName, Object[] attributes)
+            throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public CallableStatementImpl prepareCall(String sql, int resultSetType,
-			int resultSetConcurrency, int resultSetHoldability)
-			throws SQLException {
+    public CallableStatementImpl prepareCall(String sql, int resultSetType,
+            int resultSetConcurrency, int resultSetHoldability)
+            throws SQLException {
         //Check to see the connection is open
         checkConnection();
 
@@ -941,145 +941,145 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         CallableStatementImpl newStatement = new CallableStatementImpl(this, sql, resultSetType, resultSetConcurrency);
         addStatement(newStatement);
         return newStatement;
-	}
+    }
 
-	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
-			throws SQLException {
-		return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
-	}
+    public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
+            throws SQLException {
+        return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
+    }
 
-	public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
-			throws SQLException {
-		return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
-	}
+    public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
+            throws SQLException {
+        return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
+    }
 
-	public PreparedStatement prepareStatement(String sql, String[] columnNames)
-			throws SQLException {
-		return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
-	}
+    public PreparedStatement prepareStatement(String sql, String[] columnNames)
+            throws SQLException {
+        return prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT, Statement.RETURN_GENERATED_KEYS);
+    }
 
-	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public void rollback(Savepoint savepoint) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public void rollback(Savepoint savepoint) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public void setHoldability(int holdability) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public void setHoldability(int holdability) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public Savepoint setSavepoint() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Savepoint setSavepoint() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public Savepoint setSavepoint(String name) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Savepoint setSavepoint(String name) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public void setTransactionIsolation(int level) throws SQLException {
-		this.transactionIsolation = level;
-	}
+    public void setTransactionIsolation(int level) throws SQLException {
+        this.transactionIsolation = level;
+    }
 
-	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	Object setPassword(Object newPassword) {
-		if (newPassword != null) {
-			return this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, newPassword);
-		}
-		return this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
-	}
+    Object setPassword(Object newPassword) {
+        if (newPassword != null) {
+            return this.connectionProps.put(TeiidURL.CONNECTION.PASSWORD, newPassword);
+        }
+        return this.connectionProps.remove(TeiidURL.CONNECTION.PASSWORD);
+    }
 
-	String getPassword() {
-		Object result = this.connectionProps.get(TeiidURL.CONNECTION.PASSWORD);
-		if (result == null) {
-			return null;
-		}
-		return result.toString();
-	}
+    String getPassword() {
+        Object result = this.connectionProps.get(TeiidURL.CONNECTION.PASSWORD);
+        if (result == null) {
+            return null;
+        }
+        return result.toString();
+    }
 
-	@Override
-	public void changeUser(String userName, String newPassword)
-			throws SQLException {
-		//TODO: recycleConnection();
-		Object oldName = null;
-		Object oldPassword = null;
-		if (userName != null) {
-			oldName = this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, userName);
-		} else {
-			oldName = this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
-		}
-		oldPassword = setPassword(newPassword);
-		boolean success = false;
-		try {
-			this.serverConn.authenticate();
-			success = true;
-		} catch (ConnectionException e) {
-			throw TeiidSQLException.create(e);
-		} catch (CommunicationException e) {
-			throw TeiidSQLException.create(e);
-		} finally {
-			if (!success) {
-				if (oldName != null) {
-					this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, oldName);
-				} else {
-					this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
-				}
-				setPassword(oldPassword);
-			}
-		}
-	}
+    @Override
+    public void changeUser(String userName, String newPassword)
+            throws SQLException {
+        //TODO: recycleConnection();
+        Object oldName = null;
+        Object oldPassword = null;
+        if (userName != null) {
+            oldName = this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, userName);
+        } else {
+            oldName = this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
+        }
+        oldPassword = setPassword(newPassword);
+        boolean success = false;
+        try {
+            this.serverConn.authenticate();
+            success = true;
+        } catch (ConnectionException e) {
+            throw TeiidSQLException.create(e);
+        } catch (CommunicationException e) {
+            throw TeiidSQLException.create(e);
+        } finally {
+            if (!success) {
+                if (oldName != null) {
+                    this.connectionProps.put(TeiidURL.CONNECTION.USER_NAME, oldName);
+                } else {
+                    this.connectionProps.remove(TeiidURL.CONNECTION.USER_NAME);
+                }
+                setPassword(oldPassword);
+            }
+        }
+    }
 
-	public void abort(Executor executor) throws SQLException {
-		if (closed) {
-			return;
-		}
-		//TODO: ensure that threads are released.  In theory they will be since close effectively cancels current executions
-		close();
-	}
+    public void abort(Executor executor) throws SQLException {
+        if (closed) {
+            return;
+        }
+        //TODO: ensure that threads are released.  In theory they will be since close effectively cancels current executions
+        close();
+    }
 
-	public int getNetworkTimeout() throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public int getNetworkTimeout() throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public String getSchema() throws SQLException {
-		return null;
-	}
+    public String getSchema() throws SQLException {
+        return null;
+    }
 
-	/**
-	 * @see query timeouts and the synchronousTtl setting if using socket connections
-	 */
-	public void setNetworkTimeout(Executor executor, int milliseconds)
-			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see query timeouts and the synchronousTtl setting if using socket connections
+     */
+    public void setNetworkTimeout(Executor executor, int milliseconds)
+            throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public void setSchema(String schema) throws SQLException {
+    public void setSchema(String schema) throws SQLException {
 
-	}
+    }
 
-	public Properties getPayload() {
-		return payload;
-	}
+    public Properties getPayload() {
+        return payload;
+    }
 
-	public void setPayload(Properties payload) {
-		this.payload = payload;
-	}
+    public void setPayload(Properties payload) {
+        this.payload = payload;
+    }
 
-	public Properties getConnectionProps() {
-		return connectionProps;
-	}
+    public Properties getConnectionProps() {
+        return connectionProps;
+    }
 
-	void setTransactionXid(XidImpl transactionXid) {
-		this.transactionXid = transactionXid;
-	}
+    void setTransactionXid(XidImpl transactionXid) {
+        this.transactionXid = transactionXid;
+    }
 
-	public void setInLocalTxn(boolean inLocalTxn) {
-		this.inLocalTxn = inLocalTxn;
-	}
+    public void setInLocalTxn(boolean inLocalTxn) {
+        this.inLocalTxn = inLocalTxn;
+    }
 
     public void saveTransactionCharacteristics() {
         this.savedReadOnly = this.readOnly;

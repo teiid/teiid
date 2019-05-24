@@ -49,11 +49,11 @@ public class DelegatingHierarchyVisitor extends HierarchyVisitor {
 
     @Override
     public void visitNode(LanguageObject obj) {
-    	if (obj == null) {
-    		return;
-    	}
-    	if (preVisitor != null) {
-    		obj.acceptVisitor(preVisitor);
+        if (obj == null) {
+            return;
+        }
+        if (preVisitor != null) {
+            obj.acceptVisitor(preVisitor);
         }
         super.visitNode(obj);
         if (postVisitor != null) {

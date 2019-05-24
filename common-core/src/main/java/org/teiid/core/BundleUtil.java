@@ -40,7 +40,7 @@ public class BundleUtil {
     protected final String pluginId;
 
     public interface Event {
-    	//String id();
+        //String id();
     }
 
     /**
@@ -48,22 +48,22 @@ public class BundleUtil {
      * @param clazz
      */
     public static BundleUtil getBundleUtil(Class<?> clazz) {
-    	String packageName = clazz.getPackage().getName();
+        String packageName = clazz.getPackage().getName();
 
-    	while (true) {
-    		//scan up packages until found
-    		String bundleName = packageName + ".i18n"; //$NON-NLS-1$
-    		try {
-    			ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
-    			return new BundleUtil(packageName, bundleName, bundle);
-    		} catch (MissingResourceException e) {
-    			int index = packageName.lastIndexOf('.');
-    			if (index < 0) {
-    				throw e;
-    			}
-    			packageName = packageName.substring(0, index);
-    		}
-    	}
+        while (true) {
+            //scan up packages until found
+            String bundleName = packageName + ".i18n"; //$NON-NLS-1$
+            try {
+                ResourceBundle bundle = ResourceBundle.getBundle(bundleName, Locale.getDefault(), clazz.getClassLoader());
+                return new BundleUtil(packageName, bundleName, bundle);
+            } catch (MissingResourceException e) {
+                int index = packageName.lastIndexOf('.');
+                if (index < 0) {
+                    throw e;
+                }
+                packageName = packageName.substring(0, index);
+            }
+        }
     }
 
     /**
@@ -79,7 +79,7 @@ public class BundleUtil {
     public BundleUtil(final String pluginId,
                           final String bundleName,
                           final ResourceBundle bundle) {
-    	this.pluginId = pluginId;
+        this.pluginId = pluginId;
         this.bundleName = bundleName;
         this.bundle = bundle;
     }
@@ -182,7 +182,7 @@ public class BundleUtil {
      */
     public String getString(final String key,
                             final Object... parameters) {
-    	String text = getString(key);
+        String text = getString(key);
 
         // Check the trivial cases ...
         if (text == null) {
@@ -195,17 +195,17 @@ public class BundleUtil {
         return MessageFormat.format(text, parameters);
     }
 
-	public String gs(final String key, final Object... parameters) {
-		return getString(key, parameters);
-	}
+    public String gs(final String key, final Object... parameters) {
+        return getString(key, parameters);
+    }
 
-	public String gs(final Event key, final Object... parameters) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(key);
-		sb.append(" "); //$NON-NLS-1$
-		sb.append(getString(key.toString(), parameters));
-		return sb.toString();
-	}
+    public String gs(final Event key, final Object... parameters) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(key);
+        sb.append(" "); //$NON-NLS-1$
+        sb.append(getString(key.toString(), parameters));
+        return sb.toString();
+    }
 
     public String getStringOrKey(final String key) {
         ArgCheck.isNotNull(key);

@@ -45,7 +45,7 @@ public class TestGroup extends TestCase {
     }
 
     private static String getTestVDBName() {
-    	return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
     }
 
     public static TranslationUtility createTranslationUtility(String vdbName) {

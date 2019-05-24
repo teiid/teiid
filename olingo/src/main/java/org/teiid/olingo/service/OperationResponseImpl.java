@@ -114,12 +114,12 @@ public class OperationResponseImpl implements OperationResponse {
     @Override
     public void setReturnValue(Object returnValue) throws SQLException {
         try {
-			EdmReturnType returnType = this.procedureReturn.getReturnType();
+            EdmReturnType returnType = this.procedureReturn.getReturnType();
             this.returnValue = EntityCollectionResponse.buildPropery("return", //$NON-NLS-1$
                     (SingletonPrimitiveType) returnType.getType(), returnType.getPrecision(), returnType.getScale(),
                     returnType.isCollection(), returnValue);
-		} catch (TeiidProcessingException e) {
-		    throw new SQLException(e);
+        } catch (TeiidProcessingException e) {
+            throw new SQLException(e);
         } catch (IOException e) {
             throw new SQLException(e);
         }

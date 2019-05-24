@@ -78,11 +78,11 @@ public class ParseException extends Exception {
   public String[] tokenImage;
 
   @Override
-	public String getMessage() {
-	  	if (super.getMessage() == null && currentToken != null && expectedTokenSequences != null) {
-			return "Encountered Parse Error at line " + currentToken.beginLine + ", column " + currentToken.beginColumn;
-		}
-		return super.getMessage();
-	}
+    public String getMessage() {
+          if (super.getMessage() == null && currentToken != null && expectedTokenSequences != null) {
+            return "Encountered Parse Error at line " + currentToken.beginLine + ", column " + currentToken.beginColumn;
+        }
+        return super.getMessage();
+    }
 
 }

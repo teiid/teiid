@@ -32,12 +32,12 @@ import org.teiid.translator.jdbc.JDBCMetadataProcessor;
  */
 public class ModeShapeJDBCMetdataProcessor extends JDBCMetadataProcessor {
 
-	public ModeShapeJDBCMetdataProcessor() {
-		setWidenUnsignedTypes(false);
-		setUseQualifiedName(false);
-		setUseCatalogName(false);
-		setImportForeignKeys(false);
-		setColumnNamePattern("%"); //$NON-NLS-1$
-	}
+    public ModeShapeJDBCMetdataProcessor() {
+        setWidenUnsignedTypes(false);
+        setUseQualifiedName(false);
+        setUseCatalogName(false);
+        setImportForeignKeys(false);
+        setColumnNamePattern("%"); //$NON-NLS-1$
+    }
 
 }

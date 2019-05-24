@@ -62,7 +62,7 @@ import org.teiid.util.Version;
 @Translator(name="sqlserver", description="A translator for Microsoft SQL Server Database")
 public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 
-	final class SQLServerMetadataProcessor
+    final class SQLServerMetadataProcessor
             extends JDBCMetadataProcessor {
         Pattern PROCEDURE_PATTERN = Pattern.compile("(.*);\\d*"); //$NON-NLS-1$
 
@@ -127,182 +127,182 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
 
     public static final String V_2000 = "2000"; //$NON-NLS-1$
-	public static final String V_2005 = "2005"; //$NON-NLS-1$
-	public static final String V_2008 = "2008"; //$NON-NLS-1$
-	public static final String V_2012 = "2012"; //$NON-NLS-1$
+    public static final String V_2005 = "2005"; //$NON-NLS-1$
+    public static final String V_2008 = "2008"; //$NON-NLS-1$
+    public static final String V_2012 = "2012"; //$NON-NLS-1$
 
-	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
-	public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
-	public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
-	public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
+    public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
+    public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
+    public static final Version TEN_0 = Version.getVersion("10.0"); //$NON-NLS-1$
+    public static final Version ELEVEN_0 = Version.getVersion("11.0"); //$NON-NLS-1$
 
 
-	//TEIID-31 remove mod modifier for SQL Server 2008
-	public SQLServerExecutionFactory() {
-	    setSupportsFullOuterJoins(true);
-		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentInPredicates(2);
-	}
+    //TEIID-31 remove mod modifier for SQL Server 2008
+    public SQLServerExecutionFactory() {
+        setSupportsFullOuterJoins(true);
+        setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
+        setMaxDependentInPredicates(2);
+    }
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		registerFunctionModifier(SourceSystemFunctions.WEEK, new FunctionModifier() {
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("CHARINDEX")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.MD5, new TemplateFunctionModifier("HASHBYTES('MD5', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
-		registerFunctionModifier(SourceSystemFunctions.SHA1, new TemplateFunctionModifier("HASHBYTES('SHA1', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
-		registerFunctionModifier(SourceSystemFunctions.SHA2_256, new TemplateFunctionModifier("HASHBYTES('SHA2_256', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
-		registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperLowerFunctionModifier("lower")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
-	}
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("DATEPART(ISO_WEEK, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("CHARINDEX")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.MD5, new TemplateFunctionModifier("HASHBYTES('MD5', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.SHA1, new TemplateFunctionModifier("HASHBYTES('SHA1', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.SHA2_256, new TemplateFunctionModifier("HASHBYTES('SHA2_256', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.SHA2_512, new TemplateFunctionModifier("HASHBYTES('SHA2_512', ", 0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new UpperLowerFunctionModifier("upper")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new UpperLowerFunctionModifier("lower")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("unicode")); //$NON-NLS-1$
+    }
 
-	@Override
-	public void initCapabilities(Connection connection)
-			throws TranslatorException {
-		super.initCapabilities(connection);
-		if (getVersion().compareTo(TEN_0) >= 0) {
-		    //date support
-			convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-			formatMap.put("yyyy-MM-dd", "DATE"); //$NON-NLS-1$ //$NON-NLS-2$
-			convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
-				@Override
-				public List<?> translate(Function function) {
-					List<Object> result = new ArrayList<Object>();
-					result.add("cast("); //$NON-NLS-1$
-					result.add(function.getParameters().get(0));
-					result.add(" AS DATE)"); //$NON-NLS-1$
-					return result;
-				}
-			});
-			//timestamp/datetime2
-			convertModifier.addTypeMapping("datetime2", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-			registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME2, ", formatMap)); //$NON-NLS-1$
-		}
-	}
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        super.initCapabilities(connection);
+        if (getVersion().compareTo(TEN_0) >= 0) {
+            //date support
+            convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+            formatMap.put("yyyy-MM-dd", "DATE"); //$NON-NLS-1$ //$NON-NLS-2$
+            convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
+                @Override
+                public List<?> translate(Function function) {
+                    List<Object> result = new ArrayList<Object>();
+                    result.add("cast("); //$NON-NLS-1$
+                    result.add(function.getParameters().get(0));
+                    result.add(" AS DATE)"); //$NON-NLS-1$
+                    return result;
+                }
+            });
+            //timestamp/datetime2
+            convertModifier.addTypeMapping("datetime2", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+            registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new SybaseFormatFunctionModifier("CONVERT(DATETIME2, ", formatMap)); //$NON-NLS-1$
+        }
+    }
 
-	@Override
-	protected void populateDateFormats() {
-		formatMap.put("MM/dd/yy", 1); //$NON-NLS-1$
-		formatMap.put("yy.MM.dd", 2); //$NON-NLS-1$
-		formatMap.put("dd/MM/yy", 3); //$NON-NLS-1$
-		formatMap.put("dd.MM.yy", 4); //$NON-NLS-1$
-		formatMap.put("dd-MM-yy", 5); //$NON-NLS-1$
-		formatMap.put("dd MMM yy", 6); //$NON-NLS-1$
-		formatMap.put("MMM dd, yy", 7); //$NON-NLS-1$
-		formatMap.put("MM-dd-yy", 10); //$NON-NLS-1$
-		formatMap.put("yy/MM/dd", 11); //$NON-NLS-1$
-		formatMap.put("yyMMdd", 12); //$NON-NLS-1$
-		for (Map.Entry<String, Object> entry : new HashSet<Map.Entry<String, Object>>(formatMap.entrySet())) {
-			formatMap.put(entry.getKey().replace("yy", "yyyy"), (Integer)entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
-		}
+    @Override
+    protected void populateDateFormats() {
+        formatMap.put("MM/dd/yy", 1); //$NON-NLS-1$
+        formatMap.put("yy.MM.dd", 2); //$NON-NLS-1$
+        formatMap.put("dd/MM/yy", 3); //$NON-NLS-1$
+        formatMap.put("dd.MM.yy", 4); //$NON-NLS-1$
+        formatMap.put("dd-MM-yy", 5); //$NON-NLS-1$
+        formatMap.put("dd MMM yy", 6); //$NON-NLS-1$
+        formatMap.put("MMM dd, yy", 7); //$NON-NLS-1$
+        formatMap.put("MM-dd-yy", 10); //$NON-NLS-1$
+        formatMap.put("yy/MM/dd", 11); //$NON-NLS-1$
+        formatMap.put("yyMMdd", 12); //$NON-NLS-1$
+        for (Map.Entry<String, Object> entry : new HashSet<Map.Entry<String, Object>>(formatMap.entrySet())) {
+            formatMap.put(entry.getKey().replace("yy", "yyyy"), (Integer)entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
-		formatMap.put("MMM d yyyy hh:mma", 100); //$NON-NLS-1$
-		formatMap.put("HH:mm:ss", 8); //$NON-NLS-1$
-		formatMap.put("MMM d yyyy hh:mm:ss:SSSa", 109); //$NON-NLS-1$
-		formatMap.put("dd MMM yyyy HH:mm:ss:SSS", 113); //$NON-NLS-1$
-		formatMap.put("kk:MM:ss:SSS", 14); //$NON-NLS-1$
-		formatMap.put("yyyy-MM-dd HH:mm:ss", 120); //$NON-NLS-1$
-		formatMap.put("yyyy-MM-dd HH:mm:ss.SSS", 121); //$NON-NLS-1$
-		formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS", 126); //$NON-NLS-1$
-		//formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", 127); //$NON-NLS-1$
-	}
+        formatMap.put("MMM d yyyy hh:mma", 100); //$NON-NLS-1$
+        formatMap.put("HH:mm:ss", 8); //$NON-NLS-1$
+        formatMap.put("MMM d yyyy hh:mm:ss:SSSa", 109); //$NON-NLS-1$
+        formatMap.put("dd MMM yyyy HH:mm:ss:SSS", 113); //$NON-NLS-1$
+        formatMap.put("kk:MM:ss:SSS", 14); //$NON-NLS-1$
+        formatMap.put("yyyy-MM-dd HH:mm:ss", 120); //$NON-NLS-1$
+        formatMap.put("yyyy-MM-dd HH:mm:ss.SSS", 121); //$NON-NLS-1$
+        formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS", 126); //$NON-NLS-1$
+        //formatMap.put("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", 127); //$NON-NLS-1$
+    }
 
-	@Override
-	protected List<Object> convertDateToString(Function function) {
-		if (getVersion().compareTo(TEN_0) >= 0) {
-			return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Override
+    protected List<Object> convertDateToString(Function function) {
+        if (getVersion().compareTo(TEN_0) >= 0) {
+            return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	@Override
-	protected List<?> convertTimestampToString(Function function) {
-		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 21)"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Override
+    protected List<?> convertTimestampToString(Function function) {
+        return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 21)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof ColumnReference) {
-    		ColumnReference elem = (ColumnReference)obj;
-			if (getVersion().compareTo(SEVEN_0) <= 0
-			        && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
-				return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-    	} else if (obj instanceof AggregateFunction) {
-    		AggregateFunction af = (AggregateFunction)obj;
-    		if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
-    			af.setName("STDDEVP"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
-    			af.setName("STDDEV"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.VAR_POP)) {
-    			af.setName("VARP"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
-    			af.setName("VAR"); //$NON-NLS-1$
-    		}
-    	} else if (obj instanceof WithItem) {
-    		WithItem withItem = (WithItem)obj;
-    		//unlike normal unions, recursive cte require additional type handling
-    		if (withItem.isRecusive()) {
-    			List<DerivedColumn> derivedColumns = withItem.getSubquery().getProjectedQuery().getDerivedColumns();
-    			List<DerivedColumn> derivedColumnsRecurse = ((SetQuery)withItem.getSubquery()).getRightQuery().getProjectedQuery().getDerivedColumns();
-    			for (int i = 0; i < derivedColumns.size(); i++) {
-    				String nativeType = null;
-    				boolean castLeft = true;
-    				boolean castRight = true;
-    				DerivedColumn dc = derivedColumns.get(i);
-    				if (dc.getExpression() instanceof ColumnReference) {
-    					Column c = ((ColumnReference)dc.getExpression()).getMetadataObject();
-						if (c != null && c.getNativeType() != null) {
-    						nativeType = c.getNativeType();
-    						castLeft = false;
-						}
-    				}
-    				DerivedColumn dcR = derivedColumnsRecurse.get(i);
-    				if (dcR.getExpression() instanceof ColumnReference) {
-    					Column c = ((ColumnReference)dcR.getExpression()).getMetadataObject();
-						if (c != null) {
-	    					if (nativeType == null) {
-	    						if (c.getNativeType() != null) {
-		    						nativeType = c.getNativeType();
-		    						castRight = false;
-	    						}
-	    					} else {
-	    						if (nativeType.equals(c.getNativeType())) {
-	    							continue; //it matches
-	    						}
-	    						//we won't gracefully handle this case, we'll just assume the first type
-	    					}
-						}
-    				}
-    				if (castLeft) {
-    					addCast(nativeType, dc);
-    				}
-    				if (castRight) {
-    					addCast(nativeType, dcR);
-    				}
-    			}
-    		}
-    	}
-    	return super.translate(obj, context);
+        if (obj instanceof ColumnReference) {
+            ColumnReference elem = (ColumnReference)obj;
+            if (getVersion().compareTo(SEVEN_0) <= 0
+                    && TypeFacility.RUNTIME_TYPES.STRING.equals(elem.getType()) && elem.getMetadataObject() != null && "uniqueidentifier".equalsIgnoreCase(elem.getMetadataObject().getNativeType())) { //$NON-NLS-1$
+                return Arrays.asList("cast(", elem, " as char(36))"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        } else if (obj instanceof AggregateFunction) {
+            AggregateFunction af = (AggregateFunction)obj;
+            if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
+                af.setName("STDDEVP"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
+                af.setName("STDDEV"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.VAR_POP)) {
+                af.setName("VARP"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
+                af.setName("VAR"); //$NON-NLS-1$
+            }
+        } else if (obj instanceof WithItem) {
+            WithItem withItem = (WithItem)obj;
+            //unlike normal unions, recursive cte require additional type handling
+            if (withItem.isRecusive()) {
+                List<DerivedColumn> derivedColumns = withItem.getSubquery().getProjectedQuery().getDerivedColumns();
+                List<DerivedColumn> derivedColumnsRecurse = ((SetQuery)withItem.getSubquery()).getRightQuery().getProjectedQuery().getDerivedColumns();
+                for (int i = 0; i < derivedColumns.size(); i++) {
+                    String nativeType = null;
+                    boolean castLeft = true;
+                    boolean castRight = true;
+                    DerivedColumn dc = derivedColumns.get(i);
+                    if (dc.getExpression() instanceof ColumnReference) {
+                        Column c = ((ColumnReference)dc.getExpression()).getMetadataObject();
+                        if (c != null && c.getNativeType() != null) {
+                            nativeType = c.getNativeType();
+                            castLeft = false;
+                        }
+                    }
+                    DerivedColumn dcR = derivedColumnsRecurse.get(i);
+                    if (dcR.getExpression() instanceof ColumnReference) {
+                        Column c = ((ColumnReference)dcR.getExpression()).getMetadataObject();
+                        if (c != null) {
+                            if (nativeType == null) {
+                                if (c.getNativeType() != null) {
+                                    nativeType = c.getNativeType();
+                                    castRight = false;
+                                }
+                            } else {
+                                if (nativeType.equals(c.getNativeType())) {
+                                    continue; //it matches
+                                }
+                                //we won't gracefully handle this case, we'll just assume the first type
+                            }
+                        }
+                    }
+                    if (castLeft) {
+                        addCast(nativeType, dc);
+                    }
+                    if (castRight) {
+                        addCast(nativeType, dcR);
+                    }
+                }
+            }
+        }
+        return super.translate(obj, context);
     }
 
-	private void addCast(String nativeType, DerivedColumn dc) {
-		if (nativeType != null) {
-			Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), nativeType);
-			cast.setName("cast"); //$NON-NLS-1$
-			dc.setExpression(cast);
-		} else {
-			dc.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), TypeFacility.getDataTypeName(dc.getExpression().getType())));
-		}
-	}
+    private void addCast(String nativeType, DerivedColumn dc) {
+        if (nativeType != null) {
+            Function cast = ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), nativeType);
+            cast.setName("cast"); //$NON-NLS-1$
+            dc.setExpression(cast);
+        } else {
+            dc.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), dc.getExpression(), TypeFacility.getDataTypeName(dc.getExpression().getType())));
+        }
+    }
 
     @Override
     public List<String> getSupportedFunctions() {
@@ -411,31 +411,31 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 
     @Override
     public boolean supportsRowOffset() {
-    	return getVersion().compareTo(TEN_0) >= 0;
+        return getVersion().compareTo(TEN_0) >= 0;
     }
 
     @Override
     public boolean supportsIntersect() {
-    	return true;
+        return true;
     }
     @Override
     public boolean supportsExcept() {
-    	return true;
+        return true;
     };
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean nullPlusNonNullIsNull() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean booleanNullable() {
-    	return true;
+        return true;
     }
 
     /**
@@ -443,35 +443,35 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
      */
     @Override
     public void setDatabaseVersion(String version) {
-    	if (version != null) {
-    		if (version.equals(V_2000)) {
-    			setDatabaseVersion(SEVEN_0);
-    			return;
-    		} else if (version.equals(V_2005)) {
-    			setDatabaseVersion(NINE_0);
-    			return;
-    		} else if (version.equals(V_2008)) {
-    			setDatabaseVersion(TEN_0);
-    			return;
-    		} else if (version.equals(V_2012)) {
-    			setDatabaseVersion(ELEVEN_0);
-    			return;
-    		}
-    	}
-    	super.setDatabaseVersion(version);
+        if (version != null) {
+            if (version.equals(V_2000)) {
+                setDatabaseVersion(SEVEN_0);
+                return;
+            } else if (version.equals(V_2005)) {
+                setDatabaseVersion(NINE_0);
+                return;
+            } else if (version.equals(V_2008)) {
+                setDatabaseVersion(TEN_0);
+                return;
+            } else if (version.equals(V_2012)) {
+                setDatabaseVersion(ELEVEN_0);
+                return;
+            }
+        }
+        super.setDatabaseVersion(version);
     }
 
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	if (getVersion().compareTo(TEN_0) >= 0) {
-    		return super.translateLiteralDate(dateValue);
-    	}
-    	return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
+        if (getVersion().compareTo(TEN_0) >= 0) {
+            return super.translateLiteralDate(dateValue);
+        }
+        return super.translateLiteralTimestamp(new Timestamp(dateValue.getTime()));
     }
 
     @Override
     public boolean hasTimeType() {
-    	return getVersion().compareTo(TEN_0) >= 0;
+        return getVersion().compareTo(TEN_0) >= 0;
     }
 
     /**
@@ -480,61 +480,61 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
      */
     @Override
     public String translateLiteralTime(Time timeValue) {
-    	return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "cast('" +  formatDateValue(timeValue) + "' as time)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsSubqueryCommonTableExpressions() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
-    	return getVersion().compareTo(TEN_0) >= 0;
+        return getVersion().compareTo(TEN_0) >= 0;
     }
 
     @Override
     protected boolean supportsCrossJoin() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsWindowDistinctAggregates() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean supportsFormatLiteral(String literal,
-    		org.teiid.translator.ExecutionFactory.Format format) {
-    	if (format == Format.NUMBER) {
-    		return false; //TODO: add support
-    	}
-    	return formatMap.containsKey(literal);
+            org.teiid.translator.ExecutionFactory.Format format) {
+        if (format == Format.NUMBER) {
+            return false; //TODO: add support
+        }
+        return formatMap.containsKey(literal);
     }
 
     @Override
     public boolean supportsOnlyFormatLiterals() {
-    	return true;
+        return true;
     }
 
     @Override
     protected boolean setFetchSize() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -549,203 +549,203 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     }
 
 
-	@Override
-	protected boolean usesDatabaseVersion() {
-		return true;
-	}
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
 
-	@Override
-	public boolean useStreamsForLobs() {
-		return true;
-	}
+    @Override
+    public boolean useStreamsForLobs() {
+        return true;
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 
     @Override
     public String getHibernateDialectClassName() {
-    	if (getVersion().compareTo(NINE_0) >= 0) {
-    		if (getVersion().compareTo(TEN_0) >= 0) {
-    			return "org.hibernate.dialect.SQLServer2008Dialect"; //$NON-NLS-1$
-    		}
-    		return "org.hibernate.dialect.SQLServer2005Dialect"; //$NON-NLS-1$
-    	}
-    	return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
+        if (getVersion().compareTo(NINE_0) >= 0) {
+            if (getVersion().compareTo(TEN_0) >= 0) {
+                return "org.hibernate.dialect.SQLServer2008Dialect"; //$NON-NLS-1$
+            }
+            return "org.hibernate.dialect.SQLServer2005Dialect"; //$NON-NLS-1$
+        }
+        return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
     }
 
     @Override
     public boolean supportsGroupByRollup() {
-    	return getVersion().compareTo(NINE_0) >= 0;
+        return getVersion().compareTo(NINE_0) >= 0;
     }
 
     @Override
     public boolean useWithRollup() {
-    	return getVersion().compareTo(TEN_0) < 0;
+        return getVersion().compareTo(TEN_0) < 0;
     }
 
     @Override
     public boolean supportsConvert(int fromType, int toType) {
-    	if (fromType == TypeFacility.RUNTIME_CODES.OBJECT && this.convertModifier.hasTypeMapping(toType)) {
-			return true;
-    	}
-    	return super.supportsConvert(fromType, toType);
+        if (fromType == TypeFacility.RUNTIME_CODES.OBJECT && this.convertModifier.hasTypeMapping(toType)) {
+            return true;
+        }
+        return super.supportsConvert(fromType, toType);
     }
 
     @Override
     public boolean supportsLiteralOnlyWithGrouping() {
-    	return true;
+        return true;
     }
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
-    	if (command instanceof Insert) {
-    		Insert insert = (Insert)command;
-    		if (insert.getValueSource() instanceof QueryExpression) {
-    			QueryExpression qe = (QueryExpression)insert.getValueSource();
-    			if (qe.getWith() != null) {
-    				With with = qe.getWith();
-    				qe.setWith(null);
-    				return Arrays.asList(with, insert);
-    			}
-    		}
-    	}
+        if (command instanceof Insert) {
+            Insert insert = (Insert)command;
+            if (insert.getValueSource() instanceof QueryExpression) {
+                QueryExpression qe = (QueryExpression)insert.getValueSource();
+                if (qe.getWith() != null) {
+                    With with = qe.getWith();
+                    qe.setWith(null);
+                    return Arrays.asList(with, insert);
+                }
+            }
+        }
 
-    	//handle offset support
-    	boolean useRowNumber = false;
-    	if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
-    		if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
-    			QueryExpression queryCommand = (QueryExpression)command;
-    			if (queryCommand.getLimit() != null) {
-    			    if (queryCommand.getOrderBy() == null) {
-        				//an order by is required
-        				//we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
-        			    if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct())
+        //handle offset support
+        boolean useRowNumber = false;
+        if (getVersion().compareTo(ELEVEN_0) >= 0 || !(command instanceof QueryExpression)) {
+            if (getVersion().compareTo(ELEVEN_0) >= 0 && command instanceof QueryExpression) {
+                QueryExpression queryCommand = (QueryExpression)command;
+                if (queryCommand.getLimit() != null) {
+                    if (queryCommand.getOrderBy() == null) {
+                        //an order by is required
+                        //we could use top if offset is 0, but that would require contextual knowledge in useSelectLimit
+                        if (((queryCommand instanceof Select && ((Select)queryCommand).isDistinct())
                                 || (queryCommand instanceof SetQuery && !((SetQuery)queryCommand).isAll()))) {
-        			        //can't use the @@version with distinct
-        			        useRowNumber = true;
-        			    } else {
-            				List<Object> parts = new ArrayList<Object>();
-            				Limit limit = queryCommand.getLimit();
-            				queryCommand.setLimit(null);
-            				parts.add(queryCommand);
-            				parts.add(" ORDER BY @@version "); //$NON-NLS-1$
-            				parts.add(limit);
-            				return parts;
-        			    }
-    			    } else {
-    			        List<Object> parts = new ArrayList<Object>();
+                            //can't use the @@version with distinct
+                            useRowNumber = true;
+                        } else {
+                            List<Object> parts = new ArrayList<Object>();
+                            Limit limit = queryCommand.getLimit();
+                            queryCommand.setLimit(null);
+                            parts.add(queryCommand);
+                            parts.add(" ORDER BY @@version "); //$NON-NLS-1$
+                            parts.add(limit);
+                            return parts;
+                        }
+                    } else {
+                        List<Object> parts = new ArrayList<Object>();
                         Limit limit = queryCommand.getLimit();
                         queryCommand.setLimit(null);
                         parts.add(queryCommand);
                         parts.add(" "); //$NON-NLS-1$
                         parts.add(limit);
                         return parts;
-    			    }
-    			}
-    		}
-    	    if (!useRowNumber) {
-    	        return super.translateCommand(command, context);
-    	    }
-    	}
-		QueryExpression queryCommand = (QueryExpression)command;
-		if (!useRowNumber && (queryCommand.getLimit() == null || queryCommand.getLimit().getRowOffset() == 0)) {
-			return super.translateCommand(command, context);
-    	}
-		Limit limit = queryCommand.getLimit();
-		queryCommand.setLimit(null);
+                    }
+                }
+            }
+            if (!useRowNumber) {
+                return super.translateCommand(command, context);
+            }
+        }
+        QueryExpression queryCommand = (QueryExpression)command;
+        if (!useRowNumber && (queryCommand.getLimit() == null || queryCommand.getLimit().getRowOffset() == 0)) {
+            return super.translateCommand(command, context);
+        }
+        Limit limit = queryCommand.getLimit();
+        queryCommand.setLimit(null);
 
-    	List<Object> parts = new ArrayList<Object>();
+        List<Object> parts = new ArrayList<Object>();
 
-    	if (queryCommand.getWith() != null) {
-			With with = queryCommand.getWith();
-			queryCommand.setWith(null);
-			parts.add(with);
-		}
+        if (queryCommand.getWith() != null) {
+            With with = queryCommand.getWith();
+            queryCommand.setWith(null);
+            parts.add(with);
+        }
 
-    	OrderBy orderBy = queryCommand.getOrderBy();
-    	queryCommand.setOrderBy(null);
+        OrderBy orderBy = queryCommand.getOrderBy();
+        queryCommand.setOrderBy(null);
 
-    	parts.add("SELECT "); //$NON-NLS-1$
-    	/*
-    	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
-    	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
-    	 * we just use the projected names
-    	 */
-    	boolean allAliased = true;
-    	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
-			if (selectSymbol.getAlias() == null) {
-				allAliased = false;
-				break;
-			}
-		}
-    	if (allAliased) {
-	    	String[] columnNames = queryCommand.getColumnNames();
-	    	for (int i = 0; i < columnNames.length; i++) {
-	    		if (i > 0) {
-	    			parts.add(", "); //$NON-NLS-1$
-	    		}
-	    		parts.add(columnNames[i]);
-			}
-    	} else {
-        	parts.add("*"); //$NON-NLS-1$
-    	}
-    	boolean addedToSelect = false;
-    	if (orderBy != null && queryCommand instanceof Select) {
-    		Select select = (Select)queryCommand;
-    		if (!select.isDistinct() && select.getGroupBy() == null) {
-        		//the order by may be unrelated, so it needs to be with the select
-        		WindowFunction expression = new WindowFunction();
-        		expression.setFunction(new AggregateFunction("ROW_NUMBER", //$NON-NLS-1$
-        				false, Collections.EMPTY_LIST, TypeFacility.RUNTIME_TYPES.INTEGER));
-        		WindowSpecification windowSpecification = new WindowSpecification();
-        		windowSpecification.setOrderBy(orderBy);
-    			expression.setWindowSpecification(windowSpecification);
-    			select.getDerivedColumns().add(new DerivedColumn("ROWNUM_", expression)); //$NON-NLS-1$
-    			parts.add(" FROM ("); //$NON-NLS-1$
-    			parts.add(select);
-    			addedToSelect = true;
-    		}
-    	}
-    	if (!addedToSelect) {
-    		//the order by can be done above the view
-    		parts.add(" FROM (SELECT v.*, ROW_NUMBER() OVER ("); //$NON-NLS-1$
-    		if (orderBy != null) {
-    			parts.add(orderBy);
-    		} else {
-    			//use an order by a "constant"
-    			parts.add("ORDER BY @@version"); //$NON-NLS-1$
-    		}
-    		parts.add(") ROWNUM_ FROM ("); //$NON-NLS-1$
-    		parts.add(queryCommand);
-    		parts.add(") v"); //$NON-NLS-1$
-    	}
-    	parts.add(") v WHERE ROWNUM_ "); //$NON-NLS-1$
-		if (limit.getRowLimit() != Integer.MAX_VALUE) {
-			parts.add("<= "); //$NON-NLS-1$
-			parts.add((long)limit.getRowLimit() + limit.getRowOffset());
-			parts.add(" AND ROWNUM_ "); //$NON-NLS-1$
-		}
-		parts.add("> "); //$NON-NLS-1$
-		parts.add(limit.getRowOffset());
-		if (orderBy != null) {
-			parts.add(" ORDER BY ROWNUM_"); //$NON-NLS-1$
-		}
-		return parts;
+        parts.add("SELECT "); //$NON-NLS-1$
+        /*
+         * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
+         * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
+         * we just use the projected names
+         */
+        boolean allAliased = true;
+        for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
+            if (selectSymbol.getAlias() == null) {
+                allAliased = false;
+                break;
+            }
+        }
+        if (allAliased) {
+            String[] columnNames = queryCommand.getColumnNames();
+            for (int i = 0; i < columnNames.length; i++) {
+                if (i > 0) {
+                    parts.add(", "); //$NON-NLS-1$
+                }
+                parts.add(columnNames[i]);
+            }
+        } else {
+            parts.add("*"); //$NON-NLS-1$
+        }
+        boolean addedToSelect = false;
+        if (orderBy != null && queryCommand instanceof Select) {
+            Select select = (Select)queryCommand;
+            if (!select.isDistinct() && select.getGroupBy() == null) {
+                //the order by may be unrelated, so it needs to be with the select
+                WindowFunction expression = new WindowFunction();
+                expression.setFunction(new AggregateFunction("ROW_NUMBER", //$NON-NLS-1$
+                        false, Collections.EMPTY_LIST, TypeFacility.RUNTIME_TYPES.INTEGER));
+                WindowSpecification windowSpecification = new WindowSpecification();
+                windowSpecification.setOrderBy(orderBy);
+                expression.setWindowSpecification(windowSpecification);
+                select.getDerivedColumns().add(new DerivedColumn("ROWNUM_", expression)); //$NON-NLS-1$
+                parts.add(" FROM ("); //$NON-NLS-1$
+                parts.add(select);
+                addedToSelect = true;
+            }
+        }
+        if (!addedToSelect) {
+            //the order by can be done above the view
+            parts.add(" FROM (SELECT v.*, ROW_NUMBER() OVER ("); //$NON-NLS-1$
+            if (orderBy != null) {
+                parts.add(orderBy);
+            } else {
+                //use an order by a "constant"
+                parts.add("ORDER BY @@version"); //$NON-NLS-1$
+            }
+            parts.add(") ROWNUM_ FROM ("); //$NON-NLS-1$
+            parts.add(queryCommand);
+            parts.add(") v"); //$NON-NLS-1$
+        }
+        parts.add(") v WHERE ROWNUM_ "); //$NON-NLS-1$
+        if (limit.getRowLimit() != Integer.MAX_VALUE) {
+            parts.add("<= "); //$NON-NLS-1$
+            parts.add((long)limit.getRowLimit() + limit.getRowOffset());
+            parts.add(" AND ROWNUM_ "); //$NON-NLS-1$
+        }
+        parts.add("> "); //$NON-NLS-1$
+        parts.add(limit.getRowOffset());
+        if (orderBy != null) {
+            parts.add(" ORDER BY ROWNUM_"); //$NON-NLS-1$
+        }
+        return parts;
     }
 
     @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	if (getVersion().compareTo(ELEVEN_0) >= 0) {
-	        return Arrays.asList("OFFSET ", limit.getRowOffset(), " ROWS FETCH NEXT ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	}
-    	return super.translateLimit(limit, context);
+        if (getVersion().compareTo(ELEVEN_0) >= 0) {
+            return Arrays.asList("OFFSET ", limit.getRowOffset(), " ROWS FETCH NEXT ", limit.getRowLimit(), " ROWS ONLY"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+        return super.translateLimit(limit, context);
     }
 
     @Override
     public boolean useSelectLimit() {
-    	return getVersion().compareTo(ELEVEN_0) < 0;
+        return getVersion().compareTo(ELEVEN_0) < 0;
     }
 
     @Override

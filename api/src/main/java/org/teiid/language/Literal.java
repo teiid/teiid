@@ -52,21 +52,21 @@ public class Literal extends BaseLanguageObject implements Expression {
         this.value = value;
     }
 
-	public void setType(Class<?> type) {
-		this.type = type;
-	}
+    public void setType(Class<?> type) {
+        this.type = type;
+    }
 
-	/**
-	 * Set by the optimizer if the literal was created by the evaluation of another expression.
-	 * Setting to true will not always result in the value being handled as a bind value.
-	 * @return
-	 */
-	public boolean isBindEligible() {
-		return isBindEligible;
-	}
+    /**
+     * Set by the optimizer if the literal was created by the evaluation of another expression.
+     * Setting to true will not always result in the value being handled as a bind value.
+     * @return
+     */
+    public boolean isBindEligible() {
+        return isBindEligible;
+    }
 
-	public void setBindEligible(boolean isBindEligible) {
-		this.isBindEligible = isBindEligible;
-	}
+    public void setBindEligible(boolean isBindEligible) {
+        this.isBindEligible = isBindEligible;
+    }
 
 }

@@ -50,24 +50,24 @@ import org.teiid.query.validator.ValidatorReport;
 @SuppressWarnings("nls")
 public class TestDataEntitySchemaBuilder {
 
-	@Test
-	public void testMetadata() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");
-		StringWriter sw = new StringWriter();
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
-		EdmxFormatWriter.write(eds, sw);
+    @Test
+    public void testMetadata() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")), "northwind", "nw");
+        StringWriter sw = new StringWriter();
+        EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+        EdmxFormatWriter.write(eds, sw);
 
-		//System.out.println(sw.toString());
-	    EdmDataServices pds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new StringReader(sw.toString())));
+        //System.out.println(sw.toString());
+        EdmDataServices pds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new StringReader(sw.toString())));
 
-	    assertEquals(eds.getSchemas().size(), pds.getSchemas().size());
+        assertEquals(eds.getSchemas().size(), pds.getSchemas().size());
 
-	    for (int i = 0; i < eds.getSchemas().size(); i++) {
-	    	EdmSchema expected = eds.getSchemas().get(i);
-	    	EdmSchema actual = pds.getSchemas().get(i);
-	    	assertEdmSchema(expected, actual);
-	    }
-	}
+        for (int i = 0; i < eds.getSchemas().size(); i++) {
+            EdmSchema expected = eds.getSchemas().get(i);
+            EdmSchema actual = pds.getSchemas().get(i);
+            assertEdmSchema(expected, actual);
+        }
+    }
 
     @Test
     public void testArrayIterateMetadata() throws Exception {
@@ -98,155 +98,155 @@ public class TestDataEntitySchemaBuilder {
         }
     }
 
-	private void assertEdmSchema(EdmSchema expected, EdmSchema actual) {
-		assertEquals(expected.getEntityTypes().size(), actual.getEntityTypes().size());
-		assertEquals(expected.getEntityContainers().size(), actual.getEntityContainers().size());
-		assertEquals(expected.getAssociations().size(), actual.getAssociations().size());
+    private void assertEdmSchema(EdmSchema expected, EdmSchema actual) {
+        assertEquals(expected.getEntityTypes().size(), actual.getEntityTypes().size());
+        assertEquals(expected.getEntityContainers().size(), actual.getEntityContainers().size());
+        assertEquals(expected.getAssociations().size(), actual.getAssociations().size());
 
-		for (int i = 0; i < expected.getEntityTypes().size(); i++) {
-			assertEntityType(expected.getEntityTypes().get(i), actual.getEntityTypes().get(i));
-		}
+        for (int i = 0; i < expected.getEntityTypes().size(); i++) {
+            assertEntityType(expected.getEntityTypes().get(i), actual.getEntityTypes().get(i));
+        }
 
-		for (int i = 0; i < expected.getAssociations().size(); i++) {
-			assertEdmAssosiation(expected.getAssociations().get(i), actual.getAssociations().get(i));
-		}
+        for (int i = 0; i < expected.getAssociations().size(); i++) {
+            assertEdmAssosiation(expected.getAssociations().get(i), actual.getAssociations().get(i));
+        }
 
-		for (int i = 0; i < expected.getEntityContainers().size(); i++) {
-			assertEntityContainer(expected.getEntityContainers().get(i), actual.getEntityContainers().get(i));
-		}
-	}
+        for (int i = 0; i < expected.getEntityContainers().size(); i++) {
+            assertEntityContainer(expected.getEntityContainers().get(i), actual.getEntityContainers().get(i));
+        }
+    }
 
-	private void assertEntityType(EdmEntityType expected, EdmEntityType actual) {
-		assertEquals(expected.getName(), actual.getName());
-		assertEquals(expected.getNamespace(), actual.getNamespace());
-		assertArrayEquals(expected.getKeys().toArray(new String[expected.getKeys().size()]), actual.getKeys().toArray(new String[actual.getKeys().size()]));
+    private void assertEntityType(EdmEntityType expected, EdmEntityType actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getNamespace(), actual.getNamespace());
+        assertArrayEquals(expected.getKeys().toArray(new String[expected.getKeys().size()]), actual.getKeys().toArray(new String[actual.getKeys().size()]));
 
-		List<EdmProperty> propertiesExpected = new ArrayList<EdmProperty>();
-		List<EdmProperty> propertiesActual = new ArrayList<EdmProperty>();
+        List<EdmProperty> propertiesExpected = new ArrayList<EdmProperty>();
+        List<EdmProperty> propertiesActual = new ArrayList<EdmProperty>();
 
-		Iterator<EdmProperty> it = expected.getProperties().iterator();
-		while(it.hasNext()) {
-			propertiesExpected.add(it.next());
-		}
+        Iterator<EdmProperty> it = expected.getProperties().iterator();
+        while(it.hasNext()) {
+            propertiesExpected.add(it.next());
+        }
 
-		it = actual.getProperties().iterator();
-		while(it.hasNext()) {
-			propertiesActual.add(it.next());
-		}
+        it = actual.getProperties().iterator();
+        while(it.hasNext()) {
+            propertiesActual.add(it.next());
+        }
 
-		assertEquals(propertiesExpected.size(), propertiesActual.size());
-		for (int i = 0; i < propertiesExpected.size(); i++) {
-			assertEdmProperty(propertiesExpected.get(i), propertiesActual.get(i));
-		}
+        assertEquals(propertiesExpected.size(), propertiesActual.size());
+        for (int i = 0; i < propertiesExpected.size(); i++) {
+            assertEdmProperty(propertiesExpected.get(i), propertiesActual.get(i));
+        }
 
-		List<EdmNavigationProperty> navExpected = new ArrayList<EdmNavigationProperty>();
-		List<EdmNavigationProperty> navActual = new ArrayList<EdmNavigationProperty>();
+        List<EdmNavigationProperty> navExpected = new ArrayList<EdmNavigationProperty>();
+        List<EdmNavigationProperty> navActual = new ArrayList<EdmNavigationProperty>();
 
-		Iterator<EdmNavigationProperty> enpIt = expected.getDeclaredNavigationProperties().iterator();
-		while(enpIt.hasNext()) {
-			navExpected.add(enpIt.next());
-		}
+        Iterator<EdmNavigationProperty> enpIt = expected.getDeclaredNavigationProperties().iterator();
+        while(enpIt.hasNext()) {
+            navExpected.add(enpIt.next());
+        }
 
-		enpIt = actual.getDeclaredNavigationProperties().iterator();
-		while(enpIt.hasNext()) {
-			navActual.add(enpIt.next());
-		}
-		assertEquals(navExpected.size(), navActual.size());
-		for (int i = 0; i < navExpected.size(); i++) {
-			assertEdmNavigationProperty(navExpected.get(i), navActual.get(i));
-		}
+        enpIt = actual.getDeclaredNavigationProperties().iterator();
+        while(enpIt.hasNext()) {
+            navActual.add(enpIt.next());
+        }
+        assertEquals(navExpected.size(), navActual.size());
+        for (int i = 0; i < navExpected.size(); i++) {
+            assertEdmNavigationProperty(navExpected.get(i), navActual.get(i));
+        }
 
-		assertArrayEquals(expected.getKeys().toArray(), actual.getKeys().toArray());
-	}
+        assertArrayEquals(expected.getKeys().toArray(), actual.getKeys().toArray());
+    }
 
-	private void assertEdmNavigationProperty(EdmNavigationProperty expected, EdmNavigationProperty actual) {
-		assertEquals(expected.getName(), actual.getName());
-		assertEdmAssosiation(expected.getRelationship(), actual.getRelationship());
-		assertEdmAssociationEnd(expected.getFromRole(), actual.getFromRole());
-		assertEdmAssociationEnd(expected.getToRole(), actual.getToRole());
-	}
+    private void assertEdmNavigationProperty(EdmNavigationProperty expected, EdmNavigationProperty actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEdmAssosiation(expected.getRelationship(), actual.getRelationship());
+        assertEdmAssociationEnd(expected.getFromRole(), actual.getFromRole());
+        assertEdmAssociationEnd(expected.getToRole(), actual.getToRole());
+    }
 
-	private void assertEdmAssociationEnd(EdmAssociationEnd expected, EdmAssociationEnd actual) {
-		assertEquals(expected.getRole(), actual.getRole());
-	}
+    private void assertEdmAssociationEnd(EdmAssociationEnd expected, EdmAssociationEnd actual) {
+        assertEquals(expected.getRole(), actual.getRole());
+    }
 
-	private void assertEdmAssosiation(EdmAssociation expected, EdmAssociation actual) {
-		assertEquals(expected.getNamespace(), actual.getNamespace());
-		assertEquals(expected.getName(), actual.getName());
-		assertEdmAssociationEnd(expected.getEnd1(), actual.getEnd1());
-		assertEdmAssociationEnd(expected.getEnd2(), actual.getEnd2());
+    private void assertEdmAssosiation(EdmAssociation expected, EdmAssociation actual) {
+        assertEquals(expected.getNamespace(), actual.getNamespace());
+        assertEquals(expected.getName(), actual.getName());
+        assertEdmAssociationEnd(expected.getEnd1(), actual.getEnd1());
+        assertEdmAssociationEnd(expected.getEnd2(), actual.getEnd2());
 
-		// check referential integrity?
-	}
+        // check referential integrity?
+    }
 
-	private void assertEdmProperty(EdmProperty expected, EdmProperty actual) {
-		assertEquals(expected.getName(), actual.getName());
-		assertEquals(expected.getType(), actual.getType());
-	}
+    private void assertEdmProperty(EdmProperty expected, EdmProperty actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEquals(expected.getType(), actual.getType());
+    }
 
-	private void assertEntityContainer(EdmEntityContainer expected, EdmEntityContainer actual) {
-		assertEquals(expected.getEntitySets().size(), actual.getEntitySets().size());
-		assertEquals(expected.getAssociationSets().size(), actual.getAssociationSets().size());
-		for (int i = 0; i < expected.getEntitySets().size(); i++) {
-			assertEnititySet(expected.getEntitySets().get(i), actual.getEntitySets().get(i));
-		}
+    private void assertEntityContainer(EdmEntityContainer expected, EdmEntityContainer actual) {
+        assertEquals(expected.getEntitySets().size(), actual.getEntitySets().size());
+        assertEquals(expected.getAssociationSets().size(), actual.getAssociationSets().size());
+        for (int i = 0; i < expected.getEntitySets().size(); i++) {
+            assertEnititySet(expected.getEntitySets().get(i), actual.getEntitySets().get(i));
+        }
 
-		for (int i = 0; i < expected.getAssociationSets().size(); i++) {
-			assertAssosiationSet(expected.getAssociationSets().get(i), actual.getAssociationSets().get(i));
-		}
-	}
+        for (int i = 0; i < expected.getAssociationSets().size(); i++) {
+            assertAssosiationSet(expected.getAssociationSets().get(i), actual.getAssociationSets().get(i));
+        }
+    }
 
 
-	private void assertAssosiationSet(EdmAssociationSet expected, EdmAssociationSet actual) {
-		assertEquals(expected.getName(), actual.getName());
-		assertEdmAssosiation(expected.getAssociation(), actual.getAssociation());
-		assertEdmAssociationSetEnd(expected.getEnd1(), actual.getEnd1());
-		assertEdmAssociationSetEnd(expected.getEnd1(), actual.getEnd1());
-	}
+    private void assertAssosiationSet(EdmAssociationSet expected, EdmAssociationSet actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEdmAssosiation(expected.getAssociation(), actual.getAssociation());
+        assertEdmAssociationSetEnd(expected.getEnd1(), actual.getEnd1());
+        assertEdmAssociationSetEnd(expected.getEnd1(), actual.getEnd1());
+    }
 
-	private void assertEdmAssociationSetEnd(EdmAssociationSetEnd expected, EdmAssociationSetEnd actual) {
-		assertEdmAssociationEnd(expected.getRole(), actual.getRole());
-	}
+    private void assertEdmAssociationSetEnd(EdmAssociationSetEnd expected, EdmAssociationSetEnd actual) {
+        assertEdmAssociationEnd(expected.getRole(), actual.getRole());
+    }
 
-	private void assertEnititySet(EdmEntitySet expected, EdmEntitySet actual) {
-		assertEquals(expected.getName(), actual.getName());
-		assertEntityType(expected.getType(), actual.getType());
-	}
+    private void assertEnititySet(EdmEntitySet expected, EdmEntitySet actual) {
+        assertEquals(expected.getName(), actual.getName());
+        assertEntityType(expected.getType(), actual.getType());
+    }
 
-	@Test
-	public void testUnquieTreatedAsKey() {
-		// test that unique key is treated as key, when pk is absent.
-	}
+    @Test
+    public void testUnquieTreatedAsKey() {
+        // test that unique key is treated as key, when pk is absent.
+    }
 
-	@Test
-	public void testEdmPropertyPrimaryKey() throws Exception{
-	    String ddl = "CREATE FOREIGN TABLE Sales (\n" +
-	            "	id integer PRIMARY KEY OPTIONS(NAMEINSOURCE 'myid'),\n" +
+    @Test
+    public void testEdmPropertyPrimaryKey() throws Exception{
+        String ddl = "CREATE FOREIGN TABLE Sales (\n" +
+                "	id integer PRIMARY KEY OPTIONS(NAMEINSOURCE 'myid'),\n" +
                 "   name string(5));";
 
-	    TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "sales", "sl");
-	    EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
-	    assertFalse("Primary key is nullable.", ((EdmProperty)edm.findEdmProperty("id")).isNullable());
-	    assertTrue(((EdmProperty)edm.findEdmProperty("name")).isNullable());
-	}
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "sales", "sl");
+        EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+        assertFalse("Primary key is nullable.", ((EdmProperty)edm.findEdmProperty("id")).isNullable());
+        assertTrue(((EdmProperty)edm.findEdmProperty("name")).isNullable());
+    }
 
-	@Test
-	public void testEntityTypeName() throws Exception{
-		String ddl = "CREATE FOREIGN TABLE BookingCollection (\n" +
-				"	carrid bigdecimal NOT NULL,\n" +
-				"	connid string(5) NOT NULL,\n" +
-				"	bookid bigdecimal NOT NULL,\n" +
-				"	LOCCURKEY string(5) NOT NULL,\n" +
-				"	fldate timestamp NOT NULL,\n" +
-				"	PRIMARY KEY(carrid, connid, fldate, bookid)\n" +
-				") OPTIONS (UPDATABLE TRUE, " +
-				" \"teiid_odata:EntityType\" 'RMTSAMPLEFLIGHT.Booking');";
+    @Test
+    public void testEntityTypeName() throws Exception{
+        String ddl = "CREATE FOREIGN TABLE BookingCollection (\n" +
+                "	carrid bigdecimal NOT NULL,\n" +
+                "	connid string(5) NOT NULL,\n" +
+                "	bookid bigdecimal NOT NULL,\n" +
+                "	LOCCURKEY string(5) NOT NULL,\n" +
+                "	fldate timestamp NOT NULL,\n" +
+                "	PRIMARY KEY(carrid, connid, fldate, bookid)\n" +
+                ") OPTIONS (UPDATABLE TRUE, " +
+                " \"teiid_odata:EntityType\" 'RMTSAMPLEFLIGHT.Booking');";
 
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
-		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
-		assertTrue(edm.findEdmEntitySet("nw.BookingCollection")!=null);
-		assertTrue(edm.findEdmEntityType("nw.RMTSAMPLEFLIGHT.Booking")!=null);
-	}
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
+        EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+        assertTrue(edm.findEdmEntitySet("nw.BookingCollection")!=null);
+        assertTrue(edm.findEdmEntityType("nw.RMTSAMPLEFLIGHT.Booking")!=null);
+    }
 
     @Test
     public void testEntityPropertyName() throws Exception{
@@ -271,49 +271,49 @@ public class TestDataEntitySchemaBuilder {
         }
     }
 
-	@Test
-	public void testEntityTypeName2() throws Exception{
-		TransformationMetadata metadata = getNorthwindMetadataFromODataXML();
+    @Test
+    public void testEntityTypeName2() throws Exception{
+        TransformationMetadata metadata = getNorthwindMetadataFromODataXML();
 
-		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore().getSchema("nw"));
-		assertTrue(edm.findEdmEntitySet("nw.Categories")!=null);
-		assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("nw.Categories").getType().getName());
-		assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
-		assertTrue(edm.findEdmFunctionImport("nw.TopCustomers")!=null);
-		assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("nw.TopCustomers").getReturnType().getFullyQualifiedTypeName());
-		assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
+        EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore().getSchema("nw"));
+        assertTrue(edm.findEdmEntitySet("nw.Categories")!=null);
+        assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("nw.Categories").getType().getName());
+        assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
+        assertTrue(edm.findEdmFunctionImport("nw.TopCustomers")!=null);
+        assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("nw.TopCustomers").getReturnType().getFullyQualifiedTypeName());
+        assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
 
-		EdmComplexType complexType = edm.findEdmComplexType("nw.NorthwindModel.Address");
-		assertEquals("Address", complexType.getProperties().first().getName());
+        EdmComplexType complexType = edm.findEdmComplexType("nw.NorthwindModel.Address");
+        assertEquals("Address", complexType.getProperties().first().getName());
 
-		edm = new TeiidEdmMetadata("nw", edm);
-		assertTrue(edm.findEdmEntitySet("Categories")!=null);
-		assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("Categories").getType().getName());
-		assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
-		assertTrue(edm.findEdmFunctionImport("TopCustomers")!=null);
-		assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("TopCustomers").getReturnType().getFullyQualifiedTypeName());
-		assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
-	}
+        edm = new TeiidEdmMetadata("nw", edm);
+        assertTrue(edm.findEdmEntitySet("Categories")!=null);
+        assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("Categories").getType().getName());
+        assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
+        assertTrue(edm.findEdmFunctionImport("TopCustomers")!=null);
+        assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("TopCustomers").getReturnType().getFullyQualifiedTypeName());
+        assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
+    }
 
-	static TransformationMetadata getNorthwindMetadataFromODataXML() throws Exception {
-		ModelMetaData model = new ModelMetaData();
-		model.setName("nw");
-		model.setModelType(Type.PHYSICAL);
-		MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
+    static TransformationMetadata getNorthwindMetadataFromODataXML() throws Exception {
+        ModelMetaData model = new ModelMetaData();
+        model.setName("nw");
+        model.setModelType(Type.PHYSICAL);
+        MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
 
-		EdmDataServices edm = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("northwind.xml"))));
-		ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
-		PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
-		metadataProcessor.getMetadata(mf, edm);
+        EdmDataServices edm = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("northwind.xml"))));
+        ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+        PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
+        metadataProcessor.getMetadata(mf, edm);
 
-		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
-    	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
-    	if (report.hasItems()) {
-    		throw new RuntimeException(report.getFailureMessage());
-    	}
-		return metadata;
-	}
+        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
+        ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
+        if (report.hasItems()) {
+            throw new RuntimeException(report.getFailureMessage());
+        }
+        return metadata;
+    }
 
     @Test
     public void testArrayType() throws Exception {

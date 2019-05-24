@@ -20,11 +20,11 @@ package org.teiid.events;
 
 public interface EventDistributorFactory {
 
-	/**
-	 * Get an {@link EventDistributor} that will distribute events to
-	 * all members.
-	 * @return
-	 */
-	EventDistributor getEventDistributor();
+    /**
+     * Get an {@link EventDistributor} that will distribute events to
+     * all members.
+     * @return
+     */
+    EventDistributor getEventDistributor();
 
 }

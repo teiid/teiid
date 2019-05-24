@@ -18,8 +18,8 @@
 package org.teiid.deployers;
 
 public interface VDBLifeCycleListener {
-	default void added(String name, CompositeVDB vdb) {}
-	default void beforeRemove(String name, CompositeVDB vdb) {}
-	default void removed(String name, CompositeVDB vdb) {}
-	default void finishedDeployment(String name, CompositeVDB vdb) {}
+    default void added(String name, CompositeVDB vdb) {}
+    default void beforeRemove(String name, CompositeVDB vdb) {}
+    default void removed(String name, CompositeVDB vdb) {}
+    default void finishedDeployment(String name, CompositeVDB vdb) {}
 }

@@ -54,7 +54,7 @@ public class BlockInstruction extends ProgramInstruction {
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = new PlanNode("BLOCK"); //$NON-NLS-1$
+        PlanNode props = new PlanNode("BLOCK"); //$NON-NLS-1$
         props.addProperty(PROP_PROGRAM, this.program.getDescriptionProperties());
         return props;
     }

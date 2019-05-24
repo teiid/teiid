@@ -73,8 +73,8 @@ public interface ResultsGenerator {
      * @throws QueryTestFailedException
      */
     void generateQueryResultFile(String querySetID, String queryIdentfier,
-	    String query, ResultSet result, Throwable queryError, int testStatus)
-	    throws QueryTestFailedException;
+        String query, ResultSet result, Throwable queryError, int testStatus)
+        throws QueryTestFailedException;
 
     /**
      * Call to generate an error file as the result of incompatibilities in the
@@ -89,8 +89,8 @@ public interface ResultsGenerator {
      * @throws QueryTestFailedException
      */
     String generateErrorFile(final String querySetID,
-	    final String queryIdentifier, final String sql,
-	    final ResultSet resultSet, final Throwable queryError,
-	    final Object results) throws QueryTestFailedException;
+        final String queryIdentifier, final String sql,
+        final ResultSet resultSet, final Throwable queryError,
+        final Object results) throws QueryTestFailedException;
 
 }

@@ -157,7 +157,7 @@ public class TestODataSQLBuilder {
     static class BaseState {
         Client client;
         String response;
-		Integer status;
+        Integer status;
     }
 
     static class ProcedureState extends BaseState {
@@ -1088,11 +1088,11 @@ public class TestODataSQLBuilder {
     }
 
     @BeforeClass public static void oneTimeSetup() {
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT"));
     }
 
     @AfterClass public static void oneTimeTearDown() {
-    	TimestampWithTimezone.resetCalendar(null);
+        TimestampWithTimezone.resetCalendar(null);
     }
 
     @Test

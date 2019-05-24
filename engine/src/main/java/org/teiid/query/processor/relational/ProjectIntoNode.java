@@ -52,9 +52,9 @@ import org.teiid.translator.ExecutionFactory.TransactionSupport;
 
 public class ProjectIntoNode extends RelationalNode {
 
-	public enum Mode {
-		BATCH, ITERATOR, SINGLE
-	}
+    public enum Mode {
+        BATCH, ITERATOR, SINGLE
+    }
 
     private static int REQUEST_CREATION = 1;
     private static int RESPONSE_PROCESSING = 2;
@@ -133,10 +133,10 @@ public class ProjectIntoNode extends RelationalNode {
             /* If we don't have a batch to work, get the next
              */
             if (currentBatch == null) {
-            	if (sourceDone) {
-	                phase = RESPONSE_PROCESSING;
-	                break;
-            	}
+                if (sourceDone) {
+                    phase = RESPONSE_PROCESSING;
+                    break;
+                }
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
                 sourceDone = currentBatch.getTerminationFlag();
                 this.batchRow = currentBatch.getBeginRow();
@@ -144,62 +144,62 @@ public class ProjectIntoNode extends RelationalNode {
                 //normally we would want to skip a 0 sized batch, but it typically represents the terminal batch
                 //and for implicit temp tables we need to issue an empty insert
                 if(currentBatch.getRowCount() == 0
-                		&& (!currentBatch.getTerminationFlag() || mode != Mode.ITERATOR)) {
-            		currentBatch = null;
-            		continue;
+                        && (!currentBatch.getTerminationFlag() || mode != Mode.ITERATOR)) {
+                    currentBatch = null;
+                    continue;
                 }
                 if (this.constraint != null) {
-                	//row based security check
-	                if (eval == null) {
-	                	eval = new Evaluator(createLookupMap(this.intoElements), this.getDataManager(), getContext());
-	                }
-	                List<List<?>> tuples = this.currentBatch.getTuples();
-	                for (int i = 0; i < tuples.size(); i++) {
-	                	if (!eval.evaluate(constraint, tuples.get(i))) {
-	                		throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, new Insert(intoGroup, this.intoElements, convertValuesToConstants(tuples.get(i), intoElements))));
-	                	}
-	                }
+                    //row based security check
+                    if (eval == null) {
+                        eval = new Evaluator(createLookupMap(this.intoElements), this.getDataManager(), getContext());
+                    }
+                    List<List<?>> tuples = this.currentBatch.getTuples();
+                    for (int i = 0; i < tuples.size(); i++) {
+                        if (!eval.evaluate(constraint, tuples.get(i))) {
+                            throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, new Insert(intoGroup, this.intoElements, convertValuesToConstants(tuples.get(i), intoElements))));
+                        }
+                    }
                 }
             }
 
             if (mode != Mode.ITERATOR) { //delay the check in the iterator case to accumulate batches
-            	checkExitConditions();
+                checkExitConditions();
             }
 
             int batchSize = currentBatch.getRowCount();
             int requests = 1;
             switch (mode) {
             case ITERATOR:
-            	if (buffer == null) {
-            		buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
-            	}
+                if (buffer == null) {
+                    buffer = getBufferManager().createTupleBuffer(intoElements, getConnectionID(), TupleSourceType.PROCESSOR);
+                }
 
-            	if (sourceDone) {
-            		//if there is a pending request we can't process the last until it is done
-            		checkExitConditions();
-            	}
+                if (sourceDone) {
+                    //if there is a pending request we can't process the last until it is done
+                    checkExitConditions();
+                }
 
-            	for (List<?> tuple : currentBatch.getTuples()) {
-            		buffer.addTuple(tuple);
-            	}
+                for (List<?> tuple : currentBatch.getTuples()) {
+                    buffer.addTuple(tuple);
+                }
 
-            	try {
-            		checkExitConditions();
-            	} catch (BlockedException e) {
-            		//move to the next batch
+                try {
+                    checkExitConditions();
+                } catch (BlockedException e) {
+                    //move to the next batch
                     this.batchRow += batchSize;
-                	currentBatch = null;
-            		continue;
-            	}
+                    currentBatch = null;
+                    continue;
+                }
 
-            	if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
-            		registerIteratorRequest();
-            	} else if (buffer.getRowCount() >= buffer.getBatchSize() * 4) {
-        			registerIteratorRequest();
-            	} else {
-            		requests = 0;
-            	}
-            	break;
+                if (currentBatch.getTerminationFlag() && (buffer.getRowCount() != 0 || intoGroup.isImplicitTempGroupSymbol())) {
+                    registerIteratorRequest();
+                } else if (buffer.getRowCount() >= buffer.getBatchSize() * 4) {
+                    registerIteratorRequest();
+                } else {
+                    requests = 0;
+                }
+                break;
             case BATCH:
                 // Register batched update command against source
                 long endRow = currentBatch.getEndRow();
@@ -227,7 +227,7 @@ public class ProjectIntoNode extends RelationalNode {
 
             this.batchRow += batchSize;
             if (batchRow > currentBatch.getEndRow()) {
-            	currentBatch = null;
+                currentBatch = null;
             }
             this.requestsRegistered+=requests;
         }
@@ -235,8 +235,8 @@ public class ProjectIntoNode extends RelationalNode {
         checkExitConditions();
 
         if (this.buffer != null) {
-        	this.buffer.remove();
-        	this.buffer = null;
+            this.buffer.remove();
+            this.buffer = null;
         }
 
         // End this node's work
@@ -247,54 +247,54 @@ public class ProjectIntoNode extends RelationalNode {
         return pullBatch();
     }
 
-	private void registerIteratorRequest() throws TeiidComponentException,
-			TeiidProcessingException {
-		Insert insert = new Insert(intoGroup, intoElements, null);
-		insert.setSourceHint(sourceHint);
-		insert.setUpsert(upsert);
-		buffer.close();
-		insert.setTupleSource(buffer.createIndexedTupleSource(true));
-		// Register insert command against source
-		registerRequest(insert);
+    private void registerIteratorRequest() throws TeiidComponentException,
+            TeiidProcessingException {
+        Insert insert = new Insert(intoGroup, intoElements, null);
+        insert.setSourceHint(sourceHint);
+        insert.setUpsert(upsert);
+        buffer.close();
+        insert.setTupleSource(buffer.createIndexedTupleSource(true));
+        // Register insert command against source
+        registerRequest(insert);
         //remove the old buffer when the insert is complete
         last = buffer;
         buffer = null;
-	}
+    }
 
     private void checkExitConditions()  throws TeiidComponentException, BlockedException, TeiidProcessingException {
-    	if (tupleSource != null) {
-    		if (mode == Mode.BATCH || mode == Mode.ITERATOR) {
-    			List<?> tuple = null;
-    			while ((tuple = tupleSource.nextTuple()) != null) {
-        			Integer count = (Integer)tuple.get(0);
-        			if (count > 0 ||  count == Statement.SUCCESS_NO_INFO) {
-        				insertCount++;
-        			}
-    			}
-	    	} else {
-	    		Integer count = (Integer)tupleSource.nextTuple().get(0);
-	    		insertCount += count.intValue();
-	    	}
-	        closeRequest();
-	        // Mark as processed
-	        tupleSourcesProcessed++; // This should set tupleSourcesProcessed to be the same as requestsRegistered
-    	}
+        if (tupleSource != null) {
+            if (mode == Mode.BATCH || mode == Mode.ITERATOR) {
+                List<?> tuple = null;
+                while ((tuple = tupleSource.nextTuple()) != null) {
+                    Integer count = (Integer)tuple.get(0);
+                    if (count > 0 ||  count == Statement.SUCCESS_NO_INFO) {
+                        insertCount++;
+                    }
+                }
+            } else {
+                Integer count = (Integer)tupleSource.nextTuple().get(0);
+                insertCount += count.intValue();
+            }
+            closeRequest();
+            // Mark as processed
+            tupleSourcesProcessed++; // This should set tupleSourcesProcessed to be the same as requestsRegistered
+        }
         // RESPONSE_PROCESSING: process tuple sources
         if (tupleSourcesProcessed < requestsRegistered) {
-        	throw BlockedException.block(getContext().getRequestId(), "Blocking on insert update count"); //$NON-NLS-1$
+            throw BlockedException.block(getContext().getRequestId(), "Blocking on insert update count"); //$NON-NLS-1$
         }
 
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
-    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));
+        tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));
     }
 
     private void closeRequest() {
-    	if (this.last != null) {
-    		this.last.remove();
-    		this.last = null;
-    	}
+        if (this.last != null) {
+            this.last.remove();
+            this.last = null;
+        }
         if (this.tupleSource != null) {
             tupleSource.closeSource();
             this.tupleSource = null;
@@ -321,7 +321,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = super.getDescriptionProperties();
+        PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_INTO_GROUP, intoGroup.toString());
         if (upsert) {
             props.addProperty(PROP_UPSERT, "true"); //$NON-NLS-1$
@@ -346,48 +346,48 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     public Mode getMode() {
-		return mode;
-	}
+        return mode;
+    }
 
     public void setMode(Mode mode) {
-		this.mode = mode;
-	}
+        this.mode = mode;
+    }
 
     public boolean isTempGroupInsert() {
-		return intoGroup.isTempGroupSymbol();
-	}
+        return intoGroup.isTempGroupSymbol();
+    }
 
     public void closeDirect() {
-    	if (this.buffer != null) {
-    		this.buffer.remove();
-    		this.buffer = null;
-    	}
+        if (this.buffer != null) {
+            this.buffer.remove();
+            this.buffer = null;
+        }
         closeRequest();
-	}
+    }
 
     public String getModelName() {
-		return modelName;
-	}
+        return modelName;
+    }
 
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-		Boolean requires = this.getChildren()[0].requiresTransaction(transactionalReads);
-		if (requires != null && requires) {
-			return true;
-		}
-		if (transactionSupport == TransactionSupport.NONE) {
-			return requires;
-		}
-		return true;
+        Boolean requires = this.getChildren()[0].requiresTransaction(transactionalReads);
+        if (requires != null && requires) {
+            return true;
+        }
+        if (transactionSupport == TransactionSupport.NONE) {
+            return requires;
+        }
+        return true;
     }
 
     public void setConstraint(Criteria constraint) {
-		this.constraint = constraint;
-	}
+        this.constraint = constraint;
+    }
 
     public void setTransactionSupport(TransactionSupport transactionSupport) {
-		this.transactionSupport = transactionSupport;
-	}
+        this.transactionSupport = transactionSupport;
+    }
 
     public void setSourceHint(SourceHint property) {
         this.sourceHint = property;

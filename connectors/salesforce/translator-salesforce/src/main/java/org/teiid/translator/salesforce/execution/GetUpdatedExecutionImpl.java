@@ -43,68 +43,68 @@ import org.teiid.translator.TranslatorException;
 
 public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 
-	private ProcedureExecutionParent parent;
-	private UpdatedResult updatedResult;
-	private int idIndex = 0;
-	DatatypeFactory factory;
+    private ProcedureExecutionParent parent;
+    private UpdatedResult updatedResult;
+    private int idIndex = 0;
+    DatatypeFactory factory;
 
-	public GetUpdatedExecutionImpl(
-			ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
-		this.parent = procedureExecutionParent;
-		try {
-			factory = DatatypeFactory.newInstance();
-		} catch (DatatypeConfigurationException e) {
-			throw new TranslatorException(e.getMessage());
-		}
-	}
+    public GetUpdatedExecutionImpl(
+            ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
+        this.parent = procedureExecutionParent;
+        try {
+            factory = DatatypeFactory.newInstance();
+        } catch (DatatypeConfigurationException e) {
+            throw new TranslatorException(e.getMessage());
+        }
+    }
 
-	@Override
-	public void cancel() {
-		// nothing to do here
-	}
+    @Override
+    public void cancel() {
+        // nothing to do here
+    }
 
-	@Override
-	public void close() {
-		// nothing to do here
-	}
+    @Override
+    public void close() {
+        // nothing to do here
+    }
 
-	@Override
-	public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
-		Call command = parent.getCommand();
-		List<Argument> params = command.getArguments();
+    @Override
+    public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
+        Call command = parent.getCommand();
+        List<Argument> params = command.getArguments();
 
-		Argument object = params.get(OBJECT);
-		String objectName = (String) object.getArgumentValue().getValue();
+        Argument object = params.get(OBJECT);
+        String objectName = (String) object.getArgumentValue().getValue();
 
-		Argument start = params.get(STARTDATE);
-		Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
-		GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-		startCalendar.setTime(startTime);
+        Argument start = params.get(STARTDATE);
+        Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
+        GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+        startCalendar.setTime(startTime);
 
-		Argument end = params.get(ENDDATE);
-		Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
-		GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-		endCalendar.setTime(endTime);
+        Argument end = params.get(ENDDATE);
+        Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
+        GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+        endCalendar.setTime(endTime);
 
-		updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
-	}
+        updatedResult = parent.getConnection().getUpdated(objectName, startCalendar, endCalendar);
+    }
 
-	@Override
-	public List<Timestamp> getOutputParameterValues() {
-		List<Timestamp> result = new ArrayList<Timestamp>(1);
-		result.add(new Timestamp(updatedResult.getLatestDateCovered().getTimeInMillis()));
-		return result;
-	}
+    @Override
+    public List<Timestamp> getOutputParameterValues() {
+        List<Timestamp> result = new ArrayList<Timestamp>(1);
+        result.add(new Timestamp(updatedResult.getLatestDateCovered().getTimeInMillis()));
+        return result;
+    }
 
-	@Override
-	public List<?> next() {
-		List<Object> result = null;
-		if(updatedResult.getIDs() != null && idIndex < updatedResult.getIDs().size()){
-			result = new ArrayList<Object>(1);
-			result.add(updatedResult.getIDs().get(idIndex));
-			idIndex++;
-		}
-		return result;
-	}
+    @Override
+    public List<?> next() {
+        List<Object> result = null;
+        if(updatedResult.getIDs() != null && idIndex < updatedResult.getIDs().size()){
+            result = new ArrayList<Object>(1);
+            result.add(updatedResult.getIDs().get(idIndex));
+            idIndex++;
+        }
+        return result;
+    }
 
 }

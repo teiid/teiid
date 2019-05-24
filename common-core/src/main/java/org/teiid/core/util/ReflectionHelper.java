@@ -72,15 +72,15 @@ public class ReflectionHelper {
      * @throws SecurityException if access to the information is denied.
      */
     public Method findBestMethodOnTarget( String methodName, Object[] arguments ) throws NoSuchMethodException, SecurityException {
-    	createMethodMap();
-    	List<Method> methods = methodMap.get(methodName);
-    	if (methods != null && methods.size() == 1) {
-    		return methods.get(0);
-    	}
+        createMethodMap();
+        List<Method> methods = methodMap.get(methodName);
+        if (methods != null && methods.size() == 1) {
+            return methods.get(0);
+        }
 
-    	if (arguments == null) {
-    		return findBestMethodWithSignature(methodName, Collections.EMPTY_LIST);
-    	}
+        if (arguments == null) {
+            return findBestMethodWithSignature(methodName, Collections.EMPTY_LIST);
+        }
         int size = arguments.length;
         List<Class<?>> argumentClasses = new ArrayList<Class<?>>(size);
         for (int i=0; i!=size; ++i) {
@@ -166,7 +166,7 @@ public class ReflectionHelper {
         }
         for (Method method : methodsWithSameName) {
             Class[] args = method.getParameterTypes();
-			boolean allMatch = argsMatch(argumentsClasses, argumentsClassList, args);
+            boolean allMatch = argsMatch(argumentsClasses, argumentsClassList, args);
             if ( allMatch ) {
                 if (result != null) {
                     throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses + " has multiple possible signatures."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -182,51 +182,51 @@ public class ReflectionHelper {
         throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses); //$NON-NLS-1$
     }
 
-	private void createMethodMap() {
-		if ( this.methodMap == null ) {
-        	synchronized (this) {
-        		if (this.methodMap != null) {
-        			return;
-        		}
-				HashMap<String, LinkedList<Method>> newMethodMap = new HashMap<String, LinkedList<Method>>();
-	            Method[] methods = this.targetClass.getMethods();
-	            for ( int i=0; i!=methods.length; ++i ) {
-	                Method method = methods[i];
-	                LinkedList<Method> methodsWithSameName = newMethodMap.get(method.getName());
-	                if ( methodsWithSameName == null ) {
-	                    methodsWithSameName = new LinkedList<Method>();
-	                    newMethodMap.put(method.getName(),methodsWithSameName);
-	                }
-	                methodsWithSameName.addFirst(method);   // add lower methods first
-	            }
-	            this.methodMap = newMethodMap;
-			}
+    private void createMethodMap() {
+        if ( this.methodMap == null ) {
+            synchronized (this) {
+                if (this.methodMap != null) {
+                    return;
+                }
+                HashMap<String, LinkedList<Method>> newMethodMap = new HashMap<String, LinkedList<Method>>();
+                Method[] methods = this.targetClass.getMethods();
+                for ( int i=0; i!=methods.length; ++i ) {
+                    Method method = methods[i];
+                    LinkedList<Method> methodsWithSameName = newMethodMap.get(method.getName());
+                    if ( methodsWithSameName == null ) {
+                        methodsWithSameName = new LinkedList<Method>();
+                        newMethodMap.put(method.getName(),methodsWithSameName);
+                    }
+                    methodsWithSameName.addFirst(method);   // add lower methods first
+                }
+                this.methodMap = newMethodMap;
+            }
         }
-	}
+    }
 
-	private static boolean argsMatch(List<Class<?>> argumentsClasses,
-			List<Class<?>> argumentsClassList, Class[] args) {
+    private static boolean argsMatch(List<Class<?>> argumentsClasses,
+            List<Class<?>> argumentsClassList, Class[] args) {
         if ( args.length != argumentsClasses.size() ) {
             return false;
         }
-		for ( int i=0; i<args.length; ++i ) {
-		    Class<?> primitiveClazz = argumentsClassList.get(i);
-		    Class<?> objectClazz = argumentsClasses.get(i);
-		    if ( objectClazz != null ) {
-		        // Check for possible matches with (converted) primitive types
-		        // as well as the original Object type
-		        if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
-		            return false;   // found one that doesn't match
-		        }
-		    } else {
-		        // a null is assignable for everything except a primitive
-		        if ( args[i].isPrimitive() ) {
-		            return false;   // found one that doesn't match
-		        }
-		    }
-		}
-		return true;
-	}
+        for ( int i=0; i<args.length; ++i ) {
+            Class<?> primitiveClazz = argumentsClassList.get(i);
+            Class<?> objectClazz = argumentsClasses.get(i);
+            if ( objectClazz != null ) {
+                // Check for possible matches with (converted) primitive types
+                // as well as the original Object type
+                if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
+                    return false;   // found one that doesn't match
+                }
+            } else {
+                // a null is assignable for everything except a primitive
+                if ( args[i].isPrimitive() ) {
+                    return false;   // found one that doesn't match
+                }
+            }
+        }
+        return true;
+    }
 
     /**
      * Convert any argument classes to primitives.
@@ -283,31 +283,31 @@ public class ReflectionHelper {
 
     public static final Object create(String className, Collection<?> ctorObjs,
                                       final ClassLoader classLoader) throws TeiidException {
-    	try {
-	        int size = (ctorObjs == null ? 0 : ctorObjs.size());
-	        Class[] names = new Class[size];
-	        Object[] objArray = new Object[size];
-	        int i = 0;
+        try {
+            int size = (ctorObjs == null ? 0 : ctorObjs.size());
+            Class[] names = new Class[size];
+            Object[] objArray = new Object[size];
+            int i = 0;
 
-	        if (size > 0) {
-	            for (Iterator<?> it=ctorObjs.iterator(); it.hasNext(); ) {
-	                Object obj = it.next();
-	                if (obj != null) {
-		                names[i] = obj.getClass();
-		                objArray[i] = obj;
-	                }
-	                i++;
-	            }
-	        }
-	        return create(className, objArray, names, classLoader);
-    	} catch (Exception e) {
-    		  throw new TeiidException(CorePlugin.Event.TEIID10033, e);
-    	}
+            if (size > 0) {
+                for (Iterator<?> it=ctorObjs.iterator(); it.hasNext(); ) {
+                    Object obj = it.next();
+                    if (obj != null) {
+                        names[i] = obj.getClass();
+                        objArray[i] = obj;
+                    }
+                    i++;
+                }
+            }
+            return create(className, objArray, names, classLoader);
+        } catch (Exception e) {
+              throw new TeiidException(CorePlugin.Event.TEIID10033, e);
+        }
     }
 
     public static final Object create(String className, Object[] ctorObjs, Class<?>[] argTypes,
                 final ClassLoader classLoader) throws TeiidException {
-    	Class<?> cls;
+        Class<?> cls;
         try {
             cls = loadClass(className,classLoader);
         } catch(Exception e) {
@@ -315,33 +315,33 @@ public class ReflectionHelper {
         }
         Constructor<?> ctor = null;
         try {
-        	ctor = cls.getDeclaredConstructor(argTypes);
+            ctor = cls.getDeclaredConstructor(argTypes);
         } catch (NoSuchMethodException e) {
 
         }
 
         if (ctor == null && argTypes != null && argTypes.length > 0) {
-        	List<Class<?>> argumentsClasses = Arrays.asList(argTypes);
-        	List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
-        	for (Constructor<?> possible : cls.getDeclaredConstructors()) {
-        		if (argsMatch(argumentsClasses, argumentsClassList, possible.getParameterTypes())) {
-        			ctor = possible;
-        			break;
-        		}
-        	}
+            List<Class<?>> argumentsClasses = Arrays.asList(argTypes);
+            List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
+            for (Constructor<?> possible : cls.getDeclaredConstructors()) {
+                if (argsMatch(argumentsClasses, argumentsClassList, possible.getParameterTypes())) {
+                    ctor = possible;
+                    break;
+                }
+            }
         }
 
         if (ctor == null) {
-        	  throw new TeiidException(CorePlugin.Event.TEIID10035, className + CorePlugin.Event.TEIID10035 + Arrays.toString(argTypes));
+              throw new TeiidException(CorePlugin.Event.TEIID10035, className + CorePlugin.Event.TEIID10035 + Arrays.toString(argTypes));
         }
 
         try {
-			return ctor.newInstance(ctorObjs);
-		} catch (InvocationTargetException e) {
-			throw new TeiidException(CorePlugin.Event.TEIID10036, e.getTargetException());
-		} catch (Exception e) {
-			throw new TeiidException(CorePlugin.Event.TEIID10036, e);
-		}
+            return ctor.newInstance(ctorObjs);
+        } catch (InvocationTargetException e) {
+            throw new TeiidException(CorePlugin.Event.TEIID10036, e.getTargetException());
+        } catch (Exception e) {
+            throw new TeiidException(CorePlugin.Event.TEIID10036, e);
+        }
     }
 
 }

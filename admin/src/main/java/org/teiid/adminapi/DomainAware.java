@@ -23,22 +23,22 @@ package org.teiid.adminapi;
  */
 public interface DomainAware {
 
-	/**
-	 * Server group that admin object belongs to
-	 * @return
-	 */
-	String getServerGroup();
+    /**
+     * Server group that admin object belongs to
+     * @return
+     */
+    String getServerGroup();
 
-	/**
-	 * Name of the Server that this admin object belongs to
-	 * @return
-	 */
-	String getServerName();
+    /**
+     * Name of the Server that this admin object belongs to
+     * @return
+     */
+    String getServerName();
 
 
-	/**
-	 * getHostName of the Server this admin object belongs to
-	 * @return
-	 */
-	String getHostName();
+    /**
+     * getHostName of the Server this admin object belongs to
+     * @return
+     */
+    String getHostName();
 }

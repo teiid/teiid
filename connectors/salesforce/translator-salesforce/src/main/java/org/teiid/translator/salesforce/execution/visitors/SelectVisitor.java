@@ -34,212 +34,212 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
-	public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
-	private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
-	private int selectSymbolCount;
-	private int idIndex = -1; // index of the ID select symbol.
-	protected List<DerivedColumn> selectSymbols;
-	protected StringBuilder limitClause = new StringBuilder();
-	protected StringBuilder groupByClause = new StringBuilder();
-	protected StringBuilder havingClause = new StringBuilder();
-	private Boolean objectSupportsRetrieve;
-	private Condition implicitCondition;
+    public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
+    private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
+    private int selectSymbolCount;
+    private int idIndex = -1; // index of the ID select symbol.
+    protected List<DerivedColumn> selectSymbols;
+    protected StringBuilder limitClause = new StringBuilder();
+    protected StringBuilder groupByClause = new StringBuilder();
+    protected StringBuilder havingClause = new StringBuilder();
+    private Boolean objectSupportsRetrieve;
+    private Condition implicitCondition;
 
-	public SelectVisitor(RuntimeMetadata metadata) {
-		super(metadata);
-	}
+    public SelectVisitor(RuntimeMetadata metadata) {
+        super(metadata);
+    }
 
-	@Override
+    @Override
     public void visit(Select query) {
-		super.visitNodes(query.getFrom());
+        super.visitNodes(query.getFrom());
 
-		Condition condition = query.getWhere();
-		if (this.implicitCondition != null) {
-		    if (condition != null) {
-		        condition = LanguageFactory.INSTANCE.createAndOr(Operator.AND, condition, this.implicitCondition);
-		    }
-		    else {
-		        condition = implicitCondition;
-		    }
-		}
+        Condition condition = query.getWhere();
+        if (this.implicitCondition != null) {
+            if (condition != null) {
+                condition = LanguageFactory.INSTANCE.createAndOr(Operator.AND, condition, this.implicitCondition);
+            }
+            else {
+                condition = implicitCondition;
+            }
+        }
 
-		super.visitNode(condition);
-		super.visitNode(query.getGroupBy());
-		if (query.getHaving() != null) {
-			//since the base is a criteria hierarchy visitor,
-			//we must separately visit the having clause
-			//TODO: if further uses of criteria come up, we should not use hierarchy visitor as the base
-			Condition c = query.getHaving();
-			CriteriaVisitor cv = new CriteriaVisitor(this.metadata);
-			cv.visitNode(c);
-			cv.addCriteriaString(SQLConstants.Reserved.HAVING, this.havingClause);
-			if (this.havingClause.length() > 0) {
-				this.havingClause.append(SPACE);
-			}
-		}
-		super.visitNode(query.getLimit());
-		if (query.isDistinct()) {
-			exceptions.add(new TranslatorException(SalesForcePlugin.Util.getString("SelectVisitor.distinct.not.supported"))); //$NON-NLS-1$
-		}
-		selectSymbols = query.getDerivedColumns();
-		selectSymbolCount = selectSymbols.size();
-		for (int index = 0; index < selectSymbols.size(); index++) {
-			DerivedColumn symbol = selectSymbols.get(index);
-			// get the name in source
-			Expression expression = symbol.getExpression();
-			selectSymbolIndexToElement.put(index, expression);
-			if (expression instanceof ColumnReference) {
-				Column element = ((ColumnReference) expression).getMetadataObject();
-				String nameInSource = element.getSourceName();
-				if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
-					idIndex = index;
-				}
-			}
-		}
-	}
+        super.visitNode(condition);
+        super.visitNode(query.getGroupBy());
+        if (query.getHaving() != null) {
+            //since the base is a criteria hierarchy visitor,
+            //we must separately visit the having clause
+            //TODO: if further uses of criteria come up, we should not use hierarchy visitor as the base
+            Condition c = query.getHaving();
+            CriteriaVisitor cv = new CriteriaVisitor(this.metadata);
+            cv.visitNode(c);
+            cv.addCriteriaString(SQLConstants.Reserved.HAVING, this.havingClause);
+            if (this.havingClause.length() > 0) {
+                this.havingClause.append(SPACE);
+            }
+        }
+        super.visitNode(query.getLimit());
+        if (query.isDistinct()) {
+            exceptions.add(new TranslatorException(SalesForcePlugin.Util.getString("SelectVisitor.distinct.not.supported"))); //$NON-NLS-1$
+        }
+        selectSymbols = query.getDerivedColumns();
+        selectSymbolCount = selectSymbols.size();
+        for (int index = 0; index < selectSymbols.size(); index++) {
+            DerivedColumn symbol = selectSymbols.get(index);
+            // get the name in source
+            Expression expression = symbol.getExpression();
+            selectSymbolIndexToElement.put(index, expression);
+            if (expression instanceof ColumnReference) {
+                Column element = ((ColumnReference) expression).getMetadataObject();
+                String nameInSource = element.getSourceName();
+                if (nameInSource.equalsIgnoreCase("id")) { //$NON-NLS-1$
+                    idIndex = index;
+                }
+            }
+        }
+    }
 
     protected void addCriteria(Condition condition) {
         this.implicitCondition  = condition;
     }
 
-	@Override
-	public void visit(GroupBy obj) {
-		this.groupByClause.append("GROUP BY "); //$NON-NLS-1$
-		for (Iterator<Expression> iter = obj.getElements().iterator(); iter.hasNext();) {
-			Expression expr = iter.next();
-			this.groupByClause.append(getValue(expr, false));
-			if (iter.hasNext()) {
-				this.groupByClause.append(", "); //$NON-NLS-1$
-			}
-		}
-		this.groupByClause.append(SPACE);
-	}
+    @Override
+    public void visit(GroupBy obj) {
+        this.groupByClause.append("GROUP BY "); //$NON-NLS-1$
+        for (Iterator<Expression> iter = obj.getElements().iterator(); iter.hasNext();) {
+            Expression expr = iter.next();
+            this.groupByClause.append(getValue(expr, false));
+            if (iter.hasNext()) {
+                this.groupByClause.append(", "); //$NON-NLS-1$
+            }
+        }
+        this.groupByClause.append(SPACE);
+    }
 
-	@Override
-	public void visit(NamedTable obj) {
-		try {
-			table = obj.getMetadataObject();
-	        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
-	        objectSupportsRetrieve = Boolean.valueOf(table.getProperty(Constants.SUPPORTS_RETRIEVE, true));
-	        if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
-	            throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
-	        }
-			loadColumnMetadata(obj);
-		} catch (TranslatorException ce) {
-			exceptions.add(ce);
-		}
-	}
+    @Override
+    public void visit(NamedTable obj) {
+        try {
+            table = obj.getMetadataObject();
+            String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
+            objectSupportsRetrieve = Boolean.valueOf(table.getProperty(Constants.SUPPORTS_RETRIEVE, true));
+            if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
+                throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            loadColumnMetadata(obj);
+        } catch (TranslatorException ce) {
+            exceptions.add(ce);
+        }
+    }
 
-	@Override
-	public void visit(Limit obj) {
-		super.visit(obj);
-		limitClause.append(LIMIT).append(SPACE).append(obj.getRowLimit());
-	}
+    @Override
+    public void visit(Limit obj) {
+        super.visit(obj);
+        limitClause.append(LIMIT).append(SPACE).append(obj.getRowLimit());
+    }
 
-	/*
-	 * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
-	 * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
-	 * LIMIT ?
-	 */
+    /*
+     * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
+     * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
+     * LIMIT ?
+     */
 
-	public String getQuery() throws TranslatorException {
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
+    public String getQuery() throws TranslatorException {
+        if (!exceptions.isEmpty()) {
+            throw exceptions.get(0);
+        }
 
-		StringBuilder result = new StringBuilder();
-		result.append(SELECT).append(SPACE);
-		addSelectSymbols(result);
-		result.append(SPACE);
+        StringBuilder result = new StringBuilder();
+        result.append(SELECT).append(SPACE);
+        addSelectSymbols(result);
+        result.append(SPACE);
 
-		result.append(FROM).append(SPACE);
-		result.append(table.getSourceName()).append(SPACE);
-		addCriteriaString(result);
-		appendGroupByHaving(result);
-		//result.append(orderByClause).append(SPACE);
-		result.append(limitClause);
-		return result.toString();
-	}
+        result.append(FROM).append(SPACE);
+        result.append(table.getSourceName()).append(SPACE);
+        addCriteriaString(result);
+        appendGroupByHaving(result);
+        //result.append(orderByClause).append(SPACE);
+        result.append(limitClause);
+        return result.toString();
+    }
 
-	protected void appendGroupByHaving(StringBuilder result) {
-		result.append(this.groupByClause);
-		result.append(this.havingClause);
-	}
+    protected void appendGroupByHaving(StringBuilder result) {
+        result.append(this.groupByClause);
+        result.append(this.havingClause);
+    }
 
-	private void addSelectSymbols(StringBuilder result) {
-		for (int i = 0; i < selectSymbols.size(); i++) {
-			DerivedColumn symbol = selectSymbols.get(i);
-			if (i > 0) {
-				result.append(", "); //$NON-NLS-1$
-			}
-			Expression expression = symbol.getExpression();
-			if (expression instanceof ColumnReference) {
-				appendColumnReference(result, (ColumnReference) expression);
-			} else if (expression instanceof AggregateFunction) {
-				AggregateFunction af = (AggregateFunction)expression;
-				appendAggregateFunction(result, af);
-			} else {
-				throw new AssertionError("Unknown select symbol type" + symbol); //$NON-NLS-1$
-			}
-		}
-	}
+    private void addSelectSymbols(StringBuilder result) {
+        for (int i = 0; i < selectSymbols.size(); i++) {
+            DerivedColumn symbol = selectSymbols.get(i);
+            if (i > 0) {
+                result.append(", "); //$NON-NLS-1$
+            }
+            Expression expression = symbol.getExpression();
+            if (expression instanceof ColumnReference) {
+                appendColumnReference(result, (ColumnReference) expression);
+            } else if (expression instanceof AggregateFunction) {
+                AggregateFunction af = (AggregateFunction)expression;
+                appendAggregateFunction(result, af);
+            } else {
+                throw new AssertionError("Unknown select symbol type" + symbol); //$NON-NLS-1$
+            }
+        }
+    }
 
-	public int getSelectSymbolCount() {
-		return selectSymbolCount;
-	}
+    public int getSelectSymbolCount() {
+        return selectSymbolCount;
+    }
 
-	public Expression getSelectSymbolMetadata(int index) {
-		return selectSymbolIndexToElement.get(index);
-	}
+    public Expression getSelectSymbolMetadata(int index) {
+        return selectSymbolIndexToElement.get(index);
+    }
 
-	/**
-	 * Returns the index of the ID column.
-	 * @return the index of the ID column, -1 if there is no ID column.
-	 */
-	public int getIdIndex() {
-		return idIndex;
-	}
-
-
-	public boolean getQueryAll() {
-		return queryAll;
-	}
+    /**
+     * Returns the index of the ID column.
+     * @return the index of the ID column, -1 if there is no ID column.
+     */
+    public int getIdIndex() {
+        return idIndex;
+    }
 
 
-	public String getRetrieveFieldList() {
-		assertRetrieveValidated();
-		StringBuilder result = new StringBuilder();
-		addSelectSymbols(result);
-		return result.toString();
-	}
+    public boolean getQueryAll() {
+        return queryAll;
+    }
 
 
-	public List<String> getIdInCriteria() {
-		assertRetrieveValidated();
-		List<Expression> expressions = this.idInCriteria.getRightExpressions();
-		List<String> result = new ArrayList<String>(expressions.size());
-		for(int i = 0; i < expressions.size(); i++) {
-			result.add(getValue(expressions.get(i), true));
-		}
-		return result;
-	}
+    public String getRetrieveFieldList() {
+        assertRetrieveValidated();
+        StringBuilder result = new StringBuilder();
+        addSelectSymbols(result);
+        return result.toString();
+    }
 
-	private void assertRetrieveValidated() throws AssertionError {
-		if(!hasOnlyIDCriteria()) {
-			throw new AssertionError("Must call hasOnlyIdInCriteria() before this method"); //$NON-NLS-1$
-		}
-	}
 
-	public boolean hasOnlyIdInCriteria() {
-		return hasOnlyIDCriteria() && idInCriteria != null;
-	}
+    public List<String> getIdInCriteria() {
+        assertRetrieveValidated();
+        List<Expression> expressions = this.idInCriteria.getRightExpressions();
+        List<String> result = new ArrayList<String>(expressions.size());
+        for(int i = 0; i < expressions.size(); i++) {
+            result.add(getValue(expressions.get(i), true));
+        }
+        return result;
+    }
 
-	public boolean canRetrieve() {
-		return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0;
-	}
+    private void assertRetrieveValidated() throws AssertionError {
+        if(!hasOnlyIDCriteria()) {
+            throw new AssertionError("Must call hasOnlyIdInCriteria() before this method"); //$NON-NLS-1$
+        }
+    }
 
-	public boolean hasGroupBy() {
-		return groupByClause.length() > 0;
-	}
+    public boolean hasOnlyIdInCriteria() {
+        return hasOnlyIDCriteria() && idInCriteria != null;
+    }
+
+    public boolean canRetrieve() {
+        return objectSupportsRetrieve && hasOnlyIDCriteria() && this.limitClause.length() == 0 && groupByClause.length() == 0;
+    }
+
+    public boolean hasGroupBy() {
+        return groupByClause.length() > 0;
+    }
 
 }

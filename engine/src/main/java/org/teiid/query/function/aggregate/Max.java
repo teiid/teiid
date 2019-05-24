@@ -41,7 +41,7 @@ public class Max extends SingleArgumentAggregateFunction {
 
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
-    	this.outputType = inputType;
+        this.outputType = inputType;
     }
 
     /**
@@ -55,7 +55,7 @@ public class Max extends SingleArgumentAggregateFunction {
         } else {
             Comparable valueComp = (Comparable) value;
 
-        	if (Constant.COMPARATOR.compare(valueComp, maxValue) > 0) {
+            if (Constant.COMPARATOR.compare(valueComp, maxValue) > 0) {
                 maxValue = valueComp;
             }
         }
@@ -70,18 +70,18 @@ public class Max extends SingleArgumentAggregateFunction {
 
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	return Arrays.asList(outputType);
+        return Arrays.asList(outputType);
     }
 
     @Override
     public void getState(List<Object> state) {
-    	state.add(maxValue);
+        state.add(maxValue);
     }
 
     @Override
     public int setState(List<?> state, int index) {
-    	this.maxValue = state.get(index);
-    	return index++;
+        this.maxValue = state.get(index);
+        return index++;
     }
 
 }

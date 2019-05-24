@@ -48,21 +48,21 @@ import org.teiid.query.util.CommandContext;
  */
 public final class RuleAccessPatternValidation implements OptimizerRule {
 
-	/**
+    /**
      * @throws QueryPlannerException if an access pattern has not been satisfied
-	 */
-	public PlanNode execute(
-		PlanNode plan,
-		QueryMetadataInterface metadata,
+     */
+    public PlanNode execute(
+        PlanNode plan,
+        QueryMetadataInterface metadata,
         CapabilitiesFinder capFinder,
-		RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws
-			QueryPlannerException {
+        RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws
+            QueryPlannerException {
 
         validateAccessPatterns(plan, metadata, capFinder);
 
-		return plan;
-	}
+        return plan;
+    }
 
     void validateAccessPatterns(PlanNode node, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryPlannerException {
@@ -71,7 +71,7 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
 
         for (PlanNode child : node.getChildren()) {
             validateAccessPatterns(child, metadata, capFinder);
-		}
+        }
     }
 
     /**
@@ -111,8 +111,8 @@ public final class RuleAccessPatternValidation implements OptimizerRule {
          throw new QueryPlannerException(QueryPlugin.Event.TEIID30278, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30278, new Object[] {groups, accessPatterns}));
     }
 
-	public String toString() {
-		return "AccessPatternValidation"; //$NON-NLS-1$
-	}
+    public String toString() {
+        return "AccessPatternValidation"; //$NON-NLS-1$
+    }
 
 }

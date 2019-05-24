@@ -79,11 +79,11 @@ public class TestSqlUtil {
     }
 
     @Test public void testCreate() {
-    	helpTest(" create table x", true); //$NON-NLS-1$
+        helpTest(" create table x", true); //$NON-NLS-1$
     }
 
     @Test public void testDrop() {
-    	helpTest("/* */ drop table x", true); //$NON-NLS-1$
+        helpTest("/* */ drop table x", true); //$NON-NLS-1$
     }
 
 }

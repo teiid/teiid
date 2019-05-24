@@ -382,7 +382,7 @@ public class TestReflectionHelper {
     }
 
     @Test public void testCreate() throws Exception {
-    	ReflectionHelper.create(SomeClass.class.getName(), Arrays.asList(true), null);
+        ReflectionHelper.create(SomeClass.class.getName(), Arrays.asList(true), null);
     }
 
     /**
@@ -422,7 +422,7 @@ public class TestReflectionHelper {
     }
 
     public static class SomeClass {
-    	public SomeClass(boolean primArg) {
-		}
+        public SomeClass(boolean primArg) {
+        }
     }
 }

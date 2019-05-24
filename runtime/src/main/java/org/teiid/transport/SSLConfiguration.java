@@ -60,9 +60,9 @@ public class SSLConfiguration {
     private String keyPassword;
     private boolean truststoreCheckExpired;
 
-	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
+    public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
         if (!isSslEnabled()) {
-        	return null;
+            return null;
         }
 
         // Use the SSLContext to create an SSLServerSocketFactory.
@@ -88,13 +88,13 @@ public class SSLConfiguration {
         result.setUseClientMode(false);
         if (ANONYMOUS.equals(authenticationMode)) {
             if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
-            	throw new GeneralSecurityException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40082));
+                throw new GeneralSecurityException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40082));
             }
             result.setEnabledCipherSuites(new String[] {SocketUtil.ANON_CIPHER_SUITE});
         } else {
-        	if (this.enabledCipherSuites != null) {
-        		result.setEnabledCipherSuites(this.enabledCipherSuites);
-        	}
+            if (this.enabledCipherSuites != null) {
+                result.setEnabledCipherSuites(this.enabledCipherSuites);
+            }
         }
 
         result.setNeedClientAuth(TWOWAY.equals(authenticationMode));
@@ -106,73 +106,73 @@ public class SSLConfiguration {
     }
 
     public boolean isSslEnabled() {
-    	return ENABLED.equalsIgnoreCase(mode);
+        return ENABLED.equalsIgnoreCase(mode);
     }
 
     public String getMode() {
-		return mode;
-	}
+        return mode;
+    }
 
     public void setMode(String mode) {
-		this.mode = mode;
-	}
+        this.mode = mode;
+    }
 
     public void setKeystoreFilename(String value) {
-    	this.keyStoreFileName = value;
+        this.keyStoreFileName = value;
     }
 
     public void setKeystorePassword(String value) {
-    	this.keyStorePassword = value;
+        this.keyStorePassword = value;
     }
 
     public void setKeystoreType(String value) {
-    	this.keyStoreType = value;
+        this.keyStoreType = value;
     }
 
     public void setSslProtocol(String value) {
-    	this.sslProtocol = value;
+        this.sslProtocol = value;
     }
 
     public void setKeymanagementAlgorithm(String value) {
-    	this.keyManagerFactoryAlgorithm = value;
+        this.keyManagerFactoryAlgorithm = value;
     }
 
     public void setTruststoreFilename(String value) {
-    	this.trustStoreFileName = value;
+        this.trustStoreFileName = value;
     }
 
     public void setTruststorePassword(String value) {
-    	this.trustStorePassword = value;
+        this.trustStorePassword = value;
     }
 
     public void setAuthenticationMode(String value) {
-    	this.authenticationMode = value;
+        this.authenticationMode = value;
     }
 
-	public void setEnabledCipherSuites(String enabledCipherSuites) {
-		this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
-		for (int i = 0; i < this.enabledCipherSuites.length; i++) {
-			this.enabledCipherSuites[i] = this.enabledCipherSuites[i].trim();
-		}
-	}
+    public void setEnabledCipherSuites(String enabledCipherSuites) {
+        this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
+        for (int i = 0; i < this.enabledCipherSuites.length; i++) {
+            this.enabledCipherSuites[i] = this.enabledCipherSuites[i].trim();
+        }
+    }
 
-	public String[] getEnabledCipherSuitesAsArray() {
-		return enabledCipherSuites;
-	}
+    public String[] getEnabledCipherSuitesAsArray() {
+        return enabledCipherSuites;
+    }
 
-	public void setKeystoreKeyAlias(String alias) {
-		this.keyAlias = alias;
-	}
+    public void setKeystoreKeyAlias(String alias) {
+        this.keyAlias = alias;
+    }
 
-	public void setKeystoreKeyPassword(String keyPassword) {
-		this.keyPassword = keyPassword;
-	}
+    public void setKeystoreKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
 
-	public boolean isTruststoreCheckExpired() {
-		return truststoreCheckExpired;
-	}
+    public boolean isTruststoreCheckExpired() {
+        return truststoreCheckExpired;
+    }
 
-	public void setTruststoreCheckExpired(boolean checkExpired) {
-		this.truststoreCheckExpired = checkExpired;
-	}
+    public void setTruststoreCheckExpired(boolean checkExpired) {
+        this.truststoreCheckExpired = checkExpired;
+    }
 }

@@ -27,44 +27,44 @@ import org.teiid.adminapi.Model.Type;
 @SuppressWarnings("nls")
 public class TestModelMetaData {
 
-	@Test
-	public void testModelType() {
+    @Test
+    public void testModelType() {
 
-		ModelMetaData model = new ModelMetaData();
-		model.setModelType("physical");
+        ModelMetaData model = new ModelMetaData();
+        model.setModelType("physical");
 
-		assertTrue(model.getModelType() == Model.Type.PHYSICAL);
-		assertTrue(model.isSource());
+        assertTrue(model.getModelType() == Model.Type.PHYSICAL);
+        assertTrue(model.isSource());
 
-		model.modelType = "VIRTUAL";
-		assertTrue(model.getModelType() == Model.Type.VIRTUAL);
+        model.modelType = "VIRTUAL";
+        assertTrue(model.getModelType() == Model.Type.VIRTUAL);
 
-		model.modelType = "TYPE";
-		assertTrue(model.getModelType() == Model.Type.OTHER);
-		assertTrue(!model.isSource());
-	}
+        model.modelType = "TYPE";
+        assertTrue(model.getModelType() == Model.Type.OTHER);
+        assertTrue(!model.isSource());
+    }
 
-	@Test
-	public void testSupportMultiSource() {
-		ModelMetaData model = new ModelMetaData();
-		assertFalse(model.isSupportsMultiSourceBindings());
-		model.setSupportsMultiSourceBindings(true);
+    @Test
+    public void testSupportMultiSource() {
+        ModelMetaData model = new ModelMetaData();
+        assertFalse(model.isSupportsMultiSourceBindings());
+        model.setSupportsMultiSourceBindings(true);
 
-		assertTrue(model.isSupportsMultiSourceBindings());
+        assertTrue(model.isSupportsMultiSourceBindings());
 
-		model.setModelType(Type.VIRTUAL);
+        model.setModelType(Type.VIRTUAL);
 
-		assertFalse(model.isSupportsMultiSourceBindings());
+        assertFalse(model.isSupportsMultiSourceBindings());
 
-		assertTrue(!model.getProperties().isEmpty());
-	}
+        assertTrue(!model.getProperties().isEmpty());
+    }
 
-	public void testErrors() {
-		ModelMetaData m = new ModelMetaData();
-		m.addMessage("ERROR", "I am Error");
-		m.addMessage("WARNING", "I am warning");
+    public void testErrors() {
+        ModelMetaData m = new ModelMetaData();
+        m.addMessage("ERROR", "I am Error");
+        m.addMessage("WARNING", "I am warning");
 
-		assertFalse(m.getMessages().isEmpty());
-		assertEquals(1, m.getMessages().size());
-	}
+        assertFalse(m.getMessages().isEmpty());
+        assertEquals(1, m.getMessages().size());
+    }
 }

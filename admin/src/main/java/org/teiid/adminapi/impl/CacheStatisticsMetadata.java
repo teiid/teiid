@@ -21,44 +21,44 @@ import org.teiid.adminapi.CacheStatistics;
 
 public class CacheStatisticsMetadata extends AdminObjectImpl implements CacheStatistics{
 
-	private static final long serialVersionUID = -3514505497661004560L;
+    private static final long serialVersionUID = -3514505497661004560L;
 
-	private double hitRatio;
-	private int totalEntries;
-	private int requestCount;
+    private double hitRatio;
+    private int totalEntries;
+    private int requestCount;
 
-	@Override
-	public int getRequestCount() {
-		return requestCount;
-	}
+    @Override
+    public int getRequestCount() {
+        return requestCount;
+    }
 
-	public void setRequestCount(int count) {
-		this.requestCount = count;
-	}
+    public void setRequestCount(int count) {
+        this.requestCount = count;
+    }
 
-	@Override
-	public double getHitRatio() {
-		return this.hitRatio;
-	}
+    @Override
+    public double getHitRatio() {
+        return this.hitRatio;
+    }
 
-	@Override
-	public int getTotalEntries() {
-		return this.totalEntries;
-	}
+    @Override
+    public int getTotalEntries() {
+        return this.totalEntries;
+    }
 
-	public void setHitRatio(double value) {
-		this.hitRatio = value;
-	}
+    public void setHitRatio(double value) {
+        this.hitRatio = value;
+    }
 
-	public void setTotalEntries(int value) {
-		this.totalEntries = value;
-	}
+    public void setTotalEntries(int value) {
+        this.totalEntries = value;
+    }
 
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("hitRatio=").append(hitRatio);//$NON-NLS-1$
-		sb.append("; totalEntries=").append(totalEntries); //$NON-NLS-1$
-		sb.append("; requestCount=").append(requestCount); //$NON-NLS-1$
-		return sb.toString();
-	}
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("hitRatio=").append(hitRatio);//$NON-NLS-1$
+        sb.append("; totalEntries=").append(totalEntries); //$NON-NLS-1$
+        sb.append("; requestCount=").append(requestCount); //$NON-NLS-1$
+        return sb.toString();
+    }
 }

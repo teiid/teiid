@@ -29,80 +29,80 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class WindowSpecification implements LanguageObject {
 
-	private List<Expression> partition;
-	private OrderBy orderBy;
-	private WindowFrame windowFrame;
+    private List<Expression> partition;
+    private OrderBy orderBy;
+    private WindowFrame windowFrame;
 
-	public WindowSpecification() {
+    public WindowSpecification() {
 
-	}
+    }
 
-	public List<Expression> getPartition() {
-		return partition;
-	}
+    public List<Expression> getPartition() {
+        return partition;
+    }
 
-	public void setPartition(List<Expression> grouping) {
-		this.partition = grouping;
-	}
+    public void setPartition(List<Expression> grouping) {
+        this.partition = grouping;
+    }
 
-	public OrderBy getOrderBy() {
-		return orderBy;
-	}
+    public OrderBy getOrderBy() {
+        return orderBy;
+    }
 
-	public void setOrderBy(OrderBy orderBy) {
-		this.orderBy = orderBy;
-	}
+    public void setOrderBy(OrderBy orderBy) {
+        this.orderBy = orderBy;
+    }
 
-	public WindowFrame getWindowFrame() {
+    public WindowFrame getWindowFrame() {
         return windowFrame;
     }
 
-	public void setWindowFrame(WindowFrame frame) {
+    public void setWindowFrame(WindowFrame frame) {
         this.windowFrame = frame;
     }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(0, partition, orderBy, windowFrame);
-	}
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(0, partition, orderBy, windowFrame);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof WindowSpecification)) {
-			return false;
-		}
-		WindowSpecification other = (WindowSpecification)obj;
-		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
-		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
-		EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof WindowSpecification)) {
+            return false;
+        }
+        WindowSpecification other = (WindowSpecification)obj;
+        return EquivalenceUtil.areEqual(this.partition, other.partition) &&
+        EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
+        EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
+    }
 
-	@Override
-	public WindowSpecification clone() {
-		WindowSpecification clone = new WindowSpecification();
-		if (this.partition != null) {
-			clone.setPartition(LanguageObject.Util.deepClone(this.partition, Expression.class));
-		}
-		if (this.orderBy != null) {
-			clone.setOrderBy(this.orderBy.clone());
-		}
-		if (this.windowFrame != null) {
-		    clone.setWindowFrame(this.windowFrame.clone());
-		}
-		return clone;
-	}
+    @Override
+    public WindowSpecification clone() {
+        WindowSpecification clone = new WindowSpecification();
+        if (this.partition != null) {
+            clone.setPartition(LanguageObject.Util.deepClone(this.partition, Expression.class));
+        }
+        if (this.orderBy != null) {
+            clone.setOrderBy(this.orderBy.clone());
+        }
+        if (this.windowFrame != null) {
+            clone.setWindowFrame(this.windowFrame.clone());
+        }
+        return clone;
+    }
 
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
 
 }

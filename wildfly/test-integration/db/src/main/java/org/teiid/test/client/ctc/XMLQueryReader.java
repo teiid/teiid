@@ -47,142 +47,142 @@ public class XMLQueryReader implements QueryReader {
     private Map<String, String> querySetIDToFileMap = new HashMap<String, String>();
 
     public XMLQueryReader(String queryScenarioID, Properties properties)
-	    throws QueryTestFailedException {
-	this.props = properties;
-	this.queryScenarioIdentifier = queryScenarioID;
-	loadQuerySets();
+        throws QueryTestFailedException {
+    this.props = properties;
+    this.queryScenarioIdentifier = queryScenarioID;
+    loadQuerySets();
     }
 
     @Override
     public List<QueryTest> getQueries(String querySetID)
-	    throws QueryTestFailedException {
-	String queryFile = querySetIDToFileMap.get(querySetID);
+        throws QueryTestFailedException {
+    String queryFile = querySetIDToFileMap.get(querySetID);
 
-	try {
-	    return loadQueries(querySetID, queryFile);
-	} catch (IOException e) {
-	    throw new QueryTestFailedException((new StringBuilder()).append(
-		    "Failed to load queries from file: ").append(queryFile).append(" error:").append(e.getMessage())
-		    .toString());
-	}
+    try {
+        return loadQueries(querySetID, queryFile);
+    } catch (IOException e) {
+        throw new QueryTestFailedException((new StringBuilder()).append(
+            "Failed to load queries from file: ").append(queryFile).append(" error:").append(e.getMessage())
+            .toString());
+    }
 
     }
 
     @Override
     public Collection<String> getQuerySetIDs() {
-	return new HashSet<String>(querySetIDToFileMap.keySet());
+    return new HashSet<String>(querySetIDToFileMap.keySet());
     }
 
 
     private void loadQuerySets() throws QueryTestFailedException {
-	String query_dir_loc = this.props.getProperty(PROP_QUERY_FILES_DIR_LOC);
-	if (query_dir_loc == null)
-	    throw new QueryTestFailedException(
-		    "queryfiles.loc property was not specified ");
+    String query_dir_loc = this.props.getProperty(PROP_QUERY_FILES_DIR_LOC);
+    if (query_dir_loc == null)
+        throw new QueryTestFailedException(
+            "queryfiles.loc property was not specified ");
 
-	String query_root_loc = this.props
-		.getProperty(PROP_QUERY_FILES_ROOT_DIR);
+    String query_root_loc = this.props
+        .getProperty(PROP_QUERY_FILES_ROOT_DIR);
 
-	String loc = query_dir_loc;
+    String loc = query_dir_loc;
 
-	if (query_root_loc != null) {
-	    File dir = new File(query_root_loc, query_dir_loc);
-	    loc = dir.getAbsolutePath();
-	}
+    if (query_root_loc != null) {
+        File dir = new File(query_root_loc, query_dir_loc);
+        loc = dir.getAbsolutePath();
+    }
 
-	TestLogger.log("Loading queries from " + loc);
+    TestLogger.log("Loading queries from " + loc);
 
-	File files[] = findAllFilesInDirectoryHavingExtension(loc,
-		".xml");
-	if (files == null || files.length == 0)
-	    throw new QueryTestFailedException((new StringBuilder()).append(
-		    "No query files found in directory ").append(loc)
-		    .toString());
-	// List<String> queryFiles = new ArrayList<String>(files.length);
-	for (int i = 0; i < files.length; i++) {
-	    String queryfile = files[i].getAbsolutePath();
-	    // Get query set name
-	    String querySet = getQuerySetName(queryfile); //$NON-NLS-1$
-	    querySetIDToFileMap.put(querySet, queryfile);
-	    // queryFiles.add(files[i].getAbsolutePath());
-	}
+    File files[] = findAllFilesInDirectoryHavingExtension(loc,
+        ".xml");
+    if (files == null || files.length == 0)
+        throw new QueryTestFailedException((new StringBuilder()).append(
+            "No query files found in directory ").append(loc)
+            .toString());
+    // List<String> queryFiles = new ArrayList<String>(files.length);
+    for (int i = 0; i < files.length; i++) {
+        String queryfile = files[i].getAbsolutePath();
+        // Get query set name
+        String querySet = getQuerySetName(queryfile); //$NON-NLS-1$
+        querySetIDToFileMap.put(querySet, queryfile);
+        // queryFiles.add(files[i].getAbsolutePath());
+    }
 
     }
 
     private List <QueryTest> loadQueries(String querySetID, String queryFileName)
-	    throws IOException {
+        throws IOException {
 
-//	Map<String, Object> queries = new HashMap<String, Object>();
-	File queryFile = new File(queryFileName);
-	if (!queryFile.exists() || !queryFile.canRead()) {
-	    String msg = "Query file doesn't exist or cannot be read: " + queryFileName + ", ignoring and continuing";
-	    TestLogger.log(msg);
-	    throw new TransactionRuntimeException(msg); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	    // Get query set name
-	    //			String querySet = getQuerySetName(queryFileName) ; //$NON-NLS-1$
+//    Map<String, Object> queries = new HashMap<String, Object>();
+    File queryFile = new File(queryFileName);
+    if (!queryFile.exists() || !queryFile.canRead()) {
+        String msg = "Query file doesn't exist or cannot be read: " + queryFileName + ", ignoring and continuing";
+        TestLogger.log(msg);
+        throw new TransactionRuntimeException(msg); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+        // Get query set name
+        //            String querySet = getQuerySetName(queryFileName) ; //$NON-NLS-1$
 
-	    XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
-	    try {
-		return jstrat.parseXMLQueryFile(this.queryScenarioIdentifier, queryFile, querySetID);
-//		Iterator iter = queryMap.keySet().iterator();
-//		while (iter.hasNext()) {
-//		    String queryID = (String) iter.next();
-//		    String query = (String) queryMap.get(queryID);
+        XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
+        try {
+        return jstrat.parseXMLQueryFile(this.queryScenarioIdentifier, queryFile, querySetID);
+//        Iterator iter = queryMap.keySet().iterator();
+//        while (iter.hasNext()) {
+//            String queryID = (String) iter.next();
+//            String query = (String) queryMap.get(queryID);
 //
-//		    String uniqueID = querySetID + "_" + queryID;
-//		    queries.put(uniqueID, query);
-//		}
+//            String uniqueID = querySetID + "_" + queryID;
+//            queries.put(uniqueID, query);
+//        }
 
-	    } catch (Exception e) {
-		String msg = "Error reading query file: " + queryFileName + ", " + e.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$
-		TestLogger.log(msg);
-		throw new IOException(msg); //$NON-NLS-1$ //$NON-NLS-2$
-	    }
+        } catch (Exception e) {
+        String msg = "Error reading query file: " + queryFileName + ", " + e.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$
+        TestLogger.log(msg);
+        throw new IOException(msg); //$NON-NLS-1$ //$NON-NLS-2$
+        }
 
-//	return queries;
+//    return queries;
     }
 
     private static String getQuerySetName(String queryFileName) {
-	// Get query set name
-	String querySet = queryFileName;
-	List<String> nameParts = StringUtil.split(querySet, "./\\"); //$NON-NLS-1$
-	if (nameParts.size() > 1) {
-	    querySet = nameParts.get(nameParts.size() - 2);
-	}
-	return querySet;
+    // Get query set name
+    String querySet = queryFileName;
+    List<String> nameParts = StringUtil.split(querySet, "./\\"); //$NON-NLS-1$
+    if (nameParts.size() > 1) {
+        querySet = nameParts.get(nameParts.size() - 2);
+    }
+    return querySet;
     }
 
     public static void main(String[] args) {
-	System.setProperty(ConfigPropertyNames.CONFIG_FILE,
-		"ctc-bqt-test.properties");
+    System.setProperty(ConfigPropertyNames.CONFIG_FILE,
+        "ctc-bqt-test.properties");
 
-	ConfigPropertyLoader _instance = ConfigPropertyLoader.getInstance();
-	Properties p = _instance.getProperties();
-	if (p == null || p.isEmpty()) {
-	    throw new RuntimeException("Failed to load config properties file");
+    ConfigPropertyLoader _instance = ConfigPropertyLoader.getInstance();
+    Properties p = _instance.getProperties();
+    if (p == null || p.isEmpty()) {
+        throw new RuntimeException("Failed to load config properties file");
 
-	}
+    }
 
-	_instance.setProperty(PROP_QUERY_FILES_ROOT_DIR, new File(
-		"src/main/resources/").getAbsolutePath());
+    _instance.setProperty(PROP_QUERY_FILES_ROOT_DIR, new File(
+        "src/main/resources/").getAbsolutePath());
 
-	try {
-	    XMLQueryReader reader = new XMLQueryReader("scenario_id",  _instance.getProperties());
-	    Iterator<String> it = reader.getQuerySetIDs().iterator();
-	    while (it.hasNext()) {
-		String querySetID = it.next();
+    try {
+        XMLQueryReader reader = new XMLQueryReader("scenario_id",  _instance.getProperties());
+        Iterator<String> it = reader.getQuerySetIDs().iterator();
+        while (it.hasNext()) {
+        String querySetID = it.next();
 
-		List<QueryTest> queries = reader.getQueries(querySetID);
+        List<QueryTest> queries = reader.getQueries(querySetID);
 
-		if (queries.size() == 0L) {
-		    System.out.println("Failed, didn't load any queries ");
-		}
-	    }
-	} catch (QueryTestFailedException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
-	}
+        if (queries.size() == 0L) {
+            System.out.println("Failed, didn't load any queries ");
+        }
+        }
+    } catch (QueryTestFailedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }
 
     }
 

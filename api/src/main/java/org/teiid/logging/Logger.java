@@ -44,8 +44,8 @@ public interface Logger {
      */
     void shutdown();
 
-	void putMdc(String key, String val);
+    void putMdc(String key, String val);
 
-	void removeMdc(String key);
+    void removeMdc(String key);
 
 }

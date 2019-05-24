@@ -56,11 +56,11 @@ public class DerivedColumn extends BaseLanguageObject {
      * @return
      */
     public boolean isProjected() {
-		return projected;
-	}
+        return projected;
+    }
 
     public void setProjected(boolean projected) {
-		this.projected = projected;
-	}
+        this.projected = projected;
+    }
 
 }

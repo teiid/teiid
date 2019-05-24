@@ -27,7 +27,7 @@ import org.teiid.adminapi.PropertyDefinition;
 
 
 public class PropertyDefinitionMetadata extends AdminObjectImpl implements PropertyDefinition {
-	private static final long serialVersionUID = 6612838530524627205L;
+    private static final long serialVersionUID = 6612838530524627205L;
     private Collection allowedValues = new ArrayList();
     private Object defaultValue = null;
     private String description = null;
@@ -205,10 +205,10 @@ public class PropertyDefinitionMetadata extends AdminObjectImpl implements Prope
         this.requiresRestart = requiresRestart;
     }
 
-	@Override
-	public boolean isConstrainedToAllowedValues() {
-		return allowedValues != null && !allowedValues.isEmpty();
-	}
+    @Override
+    public boolean isConstrainedToAllowedValues() {
+        return allowedValues != null && !allowedValues.isEmpty();
+    }
 
     @Override
     public String getCategory() {

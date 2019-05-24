@@ -133,7 +133,7 @@ public class LocalClient implements Client {
         StringBuilder sb = new StringBuilder();
         sb.append("jdbc:teiid:").append(vdbName); //$NON-NLS-1$
         if (version != null) {
-        	sb.append(".").append(version); //$NON-NLS-1$
+            sb.append(".").append(version); //$NON-NLS-1$
         }
         sb.append(";"); //$NON-NLS-1$
 
@@ -153,16 +153,16 @@ public class LocalClient implements Client {
     @Override
     public VDBMetaData getVDB() {
         try {
-			return getVDBInternal();
+            return getVDBInternal();
         } catch (TeiidProcessingException e) {
-        	throw new TeiidRuntimeException(e);
-		} catch (SQLException e) {
-			throw new TeiidRuntimeException(e);
-		}
+            throw new TeiidRuntimeException(e);
+        } catch (SQLException e) {
+            throw new TeiidRuntimeException(e);
+        }
     }
 
-	private VDBMetaData getVDBInternal() throws SQLException, TeiidProcessingException {
-		if (this.vdb == null) {
+    private VDBMetaData getVDBInternal() throws SQLException, TeiidProcessingException {
+        if (this.vdb == null) {
             LocalServerConnection lsc = (LocalServerConnection) getConnection().getServerConnection();
             vdb = lsc.getWorkContext().getVDB();
             if (vdb == null) {
@@ -172,11 +172,11 @@ public class LocalClient implements Client {
             }
             this.vdb = vdb;
         }
-		if (vdb.getStatus() != Status.ACTIVE) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, vdb, vdb.getStatus()));
-		}
+        if (vdb.getStatus() != Status.ACTIVE) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, vdb, vdb.getStatus()));
+        }
         return this.vdb;
-	}
+    }
 
     @Override
     public void executeCall(String sql, List<SQLParameter> parameters, ProcedureReturnType returnType,

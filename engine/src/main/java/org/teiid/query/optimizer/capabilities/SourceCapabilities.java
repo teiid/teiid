@@ -373,17 +373,17 @@ public interface SourceCapabilities {
 
         private final String toString;
 
-    	Capability(String toString) {
-    		this.toString = toString;
-		}
+        Capability(String toString) {
+            this.toString = toString;
+        }
 
-    	Capability() {
-    		this.toString = name();
-		}
+        Capability() {
+            this.toString = name();
+        }
 
-    	public String toString() {
-    		return toString;
-    	}
+        public String toString() {
+            return toString;
+        }
 
     }
 

@@ -250,289 +250,289 @@ import nux.xom.pool.XOMUtil;
  */
 public class StreamingPathFilter {
 
-	private final String[] _namespaceURIs;
-	private final String[] _localNames;
+    private final String[] _namespaceURIs;
+    private final String[] _localNames;
 
-	/**
-	 * Constructs a compiled filter from the given location path and prefix
-	 * --&gt; namespaceURI map.
-	 *
-	 * @param locationPath
-	 *            the path expression to compile
-	 * @param prefixes
-	 *            a map of prefix --&gt; namespaceURI associations, each of type
-	 *            String --&gt; String.
-	 *
-	 * @throws StreamingPathFilterException
-	 *             if the location path has a syntax error
-	 */
-	public StreamingPathFilter(String locationPath, Map prefixes) throws StreamingPathFilterException {
-		if (locationPath == null)
-			throw new StreamingPathFilterException("locationPath must not be null");
-		if (locationPath.indexOf("//") >= 0)
-			throw new StreamingPathFilterException("DESCENDANT axis is not supported");
+    /**
+     * Constructs a compiled filter from the given location path and prefix
+     * --&gt; namespaceURI map.
+     *
+     * @param locationPath
+     *            the path expression to compile
+     * @param prefixes
+     *            a map of prefix --&gt; namespaceURI associations, each of type
+     *            String --&gt; String.
+     *
+     * @throws StreamingPathFilterException
+     *             if the location path has a syntax error
+     */
+    public StreamingPathFilter(String locationPath, Map prefixes) throws StreamingPathFilterException {
+        if (locationPath == null)
+            throw new StreamingPathFilterException("locationPath must not be null");
+        if (locationPath.indexOf("//") >= 0)
+            throw new StreamingPathFilterException("DESCENDANT axis is not supported");
 
-		String path = locationPath.trim();
-		if (path.startsWith("/")) path = path.substring(1);
-		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-		path = path.trim();
-		if (path.equals("")) path = "*:*"; // fixup "match anything"
-		String[] localNames = path.split("/");
-		String[] namespaceURIs = new String[localNames.length];
+        String path = locationPath.trim();
+        if (path.startsWith("/")) path = path.substring(1);
+        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+        path = path.trim();
+        if (path.equals("")) path = "*:*"; // fixup "match anything"
+        String[] localNames = path.split("/");
+        String[] namespaceURIs = new String[localNames.length];
 
-		// parse prefix:localName pairs and resolve prefixes to namespaceURIs
-		for (int i = 0; i < localNames.length; i++) {
-			int k = localNames[i].indexOf(':');
-			if (k >= 0 && localNames[i].indexOf(':', k+1) >= 0)
-				throw new StreamingPathFilterException(
-					"QName must not contain more than one colon: "
-					+ "qname='" + localNames[i] + "', path='" + path + "'");
-			if (k <= 0) {
-				namespaceURIs[i] = ""; // no namespace
-			} else {
-				String prefix = localNames[i].substring(0, k).trim();
-				if (k >= localNames[i].length() - 1)
-					throw new StreamingPathFilterException(
-						"Missing localName for prefix: " + "prefix='"
-						+ prefix + "', path='" + path + "', prefixes=" + prefixes);
-				if (prefix.equals("*")) {
-					// namespace is irrelevant (does not matter)
-					namespaceURIs[i] = null;
-				} else {
-					// lookup namespace of uri
-					if (prefixes == null)
-						throw new StreamingPathFilterException("prefixes must not be null");
-					Object uri = prefixes.get(prefix);
-					if (uri == null)
-						throw new StreamingPathFilterException(
-							"Missing namespace for prefix: "
-							+ "prefix='" + prefix + "', path='" + path
-							+ "', prefixes=" + prefixes);
-					namespaceURIs[i] = uri.toString().trim();
-				}
-			} // end if
+        // parse prefix:localName pairs and resolve prefixes to namespaceURIs
+        for (int i = 0; i < localNames.length; i++) {
+            int k = localNames[i].indexOf(':');
+            if (k >= 0 && localNames[i].indexOf(':', k+1) >= 0)
+                throw new StreamingPathFilterException(
+                    "QName must not contain more than one colon: "
+                    + "qname='" + localNames[i] + "', path='" + path + "'");
+            if (k <= 0) {
+                namespaceURIs[i] = ""; // no namespace
+            } else {
+                String prefix = localNames[i].substring(0, k).trim();
+                if (k >= localNames[i].length() - 1)
+                    throw new StreamingPathFilterException(
+                        "Missing localName for prefix: " + "prefix='"
+                        + prefix + "', path='" + path + "', prefixes=" + prefixes);
+                if (prefix.equals("*")) {
+                    // namespace is irrelevant (does not matter)
+                    namespaceURIs[i] = null;
+                } else {
+                    // lookup namespace of uri
+                    if (prefixes == null)
+                        throw new StreamingPathFilterException("prefixes must not be null");
+                    Object uri = prefixes.get(prefix);
+                    if (uri == null)
+                        throw new StreamingPathFilterException(
+                            "Missing namespace for prefix: "
+                            + "prefix='" + prefix + "', path='" + path
+                            + "', prefixes=" + prefixes);
+                    namespaceURIs[i] = uri.toString().trim();
+                }
+            } // end if
 
-			localNames[i] = localNames[i].substring(k + 1).trim();
-			if (localNames[i].equals("*")) {
-				// localName is irrelevant (does not matter)
-				localNames[i] = null;
-			}
-		}
+            localNames[i] = localNames[i].substring(k + 1).trim();
+            if (localNames[i].equals("*")) {
+                // localName is irrelevant (does not matter)
+                localNames[i] = null;
+            }
+        }
 
-		this._localNames = localNames;
-		this._namespaceURIs = namespaceURIs;
-//		System.err.println("localNames=" + java.util.Arrays.asList(localNames));
-//		System.err.println("namespaceURIs=" + java.util.Arrays.asList(namespaceURIs));
-	}
+        this._localNames = localNames;
+        this._namespaceURIs = namespaceURIs;
+//        System.err.println("localNames=" + java.util.Arrays.asList(localNames));
+//        System.err.println("namespaceURIs=" + java.util.Arrays.asList(namespaceURIs));
+    }
 
-	/**
-	 * Creates and returns a new node factory for this path filter, to be be passed
-	 * to a {@link nu.xom.Builder}.
-	 * <p>
-	 * Like a <code>Builder</code>, the node factory can be reused serially,
-	 * but is not thread-safe because it is stateful. If you need thread-safety,
-	 * call this method each time you need a new node factory for a new thread.
-	 *
-	 * @param childFactory
-	 *            an optional factory to delegate calls to. All calls except
-	 *            <code>makeRootElement()</code>,
-	 *            <code>startMakingElement()</code> and
-	 *            <code>finishMakingElement()</code> are delegated to the child
-	 *            factory. If this parameter is <code>null</code> it defaults
-	 *            to the factory returned by
-	 *            {@link XOMUtil#getIgnoreWhitespaceOnlyTextNodeFactory()}.
-	 *
-	 * @param transform
-	 *            an application-specific callback called by the returned node
-	 *            factory whenever an element matches the filter's entire location
-	 *            path. May be <code>null</code> in which case the
-	 *            identity transformation is used, adding the matching element
-	 *            unchanged and "as is" to the document being build by a
-	 *            {@link nu.xom.Builder}.
-	 * @return a node factory for this path filter
-	 */
-	public NodeFactory createNodeFactory(NodeFactory childFactory, StreamingTransform transform) {
-		if (childFactory == null)
-			childFactory = XOMUtil.getIgnoreWhitespaceOnlyTextNodeFactory();
-		return new StreamingPathFilterNodeFactory(_localNames, _namespaceURIs, childFactory, transform);
-	}
+    /**
+     * Creates and returns a new node factory for this path filter, to be be passed
+     * to a {@link nu.xom.Builder}.
+     * <p>
+     * Like a <code>Builder</code>, the node factory can be reused serially,
+     * but is not thread-safe because it is stateful. If you need thread-safety,
+     * call this method each time you need a new node factory for a new thread.
+     *
+     * @param childFactory
+     *            an optional factory to delegate calls to. All calls except
+     *            <code>makeRootElement()</code>,
+     *            <code>startMakingElement()</code> and
+     *            <code>finishMakingElement()</code> are delegated to the child
+     *            factory. If this parameter is <code>null</code> it defaults
+     *            to the factory returned by
+     *            {@link XOMUtil#getIgnoreWhitespaceOnlyTextNodeFactory()}.
+     *
+     * @param transform
+     *            an application-specific callback called by the returned node
+     *            factory whenever an element matches the filter's entire location
+     *            path. May be <code>null</code> in which case the
+     *            identity transformation is used, adding the matching element
+     *            unchanged and "as is" to the document being build by a
+     *            {@link nu.xom.Builder}.
+     * @return a node factory for this path filter
+     */
+    public NodeFactory createNodeFactory(NodeFactory childFactory, StreamingTransform transform) {
+        if (childFactory == null)
+            childFactory = XOMUtil.getIgnoreWhitespaceOnlyTextNodeFactory();
+        return new StreamingPathFilterNodeFactory(_localNames, _namespaceURIs, childFactory, transform);
+    }
 
-	///////////////////////////////////////////////////////////////////////////////
-	// Nested classes:
-	///////////////////////////////////////////////////////////////////////////////
-	private static final class StreamingPathFilterNodeFactory extends NodeFactory {
+    ///////////////////////////////////////////////////////////////////////////////
+    // Nested classes:
+    ///////////////////////////////////////////////////////////////////////////////
+    private static final class StreamingPathFilterNodeFactory extends NodeFactory {
 
-		private final String[] namespaceURIs;
-		private final String[] localNames;
-		private final StreamingTransform transform;
-		private final NodeFactory child;
+        private final String[] namespaceURIs;
+        private final String[] localNames;
+        private final StreamingTransform transform;
+        private final NodeFactory child;
 
-		private int level; // current nesting level = current location path step
-		private Element mismatch; // last element that did not match path
+        private int level; // current nesting level = current location path step
+        private Element mismatch; // last element that did not match path
 
-		private final Nodes NONE = new Nodes();
-		private static final boolean DEBUG = false;
+        private final Nodes NONE = new Nodes();
+        private static final boolean DEBUG = false;
 
-		public StreamingPathFilterNodeFactory(String[] localNames, String[] namespaceURIs,
-				NodeFactory child, StreamingTransform transform) {
+        public StreamingPathFilterNodeFactory(String[] localNames, String[] namespaceURIs,
+                NodeFactory child, StreamingTransform transform) {
 
-			this.localNames = localNames;
-			this.namespaceURIs = namespaceURIs;
-			this.child = child;
-			this.transform = transform;
-		}
+            this.localNames = localNames;
+            this.namespaceURIs = namespaceURIs;
+            this.child = child;
+            this.transform = transform;
+        }
 
-		public Document startMakingDocument() {
-			// reset state
-			level = -1;
-			mismatch = null;
-			return child.startMakingDocument();
-		}
+        public Document startMakingDocument() {
+            // reset state
+            level = -1;
+            mismatch = null;
+            return child.startMakingDocument();
+        }
 
-		public Element startMakingElement(String qname, String namespaceURI) {
-			level++;
-//			if (DEBUG) System.err.println("startlevel=" + level + ", name="+ qname);
-			// check against path, if needed
-			if (mismatch == null && level < localNames.length) {
-				if (!isMatch(qname, namespaceURI)) {
-					// build this element despite mismatch;
-					// so we can reset state in finishMakingElement()
-					mismatch = super.startMakingElement(qname, namespaceURI);
-					return mismatch;
-				}
-			}
-			if (mismatch == null) {
-				// no mismatch so far, build this element
-				return super.startMakingElement(qname, namespaceURI);
-			} else {
-				// mismatch; no need to build this element
-				level--;
-				return null;
-			}
-		}
+        public Element startMakingElement(String qname, String namespaceURI) {
+            level++;
+//            if (DEBUG) System.err.println("startlevel=" + level + ", name="+ qname);
+            // check against path, if needed
+            if (mismatch == null && level < localNames.length) {
+                if (!isMatch(qname, namespaceURI)) {
+                    // build this element despite mismatch;
+                    // so we can reset state in finishMakingElement()
+                    mismatch = super.startMakingElement(qname, namespaceURI);
+                    return mismatch;
+                }
+            }
+            if (mismatch == null) {
+                // no mismatch so far, build this element
+                return super.startMakingElement(qname, namespaceURI);
+            } else {
+                // mismatch; no need to build this element
+                level--;
+                return null;
+            }
+        }
 
-		// does element match current level/step within location path?
-		private boolean isMatch(String qname, String namespaceURI) {
-			int i = qname.indexOf(':') + 1;
-			String name = localNames[level];
-			String uri = namespaceURIs[level];
-			return
-				(name == null ||
-				 name.regionMatches(0, qname, i, Math.max(qname.length() - i, name.length()))
-				 // faster than name.equals(qname.substring(i))
-				)
-				&&
-				(uri == null || uri.equals(namespaceURI));
-		}
+        // does element match current level/step within location path?
+        private boolean isMatch(String qname, String namespaceURI) {
+            int i = qname.indexOf(':') + 1;
+            String name = localNames[level];
+            String uri = namespaceURIs[level];
+            return
+                (name == null ||
+                 name.regionMatches(0, qname, i, Math.max(qname.length() - i, name.length()))
+                 // faster than name.equals(qname.substring(i))
+                )
+                &&
+                (uri == null || uri.equals(namespaceURI));
+        }
 
-		public Nodes finishMakingElement(Element elem) {
-//			if (DEBUG) System.err.println("finishlevel=" + level + ", name="+ elem.getLocalName());
-			if (level == 0) {
-				// root element must always be present;
-				// a document without root element is illegal in XOM
-				mismatch = null; // help gc
-				level--;
-				return super.finishMakingElement(elem);
-			}
-			if (elem == mismatch) {
-				// reset state
-				mismatch = null;
-				level--;
-				return NONE;
-			}
-			if (level == localNames.length - 1) {
-				// we've found an element matching the full path expression
-				return transformMatch(elem);
-			}
+        public Nodes finishMakingElement(Element elem) {
+//            if (DEBUG) System.err.println("finishlevel=" + level + ", name="+ elem.getLocalName());
+            if (level == 0) {
+                // root element must always be present;
+                // a document without root element is illegal in XOM
+                mismatch = null; // help gc
+                level--;
+                return super.finishMakingElement(elem);
+            }
+            if (elem == mismatch) {
+                // reset state
+                mismatch = null;
+                level--;
+                return NONE;
+            }
+            if (level == localNames.length - 1) {
+                // we've found an element matching the full path expression
+                return transformMatch(elem);
+            }
 
-			level--;
-			if (level < localNames.length - 1 && !hasChildElements(elem)) {
-				// prune tree if mismatch or empty
-				return NONE;
-			}
-			return super.finishMakingElement(elem);
-		}
+            level--;
+            if (level < localNames.length - 1 && !hasChildElements(elem)) {
+                // prune tree if mismatch or empty
+                return NONE;
+            }
+            return super.finishMakingElement(elem);
+        }
 
-		private Nodes transformMatch(Element elem) {
-//			if (DEBUG) System.err.println("found match at level=" + level + ":"
-//							+ XOMUtil.toPrettyXML(elem));
-			level--;
-			if (transform == null) return super.finishMakingElement(elem);
-			Nodes results = transform.transform(elem);
+        private Nodes transformMatch(Element elem) {
+//            if (DEBUG) System.err.println("found match at level=" + level + ":"
+//                            + XOMUtil.toPrettyXML(elem));
+            level--;
+            if (transform == null) return super.finishMakingElement(elem);
+            Nodes results = transform.transform(elem);
 
-			// prevent potential nu.xom.MultipleParentException by detaching
-			for (int i = results.size(); --i >= 0; ) {
-				Node node = results.get(i);
-				if (node != elem) node.detach();
-			}
-			return results;
-		}
+            // prevent potential nu.xom.MultipleParentException by detaching
+            for (int i = results.size(); --i >= 0; ) {
+                Node node = results.get(i);
+                if (node != elem) node.detach();
+            }
+            return results;
+        }
 
-		// is at least one child element present?
-		private boolean hasChildElements(Element elem) {
-			for (int i = elem.getChildCount(); --i >= 0;) {
-				if (elem.getChild(i) instanceof Element) return true;
-			}
-			return false;
-		}
+        // is at least one child element present?
+        private boolean hasChildElements(Element elem) {
+            for (int i = elem.getChildCount(); --i >= 0;) {
+                if (elem.getChild(i) instanceof Element) return true;
+            }
+            return false;
+        }
 
-		//
-		// delegating methods:
-		//
-		public Nodes makeComment(String data) {
-			return mismatch == null ? child.makeComment(data) : NONE;
-		}
+        //
+        // delegating methods:
+        //
+        public Nodes makeComment(String data) {
+            return mismatch == null ? child.makeComment(data) : NONE;
+        }
 
-		public Nodes makeText(String data) {
-//			return mismatch == null ? child.makeText(data) : NONE;
-			if (mismatch == null) {
-				if (level == 0 && isWhitespaceOnly(data))
-					return NONE; // avoid accumulating whitespace garbage in root element (i.e. avoid hidden memory leak)
-				else
-					return child.makeText(data);
-			}
-			return NONE;
-		}
+        public Nodes makeText(String data) {
+//            return mismatch == null ? child.makeText(data) : NONE;
+            if (mismatch == null) {
+                if (level == 0 && isWhitespaceOnly(data))
+                    return NONE; // avoid accumulating whitespace garbage in root element (i.e. avoid hidden memory leak)
+                else
+                    return child.makeText(data);
+            }
+            return NONE;
+        }
 
-		public Nodes makeAttribute(String qname, String URI, String value, Attribute.Type type) {
-			return mismatch == null ? child.makeAttribute(qname, URI, value, type) : NONE;
-		}
+        public Nodes makeAttribute(String qname, String URI, String value, Attribute.Type type) {
+            return mismatch == null ? child.makeAttribute(qname, URI, value, type) : NONE;
+        }
 
-		public Nodes makeProcessingInstruction(String target, String data) {
-			return mismatch == null ? child.makeProcessingInstruction(target, data) : NONE;
-		}
+        public Nodes makeProcessingInstruction(String target, String data) {
+            return mismatch == null ? child.makeProcessingInstruction(target, data) : NONE;
+        }
 
-		public Nodes makeDocType(String rootElementName, String publicID, String systemID) {
-			return child.makeDocType(rootElementName, publicID, systemID);
-		}
+        public Nodes makeDocType(String rootElementName, String publicID, String systemID) {
+            return child.makeDocType(rootElementName, publicID, systemID);
+        }
 
-		public void finishMakingDocument(Document document) {
-			child.finishMakingDocument(document);
-		}
+        public void finishMakingDocument(Document document) {
+            child.finishMakingDocument(document);
+        }
 
-		/** see XML spec */
-		private static boolean isWhitespace(char c) {
-			switch (c) {
-				case '\t': return true;
-				case '\n': return true;
-				case '\r': return true;
-				case ' ' : return true;
-				default  : return false;
-			}
-//			// this wouldn't be quite right:
-//			if (c > ' ') // see String.trim() implementation
-//				return false;
-//			if (! Character.isWhitespace(c))
-//				return false;
-		}
+        /** see XML spec */
+        private static boolean isWhitespace(char c) {
+            switch (c) {
+                case '\t': return true;
+                case '\n': return true;
+                case '\r': return true;
+                case ' ' : return true;
+                default  : return false;
+            }
+//            // this wouldn't be quite right:
+//            if (c > ' ') // see String.trim() implementation
+//                return false;
+//            if (! Character.isWhitespace(c))
+//                return false;
+        }
 
-		private static boolean isWhitespaceOnly(String str) {
-			for (int i=str.length(); --i >= 0; ) {
-				if (!isWhitespace(str.charAt(i))) return false;
-			}
-			return true;
-		}
+        private static boolean isWhitespaceOnly(String str) {
+            for (int i=str.length(); --i >= 0; ) {
+                if (!isWhitespace(str.charAt(i))) return false;
+            }
+            return true;
+        }
 
-	}
+    }
 
 }

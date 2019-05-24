@@ -46,10 +46,10 @@ public interface FunctionCategoryConstants {
      */
     public static final String CONVERSION = "Conversion"; //$NON-NLS-1$
 
-	/**
-	 * "System" functions expose system information.
-	 */
-	public static final String SYSTEM = "System"; //$NON-NLS-1$
+    /**
+     * "System" functions expose system information.
+     */
+    public static final String SYSTEM = "System"; //$NON-NLS-1$
 
     /**
      * "Miscellaneous" functions are for functions that don't fit in any obvious category.

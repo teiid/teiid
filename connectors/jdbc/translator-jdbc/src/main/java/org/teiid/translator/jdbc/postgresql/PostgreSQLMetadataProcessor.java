@@ -36,18 +36,18 @@ public class PostgreSQLMetadataProcessor
     @Override
     protected String getRuntimeType(int type, String typeName, int precision) {
         //pg will otherwise report a 1111/other type for geometry
-    	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+        if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.GEOMETRY;
         }
-    	if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+        if ("geography".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.GEOGRAPHY;
         }
-    	if ("json".equalsIgnoreCase(typeName) || "jsonb".equalsIgnoreCase(typeName)) { //$NON-NLS-1$ //$NON-NLS-2$
+        if ("json".equalsIgnoreCase(typeName) || "jsonb".equalsIgnoreCase(typeName)) { //$NON-NLS-1$ //$NON-NLS-2$
             return TypeFacility.RUNTIME_NAMES.JSON;
         }
-    	if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) {
-    	    return TypeFacility.RUNTIME_NAMES.STRING;
-    	}
+        if (PostgreSQLExecutionFactory.UUID_TYPE.equalsIgnoreCase(typeName)) {
+            return TypeFacility.RUNTIME_NAMES.STRING;
+        }
         return super.getRuntimeType(type, typeName, precision);
     }
 

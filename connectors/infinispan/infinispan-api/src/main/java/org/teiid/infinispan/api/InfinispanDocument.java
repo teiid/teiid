@@ -33,14 +33,14 @@ public class InfinispanDocument extends Document {
     private Object identifier;
 
     public Object getIdentifier() {
-		return identifier;
-	}
+        return identifier;
+    }
 
-	public void setIdentifier(Object identifier) {
-		this.identifier = identifier;
-	}
+    public void setIdentifier(Object identifier) {
+        this.identifier = identifier;
+    }
 
-	static class Stats {
+    static class Stats {
         AtomicInteger matched = new AtomicInteger(0);
         AtomicInteger unmatched = new AtomicInteger(0);
     }

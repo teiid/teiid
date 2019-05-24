@@ -22,32 +22,32 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class SetClause extends BaseLanguageObject {
 
-	private ColumnReference symbol;
-	private Expression value;
+    private ColumnReference symbol;
+    private Expression value;
 
-	public SetClause(ColumnReference symbol, Expression value) {
-		this.symbol = symbol;
-		this.value = value;
-	}
+    public SetClause(ColumnReference symbol, Expression value) {
+        this.symbol = symbol;
+        this.value = value;
+    }
 
-	public ColumnReference getSymbol() {
-		return symbol;
-	}
+    public ColumnReference getSymbol() {
+        return symbol;
+    }
 
-	public Expression getValue() {
-		return value;
-	}
+    public Expression getValue() {
+        return value;
+    }
 
-	public void setSymbol(ColumnReference symbol) {
-		this.symbol = symbol;
-	}
+    public void setSymbol(ColumnReference symbol) {
+        this.symbol = symbol;
+    }
 
-	public void setValue(Expression value) {
-		this.value = value;
-	}
+    public void setValue(Expression value) {
+        this.value = value;
+    }
 
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

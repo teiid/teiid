@@ -25,85 +25,85 @@ import org.teiid.core.util.PropertiesUtils;
 
 public final class BinaryType implements Comparable<BinaryType> {
 
-	private byte[] bytes;
+    private byte[] bytes;
 
-	public BinaryType(byte[] bytes) {
-		Assertion.isNotNull(bytes);
-		//to be truly immutable we should clone here
-		this.bytes = bytes;
-	}
+    public BinaryType(byte[] bytes) {
+        Assertion.isNotNull(bytes);
+        //to be truly immutable we should clone here
+        this.bytes = bytes;
+    }
 
-	/**
-	 *
-	 * @return the actual bytes - no modifications should be performed
-	 */
-	public byte[] getBytesDirect() {
-		return this.bytes;
-	}
+    /**
+     *
+     * @return the actual bytes - no modifications should be performed
+     */
+    public byte[] getBytesDirect() {
+        return this.bytes;
+    }
 
-	/**
-	 *
-	 * @return a copy of the bytes
-	 */
-	public byte[] getBytes() {
-		return Arrays.copyOf(bytes, bytes.length);
-	}
+    /**
+     *
+     * @return a copy of the bytes
+     */
+    public byte[] getBytes() {
+        return Arrays.copyOf(bytes, bytes.length);
+    }
 
-	/**
-	 * Get the byte value at a given index
-	 * @param index
-	 */
-	public byte getByte(int index) {
-		return bytes[index];
-	}
+    /**
+     * Get the byte value at a given index
+     * @param index
+     */
+    public byte getByte(int index) {
+        return bytes[index];
+    }
 
-	public int getLength() {
-		return bytes.length;
-	}
+    public int getLength() {
+        return bytes.length;
+    }
 
-	@Override
-	public int compareTo(BinaryType o) {
-		int len1 = getLength();
-		int len2 = o.getLength();
-		int n = Math.min(len1, len2);
-	    for (int i = 0; i < n; i++) {
-	    	//unsigned comparison
-			int b1 = bytes[i] & 0xff;
-			int b2 = o.bytes[i] & 0xff;
-			if (b1 != b2) {
-			    return b1 - b2;
-			}
-	    }
-		return len1 - len2;
-	}
+    @Override
+    public int compareTo(BinaryType o) {
+        int len1 = getLength();
+        int len2 = o.getLength();
+        int n = Math.min(len1, len2);
+        for (int i = 0; i < n; i++) {
+            //unsigned comparison
+            int b1 = bytes[i] & 0xff;
+            int b2 = o.bytes[i] & 0xff;
+            if (b1 != b2) {
+                return b1 - b2;
+            }
+        }
+        return len1 - len2;
+    }
 
-	@Override
-	public int hashCode() {
-		return Arrays.hashCode(bytes);
-	}
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(bytes);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof BinaryType)) {
-			return false;
-		}
-		BinaryType other = (BinaryType)obj;
-		return Arrays.equals(this.bytes, other.bytes);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof BinaryType)) {
+            return false;
+        }
+        BinaryType other = (BinaryType)obj;
+        return Arrays.equals(this.bytes, other.bytes);
+    }
 
-	/**
-	 * Returns the hex string representing the binary value.
-	 */
-	@Override
-	public String toString() {
-		return PropertiesUtils.toHex(bytes);
-	}
+    /**
+     * Returns the hex string representing the binary value.
+     */
+    @Override
+    public String toString() {
+        return PropertiesUtils.toHex(bytes);
+    }
 
-	public BlobType toBlob() {
-		return new BlobType(BlobType.createBlob(bytes));
-	}
+    public BlobType toBlob() {
+        return new BlobType(BlobType.createBlob(bytes));
+    }
 
 }

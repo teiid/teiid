@@ -46,7 +46,7 @@ public class StoredProcedure extends ProcedureContainer {
     // =========================================================================
 
     /** Used as parameters */
-	private Map<Integer, SPParameter> mapOfParameters = new TreeMap<Integer, SPParameter>();
+    private Map<Integer, SPParameter> mapOfParameters = new TreeMap<Integer, SPParameter>();
 
     /** Used to reference result set parameter if there is any */
     private Integer resultSetParameterKey;
@@ -67,7 +67,7 @@ public class StoredProcedure extends ProcedureContainer {
     private boolean isCallableStatement;
     private boolean isProcedureRelational;
 
-	private boolean pushedInQuery;
+    private boolean pushedInQuery;
 
     /**
      * Constructs a default instance of this class.
@@ -75,13 +75,13 @@ public class StoredProcedure extends ProcedureContainer {
     public StoredProcedure() {
     }
 
-	/**
-	 * Return type of command.
-	 * @return TYPE_STORED_PROCEDURE
-	 */
-	public int getType() {
-		return Command.TYPE_STORED_PROCEDURE;
-	}
+    /**
+     * Return type of command.
+     * @return TYPE_STORED_PROCEDURE
+     */
+    public int getType() {
+        return Command.TYPE_STORED_PROCEDURE;
+    }
 
     private SPParameter getResultSetParameter(){
         if (this.resultSetParameterKey != null){
@@ -146,7 +146,7 @@ public class StoredProcedure extends ProcedureContainer {
 
         Integer key = parameter.getIndex();
         if(parameter.getParameterType() == ParameterInfo.RESULT_SET){
-        	resultSetParameterKey = key;
+            resultSetParameterKey = key;
         }
 
         mapOfParameters.put(key, parameter);
@@ -161,8 +161,8 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public Map<Integer, SPParameter> getMapOfParameters() {
-		return mapOfParameters;
-	}
+        return mapOfParameters;
+    }
 
     public SPParameter getParameter(int index){
         return mapOfParameters.get(index);
@@ -170,18 +170,18 @@ public class StoredProcedure extends ProcedureContainer {
 
     public int getNumberOfColumns(){
         SPParameter resultSetParameter = getResultSetParameter();
-    	if(resultSetParameter != null){
-        	return resultSetParameter.getResultSetColumns().size();
-    	}
-    	return 0;
+        if(resultSetParameter != null){
+            return resultSetParameter.getResultSetColumns().size();
+        }
+        return 0;
     }
 
     public ElementSymbol getResultSetColumn(int index){
         SPParameter resultSetParameter = getResultSetParameter();
-    	if(resultSetParameter != null){
-        	return resultSetParameter.getResultSetColumn(index);
-    	}
-    	return null;
+        if(resultSetParameter != null){
+            return resultSetParameter.getResultSetColumn(index);
+        }
+        return null;
     }
 
     public List<ElementSymbol> getResultSetColumns(){
@@ -193,9 +193,9 @@ public class StoredProcedure extends ProcedureContainer {
                 symbol.setGroupSymbol(getGroup());
                 result.add(symbol);
             }
-        	return result;
-    	}
-    	return Collections.emptyList();
+            return result;
+        }
+        return Collections.emptyList();
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -230,53 +230,53 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public boolean returnsScalarValue(){
-    	for (SPParameter param : this.mapOfParameters.values()) {
-        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-        		return true;
-        	}
-    	}
-    	return false;
+        for (SPParameter param : this.mapOfParameters.values()) {
+            if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean returnParameters() {
-    	return isCallableStatement || !returnsResultSet();
+        return isCallableStatement || !returnsResultSet();
     }
 
     /**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
-	 * single column.
-	 * @return Ordered list of ElementSymbol
-	 */
-	public List getProjectedSymbols(){
-		if (!returnParameters()) {
-			return getResultSetColumns();
-		}
-		//add result set columns
-		List<ElementSymbol> result = new ArrayList<ElementSymbol>(getResultSetColumns());
-		int size = result.size();
-		//add out/inout parameter symbols
-		for (SPParameter parameter : mapOfParameters.values()) {
-			if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of ElementSymbol
+     */
+    public List getProjectedSymbols(){
+        if (!returnParameters()) {
+            return getResultSetColumns();
+        }
+        //add result set columns
+        List<ElementSymbol> result = new ArrayList<ElementSymbol>(getResultSetColumns());
+        int size = result.size();
+        //add out/inout parameter symbols
+        for (SPParameter parameter : mapOfParameters.values()) {
+            if(parameter.getParameterType() == ParameterInfo.RETURN_VALUE){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());
                 //should be first among parameters, which we'll ensure
-            	result.add(size, symbol);
-	        } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
+                result.add(size, symbol);
+            } else if(parameter.getParameterType() == ParameterInfo.INOUT || parameter.getParameterType() == ParameterInfo.OUT){
                 ElementSymbol symbol = parameter.getParameterSymbol();
                 symbol.setGroupSymbol(this.getGroup());
-	        	result.add(symbol);
-	        }
-		}
-		return result;
-	}
+                result.add(symbol);
+            }
+        }
+        return result;
+    }
 
-	/**
+    /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
     /**
@@ -288,30 +288,30 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof StoredProcedure)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof StoredProcedure)) {
+            return false;
+        }
 
-    	StoredProcedure other = (StoredProcedure)obj;
+        StoredProcedure other = (StoredProcedure)obj;
 
-		return sameOptionAndHint(other) &&
-		this.getGroup().equals(other.getGroup()) &&
-		this.mapOfParameters.equals(other.mapOfParameters) &&
-		this.pushedInQuery == other.pushedInQuery;
+        return sameOptionAndHint(other) &&
+        this.getGroup().equals(other.getGroup()) &&
+        this.mapOfParameters.equals(other.mapOfParameters) &&
+        this.pushedInQuery == other.pushedInQuery;
     }
 
     public void clearParameters(){
-    	this.mapOfParameters.clear();
+        this.mapOfParameters.clear();
     }
 
     public void setGroup(GroupSymbol group){
-    	this.group = group;
+        this.group = group;
     }
 
     public GroupSymbol getGroup() {
@@ -321,15 +321,15 @@ public class StoredProcedure extends ProcedureContainer {
         return group;
     }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable() {
-		if (getUpdateCount() > 0) {
-			return false;
-		}
-		return Query.areColumnsCachable(getProjectedSymbols());
-	}
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable() {
+        if (getUpdateCount() > 0) {
+            return false;
+        }
+        return Query.areColumnsCachable(getProjectedSymbols());
+    }
 
     /**
      * Indicates whether parameters should be displayed in traditional
@@ -353,57 +353,57 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public List<SPParameter> getInputParameters() {
-    	List<SPParameter> parameters = new ArrayList<SPParameter>(getParameters());
-    	Iterator<SPParameter> params = parameters.iterator();
-    	while (params.hasNext()) {
-    		SPParameter param = params.next();
-    		if(param.getParameterType() != ParameterInfo.IN && param.getParameterType() != ParameterInfo.INOUT) {
-    			params.remove();
-    		}
-    	}
-    	return parameters;
+        List<SPParameter> parameters = new ArrayList<SPParameter>(getParameters());
+        Iterator<SPParameter> params = parameters.iterator();
+        while (params.hasNext()) {
+            SPParameter param = params.next();
+            if(param.getParameterType() != ParameterInfo.IN && param.getParameterType() != ParameterInfo.INOUT) {
+                params.remove();
+            }
+        }
+        return parameters;
     }
 
     public boolean isProcedureRelational() {
-		return isProcedureRelational;
-	}
+        return isProcedureRelational;
+    }
 
     public void setProcedureRelational(boolean isProcedureRelational) {
-		this.isProcedureRelational = isProcedureRelational;
-	}
+        this.isProcedureRelational = isProcedureRelational;
+    }
 
-	public boolean isCallableStatement() {
-		return isCallableStatement;
-	}
+    public boolean isCallableStatement() {
+        return isCallableStatement;
+    }
 
-	public void setCallableStatement(boolean isCallableStatement) {
-		this.isCallableStatement = isCallableStatement;
-	}
+    public void setCallableStatement(boolean isCallableStatement) {
+        this.isCallableStatement = isCallableStatement;
+    }
 
-	public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
-		LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
-	    for (SPParameter element : this.getInputParameters()) {
-	        map.put(element.getParameterSymbol(), element.getExpression());
-	    } // for
+    public LinkedHashMap<ElementSymbol, Expression> getProcedureParameters() {
+        LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
+        for (SPParameter element : this.getInputParameters()) {
+            map.put(element.getParameterSymbol(), element.getExpression());
+        } // for
 
-	    return map;
-	}
+        return map;
+    }
 
-	public void setCalledWithReturn(boolean calledWithReturn) {
-		this.calledWithReturn = calledWithReturn;
-	}
+    public void setCalledWithReturn(boolean calledWithReturn) {
+        this.calledWithReturn = calledWithReturn;
+    }
 
-	public boolean isCalledWithReturn() {
-		return calledWithReturn;
-	}
+    public boolean isCalledWithReturn() {
+        return calledWithReturn;
+    }
 
-	public boolean isPushedInQuery() {
-		return pushedInQuery;
-	}
+    public boolean isPushedInQuery() {
+        return pushedInQuery;
+    }
 
-	public void setPushedInQuery(boolean pushedInQuery) {
-		this.pushedInQuery = pushedInQuery;
-	}
+    public void setPushedInQuery(boolean pushedInQuery) {
+        this.pushedInQuery = pushedInQuery;
+    }
 
 }
 

@@ -40,36 +40,36 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="intersystems-cache", description="A translator for Intersystems Cache Database")
 public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 
-	private static final String INTER_CACHE = "intersystems-cache"; //$NON-NLS-1$
-	protected ConvertModifier convert = new ConvertModifier();
+    private static final String INTER_CACHE = "intersystems-cache"; //$NON-NLS-1$
+    protected ConvertModifier convert = new ConvertModifier();
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
-		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
-		convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
-		convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-		convert.addTypeMapping("decimal(38,19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-		convert.addTypeMapping("decimal(19,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-		convert.addTypeMapping("character", FunctionModifier.CHAR); //$NON-NLS-1$
-		convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-		convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-		convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-		convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-		convert.addNumericBooleanConversions();
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
+        convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+        convert.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convert.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+        convert.addTypeMapping("decimal(38,19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convert.addTypeMapping("decimal(19,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convert.addTypeMapping("character", FunctionModifier.CHAR); //$NON-NLS-1$
+        convert.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+        convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convert.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convert.addNumericBooleanConversions();
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
 
-		registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.ACOS, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.ASIN, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.ATAN, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.COS, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.COT, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.CURDATE, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.CURTIME, new EscapeSyntaxModifier());
-		registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("nvl")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.ACOS, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.ASIN, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.ATAN, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.COS, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.COT, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.CURDATE, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.CURTIME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
@@ -96,16 +96,16 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DIVIDE_OP, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				if (function.getType() == TypeFacility.RUNTIME_TYPES.INTEGER || function.getType() == TypeFacility.RUNTIME_TYPES.LONG) {
-					Function result = ConvertModifier.createConvertFunction(getLanguageFactory(), function, TypeFacility.getDataTypeName(function.getType()));
-					function.setType(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
-					return Arrays.asList(result);
-				}
-				return null;
-			}
-		});
+            @Override
+            public List<?> translate(Function function) {
+                if (function.getType() == TypeFacility.RUNTIME_TYPES.INTEGER || function.getType() == TypeFacility.RUNTIME_TYPES.LONG) {
+                    Function result = ConvertModifier.createConvertFunction(getLanguageFactory(), function, TypeFacility.getDataTypeName(function.getType()));
+                    function.setType(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL);
+                    return Arrays.asList(result);
+                }
+                return null;
+            }
+        });
 
         addPushDownFunction(INTER_CACHE, "CHARACTER_LENGTH", INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(INTER_CACHE, "CHAR_LENGTH", INTEGER, STRING); //$NON-NLS-1$
@@ -118,7 +118,7 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         addPushDownFunction(INTER_CACHE, "REVERSE", STRING, STRING); //$NON-NLS-1$
         addPushDownFunction(INTER_CACHE, "STUFF", STRING, STRING, STRING, INTEGER, STRING); //$NON-NLS-1$
         addPushDownFunction(INTER_CACHE, "TRIM", STRING, STRING); //$NON-NLS-1$
-	}
+    }
 
     @Override
     public List<String> getSupportedFunctions() {
@@ -126,20 +126,20 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.addAll(super.getSupportedFunctions());
 
         supportedFunctions.add(SourceSystemFunctions.ABS);
-		supportedFunctions.add(SourceSystemFunctions.ACOS);
-		supportedFunctions.add(SourceSystemFunctions.ASIN);
-		supportedFunctions.add(SourceSystemFunctions.ATAN);
+        supportedFunctions.add(SourceSystemFunctions.ACOS);
+        supportedFunctions.add(SourceSystemFunctions.ASIN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN);
         supportedFunctions.add(SourceSystemFunctions.ASCII);
         supportedFunctions.add(SourceSystemFunctions.CEILING);
         supportedFunctions.add(SourceSystemFunctions.CHAR);
         supportedFunctions.add(SourceSystemFunctions.COALESCE);
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
-		supportedFunctions.add(SourceSystemFunctions.COS);
-		supportedFunctions.add(SourceSystemFunctions.COT);
-		supportedFunctions.add(SourceSystemFunctions.CURDATE);
-		supportedFunctions.add(SourceSystemFunctions.CURTIME);
-		supportedFunctions.add(SourceSystemFunctions.DAYNAME);
+        supportedFunctions.add(SourceSystemFunctions.COS);
+        supportedFunctions.add(SourceSystemFunctions.COT);
+        supportedFunctions.add(SourceSystemFunctions.CURDATE);
+        supportedFunctions.add(SourceSystemFunctions.CURTIME);
+        supportedFunctions.add(SourceSystemFunctions.DAYNAME);
         supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
@@ -202,7 +202,7 @@ public class InterSystemsCacheExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.LAST;
+        return NullOrder.LAST;
     }
 
     @Override

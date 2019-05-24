@@ -60,7 +60,7 @@ public class TestRedshiftTranslator {
     }
 
     @Test public void testTimezoneFormat() throws Exception {
-    	assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
+        assertFalse(TRANSLATOR.supportsFormatLiteral("hh:MM:ss Z", Format.DATE));
     }
 
     @Test public void testTempTable() throws Exception {

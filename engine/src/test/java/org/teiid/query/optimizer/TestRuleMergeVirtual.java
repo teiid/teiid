@@ -364,7 +364,7 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),
-        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         SortNode node = (SortNode)plan.getRootNode();
         assertTrue("Alias was not accounted for in sort node", node.getElements().get(0).equals(node.getSortElements().get(0).getSymbol())); //$NON-NLS-1$
@@ -379,15 +379,15 @@ public class TestRuleMergeVirtual {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),
-        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0", "SELECT g_0.e1 FROM pm1.g2 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         SortNode node = (SortNode)plan.getRootNode();
         assertTrue("Alias was not accounted for in sort node", node.getElements().get(0).equals(node.getSortElements().get(0).getSymbol())); //$NON-NLS-1$
     }
 
     @Test public void testMergeImplicitGroupBy() throws Exception {
-    	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
-    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT min(y), max(x) as x FROM (select e1 x, e2 + 1 y from pm1.g1) a) AS b", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -397,8 +397,8 @@ public class TestRuleMergeVirtual {
     }
 
     @Test public void testMergeGroupBy() throws Exception {
-    	BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
-    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestAggregatePushdown.getAggregateCapabilities();
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (select c.e1 as x from (select e1 from pm1.g1) as c, pm1.g2 as d) as a group by x", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -443,14 +443,14 @@ public class TestRuleMergeVirtual {
      * TODO: should be able to remove the limit
      */
     @Test public void testNoSourcesMerge1() throws Exception {
-    	TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, 2, 3 limit 2) as z where pm1.g1.e2 = z.a", //$NON-NLS-1$
+        TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, 2, 3 limit 2) as z where pm1.g1.e2 = z.a", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(),
                                       new String[] {
                                           "SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e2 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
     @Test public void testNoSourcesMerge2() throws Exception {
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, lookup('pm1.g2', 'e1', 'e1', 'a') as b, 3) as z where pm1.g1.e2 = z.a and z.b = 'a'", //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, (select 1 as a, lookup('pm1.g2', 'e1', 'e1', 'a') as b, 3) as z where pm1.g1.e2 = z.a and z.b = 'a'", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(),
                                       new String[] {
                                           "SELECT 1, lookup('pm1.g2', 'e1', 'e1', 'a'), 3 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) AND (lookup('pm1.g2', 'e1', 'e1', 'a') = 'a')"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -474,22 +474,22 @@ public class TestRuleMergeVirtual {
     }
 
     @Test public void testNestedTableNoSourcesMerge() throws Exception {
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setFunctionSupport("convert", true); //$NON-NLS-1$
-    	caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z", //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+        caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1, arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z", //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0 WHERE convert(g_0.e1, object) IS NOT NULL"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
-    	TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
 
     @Test public void testNestedTableNoSourcesMerge1() throws Exception {
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setFunctionSupport("convert", true); //$NON-NLS-1$
-    	caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1 inner join arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z on (pm1.g1.e2 = z.one)", //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+        caps.setFunctionSupport("array_get", true); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan("select z.* from pm1.g1 inner join arraytable(cast(pm1.g1.e1 as object) COLUMNS one integer, two integer, three integer) as z on (pm1.g1.e2 = z.one)", //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT convert(array_get(convert(g_0.e1, object), 1), integer), convert(array_get(convert(g_0.e1, object), 2), integer), convert(array_get(convert(g_0.e1, object), 3), integer) FROM pm1.g1 AS g_0 WHERE (convert(g_0.e1, object) IS NOT NULL) AND (g_0.e2 = convert(array_get(convert(g_0.e1, object), 1), integer))"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -525,12 +525,12 @@ public class TestRuleMergeVirtual {
     }
 
     @Test public void testSingleOrPredicate() throws Exception {
-    	String sql = "SELECT alias3.a1 FROM (select e2 as a from pm1.g1) as alias2 INNER JOIN (SELECT t2.a AS a1, t1.a "
-    			+ "FROM (SELECT 1 AS a) AS t1 INNER JOIN (select e2 as a from pm1.g1) as t2 ON t1.a = t2.a) "
-    			+ "AS alias3 ON ((alias3.a = alias2.a) OR (alias3.a > alias2.a))";
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        String sql = "SELECT alias3.a1 FROM (select e2 as a from pm1.g1) as alias2 INNER JOIN (SELECT t2.a AS a1, t1.a "
+                + "FROM (SELECT 1 AS a) AS t1 INNER JOIN (select e2 as a from pm1.g1) as t2 ON t1.a = t2.a) "
+                + "AS alias3 ON ((alias3.a = alias2.a) OR (alias3.a > alias2.a))";
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 
-    	TestOptimizer.helpPlan(sql, //$NON-NLS-1$
+        TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT 1 FROM pm1.g1 AS g_0 WHERE (g_0.e2 = 1) OR (g_0.e2 < 1)", "SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e2 = 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$

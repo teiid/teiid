@@ -40,8 +40,8 @@ public class TestSybaseSQLConversionVisitor {
 
     @BeforeClass
     public static void setup() throws TranslatorException {
-    	trans.setUseBindVariables(false);
-    	trans.setDatabaseVersion(Version.DEFAULT_VERSION);
+        trans.setUseBindVariables(false);
+        trans.setDatabaseVersion(Version.DEFAULT_VERSION);
         trans.start();
     }
 
@@ -58,11 +58,11 @@ public class TestSybaseSQLConversionVisitor {
         Command obj = TranslationHelper.helpTranslate(vdb, input);
 
         TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), trans);
-		try {
-			tc.translateCommand(obj);
-		} catch (TranslatorException e) {
-			throw new RuntimeException(e);
-		}
+        try {
+            tc.translateCommand(obj);
+        } catch (TranslatorException e) {
+            throw new RuntimeException(e);
+        }
 
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
@@ -236,7 +236,7 @@ public class TestSybaseSQLConversionVisitor {
 
     @Test
     public void testNonIntMod() throws Exception {
-    	String input = "select mod(intkey/1.5, 3) from bqt1.smalla"; //$NON-NLS-1$
+        String input = "select mod(intkey/1.5, 3) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT ((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5) - (sign((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5)) * floor(abs(((cast(SmallA.IntKey AS numeric(38, 19)) / 1.5) / 3))) * abs(3))) FROM SmallA"; //$NON-NLS-1$
 
         helpTestVisitor(getBQTVDB(),
@@ -245,7 +245,7 @@ public class TestSybaseSQLConversionVisitor {
     }
 
     @Test public void testOrderByDesc() throws Exception {
-    	String input = "select intnum + 1 x from bqt1.smalla order by x desc"; //$NON-NLS-1$
+        String input = "select intnum + 1 x from bqt1.smalla order by x desc"; //$NON-NLS-1$
         String output = "SELECT (SmallA.IntNum + 1) AS x FROM SmallA ORDER BY x DESC"; //$NON-NLS-1$
 
         helpTestVisitor(getBQTVDB(),
@@ -254,7 +254,7 @@ public class TestSybaseSQLConversionVisitor {
     }
 
     @Test public void testCrossJoin() throws Exception {
-    	String input = "select smalla.intnum from (bqt1.smalla cross join bqt1.smallb) left outer join bqt1.mediuma on (smalla.intnum = mediuma.intnum)"; //$NON-NLS-1$
+        String input = "select smalla.intnum from (bqt1.smalla cross join bqt1.smallb) left outer join bqt1.mediuma on (smalla.intnum = mediuma.intnum)"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntNum FROM SmallA INNER JOIN SmallB ON 1 = 1 LEFT OUTER JOIN MediumA ON SmallA.IntNum = MediumA.IntNum"; //$NON-NLS-1$
 
         helpTestVisitor(getBQTVDB(), input, output);
@@ -267,20 +267,20 @@ public class TestSybaseSQLConversionVisitor {
     }
 
     @Test public void testLimitSupport() {
-    	SybaseExecutionFactory sybaseExecutionFactory = new SybaseExecutionFactory();
-    	sybaseExecutionFactory.setDatabaseVersion("12.5.4");
-    	assertTrue(sybaseExecutionFactory.supportsRowLimit());
-    	sybaseExecutionFactory.setDatabaseVersion("12.5.2");
-    	assertFalse(sybaseExecutionFactory.supportsRowLimit());
-    	sybaseExecutionFactory.setDatabaseVersion("15");
-    	assertFalse(sybaseExecutionFactory.supportsRowLimit());
-    	sybaseExecutionFactory.setDatabaseVersion("15.1");
-    	assertTrue(sybaseExecutionFactory.supportsRowLimit());
+        SybaseExecutionFactory sybaseExecutionFactory = new SybaseExecutionFactory();
+        sybaseExecutionFactory.setDatabaseVersion("12.5.4");
+        assertTrue(sybaseExecutionFactory.supportsRowLimit());
+        sybaseExecutionFactory.setDatabaseVersion("12.5.2");
+        assertFalse(sybaseExecutionFactory.supportsRowLimit());
+        sybaseExecutionFactory.setDatabaseVersion("15");
+        assertFalse(sybaseExecutionFactory.supportsRowLimit());
+        sybaseExecutionFactory.setDatabaseVersion("15.1");
+        assertTrue(sybaseExecutionFactory.supportsRowLimit());
     }
 
     @Test public void testFormatSupport() {
-    	assertTrue(trans.supportsFormatLiteral("MM/dd/yy", Format.DATE));
-    	assertFalse(trans.supportsFormatLiteral("MMM/yyy", Format.DATE));
+        assertTrue(trans.supportsFormatLiteral("MM/dd/yy", Format.DATE));
+        assertFalse(trans.supportsFormatLiteral("MMM/yyy", Format.DATE));
 
         helpTestVisitor(getBQTVDB(),
                 "SELECT formattimestamp(timestampvalue, 'yy.MM.dd') from bqt1.smalla", //$NON-NLS-1$

@@ -55,7 +55,7 @@ public class AnalysisRecord {
 
     private static final int MAX_PLAN_LENGTH = PropertiesUtils.getHierarchicalProperty("org.teiid.maxPlanLength", 1<<25, Integer.class); //$NON-NLS-1$
 
-	// Common
+    // Common
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
     public static final String PROP_ID = "Relational Node ID"; //$NON-NLS-1$
     public static final String PROP_DATA_BYTES_SENT = "Data Bytes Sent"; //$NON-NLS-1$
@@ -85,9 +85,9 @@ public class AnalysisRecord {
     public static final String PROP_WITH = "With"; //$NON-NLS-1$
     public static final String PROP_WINDOW_FUNCTIONS = "Window Functions"; //$NON-NLS-1$
     //Table functions
-	public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
+    public static final String PROP_TABLE_FUNCTION = "Table Function"; //$NON-NLS-1$
 
-	public static final String PROP_STREAMING = "Streaming"; //$NON-NLS-1$
+    public static final String PROP_STREAMING = "Streaming"; //$NON-NLS-1$
 
     // Procedure
     public static final String PROP_EXPRESSION = "Expression"; //$NON-NLS-1$
@@ -97,7 +97,7 @@ public class AnalysisRecord {
     public static final String PROP_THEN = "Then"; //$NON-NLS-1$
     public static final String PROP_ELSE = "Else"; //$NON-NLS-1$
 
-	public static final String PROP_PLANNING_TIME = "Planning Time"; //$NON-NLS-1$
+    public static final String PROP_PLANNING_TIME = "Planning Time"; //$NON-NLS-1$
 
     // Flags regarding what should be recorded
     private boolean recordQueryPlan;
@@ -111,7 +111,7 @@ public class AnalysisRecord {
     private PrintWriter debugWriter;    // public
 
     public AnalysisRecord(boolean recordQueryPlan, boolean recordDebug) {
-    	this.recordQueryPlan = recordQueryPlan || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
+        this.recordQueryPlan = recordQueryPlan || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.DETAIL);
         this.recordDebug = recordDebug || LogManager.isMessageToBeRecorded(LogConstants.CTX_QUERY_PLANNER, MessageLevel.TRACE);
 
         if(this.recordQueryPlan) {
@@ -153,7 +153,7 @@ public class AnalysisRecord {
     }
 
     public void addAnnotation(String category, String annotation, String resolution, Priority priority) {
-    	addAnnotation(new Annotation(category, annotation, resolution, priority));
+        addAnnotation(new Annotation(category, annotation, resolution, priority));
     }
 
     /**
@@ -164,7 +164,7 @@ public class AnalysisRecord {
     public void addAnnotation(Annotation annotation) {
         this.annotations.add(annotation);
         if (this.recordDebug()) {
-        	this.println(annotation.toString());
+            this.println(annotation.toString());
         }
     }
 
@@ -182,9 +182,9 @@ public class AnalysisRecord {
      * @param debugLine Text to add to debug writer
      */
     public void println(String debugLine) {
-    	if (this.stringWriter.getBuffer().length() > MAX_PLAN_LENGTH) {
-    		this.stringWriter.getBuffer().delete(0, this.stringWriter.getBuffer().length() - (MAX_PLAN_LENGTH*3/4));
-    	}
+        if (this.stringWriter.getBuffer().length() > MAX_PLAN_LENGTH) {
+            this.stringWriter.getBuffer().delete(0, this.stringWriter.getBuffer().length() - (MAX_PLAN_LENGTH*3/4));
+        }
         this.debugWriter.println(debugLine);
     }
 
@@ -201,39 +201,39 @@ public class AnalysisRecord {
     }
 
     public void stopDebugLog() {
-    	this.stringWriter = null;
-    	this.recordDebug = false;
+        this.stringWriter = null;
+        this.recordDebug = false;
     }
 
-	/**
-	 * Helper method to turn a list of projected symbols into a suitable list of
-	 * output column strings with name and type.
-	 * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
-	 * @return List of output columns for sending to the client as part of the plan
-	 */
-	public static List<String> getOutputColumnProperties(List<? extends Expression> projectedSymbols) {
-	    if(projectedSymbols != null) {
-	        List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
-	        for(int i=0; i<projectedSymbols.size() ; i++) {
-	            Expression symbol = projectedSymbols.get(i);
-	            outputCols.add(Symbol.getShortName(symbol) + " (" + DataTypeManager.getDataTypeName(symbol.getType()) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-	        }
-	        return outputCols;
-	    }
-	    return Collections.emptyList();
-	}
+    /**
+     * Helper method to turn a list of projected symbols into a suitable list of
+     * output column strings with name and type.
+     * @param projectedSymbols The list of SingleElementSymbol projected from a plan or node
+     * @return List of output columns for sending to the client as part of the plan
+     */
+    public static List<String> getOutputColumnProperties(List<? extends Expression> projectedSymbols) {
+        if(projectedSymbols != null) {
+            List<String> outputCols = new ArrayList<String>(projectedSymbols.size());
+            for(int i=0; i<projectedSymbols.size() ; i++) {
+                Expression symbol = projectedSymbols.get(i);
+                outputCols.add(Symbol.getShortName(symbol) + " (" + DataTypeManager.getDataTypeName(symbol.getType()) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+            return outputCols;
+        }
+        return Collections.emptyList();
+    }
 
-	public static void addLanaguageObjects(PlanNode node, String key, Collection<? extends LanguageObject> objects) {
-		List<String> values = new ArrayList<String>();
-		int index = 0;
-		for (LanguageObject languageObject : objects) {
-			values.add(languageObject.toString());
-			List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(languageObject);
-			for (ListIterator<SubqueryContainer<?>> iterator = subqueries.listIterator(); iterator.hasNext();) {
-				SubqueryContainer<?> subqueryContainer = iterator.next();
-				node.addProperty(key + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
-			}
-		}
-		node.addProperty(key, values);
-	}
+    public static void addLanaguageObjects(PlanNode node, String key, Collection<? extends LanguageObject> objects) {
+        List<String> values = new ArrayList<String>();
+        int index = 0;
+        for (LanguageObject languageObject : objects) {
+            values.add(languageObject.toString());
+            List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(languageObject);
+            for (ListIterator<SubqueryContainer<?>> iterator = subqueries.listIterator(); iterator.hasNext();) {
+                SubqueryContainer<?> subqueryContainer = iterator.next();
+                node.addProperty(key + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
+            }
+        }
+        node.addProperty(key, values);
+    }
 }

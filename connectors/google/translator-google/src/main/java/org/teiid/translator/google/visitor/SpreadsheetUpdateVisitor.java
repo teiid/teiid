@@ -40,31 +40,31 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  */
 public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
 
-	public SpreadsheetUpdateVisitor(SpreadsheetInfo info) {
-		super(info);
-	}
+    public SpreadsheetUpdateVisitor(SpreadsheetInfo info) {
+        super(info);
+    }
 
-	private List<UpdateSet> changes;
+    private List<UpdateSet> changes;
 
-	public void visit(Update obj) {
-		worksheetTitle = obj.getTable().getName();
-		changes = new ArrayList<UpdateSet>();
-		String columnName;
-		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-			this.worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-		}
-		for (SetClause s : obj.getChanges()) {
-			if(s.getSymbol().getMetadataObject().getNameInSource()!=null){
-				columnName=s.getSymbol().getMetadataObject().getNameInSource();
-			}else{
-				columnName=s.getSymbol().getMetadataObject().getName();
-			}
-			changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
-		}
-		translateWhere(obj.getWhere());
-	}
+    public void visit(Update obj) {
+        worksheetTitle = obj.getTable().getName();
+        changes = new ArrayList<UpdateSet>();
+        String columnName;
+        if (obj.getTable().getMetadataObject().getNameInSource() != null) {
+            this.worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
+        }
+        for (SetClause s : obj.getChanges()) {
+            if(s.getSymbol().getMetadataObject().getNameInSource()!=null){
+                columnName=s.getSymbol().getMetadataObject().getNameInSource();
+            }else{
+                columnName=s.getSymbol().getMetadataObject().getName();
+            }
+            changes.add(new UpdateSet(columnName, getStringValue(s.getValue())));
+        }
+        translateWhere(obj.getWhere());
+    }
 
-	protected String getStringValue(Expression obj) {
+    protected String getStringValue(Expression obj) {
         Literal literal;
         if (obj instanceof Literal) {
             literal = (Literal) obj;
@@ -88,12 +88,12 @@ public class SpreadsheetUpdateVisitor extends SpreadsheetCriteriaVisitor {
         return literal.getValue().toString();
     }
 
-	public List<UpdateSet> getChanges() {
-		return changes;
-	}
+    public List<UpdateSet> getChanges() {
+        return changes;
+    }
 
-	public void setChanges(List<UpdateSet> changes) {
-		this.changes = changes;
-	}
+    public void setChanges(List<UpdateSet> changes) {
+        this.changes = changes;
+    }
 
 }

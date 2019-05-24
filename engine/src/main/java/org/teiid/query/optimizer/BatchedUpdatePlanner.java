@@ -94,7 +94,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         List<VariableContext> allContexts = batchedUpdateCommand.getVariableContexts();
         List<VariableContext> planContexts = null;
         if (allContexts != null) {
-        	planContexts = new ArrayList<VariableContext>(allContexts.size());
+            planContexts = new ArrayList<VariableContext>(allContexts.size());
         }
         //pre-plan the commands to determine pushdown/batching eligibility
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
@@ -124,10 +124,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     // This is the first command in a potential batch, so add it to the batch
                     batch.add(updateCommand);
                     if (allContexts != null) {
-                    	contexts.add(allContexts.get(commandIndex));
-                    	shouldEvaluate.add(Boolean.TRUE);
+                        contexts.add(allContexts.get(commandIndex));
+                        shouldEvaluate.add(Boolean.TRUE);
                     } else {
-                    	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(updateCommand));
+                        shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(updateCommand));
                     }
                     // Find out if there are other commands called on the same physical model
                     // immediately and contiguously after this one
@@ -137,10 +137,10 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata, capFinder)) {
                             batch.add(batchingCandidate);
                             if (allContexts != null) {
-                            	contexts.add(allContexts.get(batchIndex));
-                            	shouldEvaluate.add(Boolean.TRUE);
+                                contexts.add(allContexts.get(batchIndex));
+                                shouldEvaluate.add(Boolean.TRUE);
                             } else {
-                            	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(batchingCandidate));
+                                shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(batchingCandidate));
                             }
                         } else { // Otherwise, stop batching at this point. The next command may well be the start of a new batch
                             break batchLoop;
@@ -163,8 +163,8 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         // Add a new RelationalPlan that represents the plan for this batch.
                         childPlans.add(new RelationalPlan(projectNode));
                         if (planContexts != null) {
-                        	planContexts.add(new VariableContext());
-                    	}
+                            planContexts.add(new VariableContext());
+                        }
                         // Skip those commands that were added to this batch
                         commandIndex += batch.size() - 1;
                         commandWasBatched = true;
@@ -172,11 +172,11 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 }
             }
             if (!commandWasBatched) { // If the command wasn't batched, just add the plan for this command to the list of plans
-            	Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
-            	ProcessorPlan plan = cmd.getProcessorPlan();
+                Command cmd = batchedUpdateCommand.getUpdateCommands().get(commandIndex);
+                ProcessorPlan plan = cmd.getProcessorPlan();
                 childPlans.add(plan);
                 if (allContexts != null) {
-                	planContexts.add(allContexts.get(commandIndex));
+                    planContexts.add(allContexts.get(commandIndex));
                 }
             }
         }

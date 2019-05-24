@@ -32,107 +32,107 @@ import org.teiid.query.sql.lang.Criteria;
  */
 public class IfStatement extends Statement  {
 
-	// the IF block
-	private Block ifBlock;
+    // the IF block
+    private Block ifBlock;
 
-	// the ELSE block
-	private Block elseBlock;
+    // the ELSE block
+    private Block elseBlock;
 
-	// criteria on the if block
-	private Criteria condition;
+    // criteria on the if block
+    private Criteria condition;
 
-	/**
-	 * Constructor for IfStatement.
-	 */
-	public IfStatement() {
-		super();
-	}
+    /**
+     * Constructor for IfStatement.
+     */
+    public IfStatement() {
+        super();
+    }
 
-	/**
-	 * Constructor for IfStatement.
-	 * @param criteria The criteria determining which bleck should be executed
-	 * @param ifBlock The IF <code>Block</code> object.
-	 * @param ifBlock The ELSE <code>Block</code> object.
-	 */
-	public IfStatement(Criteria criteria, Block ifBlock, Block elseBlock) {
-		this.ifBlock = ifBlock;
-		this.elseBlock = elseBlock;
-		this.condition = criteria;
-	}
+    /**
+     * Constructor for IfStatement.
+     * @param criteria The criteria determining which bleck should be executed
+     * @param ifBlock The IF <code>Block</code> object.
+     * @param ifBlock The ELSE <code>Block</code> object.
+     */
+    public IfStatement(Criteria criteria, Block ifBlock, Block elseBlock) {
+        this.ifBlock = ifBlock;
+        this.elseBlock = elseBlock;
+        this.condition = criteria;
+    }
 
-	/**
-	 * Constructor for IfStatement.
-	 * @param criteria The criteria determining which bleck should be executed
-	 * @param ifBlock The IF <code>Block</code> object.
-	 */
-	public IfStatement(Criteria criteria, Block ifBlock) {
-		this(criteria, ifBlock, null);
-	}
+    /**
+     * Constructor for IfStatement.
+     * @param criteria The criteria determining which bleck should be executed
+     * @param ifBlock The IF <code>Block</code> object.
+     */
+    public IfStatement(Criteria criteria, Block ifBlock) {
+        this(criteria, ifBlock, null);
+    }
 
-	/**
-	 * Get the statement's IF block.
-	 * @return The IF <code>Block</code> object.
-	 */
-	public Block getIfBlock() {
-		return ifBlock;
-	}
+    /**
+     * Get the statement's IF block.
+     * @return The IF <code>Block</code> object.
+     */
+    public Block getIfBlock() {
+        return ifBlock;
+    }
 
-	/**
-	 * Set the statement's IF block.
-	 * @param block The IF <code>Block</code> object.
-	 */
-	public void setIfBlock(Block block) {
-		this.ifBlock = block;
-	}
+    /**
+     * Set the statement's IF block.
+     * @param block The IF <code>Block</code> object.
+     */
+    public void setIfBlock(Block block) {
+        this.ifBlock = block;
+    }
 
-	/**
-	 * Get the statement's ELSE block.
-	 * @return The ELSE <code>Block</code> object.
-	 */
-	public Block getElseBlock() {
-		return elseBlock;
-	}
+    /**
+     * Get the statement's ELSE block.
+     * @return The ELSE <code>Block</code> object.
+     */
+    public Block getElseBlock() {
+        return elseBlock;
+    }
 
-	/**
-	 * Set the statement's ELSE block.
-	 * @param block The ELSE <code>Block</code> object.
-	 */
-	public void setElseBlock(Block block) {
-		elseBlock = block;
-	}
+    /**
+     * Set the statement's ELSE block.
+     * @param block The ELSE <code>Block</code> object.
+     */
+    public void setElseBlock(Block block) {
+        elseBlock = block;
+    }
 
-	/**
-	 * Return a boolean indicating if the statement has an else block.
-	 * @return A boolean indicating if the statement has an else block
-	 */
-	public boolean hasElseBlock() {
-		return (elseBlock != null);
-	}
+    /**
+     * Return a boolean indicating if the statement has an else block.
+     * @return A boolean indicating if the statement has an else block
+     */
+    public boolean hasElseBlock() {
+        return (elseBlock != null);
+    }
 
-	/**
-	 * Get the condition that determines which block needs to be executed.
-	 * @return The <code>Criteria</code> to determine block execution
-	 */
-	public Criteria getCondition() {
-		return condition;
-	}
+    /**
+     * Get the condition that determines which block needs to be executed.
+     * @return The <code>Criteria</code> to determine block execution
+     */
+    public Criteria getCondition() {
+        return condition;
+    }
 
-	/**
-	 * Set the condition that determines which block needs to be executed.
-	 * @param criteria The <code>Criteria</code> to determine block execution
-	 */
-	public void setCondition(Criteria criteria) {
-		this.condition = criteria;
-	}
+    /**
+     * Set the condition that determines which block needs to be executed.
+     * @param criteria The <code>Criteria</code> to determine block execution
+     */
+    public void setCondition(Criteria criteria) {
+        this.condition = criteria;
+    }
 
-	/**
-	 * Return the type for this statement, this is one of the types
-	 * defined on the statement object.
-	 * @return The statement type
-	 */
-	public int getType() {
-		return Statement.TYPE_IF;
-	}
+    /**
+     * Return the type for this statement, this is one of the types
+     * defined on the statement object.
+     * @return The statement type
+     */
+    public int getType() {
+        return Statement.TYPE_IF;
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
@@ -142,20 +142,20 @@ public class IfStatement extends Statement  {
         visitor.visit(this);
     }
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone
-	 */
-	public Object clone() {
-		Block otherIf = this.ifBlock.clone();
-		Criteria otherCrit = (Criteria) this.condition.clone();
-		Block otherElse = null;
-		if(this.hasElseBlock()) {
-			otherElse = this.elseBlock.clone();
-		}
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public Object clone() {
+        Block otherIf = this.ifBlock.clone();
+        Criteria otherCrit = (Criteria) this.condition.clone();
+        Block otherElse = null;
+        if(this.hasElseBlock()) {
+            otherElse = this.elseBlock.clone();
+        }
 
-		return new IfStatement(otherCrit, otherIf, otherElse);
-	}
+        return new IfStatement(otherCrit, otherIf, otherElse);
+    }
 
     /**
      * Compare two IfStatements for equality.  They will only evaluate to equal if
@@ -165,25 +165,25 @@ public class IfStatement extends Statement  {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof IfStatement)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof IfStatement)) {
+            return false;
+        }
 
-		IfStatement other = (IfStatement) obj;
+        IfStatement other = (IfStatement) obj;
 
         return
-    		// Compare the condition
-    		EquivalenceUtil.areEqual(getCondition(), other.getCondition()) &&
+            // Compare the condition
+            EquivalenceUtil.areEqual(getCondition(), other.getCondition()) &&
             // Compare the if block
             EquivalenceUtil.areEqual(getIfBlock(), other.getIfBlock()) &&
             // Compare the else block
-    		EquivalenceUtil.areEqual(this.getElseBlock(), other.getElseBlock());
+            EquivalenceUtil.areEqual(this.getElseBlock(), other.getElseBlock());
     }
 
     /**
@@ -194,12 +194,12 @@ public class IfStatement extends Statement  {
      * @return Hash code
      */
     public int hashCode() {
-    	// This hash code relies on the blocks and criteria for this statement
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.getCondition());
-    	myHash = HashCodeUtil.hashCode(myHash, this.getIfBlock());
-    	myHash = HashCodeUtil.hashCode(myHash, this.getElseBlock());
-		return myHash;
-	}
+        // This hash code relies on the blocks and criteria for this statement
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.getCondition());
+        myHash = HashCodeUtil.hashCode(myHash, this.getIfBlock());
+        myHash = HashCodeUtil.hashCode(myHash, this.getElseBlock());
+        return myHash;
+    }
 
 } // END CLASS

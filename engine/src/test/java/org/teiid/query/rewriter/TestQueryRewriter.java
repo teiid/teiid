@@ -67,29 +67,29 @@ public class TestQueryRewriter {
 
     private static final class FakeObject implements Comparable<FakeObject> {
 
-    	private int hashCode;
+        private int hashCode;
 
-		public FakeObject(int hashCode) {
-    		this.hashCode = hashCode;
-		}
+        public FakeObject(int hashCode) {
+            this.hashCode = hashCode;
+        }
 
-		@Override
-		public int hashCode() {
-			return hashCode;
-		}
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
 
-		@Override
-		public boolean equals(Object obj) {
-			return true;
-		}
+        @Override
+        public boolean equals(Object obj) {
+            return true;
+        }
 
-		@Override
-		public int compareTo(FakeObject o) {
-			return 0;
-		}
-	}
+        @Override
+        public int compareTo(FakeObject o) {
+            return 0;
+        }
+    }
 
-	private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
+    private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
     private static final String FALSE_STR = "1 = 0"; //$NON-NLS-1$
 
     // ################################## TEST HELPERS ################################
@@ -129,8 +129,8 @@ public class TestQueryRewriter {
     private List<List<? extends Object>> tuples;
 
     @Before public void setUp() {
-    	elements = null;
-    	tuples = new ArrayList<List<? extends Object>>();
+        elements = null;
+        tuples = new ArrayList<List<? extends Object>>();
     }
 
     private Criteria helpTestRewriteCriteria(String original, String expectedCrit, QueryMetadataInterface metadata) {
@@ -143,51 +143,51 @@ public class TestQueryRewriter {
         Criteria actual = null;
         // rewrite
         try {
-        	ArrayList<Boolean> booleanVals = new ArrayList<Boolean>(tuples.size());
-        	for (List<?> tuple : tuples) {
-            	booleanVals.add(new Evaluator(elements, null, null).evaluate(origCrit, tuple));
-			}
+            ArrayList<Boolean> booleanVals = new ArrayList<Boolean>(tuples.size());
+            for (List<?> tuple : tuples) {
+                booleanVals.add(new Evaluator(elements, null, null).evaluate(origCrit, tuple));
+            }
             actual = QueryRewriter.rewriteCriteria(origCrit, null, metadata);
             assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
             for (int i = 0; i < tuples.size(); i++) {
-            	assertEquals(tuples.get(i).toString(), booleanVals.get(i), new Evaluator(elements, null, null).evaluate(actual, tuples.get(i)));
-			}
+                assertEquals(tuples.get(i).toString(), booleanVals.get(i), new Evaluator(elements, null, null).evaluate(actual, tuples.get(i)));
+            }
         } catch(TeiidException e) {
-        	throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
         return actual;
     }
 
     public static Expression helpTestRewriteExpression(String original, String expected, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
-    	Expression actualExp = QueryParser.getQueryParser().parseExpression(original);
-    	ResolverVisitor.resolveLanguageObject(actualExp, metadata);
-    	CommandContext context = new CommandContext();
-    	context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-    	actualExp = QueryRewriter.rewriteExpression(actualExp, context, metadata);
-    	if (expected != null) {
-	    	Expression expectedExp = QueryParser.getQueryParser().parseExpression(expected);
-	    	ResolverVisitor.resolveLanguageObject(expectedExp, metadata);
-	    	assertEquals(expectedExp, actualExp);
-    	}
-    	return actualExp;
+        Expression actualExp = QueryParser.getQueryParser().parseExpression(original);
+        ResolverVisitor.resolveLanguageObject(actualExp, metadata);
+        CommandContext context = new CommandContext();
+        context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
+        actualExp = QueryRewriter.rewriteExpression(actualExp, context, metadata);
+        if (expected != null) {
+            Expression expectedExp = QueryParser.getQueryParser().parseExpression(expected);
+            ResolverVisitor.resolveLanguageObject(expectedExp, metadata);
+            assertEquals(expectedExp, actualExp);
+        }
+        return actualExp;
     }
 
-	private String getRewritenProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws TeiidComponentException, TeiidProcessingException {
+    private String getRewritenProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws TeiidComponentException, TeiidProcessingException {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         return getRewritenProcedure(userUpdateStr, metadata);
-	}
+    }
 
-	private String getRewritenProcedure(String userUpdateStr,
-			QueryMetadataInterface metadata) throws TeiidComponentException,
-			QueryMetadataException, TeiidProcessingException {
-		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
+    private String getRewritenProcedure(String userUpdateStr,
+            QueryMetadataInterface metadata) throws TeiidComponentException,
+            QueryMetadataException, TeiidProcessingException {
+        ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr);
         QueryResolver.resolveCommand(userCommand, metadata);
         Command proc = QueryResolver.expandCommand(userCommand, metadata, null);
-		QueryRewriter.rewrite(userCommand, metadata, null);
-		Command result = QueryRewriter.rewrite(proc, metadata, null);
-		return result.toString();
-	}
+        QueryRewriter.rewrite(userCommand, metadata, null);
+        Command result = QueryRewriter.rewrite(proc, metadata, null);
+        return result.toString();
+    }
 
     static Command helpTestRewriteCommand(String original, String expected) {
         try {
@@ -202,7 +202,7 @@ public class TestQueryRewriter {
     }
 
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata, CommandContext cc) throws TeiidException {
-    	Command command = QueryParser.getQueryParser().parseCommand(original);
+        Command command = QueryParser.getQueryParser().parseCommand(original);
         QueryResolver.resolveCommand(command, metadata);
         Command rewriteCommand = QueryRewriter.rewrite(command, metadata, cc);
         //to accomodate the logic that was moved to QueryOptimizer
@@ -250,15 +250,15 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteUnknown9() {
-    	helpTestRewriteCriteria("pm1.g1.e1 not in (2, null)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 not in (2, null)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteUnknown10() {
-    	helpTestRewriteCriteria("pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteUnknown11() {
-    	helpTestRewriteCommand("update pm1.g1 set e3 = pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "UPDATE pm1.g1 SET e3 = (pm1.g1.e1 <> 'a') AND (null <> null)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("update pm1.g1 set e3 = pm1.g1.e1 <> 'a' and pm1.g1.e2 <> null", "UPDATE pm1.g1 SET e3 = (pm1.g1.e1 <> 'a') AND (null <> null)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteInCriteriaWithRepeats() {
@@ -278,9 +278,9 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
-    	ElementSymbol e1 = new ElementSymbol("e1");
-    	e1.setGroupSymbol(new GroupSymbol("g1"));
-    	SetCriteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
+        ElementSymbol e1 = new ElementSymbol("e1");
+        e1.setGroupSymbol(new GroupSymbol("g1"));
+        SetCriteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
 
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null);
 
@@ -294,11 +294,11 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteInNotHashable() throws Exception {
-    	Constant c = new Constant(new FakeObject(0));
-    	SetCriteria crit = new SetCriteria(c, new ArrayList<Constant>()); //$NON-NLS-1$
+        Constant c = new Constant(new FakeObject(0));
+        SetCriteria crit = new SetCriteria(c, new ArrayList<Constant>()); //$NON-NLS-1$
 
-    	crit.getValues().add(new Constant(new FakeObject(1)));
-    	crit.getValues().add(new Constant(new FakeObject(2)));
+        crit.getValues().add(new Constant(new FakeObject(1)));
+        crit.getValues().add(new Constant(new FakeObject(2)));
 
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null);
 
@@ -960,7 +960,7 @@ public class TestQueryRewriter {
             QueryRewriter.rewriteCriteria(origCrit, null, metadata);
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
         } catch(TeiidException e) {
-        	// looks like message is being wrapped with another exception with same message
+            // looks like message is being wrapped with another exception with same message
             assertEquals("TEIID30328 Unable to evaluate (5 / 0): TEIID30384 Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
         }
     }
@@ -1080,7 +1080,7 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteConstantAgg2() throws Exception {
-    	helpTestRewriteCommand("select count(2) from pm1.g1 group by e1", "SELECT COUNT(2) FROM pm1.g1 GROUP BY e1");
+        helpTestRewriteCommand("select count(2) from pm1.g1 group by e1", "SELECT COUNT(2) FROM pm1.g1 GROUP BY e1");
     }
 
     @Test public void testRewriteCaseExprForCase5413a() {
@@ -1117,19 +1117,19 @@ public class TestQueryRewriter {
     }
 
     @Test public void testDefect16879_1(){
-    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodestring(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDefect16879_2(){
-    	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodestring(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDefect16879_3(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDefect16879_4(){
-    	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT convert(CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END, integer) FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testDefect16879_5(){
@@ -1435,170 +1435,170 @@ public class TestQueryRewriter {
 
 
     @Test public void testRewriteNullIf() throws Exception {
-    	helpTestRewriteCriteria("nullif(pm1.g1.e2, pm1.g1.e4) = 1", "CASE WHEN pm1.g1.e2 = pm1.g1.e4 THEN convert(null, double) ELSE pm1.g1.e2 END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("nullif(pm1.g1.e2, pm1.g1.e4) = 1", "CASE WHEN pm1.g1.e2 = pm1.g1.e4 THEN convert(null, double) ELSE pm1.g1.e2 END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteCoalesce() throws Exception {
-    	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testAggregateWithBetweenInCaseInSelect() {
-    	String sqlBefore = "SELECT MAX(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
-    	String sqlAfter  = "SELECT MAX(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+        String sqlBefore = "SELECT MAX(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+        String sqlAfter  = "SELECT MAX(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
 
-    	helpTestRewriteCommand( sqlBefore, sqlAfter );
+        helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
 
     @Test public void testBetweenInCaseInSelect() {
-    	String sqlBefore = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
-    	String sqlAfter = "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+        String sqlBefore = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+        String sqlAfter = "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
 
-    	helpTestRewriteCommand( sqlBefore, sqlAfter );
+        helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
 
     @Test public void testBetweenInCase() {
-    	String sqlBefore = "SELECT e1 FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
-    	String sqlAfter = "SELECT e1 FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
+        String sqlBefore = "SELECT e1 FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
+        String sqlAfter = "SELECT e1 FROM pm1.g1 WHERE convert(e3, integer) = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
 
-    	helpTestRewriteCommand( sqlBefore, sqlAfter );
+        helpTestRewriteCommand( sqlBefore, sqlAfter );
     }
 
     @Test public void testRewriteNullHandling() {
-    	String original = "pm1.g1.e1 like '%'"; //$NON-NLS-1$
-    	String expected = "pm1.g1.e1 is not null"; //$NON-NLS-1$
-    	addTestData();
+        String original = "pm1.g1.e1 like '%'"; //$NON-NLS-1$
+        String expected = "pm1.g1.e1 is not null"; //$NON-NLS-1$
+        addTestData();
 
-    	helpTestRewriteCriteria(original, expected);
+        helpTestRewriteCriteria(original, expected);
     }
 
-	@SuppressWarnings("unchecked")
-	private void addTestData() {
-		this.elements = new HashMap<ElementSymbol, Integer>();
-    	elements.put(new ElementSymbol("pm1.g1.e1"), 0);
-    	elements.put(new ElementSymbol("pm1.g1.e2"), 1);
-    	elements.put(new ElementSymbol("pm1.g1.e3"), 2);
-    	for (String s : Arrays.asList("a", null, "*")) {
-			for (Integer i : Arrays.asList(1, null, 6)) {
-	    		for (Boolean b : Arrays.asList(true, false, null)) {
-    		    	tuples.add(Arrays.asList(s, i, b));
-    			}
-    		}
-		}
-	}
+    @SuppressWarnings("unchecked")
+    private void addTestData() {
+        this.elements = new HashMap<ElementSymbol, Integer>();
+        elements.put(new ElementSymbol("pm1.g1.e1"), 0);
+        elements.put(new ElementSymbol("pm1.g1.e2"), 1);
+        elements.put(new ElementSymbol("pm1.g1.e3"), 2);
+        for (String s : Arrays.asList("a", null, "*")) {
+            for (Integer i : Arrays.asList(1, null, 6)) {
+                for (Boolean b : Arrays.asList(true, false, null)) {
+                    tuples.add(Arrays.asList(s, i, b));
+                }
+            }
+        }
+    }
 
     @Test public void testRewriteNullHandling1() {
-    	String original = "not(pm1.g1.e1 like '%' or pm1.g1.e1 = '1')"; //$NON-NLS-1$
-    	String expected = "1 = 0"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not(pm1.g1.e1 like '%' or pm1.g1.e1 = '1')"; //$NON-NLS-1$
+        String expected = "1 = 0"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling2() {
-    	String original = "not(pm1.g1.e1 like '%' and pm1.g1.e1 = '1')"; //$NON-NLS-1$
-    	String expected = "pm1.g1.e1 <> '1'"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not(pm1.g1.e1 like '%' and pm1.g1.e1 = '1')"; //$NON-NLS-1$
+        String expected = "pm1.g1.e1 <> '1'"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling3() {
-    	String original = "pm1.g1.e1 like '%' or pm1.g1.e1 = '1'"; //$NON-NLS-1$
-    	String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e1 = '1')"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "pm1.g1.e1 like '%' or pm1.g1.e1 = '1'"; //$NON-NLS-1$
+        String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e1 = '1')"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling4() {
-    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "pm1.g1.e2 >= 5"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        String expected = "pm1.g1.e2 >= 5"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling4a() {
-    	String original = "not(not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5))"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 = TRUE)) AND (pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not(not((pm1.g1.e1 like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5))"; //$NON-NLS-1$
+        String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 = TRUE)) AND (pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling5() {
-    	String original = "not((pm1.g1.e1 not like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) AND (pm1.g1.e3 <> TRUE)) OR (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not((pm1.g1.e1 not like '%' or pm1.g1.e3 = true) and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        String expected = "((pm1.g1.e1 IS NOT NULL) AND (pm1.g1.e3 <> TRUE)) OR (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling6() {
-    	String original = "not((pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 <> TRUE)) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not((pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        String expected = "((pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 <> TRUE)) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling7() {
-    	String original = "not(not(pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "1 = 0"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not(not(pm1.g1.e1 not like '%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        String expected = "1 = 0"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteNullHandling7a() {
-    	String original = "not(not(pm1.g1.e1 like '*%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
-    	String expected = "(pm1.g1.e1 LIKE '*%') AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
-    	addTestData();
-    	helpTestRewriteCriteria(original, expected);
+        String original = "not(not(pm1.g1.e1 like '*%' and pm1.g1.e3 = true) or pm1.g1.e2 < 5)"; //$NON-NLS-1$
+        String expected = "(pm1.g1.e1 LIKE '*%') AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e2 >= 5)"; //$NON-NLS-1$
+        addTestData();
+        helpTestRewriteCriteria(original, expected);
     }
 
     @Test public void testRewriteChar() {
-    	String original = "convert(pm1.g1.e1, char) = '100'"; //$NON-NLS-1$
-    	String expected = "1 = 0"; //$NON-NLS-1$
+        String original = "convert(pm1.g1.e1, char) = '100'"; //$NON-NLS-1$
+        String expected = "1 = 0"; //$NON-NLS-1$
 
-    	helpTestRewriteCriteria(original, expected);
+        helpTestRewriteCriteria(original, expected);
     }
 
     /**
      * Test ensures that '22.0' is a valid long via bigdecimal
      */
     @Test public void testRewriteBigDecimal() {
-    	String original = "convert(BQT1.SmallA.LongNum, bigdecimal) = '22.0'"; //$NON-NLS-1$
-    	CompareCriteria crit = new CompareCriteria(new ElementSymbol("BQT1.SmallA.LongNum"), CompareCriteria.EQ, new Constant(new Long(22))); //$NON-NLS-1$
-    	helpTestRewriteCriteria(original, crit, RealMetadataFactory.exampleBQTCached());
+        String original = "convert(BQT1.SmallA.LongNum, bigdecimal) = '22.0'"; //$NON-NLS-1$
+        CompareCriteria crit = new CompareCriteria(new ElementSymbol("BQT1.SmallA.LongNum"), CompareCriteria.EQ, new Constant(new Long(22))); //$NON-NLS-1$
+        helpTestRewriteCriteria(original, crit, RealMetadataFactory.exampleBQTCached());
     }
 
     /**
      * Test ensures that we will not attempt to invert the widening conversion
      */
     @Test public void testRewriteWideningIn() {
-    	String original = "convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})"; //$NON-NLS-1$
-    	helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", RealMetadataFactory.exampleBQTCached()), RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        String original = "convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})"; //$NON-NLS-1$
+        helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", RealMetadataFactory.exampleBQTCached()), RealMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
 
     @Test public void testRewriteParseDate() {
-    	String original = "parsedate(BQT1.SmallA.stringkey, 'yymmdd') = {d'1970-01-01'}"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCriteria(original, parseCriteria("convert(parsetimestamp(BQT1.SmallA.stringkey, 'yymmdd'), date) = {d'1970-01-01'}", metadata), metadata); //$NON-NLS-1$
+        String original = "parsedate(BQT1.SmallA.stringkey, 'yymmdd') = {d'1970-01-01'}"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        helpTestRewriteCriteria(original, parseCriteria("convert(parsetimestamp(BQT1.SmallA.stringkey, 'yymmdd'), date) = {d'1970-01-01'}", metadata), metadata); //$NON-NLS-1$
     }
 
     @Test public void testRewriteFormatTime() {
-    	String original = "formattime(BQT1.SmallA.timevalue, 'hh:mm') = '08:02'"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCriteria(original, parseCriteria("formattimestamp(convert(BQT1.SmallA.timevalue, timestamp), 'hh:mm') = '08:02'", metadata), metadata); //$NON-NLS-1$
+        String original = "formattime(BQT1.SmallA.timevalue, 'hh:mm') = '08:02'"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        helpTestRewriteCriteria(original, parseCriteria("formattimestamp(convert(BQT1.SmallA.timevalue, timestamp), 'hh:mm') = '08:02'", metadata), metadata); //$NON-NLS-1$
     }
 
     @Test public void testRewriteTimestampAdd() {
-    	String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
+        String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
     }
 
     @Test public void testRewriteQueryString() throws Exception {
-    	String original = "querystring('path', 'value' as \"&x\", ' & ' as y, null as z)"; //$NON-NLS-1$
-    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-    	helpTestRewriteExpression(original, "'path?%26x=value&y=%20%26%20'", metadata);
+        String original = "querystring('path', 'value' as \"&x\", ' & ' as y, null as z)"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        helpTestRewriteExpression(original, "'path?%26x=value&y=%20%26%20'", metadata);
     }
 
     @Test public void testRewriteExpressionCriteria() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
+        helpTestRewriteCriteria("pm1.g1.e3", "pm1.g1.e3 = true");
     }
 
     @Test public void testRewriteExpressionCriteriaBooleanLiterals() {
@@ -1611,60 +1611,60 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewritePredicateOptimization() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2, 3) and pm1.g1.e2 in (2, 3, 4)", "pm1.g1.e2 in (2, 3)");
+        helpTestRewriteCriteria("pm1.g1.e2 in (1, 2, 3) and pm1.g1.e2 in (2, 3, 4)", "pm1.g1.e2 in (2, 3)");
     }
 
     @Test public void testRewritePredicateOptimization1() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
+        helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
     }
 
     @Test public void testRewritePredicateOptimization2() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 6", "1 = 0");
+        helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 6", "1 = 0");
     }
 
     @Test public void testRewritePredicateOptimization2a() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
+        helpTestRewriteCriteria("pm1.g1.e2 < 5 and pm1.g1.e2 = 2", "pm1.g1.e2 = 2");
     }
 
     @Test public void testRewritePredicateOptimization3() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 = 6", "1 = 0");
+        helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 = 6", "1 = 0");
     }
 
     @Test public void testRewritePredicateOptimization4() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 is null", "1 = 0");
+        helpTestRewriteCriteria("pm1.g1.e2 in (1, 2) and pm1.g1.e2 is null", "1 = 0");
     }
 
     @Test public void testRewritePredicateOptimization5() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 <> 5 and pm1.g1.e2 in (2, 3, 5)", "pm1.g1.e2 in (2, 3)");
+        helpTestRewriteCriteria("pm1.g1.e2 <> 5 and pm1.g1.e2 in (2, 3, 5)", "pm1.g1.e2 in (2, 3)");
     }
 
     @Test public void testRewritePredicateOptimization6() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 = 5 and pm1.g1.e2 in (5, 6)", "pm1.g1.e2 = 5");
+        helpTestRewriteCriteria("pm1.g1.e2 = 5 and pm1.g1.e2 in (5, 6)", "pm1.g1.e2 = 5");
     }
 
     @Test public void testRewritePredicateOptimization6a() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) and pm1.g1.e2 = 5", "pm1.g1.e2 = 5");
+        helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) and pm1.g1.e2 = 5", "pm1.g1.e2 = 5");
     }
 
     @Ignore("TODO")
     @Test public void testRewritePredicateOptimization7() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
+        helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
 
     @Test public void testRewritePredicateOptimization8() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 = 2 and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+        helpTestRewriteCriteria("pm1.g1.e2 = 2 and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
     }
 
     @Test public void testRewritePredicateOptimization8a() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (0, 2) and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+        helpTestRewriteCriteria("pm1.g1.e2 in (0, 2) and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
     }
 
     @Test public void testRewritePredicateOptimization9() throws Exception {
-    	helpTestRewriteCriteria("not(pm1.g1.e2 = 2 and pm1.g1.e2 = 3)", "(pm1.g1.e2 <> 2) OR (pm1.g1.e2 <> 3)");
+        helpTestRewriteCriteria("not(pm1.g1.e2 = 2 and pm1.g1.e2 = 3)", "(pm1.g1.e2 <> 2) OR (pm1.g1.e2 <> 3)");
     }
 
     @Test public void testRewritePredicateOptimizationOr() throws Exception {
-    	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
+        helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }
 
     @Test public void testRewriteCritSubqueryNegate() {
@@ -1687,11 +1687,11 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("pm1.g1.e1 not in (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Test public void testUDFParse() throws Exception {
+    @Test public void testUDFParse() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
-		String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
+        String sql = "parsedate_(pm1.g1.e1) = {d'2001-01-01'}";
         helpTestRewriteCriteria(sql, parseCriteria(sql, metadata), metadata);
-	}
+    }
 
     @Test public void testRewriteNestedConvert() throws Exception {
         helpTestRewriteExpression("cast(cast(pm1.g1.e3 as integer) as long)", "cast(pm1.g1.e3 as long)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1706,86 +1706,86 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteConstantAgg() throws Exception {
-    	helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
+        helpTestRewriteCommand("select max(1) from pm1.g1 group by e1", "SELECT 1 FROM pm1.g1 GROUP BY e1");
     }
 
     @Test public void testRewriteTrim() throws Exception {
-    	helpTestRewriteExpression("trim(pm1.g1.e1)", "rtrim(ltrim(pm1.g1.e1))", RealMetadataFactory.example1Cached());
+        helpTestRewriteExpression("trim(pm1.g1.e1)", "rtrim(ltrim(pm1.g1.e1))", RealMetadataFactory.example1Cached());
     }
 
     @Test public void testRewriteTrim1() throws Exception {
-    	helpTestRewriteExpression("trim(leading from pm1.g1.e1)", "ltrim(pm1.g1.e1)", RealMetadataFactory.example1Cached());
+        helpTestRewriteExpression("trim(leading from pm1.g1.e1)", "ltrim(pm1.g1.e1)", RealMetadataFactory.example1Cached());
     }
 
     @Test public void testRewriteXmlSerialize1() throws Exception {
-    	helpTestRewriteExpression("xmlserialize(DOCUMENT cast (pm1.g1.e1 as xml) as clob version '2.0')", "XMLSERIALIZE(DOCUMENT convert(pm1.g1.e1, xml) AS clob VERSION '2.0' INCLUDING XMLDECLARATION)", RealMetadataFactory.example1Cached());
+        helpTestRewriteExpression("xmlserialize(DOCUMENT cast (pm1.g1.e1 as xml) as clob version '2.0')", "XMLSERIALIZE(DOCUMENT convert(pm1.g1.e1, xml) AS clob VERSION '2.0' INCLUDING XMLDECLARATION)", RealMetadataFactory.example1Cached());
     }
 
     @Test public void testRewriteMerge() throws Exception {
-		String ddl = "CREATE foreign table x (y string primary key)";
+        String ddl = "CREATE foreign table x (y string primary key)";
 
-		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 
-    	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\n" +
-    	        "DECLARE integer VARIABLES.ROWS_UPDATED = 0;\n" +
-    	        "INSERT INTO #changes (y) SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X;\n" +
-    	        "LOOP ON (SELECT #changes.y FROM #changes) AS X1\n" +
-    	        "BEGIN\n" +
-    	        "IF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\n" +
-    	        "BEGIN\n" +
-    	        "END\n" +
-    	        "ELSE\n" +
-    	        "BEGIN\n" +
-    	        "INSERT INTO x (y) VALUES (X1.y);\n" +
-    	        "END\n" +
-    	        "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" +
-    	        "END\n" +
-    	        "SELECT VARIABLES.ROWS_UPDATED;\n" +
-    	        "END", metadata);
+        helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\n" +
+                "DECLARE integer VARIABLES.ROWS_UPDATED = 0;\n" +
+                "INSERT INTO #changes (y) SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X;\n" +
+                "LOOP ON (SELECT #changes.y FROM #changes) AS X1\n" +
+                "BEGIN\n" +
+                "IF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\n" +
+                "BEGIN\n" +
+                "END\n" +
+                "ELSE\n" +
+                "BEGIN\n" +
+                "INSERT INTO x (y) VALUES (X1.y);\n" +
+                "END\n" +
+                "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" +
+                "END\n" +
+                "SELECT VARIABLES.ROWS_UPDATED;\n" +
+                "END", metadata);
     }
 
-	@Test public void testUnknownRewrite() throws Exception {
-		String sql = "SELECT 1 = null"; //$NON-NLS-1$
+    @Test public void testUnknownRewrite() throws Exception {
+        String sql = "SELECT 1 = null"; //$NON-NLS-1$
 
-		helpTestRewriteCommand(sql, "SELECT UNKNOWN");
+        helpTestRewriteCommand(sql, "SELECT UNKNOWN");
     }
 
-	@Test public void testWithInliningUnused() throws Exception {
-		String sql = "with a as (select 1) select 2"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "SELECT 2");
-	}
-
-	@Test public void testWithInliningChained() throws Exception {
-		String sql = "with a (x) as (select x from (select 1 as x) as b), b as (select * from a) select * from b"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "SELECT b.x FROM (SELECT a.x FROM (SELECT x FROM (SELECT 1 AS x) AS b) AS a) AS b");
+    @Test public void testWithInliningUnused() throws Exception {
+        String sql = "with a as (select 1) select 2"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT 2");
     }
 
-	@Test public void testWithInliningRecursive() throws Exception {
-		String sql = "with a as (select 1 as col union all select col + 1 from a) select * from a"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "WITH a (col) AS (SELECT 1 AS col UNION ALL SELECT (col + 1) FROM a) SELECT a.col FROM a");
-	}
+    @Test public void testWithInliningChained() throws Exception {
+        String sql = "with a (x) as (select x from (select 1 as x) as b), b as (select * from a) select * from b"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT b.x FROM (SELECT a.x FROM (SELECT x FROM (SELECT 1 AS x) AS b) AS a) AS b");
+    }
 
-	@Test public void testWithScalar() throws Exception {
-		String sql = "with a as (select 1 as col) select * from a, a as other"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "SELECT a.col, other.col FROM (SELECT 1 AS col) AS a, (SELECT 1 AS col) AS other");
-	}
+    @Test public void testWithInliningRecursive() throws Exception {
+        String sql = "with a as (select 1 as col union all select col + 1 from a) select * from a"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "WITH a (col) AS (SELECT 1 AS col UNION ALL SELECT (col + 1) FROM a) SELECT a.col FROM a");
+    }
 
-	@Test public void testWithMultiple() throws Exception {
-		String sql = "with a as (select e1 from pm1.g1) select * from a, a as other"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "WITH a (e1) AS (SELECT e1 FROM pm1.g1) SELECT a.e1, other.e1 FROM a, a AS other");
-	}
+    @Test public void testWithScalar() throws Exception {
+        String sql = "with a as (select 1 as col) select * from a, a as other"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT a.col, other.col FROM (SELECT 1 AS col) AS a, (SELECT 1 AS col) AS other");
+    }
 
-	@Test public void testRewriteWithRedefinedName() throws Exception {
-		String sql = "with a as (select e1 from pm1.g1) select * from (select 1 as x) as a"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "SELECT a.x FROM (SELECT 1 AS x) AS a");
-	}
+    @Test public void testWithMultiple() throws Exception {
+        String sql = "with a as (select e1 from pm1.g1) select * from a, a as other"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "WITH a (e1) AS (SELECT e1 FROM pm1.g1) SELECT a.e1, other.e1 FROM a, a AS other");
+    }
 
-	@Test public void testDeepReplacement() throws Exception {
-		String sql = "with a as (select e1 from pm1.g1) select (select e1 from a) from pm1.g2"; //$NON-NLS-1$
-		helpTestRewriteCommand(sql, "SELECT (SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS a LIMIT 2) FROM pm1.g2");
-	}
+    @Test public void testRewriteWithRedefinedName() throws Exception {
+        String sql = "with a as (select e1 from pm1.g1) select * from (select 1 as x) as a"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT a.x FROM (SELECT 1 AS x) AS a");
+    }
 
-	@Test public void testRewriteCritBooleanExpression() {
+    @Test public void testDeepReplacement() throws Exception {
+        String sql = "with a as (select e1 from pm1.g1) select (select e1 from a) from pm1.g2"; //$NON-NLS-1$
+        helpTestRewriteCommand(sql, "SELECT (SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS a LIMIT 2) FROM pm1.g2");
+    }
+
+    @Test public void testRewriteCritBooleanExpression() {
         helpTestRewriteCriteria("not (pm1.g1.e3)", //$NON-NLS-1$
                                 "pm1.g1.e3 <> TRUE" );         //$NON-NLS-1$
     }

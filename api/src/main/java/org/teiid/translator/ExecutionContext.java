@@ -43,7 +43,7 @@ import org.teiid.translator.CacheDirective.Scope;
  */
 public interface ExecutionContext {
 
-	/**
+    /**
      * Get the identifier for the current connector running the command
      * @return Connector identifier; never null
      */
@@ -223,15 +223,15 @@ public interface ExecutionContext {
      * Get the result cache scope for the current execution
      * @return
      */
-	Scope getScope();
+    Scope getScope();
 
-	/**
-	 * Set the result cache scope for the current execution.
-	 * <br>
-	 * Setting to {@link Scope#NONE} will typically result in the user query result being
-	 * cached at the {@link Scope#SESSION} level.
-	 *
-	 * @param scope
-	 */
-	void setScope(Scope scope);
+    /**
+     * Set the result cache scope for the current execution.
+     * <br>
+     * Setting to {@link Scope#NONE} will typically result in the user query result being
+     * cached at the {@link Scope#SESSION} level.
+     *
+     * @param scope
+     */
+    void setScope(Scope scope);
 }

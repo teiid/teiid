@@ -21,68 +21,68 @@ import org.teiid.adminapi.Translator;
 
 
 public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator {
-	private static final long serialVersionUID = -3454161477587996138L;
-	private String type;
-	private Class<?> executionClass;
-	private String description;
-	private String moduleName;
-	private transient VDBTranslatorMetaData parent;
+    private static final long serialVersionUID = -3454161477587996138L;
+    private String type;
+    private Class<?> executionClass;
+    private String description;
+    private String moduleName;
+    private transient VDBTranslatorMetaData parent;
 
-	@Override
-	public String getName() {
-		return super.getName();
-	}
+    @Override
+    public String getName() {
+        return super.getName();
+    }
 
-	public void setName(String name) {
-		super.setName(name);
-	}
+    public void setName(String name) {
+        super.setName(name);
+    }
 
-	@Override
-	public String getType() {
-		return type;
-	}
+    @Override
+    public String getType() {
+        return type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public String toString() {
-		return getName();
-	}
+    public String toString() {
+        return getName();
+    }
 
-	public Class<?> getExecutionFactoryClass() {
-		if (this.executionClass == null && this.parent != null) {
-			return this.parent.getExecutionFactoryClass();
-		}
-		return this.executionClass;
-	}
+    public Class<?> getExecutionFactoryClass() {
+        if (this.executionClass == null && this.parent != null) {
+            return this.parent.getExecutionFactoryClass();
+        }
+        return this.executionClass;
+    }
 
-	public void setExecutionFactoryClass(Class<?> clazz) {
-		this.executionClass = clazz;
-		addProperty(EXECUTION_FACTORY_CLASS, clazz.getName());
-	}
+    public void setExecutionFactoryClass(Class<?> clazz) {
+        this.executionClass = clazz;
+        addProperty(EXECUTION_FACTORY_CLASS, clazz.getName());
+    }
 
-	public String getDescription() {
-		return this.description;
-	}
+    public String getDescription() {
+        return this.description;
+    }
 
-	public void setDescription(String desc) {
-		this.description = desc;
-	}
+    public void setDescription(String desc) {
+        this.description = desc;
+    }
 
-	public String getModuleName() {
-		return this.moduleName;
-	}
+    public String getModuleName() {
+        return this.moduleName;
+    }
 
-	public void setModuleName(String name) {
-		this.moduleName = name;
-	}
+    public void setModuleName(String name) {
+        this.moduleName = name;
+    }
 
-	public void setParent(VDBTranslatorMetaData parent) {
-		this.parent = parent;
-	}
+    public void setParent(VDBTranslatorMetaData parent) {
+        this.parent = parent;
+    }
 
-	public VDBTranslatorMetaData getParent() {
-		return parent;
-	}
+    public VDBTranslatorMetaData getParent() {
+        return parent;
+    }
 }

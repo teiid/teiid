@@ -32,7 +32,7 @@ public class DeepPreOrderNavigator extends PreOrPostOrderNavigator {
      * @since 4.2
      */
     public DeepPreOrderNavigator(LanguageVisitor visitor) {
-    	super(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
+        super(visitor, PreOrPostOrderNavigator.PRE_ORDER, true);
     }
 
     public static void doVisit(LanguageObject object, LanguageVisitor visitor) {

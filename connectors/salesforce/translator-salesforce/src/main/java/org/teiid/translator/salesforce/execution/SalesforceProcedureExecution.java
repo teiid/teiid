@@ -24,19 +24,19 @@ import org.teiid.translator.TranslatorException;
 
 public interface SalesforceProcedureExecution {
 
-	static final int OBJECT = 0;
-	static final int STARTDATE = 1;
-	static final int ENDDATE = 2;
-	static final int LATESTDATECOVERED = 3;
+    static final int OBJECT = 0;
+    static final int STARTDATE = 1;
+    static final int ENDDATE = 2;
+    static final int LATESTDATECOVERED = 3;
 
-	List<?> getOutputParameterValues();
+    List<?> getOutputParameterValues();
 
-	List<?> next();
+    List<?> next();
 
-	void cancel();
+    void cancel();
 
-	void close();
+    void close();
 
-	void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException;
+    void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException;
 
 }

@@ -46,7 +46,7 @@ import org.teiid.net.TeiidURL;
  * return {@link javax.sql.XAConnection} instances that can be used with distributed transactions.
  */
 public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable {
-	public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
+    public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
 
     // constant indicating Virtual database name
     public static final String VDB_NAME = TeiidURL.JDBC.VDB_NAME;
@@ -222,7 +222,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
 
         if (this.getQueryTimeout() > 0) {
-        	props.setProperty(ExecutionProperties.QUERYTIMEOUT, String.valueOf(this.getQueryTimeout()));
+            props.setProperty(ExecutionProperties.QUERYTIMEOUT, String.valueOf(this.getQueryTimeout()));
         }
 
         if (this.getResultSetCacheMode() != null && this.getResultSetCacheMode().trim().length() != 0) {
@@ -234,7 +234,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
 
         if (this.isNoExec()) {
-        	props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
+            props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
         }
 
         if ( this.getAutoCommitTxn() != null && this.getAutoCommitTxn().trim().length() != 0   ) {
@@ -246,11 +246,11 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
 
         if (!this.getUseJDBC4ColumnNameAndLabelSemantics()) {
-        	props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, Boolean.FALSE.toString());
+            props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, Boolean.FALSE.toString());
         }
 
         if (this.additionalProperties != null) {
-        	JDBCURL.parseConnectionProperties(this.additionalProperties, props);
+            JDBCURL.parseConnectionProperties(this.additionalProperties, props);
         }
 
         return props;
@@ -310,7 +310,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
 
         if (this.queryTimeout < 0) {
-        	throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
+            throw new TeiidSQLException(JDBCPlugin.Util.getString("MMStatement.Bad_timeout_value")); //$NON-NLS-1$
         }
 
 
@@ -338,25 +338,25 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     public PooledConnection getPooledConnection() throws SQLException {
-		return getPooledConnection(null, null);
-	}
+        return getPooledConnection(null, null);
+    }
 
-	public PooledConnection getPooledConnection(final String userName, final String password)
-			throws SQLException {
-		return getXAConnection(userName, password);
-	}
+    public PooledConnection getPooledConnection(final String userName, final String password)
+            throws SQLException {
+        return getXAConnection(userName, password);
+    }
 
     // --------------------------------------------------------------------------------------------
     //                        P R O P E R T Y   M E T H O D S
     // --------------------------------------------------------------------------------------------
 
-	public String getDisableLocalTxn() {
-		return disableLocalTxn;
-	}
+    public String getDisableLocalTxn() {
+        return disableLocalTxn;
+    }
 
-	public void setDisableLocalTxn(String disableLocalTxn) {
-		this.disableLocalTxn = disableLocalTxn;
-	}
+    public void setDisableLocalTxn(String disableLocalTxn) {
+        this.disableLocalTxn = disableLocalTxn;
+    }
 
     /**
      * Get the log writer for this data source.
@@ -565,20 +565,20 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     public String getShowPlan() {
-		return showPlan;
-	}
+        return showPlan;
+    }
 
     public void setShowPlan(String showPlan) {
-		this.showPlan = showPlan;
-	}
+        this.showPlan = showPlan;
+    }
 
     public void setNoExec(boolean noExec) {
-		this.noExec = noExec;
-	}
+        this.noExec = noExec;
+    }
 
     public boolean isNoExec() {
-		return noExec;
-	}
+        return noExec;
+    }
 
     /**
      * Returns the current setting for how connections are created by this DataSource manage transactions
@@ -591,8 +591,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * be used.
      */
     public String getAutoCommitTxn() {
-		return this.transactionAutoWrap;
-	}
+        return this.transactionAutoWrap;
+    }
 
     /**
      * Sets the setting for how connections are created by this DataSource manage transactions
@@ -618,17 +618,17 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @param transactionAutoWrap The transactionAutoWrap to set
      */
     public void setAutoCommitTxn(String transactionAutoWrap) {
-    	this.transactionAutoWrap = transactionAutoWrap;
+        this.transactionAutoWrap = transactionAutoWrap;
     }
 
 
-	public boolean getUseJDBC4ColumnNameAndLabelSemantics() {
-		return useJDBC4ColumnNameAndLabelSemantics;
-	}
+    public boolean getUseJDBC4ColumnNameAndLabelSemantics() {
+        return useJDBC4ColumnNameAndLabelSemantics;
+    }
 
-	public void setUseJDBC4ColumnNameAndLabelSemantics(boolean useJDBC4ColumnNameAndLabelSemantics) {
-		this.useJDBC4ColumnNameAndLabelSemantics = useJDBC4ColumnNameAndLabelSemantics;
-	}
+    public void setUseJDBC4ColumnNameAndLabelSemantics(boolean useJDBC4ColumnNameAndLabelSemantics) {
+        this.useJDBC4ColumnNameAndLabelSemantics = useJDBC4ColumnNameAndLabelSemantics;
+    }
 
     // --------------------------------------------------------------------------------------------
     //                  V A L I D A T I O N   M E T H O D S
@@ -773,29 +773,29 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         return null;
     }
 
-	public void setAdditionalProperties(String additionalProperties) {
-		this.additionalProperties = additionalProperties;
-	}
+    public void setAdditionalProperties(String additionalProperties) {
+        this.additionalProperties = additionalProperties;
+    }
 
-	public String getAdditionalProperties() {
-		return additionalProperties;
-	}
+    public String getAdditionalProperties() {
+        return additionalProperties;
+    }
 
-	public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
-		this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
-	}
+    public void setAnsiQuotedIdentifiers(boolean ansiQuotedIdentifiers) {
+        this.ansiQuotedIdentifiers = ansiQuotedIdentifiers;
+    }
 
-	public boolean isAnsiQuotedIdentifiers() {
-		return ansiQuotedIdentifiers;
-	}
+    public boolean isAnsiQuotedIdentifiers() {
+        return ansiQuotedIdentifiers;
+    }
 
-	public int getQueryTimeout() {
-		return queryTimeout;
-	}
+    public int getQueryTimeout() {
+        return queryTimeout;
+    }
 
-	public void setQueryTimeout(int queryTimeout) {
-		this.queryTimeout = queryTimeout;
-	}
+    public void setQueryTimeout(int queryTimeout) {
+        this.queryTimeout = queryTimeout;
+    }
 
 }
 

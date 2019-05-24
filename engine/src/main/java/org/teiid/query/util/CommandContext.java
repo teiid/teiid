@@ -98,118 +98,118 @@ import org.teiid.translator.ReusableExecution;
  */
 public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
-	private static final int MAX_WARNINGS = 1000;
+    private static final int MAX_WARNINGS = 1000;
 
     private static ThreadLocal<LinkedList<CommandContext>> threadLocalContext = new ThreadLocal<LinkedList<CommandContext>>() {
-		@Override
-		protected LinkedList<CommandContext> initialValue() {
-			return new LinkedList<CommandContext>();
-		}
-	};
+        @Override
+        protected LinkedList<CommandContext> initialValue() {
+            return new LinkedList<CommandContext>();
+        }
+    };
 
-	private static class VDBState {
-	    private String vdbName = ""; //$NON-NLS-1$
-	    private String vdbVersion = ""; //$NON-NLS-1$
-	    private QueryMetadataInterface metadata;
-	    private GlobalTableStore globalTables;
-		private SessionMetadata session;
-		private ClassLoader classLoader;
-		private DQPWorkContext dqpWorkContext;
-	}
+    private static class VDBState {
+        private String vdbName = ""; //$NON-NLS-1$
+        private String vdbVersion = ""; //$NON-NLS-1$
+        private QueryMetadataInterface metadata;
+        private GlobalTableStore globalTables;
+        private SessionMetadata session;
+        private ClassLoader classLoader;
+        private DQPWorkContext dqpWorkContext;
+    }
 
-	private static class LookupKey implements Comparable<LookupKey> {
-		String matTableName;
-		Comparable keyValue;
+    private static class LookupKey implements Comparable<LookupKey> {
+        String matTableName;
+        Comparable keyValue;
 
-		public LookupKey(String matTableName, Object keyValue) {
-			this.matTableName = matTableName;
-			this.keyValue = (Comparable) keyValue;
-		}
+        public LookupKey(String matTableName, Object keyValue) {
+            this.matTableName = matTableName;
+            this.keyValue = (Comparable) keyValue;
+        }
 
-		@Override
-		public int compareTo(LookupKey arg0) {
-			int comp = matTableName.compareTo(arg0.matTableName);
-			if (comp != 0) {
-				return comp;
-			}
-			return keyValue.compareTo(arg0.keyValue);
-		}
-	}
+        @Override
+        public int compareTo(LookupKey arg0) {
+            int comp = matTableName.compareTo(arg0.matTableName);
+            if (comp != 0) {
+                return comp;
+            }
+            return keyValue.compareTo(arg0.keyValue);
+        }
+    }
 
-	private static class GlobalState implements Cloneable {
-	    private WeakReference<RequestWorkItem> processorID;
+    private static class GlobalState implements Cloneable {
+        private WeakReference<RequestWorkItem> processorID;
 
-	    /** Identify a group of related commands, which typically get cleaned up together */
-	    private String connectionID;
+        /** Identify a group of related commands, which typically get cleaned up together */
+        private String connectionID;
 
-	    private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+        private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 
-	    private String userName;
+        private String userName;
 
-	    private Serializable commandPayload;
+        private Serializable commandPayload;
 
-	    /** Indicate whether statistics should be collected for relational node processing*/
-	    private boolean collectNodeStatistics;
+        /** Indicate whether statistics should be collected for relational node processing*/
+        private boolean collectNodeStatistics;
 
-	    private Random random = null;
+        private Random random = null;
 
-	    private TimeZone timezone = TimeZone.getDefault();
+        private TimeZone timezone = TimeZone.getDefault();
 
-	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
+        private QueryProcessor.ProcessorFactory queryProcessorFactory;
 
-	    private Set<String> groups;
-	    private Map<String, String> aliasMapping;
+        private Set<String> groups;
+        private Map<String, String> aliasMapping;
 
-	    private long timeSliceEnd = Long.MAX_VALUE;
+        private long timeSliceEnd = Long.MAX_VALUE;
 
-	    private long timeoutEnd = Long.MAX_VALUE;
+        private long timeoutEnd = Long.MAX_VALUE;
 
-	    private BufferManager bufferManager;
+        private BufferManager bufferManager;
 
-	    private SessionAwareCache<PreparedPlan> planCache;
+        private SessionAwareCache<PreparedPlan> planCache;
 
-	    private boolean resultSetCacheEnabled = true;
+        private boolean resultSetCacheEnabled = true;
 
-	    private int userRequestSourceConcurrency;
-	    private Subject subject;
-	    private HashSet<Object> dataObjects;
+        private int userRequestSourceConcurrency;
+        private Subject subject;
+        private HashSet<Object> dataObjects;
 
-		private RequestID requestId;
+        private RequestID requestId;
 
-		private TransactionContext transactionContext;
-		private TransactionService transactionService;
-		private Executor executor = ExecutorUtils.getDirectExecutor();
-		Map<Object, List<ReusableExecution<?>>> reusableExecutions;
-	    Set<CommandListener> commandListeners = null;
-	    private LRUCache<String, DecimalFormat> decimalFormatCache;
-		private LRUCache<String, SimpleDateFormat> dateFormatCache;
-		private LRUCache<Entry<String,Integer>, Pattern> patternCache;
-		private AtomicLong reuseCount = null;
+        private TransactionContext transactionContext;
+        private TransactionService transactionService;
+        private Executor executor = ExecutorUtils.getDirectExecutor();
+        Map<Object, List<ReusableExecution<?>>> reusableExecutions;
+        Set<CommandListener> commandListeners = null;
+        private LRUCache<String, DecimalFormat> decimalFormatCache;
+        private LRUCache<String, SimpleDateFormat> dateFormatCache;
+        private LRUCache<Entry<String,Integer>, Pattern> patternCache;
+        private AtomicLong reuseCount = null;
 
-	    private List<Exception> warnings = null;
+        private List<Exception> warnings = null;
 
-	    private Options options = null;
-	    private List<ElementSymbol> returnAutoGeneratedKeys;
-	    private GeneratedKeysImpl generatedKeys;
-	    private long reservedBuffers;
+        private Options options = null;
+        private List<ElementSymbol> returnAutoGeneratedKeys;
+        private GeneratedKeysImpl generatedKeys;
+        private long reservedBuffers;
 
-		private AuthorizationValidator authorizationValidator;
+        private AuthorizationValidator authorizationValidator;
 
-		private Map<LookupKey, TupleSource> lookups;
-		private TempTableStore sessionTempTableStore;
+        private Map<LookupKey, TupleSource> lookups;
+        private TempTableStore sessionTempTableStore;
 
-		private Set<FileStoreInputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<FileStoreInputStreamFactory, Boolean>());
+        private Set<FileStoreInputStreamFactory> created = Collections.newSetFromMap(new WeakHashMap<FileStoreInputStreamFactory, Boolean>());
 
-		private LRUCache<AbstractMetadataRecord, Boolean> accessible;
+        private LRUCache<AbstractMetadataRecord, Boolean> accessible;
 
-		private Throwable batchUpdateException;
+        private Throwable batchUpdateException;
 
         public boolean parallel;
 
         private long timestamp = System.currentTimeMillis();
-	}
+    }
 
-	private GlobalState globalState = new GlobalState();
+    private GlobalState globalState = new GlobalState();
 
     private VariableContext variableContext = new VariableContext();
     private TempTableStore tempTableStore;
@@ -256,41 +256,41 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     private CommandContext(GlobalState state) {
-    	this.globalState = state;
-    	this.dataObjects = this.globalState.dataObjects;
+        this.globalState = state;
+        this.dataObjects = this.globalState.dataObjects;
     }
 
     public Determinism getDeterminismLevel() {
-		return determinismLevel[0];
-	}
+        return determinismLevel[0];
+    }
 
     public Determinism resetDeterminismLevel(boolean detach) {
-    	Determinism result = determinismLevel[0];
-    	if (detach) {
-    		determinismLevel = new Determinism[1];
-    	}
-    	determinismLevel[0] = Determinism.DETERMINISTIC;
-    	return result;
+        Determinism result = determinismLevel[0];
+        if (detach) {
+            determinismLevel = new Determinism[1];
+        }
+        determinismLevel[0] = Determinism.DETERMINISTIC;
+        return result;
 
     }
 
     public Determinism resetDeterminismLevel() {
-    	return resetDeterminismLevel(false);
+        return resetDeterminismLevel(false);
     }
 
     public void setDeterminismLevel(Determinism level) {
-    	if (determinismLevel[0] == null || level.compareTo(determinismLevel[0]) < 0) {
-    		determinismLevel[0] = level;
-    	}
+        if (determinismLevel[0] == null || level.compareTo(determinismLevel[0]) < 0) {
+            determinismLevel[0] = level;
+        }
     }
 
     /**
      * @return
      */
     public RequestWorkItem getWorkItem() {
-    	if (globalState.processorID == null) {
-    		return null;
-    	}
+        if (globalState.processorID == null) {
+            return null;
+        }
         return globalState.processorID.get();
     }
 
@@ -303,38 +303,38 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     public CommandContext clone() {
-    	CommandContext clone = new CommandContext(this.globalState);
-    	clone.variableContext = this.variableContext;
-    	clone.tempTableStore = this.tempTableStore;
-    	if (this.recursionStack != null) {
+        CommandContext clone = new CommandContext(this.globalState);
+        clone.variableContext = this.variableContext;
+        clone.tempTableStore = this.tempTableStore;
+        if (this.recursionStack != null) {
             clone.recursionStack = new LinkedList<String>(this.recursionStack);
         }
-    	clone.setNonBlocking(this.nonBlocking);
-    	clone.tupleSourceCache = this.tupleSourceCache;
-    	clone.vdbState = this.vdbState;
-    	clone.determinismLevel = this.determinismLevel;
-    	if (this.parentCancelled != null) {
-    		clone.parentCancelled = this.parentCancelled;
-    	} else {
-    		clone.parentCancelled = this.cancelled;
-    	}
-    	clone.currentTimestamp = this.currentTimestamp;
-    	return clone;
+        clone.setNonBlocking(this.nonBlocking);
+        clone.tupleSourceCache = this.tupleSourceCache;
+        clone.vdbState = this.vdbState;
+        clone.determinismLevel = this.determinismLevel;
+        if (this.parentCancelled != null) {
+            clone.parentCancelled = this.parentCancelled;
+        } else {
+            clone.parentCancelled = this.cancelled;
+        }
+        clone.currentTimestamp = this.currentTimestamp;
+        return clone;
     }
 
     public void setNewVDBState(DQPWorkContext newWorkContext) {
-    	this.vdbState = new VDBState();
-    	VDBMetaData vdb = newWorkContext.getVDB();
-		GlobalTableStore actualGlobalStore = vdb.getAttachment(GlobalTableStore.class);
-		this.vdbState.globalTables = actualGlobalStore;
-		this.vdbState.session = newWorkContext.getSession();
-		this.vdbState.classLoader = vdb.getAttachment(ClassLoader.class);
-		this.vdbState.vdbName = vdb.getName();
-		this.vdbState.vdbVersion = vdb.getVersion();
-		this.vdbState.dqpWorkContext = newWorkContext;
-		TempMetadataAdapter metadata = new TempMetadataAdapter(vdb.getAttachment(QueryMetadataInterface.class), globalState.sessionTempTableStore.getMetadataStore());
-		metadata.setSession(true);
-		this.vdbState.metadata = metadata;
+        this.vdbState = new VDBState();
+        VDBMetaData vdb = newWorkContext.getVDB();
+        GlobalTableStore actualGlobalStore = vdb.getAttachment(GlobalTableStore.class);
+        this.vdbState.globalTables = actualGlobalStore;
+        this.vdbState.session = newWorkContext.getSession();
+        this.vdbState.classLoader = vdb.getAttachment(ClassLoader.class);
+        this.vdbState.vdbName = vdb.getName();
+        this.vdbState.vdbVersion = vdb.getVersion();
+        this.vdbState.dqpWorkContext = newWorkContext;
+        TempMetadataAdapter metadata = new TempMetadataAdapter(vdb.getAttachment(QueryMetadataInterface.class), globalState.sessionTempTableStore.getMetadataStore());
+        metadata.setSession(true);
+        this.vdbState.metadata = metadata;
     }
 
     public String toString() {
@@ -418,7 +418,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
 
     public int getProcessorBatchSize(List<Expression> schema) {
-    	return this.globalState.bufferManager.getProcessorBatchSize(schema);
+        return this.globalState.bufferManager.getProcessorBatchSize(schema);
     }
 
     public void setProcessorBatchSize(int processorBatchSize) {
@@ -427,14 +427,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
     public double getNextRand() {
         if (globalState.random == null) {
-        	globalState.random = new Random();
+            globalState.random = new Random();
         }
         return globalState.random.nextDouble();
     }
 
     public double getNextRand(long seed) {
         if (globalState.random == null) {
-        	globalState.random = new Random();
+            globalState.random = new Random();
         }
         globalState.random.setSeed(seed);
         return globalState.random.nextDouble();
@@ -448,17 +448,17 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         if (recursionStack == null) {
             recursionStack = new LinkedList<String>();
         } else if (recursionStack.contains(value)) {
-			 throw new QueryProcessingException(QueryPlugin.Event.TEIID30347, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30347, value));
+             throw new QueryProcessingException(QueryPlugin.Event.TEIID30347, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30347, value));
         }
 
         recursionStack.push(value);
     }
 
     public int getCallStackDepth() {
-    	if (this.recursionStack == null) {
-    		return 0;
-    	}
-    	return this.recursionStack.size();
+        if (this.recursionStack == null) {
+            return 0;
+        }
+        return this.recursionStack.size();
     }
 
     public void popCall() {
@@ -471,416 +471,416 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         this.globalState.authorizationValidator = authorizationValidator;
     }
 
-	public TempTableStore getTempTableStore() {
-		return tempTableStore;
-	}
+    public TempTableStore getTempTableStore() {
+        return tempTableStore;
+    }
 
-	public void setTempTableStore(TempTableStore tempTableStore) {
-		this.tempTableStore = tempTableStore;
-		if (globalState.sessionTempTableStore == null) {
-			globalState.sessionTempTableStore = tempTableStore;
-		}
-	}
+    public void setTempTableStore(TempTableStore tempTableStore) {
+        this.tempTableStore = tempTableStore;
+        if (globalState.sessionTempTableStore == null) {
+            globalState.sessionTempTableStore = tempTableStore;
+        }
+    }
 
-	public TempTableStore getSessionTempTableStore() {
-		return globalState.sessionTempTableStore;
-	}
+    public TempTableStore getSessionTempTableStore() {
+        return globalState.sessionTempTableStore;
+    }
 
-	public void setSessionTempTableStore(TempTableStore tempTableStore) {
-		this.globalState.sessionTempTableStore = tempTableStore;
-	}
+    public void setSessionTempTableStore(TempTableStore tempTableStore) {
+        this.globalState.sessionTempTableStore = tempTableStore;
+    }
 
-	public TimeZone getServerTimeZone() {
-		return globalState.timezone;
-	}
+    public TimeZone getServerTimeZone() {
+        return globalState.timezone;
+    }
 
-	public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
-		return this.globalState.queryProcessorFactory;
-	}
+    public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
+        return this.globalState.queryProcessorFactory;
+    }
 
-	public void setQueryProcessorFactory(QueryProcessor.ProcessorFactory queryProcessorFactory) {
-		this.globalState.queryProcessorFactory = queryProcessorFactory;
-	}
+    public void setQueryProcessorFactory(QueryProcessor.ProcessorFactory queryProcessorFactory) {
+        this.globalState.queryProcessorFactory = queryProcessorFactory;
+    }
 
-	public VariableContext getVariableContext() {
-		return variableContext;
-	}
+    public VariableContext getVariableContext() {
+        return variableContext;
+    }
 
-	public void setVariableContext(VariableContext variableContext) {
-		this.variableContext = variableContext;
-	}
+    public void setVariableContext(VariableContext variableContext) {
+        this.variableContext = variableContext;
+    }
 
-	public void pushVariableContext(VariableContext toPush) {
-		toPush.setParentContext(this.variableContext);
-		this.variableContext = toPush;
-	}
+    public void pushVariableContext(VariableContext toPush) {
+        toPush.setParentContext(this.variableContext);
+        this.variableContext = toPush;
+    }
 
-	public Object getFromContext(Expression expression) throws TeiidComponentException {
-		if (variableContext == null || !(expression instanceof ElementSymbol)) {
-			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
-		}
-		Object value = variableContext.getValue(expression);
-		if (value == null && !variableContext.containsVariable(expression)) {
-			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
-		}
-		return value;
-	}
+    public Object getFromContext(Expression expression) throws TeiidComponentException {
+        if (variableContext == null || !(expression instanceof ElementSymbol)) {
+            throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
+        }
+        Object value = variableContext.getValue(expression);
+        if (value == null && !variableContext.containsVariable(expression)) {
+            throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
+        }
+        return value;
+    }
 
-	public Set<String> getGroups() {
-		if (globalState.groups == null) {
-			globalState.groups = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-		}
-		return globalState.groups;
-	}
+    public Set<String> getGroups() {
+        if (globalState.groups == null) {
+            globalState.groups = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        }
+        return globalState.groups;
+    }
 
-	public Map<String, String> getAliasMapping() {
-		if (globalState.aliasMapping == null) {
-			globalState.aliasMapping = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		}
-		return globalState.aliasMapping;
-	}
+    public Map<String, String> getAliasMapping() {
+        if (globalState.aliasMapping == null) {
+            globalState.aliasMapping = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        }
+        return globalState.aliasMapping;
+    }
 
-	public long getTimeSliceEnd() {
-		return globalState.timeSliceEnd;
-	}
+    public long getTimeSliceEnd() {
+        return globalState.timeSliceEnd;
+    }
 
-	public long getTimeoutEnd() {
-		return globalState.timeoutEnd;
-	}
+    public long getTimeoutEnd() {
+        return globalState.timeoutEnd;
+    }
 
-	public void setTimeSliceEnd(long timeSliceEnd) {
-		globalState.timeSliceEnd = timeSliceEnd;
-	}
+    public void setTimeSliceEnd(long timeSliceEnd) {
+        globalState.timeSliceEnd = timeSliceEnd;
+    }
 
-	public void setTimeoutEnd(long timeoutEnd) {
-		globalState.timeoutEnd = timeoutEnd;
-	}
+    public void setTimeoutEnd(long timeoutEnd) {
+        globalState.timeoutEnd = timeoutEnd;
+    }
 
-	public void setMetadata(QueryMetadataInterface metadata) {
-		vdbState.metadata = metadata;
-	}
+    public void setMetadata(QueryMetadataInterface metadata) {
+        vdbState.metadata = metadata;
+    }
 
-	public QueryMetadataInterface getMetadata() {
-		return vdbState.metadata;
-	}
+    public QueryMetadataInterface getMetadata() {
+        return vdbState.metadata;
+    }
 
     public BufferManager getBufferManager() {
-    	return globalState.bufferManager;
+        return globalState.bufferManager;
     }
 
     public void setBufferManager(BufferManager bm) {
-    	globalState.bufferManager = bm;
+        globalState.bufferManager = bm;
     }
 
     public GlobalTableStore getGlobalTableStore() {
-    	return vdbState.globalTables;
+        return vdbState.globalTables;
     }
 
     public void setGlobalTableStore(GlobalTableStore tempTableStore) {
-    	vdbState.globalTables = tempTableStore;
+        vdbState.globalTables = tempTableStore;
     }
 
     public boolean isNonBlocking() {
-		return nonBlocking;
-	}
+        return nonBlocking;
+    }
 
     public void setNonBlocking(boolean nonBlocking) {
-		this.nonBlocking = nonBlocking;
-	}
+        this.nonBlocking = nonBlocking;
+    }
 
     public void setPreparedPlanCache(SessionAwareCache<PreparedPlan> cache) {
-    	this.globalState.planCache = cache;
+        this.globalState.planCache = cache;
     }
 
     public PreparedPlan getPlan(String key) {
-    	if (this.globalState.planCache == null) {
-    		return null;
-    	}
-    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
-    	PreparedPlan pp = this.globalState.planCache.get(id);
-    	if (pp != null) {
-    		if (id.getSessionId() != null) {
-    			setDeterminismLevel(Determinism.USER_DETERMINISTIC);
-    		} else if (id.getUserName() != null) {
-    			setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
-    		}
-        	return pp;
-    	}
-    	return null;
+        if (this.globalState.planCache == null) {
+            return null;
+        }
+        CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
+        PreparedPlan pp = this.globalState.planCache.get(id);
+        if (pp != null) {
+            if (id.getSessionId() != null) {
+                setDeterminismLevel(Determinism.USER_DETERMINISTIC);
+            } else if (id.getUserName() != null) {
+                setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
+            }
+            return pp;
+        }
+        return null;
     }
 
     public void putPlan(String key, PreparedPlan plan, Determinism determinismLevel) {
-    	if (this.globalState.planCache == null) {
-    		return;
-    	}
-    	CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
-    	this.globalState.planCache.put(id, determinismLevel, plan, null);
+        if (this.globalState.planCache == null) {
+            return;
+        }
+        CacheID id = new CacheID(new ParseInfo(), key, getVdbName(), getVdbVersion(), getConnectionId(), getUserName());
+        this.globalState.planCache.put(id, determinismLevel, plan, null);
     }
 
     public boolean isResultSetCacheEnabled() {
-		return globalState.resultSetCacheEnabled;
-	}
-
-    public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
-		this.globalState.resultSetCacheEnabled = resultSetCacheEnabled;
-	}
-
-	public int getUserRequestSourceConcurrency() {
-		return this.globalState.userRequestSourceConcurrency;
-	}
-
-	public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
-		this.globalState.userRequestSourceConcurrency = userRequestSourceConcurrency;
-	}
-
-	@Override
-	public Subject getSubject() {
-		return this.globalState.subject;
-	}
-
-	public void setSubject(Subject subject) {
-		this.globalState.subject = subject;
-	}
-
-	public void accessedPlanningObject(Object id) {
-		if (this.planningObjects == null) {
-			this.planningObjects = new HashSet<Object>();
-		}
-		this.planningObjects.add(id);
-	}
-
-	public Set<Object> getPlanningObjects() {
-		if (this.planningObjects == null) {
-			return Collections.emptySet();
-		}
-		return planningObjects;
-	}
-
-	public void accessedDataObject(Object id) {
-		if (this.dataObjects != null) {
-			this.dataObjects.add(id);
-		}
-	}
-
-	public Set<Object> getDataObjects() {
-		return dataObjects;
-	}
-
-	public void setDataObjects(HashSet<Object> dataObjectsAccessed) {
-		this.dataObjects = dataObjectsAccessed;
-	}
-
-	@Override
-	public SessionMetadata getSession() {
-		return this.vdbState.session;
-	}
-
-	public void setSession(SessionMetadata session) {
-		this.vdbState.session = session;
-	}
-
-	@Override
-	public String getRequestId() {
-		return this.globalState.requestId != null ? this.globalState.requestId.toString() : null;
-	}
-
-	public void setRequestId(RequestID requestId) {
-		this.globalState.requestId = requestId;
-	}
-
-	public void setDQPWorkContext(DQPWorkContext workContext) {
-		this.vdbState.dqpWorkContext = workContext;
-	}
-
-	@Override
-	public Map<String, DataPolicy> getAllowedDataPolicies() {
-		if (this.vdbState.dqpWorkContext == null) {
-			return null;
-		}
-		return this.vdbState.dqpWorkContext.getAllowedDataPolicies();
-	}
-
-	@Override
-	public VDBMetaData getVdb() {
-		if (this.vdbState.dqpWorkContext == null) {
-			return null;
-		}
-		return this.vdbState.dqpWorkContext.getVDB();
-	}
-
-	public DQPWorkContext getDQPWorkContext() {
-		return this.vdbState.dqpWorkContext;
-	}
-
-	public TransactionContext getTransactionContext() {
-		return globalState.transactionContext;
-	}
-
-	public void setTransactionContext(TransactionContext transactionContext) {
-		globalState.transactionContext = transactionContext;
-	}
-
-	public TransactionService getTransactionServer() {
-		return globalState.transactionService;
-	}
-
-	public void setTransactionService(TransactionService transactionService) {
-		globalState.transactionService = transactionService;
-	}
-
-	public Executor getExecutor() {
-		return this.globalState.executor;
-	}
-
-	/**
-	 * Submit work that will notify the request work item of more work when complete
-	 * @param callable
-	 * @return
-	 */
-	public <V> Future<V> submit(Callable<V> callable) {
-	    if (getWorkItem() != null) {
-	        return getWorkItem().addRequestWork(callable);
-	    }
-	    return ForkJoinPool.commonPool().submit(callable);
+        return globalState.resultSetCacheEnabled;
     }
 
-	public void setExecutor(Executor e) {
-		this.globalState.executor = e;
-	}
+    public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
+        this.globalState.resultSetCacheEnabled = resultSetCacheEnabled;
+    }
 
-	public ReusableExecution<?> getReusableExecution(Object key) {
-		synchronized (this.globalState) {
-			if (this.globalState.reusableExecutions == null) {
-				return null;
-			}
-			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
-			if (reusableExecutions != null && !reusableExecutions.isEmpty()) {
-				return reusableExecutions.remove(0);
-			}
-			return null;
-		}
-	}
+    public int getUserRequestSourceConcurrency() {
+        return this.globalState.userRequestSourceConcurrency;
+    }
 
-	public void putReusableExecution(Object key, ReusableExecution<?> execution) {
-		synchronized (this.globalState) {
-			if (this.globalState.reusableExecutions == null) {
-				this.globalState.reusableExecutions = new HashMap<Object, List<ReusableExecution<?>>>();
-			}
-			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
-			if (reusableExecutions == null) {
-				reusableExecutions = new LinkedList<ReusableExecution<?>>();
-				this.globalState.reusableExecutions.put(key, reusableExecutions);
-			}
-			reusableExecutions.add(execution);
-		}
-	}
+    public void setUserRequestSourceConcurrency(int userRequestSourceConcurrency) {
+        this.globalState.userRequestSourceConcurrency = userRequestSourceConcurrency;
+    }
 
-	public void close() {
-		synchronized (this.globalState) {
-			if (this.globalState.reservedBuffers > 0) {
-				long toRelease = this.globalState.reservedBuffers;
-				this.globalState.reservedBuffers = 0;
-				this.globalState.bufferManager.releaseOrphanedBuffers(toRelease);
-			}
-			if (this.globalState.reusableExecutions != null) {
-				for (List<ReusableExecution<?>> reusableExecutions : this.globalState.reusableExecutions.values()) {
-					for (ReusableExecution<?> reusableExecution : reusableExecutions) {
-						try {
-							reusableExecution.dispose();
-						} catch (Exception e) {
-							LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
-						}
-					}
-				}
-				this.globalState.reusableExecutions.clear();
-			}
-			if (this.globalState.commandListeners != null) {
-				for (CommandListener listener : this.globalState.commandListeners) {
-					try {
-						listener.commandClosed(this);
-					} catch (Exception e) {
-						LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30031));
-					}
-				}
-				this.globalState.commandListeners.clear();
-			}
-			if (this.globalState.lookups != null) {
-				for (TupleSource ts : this.globalState.lookups.values()) {
-					ts.closeSource();
-				}
-				this.globalState.lookups = null;
-			}
-			if (this.globalState.created != null) {
-				for (FileStoreInputStreamFactory isf : this.globalState.created) {
-				    if (isf.isTemporary()) {
-				        //TODO: we could also elect to not free memory backed lobs
-				        isf.free();
-				    }
-				}
-				this.globalState.created.clear();
-			}
-		}
-	}
+    @Override
+    public Subject getSubject() {
+        return this.globalState.subject;
+    }
 
-	@Override
-	public void addListener(CommandListener listener) {
-		if (listener != null) {
-			synchronized (this.globalState) {
-				if (this.globalState.commandListeners == null) {
-					this.globalState.commandListeners = Collections.newSetFromMap(new IdentityHashMap<CommandListener, Boolean>());
-				}
-				this.globalState.commandListeners.add(listener);
-			}
-		}
-	}
+    public void setSubject(Subject subject) {
+        this.globalState.subject = subject;
+    }
 
-	@Override
-	public void removeListener(CommandListener listener) {
-		if (listener != null) {
-			synchronized (this.globalState) {
-				if (this.globalState.commandListeners != null) {
-					this.globalState.commandListeners.remove(listener);
-				}
-			}
-		}
-	}
+    public void accessedPlanningObject(Object id) {
+        if (this.planningObjects == null) {
+            this.planningObjects = new HashSet<Object>();
+        }
+        this.planningObjects.add(id);
+    }
 
-	public static DecimalFormat getDecimalFormat(CommandContext context, String format) {
-		DecimalFormat result = null;
-		if (context != null) {
-			if (context.globalState.decimalFormatCache == null) {
-				context.globalState.decimalFormatCache = new LRUCache<String, DecimalFormat>(32);
-			} else {
-				result = context.globalState.decimalFormatCache.get(format);
-			}
-		}
-		if (result == null) {
-			result = new DecimalFormat(format); //TODO: could be locale sensitive
-			result.setParseBigDecimal(true);
-			if (context != null) {
-				context.globalState.decimalFormatCache.put(format, result);
-			}
-		}
-		return result;
-	}
+    public Set<Object> getPlanningObjects() {
+        if (this.planningObjects == null) {
+            return Collections.emptySet();
+        }
+        return planningObjects;
+    }
 
-	public static SimpleDateFormat getDateFormat(CommandContext context, String format) {
-		SimpleDateFormat result = null;
-		if (context != null) {
-			if (context.globalState.dateFormatCache == null) {
-				context.globalState.dateFormatCache = new LRUCache<String, SimpleDateFormat>(32);
-			} else {
-				result = context.globalState.dateFormatCache.get(format);
-			}
-		}
-		if (result == null) {
-			result = new SimpleDateFormat(format); //TODO: could be locale sensitive
-			if (context != null) {
-				context.globalState.dateFormatCache.put(format, result);
-			}
-		}
-		return result;
-	}
+    public void accessedDataObject(Object id) {
+        if (this.dataObjects != null) {
+            this.dataObjects.add(id);
+        }
+    }
+
+    public Set<Object> getDataObjects() {
+        return dataObjects;
+    }
+
+    public void setDataObjects(HashSet<Object> dataObjectsAccessed) {
+        this.dataObjects = dataObjectsAccessed;
+    }
+
+    @Override
+    public SessionMetadata getSession() {
+        return this.vdbState.session;
+    }
+
+    public void setSession(SessionMetadata session) {
+        this.vdbState.session = session;
+    }
+
+    @Override
+    public String getRequestId() {
+        return this.globalState.requestId != null ? this.globalState.requestId.toString() : null;
+    }
+
+    public void setRequestId(RequestID requestId) {
+        this.globalState.requestId = requestId;
+    }
+
+    public void setDQPWorkContext(DQPWorkContext workContext) {
+        this.vdbState.dqpWorkContext = workContext;
+    }
+
+    @Override
+    public Map<String, DataPolicy> getAllowedDataPolicies() {
+        if (this.vdbState.dqpWorkContext == null) {
+            return null;
+        }
+        return this.vdbState.dqpWorkContext.getAllowedDataPolicies();
+    }
+
+    @Override
+    public VDBMetaData getVdb() {
+        if (this.vdbState.dqpWorkContext == null) {
+            return null;
+        }
+        return this.vdbState.dqpWorkContext.getVDB();
+    }
+
+    public DQPWorkContext getDQPWorkContext() {
+        return this.vdbState.dqpWorkContext;
+    }
+
+    public TransactionContext getTransactionContext() {
+        return globalState.transactionContext;
+    }
+
+    public void setTransactionContext(TransactionContext transactionContext) {
+        globalState.transactionContext = transactionContext;
+    }
+
+    public TransactionService getTransactionServer() {
+        return globalState.transactionService;
+    }
+
+    public void setTransactionService(TransactionService transactionService) {
+        globalState.transactionService = transactionService;
+    }
+
+    public Executor getExecutor() {
+        return this.globalState.executor;
+    }
+
+    /**
+     * Submit work that will notify the request work item of more work when complete
+     * @param callable
+     * @return
+     */
+    public <V> Future<V> submit(Callable<V> callable) {
+        if (getWorkItem() != null) {
+            return getWorkItem().addRequestWork(callable);
+        }
+        return ForkJoinPool.commonPool().submit(callable);
+    }
+
+    public void setExecutor(Executor e) {
+        this.globalState.executor = e;
+    }
+
+    public ReusableExecution<?> getReusableExecution(Object key) {
+        synchronized (this.globalState) {
+            if (this.globalState.reusableExecutions == null) {
+                return null;
+            }
+            List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+            if (reusableExecutions != null && !reusableExecutions.isEmpty()) {
+                return reusableExecutions.remove(0);
+            }
+            return null;
+        }
+    }
+
+    public void putReusableExecution(Object key, ReusableExecution<?> execution) {
+        synchronized (this.globalState) {
+            if (this.globalState.reusableExecutions == null) {
+                this.globalState.reusableExecutions = new HashMap<Object, List<ReusableExecution<?>>>();
+            }
+            List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+            if (reusableExecutions == null) {
+                reusableExecutions = new LinkedList<ReusableExecution<?>>();
+                this.globalState.reusableExecutions.put(key, reusableExecutions);
+            }
+            reusableExecutions.add(execution);
+        }
+    }
+
+    public void close() {
+        synchronized (this.globalState) {
+            if (this.globalState.reservedBuffers > 0) {
+                long toRelease = this.globalState.reservedBuffers;
+                this.globalState.reservedBuffers = 0;
+                this.globalState.bufferManager.releaseOrphanedBuffers(toRelease);
+            }
+            if (this.globalState.reusableExecutions != null) {
+                for (List<ReusableExecution<?>> reusableExecutions : this.globalState.reusableExecutions.values()) {
+                    for (ReusableExecution<?> reusableExecution : reusableExecutions) {
+                        try {
+                            reusableExecution.dispose();
+                        } catch (Exception e) {
+                            LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
+                        }
+                    }
+                }
+                this.globalState.reusableExecutions.clear();
+            }
+            if (this.globalState.commandListeners != null) {
+                for (CommandListener listener : this.globalState.commandListeners) {
+                    try {
+                        listener.commandClosed(this);
+                    } catch (Exception e) {
+                        LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30031));
+                    }
+                }
+                this.globalState.commandListeners.clear();
+            }
+            if (this.globalState.lookups != null) {
+                for (TupleSource ts : this.globalState.lookups.values()) {
+                    ts.closeSource();
+                }
+                this.globalState.lookups = null;
+            }
+            if (this.globalState.created != null) {
+                for (FileStoreInputStreamFactory isf : this.globalState.created) {
+                    if (isf.isTemporary()) {
+                        //TODO: we could also elect to not free memory backed lobs
+                        isf.free();
+                    }
+                }
+                this.globalState.created.clear();
+            }
+        }
+    }
+
+    @Override
+    public void addListener(CommandListener listener) {
+        if (listener != null) {
+            synchronized (this.globalState) {
+                if (this.globalState.commandListeners == null) {
+                    this.globalState.commandListeners = Collections.newSetFromMap(new IdentityHashMap<CommandListener, Boolean>());
+                }
+                this.globalState.commandListeners.add(listener);
+            }
+        }
+    }
+
+    @Override
+    public void removeListener(CommandListener listener) {
+        if (listener != null) {
+            synchronized (this.globalState) {
+                if (this.globalState.commandListeners != null) {
+                    this.globalState.commandListeners.remove(listener);
+                }
+            }
+        }
+    }
+
+    public static DecimalFormat getDecimalFormat(CommandContext context, String format) {
+        DecimalFormat result = null;
+        if (context != null) {
+            if (context.globalState.decimalFormatCache == null) {
+                context.globalState.decimalFormatCache = new LRUCache<String, DecimalFormat>(32);
+            } else {
+                result = context.globalState.decimalFormatCache.get(format);
+            }
+        }
+        if (result == null) {
+            result = new DecimalFormat(format); //TODO: could be locale sensitive
+            result.setParseBigDecimal(true);
+            if (context != null) {
+                context.globalState.decimalFormatCache.put(format, result);
+            }
+        }
+        return result;
+    }
+
+    public static SimpleDateFormat getDateFormat(CommandContext context, String format) {
+        SimpleDateFormat result = null;
+        if (context != null) {
+            if (context.globalState.dateFormatCache == null) {
+                context.globalState.dateFormatCache = new LRUCache<String, SimpleDateFormat>(32);
+            } else {
+                result = context.globalState.dateFormatCache.get(format);
+            }
+        }
+        if (result == null) {
+            result = new SimpleDateFormat(format); //TODO: could be locale sensitive
+            if (context != null) {
+                context.globalState.dateFormatCache.put(format, result);
+            }
+        }
+        return result;
+    }
 
     /**
      * Compile a regular expression into a {@link java.util.regex.Pattern} and cache it in
@@ -909,35 +909,35 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         return result;
     }
 
-	public void incrementReuseCount() {
-		globalState.reuseCount.getAndIncrement();
-	}
+    public void incrementReuseCount() {
+        globalState.reuseCount.getAndIncrement();
+    }
 
-	@Override
-	public long getReuseCount() {
-		if (globalState.reuseCount == null) {
-			return 0;
-		}
-		return globalState.reuseCount.get();
-	}
+    @Override
+    public long getReuseCount() {
+        if (globalState.reuseCount == null) {
+            return 0;
+        }
+        return globalState.reuseCount.get();
+    }
 
-	@Override
-	public boolean isContinuous() {
-		return globalState.reuseCount != null;
-	}
+    @Override
+    public boolean isContinuous() {
+        return globalState.reuseCount != null;
+    }
 
-	public void setContinuous() {
-		this.globalState.reuseCount = new AtomicLong();
-	}
+    public void setContinuous() {
+        this.globalState.reuseCount = new AtomicLong();
+    }
 
-	@Override
-	public ClassLoader getVDBClassLoader() {
-		return this.vdbState.classLoader;
-	}
+    @Override
+    public ClassLoader getVDBClassLoader() {
+        return this.vdbState.classLoader;
+    }
 
-	public void setVDBClassLoader(ClassLoader classLoader) {
-		this.vdbState.classLoader = classLoader;
-	}
+    public void setVDBClassLoader(ClassLoader classLoader) {
+        this.vdbState.classLoader = classLoader;
+    }
 
     /**
      * Get all warnings found while processing this plan.  These warnings may
@@ -954,240 +954,240 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
             List<Exception> copied = globalState.warnings;
             globalState.warnings = null;
             return copied;
-		}
+        }
     }
 
     public void addWarning(Exception warning) {
-    	if (warning == null) {
-    		return;
-    	}
-    	synchronized (this.globalState) {
+        if (warning == null) {
+            return;
+        }
+        synchronized (this.globalState) {
             if (globalState.warnings == null) {
-            	globalState.warnings = new ArrayList<Exception>(1);
+                globalState.warnings = new ArrayList<Exception>(1);
             }
             globalState.warnings.add(warning);
             if (globalState.warnings.size() > MAX_WARNINGS) {
                 globalState.warnings.remove(0);
             }
-		}
-    	if (!this.getOptions().isSanitizeMessages() || LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    		LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
-    	}
+        }
+        if (!this.getOptions().isSanitizeMessages() || LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
+        }
     }
 
     public TupleSourceCache getTupleSourceCache() {
-		return tupleSourceCache;
-	}
+        return tupleSourceCache;
+    }
 
     public void setTupleSourceCache(TupleSourceCache tupleSourceCache) {
-		this.tupleSourceCache = tupleSourceCache;
-	}
+        this.tupleSourceCache = tupleSourceCache;
+    }
 
     public Options getOptions() {
-    	if (this.globalState.options == null) {
-    		this.globalState.options = new Options();
-    	}
-    	return this.globalState.options;
+        if (this.globalState.options == null) {
+            this.globalState.options = new Options();
+        }
+        return this.globalState.options;
     }
 
     public void setOptions(Options options) {
-    	this.globalState.options = options;
+        this.globalState.options = options;
     }
 
-	@Override
-	public boolean isReturnAutoGeneratedKeys() {
-		return this.globalState.returnAutoGeneratedKeys != null;
-	}
+    @Override
+    public boolean isReturnAutoGeneratedKeys() {
+        return this.globalState.returnAutoGeneratedKeys != null;
+    }
 
-	public void setReturnAutoGeneratedKeys(List<ElementSymbol> variables) {
-		this.globalState.returnAutoGeneratedKeys = variables;
-	}
+    public void setReturnAutoGeneratedKeys(List<ElementSymbol> variables) {
+        this.globalState.returnAutoGeneratedKeys = variables;
+    }
 
-	public List<ElementSymbol> getReturnAutoGeneratedKeys() {
+    public List<ElementSymbol> getReturnAutoGeneratedKeys() {
         return this.globalState.returnAutoGeneratedKeys;
     }
-	@Override
-	public GeneratedKeysImpl returnGeneratedKeys(String[] columnNames,
-			Class<?>[] columnDataTypes) {
-		synchronized (this.globalState) {
-			this.globalState.generatedKeys = new GeneratedKeysImpl(columnNames, columnDataTypes);
-			return this.globalState.generatedKeys;
-		}
-	}
-
-	public GeneratedKeysImpl getGeneratedKeys() {
-		synchronized (this.globalState) {
-			return this.globalState.generatedKeys;
-		}
-	}
-
-	public static CommandContext getThreadLocalContext() {
-		return threadLocalContext.get().peek();
-	}
-
-	public static void pushThreadLocalContext(CommandContext context) {
-		threadLocalContext.get().push(context);
-	}
-
-	public static void popThreadLocalContext() {
-		threadLocalContext.get().poll();
-	}
-
-	public long addAndGetReservedBuffers(int i) {
-	    synchronized (this.globalState) {
-	        return globalState.reservedBuffers += i;
+    @Override
+    public GeneratedKeysImpl returnGeneratedKeys(String[] columnNames,
+            Class<?>[] columnDataTypes) {
+        synchronized (this.globalState) {
+            this.globalState.generatedKeys = new GeneratedKeysImpl(columnNames, columnDataTypes);
+            return this.globalState.generatedKeys;
         }
-	}
+    }
 
-	@Override
-	public Object setSessionVariable(String key, Object value) {
-		return this.vdbState.session.getSessionVariables().put(key, value);
-	}
+    public GeneratedKeysImpl getGeneratedKeys() {
+        synchronized (this.globalState) {
+            return this.globalState.generatedKeys;
+        }
+    }
 
-	@Override
-	public Object getSessionVariable(String key) {
-		return this.vdbState.session.getSessionVariables().get(key);
-	}
+    public static CommandContext getThreadLocalContext() {
+        return threadLocalContext.get().peek();
+    }
 
-	public AuthorizationValidator getAuthorizationValidator() {
-		return this.globalState.authorizationValidator;
-	}
+    public static void pushThreadLocalContext(CommandContext context) {
+        threadLocalContext.get().push(context);
+    }
 
-	public TupleSource getCodeLookup(String matTableName, Object keyValue) {
-		if (this.globalState.lookups != null) {
-			return this.globalState.lookups.remove(new LookupKey(matTableName, keyValue));
-		}
-		return null;
-	}
+    public static void popThreadLocalContext() {
+        threadLocalContext.get().poll();
+    }
 
-	public void putCodeLookup(String matTableName, Object keyValue, TupleSource ts) {
-		if (this.globalState.lookups == null) {
-			this.globalState.lookups = new TreeMap<LookupKey, TupleSource>();
-		}
-		this.globalState.lookups.put(new LookupKey(matTableName, keyValue), ts);
-	}
+    public long addAndGetReservedBuffers(int i) {
+        synchronized (this.globalState) {
+            return globalState.reservedBuffers += i;
+        }
+    }
+
+    @Override
+    public Object setSessionVariable(String key, Object value) {
+        return this.vdbState.session.getSessionVariables().put(key, value);
+    }
+
+    @Override
+    public Object getSessionVariable(String key) {
+        return this.vdbState.session.getSessionVariables().get(key);
+    }
+
+    public AuthorizationValidator getAuthorizationValidator() {
+        return this.globalState.authorizationValidator;
+    }
+
+    public TupleSource getCodeLookup(String matTableName, Object keyValue) {
+        if (this.globalState.lookups != null) {
+            return this.globalState.lookups.remove(new LookupKey(matTableName, keyValue));
+        }
+        return null;
+    }
+
+    public void putCodeLookup(String matTableName, Object keyValue, TupleSource ts) {
+        if (this.globalState.lookups == null) {
+            this.globalState.lookups = new TreeMap<LookupKey, TupleSource>();
+        }
+        this.globalState.lookups.put(new LookupKey(matTableName, keyValue), ts);
+    }
 
 
-	@Override
-	public TeiidConnection getConnection() throws TeiidSQLException {
-		LocalProfile ep = getDQPWorkContext().getConnectionProfile();
-		//TODO: this is problematic as the client properties are not conveyed
-		Properties info = new Properties();
-		info.put(LocalProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
-		String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
-		ServerConnection sc;
-		try {
-			sc = ep.createServerConnection(info);
-		} catch (TeiidException e) {
-			throw TeiidSQLException.create(e);
-		}
-		return new ConnectionImpl(sc, info, url) {
-			@Override
-			public void close() throws SQLException {
-				//just ignore
-			}
+    @Override
+    public TeiidConnection getConnection() throws TeiidSQLException {
+        LocalProfile ep = getDQPWorkContext().getConnectionProfile();
+        //TODO: this is problematic as the client properties are not conveyed
+        Properties info = new Properties();
+        info.put(LocalProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
+        String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
+        ServerConnection sc;
+        try {
+            sc = ep.createServerConnection(info);
+        } catch (TeiidException e) {
+            throw TeiidSQLException.create(e);
+        }
+        return new ConnectionImpl(sc, info, url) {
+            @Override
+            public void close() throws SQLException {
+                //just ignore
+            }
 
-			@Override
-			public void rollback() throws SQLException {
-				//just ignore
-			}
+            @Override
+            public void rollback() throws SQLException {
+                //just ignore
+            }
 
-			@Override
-			public void setAutoCommit(boolean autoCommit) throws SQLException {
-				//TODO: detect if attempted set conflicts with current txn state
-				throw new TeiidSQLException();
-			}
+            @Override
+            public void setAutoCommit(boolean autoCommit) throws SQLException {
+                //TODO: detect if attempted set conflicts with current txn state
+                throw new TeiidSQLException();
+            }
 
-			@Override
-			public void commit() throws SQLException {
-				throw new TeiidSQLException();
-			}
+            @Override
+            public void commit() throws SQLException {
+                throw new TeiidSQLException();
+            }
 
-			@Override
-			public void changeUser(String userName, String newPassword)
-					throws SQLException {
-				throw new TeiidSQLException();
-			}
+            @Override
+            public void changeUser(String userName, String newPassword)
+                    throws SQLException {
+                throw new TeiidSQLException();
+            }
 
-			@Override
-			protected synchronized long nextRequestID() {
-			    //need to choose ids that won't conflict with the user connection
-			    return -(long)(Math.random()*Long.MAX_VALUE);
-			}
-		};
-	}
+            @Override
+            protected synchronized long nextRequestID() {
+                //need to choose ids that won't conflict with the user connection
+                return -(long)(Math.random()*Long.MAX_VALUE);
+            }
+        };
+    }
 
-	/**
-	 * Used by the system table logic
-	 * @return
-	 */
-	public Clob getSpatialRefSys() {
-		return new ClobImpl(new InputStreamFactory() {
+    /**
+     * Used by the system table logic
+     * @return
+     */
+    public Clob getSpatialRefSys() {
+        return new ClobImpl(new InputStreamFactory() {
 
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/spatial_ref_sys.csv"); //$NON-NLS-1$
-			}
-		}, -1);
-	}
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/spatial_ref_sys.csv"); //$NON-NLS-1$
+            }
+        }, -1);
+    }
 
-	public void addCreatedLob(FileStoreInputStreamFactory isf) {
-		if (this.globalState.created != null) {
-		    isf.setTemporary(true);
-			this.globalState.created.add(isf);
-		}
-	}
+    public void addCreatedLob(FileStoreInputStreamFactory isf) {
+        if (this.globalState.created != null) {
+            isf.setTemporary(true);
+            this.globalState.created.add(isf);
+        }
+    }
 
-	public void disableAutoCleanLobs() {
-		this.globalState.created = null;
-	}
+    public void disableAutoCleanLobs() {
+        this.globalState.created = null;
+    }
 
-	public void requestCancelled() {
-		this.cancelled.set(true);
-	}
+    public void requestCancelled() {
+        this.cancelled.set(true);
+    }
 
-	/**
-	 * Check if this context or the parent has been cancelled.
-	 * If the parent has been, then we'll propagate.
-	 * @return
-	 */
-	public boolean isCancelled() {
-		if (this.cancelled.get()) {
-			return true;
-		}
-		if (this.parentCancelled != null && this.parentCancelled.get()) {
-			return true;
-		}
-		return false;
-	}
+    /**
+     * Check if this context or the parent has been cancelled.
+     * If the parent has been, then we'll propagate.
+     * @return
+     */
+    public boolean isCancelled() {
+        if (this.cancelled.get()) {
+            return true;
+        }
+        if (this.parentCancelled != null && this.parentCancelled.get()) {
+            return true;
+        }
+        return false;
+    }
 
-	public void clearGeneratedKeys() {
-		synchronized (this.globalState) {
-			this.globalState.generatedKeys = null;
-		}
-	}
+    public void clearGeneratedKeys() {
+        synchronized (this.globalState) {
+            this.globalState.generatedKeys = null;
+        }
+    }
 
-	public Boolean isAccessible(AbstractMetadataRecord record) {
-		if (this.globalState.accessible == null) {
-			return null;
-		}
-		return this.globalState.accessible.get(record);
-	}
+    public Boolean isAccessible(AbstractMetadataRecord record) {
+        if (this.globalState.accessible == null) {
+            return null;
+        }
+        return this.globalState.accessible.get(record);
+    }
 
-	public void setAccessible(AbstractMetadataRecord record, Boolean result) {
-		if (this.globalState.accessible == null) {
-			this.globalState.accessible = new LRUCache<>(1000);
-		}
-		this.globalState.accessible.put(record, result);
-	}
+    public void setAccessible(AbstractMetadataRecord record, Boolean result) {
+        if (this.globalState.accessible == null) {
+            this.globalState.accessible = new LRUCache<>(1000);
+        }
+        this.globalState.accessible.put(record, result);
+    }
 
-	public Throwable getBatchUpdateException() {
-		return this.globalState.batchUpdateException;
-	}
+    public Throwable getBatchUpdateException() {
+        return this.globalState.batchUpdateException;
+    }
 
-	public void setBatchUpdateException(Throwable t) {
-		this.globalState.batchUpdateException = t;
-	}
+    public void setBatchUpdateException(Throwable t) {
+        this.globalState.batchUpdateException = t;
+    }
 
     public boolean isParallel() {
         return this.globalState.parallel;

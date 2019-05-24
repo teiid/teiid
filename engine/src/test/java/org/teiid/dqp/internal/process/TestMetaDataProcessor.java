@@ -50,7 +50,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings({"nls", "unchecked"})
 public class TestMetaDataProcessor {
 
-	public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
+    public Map[] helpGetMetadata(String sql, QueryMetadataInterface metadata, VDBMetaData vdb) throws Exception {
         // Prepare sql
         Command command = QueryParser.getQueryParser().parseCommand(sql);
         QueryResolver.resolveCommand(command, metadata);
@@ -95,7 +95,7 @@ public class TestMetaDataProcessor {
     }
 
     @Test public void testElementLabel() throws Exception {
-    	Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        Map[] metadata = helpGetMetadata("SELECT E2 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
         assertNotNull(metadata);
         assertEquals(1, metadata.length);
         assertEquals("e2", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
@@ -246,51 +246,51 @@ public class TestMetaDataProcessor {
         }
     }
 
-	public static TransformationMetadata examplePrivatePhysicalModel() {
-		MetadataStore metadataStore = new MetadataStore();
-	    // Create models
-	    Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
+    public static TransformationMetadata examplePrivatePhysicalModel() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
 
-	    // Create physical groups
-	    Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
 
-	    QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-	    Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
 
-	    // Create physical elements
-	    RealMetadataFactory.createElements(pm1g1,
-	        new String[] { "e1"}, //$NON-NLS-1$
-	        new String[] { DataTypeManager.DefaultDataTypes.SHORT});
+        // Create physical elements
+        RealMetadataFactory.createElements(pm1g1,
+            new String[] { "e1"}, //$NON-NLS-1$
+            new String[] { DataTypeManager.DefaultDataTypes.SHORT});
 
-	    // Create physical elements
-	    List<Column> pm1g2e = RealMetadataFactory.createElements(pm1g2,
-	        new String[] { "e1"}, //$NON-NLS-1$
-	        new String[] { DataTypeManager.DefaultDataTypes.BIG_DECIMAL});
+        // Create physical elements
+        List<Column> pm1g2e = RealMetadataFactory.createElements(pm1g2,
+            new String[] { "e1"}, //$NON-NLS-1$
+            new String[] { DataTypeManager.DefaultDataTypes.BIG_DECIMAL});
 
-	    Column e1 = pm1g2e.get(0);
-	    e1.setPrecision(19);
-	    e1.setLength(21);
-	    e1.setScale(4);
+        Column e1 = pm1g2e.get(0);
+        e1.setPrecision(19);
+        e1.setLength(21);
+        e1.setScale(4);
 
-	    RealMetadataFactory.createElements(vm1g1,
-	                                new String[] { "e1" }, //$NON-NLS-1$
-	                                new String[] { DataTypeManager.DefaultDataTypes.STRING });
-	    // Create the facade from the store
-	    return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
-	}
+        RealMetadataFactory.createElements(vm1g1,
+                                    new String[] { "e1" }, //$NON-NLS-1$
+                                    new String[] { DataTypeManager.DefaultDataTypes.STRING });
+        // Create the facade from the store
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+    }
 
-	public static VDBMetaData examplePrivatePhysicalModelVDB() {
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("example1");
-		vdb.setVersion(1);
-		ModelMetaData m = RealMetadataFactory.createModel("pm1", true);
-		m.setVisible(false);
-		vdb.addModel(m);
-		vdb.addModel(RealMetadataFactory.createModel("vm1", false));
+    public static VDBMetaData examplePrivatePhysicalModelVDB() {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("example1");
+        vdb.setVersion(1);
+        ModelMetaData m = RealMetadataFactory.createModel("pm1", true);
+        m.setVisible(false);
+        vdb.addModel(m);
+        vdb.addModel(RealMetadataFactory.createModel("vm1", false));
 
-		return vdb;
-	}
+        return vdb;
+    }
 }

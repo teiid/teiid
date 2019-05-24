@@ -42,19 +42,19 @@ import org.teiid.test.framework.transaction.XATransaction;
 public class TransactionFactory {
 
 
-	/**
-	 * Transaction Type indicates the type of transaction container to use
-	 * @see TransactionFactory
-	 */
+    /**
+     * Transaction Type indicates the type of transaction container to use
+     * @see TransactionFactory
+     */
     public static final String TRANSACTION_TYPE = "transaction-option"; //$NON-NLS-1$
 
     public interface TRANSACTION_TYPES {
-		public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$
-		public static final String XATRANSACTION = "xa"; //$NON-NLS-1$
-		public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
-		public static final String OFFWRAP_TRANSACTION = "off"; //$NON-NLS-1$
-		public static final String ONWRAP_TRANSACTION = "on"; //$NON-NLS-1$
-		public static final String AUTOWRAP_TRANSACTION = "auto"; //$NON-NLS-1$
+        public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$
+        public static final String XATRANSACTION = "xa"; //$NON-NLS-1$
+        public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
+        public static final String OFFWRAP_TRANSACTION = "off"; //$NON-NLS-1$
+        public static final String ONWRAP_TRANSACTION = "on"; //$NON-NLS-1$
+        public static final String AUTOWRAP_TRANSACTION = "auto"; //$NON-NLS-1$
    }
 
 
@@ -63,7 +63,7 @@ public class TransactionFactory {
 
 
     public static TransactionContainer create(ConfigPropertyLoader config) throws QueryTestFailedException {
-    	TransactionContainer transacton = null;
+        TransactionContainer transacton = null;
 
         String type = config.getProperty(TRANSACTION_TYPE);
         if (type == null) {
@@ -74,25 +74,25 @@ public class TransactionFactory {
         TestLogger.logDebug("====  Create Transaction-Option: " + type);
 
         if (type.equalsIgnoreCase(TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
-        	transacton = new LocalTransaction();
+            transacton = new LocalTransaction();
         }
         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.XATRANSACTION)) {
-        	transacton = new XATransaction();
+            transacton = new XATransaction();
         }
         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.JNDI_TRANSACTION)) {
-        	transacton = new JNDITransaction();
+            transacton = new JNDITransaction();
         }
-     	else if (type.equalsIgnoreCase(TRANSACTION_TYPES.OFFWRAP_TRANSACTION)) {
-            	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.OFFWRAP_TRANSACTION)) {
+                transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
         }
         else if (type.equalsIgnoreCase(TRANSACTION_TYPES.ONWRAP_TRANSACTION)) {
-        	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
+            transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_ON);
         }
             else if (type.equalsIgnoreCase(TRANSACTION_TYPES.AUTOWRAP_TRANSACTION)) {
-        	transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
+            transacton = new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
 
         } else {
-        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
+            throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
         }
 
         TestLogger.log("====  TransactionContainer: " + transacton.getClass().getName() + " option:" + type);

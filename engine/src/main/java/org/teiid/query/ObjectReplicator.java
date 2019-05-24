@@ -20,8 +20,8 @@ package org.teiid.query;
 
 public interface ObjectReplicator {
 
-	public <T, S> T replicate(String id, Class<T> iface, S object, long startTimeout) throws Exception;
+    public <T, S> T replicate(String id, Class<T> iface, S object, long startTimeout) throws Exception;
 
-	public void stop(Object o);
+    public void stop(Object o);
 
 }

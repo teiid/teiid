@@ -29,7 +29,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class Limit implements LanguageObject {
 
-	public static String NON_STRICT = "NON_STRICT"; //$NON-NLS-1$
+    public static String NON_STRICT = "NON_STRICT"; //$NON-NLS-1$
 
     private Expression offset;
     private Expression rowLimit;
@@ -46,20 +46,20 @@ public class Limit implements LanguageObject {
     }
 
     public void setStrict(boolean strict) {
-		this.strict = strict;
-	}
+        this.strict = strict;
+    }
 
     public boolean isStrict() {
-		return strict;
-	}
+        return strict;
+    }
 
     public boolean isImplicit() {
-		return implicit;
-	}
+        return implicit;
+    }
 
     public void setImplicit(boolean implicit) {
-		this.implicit = implicit;
-	}
+        this.implicit = implicit;
+    }
 
     public Expression getOffset() {
         return offset;
@@ -105,10 +105,10 @@ public class Limit implements LanguageObject {
         clone.implicit = this.implicit;
         clone.strict = this.strict;
         if (this.rowLimit != null) {
-        	clone.setRowLimit((Expression) this.rowLimit.clone());
+            clone.setRowLimit((Expression) this.rowLimit.clone());
         }
         if (this.offset != null) {
-        	clone.setOffset((Expression) this.offset.clone());
+            clone.setOffset((Expression) this.offset.clone());
         }
         return clone;
     }

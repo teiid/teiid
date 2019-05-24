@@ -30,56 +30,56 @@ import org.teiid.logging.MessageLevel;
  */
 public class ThreadCpuTimer {
 
-	private static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-	private int totalTime = -1;
-	private long lastTime = -1;
-	private boolean active;
+    private static ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+    private int totalTime = -1;
+    private long lastTime = -1;
+    private boolean active;
 
-	public ThreadCpuTimer() {
-		active = threadMXBean.isThreadCpuTimeSupported()
-				&& threadMXBean.isThreadCpuTimeEnabled()
-				&& LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL);
-	}
+    public ThreadCpuTimer() {
+        active = threadMXBean.isThreadCpuTimeSupported()
+                && threadMXBean.isThreadCpuTimeEnabled()
+                && LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL);
+    }
 
-	public void start() {
-		if (!active) {
-			return;
-		}
-		try {
-			lastTime = threadMXBean.getCurrentThreadCpuTime();
-		} catch (UnsupportedOperationException e) {
-			inactivate();
-		}
+    public void start() {
+        if (!active) {
+            return;
+        }
+        try {
+            lastTime = threadMXBean.getCurrentThreadCpuTime();
+        } catch (UnsupportedOperationException e) {
+            inactivate();
+        }
 
-	}
+    }
 
-	private void inactivate() {
-		active = false;
-		lastTime = -1;
-		totalTime = -1;
-	}
+    private void inactivate() {
+        active = false;
+        lastTime = -1;
+        totalTime = -1;
+    }
 
-	public long stop() {
-		if (!active) {
-			return -1;
-		}
-		if (lastTime != -1) {
-			try {
-				long time = threadMXBean.getCurrentThreadCpuTime();
-				if (time != -1) {
-					if (totalTime == -1) {
-						totalTime = 0;
-					}
-					totalTime += (time - lastTime);
-				} else {
-					inactivate();
-				}
-			} catch (UnsupportedOperationException e) {
-				inactivate();
-			}
-		}
-		lastTime = -1;
-		return totalTime;
-	}
+    public long stop() {
+        if (!active) {
+            return -1;
+        }
+        if (lastTime != -1) {
+            try {
+                long time = threadMXBean.getCurrentThreadCpuTime();
+                if (time != -1) {
+                    if (totalTime == -1) {
+                        totalTime = 0;
+                    }
+                    totalTime += (time - lastTime);
+                } else {
+                    inactivate();
+                }
+            } catch (UnsupportedOperationException e) {
+                inactivate();
+            }
+        }
+        lastTime = -1;
+        return totalTime;
+    }
 
 }

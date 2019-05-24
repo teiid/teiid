@@ -53,151 +53,151 @@ import org.teiid.query.util.CommandContext;
  */
 public class DefaultAuthorizationValidator implements AuthorizationValidator {
 
-	public static final String IGNORE_UNAUTHORIZED_ASTERISK = "ignore_unauthorized_asterisk"; //$NON-NLS-1$
-	private PolicyDecider policyDecider;
-	private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.ignoreUnauthorizedAsterisk", false, Boolean.class); //$NON-NLS-1$
+    public static final String IGNORE_UNAUTHORIZED_ASTERISK = "ignore_unauthorized_asterisk"; //$NON-NLS-1$
+    private PolicyDecider policyDecider;
+    private boolean ignoreUnauthorizedAsteriskDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.ignoreUnauthorizedAsterisk", false, Boolean.class); //$NON-NLS-1$
     private boolean metadataRequiresPermission = PropertiesUtils.getHierarchicalProperty("org.teiid.metadataRequiresPermission", true, Boolean.class); //$NON-NLS-1$
 
-	public DefaultAuthorizationValidator() {
-	}
+    public DefaultAuthorizationValidator() {
+    }
 
-	public void setMetadataRequiresPermission(
+    public void setMetadataRequiresPermission(
             boolean metadataRequiresPermission) {
         this.metadataRequiresPermission = metadataRequiresPermission;
     }
 
-	@Override
-	public boolean validate(String[] originalSql, Command command,
-			QueryMetadataInterface metadata, CommandContext commandContext,
-			CommandType commandType) throws QueryValidatorException,
-			TeiidComponentException {
-		boolean modified = false;
-		if (policyDecider != null && policyDecider.validateCommand(commandContext)) {
-			if (ignoreUnathorizedInAsterisk(command, commandContext)) {
-				Query query = (Query)command;
-				HashMap<String, LanguageObject> map = null;
-        		for (Expression ex : query.getSelect().getSymbols()) {
-        			if (ex instanceof MultipleElementSymbol) {
-        				MultipleElementSymbol mes = (MultipleElementSymbol)ex;
-        				if (map == null) {
-        					map = new HashMap<String, LanguageObject>();
-        				}
-        				for (Iterator<ElementSymbol> iter = mes.getElementSymbols().iterator(); iter.hasNext();) {
-        					ElementSymbol es = iter.next();
-        					Object metadataObject = es.getMetadataID();
-        					if (metadataObject instanceof MultiSourceElement || metadataObject instanceof TempMetadataID) {
-        						continue;
-        					}
-        					map.clear();
-        					AuthorizationValidationVisitor.addToNameMap(metadataObject, es, map, commandContext.getMetadata());
-        					Set<String> results = this.policyDecider.getInaccessibleResources(PermissionType.READ, map.keySet(), Context.QUERY, commandContext);
-        					if (!results.isEmpty()) {
-        						iter.remove(); //remove from the select
-        						modified = true;
-        					}
-        				}
-        			}
-        		}
-        		if (query.getProjectedSymbols().isEmpty()) {
-        			throw new QueryValidatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31151));
-        		}
-			}
-			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
-			Request.validateWithVisitor(visitor, metadata, command);
-		}
-		return modified;
-	}
+    @Override
+    public boolean validate(String[] originalSql, Command command,
+            QueryMetadataInterface metadata, CommandContext commandContext,
+            CommandType commandType) throws QueryValidatorException,
+            TeiidComponentException {
+        boolean modified = false;
+        if (policyDecider != null && policyDecider.validateCommand(commandContext)) {
+            if (ignoreUnathorizedInAsterisk(command, commandContext)) {
+                Query query = (Query)command;
+                HashMap<String, LanguageObject> map = null;
+                for (Expression ex : query.getSelect().getSymbols()) {
+                    if (ex instanceof MultipleElementSymbol) {
+                        MultipleElementSymbol mes = (MultipleElementSymbol)ex;
+                        if (map == null) {
+                            map = new HashMap<String, LanguageObject>();
+                        }
+                        for (Iterator<ElementSymbol> iter = mes.getElementSymbols().iterator(); iter.hasNext();) {
+                            ElementSymbol es = iter.next();
+                            Object metadataObject = es.getMetadataID();
+                            if (metadataObject instanceof MultiSourceElement || metadataObject instanceof TempMetadataID) {
+                                continue;
+                            }
+                            map.clear();
+                            AuthorizationValidationVisitor.addToNameMap(metadataObject, es, map, commandContext.getMetadata());
+                            Set<String> results = this.policyDecider.getInaccessibleResources(PermissionType.READ, map.keySet(), Context.QUERY, commandContext);
+                            if (!results.isEmpty()) {
+                                iter.remove(); //remove from the select
+                                modified = true;
+                            }
+                        }
+                    }
+                }
+                if (query.getProjectedSymbols().isEmpty()) {
+                    throw new QueryValidatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31151));
+                }
+            }
+            AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
+            Request.validateWithVisitor(visitor, metadata, command);
+        }
+        return modified;
+    }
 
-	private boolean ignoreUnathorizedInAsterisk(Command command, CommandContext commandContext) {
-		if (!(command instanceof Query)) {
-			return false;
-		}
-		Query query = (Query)command;
-		if (query.getInto() != null) {
-			return false;
-		}
-		if (ignoreUnauthorizedAsteriskDefault) {
-			return true;
-		}
-		Object value = commandContext.getSessionVariable(IGNORE_UNAUTHORIZED_ASTERISK);
-		if (value != null) {
-			try {
-				return Boolean.TRUE.equals(DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.BOOLEAN));
-			} catch (TransformationException e) {
-			}
-		}
-		return false;
-	}
+    private boolean ignoreUnathorizedInAsterisk(Command command, CommandContext commandContext) {
+        if (!(command instanceof Query)) {
+            return false;
+        }
+        Query query = (Query)command;
+        if (query.getInto() != null) {
+            return false;
+        }
+        if (ignoreUnauthorizedAsteriskDefault) {
+            return true;
+        }
+        Object value = commandContext.getSessionVariable(IGNORE_UNAUTHORIZED_ASTERISK);
+        if (value != null) {
+            try {
+                return Boolean.TRUE.equals(DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.BOOLEAN));
+            } catch (TransformationException e) {
+            }
+        }
+        return false;
+    }
 
-	@Override
-	public boolean hasRole(String roleName, CommandContext commandContext) {
-		if (policyDecider == null) {
-			return true;
-		}
-		return this.policyDecider.hasRole(roleName, commandContext);
-	}
+    @Override
+    public boolean hasRole(String roleName, CommandContext commandContext) {
+        if (policyDecider == null) {
+            return true;
+        }
+        return this.policyDecider.hasRole(roleName, commandContext);
+    }
 
-	public void setPolicyDecider(PolicyDecider policyDecider) {
-		this.policyDecider = policyDecider;
-	}
+    public void setPolicyDecider(PolicyDecider policyDecider) {
+        this.policyDecider = policyDecider;
+    }
 
-	@Override
-	public boolean isAccessible(AbstractMetadataRecord record,
-			CommandContext commandContext) {
-		if (policyDecider == null || !policyDecider.validateCommand(commandContext)) {
-			return true;
-		}
-		if (!metadataRequiresPermission) {
-		    return true;
-		}
-		AbstractMetadataRecord parent = record;
-		while (parent.getParent() != null) {
-			parent = parent.getParent();
-			if (parent instanceof Procedure) {
-				return true; //don't check procedure params/rs columns
-			}
-		}
-		if (!(parent instanceof Schema) || (CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(parent.getName()) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(parent.getName()))) {
-			//access is always allowed to system tables / procedures or unrooted objects
-			return true;
-		}
-		PermissionType action = PermissionType.READ;
-		if (record instanceof FunctionMethod || record instanceof Procedure) {
-			action = PermissionType.EXECUTE;
-		}
-		HashSet<String> resources = new HashSet<String>(2);
+    @Override
+    public boolean isAccessible(AbstractMetadataRecord record,
+            CommandContext commandContext) {
+        if (policyDecider == null || !policyDecider.validateCommand(commandContext)) {
+            return true;
+        }
+        if (!metadataRequiresPermission) {
+            return true;
+        }
+        AbstractMetadataRecord parent = record;
+        while (parent.getParent() != null) {
+            parent = parent.getParent();
+            if (parent instanceof Procedure) {
+                return true; //don't check procedure params/rs columns
+            }
+        }
+        if (!(parent instanceof Schema) || (CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(parent.getName()) || CoreConstants.ODBC_MODEL.equalsIgnoreCase(parent.getName()))) {
+            //access is always allowed to system tables / procedures or unrooted objects
+            return true;
+        }
+        PermissionType action = PermissionType.READ;
+        if (record instanceof FunctionMethod || record instanceof Procedure) {
+            action = PermissionType.EXECUTE;
+        }
+        HashSet<String> resources = new HashSet<String>(2);
 
-		boolean result = false;
-		if (record instanceof Schema) {
-		    Boolean cachedResult = commandContext.isAccessible(record);
-	        if (cachedResult != null) {
-	            return cachedResult;
-	        }
-		    Schema s = (Schema)record;
-	        //check if anything can be seen below the schema level
-		    if (s.getTables().entrySet().stream().anyMatch(e->isAccessibleInternal(e.getValue(), commandContext, resources, PermissionType.READ))) {
-		        result = true;
-		    } else if (s.getProcedures().entrySet().stream().anyMatch(e->isAccessibleInternal(e.getValue(), commandContext, resources, PermissionType.EXECUTE))) {
+        boolean result = false;
+        if (record instanceof Schema) {
+            Boolean cachedResult = commandContext.isAccessible(record);
+            if (cachedResult != null) {
+                return cachedResult;
+            }
+            Schema s = (Schema)record;
+            //check if anything can be seen below the schema level
+            if (s.getTables().entrySet().stream().anyMatch(e->isAccessibleInternal(e.getValue(), commandContext, resources, PermissionType.READ))) {
+                result = true;
+            } else if (s.getProcedures().entrySet().stream().anyMatch(e->isAccessibleInternal(e.getValue(), commandContext, resources, PermissionType.EXECUTE))) {
                 result = true;
             } else if (s.getFunctions().entrySet().stream().anyMatch(e->isAccessibleInternal(e.getValue(), commandContext, resources, PermissionType.EXECUTE))) {
                 result = true;
             }
-		} else {
-		    result = isAccessibleInternal(record, commandContext, resources, action);
-		}
-		commandContext.setAccessible(record, result);
-		return result;
-	}
+        } else {
+            result = isAccessibleInternal(record, commandContext, resources, action);
+        }
+        commandContext.setAccessible(record, result);
+        return result;
+    }
 
     private boolean isAccessibleInternal(AbstractMetadataRecord record,
             CommandContext commandContext, HashSet<String> resources, PermissionType action) {
         Boolean result = commandContext.isAccessible(record);
-		if (result != null) {
-			return result;
-		}
-		resources.clear();
+        if (result != null) {
+            return result;
+        }
+        resources.clear();
         resources.add(record.getFullName());
-		return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
+        return this.policyDecider.getInaccessibleResources(action, resources, Context.METADATA, commandContext).isEmpty();
     }
 
 }

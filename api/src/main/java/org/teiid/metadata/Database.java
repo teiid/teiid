@@ -217,7 +217,7 @@ public class Database extends AbstractMetadataRecord {
     }
 
     public void revokeGrant(Grant grant) {
-    	this.store.removeGrant(grant);
+        this.store.removeGrant(grant);
     }
 
     public Collection<Grant> getGrants(){

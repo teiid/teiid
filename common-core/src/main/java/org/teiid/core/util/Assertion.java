@@ -41,16 +41,16 @@ import org.teiid.core.CorePlugin;
  */
 public final class Assertion {
     //============================================================================================================================
-	// Constructors
+    // Constructors
 
-	// Can't construct - just utility methods
-	private Assertion() {
-	}
+    // Can't construct - just utility methods
+    private Assertion() {
+    }
 
     //============================================================================================================================
-	// Methods
+    // Methods
 
-	// ########################## BASIC METHODS ###################################
+    // ########################## BASIC METHODS ###################################
 
     public static final void assertTrue(boolean condition) {
         assertTrue(condition,null);
@@ -65,37 +65,37 @@ public final class Assertion {
         }
     }
 
-	public static final void failed(String msg) {
-		throw new AssertionError(msg);
-	}
+    public static final void failed(String msg) {
+        throw new AssertionError(msg);
+    }
 
-	// ########################## OBJECT METHODS ###################################
+    // ########################## OBJECT METHODS ###################################
 
-	public static final void isNull(Object value) {
+    public static final void isNull(Object value) {
         isNull(value,null);
-	}
+    }
 
-	public static final void isNull(Object value, String message) {
+    public static final void isNull(Object value, String message) {
         if ( value != null ) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("Assertion.isNull"); //$NON-NLS-1$
             failed(msg);
         }
-	}
+    }
 
-	public static final void isNotNull(Object value) {
+    public static final void isNotNull(Object value) {
         isNotNull(value,null);
-	}
+    }
 
-	public static final void isNotNull(Object value, String message) {
+    public static final void isNotNull(Object value, String message) {
         if ( value == null ) {
             final String msg = message != null ?
                                message :
                                CorePlugin.Util.getString("Assertion.isNotNull"); //$NON-NLS-1$
             failed(msg);
         }
-	}
+    }
 
     /**
      * Verifies that the specified value is an instance of the specified class.

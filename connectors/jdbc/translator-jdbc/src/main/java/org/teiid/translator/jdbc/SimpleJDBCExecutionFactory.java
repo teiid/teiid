@@ -32,13 +32,13 @@ import org.teiid.translator.Translator;
 @Translator(name="jdbc-simple", description="An extended JDBC ANSI translator with some simple capabilities")
 public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
-	public SimpleJDBCExecutionFactory() {
-		setSupportsOuterJoins(false);
-		setSupportsFullOuterJoins(false);
-		setSupportsOrderBy(false);
-		setMaxInCriteriaSize(250);
-		setMaxDependentInPredicates(10);
-	}
+    public SimpleJDBCExecutionFactory() {
+        setSupportsOuterJoins(false);
+        setSupportsFullOuterJoins(false);
+        setSupportsOrderBy(false);
+        setMaxInCriteriaSize(250);
+        setMaxDependentInPredicates(10);
+    }
 
     @Override
     public boolean supportsCompareCriteriaEquals() {
@@ -171,6 +171,6 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsInsertWithQueryExpression() {
-    	return false;
+        return false;
     }
 }

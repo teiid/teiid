@@ -69,7 +69,7 @@ public class IfInstruction extends ProgramInstruction {
      * @param ifProgram The <code>Program</code> representing the "if" block
      */
     public IfInstruction(Criteria condition, Program ifProgram) {
-		this(condition, ifProgram, null);
+        this(condition, ifProgram, null);
     }
 
     /**
@@ -84,17 +84,17 @@ public class IfInstruction extends ProgramInstruction {
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
-    	boolean evalValue = procEnv.evaluateCriteria(condition);
+        boolean evalValue = procEnv.evaluateCriteria(condition);
 
         if(evalValue) {
-	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
-		        	" The criteria on the if block evaluated to true, processing the if block"}); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+                    " The criteria on the if block evaluated to true, processing the if block"}); //$NON-NLS-1$
 
             //push the "if" Program onto the stack
             procEnv.push(ifProgram);
         } else if(elseProgram != null) {
-	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
-		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$
+            LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+                    " The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$
             //push the "else" Program onto the stack
             procEnv.push(elseProgram);
         }
@@ -113,32 +113,32 @@ public class IfInstruction extends ProgramInstruction {
      * Returns a deep clone
      */
     public IfInstruction clone(){
-    	Program cloneIf = this.ifProgram.clone();
-    	Program cloneElse = null;
-    	if(elseProgram != null) {
-    		cloneElse = this.elseProgram.clone();
-    	}
+        Program cloneIf = this.ifProgram.clone();
+        Program cloneElse = null;
+        if(elseProgram != null) {
+            cloneElse = this.elseProgram.clone();
+        }
         IfInstruction clone = new IfInstruction(this.condition, cloneIf, cloneElse);
         return clone;
     }
 
     public String toString() {
-    	StringBuffer sb = new StringBuffer("IF INSTRUCTION: "); //$NON-NLS-1$
-    	sb.append(condition);
-    	sb.append("\n").append(ifProgram); //$NON-NLS-1$
-    	if (elseProgram!=null) {
-    		sb.append("\nELSE\n"); //$NON-NLS-1$
-    		sb.append(elseProgram);
-    	}
-    	return sb.toString();
+        StringBuffer sb = new StringBuffer("IF INSTRUCTION: "); //$NON-NLS-1$
+        sb.append(condition);
+        sb.append("\n").append(ifProgram); //$NON-NLS-1$
+        if (elseProgram!=null) {
+            sb.append("\nELSE\n"); //$NON-NLS-1$
+            sb.append(elseProgram);
+        }
+        return sb.toString();
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = new PlanNode("IF"); //$NON-NLS-1$
+        PlanNode props = new PlanNode("IF"); //$NON-NLS-1$
         props.addProperty(PROP_CRITERIA, this.condition.toString());
         props.addProperty(PROP_THEN, this.ifProgram.getDescriptionProperties());
         if(elseProgram != null) {
-        	props.addProperty(PROP_ELSE, this.elseProgram.getDescriptionProperties());
+            props.addProperty(PROP_ELSE, this.elseProgram.getDescriptionProperties());
         }
         return props;
     }

@@ -110,7 +110,7 @@ public class TestLoopStatement  extends TestCase{
     }
 
     public void testCloneNonSimpleQuery(){
-    	Block block = TestBlock.sample1();
+        Block block = TestBlock.sample1();
         LoopStatement ls = new LoopStatement(block, TestSetQuery.sample1(), "cursor"); //$NON-NLS-1$
         LoopStatement clone = (LoopStatement) ls.clone();
         UnitTestUtil.helpTestEquivalence(0, ls, clone);

@@ -37,23 +37,23 @@ import org.teiid.translator.ExecutionFactory;
 @SuppressWarnings("nls")
 public class TestVDBService {
 
-	public static class SampleExecutionFactory extends BaseDelegatingExecutionFactory<Void, Void> {
+    public static class SampleExecutionFactory extends BaseDelegatingExecutionFactory<Void, Void> {
 
-	}
+    }
 
-	@Test(expected=ConnectorManagerException.class) public void testMissingDelegate() throws ConnectorManagerException {
-		TranslatorRepository repo = new TranslatorRepository();
-		VDBTranslatorMetaData tmd = new VDBTranslatorMetaData();
-		Properties props = new Properties();
-		props.put("delegateName", "y");
-		tmd.setProperties(props);
-		tmd.setExecutionFactoryClass(SampleExecutionFactory.class);
-		repo.addTranslatorMetadata("x", tmd);
-		TranslatorUtil.getExecutionFactory("x", repo, repo,
-				new VDBMetaData(), new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>(), new HashSet<String>());
-	}
+    @Test(expected=ConnectorManagerException.class) public void testMissingDelegate() throws ConnectorManagerException {
+        TranslatorRepository repo = new TranslatorRepository();
+        VDBTranslatorMetaData tmd = new VDBTranslatorMetaData();
+        Properties props = new Properties();
+        props.put("delegateName", "y");
+        tmd.setProperties(props);
+        tmd.setExecutionFactoryClass(SampleExecutionFactory.class);
+        repo.addTranslatorMetadata("x", tmd);
+        TranslatorUtil.getExecutionFactory("x", repo, repo,
+                new VDBMetaData(), new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>(), new HashSet<String>());
+    }
 
-	@Test public void testAddSupportedFunctions() throws ConnectorManagerException {
+    @Test public void testAddSupportedFunctions() throws ConnectorManagerException {
         TranslatorRepository repo = new TranslatorRepository();
         VDBTranslatorMetaData tmd = new VDBTranslatorMetaData();
         Properties props = new Properties();

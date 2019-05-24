@@ -56,76 +56,76 @@ import com.sforce.soap.partner.sobject.SObject;
 @SuppressWarnings("nls")
 public class TestQueryExecutionImpl {
 
-	private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
+    private static TranslationUtility translationUtility = new TranslationUtility(TestVisitors.exampleSalesforce());
 
-	@Test public void testBatching() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
-		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
-		QueryResult qr = new QueryResult();
-		SObject so = new SObject();
-		so.setType("Account");
-		so.addField("Name", null);
-		qr.setRecords(new SObject[] {so});
-		qr.setDone(false);
-		QueryResult finalQr = new QueryResult();
-		finalQr.setRecords(new SObject[] {so});
-		finalQr.setDone(true);
-		Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
-		Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);
-		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
-		qei.execute();
-		assertNotNull(qei.next());
-		assertNotNull(qei.next());
-		assertNull(qei.next());
-	}
+    @Test public void testBatching() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", null);
+        qr.setRecords(new SObject[] {so});
+        qr.setDone(false);
+        QueryResult finalQr = new QueryResult();
+        finalQr.setRecords(new SObject[] {so});
+        finalQr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Account.Name FROM Account", 0, false)).toReturn(qr);
+        Mockito.stub(sfc.queryMore(null, 0)).toReturn(finalQr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertNotNull(qei.next());
+        assertNotNull(qei.next());
+        assertNull(qei.next());
+    }
 
-	@Test public void testJoin() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
-		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
-		QueryResult qr = new QueryResult();
-		SObject so = new SObject();
-		so.setType("Account");
-		so.addField("Name", "account name");
-		SObject so1 = new SObject();
-		so1.setType("Contact");
-		so1.addField("Id", "contact id");
-		so.addField("Contacts", so1);
-		qr.setRecords(new SObject[] {so});
-		qr.setDone(true);
-		Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
-		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
-		qei.execute();
-		assertEquals(Arrays.asList("account name", "contact id"), qei.next());
-		assertNull(qei.next());
-	}
+    @Test public void testJoin() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Account.Name, Contact.Id from Account inner join Contact on Account.Id = Contact.AccountId"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+        QueryResult qr = new QueryResult();
+        SObject so = new SObject();
+        so.setType("Account");
+        so.addField("Name", "account name");
+        SObject so1 = new SObject();
+        so1.setType("Contact");
+        so1.addField("Id", "contact id");
+        so.addField("Contacts", so1);
+        qr.setRecords(new SObject[] {so});
+        qr.setDone(true);
+        Mockito.stub(sfc.query("SELECT Account.Name, Contact.Id FROM Contact WHERE Contact.AccountId != NULL", 0, false)).toReturn(qr);
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertEquals(Arrays.asList("account name", "contact id"), qei.next());
+        assertNull(qei.next());
+    }
 
-	@BeforeClass static public void oneTimeSetup() {
-		TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
-	}
+    @BeforeClass static public void oneTimeSetup() {
+        TimeZone.setDefault(TimeZone.getTimeZone("GMT-06:00"));
+    }
 
-	@AfterClass static public void oneTimeTearDown() {
-		TimeZone.setDefault(null);
-	}
+    @AfterClass static public void oneTimeTearDown() {
+        TimeZone.setDefault(null);
+    }
 
-	@Test public void testValueParsing() throws Exception {
-		assertEquals(TimestampUtil.createTime(2, 0, 0), QueryExecutionImpl.parseDateTime("08:00:00.000Z", Time.class, Calendar.getInstance()));
-	}
+    @Test public void testValueParsing() throws Exception {
+        assertEquals(TimestampUtil.createTime(2, 0, 0), QueryExecutionImpl.parseDateTime("08:00:00.000Z", Time.class, Calendar.getInstance()));
+    }
 
-	@Test public void testValueParsing1() throws Exception {
-		assertEquals(TimestampUtil.createTimestamp(101, 0, 1, 2, 0, 0, 1000000), QueryExecutionImpl.parseDateTime("2001-01-01T08:00:00.001Z", Timestamp.class, Calendar.getInstance()));
-	}
+    @Test public void testValueParsing1() throws Exception {
+        assertEquals(TimestampUtil.createTimestamp(101, 0, 1, 2, 0, 0, 1000000), QueryExecutionImpl.parseDateTime("2001-01-01T08:00:00.001Z", Timestamp.class, Calendar.getInstance()));
+    }
 
-	@Test public void testRetrieve() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select Name from Account where id = 'abc'"); //$NON-NLS-1$
-		SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
+    @Test public void testRetrieve() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Name from Account where id = 'abc'"); //$NON-NLS-1$
+        SalesforceConnection sfc = Mockito.mock(SalesforceConnection.class);
 
-		Mockito.stub(sfc.retrieve("Account.Name", "Account", Arrays.asList("abc"))).toReturn(new SObject[] {null});
-		QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
-		qei.execute();
-		assertNull(qei.next());
-	}
+        Mockito.stub(sfc.retrieve("Account.Name", "Account", Arrays.asList("abc"))).toReturn(new SObject[] {null});
+        QueryExecutionImpl qei = new QueryExecutionImpl(command, sfc, Mockito.mock(RuntimeMetadata.class), Mockito.mock(ExecutionContext.class), new SalesForceExecutionFactory());
+        qei.execute();
+        assertNull(qei.next());
+    }
 
-	@Test public void testBulkValidator() throws Exception {
+    @Test public void testBulkValidator() throws Exception {
         helpTestBulkValidator("select Name from Account where id = 'abc'", true, true);
         helpTestBulkValidator("select max(Name) from Account", false, false);
         helpTestBulkValidator("select Name from Account limit 1", true, false);
@@ -140,29 +140,29 @@ public class TestQueryExecutionImpl {
         assertEquals(pkChunk, validator.usePkChunking());
     }
 
-	@Test
-	public void testBulkFlow() throws Exception {
-		Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
+    @Test
+    public void testBulkFlow() throws Exception {
+        Select command = (Select)translationUtility.parseCommand("select Name from Account"); //$NON-NLS-1$
 
-		SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
-		JobInfo jobInfo = Mockito.mock(JobInfo.class);
+        SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
+        JobInfo jobInfo = Mockito.mock(JobInfo.class);
 
-		Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.query), Mockito.eq(true))).thenReturn(jobInfo);
+        Mockito.when(connection.createBulkJob(Mockito.anyString(), Mockito.eq(OperationEnum.query), Mockito.eq(true))).thenReturn(jobInfo);
 
-		final BatchResultInfo info = new BatchResultInfo("x");
+        final BatchResultInfo info = new BatchResultInfo("x");
 
-		Mockito.when(connection.getBatchQueryResults(Mockito.anyString(), Mockito.eq(info))).thenAnswer(new Answer<BulkBatchResult>() {
-			boolean first = true;
-			@Override
-			public BulkBatchResult answer(InvocationOnMock invocation)
-					throws Throwable {
-				if (first) {
-					first = false;
-					throw new DataNotAvailableException();
-				}
-				if (info.getAndIncrementResultNum() == 0) {
-				    final Iterator<List<String>> i = Arrays.asList(Arrays.asList("Name"), Arrays.asList("X")).iterator();
-					return new BulkBatchResult() {
+        Mockito.when(connection.getBatchQueryResults(Mockito.anyString(), Mockito.eq(info))).thenAnswer(new Answer<BulkBatchResult>() {
+            boolean first = true;
+            @Override
+            public BulkBatchResult answer(InvocationOnMock invocation)
+                    throws Throwable {
+                if (first) {
+                    first = false;
+                    throw new DataNotAvailableException();
+                }
+                if (info.getAndIncrementResultNum() == 0) {
+                    final Iterator<List<String>> i = Arrays.asList(Arrays.asList("Name"), Arrays.asList("X")).iterator();
+                    return new BulkBatchResult() {
 
                         @Override
                         public List<String> nextRecord() throws IOException {
@@ -177,29 +177,29 @@ public class TestQueryExecutionImpl {
 
                         }
                     };
-				}
-				return null;
-			}
-		});
+                }
+                return null;
+            }
+        });
 
-		Mockito.when(connection.addBatch("SELECT Account.Name FROM Account", jobInfo)).thenReturn(info);
+        Mockito.when(connection.addBatch("SELECT Account.Name FROM Account", jobInfo)).thenReturn(info);
 
-		ExecutionContext mock = Mockito.mock(ExecutionContext.class);
-		Mockito.stub(mock.getSourceHints()).toReturn(Arrays.asList("bulk"));
+        ExecutionContext mock = Mockito.mock(ExecutionContext.class);
+        Mockito.stub(mock.getSourceHints()).toReturn(Arrays.asList("bulk"));
 
-		QueryExecutionImpl execution = new QueryExecutionImpl(command, connection, Mockito.mock(RuntimeMetadata.class), mock, new SalesForceExecutionFactory());
+        QueryExecutionImpl execution = new QueryExecutionImpl(command, connection, Mockito.mock(RuntimeMetadata.class), mock, new SalesForceExecutionFactory());
 
-		execution.execute();
+        execution.execute();
 
-		try {
-			execution.next();
-			fail();
-		} catch (DataNotAvailableException e) {
+        try {
+            execution.next();
+            fail();
+        } catch (DataNotAvailableException e) {
 
-		}
-		List<?> row = execution.next();
-		assertEquals(Arrays.asList("X"), row);
-		assertNull(execution.next());
-	}
+        }
+        List<?> row = execution.next();
+        assertEquals(Arrays.asList("X"), row);
+        assertNull(execution.next());
+    }
 
 }

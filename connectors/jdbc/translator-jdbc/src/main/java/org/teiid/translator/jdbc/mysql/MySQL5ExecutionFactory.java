@@ -41,53 +41,53 @@ import org.teiid.util.Version;
 @Translator(name="mysql5", description="A translator for open source MySQL5 Database")
 public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 
-	public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
+    public static final Version FIVE_6 = Version.getVersion("5.6"); //$NON-NLS-1$
 
-	@Override
+    @Override
     public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.CHAR, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				Literal intervalType = (Literal)function.getParameters().get(0);
-				String interval = ((String)intervalType.getValue()).toUpperCase();
-				if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
-					intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
-					Expression[] args = new Expression[] {function.getParameters().get(1), getLanguageFactory().createLiteral(1000, TypeFacility.RUNTIME_TYPES.INTEGER)};
-					function.getParameters().set(1, getLanguageFactory().createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
-				}
-				return null;
-			}
-		});
+            @Override
+            public List<?> translate(Function function) {
+                Literal intervalType = (Literal)function.getParameters().get(0);
+                String interval = ((String)intervalType.getValue()).toUpperCase();
+                if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+                    intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
+                    Expression[] args = new Expression[] {function.getParameters().get(1), getLanguageFactory().createLiteral(1000, TypeFacility.RUNTIME_TYPES.INTEGER)};
+                    function.getParameters().set(1, getLanguageFactory().createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+                }
+                return null;
+            }
+        });
 
-		addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
 
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				Literal intervalType = (Literal)function.getParameters().get(0);
-				String interval = ((String)intervalType.getValue()).toUpperCase();
-				if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
-					intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
-					return Arrays.asList(function, " * 1000"); //$NON-NLS-1$
-				}
-				return null;
-			}
-		});
+            @Override
+            public List<?> translate(Function function) {
+                Literal intervalType = (Literal)function.getParameters().get(0);
+                String interval = ((String)intervalType.getValue()).toUpperCase();
+                if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+                    intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
+                    return Arrays.asList(function, " * 1000"); //$NON-NLS-1$
+                }
+                return null;
+            }
+        });
 
-		registerFunctionModifier(SourceSystemFunctions.ST_SRID, new AliasModifier("SRID")); //$NON-NLS-1$
-	}
+        registerFunctionModifier(SourceSystemFunctions.ST_SRID, new AliasModifier("SRID")); //$NON-NLS-1$
+    }
 
-	@Override
+    @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
@@ -95,14 +95,14 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         //mysql rounds down even when crossing a date part
         //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         if (getVersion().compareTo(FIVE_6) >= 0) {
-	        supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
-	        supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
-	        supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
-	        supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
-	        supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
-	        supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
-	        supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
-	        supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
+            supportedFunctions.add(SourceSystemFunctions.ST_INTERSECTS);
+            supportedFunctions.add(SourceSystemFunctions.ST_CONTAINS);
+            supportedFunctions.add(SourceSystemFunctions.ST_CROSSES);
+            supportedFunctions.add(SourceSystemFunctions.ST_DISJOINT);
+            supportedFunctions.add(SourceSystemFunctions.ST_DISTANCE);
+            supportedFunctions.add(SourceSystemFunctions.ST_OVERLAPS);
+            supportedFunctions.add(SourceSystemFunctions.ST_TOUCHES);
+            supportedFunctions.add(SourceSystemFunctions.ST_EQUALS);
         }
         supportedFunctions.add(SourceSystemFunctions.ST_SRID);
         supportedFunctions.add(SourceSystemFunctions.RAND);
@@ -116,67 +116,67 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 
     @Override
     public boolean supportsInlineViews() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsLikeRegex() {
-    	return true;
+        return true;
     }
 
     @Override
     public String getLikeRegexString() {
-    	return "REGEXP"; //$NON-NLS-1$
+        return "REGEXP"; //$NON-NLS-1$
     }
 
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
-    		Class<?> expectedType) throws SQLException {
-    	Object result = super.retrieveValue(results, columnIndex, expectedType);
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
-    		return results.getString(columnIndex);
-    	}
-    	return result;
+            Class<?> expectedType) throws SQLException {
+        Object result = super.retrieveValue(results, columnIndex, expectedType);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
+            return results.getString(columnIndex);
+        }
+        return result;
     }
 
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
-    		Class<?> expectedType) throws SQLException {
-    	Object result = super.retrieveValue(results, parameterIndex, expectedType);
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
-    		return results.getString(parameterIndex);
-    	}
-    	return result;
+            Class<?> expectedType) throws SQLException {
+        Object result = super.retrieveValue(results, parameterIndex, expectedType);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.STRING && (result instanceof Blob || result instanceof byte[])) {
+            return results.getString(parameterIndex);
+        }
+        return result;
     }
 
     @Override
     public String getHibernateDialectClassName() {
-    	return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
+        return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
     }
 
     @Override
     public boolean supportsGroupByRollup() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean useWithRollup() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsOrderByWithExtendedGrouping() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean supportsAggregatesDistinct() {
-	    return true;
+        return true;
     }
 
     @Override

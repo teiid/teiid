@@ -22,9 +22,9 @@ import java.io.Serializable;
 
 public class Credentials implements Serializable {
 
-	private static final long serialVersionUID = 7453114713211221240L;
+    private static final long serialVersionUID = 7453114713211221240L;
 
-	private String credentials = null;
+    private String credentials = null;
 
     /**
      * Construct a new PasswordCredentials

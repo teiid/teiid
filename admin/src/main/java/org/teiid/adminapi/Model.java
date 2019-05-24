@@ -28,14 +28,14 @@ import java.util.List;
  */
 public interface Model extends AdminObject {
 
-	enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
-	enum MetadataStatus {LOADING, LOADED, FAILED, RETRYING};
+    enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
+    enum MetadataStatus {LOADING, LOADED, FAILED, RETRYING};
 
-	/**
-	 * Description about the model
-	 * @return
-	 */
-	String getDescription();
+    /**
+     * Description about the model
+     * @return
+     */
+    String getDescription();
 
     /**
      * Determine if this model is a Source model.

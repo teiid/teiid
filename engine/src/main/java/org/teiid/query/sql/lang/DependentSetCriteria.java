@@ -42,12 +42,12 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class DependentSetCriteria extends AbstractSetCriteria implements ContextReference {
 
-	public static class AttributeComparison {
-		public Expression dep;
-		public Expression ind;
-		public float ndv;
-		public float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
-	}
+    public static class AttributeComparison {
+        public Expression dep;
+        public Expression ind;
+        public float ndv;
+        public float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+    }
 
     /**
      * Specifies the expression whose values we want to return in the iterator
@@ -78,63 +78,63 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     }
 
     public void setAttributes(List<AttributeComparison> attributes) {
-		this.ndvs = new float[attributes.size()];
-		this.maxNdvs = new float[attributes.size()];
-		for (int i = 0; i < attributes.size(); i++) {
-			AttributeComparison comp = attributes.get(i);
-			this.ndvs[i] = comp.ndv;
-			this.maxNdvs[i] = comp.maxNdv;
-		}
-	}
+        this.ndvs = new float[attributes.size()];
+        this.maxNdvs = new float[attributes.size()];
+        for (int i = 0; i < attributes.size(); i++) {
+            AttributeComparison comp = attributes.get(i);
+            this.ndvs[i] = comp.ndv;
+            this.maxNdvs[i] = comp.maxNdv;
+        }
+    }
 
     /**
      * There is a mismatch between the expression form and the more convenient attribute comparison,
      * so we reconstruct when needed
      */
     public List<AttributeComparison> getAttributes() {
-		if (!hasMultipleAttributes()) {
-			AttributeComparison comp = new AttributeComparison();
-			comp.dep = getExpression();
-			comp.ind = getValueExpression();
-			comp.ndv = ndv;
-			comp.maxNdv = maxNdv;
-			return Arrays.asList(comp);
-		}
-		ArrayList<AttributeComparison> result = new ArrayList<AttributeComparison>();
-		for (int i = 0; i < ndvs.length; i++) {
-			AttributeComparison comp = new AttributeComparison();
-			comp.dep = ((Array)getExpression()).getExpressions().get(i);
-			comp.ind = ((Array)getValueExpression()).getExpressions().get(i);
-			comp.ndv = ndv;
-			comp.maxNdv = maxNdv;
-			result.add(comp);
-		}
-		return result;
-	}
+        if (!hasMultipleAttributes()) {
+            AttributeComparison comp = new AttributeComparison();
+            comp.dep = getExpression();
+            comp.ind = getValueExpression();
+            comp.ndv = ndv;
+            comp.maxNdv = maxNdv;
+            return Arrays.asList(comp);
+        }
+        ArrayList<AttributeComparison> result = new ArrayList<AttributeComparison>();
+        for (int i = 0; i < ndvs.length; i++) {
+            AttributeComparison comp = new AttributeComparison();
+            comp.dep = ((Array)getExpression()).getExpressions().get(i);
+            comp.ind = ((Array)getValueExpression()).getExpressions().get(i);
+            comp.ndv = ndv;
+            comp.maxNdv = maxNdv;
+            result.add(comp);
+        }
+        return result;
+    }
 
     public boolean hasMultipleAttributes() {
-    	return this.ndvs != null && this.ndvs.length > 1;
+        return this.ndvs != null && this.ndvs.length > 1;
     }
 
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
 
     public float getMaxNdv() {
-		return maxNdv;
-	}
+        return maxNdv;
+    }
 
     public void setMaxNdv(float maxNdv) {
-		this.maxNdv = maxNdv;
-	}
+        this.maxNdv = maxNdv;
+    }
 
     public float getNdv() {
-		return ndv;
-	}
+        return ndv;
+    }
 
     public void setNdv(float ndv) {
-		this.ndv = ndv;
-	}
+        this.ndv = ndv;
+    }
 
     /**
      * Get the independent value expression
@@ -207,7 +207,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 
         DependentSetCriteria criteriaCopy = new DependentSetCriteria(copy, id);
         if (this.valueExpression != null) {
-        	criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
+            criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
         }
         criteriaCopy.id = this.id;
         criteriaCopy.ndv = this.ndv;
@@ -220,30 +220,30 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 
     @Override
     public void setNegated(boolean negationFlag) {
-    	if (!negationFlag) {
-    		throw new UnsupportedOperationException();
-    	}
+        if (!negationFlag) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public DependentValueSource getDependentValueSource() {
-		return dependentValueSource;
-	}
+        return dependentValueSource;
+    }
 
     public void setDependentValueSource(
-			DependentValueSource dependentValueSource) {
-		this.dependentValueSource = dependentValueSource;
-	}
+            DependentValueSource dependentValueSource) {
+        this.dependentValueSource = dependentValueSource;
+    }
 
-	public void setMakeDepOptions(MakeDep makeDep) {
-		this.makeDepOptions = makeDep;
-		//hint overrides computed value
-		if (makeDep != null && makeDep.getMax() != null) {
-			this.maxNdv = makeDep.getMax();
-		}
-	}
+    public void setMakeDepOptions(MakeDep makeDep) {
+        this.makeDepOptions = makeDep;
+        //hint overrides computed value
+        if (makeDep != null && makeDep.getMax() != null) {
+            this.maxNdv = makeDep.getMax();
+        }
+    }
 
-	public MakeDep getMakeDepOptions() {
-		return makeDepOptions;
-	}
+    public MakeDep getMakeDepOptions() {
+        return makeDepOptions;
+    }
 
 }

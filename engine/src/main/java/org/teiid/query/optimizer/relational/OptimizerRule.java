@@ -29,7 +29,7 @@ import org.teiid.query.util.CommandContext;
 
 public interface OptimizerRule {
 
-	PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capabilitiesFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException;
+    PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capabilitiesFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException;
 
 }

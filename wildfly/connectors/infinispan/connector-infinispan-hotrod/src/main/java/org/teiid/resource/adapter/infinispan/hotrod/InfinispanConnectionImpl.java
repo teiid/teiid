@@ -50,8 +50,8 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
     private RemoteCacheManager scriptManager;
     private String cacheTemplate;
 
-	public InfinispanConnectionImpl(RemoteCacheManager manager, RemoteCacheManager scriptManager, String cacheName,
-			SerializationContext ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
+    public InfinispanConnectionImpl(RemoteCacheManager manager, RemoteCacheManager scriptManager, String cacheName,
+            SerializationContext ctx, InfinispanConnectionFactory icf, String cacheTemplate) throws ResourceException {
         this.cacheManager = manager;
         this.cacheName = cacheName;
         this.ctx = ctx;
@@ -85,12 +85,12 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
 
     @Override
     public <K, V> BasicCache<K, V> getCache(String cacheName, boolean createIfNotExists) throws TranslatorException{
-    	RemoteCache<Object, Object> cache = cacheManager.getCache(cacheName);
-    	if (cache == null && createIfNotExists) {
-    		cacheManager.administration().createCache(cacheName, this.cacheTemplate, EnumSet.of(AdminFlag.PERSISTENT));
-    		cache = cacheManager.getCache(cacheName);
-    	}
-    	return (BasicCache<K,V>)cache;
+        RemoteCache<Object, Object> cache = cacheManager.getCache(cacheName);
+        if (cache == null && createIfNotExists) {
+            cacheManager.administration().createCache(cacheName, this.cacheTemplate, EnumSet.of(AdminFlag.PERSISTENT));
+            cache = cacheManager.getCache(cacheName);
+        }
+        return (BasicCache<K,V>)cache;
     }
 
     @Override
@@ -139,17 +139,17 @@ public class InfinispanConnectionImpl extends BasicConnection implements Infinis
         }
     }
 
-	@Override
-	public <T> T execute(String scriptName, Map<String, ?> params) {
-		return scriptManager.getCache().execute(scriptName, params);
-	}
+    @Override
+    public <T> T execute(String scriptName, Map<String, ?> params) {
+        return scriptManager.getCache().execute(scriptName, params);
+    }
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public void registerScript(String scriptName, String script) {
-		RemoteCache cache = scriptManager.getCache("___script_cache");
-		if (cache.get(scriptName) == null) {
-			cache.put(scriptName, script);
-		}
-	}
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Override
+    public void registerScript(String scriptName, String script) {
+        RemoteCache cache = scriptManager.getCache("___script_cache");
+        if (cache.get(scriptName) == null) {
+            cache.put(scriptName, script);
+        }
+    }
 }

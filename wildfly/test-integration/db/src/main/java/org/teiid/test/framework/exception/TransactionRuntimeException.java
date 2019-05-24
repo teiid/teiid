@@ -10,11 +10,11 @@ package org.teiid.test.framework.exception;
  */
 public class TransactionRuntimeException extends RuntimeException{
     /**
-	 * @since
-	 */
-	private static final long serialVersionUID = 1L;
+     * @since
+     */
+    private static final long serialVersionUID = 1L;
 
-	public TransactionRuntimeException(Exception e){
+    public TransactionRuntimeException(Exception e){
         super(e);
     }
     public TransactionRuntimeException(String msg){

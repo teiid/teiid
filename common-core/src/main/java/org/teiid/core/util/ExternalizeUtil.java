@@ -77,7 +77,7 @@ public class ExternalizeUtil {
     }
 
     public static void writeList(ObjectOutput out, List<?> coll) throws IOException {
-    	writeCollection(out, coll);
+        writeCollection(out, coll);
     }
 
     /**
@@ -106,17 +106,17 @@ public class ExternalizeUtil {
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-	public static <T> T[] readArray(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
+    public static <T> T[] readArray(ObjectInput in, Class<T> type) throws IOException, ClassNotFoundException {
         final int length = in.readInt();
         T[] result = (T[])Array.newInstance(type, length);
         for (int i = 0; i < length; i++) {
-        	result[i] = type.cast(in.readObject());
+            result[i] = type.cast(in.readObject());
         }
         return result;
     }
 
     public static String[] readStringArray(ObjectInput in) throws IOException, ClassNotFoundException {
-    	return readArray(in, String.class);
+        return readArray(in, String.class);
     }
 
     /**
@@ -131,7 +131,7 @@ public class ExternalizeUtil {
     }
 
     public static List<?> readList(ObjectInput in) throws IOException, ClassNotFoundException {
-    	return readList(in, Object.class);
+        return readList(in, Object.class);
     }
 
     /**
@@ -142,7 +142,7 @@ public class ExternalizeUtil {
      * @throws ClassNotFoundException
      */
     @SuppressWarnings("unchecked")
-	public static <K, V> Map<K, V> readMap(ObjectInput in) throws IOException, ClassNotFoundException {
+    public static <K, V> Map<K, V> readMap(ObjectInput in) throws IOException, ClassNotFoundException {
         final int size = in.readInt();
         HashMap<K, V> map = new HashMap<K, V>(size);
         for (int i = 0; i < size; i++) {
@@ -152,23 +152,23 @@ public class ExternalizeUtil {
     }
 
     public static void writeEnum(ObjectOutput out, Enum<?> value) throws IOException {
-    	if (value == null) {
-    		out.writeObject(null);
-    	} else {
-    		out.writeUTF(value.name());
-    	}
+        if (value == null) {
+            out.writeObject(null);
+        } else {
+            out.writeUTF(value.name());
+        }
     }
 
     public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz, T defaultVal) throws IOException {
-    	String name = in.readUTF();
-    	if (name == null) {
-    		return null;
-    	}
-    	try {
-    		return Enum.valueOf(clazz, name);
-    	} catch (IllegalArgumentException e) {
-    		return defaultVal;
-    	}
+        String name = in.readUTF();
+        if (name == null) {
+            return null;
+        }
+        try {
+            return Enum.valueOf(clazz, name);
+        } catch (IllegalArgumentException e) {
+            return defaultVal;
+        }
     }
 
 }

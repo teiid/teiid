@@ -21,9 +21,6 @@
 <module name="Checker">
   <!-- http://checkstyle.sourceforge.net/config_filters.html -->
   <module name="SuppressWarningsFilter" />
-  <module name="SuppressionFilter">
-    <property name="file" value="checkstyle-suppressions.xml"/>
-  </module>
 
   <!-- http://checkstyle.sourceforge.net/config_misc.html -->
   <module name="NewlineAtEndOfFile">
@@ -32,10 +29,9 @@
   </module>
 
   <!-- http://checkstyle.sourceforge.net/config_whitespace.html -->
-  <!-- <module name="FileTabCharacter">
+  <module name="FileTabCharacter">
     <property name="eachLine" value="true"/>
-    <property name="severity" value="warning"/>
-  </module>-->
+  </module>
 
   <!-- http://checkstyle.sourceforge.net/config_regexp.html -->
   <module name="RegexpSingleline">

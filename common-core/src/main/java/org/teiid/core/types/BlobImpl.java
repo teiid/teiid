@@ -40,16 +40,16 @@ import org.teiid.core.util.SqlUtil;
  */
 public class BlobImpl extends BaseLob implements Blob, StreamProvider {
 
-	public BlobImpl() {
+    public BlobImpl() {
 
-	}
+    }
 
     /**
      * Creates a MMBlob object with the <code>valueID</code>.
      * @param streamFactory reference to value chunk in data source.
      */
     public BlobImpl(InputStreamFactory streamFactory) {
-    	super(streamFactory);
+        super(streamFactory);
     }
 
     /**
@@ -87,19 +87,19 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         }
         InputStream in = getBinaryStream();
         try {
-        	long skipped = 0;
-        	while (pos > 0) {
-        		skipped = in.skip(pos);
-        		pos -= skipped;
-        	}
-        	return ObjectConverterUtil.convertToByteArray(in, length);
+            long skipped = 0;
+            while (pos > 0) {
+                skipped = in.skip(pos);
+                pos -= skipped;
+            }
+            return ObjectConverterUtil.convertToByteArray(in, length);
         } catch (IOException e) {
-        	throw new SQLException(e);
+            throw new SQLException(e);
         } finally {
-        	try {
-				in.close();
-			} catch (IOException e) {
-			}
+            try {
+                in.close();
+            } catch (IOException e) {
+            }
         }
     }
 
@@ -122,9 +122,9 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
         }
 
         return LobSearchUtil.position(new LobSearchUtil.StreamProvider() {
-        	public InputStream getBinaryStream() throws SQLException {
-        		return pattern.getBinaryStream();
-        	}
+            public InputStream getBinaryStream() throws SQLException {
+                return pattern.getBinaryStream();
+            }
         }, pattern.length(), this, this.length(), start, 1);
     }
 
@@ -142,43 +142,43 @@ public class BlobImpl extends BaseLob implements Blob, StreamProvider {
      * <code>BLOB</code>
      */
     public long position(byte[] pattern, long start) throws SQLException {
-    	if (pattern == null) {
-    		return -1;
-    	}
+        if (pattern == null) {
+            return -1;
+        }
         return position(new SerialBlob(pattern), start);
     }
 
-	public InputStream getBinaryStream(long arg0, long arg1)
-			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public InputStream getBinaryStream(long arg0, long arg1)
+            throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
 
-	/**
-	 * @see java.sql.Blob#setBytes(long, byte[])
-	 */
-	public int setBytes(long pos, byte[] bytes) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBytes(long, byte[])
+     */
+    public int setBytes(long pos, byte[] bytes) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#setBytes(long, byte[], int, int)
-	 */
-	public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBytes(long, byte[], int, int)
+     */
+    public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#setBinaryStream(long)
-	 */
-	public OutputStream setBinaryStream(long pos) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#setBinaryStream(long)
+     */
+    public OutputStream setBinaryStream(long pos) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	/**
-	 * @see java.sql.Blob#truncate(long)
-	 */
-	public void truncate(long len) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    /**
+     * @see java.sql.Blob#truncate(long)
+     */
+    public void truncate(long len) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 }

@@ -103,12 +103,12 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
     }
 
     public boolean isDistinct() {
-		return isDistinct;
-	}
+        return isDistinct;
+    }
 
     public void setDistinctIndex(int distinctIndex) {
-		this.distinctIndex = distinctIndex;
-	}
+        this.distinctIndex = distinctIndex;
+    }
 
     /**
      * Compares its two arguments for order.  Returns a negative integer,
@@ -135,30 +135,30 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
             Object param2 = list2.get(sortParameters[k]);
 
             if( param1 == null ) {
-				if(param2 == null ) {
-					// Both are null
-					compare = 0;
-				} else {
-					// param1 = null, so is less than a non-null
-					compare = -1;
-				}
-	    } else if( param2 == null ) {
-				// param1 != null, param2 == null
-				compare = 1;
-	   } else if ( param1 instanceof Comparable ) {
+                if(param2 == null ) {
+                    // Both are null
+                    compare = 0;
+                } else {
+                    // param1 = null, so is less than a non-null
+                    compare = -1;
+                }
+        } else if( param2 == null ) {
+                // param1 != null, param2 == null
+                compare = 1;
+       } else if ( param1 instanceof Comparable ) {
                 compare = ((Comparable)param1).compareTo(param2);
             } else {
-        	compare = 0;
+            compare = 0;
             }
 
             if (compare != 0) {
-            	boolean asc = orderTypes != null?((Boolean)orderTypes.get(k)).booleanValue():this.ascendingOrder;
+                boolean asc = orderTypes != null?((Boolean)orderTypes.get(k)).booleanValue():this.ascendingOrder;
                 return asc ? compare : -compare;
             } else if (k == distinctIndex) {
-        		isDistinct = false;
-        	}
+                isDistinct = false;
+            }
         }
-    	return 0;
+        return 0;
     }
 
 } // END CLASS

@@ -31,30 +31,30 @@ import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 
 class TransportRemove extends AbstractRemoveStepHandler {
-	public static TransportRemove INSTANCE = new TransportRemove();
+    public static TransportRemove INSTANCE = new TransportRemove();
 
-	@Override
+    @Override
     protected void performRuntime(OperationContext context,
             final ModelNode operation, final ModelNode model)
             throws OperationFailedException {
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
-    	String transportName = pathAddress.getLastElement().getValue();
+        String transportName = pathAddress.getLastElement().getValue();
 
-    	final ServiceRegistry serviceRegistry = context.getServiceRegistry(true);
+        final ServiceRegistry serviceRegistry = context.getServiceRegistry(true);
 
-    	ServiceName serviceName = TeiidServiceNames.transportServiceName(transportName);
-		final ServiceController<?> controller = serviceRegistry.getService(serviceName);
-		if (controller != null) {
-			TransportService transport = TransportService.class.cast(controller.getValue());
+        ServiceName serviceName = TeiidServiceNames.transportServiceName(transportName);
+        final ServiceController<?> controller = serviceRegistry.getService(serviceName);
+        if (controller != null) {
+            TransportService transport = TransportService.class.cast(controller.getValue());
 
-			if (transport.isLocal()) {
-				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
-				context.removeService(bindInfo.getBinderServiceName());
-				context.removeService(TeiidServiceNames.localTransportServiceName(transportName).append("reference-factory")); //$NON-NLS-1$
-			}
-			context.removeService(serviceName);
-		}
+            if (transport.isLocal()) {
+                final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
+                context.removeService(bindInfo.getBinderServiceName());
+                context.removeService(TeiidServiceNames.localTransportServiceName(transportName).append("reference-factory")); //$NON-NLS-1$
+            }
+            context.removeService(serviceName);
+        }
     }
 }

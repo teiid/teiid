@@ -27,9 +27,9 @@ import org.teiid.resource.api.XAImporter;
 
 public class FakeTransactionService extends TransactionServerImpl {
 
-	public FakeTransactionService() {
-		this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
-		this.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
-	}
+    public FakeTransactionService() {
+        this.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
+        this.setXaImporter(SimpleMock.createSimpleMock(XAImporter.class));
+    }
 
 }

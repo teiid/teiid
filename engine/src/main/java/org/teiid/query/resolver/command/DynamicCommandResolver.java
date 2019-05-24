@@ -63,7 +63,7 @@ public class DynamicCommandResolver implements CommandResolver {
                 column.setMetadataID(new TempMetadataID(column.getShortName(), column.getType()));
             }
         } else if (dynamicCmd.getIntoGroup().isTempGroupSymbol()) {
-        	resolvedColumns = true;
+            resolvedColumns = true;
             while (columns.hasNext()) {
                 ElementSymbol column = (ElementSymbol)columns.next();
                 column.setGroupSymbol(new GroupSymbol(dynamicCmd.getIntoGroup().getName()));
@@ -94,8 +94,8 @@ public class DynamicCommandResolver implements CommandResolver {
             if (!intoSymbol.isImplicitTempGroupSymbol()) {
                 ResolverUtil.resolveGroup(intoSymbol, metadata);
                 if (!resolvedColumns) {
-                	//must be a temp table from a higher scope
-                	for (ElementSymbol column : (List<ElementSymbol>)dynamicCmd.getAsColumns()) {
+                    //must be a temp table from a higher scope
+                    for (ElementSymbol column : (List<ElementSymbol>)dynamicCmd.getAsColumns()) {
                         column.setGroupSymbol(dynamicCmd.getIntoGroup().clone());
                     }
                 }

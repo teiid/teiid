@@ -33,55 +33,55 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings({"unchecked", "nls"})
 public class TestArrayTable {
 
-	@Test public void testCorrelatedArrayTable() throws Exception {
-    	String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer) x"; //$NON-NLS-1$
+    @Test public void testCorrelatedArrayTable() throws Exception {
+        String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer) x"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
-        		Arrays.asList("a", 1),
-        		Arrays.asList("b", 3),
+                Arrays.asList("a", 1),
+                Arrays.asList("b", 3),
         };
 
         process(sql, expected);
     }
 
-	@Test public void testCorrelatedArrayTable1() throws Exception {
-    	String sql = "select z from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z long) x"; //$NON-NLS-1$
+    @Test public void testCorrelatedArrayTable1() throws Exception {
+        String sql = "select z from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z long) x"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
-        		Arrays.asList(Long.valueOf(2)),
-        		Arrays.asList(Long.valueOf(6)),
+                Arrays.asList(Long.valueOf(2)),
+                Arrays.asList(Long.valueOf(6)),
         };
 
         process(sql, expected);
     }
 
-	@Test(expected=TeiidProcessingException.class) public void testCorrelatedArrayTable2() throws Exception {
-    	String sql = "select y from bqt1.smalla, arraytable(objectvalue COLUMNS y integer) x"; //$NON-NLS-1$
+    @Test(expected=TeiidProcessingException.class) public void testCorrelatedArrayTable2() throws Exception {
+        String sql = "select y from bqt1.smalla, arraytable(objectvalue COLUMNS y integer) x"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {};
 
         process(sql, expected);
     }
 
-	@Test public void testCorrelatedArrayTable3() throws Exception {
-    	String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z integer, aa object) x"; //$NON-NLS-1$
+    @Test public void testCorrelatedArrayTable3() throws Exception {
+        String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z integer, aa object) x"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
-        		Arrays.asList("a", 1, 2, null),
-        		Arrays.asList("b", 3, 6, null),
+                Arrays.asList("a", 1, 2, null),
+                Arrays.asList("b", 3, 6, null),
         };
 
         process(sql, expected);
     }
 
-	//should not work as we are passing 1-dimensional arrays
-	@Test(expected=TeiidProcessingException.class) public void testCorrelatedMultiRowArrayTable() throws Exception {
+    //should not work as we are passing 1-dimensional arrays
+    @Test(expected=TeiidProcessingException.class) public void testCorrelatedMultiRowArrayTable() throws Exception {
         String sql = "select z from bqt1.smalla, arraytable(rows objectvalue COLUMNS z long) x"; //$NON-NLS-1$
 
         process(sql, null);
     }
 
-	@Test public void testMultiRowArrayTable() throws Exception {
+    @Test public void testMultiRowArrayTable() throws Exception {
         String sql = "select * from arraytable(rows ((1,'a'),(2,'b'),(3,)) COLUMNS x integer, y string) x"; //$NON-NLS-1$
 
         assertEquals("SELECT * FROM ARRAYTABLE(ROWS ((1, 'a'), (2, 'b'), (3,)) COLUMNS x integer, y string) AS x", QueryParser.getQueryParser().parseCommand(sql).toString());
@@ -95,16 +95,16 @@ public class TestArrayTable {
         process(sql, expected);
     }
 
-	@Test(expected=TeiidProcessingException.class) public void testMultiRowArrayTableFails() throws Exception {
+    @Test(expected=TeiidProcessingException.class) public void testMultiRowArrayTableFails() throws Exception {
         String sql = "select * from arraytable(rows (1,'a') COLUMNS x integer, y string) x"; //$NON-NLS-1$
 
         process(sql, null);
     }
 
-	public static void process(String sql, List<?>[] expectedResults) throws Exception {
-    	HardcodedDataManager dataManager = new HardcodedDataManager();
-    	dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", new List[] {Collections.singletonList(new Object[] {"a", 1, 2}), Collections.singletonList(new Object[] {"b", 3, 6}), Collections.singletonList(null)} );
-    	ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached());
+    public static void process(String sql, List<?>[] expectedResults) throws Exception {
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT BQT1.SmallA.ObjectValue FROM BQT1.SmallA", new List[] {Collections.singletonList(new Object[] {"a", 1, 2}), Collections.singletonList(new Object[] {"b", 3, 6}), Collections.singletonList(null)} );
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached());
         helpProcess(plan, createCommandContext(), dataManager, expectedResults);
     }
 

@@ -114,19 +114,19 @@ public class TestProcedure extends TestCase {
 
     }
 
-	private List<ProcedureParameter> checkParams(Procedure proc,
-			String[] nameInSource, ProcedureParameter.Type[] direction,
-			int[] index, Class<?>[] type) {
-		List<ProcedureParameter> params = proc.getParameters();
-		assertEquals(type.length, params.size());
+    private List<ProcedureParameter> checkParams(Procedure proc,
+            String[] nameInSource, ProcedureParameter.Type[] direction,
+            int[] index, Class<?>[] type) {
+        List<ProcedureParameter> params = proc.getParameters();
+        assertEquals(type.length, params.size());
         for (int i = 0; i < params.size(); i++) {
-        	ProcedureParameter param = params.get(i);
+            ProcedureParameter param = params.get(i);
             assertEquals(nameInSource[i], param.getNameInSource());
             assertEquals(direction[i], param.getType());
             assertEquals(index[i], param.getPosition());
             assertEquals(type[i], param.getJavaType());
         }
-		return params;
-	}
+        return params;
+    }
 
 }

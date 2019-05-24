@@ -53,12 +53,12 @@ public class LimitNode extends RelationalNode {
     }
 
     public void setImplicit(boolean implicit) {
-		this.implicit = implicit;
-	}
+        this.implicit = implicit;
+    }
 
     public boolean isImplicit() {
-		return implicit;
-	}
+        return implicit;
+    }
 
     protected TupleBatch nextBatchDirect() throws BlockedException,
                                           TeiidComponentException,
@@ -66,8 +66,8 @@ public class LimitNode extends RelationalNode {
         TupleBatch batch = null; // Can throw BlockedException
 
         if (limit == 0) {
-        	this.terminateBatches();
-        	return pullBatch();
+            this.terminateBatches();
+            return pullBatch();
         }
 
         // If we haven't reached the offset, then skip rows/batches
@@ -119,14 +119,14 @@ public class LimitNode extends RelationalNode {
     }
 
     public void open() throws TeiidComponentException, TeiidProcessingException {
-    	limit = -1;
-    	if (limitExpr != null) {
+        limit = -1;
+        if (limitExpr != null) {
             Integer limitVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(limitExpr, Collections.emptyList());
             ValidationVisitor.LIMIT_CONSTRAINT.validate(limitVal);
             limit = limitVal.intValue();
-    	}
+        }
         if (limit == 0) {
-        	return;
+            return;
         }
         if (offsetExpr != null) {
             Integer offsetVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(offsetExpr, Collections.emptyList());
@@ -137,7 +137,7 @@ public class LimitNode extends RelationalNode {
         }
         offsetPhase = offset > 0;
         if (limit > -1 && this.getChildren()[0] instanceof SortNode) {
-        	((SortNode)this.getChildren()[0]).setRowLimit((int) Math.min(Integer.MAX_VALUE, (long)limit + offset));
+            ((SortNode)this.getChildren()[0]).setRowLimit((int) Math.min(Integer.MAX_VALUE, (long)limit + offset));
         }
         super.open();
     }
@@ -161,7 +161,7 @@ public class LimitNode extends RelationalNode {
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = super.getDescriptionProperties();
+        PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_ROW_OFFSET, String.valueOf(offsetExpr));
         props.addProperty(PROP_ROW_LIMIT, String.valueOf(limitExpr));
         return props;
@@ -175,39 +175,39 @@ public class LimitNode extends RelationalNode {
         return node;
     }
 
-	public Expression getLimitExpr() {
-		return limitExpr;
-	}
+    public Expression getLimitExpr() {
+        return limitExpr;
+    }
 
-	public Expression getOffsetExpr() {
-		return offsetExpr;
-	}
+    public Expression getOffsetExpr() {
+        return offsetExpr;
+    }
 
-	public int getLimit() {
-		return limit;
-	}
+    public int getLimit() {
+        return limit;
+    }
 
-	public int getOffset() {
-		return offset;
-	}
+    public int getOffset() {
+        return offset;
+    }
 
-	@Override
-	public boolean hasBuffer() {
-		//TODO: support offset
-		return offsetExpr == null && this.getChildren()[0].hasBuffer();
-	}
+    @Override
+    public boolean hasBuffer() {
+        //TODO: support offset
+        return offsetExpr == null && this.getChildren()[0].hasBuffer();
+    }
 
-	@Override
-	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-		if (maxRows >= 0) {
-			if (limit >= 0) {
-				maxRows = Math.min(maxRows, limit);
-			}
-		} else {
-			maxRows = limit;
-		}
-		return this.getChildren()[0].getBuffer(maxRows);
-	}
+    @Override
+    public TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
+            TeiidComponentException, TeiidProcessingException {
+        if (maxRows >= 0) {
+            if (limit >= 0) {
+                maxRows = Math.min(maxRows, limit);
+            }
+        } else {
+            maxRows = limit;
+        }
+        return this.getChildren()[0].getBuffer(maxRows);
+    }
 
 }

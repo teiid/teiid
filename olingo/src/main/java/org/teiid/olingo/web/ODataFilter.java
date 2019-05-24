@@ -115,15 +115,15 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
-    		FilterChain chain) throws IOException, ServletException {
-    	try {
-    		internalDoFilter(request, response, chain);
-    	} catch (TeiidProcessingException e) {
-    		//TODO: use engine style logic to determine if the stack should be logged
-    		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
-    		HttpServletResponse httpResponse = (HttpServletResponse)response;
-    	    writeError(request, e, httpResponse, 404);
-    	}
+            FilterChain chain) throws IOException, ServletException {
+        try {
+            internalDoFilter(request, response, chain);
+        } catch (TeiidProcessingException e) {
+            //TODO: use engine style logic to determine if the stack should be logged
+            LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
+            HttpServletResponse httpResponse = (HttpServletResponse)response;
+            writeError(request, e, httpResponse, 404);
+        }
     }
 
     static void writeError(ServletRequest request, TeiidProcessingException e,
@@ -143,12 +143,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
         String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
         if (format.equalsIgnoreCase("json")) { //$NON-NLS-1$
-        	httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
-        	writer.write("{ \"error\": { \"code\": \""); //$NON-NLS-1$
-        	JSONParser.escape(code, writer);
-        	writer.write("\", \"message\": \""); //$NON-NLS-1$
-        	JSONParser.escape(message, writer);
-        	writer.write("\" } }"); //$NON-NLS-1$
+            httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
+            writer.write("{ \"error\": { \"code\": \""); //$NON-NLS-1$
+            JSONParser.escape(code, writer);
+            writer.write("\", \"message\": \""); //$NON-NLS-1$
+            JSONParser.escape(message, writer);
+            writer.write("\" } }"); //$NON-NLS-1$
         } else {
             try {
                 httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString());
@@ -224,7 +224,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             modelName = URLDecoder.decode(modelName, "UTF-8"); //$NON-NLS-1$
             vdbName = URLDecoder.decode(vdbName, "UTF-8"); //$NON-NLS-1$
         } else {
-        	if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$
+            if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
 
@@ -232,13 +232,13 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             version = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
 
             if (endIdx == -1) {
-			    modelName = uri.substring(beginIdx).trim();
-			    if (modelName.isEmpty()) {
-			        throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
-			    }
-			} else {
-			    modelName = uri.substring(beginIdx, endIdx);
-			}
+                modelName = uri.substring(beginIdx).trim();
+                if (modelName.isEmpty()) {
+                    throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                }
+            } else {
+                modelName = uri.substring(beginIdx, endIdx);
+            }
 
             contextPath = contextPath + "/" + modelName; //$NON-NLS-1$
         }
@@ -249,10 +249,10 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
 
         key = new VDBKey(vdbName, version);
         if (key.isAtMost()) {
-        	if (key.getVersion() != null) {
-        		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
-        	}
-    	    key = new VDBKey(vdbName, defaultVdbVersion);
+            if (key.getVersion() != null) {
+                throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
+            }
+            key = new VDBKey(vdbName, defaultVdbVersion);
         }
 
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);

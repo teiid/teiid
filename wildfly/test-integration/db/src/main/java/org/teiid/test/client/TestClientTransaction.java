@@ -54,8 +54,8 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
     private TestResultsSummary testResultsSummary;
 
     public TestClientTransaction(QueryScenario querySet) {
-	super(querySet.getQueryScenarioIdentifier());
-	this.querySet = querySet;
+    super(querySet.getQueryScenarioIdentifier());
+    this.querySet = querySet;
 
     }
 
@@ -63,123 +63,123 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
 
 
     public void init(TestResultsSummary testResultsSummary, ExpectedResults expectedResults, QueryTest query) {
-	this.query = query;
-	this.testResultsSummary = testResultsSummary;
-	this.expectedResults = expectedResults;
+    this.query = query;
+    this.testResultsSummary = testResultsSummary;
+    this.expectedResults = expectedResults;
 
-	endTS = 0;
-	beginTS = 0;
+    endTS = 0;
+    beginTS = 0;
 
-	testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
+    testStatus = TestResult.RESULT_STATE.TEST_SUCCESS;
 
-	errorExpected = false;
-	resultFromQuery = false;
+    errorExpected = false;
+    resultFromQuery = false;
 
     }
 
     public String getTestName() {
-	return query.getQueryScenarioID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
+    return query.getQueryScenarioID() + ":" + (query.getQueryID()!=null?query.getQueryID():"NA");
 
     }
 
     @Override
     public void before() {
-	// TODO Auto-generated method stub
-	super.before();
+    // TODO Auto-generated method stub
+    super.before();
 
 
-	try {
-	    this.errorExpected = expectedResults
-		    .isExceptionExpected(query.getQueryID());
-	} catch (QueryTestFailedException e) {
-	    // TODO Auto-generated catch block
-	    throw new TransactionRuntimeException("ProgramError: "
-		    + e.getMessage());
-	}
+    try {
+        this.errorExpected = expectedResults
+            .isExceptionExpected(query.getQueryID());
+    } catch (QueryTestFailedException e) {
+        // TODO Auto-generated catch block
+        throw new TransactionRuntimeException("ProgramError: "
+            + e.getMessage());
+    }
 
     }
 
 
     @Override
     public void testCase() throws Exception {
-	TestLogger.logDebug("expected error: " + this.errorExpected);
-	TestLogger.logInfo("ID: " + query.geQuerySetID() + "  -  " + query.getQueryID());
+    TestLogger.logDebug("expected error: " + this.errorExpected);
+    TestLogger.logInfo("ID: " + query.geQuerySetID() + "  -  " + query.getQueryID());
 
-	QuerySQL[] queries = query.getQueries();
-	int l = queries.length;
+    QuerySQL[] queries = query.getQueries();
+    int l = queries.length;
 
-	try {
-	    // need to set this so the underlying query execution handles an
-	    // error properly.
+    try {
+        // need to set this so the underlying query execution handles an
+        // error properly.
 
-	    beginTS = System.currentTimeMillis();
+        beginTS = System.currentTimeMillis();
 
-	    for (int i= 0; i < l; i++) {
-		QuerySQL qsql = queries[i];
-		this.sql = qsql.getSql();
-		resultFromQuery = execute(sql, qsql.getParms());
-		if (qsql.getUpdateCnt() >= 0) {
-		    this.assertUpdateCount(qsql.getUpdateCnt());
+        for (int i= 0; i < l; i++) {
+        QuerySQL qsql = queries[i];
+        this.sql = qsql.getSql();
+        resultFromQuery = execute(sql, qsql.getParms());
+        if (qsql.getUpdateCnt() >= 0) {
+            this.assertUpdateCount(qsql.getUpdateCnt());
 
-		} else if (qsql.getRowCnt() >= 0) {
-		    this.assertRowCount(qsql.getRowCnt());
+        } else if (qsql.getRowCnt() >= 0) {
+            this.assertRowCount(qsql.getRowCnt());
 
-		}
+        }
 
-	    }
+        }
 
-	} catch (Throwable t) {
-	    this.setApplicationException(t);
+    } catch (Throwable t) {
+        this.setApplicationException(t);
 
-	} finally {
-	    // Capture resp time
-	    endTS = System.currentTimeMillis();
-	}
+    } finally {
+        // Capture resp time
+        endTS = System.currentTimeMillis();
+    }
 
     }
 
     @Override
     public void after() {
-	// TODO Auto-generated method stub
-	super.after();
-	TestResult rs = null;
+    // TODO Auto-generated method stub
+    super.after();
+    TestResult rs = null;
 
-	Throwable resultException = null;
+    Throwable resultException = null;
 
-	resultException = (this.getLastException() != null ? this
-		    .getLastException() : this.getApplicationException());
+    resultException = (this.getLastException() != null ? this
+            .getLastException() : this.getApplicationException());
 
 
-	if (resultException != null) {
-	    if (this.exceptionExpected()) {
-		testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
-	    } else {
-		testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
-	    }
+    if (resultException != null) {
+        if (this.exceptionExpected()) {
+        testStatus = TestResult.RESULT_STATE.TEST_EXPECTED_EXCEPTION;
+        } else {
+        testStatus = TestResult.RESULT_STATE.TEST_EXCEPTION;
+        }
 
-	}
+    }
 
-	rs = new TestResultStat(query.geQuerySetID(), query.getQueryID(), sql,
-		testStatus, beginTS, endTS, resultException, null);
+    rs = new TestResultStat(query.geQuerySetID(), query.getQueryID(), sql,
+        testStatus, beginTS, endTS, resultException, null);
 
-	this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
+    this.testResultsSummary.addTestResult(query.geQuerySetID(), rs);
 
-	this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
+    this.querySet.handleTestResult(rs, this.internalResultSet, this.updateCount, resultFromQuery, sql);
 
     }
 
 
     @Override
     protected Statement createStatement() throws SQLException {
-	return this.internalConnection.createStatement(
-		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+    return this.internalConnection.createStatement(
+        ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
     }
 
     // need to override this method because the abstract logic for throwing
     // exceptions depends on this
     @Override
     public boolean exceptionExpected() {
-	return this.errorExpected;
+    return this.errorExpected;
     }
 
 
@@ -194,9 +194,9 @@ public class TestClientTransaction extends AbstractQueryTransactionTest {
      */
     @Override
     public void cleanup() {
-	//
-	// NOTE: do not cleanup TestResults because {@link #getTestResult} is called
-	// after cleanup
+    //
+    // NOTE: do not cleanup TestResults because {@link #getTestResult} is called
+    // after cleanup
 
     }
 

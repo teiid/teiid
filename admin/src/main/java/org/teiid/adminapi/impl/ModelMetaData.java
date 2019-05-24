@@ -34,62 +34,62 @@ import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
 
-	private static final int DEFAULT_ERROR_HISTORY = 10;
-	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
-	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
-	private static final long serialVersionUID = 3714234763056162230L;
+    private static final int DEFAULT_ERROR_HISTORY = 10;
+    private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
+    private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
+    private static final long serialVersionUID = 3714234763056162230L;
 
-	protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();
-	protected String modelType = Type.PHYSICAL.name();
-	protected String description;
-	protected String path;
+    protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();
+    protected String modelType = Type.PHYSICAL.name();
+    protected String description;
+    protected String path;
     protected boolean visible = true;
     protected List<Message> messages;
     protected transient List<Message> runtimeMessages;
     protected List<String> sourceMetadataType = new ArrayList<String>();
-	protected List<String> sourceMetadataText = new ArrayList<String>();
-	protected MetadataStatus metadataStatus = MetadataStatus.LOADING;
+    protected List<String> sourceMetadataText = new ArrayList<String>();
+    protected MetadataStatus metadataStatus = MetadataStatus.LOADING;
 
-	@Override
-	public String getDescription() {
-		return description;
-	}
+    @Override
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	@Override
+    @Override
     public boolean isSource() {
-		return getModelType() == Model.Type.PHYSICAL;
-	}
+        return getModelType() == Model.Type.PHYSICAL;
+    }
 
-	@Override
-	public boolean isVisible() {
-		return this.visible;
-	}
+    @Override
+    public boolean isVisible() {
+        return this.visible;
+    }
 
-	@Override
-	public Type getModelType() {
-		try {
-			return Type.valueOf(modelType);
-		} catch(IllegalArgumentException e) {
-			return Type.OTHER;
-		}
-	}
+    @Override
+    public Type getModelType() {
+        try {
+            return Type.valueOf(modelType);
+        } catch(IllegalArgumentException e) {
+            return Type.OTHER;
+        }
+    }
 
     public String getPath() {
-		return path;
-	}
+        return path;
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public void setPath(String path) {
+        this.path = path;
+    }
 
-	@Override
+    @Override
     public boolean isSupportsMultiSourceBindings() {
-		return this.isSource() &&
-				(this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD)));
+        return this.isSource() &&
+                (this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD)));
     }
 
     public void setSupportsMultiSourceBindings(boolean supports) {
@@ -101,121 +101,121 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     }
 
     public void setModelType(String modelType) {
-    	if (modelType != null) {
-    		this.modelType = modelType.toUpperCase();
-    	} else {
-    		this.modelType = null;
-    	}
+        if (modelType != null) {
+            this.modelType = modelType.toUpperCase();
+        } else {
+            this.modelType = null;
+        }
     }
 
-	@Override
-	public MetadataStatus getMetadataStatus() {
-		return metadataStatus;
-	}
+    @Override
+    public MetadataStatus getMetadataStatus() {
+        return metadataStatus;
+    }
 
     public void setMetadataStatus(Model.MetadataStatus status) {
         this.metadataStatus = status;
     }
 
     public void setMetadataStatus(String status) {
-    	if (status != null) {
-    		this.metadataStatus = Model.MetadataStatus.valueOf(status);
-    	}
+        if (status != null) {
+            this.metadataStatus = Model.MetadataStatus.valueOf(status);
+        }
     }
 
     public String toString() {
-		return getName() + this.sources;
+        return getName() + this.sources;
     }
 
     public void setVisible(boolean value) {
-    	this.visible = value;
+        this.visible = value;
     }
 
-	public Collection<SourceMappingMetadata> getSourceMappings(){
-		return this.sources.values();
-	}
+    public Collection<SourceMappingMetadata> getSourceMappings(){
+        return this.sources.values();
+    }
 
-	public Map<String, SourceMappingMetadata> getSources() {
-		return sources;
-	}
+    public Map<String, SourceMappingMetadata> getSources() {
+        return sources;
+    }
 
-	public SourceMappingMetadata getSourceMapping(String sourceName){
-		return this.sources.get(sourceName);
-	}
+    public SourceMappingMetadata getSourceMapping(String sourceName){
+        return this.sources.get(sourceName);
+    }
 
-	public void setSourceMappings(List<SourceMappingMetadata> sources){
-		this.sources.clear();
-		for (SourceMappingMetadata source: sources) {
-			addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
-		}
-	}
+    public void setSourceMappings(List<SourceMappingMetadata> sources){
+        this.sources.clear();
+        for (SourceMappingMetadata source: sources) {
+            addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
+        }
+    }
 
     @Override
     public List<String> getSourceNames() {
-    	return new ArrayList<String>(this.sources.keySet());
-	}
+        return new ArrayList<String>(this.sources.keySet());
+    }
 
     @Override
     public String getSourceConnectionJndiName(String sourceName) {
-    	SourceMappingMetadata s = this.sources.get(sourceName);
-    	if (s == null) {
-    		return null;
-    	}
-    	return s.getConnectionJndiName();
-	}
+        SourceMappingMetadata s = this.sources.get(sourceName);
+        if (s == null) {
+            return null;
+        }
+        return s.getConnectionJndiName();
+    }
 
     @Override
     public String getSourceTranslatorName(String sourceName) {
-    	SourceMappingMetadata s = this.sources.get(sourceName);
-    	if (s == null) {
-    		return null;
-    	}
-    	return s.getTranslatorName();
-	}
+        SourceMappingMetadata s = this.sources.get(sourceName);
+        if (s == null) {
+            return null;
+        }
+        return s.getTranslatorName();
+    }
 
-	public SourceMappingMetadata addSourceMapping(String name, String translatorName, String connJndiName) {
-		return this.sources.put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
-	}
+    public SourceMappingMetadata addSourceMapping(String name, String translatorName, String connJndiName) {
+        return this.sources.put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
+    }
 
-	public void addSourceMapping(SourceMappingMetadata source) {
-		this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
-	}
+    public void addSourceMapping(SourceMappingMetadata source) {
+        this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
+    }
 
-	public synchronized boolean hasErrors() {
-		if (this.messages != null) {
-			for (Message error : this.messages) {
-				if (error.getSeverity() == Severity.ERROR) {
-					return true;
-				}
-			}
-		}
-		if (this.runtimeMessages != null) {
-			for (Message error : this.runtimeMessages) {
-				if (error.getSeverity() == Severity.ERROR) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+    public synchronized boolean hasErrors() {
+        if (this.messages != null) {
+            for (Message error : this.messages) {
+                if (error.getSeverity() == Severity.ERROR) {
+                    return true;
+                }
+            }
+        }
+        if (this.runtimeMessages != null) {
+            for (Message error : this.runtimeMessages) {
+                if (error.getSeverity() == Severity.ERROR) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-	public synchronized List<Message> getMessages(){
-		return getMessages(true);
-	}
+    public synchronized List<Message> getMessages(){
+        return getMessages(true);
+    }
 
-	public synchronized List<Message> getMessages(boolean includeRuntime){
-		if (this.messages == null && this.runtimeMessages == null) {
-			return Collections.emptyList();
-		}
-		List<Message> list = new ArrayList<Message>();
-		if (this.messages != null) {
-			list.addAll(messages);
-		}
-		if (includeRuntime && this.runtimeMessages != null) {
-			list.addAll(runtimeMessages);
-		}
-		return list;
-	}
+    public synchronized List<Message> getMessages(boolean includeRuntime){
+        if (this.messages == null && this.runtimeMessages == null) {
+            return Collections.emptyList();
+        }
+        List<Message> list = new ArrayList<Message>();
+        if (this.messages != null) {
+            list.addAll(messages);
+        }
+        if (includeRuntime && this.runtimeMessages != null) {
+            list.addAll(runtimeMessages);
+        }
+        return list;
+    }
 
     public Message addMessage(String severity, String message) {
         Message ve = new Message(Severity.valueOf(severity), message);
@@ -223,12 +223,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         return ve;
     }
 
-	public synchronized boolean hasRuntimeMessages(){
-		return this.runtimeMessages != null && !this.runtimeMessages.isEmpty();
-	}
+    public synchronized boolean hasRuntimeMessages(){
+        return this.runtimeMessages != null && !this.runtimeMessages.isEmpty();
+    }
 
     public synchronized Message addRuntimeError(String message) {
-    	return addRuntimeMessage(Severity.ERROR, message);
+        return addRuntimeMessage(Severity.ERROR, message);
     }
 
     public synchronized Message addRuntimeMessage(Severity severity, String message) {
@@ -238,7 +238,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         }
         this.runtimeMessages.add(ve);
         if (this.runtimeMessages.size() > DEFAULT_ERROR_HISTORY) {
-        	this.runtimeMessages.remove(0);
+            this.runtimeMessages.remove(0);
         }
         return ve;
     }
@@ -252,82 +252,82 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     }
 
     public synchronized void clearRuntimeMessages() {
-		runtimeMessages = null;
+        runtimeMessages = null;
     }
 
     public synchronized void clearMessages() {
-    	clearRuntimeMessages();
-    	this.messages = null;
+        clearRuntimeMessages();
+        this.messages = null;
     }
 
     public static class Message implements Serializable{
-		private static final long serialVersionUID = 2044197069467559527L;
+        private static final long serialVersionUID = 2044197069467559527L;
 
-		public enum Severity {ERROR, WARNING, INFO};
+        public enum Severity {ERROR, WARNING, INFO};
 
         protected String value;
         protected Severity severity;
         protected String path;
 
-		public Message() {};
+        public Message() {};
 
         public Message(Severity severity, String msg) {
-        	this.severity = severity;
-        	Assertion.isNotNull(msg);
-        	this.value = msg;
+            this.severity = severity;
+            Assertion.isNotNull(msg);
+            this.value = msg;
         }
 
         public String getValue() {
-			return value;
-		}
+            return value;
+        }
 
-		public void setValue(String value) {
-			Assertion.isNotNull(value);
-			this.value = value;
-		}
+        public void setValue(String value) {
+            Assertion.isNotNull(value);
+            this.value = value;
+        }
 
-		public Severity getSeverity() {
-			return severity;
-		}
+        public Severity getSeverity() {
+            return severity;
+        }
 
-		public void setSeverity(Severity severity) {
-			this.severity = severity;
-		}
+        public void setSeverity(Severity severity) {
+            this.severity = severity;
+        }
 
         public String getPath() {
-			return path;
-		}
+            return path;
+        }
 
-		public void setPath(String path) {
-			this.path = path;
-		}
+        public void setPath(String path) {
+            this.path = path;
+        }
 
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Message other = (Message) obj;
-			if (severity == null) {
-				if (other.severity != null)
-					return false;
-			} else if (!severity.equals(other.severity))
-				return false;
-			if (value == null) {
-				if (other.value != null)
-					return false;
-			} else if (!value.equals(other.value))
-				return false;
-			return true;
-		}
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Message other = (Message) obj;
+            if (severity == null) {
+                if (other.severity != null)
+                    return false;
+            } else if (!severity.equals(other.severity))
+                return false;
+            if (value == null) {
+                if (other.value != null)
+                    return false;
+            } else if (!value.equals(other.value))
+                return false;
+            return true;
+        }
     }
 
     public void addSourceMetadata(String type, String text) {
-    	this.sourceMetadataType.add(type);
-    	this.sourceMetadataText.add(text);
+        this.sourceMetadataType.add(type);
+        this.sourceMetadataText.add(text);
     }
 
     /**
@@ -335,68 +335,68 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
      */
     @Deprecated
     public String getSchemaSourceType() {
-    	if (!sourceMetadataType.isEmpty()) {
-    		return sourceMetadataType.get(0);
-    	}
-    	return null;
-	}
+        if (!sourceMetadataType.isEmpty()) {
+            return sourceMetadataType.get(0);
+        }
+        return null;
+    }
 
     /**
      * @see #addSourceMetadata(String, String)
      */
     @Deprecated
-	public void setSchemaSourceType(String schemaSourceType) {
-		if (!sourceMetadataType.isEmpty()) {
-			sourceMetadataType.set(0, schemaSourceType);
-		} else {
-			sourceMetadataType.add(schemaSourceType);
-		}
-	}
+    public void setSchemaSourceType(String schemaSourceType) {
+        if (!sourceMetadataType.isEmpty()) {
+            sourceMetadataType.set(0, schemaSourceType);
+        } else {
+            sourceMetadataType.add(schemaSourceType);
+        }
+    }
 
     /**
      * @see #getSourceMetadataText()
      */
     @Deprecated
-	public String getSchemaText() {
-		if (!sourceMetadataText.isEmpty()) {
-    		return sourceMetadataText.get(0);
-    	}
-    	return null;
-	}
+    public String getSchemaText() {
+        if (!sourceMetadataText.isEmpty()) {
+            return sourceMetadataText.get(0);
+        }
+        return null;
+    }
 
     /**
      * @see #addSourceMetadata(String, String)
      */
     @Deprecated
-	public void setSchemaText(String schemaText) {
-		if (!sourceMetadataText.isEmpty()) {
-			sourceMetadataText.set(0, schemaText);
-		} else {
-			sourceMetadataText.add(schemaText);
-		}
-	}
+    public void setSchemaText(String schemaText) {
+        if (!sourceMetadataText.isEmpty()) {
+            sourceMetadataText.set(0, schemaText);
+        } else {
+            sourceMetadataText.add(schemaText);
+        }
+    }
 
     public List<String> getSourceMetadataType() {
-		return sourceMetadataType;
-	}
+        return sourceMetadataType;
+    }
 
     public List<String> getSourceMetadataText() {
-		return sourceMetadataText;
-	}
+        return sourceMetadataText;
+    }
 
-	@Override
-	public List<String> getValidityErrors() {
-		List<String> allErrors = new ArrayList<String>();
-		List<Message> errors = getMessages();
-		if (errors != null && !errors.isEmpty()) {
-			for (Message m:errors) {
-				if (m.getSeverity() == Severity.ERROR) {
-					allErrors.add(m.getValue());
-				}
-			}
-		}
-		return allErrors;
-	}
+    @Override
+    public List<String> getValidityErrors() {
+        List<String> allErrors = new ArrayList<String>();
+        List<Message> errors = getMessages();
+        if (errors != null && !errors.isEmpty()) {
+            for (Message m:errors) {
+                if (m.getSeverity() == Severity.ERROR) {
+                    allErrors.add(m.getValue());
+                }
+            }
+        }
+        return allErrors;
+    }
 
 
 

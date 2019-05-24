@@ -23,39 +23,39 @@ import org.teiid.core.types.TransformationException;
 
 public class NumberToIntegerTransform extends NumberToNumberTransform {
 
-	private boolean isNarrowing;
+    private boolean isNarrowing;
 
-	public NumberToIntegerTransform(Class<?> sourceType, boolean isNarrowing) {
-		super(Integer.MIN_VALUE, Integer.MAX_VALUE, sourceType);
-		this.isNarrowing = isNarrowing;
-	}
+    public NumberToIntegerTransform(Class<?> sourceType, boolean isNarrowing) {
+        super(Integer.MIN_VALUE, Integer.MAX_VALUE, sourceType);
+        this.isNarrowing = isNarrowing;
+    }
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		if (isNarrowing) {
-			checkValueRange(value);
-		}
-		return Integer.valueOf(((Number)value).intValue());
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        if (isNarrowing) {
+            checkValueRange(value);
+        }
+        return Integer.valueOf(((Number)value).intValue());
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DataTypeManager.DefaultDataClasses.INTEGER;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DataTypeManager.DefaultDataClasses.INTEGER;
+    }
 
-	@Override
-	public boolean isExplicit() {
-		return isNarrowing;
-	}
+    @Override
+    public boolean isExplicit() {
+        return isNarrowing;
+    }
 
 }

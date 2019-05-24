@@ -73,26 +73,26 @@ import com.sforce.ws.transport.JdkHttpTransport;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 
-	private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
+    private static final String ID_FIELD_NAME = "id"; //$NON-NLS-1$
     private static final String PK_CHUNKING_HEADER = "Sforce-Enable-PKChunking"; //$NON-NLS-1$
     private static final int MAX_CHUNK_SIZE = 100000;
-	private BulkConnection bulkConnection;
-	private PartnerConnection partnerConnection;
-	private SalesforceConnectorConfig config;
-	private String restEndpoint;
-	private String apiVersion;
-	private int pollingInterval = 500; //TODO: this could be configurable
+    private BulkConnection bulkConnection;
+    private PartnerConnection partnerConnection;
+    private SalesforceConnectorConfig config;
+    private String restEndpoint;
+    private String apiVersion;
+    private int pollingInterval = 500; //TODO: this could be configurable
 
-	public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		login(mcf);
-	}
+    public SalesforceConnectionImpl(SalesForceManagedConnectionFactory mcf) throws ResourceException {
+        login(mcf);
+    }
 
-	SalesforceConnectionImpl(PartnerConnection partnerConnection) {
-		this.partnerConnection = partnerConnection;
-	}
+    SalesforceConnectionImpl(PartnerConnection partnerConnection) {
+        this.partnerConnection = partnerConnection;
+    }
 
-	private void login(SalesForceManagedConnectionFactory mcf) throws ResourceException {
-	    config = new SalesforceConnectorConfig();
+    private void login(SalesForceManagedConnectionFactory mcf) throws ResourceException {
+        config = new SalesforceConnectorConfig();
         String username = mcf.getUsername();
         String password = mcf.getPassword();
 
@@ -111,25 +111,25 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
             }
         }
 
-		config.setCxfConfigFile(mcf.getConfigFile());
-		if (useCXFTransport) {
-		    config.setTransport(SalesforceCXFTransport.class);
-		}
+        config.setCxfConfigFile(mcf.getConfigFile());
+        if (useCXFTransport) {
+            config.setTransport(SalesforceCXFTransport.class);
+        }
 
         config.setCompression(true);
         config.setTraceMessage(false);
 
-		//set the catch all properties
-		String props = mcf.getConfigProperties();
-		if (props != null) {
-			Properties p = new Properties();
-			try {
-				p.load(new StringReader(props));
-			} catch (IOException e) {
-				throw new ResourceException(e);
-			}
-			PropertiesUtils.setBeanProperties(config, p, null);
-		}
+        //set the catch all properties
+        String props = mcf.getConfigProperties();
+        if (props != null) {
+            Properties p = new Properties();
+            try {
+                p.load(new StringReader(props));
+            } catch (IOException e) {
+                throw new ResourceException(e);
+            }
+            PropertiesUtils.setBeanProperties(config, p, null);
+        }
 
         config.setUsername(username);
         config.setPassword(password);
@@ -137,214 +137,214 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
         //set proxy if needed
         if (mcf.getProxyURL() != null) {
-			try {
-				URL proxyURL = new URL(mcf.getProxyURL());
-				config.setProxy(proxyURL.getHost(), proxyURL.getPort());
-		        config.setProxyUsername(mcf.getProxyUsername());
-		        config.setProxyPassword(mcf.getProxyPassword());
-			} catch (MalformedURLException e) {
-				throw new ResourceException(e);
-			}
+            try {
+                URL proxyURL = new URL(mcf.getProxyURL());
+                config.setProxy(proxyURL.getHost(), proxyURL.getPort());
+                config.setProxyUsername(mcf.getProxyUsername());
+                config.setProxyPassword(mcf.getProxyPassword());
+            } catch (MalformedURLException e) {
+                throw new ResourceException(e);
+            }
         }
         if (mcf.getConnectTimeout() != null) {
-        	config.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
+            config.setConnectionTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getConnectTimeout()));
         }
         if (mcf.getRequestTimeout() != null) {
-        	config.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
+            config.setReadTimeout((int) Math.min(Integer.MAX_VALUE, mcf.getRequestTimeout()));
         }
 
         try {
-	        partnerConnection = new TeiidPartnerConnection(config);
+            partnerConnection = new TeiidPartnerConnection(config);
 
-	        String endpoint = config.getServiceEndpoint();
-	        // The endpoint for the Bulk API service is the same as for the normal
-	        // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
-	        int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
-	        int endIndex = endpoint.indexOf('/', index+7);
-	        apiVersion = endpoint.substring(index+7,endIndex);
-	        String bulkEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
-	        config.setRestEndpoint(bulkEndpoint);
-			// This value identifies Teiid as a SF certified solution.
-			// It was provided by SF and should not be changed.
-	        partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
-	        bulkConnection = new BulkConnection(config);
-			// Test the connection.
-			partnerConnection.getUserInfo();
-			restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            String endpoint = config.getServiceEndpoint();
+            // The endpoint for the Bulk API service is the same as for the normal
+            // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
+            int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
+            int endIndex = endpoint.indexOf('/', index+7);
+            apiVersion = endpoint.substring(index+7,endIndex);
+            String bulkEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
+            config.setRestEndpoint(bulkEndpoint);
+            // This value identifies Teiid as a SF certified solution.
+            // It was provided by SF and should not be changed.
+            partnerConnection.setCallOptions("RedHat/MetaMatrix/", null); //$NON-NLS-1$
+            bulkConnection = new BulkConnection(config);
+            // Test the connection.
+            partnerConnection.getUserInfo();
+            restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "data/" + "v30.0";//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (AsyncApiException e) {
-        	throw new ResourceException(e);
+            throw new ResourceException(e);
         } catch (ConnectionException e) {
-        	throw new ResourceException(e);
-		}
+            throw new ResourceException(e);
+        }
 
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username", username); //$NON-NLS-1$
-	}
+        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username", username); //$NON-NLS-1$
+    }
 
-	@Override
-	public Long getCardinality(String sobject) throws TranslatorException {
-		InputStream is = null;
-		try {
-			is = doRestHttpGet(new URL(restEndpoint + "/query/?explain=select+id+from+" + URLEncoder.encode(sobject, "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
-			String s = ObjectConverterUtil.convertToString(new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
-			//TODO: introduce a json parser
-			int index = s.indexOf("cardinality"); //$NON-NLS-1$
-			if (index < 0) {
-				return null;
-			}
-			index = s.indexOf(":", index); //$NON-NLS-1$
-			if (index < 0) {
-				return null;
-			}
-			int end = s.indexOf(",", index); //$NON-NLS-1$
-			if (end < 0) {
-				end = s.indexOf("}", index); //$NON-NLS-1$
-			}
-			if (end < 0) {
-				return null;
-			}
-			s = s.substring(index+1, end);
-			return Long.valueOf(s);
-		} catch (NumberFormatException e) {
-			throw new TranslatorException(e);
-		} catch (MalformedURLException e) {
-			throw new TranslatorException(e);
-		} catch (UnsupportedEncodingException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		} finally {
-			if (is != null) {
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-			}
-		}
-	}
+    @Override
+    public Long getCardinality(String sobject) throws TranslatorException {
+        InputStream is = null;
+        try {
+            is = doRestHttpGet(new URL(restEndpoint + "/query/?explain=select+id+from+" + URLEncoder.encode(sobject, "UTF-8"))); //$NON-NLS-1$ //$NON-NLS-2$
+            String s = ObjectConverterUtil.convertToString(new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+            //TODO: introduce a json parser
+            int index = s.indexOf("cardinality"); //$NON-NLS-1$
+            if (index < 0) {
+                return null;
+            }
+            index = s.indexOf(":", index); //$NON-NLS-1$
+            if (index < 0) {
+                return null;
+            }
+            int end = s.indexOf(",", index); //$NON-NLS-1$
+            if (end < 0) {
+                end = s.indexOf("}", index); //$NON-NLS-1$
+            }
+            if (end < 0) {
+                return null;
+            }
+            s = s.substring(index+1, end);
+            return Long.valueOf(s);
+        } catch (NumberFormatException e) {
+            throw new TranslatorException(e);
+        } catch (MalformedURLException e) {
+            throw new TranslatorException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+    }
 
-	private InputStream doRestHttpGet(URL url) throws IOException {
-		HttpURLConnection connection = JdkHttpTransport.createConnection(config, url, null);
-		connection.setRequestProperty("Authorization", "Bearer " + config.getSessionId()); //$NON-NLS-1$ //$NON-NLS-2$
+    private InputStream doRestHttpGet(URL url) throws IOException {
+        HttpURLConnection connection = JdkHttpTransport.createConnection(config, url, null);
+        connection.setRequestProperty("Authorization", "Bearer " + config.getSessionId()); //$NON-NLS-1$ //$NON-NLS-2$
 
-		InputStream in = connection.getInputStream();
+        InputStream in = connection.getInputStream();
 
-		String encoding = connection.getHeaderField("Content-Encoding"); //$NON-NLS-1$
-		if ("gzip".equals(encoding)) { //$NON-NLS-1$
-			in = new GZIPInputStream(in);
-		}
+        String encoding = connection.getHeaderField("Content-Encoding"); //$NON-NLS-1$
+        if ("gzip".equals(encoding)) { //$NON-NLS-1$
+            in = new GZIPInputStream(in);
+        }
 
-		return in;
-	}
+        return in;
+    }
 
-	public boolean isValid() {
-		if(partnerConnection != null) {
-			try {
-				partnerConnection.getServerTimestamp();
-				return true;
-			} catch (Throwable t) {
-				LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Caught Throwable in isAlive", t); //$NON-NLS-1$
-			}
-		}
-		return false;
-	}
+    public boolean isValid() {
+        if(partnerConnection != null) {
+            try {
+                partnerConnection.getServerTimestamp();
+                return true;
+            } catch (Throwable t) {
+                LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Caught Throwable in isAlive", t); //$NON-NLS-1$
+            }
+        }
+        return false;
+    }
 
-	public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
+    public QueryResult query(String queryString, int batchSize, boolean queryAll) throws TranslatorException {
 
-		if(batchSize > 2000) {
-			batchSize = 2000;
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
-		}
+        if(batchSize > 2000) {
+            batchSize = 2000;
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
+        }
 
-		QueryResult qr = null;
-		partnerConnection.setQueryOptions(batchSize);
-		try {
-			if(queryAll) {
-				qr = partnerConnection.queryAll(queryString);
-			} else {
-				partnerConnection.setMruHeader(false);
-				qr = partnerConnection.query(queryString);
-			}
-		} catch (InvalidFieldFault e) {
-			throw new TranslatorException(e);
-		} catch (MalformedQueryFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidSObjectFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidIdFault e) {
-			throw new TranslatorException(e);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidQueryLocatorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		} finally {
-			partnerConnection.clearMruHeader();
-			partnerConnection.clearQueryOptions();
-		}
-		return qr;
-	}
+        QueryResult qr = null;
+        partnerConnection.setQueryOptions(batchSize);
+        try {
+            if(queryAll) {
+                qr = partnerConnection.queryAll(queryString);
+            } else {
+                partnerConnection.setMruHeader(false);
+                qr = partnerConnection.query(queryString);
+            }
+        } catch (InvalidFieldFault e) {
+            throw new TranslatorException(e);
+        } catch (MalformedQueryFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidSObjectFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidIdFault e) {
+            throw new TranslatorException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidQueryLocatorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        } finally {
+            partnerConnection.clearMruHeader();
+            partnerConnection.clearQueryOptions();
+        }
+        return qr;
+    }
 
-	public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
-		if(batchSize > 2000) {
-			batchSize = 2000;
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
-		}
+    public QueryResult queryMore(String queryLocator, int batchSize) throws TranslatorException {
+        if(batchSize > 2000) {
+            batchSize = 2000;
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "reduced.batch.size"); //$NON-NLS-1$
+        }
 
-		partnerConnection.setQueryOptions(batchSize);
-		try {
-			return partnerConnection.queryMore(queryLocator);
-		} catch (InvalidFieldFault e) {
-			throw new TranslatorException(e);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidQueryLocatorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		} finally {
-			partnerConnection.clearQueryOptions();
-		}
+        partnerConnection.setQueryOptions(batchSize);
+        try {
+            return partnerConnection.queryMore(queryLocator);
+        } catch (InvalidFieldFault e) {
+            throw new TranslatorException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidQueryLocatorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        } finally {
+            partnerConnection.clearQueryOptions();
+        }
 
-	}
+    }
 
-	public int delete(String[] ids) throws TranslatorException {
-		DeleteResult[] results = null;
-		try {
-			results = partnerConnection.delete(ids);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		}
+    public int delete(String[] ids) throws TranslatorException {
+        DeleteResult[] results = null;
+        try {
+            results = partnerConnection.delete(ids);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        }
 
-		boolean allGood = true;
-		StringBuffer errorMessages = new StringBuffer();
-		for(int i = 0; i < results.length; i++) {
-			DeleteResult result = results[i];
-			if(!result.isSuccess()) {
-				if(allGood) {
-					errorMessages.append("Error(s) executing DELETE: "); //$NON-NLS-1$
-					allGood = false;
-				}
-				Error[] errors = result.getErrors();
-				if(null != errors && errors.length > 0) {
-					for(int x = 0; x < errors.length; x++) {
-						Error error = errors[x];
-						errorMessages.append(error.getMessage()).append(';');
-					}
-				}
+        boolean allGood = true;
+        StringBuffer errorMessages = new StringBuffer();
+        for(int i = 0; i < results.length; i++) {
+            DeleteResult result = results[i];
+            if(!result.isSuccess()) {
+                if(allGood) {
+                    errorMessages.append("Error(s) executing DELETE: "); //$NON-NLS-1$
+                    allGood = false;
+                }
+                Error[] errors = result.getErrors();
+                if(null != errors && errors.length > 0) {
+                    for(int x = 0; x < errors.length; x++) {
+                        Error error = errors[x];
+                        errorMessages.append(error.getMessage()).append(';');
+                    }
+                }
 
-			}
-		}
-		if(!allGood) {
-			throw new TranslatorException(errorMessages.toString());
-		}
-		return results.length;
-	}
+            }
+        }
+        if(!allGood) {
+            throw new TranslatorException(errorMessages.toString());
+        }
+        return results.length;
+    }
 
-	public int upsert(DataPayload data) throws TranslatorException {
-	    SObject toCreate = new SObject();
+    public int upsert(DataPayload data) throws TranslatorException {
+        SObject toCreate = new SObject();
         toCreate.setType(data.getType());
         for (DataPayload.Field field : data.getMessageElements()) {
             toCreate.addField(field.name, field.value);
@@ -370,282 +370,282 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
             }
         }
         return results.length;
-	}
+    }
 
-	public int create(DataPayload data) throws TranslatorException {
-		SObject toCreate = new SObject();
-		toCreate.setType(data.getType());
-		for (DataPayload.Field field : data.getMessageElements()) {
-			toCreate.addField(field.name, field.value);
-		}
-		SObject[] objects = new SObject[] {toCreate};
-		SaveResult[] result;
-		try {
-			result = partnerConnection.create(objects);
-		} catch (InvalidFieldFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidSObjectFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidIdFault e) {
-			throw new TranslatorException(e);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		}
-		return analyzeResult(result);
-	}
-
-	public int update(List<DataPayload> updateDataList) throws TranslatorException {
-		List<SObject> params = new ArrayList<SObject>(updateDataList.size());
-		for(int i = 0; i < updateDataList.size(); i++) {
-			DataPayload data = updateDataList.get(i);
-			SObject toCreate = new SObject();
-			toCreate.setType(data.getType());
-			toCreate.setId(data.getID());
-			for (DataPayload.Field field : data.getMessageElements()) {
-				toCreate.addField(field.name, field.value);
-			}
-			params.add(i, toCreate);
-		}
-		SaveResult[] result;
-			try {
-				result = partnerConnection.update(params.toArray(new SObject[params.size()]));
-			} catch (InvalidFieldFault e) {
-				throw new TranslatorException(e);
-			} catch (InvalidSObjectFault e) {
-				throw new TranslatorException(e);
-			} catch (InvalidIdFault e) {
-				throw new TranslatorException(e);
-			} catch (UnexpectedErrorFault e) {
-				throw new TranslatorException(e);
-			} catch (ConnectionException e) {
-				throw new TranslatorException(e);
-			}
-		return analyzeResult(result);
-	}
-
-	private int analyzeResult(SaveResult[] results) throws TranslatorException {
-		for (SaveResult result : results) {
-			if(!result.isSuccess()) {
-				throw new TranslatorException(result.getErrors()[0].getMessage());
-			}
-		}
-		return results.length;
-	}
-
-	public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws TranslatorException {
-			GetUpdatedResult updated;
-			try {
-				updated = partnerConnection.getUpdated(objectType, startDate, endDate);
-			} catch (InvalidSObjectFault e) {
-				throw new TranslatorException(e);
-			} catch (UnexpectedErrorFault e) {
-				throw new TranslatorException(e);
-			} catch (ConnectionException e) {
-				throw new TranslatorException(e);
-			}
-			UpdatedResult result = new UpdatedResult();
-			result.setLatestDateCovered(updated.getLatestDateCovered());
-			result.setIDs(Arrays.asList(updated.getIds()));
-			return result;
-	}
-
-	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
-			Calendar endCalendar) throws TranslatorException {
-			GetDeletedResult deleted;
-			try {
-				deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
-			} catch (InvalidSObjectFault e) {
-				throw new TranslatorException(e);
-			} catch (UnexpectedErrorFault e) {
-				throw new TranslatorException(e);
-			} catch (ConnectionException e) {
-				throw new TranslatorException(e);
-			}
-			DeletedResult result = new DeletedResult();
-			result.setLatestDateCovered(deleted.getLatestDateCovered());
-			result.setEarliestDateAvailable(deleted.getEarliestDateAvailable());
-			DeletedRecord[] records = deleted.getDeletedRecords();
-			List<DeletedObject> resultRecords = new ArrayList<DeletedObject>();
-			if(records != null) {
-				for (DeletedRecord record : records) {
-					DeletedObject object = new DeletedObject();
-					object.setID(record.getId());
-					object.setDeletedDate(record.getDeletedDate());
-					resultRecords.add(object);
-				}
-			}
-			result.setResultRecords(resultRecords);
-			return result;
-	}
-
-	public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
-		try {
-			return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
-		} catch (InvalidFieldFault e) {
-			throw new TranslatorException(e);
-		} catch (MalformedQueryFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidSObjectFault e) {
-			throw new TranslatorException(e);
-		} catch (InvalidIdFault e) {
-			throw new TranslatorException(e);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		}
-
-	}
-
-	public DescribeGlobalResult getObjects() throws TranslatorException {
-		try {
-			return partnerConnection.describeGlobal();
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		}
-	}
-
-	public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
-		try {
-			return partnerConnection.describeSObjects(objectName);
-		} catch (InvalidSObjectFault e) {
-			throw new TranslatorException(e);
-		} catch (UnexpectedErrorFault e) {
-			throw new TranslatorException(e);
-		} catch (ConnectionException e) {
-			throw new TranslatorException(e);
-		}
-	}
-
-	@Override
-	public void close() throws ResourceException {
-
-	}
-
-	@Override
-	public boolean isAlive() {
-		return isValid();
-	}
-
-	@Override
-	public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException {
+    public int create(DataPayload data) throws TranslatorException {
+        SObject toCreate = new SObject();
+        toCreate.setType(data.getType());
+        for (DataPayload.Field field : data.getMessageElements()) {
+            toCreate.addField(field.name, field.value);
+        }
+        SObject[] objects = new SObject[] {toCreate};
+        SaveResult[] result;
         try {
-			JobInfo job = new JobInfo();
-			job.setObject(objectName);
-			job.setOperation(operation);
-			job.setContentType((operation==OperationEnum.insert||operation==OperationEnum.upsert)?ContentType.XML:ContentType.CSV);
-			if (operation==OperationEnum.upsert) {
-			    job.setExternalIdFieldName(ID_FIELD_NAME);
-			}
-			job.setConcurrencyMode(ConcurrencyMode.Parallel);
-			if (operation == OperationEnum.query && usePkChunking) {
-			    this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
-			}
-			JobInfo info = this.bulkConnection.createJob(job);
-			//reset the header
-			if (operation == OperationEnum.query) {
-			    this.bulkConnection = new BulkConnection(config);
-			}
-			return info;
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+            result = partnerConnection.create(objects);
+        } catch (InvalidFieldFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidSObjectFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidIdFault e) {
+            throw new TranslatorException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        }
+        return analyzeResult(result);
+    }
 
-	@Override
-	public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws TranslatorException {
-		try {
-			BatchRequest request = this.bulkConnection.createBatch(job);
-			request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
-			return request.completeRequest().getId();
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    public int update(List<DataPayload> updateDataList) throws TranslatorException {
+        List<SObject> params = new ArrayList<SObject>(updateDataList.size());
+        for(int i = 0; i < updateDataList.size(); i++) {
+            DataPayload data = updateDataList.get(i);
+            SObject toCreate = new SObject();
+            toCreate.setType(data.getType());
+            toCreate.setId(data.getID());
+            for (DataPayload.Field field : data.getMessageElements()) {
+                toCreate.addField(field.name, field.value);
+            }
+            params.add(i, toCreate);
+        }
+        SaveResult[] result;
+            try {
+                result = partnerConnection.update(params.toArray(new SObject[params.size()]));
+            } catch (InvalidFieldFault e) {
+                throw new TranslatorException(e);
+            } catch (InvalidSObjectFault e) {
+                throw new TranslatorException(e);
+            } catch (InvalidIdFault e) {
+                throw new TranslatorException(e);
+            } catch (UnexpectedErrorFault e) {
+                throw new TranslatorException(e);
+            } catch (ConnectionException e) {
+                throw new TranslatorException(e);
+            }
+        return analyzeResult(result);
+    }
 
-	@Override
-	public BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException {
-		try {
-			BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
-			return new BatchResultInfo(batch.getId());
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    private int analyzeResult(SaveResult[] results) throws TranslatorException {
+        for (SaveResult result : results) {
+            if(!result.isSuccess()) {
+                throw new TranslatorException(result.getErrors()[0].getMessage());
+            }
+        }
+        return results.length;
+    }
 
-	@Override
-	public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws TranslatorException {
-		if (info.getResultList() == null && info.getPkBatches() == null) {
-			try {
-				BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
+    public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws TranslatorException {
+            GetUpdatedResult updated;
+            try {
+                updated = partnerConnection.getUpdated(objectType, startDate, endDate);
+            } catch (InvalidSObjectFault e) {
+                throw new TranslatorException(e);
+            } catch (UnexpectedErrorFault e) {
+                throw new TranslatorException(e);
+            } catch (ConnectionException e) {
+                throw new TranslatorException(e);
+            }
+            UpdatedResult result = new UpdatedResult();
+            result.setLatestDateCovered(updated.getLatestDateCovered());
+            result.setIDs(Arrays.asList(updated.getIds()));
+            return result;
+    }
+
+    public DeletedResult getDeleted(String objectName, Calendar startCalendar,
+            Calendar endCalendar) throws TranslatorException {
+            GetDeletedResult deleted;
+            try {
+                deleted = partnerConnection.getDeleted(objectName, startCalendar, endCalendar);
+            } catch (InvalidSObjectFault e) {
+                throw new TranslatorException(e);
+            } catch (UnexpectedErrorFault e) {
+                throw new TranslatorException(e);
+            } catch (ConnectionException e) {
+                throw new TranslatorException(e);
+            }
+            DeletedResult result = new DeletedResult();
+            result.setLatestDateCovered(deleted.getLatestDateCovered());
+            result.setEarliestDateAvailable(deleted.getEarliestDateAvailable());
+            DeletedRecord[] records = deleted.getDeletedRecords();
+            List<DeletedObject> resultRecords = new ArrayList<DeletedObject>();
+            if(records != null) {
+                for (DeletedRecord record : records) {
+                    DeletedObject object = new DeletedObject();
+                    object.setID(record.getId());
+                    object.setDeletedDate(record.getDeletedDate());
+                    resultRecords.add(object);
+                }
+            }
+            result.setResultRecords(resultRecords);
+            return result;
+    }
+
+    public SObject[] retrieve(String fieldList, String sObjectType, List<String> ids) throws TranslatorException {
+        try {
+            return partnerConnection.retrieve(fieldList, sObjectType, ids.toArray(new String[ids.size()]));
+        } catch (InvalidFieldFault e) {
+            throw new TranslatorException(e);
+        } catch (MalformedQueryFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidSObjectFault e) {
+            throw new TranslatorException(e);
+        } catch (InvalidIdFault e) {
+            throw new TranslatorException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        }
+
+    }
+
+    public DescribeGlobalResult getObjects() throws TranslatorException {
+        try {
+            return partnerConnection.describeGlobal();
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    public DescribeSObjectResult[] getObjectMetaData(String... objectName) throws TranslatorException {
+        try {
+            return partnerConnection.describeSObjects(objectName);
+        } catch (InvalidSObjectFault e) {
+            throw new TranslatorException(e);
+        } catch (UnexpectedErrorFault e) {
+            throw new TranslatorException(e);
+        } catch (ConnectionException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public void close() throws ResourceException {
+
+    }
+
+    @Override
+    public boolean isAlive() {
+        return isValid();
+    }
+
+    @Override
+    public JobInfo createBulkJob(String objectName, OperationEnum operation, boolean usePkChunking) throws TranslatorException {
+        try {
+            JobInfo job = new JobInfo();
+            job.setObject(objectName);
+            job.setOperation(operation);
+            job.setContentType((operation==OperationEnum.insert||operation==OperationEnum.upsert)?ContentType.XML:ContentType.CSV);
+            if (operation==OperationEnum.upsert) {
+                job.setExternalIdFieldName(ID_FIELD_NAME);
+            }
+            job.setConcurrencyMode(ConcurrencyMode.Parallel);
+            if (operation == OperationEnum.query && usePkChunking) {
+                this.bulkConnection.addHeader(PK_CHUNKING_HEADER, "chunkSize=" + MAX_CHUNK_SIZE); //$NON-NLS-1$
+            }
+            JobInfo info = this.bulkConnection.createJob(job);
+            //reset the header
+            if (operation == OperationEnum.query) {
+                this.bulkConnection = new BulkConnection(config);
+            }
+            return info;
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public String addBatch(List<com.sforce.async.SObject> payload, JobInfo job) throws TranslatorException {
+        try {
+            BatchRequest request = this.bulkConnection.createBatch(job);
+            request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
+            return request.completeRequest().getId();
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public BatchResultInfo addBatch(String query, JobInfo job) throws TranslatorException {
+        try {
+            BatchInfo batch = this.bulkConnection.createBatchFromStream(job, new ByteArrayInputStream(query.getBytes(Charset.forName("UTF-8")))); //$NON-NLS-1$
+            return new BatchResultInfo(batch.getId());
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
+
+    @Override
+    public BulkBatchResult getBatchQueryResults(String jobId, BatchResultInfo info) throws TranslatorException {
+        if (info.getResultList() == null && info.getPkBatches() == null) {
+            try {
+                BatchInfo batch = this.bulkConnection.getBatchInfo(jobId, info.getBatchId());
                 switch (batch.getState()) {
-    				case NotProcessed:
+                    case NotProcessed:
                         // we need more checks to ensure that chunking is being used.  since
-    				    // we don't know, then we'll explicitly check
-    				    JobInfo jobStatus = this.bulkConnection.getJobStatus(jobId);
-    				    if (jobStatus.getState() == JobStateEnum.Aborted) {
+                        // we don't know, then we'll explicitly check
+                        JobInfo jobStatus = this.bulkConnection.getJobStatus(jobId);
+                        if (jobStatus.getState() == JobStateEnum.Aborted) {
                             throw new TranslatorException(JobStateEnum.Aborted.name());
                         }
-    				    BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
-    				    LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Pk chunk batches", batchInfoList); //$NON-NLS-1$
-    				    BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
-    				    LinkedHashMap<String, BatchInfo> pkBactches = new LinkedHashMap<String, BatchInfo>();
-    				    boolean anyComplete = false;
-    		            for (int i = 0; i < batchInfo.length; i++) {
-    		                BatchInfo batchInfoItem = batchInfo[i];
+                        BatchInfoList batchInfoList = this.bulkConnection.getBatchInfoList(jobId);
+                        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Pk chunk batches", batchInfoList); //$NON-NLS-1$
+                        BatchInfo[] batchInfo = batchInfoList.getBatchInfo();
+                        LinkedHashMap<String, BatchInfo> pkBactches = new LinkedHashMap<String, BatchInfo>();
+                        boolean anyComplete = false;
+                        for (int i = 0; i < batchInfo.length; i++) {
+                            BatchInfo batchInfoItem = batchInfo[i];
                             if (batchInfoItem.getId().equals(info.getBatchId())) {
-    		                    continue; //disregard the initial batch
-    		                }
-    		                switch (batchInfoItem.getState()) {
-    		                case Failed:
-    		                case NotProcessed:
+                                continue; //disregard the initial batch
+                            }
+                            switch (batchInfoItem.getState()) {
+                            case Failed:
+                            case NotProcessed:
                                 throw new TranslatorException(batchInfoItem.getStateMessage());
-    		                case Completed:
-    		                    anyComplete = true;
-		                    default:
-		                        pkBactches.put(batchInfoItem.getId(), batchInfoItem);
-    		                }
-    		            }
-    		            info.setPkBatches(pkBactches);
-    				    if (!anyComplete) {
-    				        throwDataNotAvailable(info);
-    				    }
-    				    break;
-    				case Completed:
+                            case Completed:
+                                anyComplete = true;
+                            default:
+                                pkBactches.put(batchInfoItem.getId(), batchInfoItem);
+                            }
+                        }
+                        info.setPkBatches(pkBactches);
+                        if (!anyComplete) {
+                            throwDataNotAvailable(info);
+                        }
+                        break;
+                    case Completed:
                     {
-				        QueryResultList list = this.bulkConnection.getQueryResultList(jobId, info.getBatchId());
+                        QueryResultList list = this.bulkConnection.getQueryResultList(jobId, info.getBatchId());
                         info.setResultList(list.getResult());
                         break;
-				    }
-				    case InProgress:
-				    case Queued:
+                    }
+                    case InProgress:
+                    case Queued:
                     throwDataNotAvailable(info);
-	                 default:
-	                    throw new TranslatorException(batch.getStateMessage());
-				}
-			} catch (AsyncApiException e) {
-				throw new TranslatorException(e);
-			}
-		}
-		try {
-		    BulkBatchResult result = null;
-		    if (info.getResultList() != null) {
-		        result = nextBulkBatch(jobId, info);
-		    }
-		    if (result == null && info.getPkBatches() != null) {
-    		    getNextPkChunkResultList(jobId, info);
-    		    result = nextBulkBatch(jobId, info);
-    		}
-		    info.resetWaitCount();
-		    return result;
-		} catch (AsyncApiException e) {
-		    throw new TranslatorException(e);
-		}
-	}
+                     default:
+                        throw new TranslatorException(batch.getStateMessage());
+                }
+            } catch (AsyncApiException e) {
+                throw new TranslatorException(e);
+            }
+        }
+        try {
+            BulkBatchResult result = null;
+            if (info.getResultList() != null) {
+                result = nextBulkBatch(jobId, info);
+            }
+            if (result == null && info.getPkBatches() != null) {
+                getNextPkChunkResultList(jobId, info);
+                result = nextBulkBatch(jobId, info);
+            }
+            info.resetWaitCount();
+            return result;
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
     private void throwDataNotAvailable(BatchResultInfo info) {
         int waitCount = info.incrementAndGetWaitCount();
@@ -703,8 +703,8 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
     private BulkBatchResult nextBulkBatch(String jobId, BatchResultInfo info)
             throws AsyncApiException {
-		int index = info.getAndIncrementResultNum();
-		if (index < info.getResultList().length) {
+        int index = info.getAndIncrementResultNum();
+        if (index < info.getResultList().length) {
             String resultId = info.getResultList()[index];
             final InputStream inputStream = bulkConnection.getQueryResultStream(jobId, info.getBatchId(), resultId);
             final CSVReader reader = new CSVReader(inputStream);
@@ -724,48 +724,48 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
                     }
                 }
             };
-		}
-		return null;
+        }
+        return null;
     }
 
-	@Override
-	public JobInfo closeJob(String jobId) throws TranslatorException {
-		try {
-			return this.bulkConnection.closeJob(jobId);
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public JobInfo closeJob(String jobId) throws TranslatorException {
+        try {
+            return this.bulkConnection.closeJob(jobId);
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws TranslatorException {
-		try {
-			JobInfo info = this.bulkConnection.getJobStatus(job.getId());
-			if (info.getNumberBatchesTotal() != info.getNumberBatchesFailed() + info.getNumberBatchesCompleted()) {
-				throw new DataNotAvailableException(pollingInterval);
-			}
-			BatchResult[] results = new BatchResult[ids.size()];
-			for (int i = 0; i < ids.size(); i++) {
-				results[i] = this.bulkConnection.getBatchResult(job.getId(), ids.get(i));
-			}
-			return results;
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public BatchResult[] getBulkResults(JobInfo job, List<String> ids) throws TranslatorException {
+        try {
+            JobInfo info = this.bulkConnection.getJobStatus(job.getId());
+            if (info.getNumberBatchesTotal() != info.getNumberBatchesFailed() + info.getNumberBatchesCompleted()) {
+                throw new DataNotAvailableException(pollingInterval);
+            }
+            BatchResult[] results = new BatchResult[ids.size()];
+            for (int i = 0; i < ids.size(); i++) {
+                results[i] = this.bulkConnection.getBatchResult(job.getId(), ids.get(i));
+            }
+            return results;
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public void cancelBulkJob(JobInfo job) throws TranslatorException {
-		try {
-			this.bulkConnection.abortJob(job.getId());
-		} catch (AsyncApiException e) {
-			throw new TranslatorException(e);
-		}
-	}
+    @Override
+    public void cancelBulkJob(JobInfo job) throws TranslatorException {
+        try {
+            this.bulkConnection.abortJob(job.getId());
+        } catch (AsyncApiException e) {
+            throw new TranslatorException(e);
+        }
+    }
 
-	@Override
-	public String getVersion() {
-		return apiVersion;
-	}
+    @Override
+    public String getVersion() {
+        return apiVersion;
+    }
 
 }

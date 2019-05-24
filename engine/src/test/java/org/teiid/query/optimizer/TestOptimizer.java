@@ -106,7 +106,7 @@ public class TestOptimizer {
     public static final boolean SHOULD_SUCCEED = true;
     public static final boolean SHOULD_FAIL = false;
 
-	// ################################## TEST HELPERS ################################
+    // ################################## TEST HELPERS ################################
 
     public static BasicSourceCapabilities getTypicalCapabilities() {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -134,31 +134,31 @@ public class TestOptimizer {
     }
 
     public static CapabilitiesFinder getGenericFinder(boolean supportsJoins) {
-    	final BasicSourceCapabilities caps = getTypicalCapabilities();
-    	if (!supportsJoins) {
-	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
-	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
-		    caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
-    	}
+        final BasicSourceCapabilities caps = getTypicalCapabilities();
+        if (!supportsJoins) {
+            caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+            caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+            caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        }
         return new DefaultCapabilitiesFinder(caps);
     }
 
     public static CapabilitiesFinder getGenericFinder() {
-    	return getGenericFinder(true);
+        return getGenericFinder(true);
     }
 
-	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic) {
-		return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, SHOULD_SUCCEED);
-	}
+    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic) {
+        return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, SHOULD_SUCCEED);
+    }
 
-	public static ProcessorPlan helpPlan(String sql,
-			QueryMetadataInterface md, String[] expected,
-			CapabilitiesFinder capFinder,
-			ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
-		return helpPlan(sql, md, null, capFinder, expected, mode);
-	}
+    public static ProcessorPlan helpPlan(String sql,
+            QueryMetadataInterface md, String[] expected,
+            CapabilitiesFinder capFinder,
+            ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
+        return helpPlan(sql, md, null, capFinder, expected, mode);
+    }
 
-	public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic, ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
+    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, String[] expectedAtomic, ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
         return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, mode);
     }
 
@@ -181,9 +181,9 @@ public class TestOptimizer {
 
 
     public static Command helpGetCommand(String sql, QueryMetadataInterface md) throws TeiidComponentException, TeiidProcessingException {
-		if(DEBUG) System.out.println("\n####################################\n" + sql);	 //$NON-NLS-1$
-		Command command = QueryParser.getQueryParser().parseCommand(sql);
-		QueryResolver.resolveCommand(command, md);
+        if(DEBUG) System.out.println("\n####################################\n" + sql);     //$NON-NLS-1$
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+        QueryResolver.resolveCommand(command, md);
 
         ValidatorReport repo = Validator.validate(command, md);
 
@@ -193,8 +193,8 @@ public class TestOptimizer {
             fail("Exception during validation (" + repo); //$NON-NLS-1$
         }
 
-		// rewrite
-		command = QueryRewriter.rewrite(command, md, new CommandContext());
+        // rewrite
+        command = QueryRewriter.rewrite(command, md, new CommandContext());
 
         return command;
     }
@@ -257,39 +257,39 @@ public class TestOptimizer {
     }
 
     public static ProcessorPlan getPlan(Command command, QueryMetadataInterface md, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean shouldSucceed, CommandContext cc) {
-		ProcessorPlan plan = null;
-		if (analysisRecord == null) {
-        	analysisRecord = new AnalysisRecord(false, DEBUG);
-		}
-		Exception exception = null;
-		try {
-			//do planning
-			plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, cc);
-		} catch (QueryPlannerException e) {
-			exception = e;
-		} catch (TeiidComponentException e) {
-			exception = e;
-		} catch (Throwable e) {
-			throw new TeiidRuntimeException(e);
-		} finally {
+        ProcessorPlan plan = null;
+        if (analysisRecord == null) {
+            analysisRecord = new AnalysisRecord(false, DEBUG);
+        }
+        Exception exception = null;
+        try {
+            //do planning
+            plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, cc);
+        } catch (QueryPlannerException e) {
+            exception = e;
+        } catch (TeiidComponentException e) {
+            exception = e;
+        } catch (Throwable e) {
+            throw new TeiidRuntimeException(e);
+        } finally {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }
-		}
-		if (!shouldSucceed) {
-			assertNotNull("Expected exception but did not get one.", exception); //$NON-NLS-1$
-			return null;
-		}
-		if (plan == null) {
-			throw new TeiidRuntimeException(exception);
-		}
-		assertNotNull("Output elements are null", plan.getOutputElements()); //$NON-NLS-1$
-		if(DEBUG) System.out.println("\n" + plan);	 //$NON-NLS-1$
-		return plan;
-	}
+        }
+        if (!shouldSucceed) {
+            assertNotNull("Expected exception but did not get one.", exception); //$NON-NLS-1$
+            return null;
+        }
+        if (plan == null) {
+            throw new TeiidRuntimeException(exception);
+        }
+        assertNotNull("Output elements are null", plan.getOutputElements()); //$NON-NLS-1$
+        if(DEBUG) System.out.println("\n" + plan);     //$NON-NLS-1$
+        return plan;
+    }
 
     public static Set<String> getAtomicQueries(ProcessorPlan plan) {
-    	Set<Command> atomicQueries = new HashSet<Command>();
+        Set<Command> atomicQueries = new HashSet<Command>();
         if(plan instanceof RelationalPlan) {
             getAtomicCommands( ((RelationalPlan)plan).getRootNode(), atomicQueries );
         }
@@ -365,12 +365,12 @@ public class TestOptimizer {
     static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
         Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
-        	JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
-        	if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_SEMI)) {
-        		updateCounts(SemiJoin.class, counts, types);
-        	} else if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_ANTI_SEMI)) {
-        		updateCounts(AntiSemiJoin.class, counts, types);
-        	}
+            JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
+            if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_SEMI)) {
+                updateCounts(SemiJoin.class, counts, types);
+            } else if (((JoinNode)relationalNode).getJoinType().equals(JoinType.JOIN_ANTI_SEMI)) {
+                updateCounts(AntiSemiJoin.class, counts, types);
+            }
             if (strategy instanceof NestedLoopJoinStrategy) {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
             } else if (strategy instanceof MergeJoinStrategy) {
@@ -379,33 +379,33 @@ public class TestOptimizer {
                     updateCounts(EnhancedSortMergeJoinStrategy.class, counts, types);
                 }
             } else if (strategy instanceof NestedTableJoinStrategy) {
-            	updateCounts(NestedTableJoinStrategy.class, counts, types);
+                updateCounts(NestedTableJoinStrategy.class, counts, types);
             }
             if (((JoinNode)relationalNode).isDependent()) {
                 updateCounts(DependentJoin.class, counts, types);
             }
         }else if (nodeType.equals(ProjectNode.class)){
-        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((ProjectNode)relationalNode).getSelectSymbols()).isEmpty()) {
-        		updateCounts(ProjectNode.class, counts, types);
-        	} else {
-        		updateCounts(DependentProjectNode.class, counts, types);
-        	}
+            if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((ProjectNode)relationalNode).getSelectSymbols()).isEmpty()) {
+                updateCounts(ProjectNode.class, counts, types);
+            } else {
+                updateCounts(DependentProjectNode.class, counts, types);
+            }
         }else if (nodeType.equals(SelectNode.class)){
-        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((SelectNode)relationalNode).getCriteria()).isEmpty()) {
-        		updateCounts(SelectNode.class, counts, types);
-        	} else {
-        		updateCounts(DependentSelectNode.class, counts, types);
-        	}
+            if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((SelectNode)relationalNode).getCriteria()).isEmpty()) {
+                updateCounts(SelectNode.class, counts, types);
+            } else {
+                updateCounts(DependentSelectNode.class, counts, types);
+            }
         } else if (nodeType.equals(SortNode.class)) {
-        	Mode mode = ((SortNode)relationalNode).getMode();
-        	switch(mode) {
-        	case DUP_REMOVE_SORT:
+            Mode mode = ((SortNode)relationalNode).getMode();
+            switch(mode) {
+            case DUP_REMOVE_SORT:
                 updateCounts(DupRemoveSortNode.class, counts, types);
-        		break;
-        	case SORT:
+                break;
+            case SORT:
                 updateCounts(SortNode.class, counts, types);
-        		break;
-        	}
+                break;
+            }
         } else {
             updateCounts(nodeType, counts, types);
         }
@@ -433,17 +433,17 @@ public class TestOptimizer {
         checkNodeTypes(plan, new int[] {expectedCount}, new Class[] {DependentJoin.class});
     }
 
-	public static TransformationMetadata example1() {
-		MetadataStore metadataStore = new MetadataStore();
-		// Create models
-		Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+    public static TransformationMetadata example1() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
         Schema pm2 = RealMetadataFactory.createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-		Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);	 //$NON-NLS-1$
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);     //$NON-NLS-1$
 
-		// Create physical groups
-		Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
-		Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
-		Table pm1g3 = RealMetadataFactory.createPhysicalGroup("g3", pm1); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = RealMetadataFactory.createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = RealMetadataFactory.createPhysicalGroup("g3", pm1); //$NON-NLS-1$
         Table pm1g4 = RealMetadataFactory.createPhysicalGroup("g4", pm1); //$NON-NLS-1$
         Table pm1g5 = RealMetadataFactory.createPhysicalGroup("g5", pm1); //$NON-NLS-1$
         Table pm1g6 = RealMetadataFactory.createPhysicalGroup("g6", pm1); //$NON-NLS-1$
@@ -453,16 +453,16 @@ public class TestOptimizer {
         Table pm2g2 = RealMetadataFactory.createPhysicalGroup("g2", pm2); //$NON-NLS-1$
         Table pm2g3 = RealMetadataFactory.createPhysicalGroup("g3", pm2); //$NON-NLS-1$
 
-		// Create physical elements
-		RealMetadataFactory.createElements(pm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(pm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(pm1g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical elements
+        RealMetadataFactory.createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(pm1g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         RealMetadataFactory.createElements(pm1g4,
             new String[] { "e1" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.STRING });
@@ -488,19 +488,19 @@ public class TestOptimizer {
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        // Create virtual groups
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = RealMetadataFactory.createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g2 = RealMetadataFactory.createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
+        QueryNode vm1g2n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g2 = RealMetadataFactory.createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		//defect 8096
-		QueryNode vm1sub1n1 = new QueryNode("SELECT * FROM vm1.g1 WHERE e1 IN /*+ no_unnest */ (SELECT e1 FROM vm1.g3)"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1sub1 = RealMetadataFactory.createVirtualGroup("sub1", vm1, vm1sub1n1); //$NON-NLS-1$
+        //defect 8096
+        QueryNode vm1sub1n1 = new QueryNode("SELECT * FROM vm1.g1 WHERE e1 IN /*+ no_unnest */ (SELECT e1 FROM vm1.g3)"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1sub1 = RealMetadataFactory.createVirtualGroup("sub1", vm1, vm1sub1n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g3 = RealMetadataFactory.createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
+        QueryNode vm1g3n1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g3 = RealMetadataFactory.createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
 
         QueryNode vm1g4n1 = new QueryNode("SELECT pm1.g1.e1,  g2.e1 FROM pm1.g1, pm1.g2 g2 WHERE pm1.g1.e1= g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g4 = RealMetadataFactory.createUpdatableVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
@@ -511,14 +511,14 @@ public class TestOptimizer {
         QueryNode vm1g6n1 = new QueryNode("SELECT e1, convert(e2, string), 3 as e3, ((e2+e4)/3) as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g6 = RealMetadataFactory.createUpdatableVirtualGroup("g6", vm1, vm1g6n1); //$NON-NLS-1$
 
-		QueryNode vm1u1n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2 UNION ALL SELECT * FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1u1 = RealMetadataFactory.createUpdatableVirtualGroup("u1", vm1, vm1u1n1); //$NON-NLS-1$
+        QueryNode vm1u1n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2 UNION ALL SELECT * FROM pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1u1 = RealMetadataFactory.createUpdatableVirtualGroup("u1", vm1, vm1u1n1); //$NON-NLS-1$
 
-		QueryNode vm1u2n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1u2 = RealMetadataFactory.createUpdatableVirtualGroup("u2", vm1, vm1u2n1); //$NON-NLS-1$
+        QueryNode vm1u2n1 = new QueryNode("SELECT * FROM pm1.g1 UNION SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1u2 = RealMetadataFactory.createUpdatableVirtualGroup("u2", vm1, vm1u2n1); //$NON-NLS-1$
 
-		QueryNode vm1u3n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION SELECT convert(e2, string) as x FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1u3 = RealMetadataFactory.createUpdatableVirtualGroup("u3", vm1, vm1u3n1); //$NON-NLS-1$
+        QueryNode vm1u3n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION SELECT convert(e2, string) as x FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1u3 = RealMetadataFactory.createUpdatableVirtualGroup("u3", vm1, vm1u3n1); //$NON-NLS-1$
 
         QueryNode vm1u4n1 = new QueryNode("SELECT concat(e1, 'x') as v1 FROM pm1.g1 UNION ALL SELECT e1 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1u4 = RealMetadataFactory.createUpdatableVirtualGroup("u4", vm1, vm1u4n1); //$NON-NLS-1$
@@ -559,20 +559,20 @@ public class TestOptimizer {
         QueryNode vm1g7n1 = new QueryNode("select DECODESTRING(e1, 'S,Pay,P,Rec') as e1, e2 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g7 = RealMetadataFactory.createVirtualGroup("g7", vm1, vm1g7n1); //$NON-NLS-1$
 
-		// Create virtual elements
-		RealMetadataFactory.createElements(vm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(vm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(vm1g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		//for defect 8096
-		RealMetadataFactory.createElements(vm1sub1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create virtual elements
+        RealMetadataFactory.createElements(vm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(vm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(vm1g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        //for defect 8096
+        RealMetadataFactory.createElements(vm1sub1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         RealMetadataFactory.createElements(vm1g4,
             new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
@@ -586,14 +586,14 @@ public class TestOptimizer {
             new String[] { "e1", "e2"}, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER});
         RealMetadataFactory.createElements(vm1u1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(vm1u2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		RealMetadataFactory.createElements(vm1u3,
-			new String[] { "e1" }, //$NON-NLS-1$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING });
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(vm1u2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        RealMetadataFactory.createElements(vm1u3,
+            new String[] { "e1" }, //$NON-NLS-1$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING });
         RealMetadataFactory.createElements(vm1u4,
             new String[] { "v1" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.STRING });
@@ -631,87 +631,87 @@ public class TestOptimizer {
             new String[] { "count" }, //$NON-NLS-1$
             new String[] { DataTypeManager.DefaultDataTypes.INTEGER });
 
-		return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
-	}
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
+    }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
-	/**
-	 * Test defect 8096 - query a virtual group with subquery of another virtual group
-	 */
-	@Test public void testVirtualSubqueryINClause_8096() {
-		helpPlan("SELECT * FROM vm1.sub1", example1(), //$NON-NLS-1$
-			new String[] {"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
-	}
+    /**
+     * Test defect 8096 - query a virtual group with subquery of another virtual group
+     */
+    @Test public void testVirtualSubqueryINClause_8096() {
+        helpPlan("SELECT * FROM vm1.sub1", example1(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
+    }
 
-	@Test public void testQueryPhysical() {
-		ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
-		assertNull(plan.requiresTransaction(true));
+    @Test public void testQueryPhysical() {
+        ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] {"SELECT pm1.g1.e1, e2, pm1.g1.e3, e4 FROM pm1.g1"} ); //$NON-NLS-1$
+        assertNull(plan.requiresTransaction(true));
         checkNodeTypes(plan, FULL_PUSHDOWN);
-	}
+    }
 
-	@Test public void testSelectStarPhysical() {
-		ProcessorPlan plan = helpPlan("SELECT * FROM pm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
+    @Test public void testSelectStarPhysical() {
+        ProcessorPlan plan = helpPlan("SELECT * FROM pm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
-	}
+    }
 
-	@Test public void testQuerySingleSourceVirtual() {
-		ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
+    @Test public void testQuerySingleSourceVirtual() {
+        ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
-	}
+    }
 
-	@Test public void testQueryMultiSourceVirtual() {
-		ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT g_0.e1, g_0.e2, g_1.e3, g_1.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
+    @Test public void testQueryMultiSourceVirtual() {
+        ProcessorPlan plan = helpPlan("SELECT * FROM vm1.g2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_0.e2, g_1.e3, g_1.e4 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 = g_1.e1"} ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
-	}
+    }
 
-	@Test public void testPhysicalVirtualJoinWithCriteria() throws Exception {
-		ProcessorPlan plan = helpPlan("SELECT vm1.g2.e1 from vm1.g2, pm1.g3 where vm1.g2.e1=pm1.g3.e1 and vm1.g2.e2 > 0", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = g_2.e1) AND (g_0.e2 > 0)" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+    @Test public void testPhysicalVirtualJoinWithCriteria() throws Exception {
+        ProcessorPlan plan = helpPlan("SELECT vm1.g2.e1 from vm1.g2, pm1.g3 where vm1.g2.e1=pm1.g3.e1 and vm1.g2.e2 > 0", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = g_2.e1) AND (g_0.e2 > 0)" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
-	}
+    }
 
     @Test public void testQueryWithExpression() {
         helpPlan("SELECT e4 FROM pm3.g1 WHERE e4 < convert('2001-11-01 10:30:40.42', timestamp)", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT e4 FROM pm3.g1 WHERE e4 < {ts'2001-11-01 10:30:40.42'}"} ); //$NON-NLS-1$
+            new String[] { "SELECT e4 FROM pm3.g1 WHERE e4 < {ts'2001-11-01 10:30:40.42'}"} ); //$NON-NLS-1$
     }
 
     @Test public void testInsert() {
         helpPlan("Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values ('MyString', 1)", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)"} ); //$NON-NLS-1$
+            new String[] { "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)"} ); //$NON-NLS-1$
     }
 
     @Test public void testUpdate1() {
-      	helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e3= 'true'", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e3 = TRUE"} ); //$NON-NLS-1$
-  	}
+          helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e3= 'true'", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "UPDATE pm1.g1 SET pm1.g1.e1 = 'MyString', pm1.g1.e2 = 1 WHERE pm1.g1.e3 = TRUE"} ); //$NON-NLS-1$
+      }
 
     @Test public void testUpdate2() throws Exception {
-    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-    	bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-    	DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
         helpPlan("Update pm1.g1 Set pm1.g1.e1= LTRIM('MyString'), pm1.g1.e2= 1 where pm1.g1.e2= convert(pm1.g1.e4, integer)", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "UPDATE pm1.g1 SET e1 = 'MyString', e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+            new String[] { "UPDATE pm1.g1 SET e1 = 'MyString', e2 = 1 WHERE pm1.g1.e2 = convert(pm1.g1.e4, integer)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
     }
 
     @Test public void testDelete() throws Exception {
-    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-    	bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-    	DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
-    	helpPlan("Delete from pm1.g1 where pm1.g1.e1 = cast(pm1.g1.e2 AS string)", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = convert(pm1.g1.e2, string)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
-  	}
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
+        helpPlan("Delete from pm1.g1 where pm1.g1.e1 = cast(pm1.g1.e2 AS string)", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "DELETE FROM pm1.g1 WHERE pm1.g1.e1 = convert(pm1.g1.e2, string)"}, dcf, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
+      }
 
-	// ############################# TESTS ON EXAMPLE 1 ############################
+    // ############################# TESTS ON EXAMPLE 1 ############################
 
     @Test public void testCopyInAcrossJoin() throws Exception {
         ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0", //$NON-NLS-1$
-        				   "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                           "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('a', 'b') ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -734,7 +734,7 @@ public class TestOptimizer {
     @Test public void testCopyMatchAcrossJoin() throws Exception {
         helpPlan("select pm1.g1.e1, pm2.g2.e1 from pm1.g1, pm2.g2 where pm1.g1.e1=pm2.g2.e1 and pm1.g1.e1 LIKE '%1'", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0", //$NON-NLS-1$
-        					"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                            "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 WHERE g_0.e1 LIKE '%1' ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
     @Test public void testCopyOrAcrossJoin() throws Exception {
@@ -761,56 +761,56 @@ public class TestOptimizer {
     }
 
     @Test public void testPushingCriteriaThroughFrame1() {
-    	helpPlan("select * from vm1.g1, vm1.g2 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1", example1(), //$NON-NLS-1$
-			new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select * from vm1.g1, vm1.g2 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughFrame2() throws Exception {
-    	helpPlan("select * from vm1.g1, vm1.g3 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g3.e1", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'",  //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
-  	}
+        helpPlan("select * from vm1.g1, vm1.g3 where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g3.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'",  //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" }, getGenericFinder(false), ComparisonMode.CORRECTED_COMMAND_STRING ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughFrame3() {
-    	helpPlan("select * from vm1.g1, vm1.g2, vm1.g1 as a where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1 and vm1.g1.e1=a.e1", example1(), //$NON-NLS-1$
-			new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT g1__2.e1, g1__2.e2, g1__2.e3, g1__2.e4 FROM pm1.g1 AS g1__2 WHERE g1__2.e1 = 'abc'" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select * from vm1.g1, vm1.g2, vm1.g1 as a where vm1.g1.e1='abc' and vm1.g1.e1=vm1.g2.e1 and vm1.g1.e1=a.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g1__1.e1, g1__1.e2, g1__1.e3, g1__1.e4 FROM pm1.g1 AS g1__1 WHERE g1__1.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT g1__2.e1, g1__2.e2, g1__2.e3, g1__2.e4 FROM pm1.g1 AS g1__2 WHERE g1__2.e1 = 'abc'" } ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughUnion1() {
-    	helpPlan("select e1 from vm1.u1 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select e1 from vm1.u1 where e1='abc'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughUnion2() {
-    	helpPlan("select e1 from vm1.u2 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select e1 from vm1.u2 where e1='abc'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughUnion3() {
-    	helpPlan("select e1 from vm1.u1 where e1='abc' and e2=5", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') AND (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select e1 from vm1.u1 where e1='abc' and e2=5", example1(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') AND (pm1.g3.e2 = 5)", //$NON-NLS-1$
+                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
+      }
 
     @Test public void testPushingCriteriaThroughUnion4() {
-    	helpPlan("select e1 from vm1.u1 where e1='abc' or e2=5", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') OR (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select e1 from vm1.u1 where e1='abc' or e2=5", example1(), //$NON-NLS-1$
+            new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') OR (pm1.g3.e2 = 5)", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
+                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
+      }
 
-	// expression in a subquery of the union
+    // expression in a subquery of the union
     @Test public void testPushingCriteriaThroughUnion5() {
-    	helpPlan("select e1 from vm1.u3 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT DISTINCT e1 FROM pm1.g1 WHERE e1 = 'abc'" } ); //$NON-NLS-1$
-  	}
+        helpPlan("select e1 from vm1.u3 where e1='abc'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT DISTINCT e1 FROM pm1.g1 WHERE e1 = 'abc'" } ); //$NON-NLS-1$
+      }
 
     /** defect #4956 */
     @Test public void testPushCriteriaThroughUnion6() {
@@ -869,11 +869,11 @@ public class TestOptimizer {
     }
 
     @Test public void testPushingCriteriaWithCopy() {
-    	ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
-			new String[] { "SELECT 1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT 1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+                            "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             4,      // Access
             0,      // DependentAccess
@@ -890,7 +890,7 @@ public class TestOptimizer {
             0,      // Sort
             2       // UnionAll
         });
-  	}
+      }
 
     @Test public void testVirtualGroupWithAliasedElement() {
         helpPlan("select elem FROM vm1.u6 where elem='abc' and const='xyz'", example1(), //$NON-NLS-1$
@@ -1034,15 +1034,15 @@ public class TestOptimizer {
     }
 
     @Test public void testManyJoinsGreedy() throws Exception {
-    	TransformationMetadata tm = example1();
-    	RealMetadataFactory.setCardinality("pm1.g5", 1000000, tm);
-    	RealMetadataFactory.setCardinality("pm1.g4", 1000000, tm);
-    	RealMetadataFactory.setCardinality("pm1.g1", 10000000, tm);
-    	RealMetadataFactory.setCardinality("pm1.g8", 100, tm);
-    	RealMetadataFactory.setCardinality("pm1.g3", 10000, tm);
-    	RealMetadataFactory.setCardinality("pm1.g6", 100000, tm);
+        TransformationMetadata tm = example1();
+        RealMetadataFactory.setCardinality("pm1.g5", 1000000, tm);
+        RealMetadataFactory.setCardinality("pm1.g4", 1000000, tm);
+        RealMetadataFactory.setCardinality("pm1.g1", 10000000, tm);
+        RealMetadataFactory.setCardinality("pm1.g8", 100, tm);
+        RealMetadataFactory.setCardinality("pm1.g3", 10000, tm);
+        RealMetadataFactory.setCardinality("pm1.g6", 100000, tm);
         ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4, pm1.g5, pm1.g6, pm1.g7, pm1.g8 "
-        		+ "WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1 AND pm1.g5.e1=pm1.g6.e1 AND pm1.g6.e1=pm1.g7.e1 AND pm1.g7.e1=pm1.g8.e1", //$NON-NLS-1$
+                + "WHERE pm1.g1.e1 = pm1.g2.e1 AND pm1.g2.e1 = pm1.g3.e1 AND pm1.g3.e1 = pm1.g4.e1 AND pm1.g4.e1 = pm1.g5.e1 AND pm1.g5.e1=pm1.g6.e1 AND pm1.g6.e1=pm1.g7.e1 AND pm1.g7.e1=pm1.g8.e1", //$NON-NLS-1$
             tm,
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", //$NON-NLS-1$
                             "SELECT pm1.g2.e1 FROM pm1.g2",  //$NON-NLS-1$
@@ -1178,15 +1178,15 @@ public class TestOptimizer {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
 
-	@Test public void testSubquery3() {
-		ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1) AS x WHERE x.e1 = 'a'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
+    @Test public void testSubquery3() {
+        ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1) AS x WHERE x.e1 = 'a'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
 
-	@Test public void testSubquery4() {
-		ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1 WHERE e1 = 'a') AS x", example1(), //$NON-NLS-1$
-			new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
+    @Test public void testSubquery4() {
+        ProcessorPlan plan = helpPlan("Select e1 from (select e1 FROM pm1.g1 WHERE e1 = 'a') AS x", example1(), //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 = 'a'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
 
@@ -2643,7 +2643,7 @@ public class TestOptimizer {
      * See also case 2912.
      */
     @Test public void testCopyCriteriaWithOuterJoin5_defect10050(){
-    	helpPlan("select pm2.g1.e1, pm1.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm1.g2 on pm2.g1.e1=pm1.g2.e1) right outer join pm2.g3 on pm1.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
+        helpPlan("select pm2.g1.e1, pm1.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm1.g2 on pm2.g1.e1=pm1.g2.e1) right outer join pm2.g3 on pm1.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g3 AS g_0 WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$
     }
 
@@ -2660,8 +2660,8 @@ public class TestOptimizer {
     }
 
     @Test public void testCopyCriteriaWithTransitivePushdown3() throws TeiidComponentException, TeiidProcessingException{
-    	BasicSourceCapabilities caps = getTypicalCapabilities();
-    	caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
         ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1, pm1.g2, pm1.g3 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = pm1.g3.e2 and pm1.g3.e2 = pm1.g2.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = convert(g_2.e2, string)) AND (convert(g_2.e2, string) = g_1.e1)" }
         , new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -3010,7 +3010,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(),
             null, capFinder,
             new String[] { "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.IntKey IN (1, 2, 3, 4, 5) ORDER BY BQT1.SmallA.IntKey",
-        	"SELECT BQT2.SmallB.IntKey FROM BQT2.SmallB WHERE BQT2.SmallB.IntKey IN (1, 2, 3, 4, 5) ORDER BY BQT2.SmallB.IntKey" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            "SELECT BQT2.SmallB.IntKey FROM BQT2.SmallB WHERE BQT2.SmallB.IntKey IN (1, 2, 3, 4, 5) ORDER BY BQT2.SmallB.IntKey" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -5309,7 +5309,7 @@ public class TestOptimizer {
      */
     @Test public void testCase3778() throws Exception {
 
-    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         BasicSourceCapabilities caps = getTypicalCapabilities();
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -5318,8 +5318,8 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(
-        		"select a.e1, b.e1 from vm2.g1 a, vm2.g1 b where a.e1 = b.e1 and a.e2 in /*+ no_unnest */ (select e2 from vm1.g1)",  //$NON-NLS-1$
-        		metadata, null, capFinder, new String[] {"SELECT g_0.e1, g_2.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_0.e1 = g_2.e1) AND (g_0.e2 IN /*+ NO_UNNEST */ (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                "select a.e1, b.e1 from vm2.g1 a, vm2.g1 b where a.e1 = b.e1 and a.e2 in /*+ no_unnest */ (select e2 from vm1.g1)",  //$NON-NLS-1$
+                metadata, null, capFinder, new String[] {"SELECT g_0.e1, g_2.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_0.e1 = g_2.e1) AND (g_0.e2 IN /*+ NO_UNNEST */ (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
@@ -6109,7 +6109,7 @@ public class TestOptimizer {
         String sql = "select pm1.g1.e1 from pm1.g1, (select * from pm1.g2) y where (pm1.g1.e1 = y.e1) and exists (select e2 from pm1.g2 where e1 = y.e1) and exists (select e3 from pm1.g2 where e1 = y.e1)"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder,
-        		new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (EXISTS (SELECT g_2.e2 FROM pm1.g2 AS g_2 WHERE g_2.e1 = g_1.e1)) AND (EXISTS (SELECT g_3.e3 FROM pm1.g2 AS g_3 WHERE g_3.e1 = g_1.e1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (EXISTS (SELECT g_2.e2 FROM pm1.g2 AS g_2 WHERE g_2.e1 = g_1.e1)) AND (EXISTS (SELECT g_3.e3 FROM pm1.g2 AS g_3 WHERE g_3.e1 = g_1.e1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
@@ -6258,9 +6258,9 @@ public class TestOptimizer {
     }
 
     @Test public void testCopyCriteriaWithIsNull() {
-    	String sql = "select * from (select a.intnum, a.intkey y, b.intkey from bqt1.smalla a, bqt2.smalla b where a.intkey = b.intkey) x where intkey is null"; //$NON-NLS-1$
+        String sql = "select * from (select a.intnum, a.intkey y, b.intkey from bqt1.smalla a, bqt2.smalla b where a.intkey = b.intkey) x where intkey is null"; //$NON-NLS-1$
 
-    	helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {});
+        helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {});
     }
 
     /**
@@ -6274,7 +6274,7 @@ public class TestOptimizer {
      */
     @Test public void testBetween() {
         helpPlan("select * from pm1.g1 where e2 between 1 and 2", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
-    			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (e2 >= 1) AND (e2 <= 2)"} ); //$NON-NLS-1$
+                new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (e2 >= 1) AND (e2 <= 2)"} ); //$NON-NLS-1$
     }
 
     /**
@@ -6294,9 +6294,9 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         helpPlan("select case when e2 between 3 and 5 then e2 else -1 end from pm1.g1", //$NON-NLS-1$
-        		RealMetadataFactory.example1Cached(), null, capFinder,
-    			new String[] { "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"},  //$NON-NLS-1$
-    			TestOptimizer.SHOULD_SUCCEED);
+                RealMetadataFactory.example1Cached(), null, capFinder,
+                new String[] { "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"},  //$NON-NLS-1$
+                TestOptimizer.SHOULD_SUCCEED);
     }
 
     /**
@@ -6318,9 +6318,9 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         helpPlan("select sum(case when e2 between 3 and 5 then e2 else -1 end) from pm1.g1", //$NON-NLS-1$
-        		RealMetadataFactory.example1Cached(), null, capFinder,
-    			new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"},  //$NON-NLS-1$
-    			TestOptimizer.SHOULD_SUCCEED);
+                RealMetadataFactory.example1Cached(), null, capFinder,
+                new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"},  //$NON-NLS-1$
+                TestOptimizer.SHOULD_SUCCEED);
     }
 
     /**
@@ -6343,9 +6343,9 @@ public class TestOptimizer {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         helpPlan("select sum(case when e2 between 3 and 5 then e2 else -1 end) from pm1.g1 group by e1", //$NON-NLS-1$
-        		RealMetadataFactory.example1Cached(), null, capFinder,
-    			new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1 GROUP BY e1"},  //$NON-NLS-1$
-    			TestOptimizer.SHOULD_SUCCEED);
+                RealMetadataFactory.example1Cached(), null, capFinder,
+                new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1 GROUP BY e1"},  //$NON-NLS-1$
+                TestOptimizer.SHOULD_SUCCEED);
     }
 
     /**
@@ -6363,11 +6363,11 @@ public class TestOptimizer {
      */
     @Test public void testAmbiguousAliasFunctionInSubQuerySource() throws Exception {
         // Create query
-    	String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
-    	"   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
-    	") AS A"; //$NON-NLS-1$
+        String sql = "SELECT CONVERT(A.e2, biginteger) AS e2 FROM (" + //$NON-NLS-1$
+        "   SELECT CONVERT(e2, long) AS e2 FROM pm1.g1 AS A" + //$NON-NLS-1$
+        ") AS A"; //$NON-NLS-1$
 
-    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         helpPlan(sql, metadata, new String[] {"SELECT e2 FROM pm1.g1 AS A"}); //$NON-NLS-1$
 
@@ -6384,9 +6384,9 @@ public class TestOptimizer {
     }
 
     @Test public void testNestedTable() throws Exception {
-		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-		caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, x.e1 from pm2.g1, table(select * from pm2.g2 where pm2.g1.e1=pm2.g2.e1) x where pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm2.g2 AS g_0 WHERE g_0.e1 = pm2.g1.e1", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 IN (1, 2)" }, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -6395,11 +6395,11 @@ public class TestOptimizer {
 
     @Test public void testUpdatePushdownFails() {
         helpPlan("update pm1.g1 set e1 = 1 where exists (select 1 from pm1.g2)", RealMetadataFactory.example1Cached(), null, //$NON-NLS-1$
-			null, null, false); //$NON-NLS-1$
+            null, null, false); //$NON-NLS-1$
     }
 
     @Test public void testUnnamedAggInView() throws Exception {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
 
         Schema bqt1 = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
         Schema vqt = RealMetadataFactory.createVirtualModel("VQT", metadataStore); //$NON-NLS-1$
@@ -6419,9 +6419,9 @@ public class TestOptimizer {
     }
 
     @Test public void testMergeGroupBy1() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT a, b FROM (select 1 as a, 2 as b from pm1.g1) as x group by a, b", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -6446,9 +6446,9 @@ public class TestOptimizer {
     }
 
     @Test public void testNonJoinComparison() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
-    	caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-    	caps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT intkey from bqt1.smalla where intkey = intnum", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -6473,15 +6473,15 @@ public class TestOptimizer {
     }
 
     @Test public void testConvertSignature() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
-    	caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-    	caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-    	caps.setTranslator(new ExecutionFactory<Object, Object>() {
-    		@Override
-    		public boolean supportsConvert(int fromType, int toType) {
-    			return (fromType == DefaultTypeCodes.INTEGER && toType == DefaultTypeCodes.STRING);
-    		}
-       	});
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        caps.setTranslator(new ExecutionFactory<Object, Object>() {
+            @Override
+            public boolean supportsConvert(int fromType, int toType) {
+                return (fromType == DefaultTypeCodes.INTEGER && toType == DefaultTypeCodes.STRING);
+            }
+           });
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 from pm1.g1 where e1 = e2 and e1 = e3", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -6506,17 +6506,17 @@ public class TestOptimizer {
     }
 
     @Test public void testParseFormat() throws Exception {
-    	BasicSourceCapabilities caps = getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
-    	caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
-    	caps.setFunctionSupport(SourceSystemFunctions.PARSEBIGDECIMAL, true);
-    	caps.setTranslator(new ExecutionFactory<Object, Object> () {
-    		@Override
-    		public boolean supportsFormatLiteral(String literal,
-    				org.teiid.translator.ExecutionFactory.Format format) {
-    			return (format == Format.DATE && literal.equals("yyyy")) || (format == Format.NUMBER && literal.equals("$"));
-    		}
-    	});
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
+        caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
+        caps.setFunctionSupport(SourceSystemFunctions.PARSEBIGDECIMAL, true);
+        caps.setTranslator(new ExecutionFactory<Object, Object> () {
+            @Override
+            public boolean supportsFormatLiteral(String literal,
+                    org.teiid.translator.ExecutionFactory.Format format) {
+                return (format == Format.DATE && literal.equals("yyyy")) || (format == Format.NUMBER && literal.equals("$"));
+            }
+        });
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formattimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, '$') = 1 and formattimestamp(timestampvalue, 'yy') = '19'", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
@@ -6574,7 +6574,7 @@ public class TestOptimizer {
                 0,      // DependentProject
                 1,      // DupRemove
                 0,      // Grouping
-                1,		// Limit
+                1,        // Limit
                 0,      // NestedLoopJoinStrategy
                 0,      // MergeJoinStrategy
                 0,      // Null
@@ -6598,83 +6598,83 @@ public class TestOptimizer {
     }
 
     @Test public void testDistinctConstant3() throws Exception {
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	TestOptimizer.helpPlan("SELECT DISTINCT c1, null as c2, null as c3 FROM(SELECT c1, c2 FROM ("
-    			+ "SELECT 'const_col_1' as c1, e1 as c2 FROM pm1.g1 UNION ALL "
-    			+ "SELECT 'const_col_2' as c1, e1 as c2 FROM pm2.g2 ) as v ) as v1", //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        TestOptimizer.helpPlan("SELECT DISTINCT c1, null as c2, null as c3 FROM(SELECT c1, c2 FROM ("
+                + "SELECT 'const_col_1' as c1, e1 as c2 FROM pm1.g1 UNION ALL "
+                + "SELECT 'const_col_2' as c1, e1 as c2 FROM pm2.g2 ) as v ) as v1", //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT 'const_col_2' AS c_0 FROM pm2.g2 AS g_0 LIMIT 1", "SELECT 'const_col_1' AS c_0 FROM pm1.g1 AS g_0 LIMIT 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
     @Test public void testDistinctConstant4() throws Exception {
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
-    	TestOptimizer.helpPlan("SELECT DISTINCT c1, null as c2, null as c3 FROM(SELECT c1, c2 FROM ("
-    			+ "SELECT 'const_col_1' as c1, e1 as c2 FROM pm1.g1 UNION ALL "
-    			+ "SELECT 'const_col_2' as c1, e1 as c2 FROM pm2.g2 ) as v ) as v1", //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        TestOptimizer.helpPlan("SELECT DISTINCT c1, null as c2, null as c3 FROM(SELECT c1, c2 FROM ("
+                + "SELECT 'const_col_1' as c1, e1 as c2 FROM pm1.g1 UNION ALL "
+                + "SELECT 'const_col_2' as c1, e1 as c2 FROM pm2.g2 ) as v ) as v1", //$NON-NLS-1$
                 RealMetadataFactory.example1Cached(),
                 new String[] {
                     "SELECT g_0.e1 FROM pm2.g2 AS g_0 LIMIT 1", "SELECT g_0.e1 FROM pm1.g1 AS g_0 LIMIT 1"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
     @Test public void testPlanNodeAnnotation() throws Exception {
-    	PlanNode pn = new PlanNode();
-    	TransformationMetadata metadata = RealMetadataFactory.example1Cached();
-    	Object modelID = metadata.getMetadataStore().getSchema("pm1");
-    	AnalysisRecord record = new AnalysisRecord(true, true);
-    	pn.recordDebugAnnotation("hello", modelID, "world", record, metadata);
-    	assertEquals("[LOW [Relational Planner] hello pm1 - world Unknown: 0(groups=[]]", record.getAnnotations().toString());
+        PlanNode pn = new PlanNode();
+        TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+        Object modelID = metadata.getMetadataStore().getSchema("pm1");
+        AnalysisRecord record = new AnalysisRecord(true, true);
+        pn.recordDebugAnnotation("hello", modelID, "world", record, metadata);
+        assertEquals("[LOW [Relational Planner] hello pm1 - world Unknown: 0(groups=[]]", record.getAnnotations().toString());
     }
 
-	@Test public void testRecursiveView() throws Exception {
-		String ddl = "CREATE view x (y string) as (select * from x)";
+    @Test public void testRecursiveView() throws Exception {
+        String ddl = "CREATE view x (y string) as (select * from x)";
 
-		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 
-		getPlan(helpGetCommand("select * from x", metadata), metadata, getGenericFinder(), null, false, null);
-	}
+        getPlan(helpGetCommand("select * from x", metadata), metadata, getGenericFinder(), null, false, null);
+    }
 
-	@Test(expected=QueryPlannerException.class) public void testInvalidSource() throws Exception {
-		String sql = "select * from pm1.g1"; //$NON-NLS-1$
-		QueryMetadataInterface md = RealMetadataFactory.example1Cached();
-		QueryOptimizer.optimizePlan(helpGetCommand(sql, md), md, null,  new DefaultCapabilitiesFinder() {
-        	@Override
-        	public boolean isValid(String modelName) {
-        		return false;
-        	}
+    @Test(expected=QueryPlannerException.class) public void testInvalidSource() throws Exception {
+        String sql = "select * from pm1.g1"; //$NON-NLS-1$
+        QueryMetadataInterface md = RealMetadataFactory.example1Cached();
+        QueryOptimizer.optimizePlan(helpGetCommand(sql, md), md, null,  new DefaultCapabilitiesFinder() {
+            @Override
+            public boolean isValid(String modelName) {
+                return false;
+            }
         }, null, new CommandContext());
-	}
+    }
 
-	@Test public void testUnaliased() throws Exception {
-		String sql = "SELECT x.count + 1 FROM agg x"; //$NON-NLS-1$
+    @Test public void testUnaliased() throws Exception {
+        String sql = "SELECT x.count + 1 FROM agg x"; //$NON-NLS-1$
 
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); create view agg (count integer) as select intkey from smalla order by intkey limit 1", "x", "y");
-		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
-		bsc.setFunctionSupport("+", true);
-		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT (v_0.c_0 + 1) FROM (SELECT g_0.intkey AS c_0 FROM y.smalla AS g_0 ORDER BY c_0 LIMIT 1) AS v_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
-	}
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); create view agg (count integer) as select intkey from smalla order by intkey limit 1", "x", "y");
+        BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+        bsc.setFunctionSupport("+", true);
+        TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT (v_0.c_0 + 1) FROM (SELECT g_0.intkey AS c_0 FROM y.smalla AS g_0 ORDER BY c_0 LIMIT 1) AS v_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
 
-	@Test public void testLikeEscapeRestriction() throws Exception {
-		String sql = "SELECT e2 FROM pm1.g1 where e1 like 'a%b' escape '!'"; //$NON-NLS-1$
+    @Test public void testLikeEscapeRestriction() throws Exception {
+        String sql = "SELECT e2 FROM pm1.g1 where e1 like 'a%b' escape '!'"; //$NON-NLS-1$
 
-		BasicSourceCapabilities bsc = getTypicalCapabilities();
-		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
-		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE 'a%b'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE 'a%b'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 
-		sql = "SELECT e2 FROM pm1.g1 where e1 like '!_a%b' escape '!'"; //$NON-NLS-1$
+        sql = "SELECT e2 FROM pm1.g1 where e1 like '!_a%b' escape '!'"; //$NON-NLS-1$
 
-		//TODO - when possible this should modify the match pattern to use the required escape
-		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
-		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+        //TODO - when possible this should modify the match pattern to use the required escape
+        bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
 
-		sql = "SELECT e2 FROM pm1.g1 where e1 like '\\_a%b' escape '\\'"; //$NON-NLS-1$
+        sql = "SELECT e2 FROM pm1.g1 where e1 like '\\_a%b' escape '\\'"; //$NON-NLS-1$
 
-		bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
-		TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '\\_a%b' ESCAPE '\\'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
-	}
+        bsc.setSourceProperty(Capability.REQUIRED_LIKE_ESCAPE, '\\');
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE '\\_a%b' ESCAPE '\\'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
 
     @Test public void testTimestampAddRestriction() throws Exception {
         String sql = "SELECT timestampadd(sql_tsi_second, 1, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
@@ -6694,6 +6694,6 @@ public class TestOptimizer {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT timestampadd(sql_tsi_second, g_0.IntKey, g_0.TimestampValue) FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
 
-	public static final boolean DEBUG = false;
+    public static final boolean DEBUG = false;
 
 }

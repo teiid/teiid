@@ -29,10 +29,10 @@ import org.jboss.vfs.VirtualFile;
 
 
 class DynamicVDBRootMountDeployer  implements DeploymentUnitProcessor {
-	private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
-	private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
+    private static final String DYNAMIC_VDB_STRUCTURE = "-vdb.xml"; //$NON-NLS-1$
+    private static final String DDL_VDB_STRUCTURE = "-vdb.ddl"; //$NON-NLS-1$
 
-	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
 
         if(deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT) != null) {

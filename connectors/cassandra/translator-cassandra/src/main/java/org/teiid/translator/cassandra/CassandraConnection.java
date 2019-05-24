@@ -32,36 +32,36 @@ import com.datastax.driver.core.VersionNumber;
  * */
 public interface CassandraConnection extends Connection {
 
-	/**
-	 * Executes a CQL query.
-	 * */
-	public ResultSetFuture executeQuery(String query);
+    /**
+     * Executes a CQL query.
+     * */
+    public ResultSetFuture executeQuery(String query);
 
-	/**
-	 * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
-	 * @throws KeyspaceNotDefinedException
-	 * */
-	public KeyspaceMetadata keyspaceInfo() throws TranslatorException;
+    /**
+     * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
+     * @throws KeyspaceNotDefinedException
+     * */
+    public KeyspaceMetadata keyspaceInfo() throws TranslatorException;
 
-	/**
-	 * Execute a batch of updates
-	 * @param updates
-	 * @return
-	 */
-	ResultSetFuture executeBatch(List<String> updates);
+    /**
+     * Execute a batch of updates
+     * @param updates
+     * @return
+     */
+    ResultSetFuture executeBatch(List<String> updates);
 
-	/**
-	 * Execute a bulk update
-	 * @param update
-	 * @param values
-	 * @return
-	 */
-	ResultSetFuture executeBatch(String update, List<Object[]> values);
+    /**
+     * Execute a bulk update
+     * @param update
+     * @param values
+     * @return
+     */
+    ResultSetFuture executeBatch(String update, List<Object[]> values);
 
-	/**
-	 * Get the version in use for this connection
-	 * @return
-	 */
-	VersionNumber getVersion();
+    /**
+     * Get the version in use for this connection
+     * @return
+     */
+    VersionNumber getVersion();
 
 }

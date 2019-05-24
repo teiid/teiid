@@ -67,11 +67,11 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
             context.remove(ref.getExpression());
         }
 
-    	if (critInProgress == QueryRewriter.FALSE_CRITERIA) {
-    		critInProgress = null;
-    		consumedCriteria();
-    		return false;
-    	}
+        if (critInProgress == QueryRewriter.FALSE_CRITERIA) {
+            critInProgress = null;
+            consumedCriteria();
+            return false;
+        }
 
         boolean validRow = true;
 
@@ -89,22 +89,22 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                 CompareCriteria compare = (CompareCriteria)crit;
                 value = compare.getRightExpression();
                 if (compare.getLeftExpression() instanceof Array) {
-                	Array array = (Array)compare.getLeftExpression();
-                	if (value instanceof Expression) {
-            		    value = eval.evaluate((Expression)value, null);
-            		}
-                	if (value == null) {
-                		validRow = false;
-                		break;
-                	}
-                	ArrayImpl valueArray = (ArrayImpl)value;
-                	for (int j = 0; j < array.getExpressions().size(); j++) {
-                		validRow = setParam(context, valueArray.getValues()[j], nullAllowed, (Reference) array.getExpressions().get(j));
-                		if (!validRow) {
-                			break;
-                		}
-                	}
-                	continue;
+                    Array array = (Array)compare.getLeftExpression();
+                    if (value instanceof Expression) {
+                        value = eval.evaluate((Expression)value, null);
+                    }
+                    if (value == null) {
+                        validRow = false;
+                        break;
+                    }
+                    ArrayImpl valueArray = (ArrayImpl)value;
+                    for (int j = 0; j < array.getExpressions().size(); j++) {
+                        validRow = setParam(context, valueArray.getValues()[j], nullAllowed, (Reference) array.getExpressions().get(j));
+                        if (!validRow) {
+                            break;
+                        }
+                    }
+                    continue;
                 }
                 parameter = (Reference)compare.getLeftExpression();
             } else {
@@ -134,29 +134,29 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
         return true;
     }
 
-	private boolean setParam(VariableContext context,
-			Object value, boolean nullAllowed, Reference parameter)
-			throws ExpressionEvaluationException, BlockedException,
-			TeiidComponentException {
-		if (value instanceof Expression) {
-		    value = eval.evaluate((Expression)value, null);
-		}
+    private boolean setParam(VariableContext context,
+            Object value, boolean nullAllowed, Reference parameter)
+            throws ExpressionEvaluationException, BlockedException,
+            TeiidComponentException {
+        if (value instanceof Expression) {
+            value = eval.evaluate((Expression)value, null);
+        }
 
-		if (value == null && !nullAllowed) {
-		    return false;
-		}
+        if (value == null && !nullAllowed) {
+            return false;
+        }
 
-		ElementSymbol parameterSymbol = parameter.getExpression();
-		if (context.containsVariable(parameterSymbol)) {
-		    Object existingValue = context.getValue(parameterSymbol);
+        ElementSymbol parameterSymbol = parameter.getExpression();
+        if (context.containsVariable(parameterSymbol)) {
+            Object existingValue = context.getValue(parameterSymbol);
 
-		    if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
-		        return false;
-		    }
-		}
+            if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
+                return false;
+            }
+        }
 
-		context.setValue(parameterSymbol, value);
-		return true;
-	}
+        context.setValue(parameterSymbol, value);
+        return true;
+    }
 
 }

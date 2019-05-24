@@ -55,11 +55,11 @@ public interface SessionService {
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */
-	public SessionMetadata createSession(String vdbName,
-			String vdbVersion, AuthenticationType authType,
-			String user, Credentials credential,
-			String applicationName, Properties connProps) throws LoginException,
-			SessionServiceException;
+    public SessionMetadata createSession(String vdbName,
+            String vdbVersion, AuthenticationType authType,
+            String user, Credentials credential,
+            String applicationName, Properties connProps) throws LoginException,
+            SessionServiceException;
 
     /**
      * Closes the specified session.
@@ -112,13 +112,13 @@ public interface SessionService {
 
     SessionMetadata getActiveSession(String sessionID);
 
-	void setDqp(DQPCore dqp);
+    void setDqp(DQPCore dqp);
 
-	AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
+    AuthenticationType getAuthenticationType(String vdbName, String version, String user) throws LogonException;
 
-	SecurityHelper getSecurityHelper();
+    SecurityHelper getSecurityHelper();
 
-	GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
+    GSSResult neogitiateGssLogin(String user, String vdbName, String vdbVersion, byte[] serviceTicket) throws LoginException, LogonException;
 
-	AuthenticationType getDefaultAuthenticationType();
+    AuthenticationType getDefaultAuthenticationType();
 }

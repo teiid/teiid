@@ -39,7 +39,7 @@ public class TestCrossSourceStarJoin {
 
     @Test public void testCrossSourceStarJoin() throws Exception {
         String sql = "select p.Description, sum(AMOUNT) from s3 p, s2 c, s1 b, o1 f " +
-        		"where p.PRODUCTID = f.PRODUCT and c.CurrencyCode = f.CURRENCY and b.BOOKID = f.BOOK and b.Name = 'xyz' and c.Name = 'abc' Group by p.Description";
+                "where p.PRODUCTID = f.PRODUCT and c.CurrencyCode = f.CURRENCY and b.BOOKID = f.BOOK and b.Name = 'xyz' and c.Name = 'abc' Group by p.Description";
 
         MetadataStore metadataStore = new MetadataStore();
 
@@ -96,19 +96,19 @@ public class TestCrossSourceStarJoin {
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "star");
 
         TestOptimizer.helpPlan(sql, metadata, new String[] {
-        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
-        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0",
-        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
-        		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, SUM(g_0.AMOUNT) FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY"
+                "SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
+                "SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0",
+                "SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
+                "SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, SUM(g_0.AMOUNT) FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.PRODUCT IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>)) GROUP BY g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
 
         //test that aggregate will not be staged
         f.setCardinality(527696);
         TestOptimizer.helpPlan(sql, metadata, new String[] {
-        		"SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
-        		"SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>))",
-        		"SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
-        		"SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0"
+                "SELECT g_0.CurrencyCode AS c_0 FROM sybase.s2 AS g_0 WHERE g_0.Name = 'abc' ORDER BY c_0",
+                "SELECT g_0.BOOK, g_0.PRODUCT, g_0.CURRENCY, g_0.AMOUNT FROM oracle.o1 AS g_0 WHERE (g_0.BOOK IN (<dependent values>)) AND (g_0.CURRENCY IN (<dependent values>))",
+                "SELECT g_0.PRODUCTID AS c_0, g_0.Description AS c_1 FROM sybase.s3 AS g_0 ORDER BY c_0",
+                "SELECT g_0.BOOKID AS c_0 FROM sybase.s1 AS g_0 WHERE g_0.Name = 'xyz' ORDER BY c_0"
         }, finder, ComparisonMode.EXACT_COMMAND_STRING);
     }
 

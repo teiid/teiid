@@ -70,83 +70,83 @@ import org.teiid.util.Version;
 @Translator(name="jdbc-ansi", description="JDBC ANSI translator, can used with any ANSI compatible JDBC Driver")
 public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 
-	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
-	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
+    public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
+    public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
 
     public enum StructRetrieval {
-    	OBJECT,
-    	COPY,
-    	ARRAY
+        OBJECT,
+        COPY,
+        ARRAY
     }
 
     private final ThreadLocal<MessageFormat> comment = new ThreadLocal<MessageFormat>() {
-    	@Override
+        @Override
         protected MessageFormat initialValue() {
-    		return new MessageFormat(commentFormat);
-    	}
+            return new MessageFormat(commentFormat);
+        }
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
     static class DatabaseCalender extends ThreadLocal<Calendar> {
-    	private String timeZone;
-    	public DatabaseCalender(String tz) {
-    		this.timeZone = tz;
-    	}
-    	@Override
-    	protected Calendar initialValue() {
+        private String timeZone;
+        public DatabaseCalender(String tz) {
+            this.timeZone = tz;
+        }
+        @Override
+        protected Calendar initialValue() {
             if(this.timeZone != null && this.timeZone.trim().length() > 0) {
-            	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
+                TimeZone tz = TimeZone.getTimeZone(this.timeZone);
                 if(!TimestampWithTimezone.getCalendar().getTimeZone().hasSameRules(tz)) {
-            		return Calendar.getInstance(tz);
+                    return Calendar.getInstance(tz);
                 }
             }
-    		return Calendar.getInstance();
-    	}
+            return Calendar.getInstance();
+        }
     };
 
     private Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 
-	private boolean useBindVariables = true;
-	private String databaseTimeZone;
-	private boolean trimStrings;
-	private boolean useCommentsInSourceQuery;
-	private Version version;
-	private int maxInsertBatchSize = 2048;
-	private DatabaseCalender databaseCalender;
-	private boolean supportsGeneratedKeys;
-	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
-	protected SQLDialect dialect;
-	private boolean enableDependentJoins;
-	private boolean useBindingsForDependentJoin = true;
-	private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
-	private Pattern removePushdownCharacters;
+    private boolean useBindVariables = true;
+    private String databaseTimeZone;
+    private boolean trimStrings;
+    private boolean useCommentsInSourceQuery;
+    private Version version;
+    private int maxInsertBatchSize = 2048;
+    private DatabaseCalender databaseCalender;
+    private boolean supportsGeneratedKeys;
+    private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
+    protected SQLDialect dialect;
+    private boolean enableDependentJoins;
+    private boolean useBindingsForDependentJoin = true;
+    private String commentFormat = "/*teiid sessionid:{0}, requestid:{1}.{2}*/ "; //$NON-NLS-1$
+    private Pattern removePushdownCharacters;
 
-	private AtomicBoolean initialConnection = new AtomicBoolean(true);
+    private AtomicBoolean initialConnection = new AtomicBoolean(true);
     private Boolean defaultTimeZone;
 
-	public JDBCExecutionFactory() {
-		setSupportsFullOuterJoins(true);
-		setSupportsOrderBy(true);
-		setSupportsOuterJoins(true);
-		setSupportsSelectDistinct(true);
-		setSupportsInnerJoins(true);
-		setMaxInCriteriaSize(DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentInPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
-	}
+    public JDBCExecutionFactory() {
+        setSupportsFullOuterJoins(true);
+        setSupportsOrderBy(true);
+        setSupportsOuterJoins(true);
+        setSupportsSelectDistinct(true);
+        setSupportsInnerJoins(true);
+        setMaxInCriteriaSize(DEFAULT_MAX_IN_CRITERIA);
+        setMaxDependentInPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
+    }
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
-		if (useCommentsInSourceQuery) {
-			//will throw an exception if not valid
-			new MessageFormat(commentFormat);
-		}
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
+        if (useCommentsInSourceQuery) {
+            //will throw an exception if not valid
+            new MessageFormat(commentFormat);
+        }
     }
 
     @TranslatorProperty(display="Database Version", description= "Database Version")
     public String getDatabaseVersion() {
-    	return this.version.toString();
+        return this.version.toString();
     }
 
     /**
@@ -154,11 +154,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param version
      */
     public void setDatabaseVersion(String version) {
-    	this.version = Version.getVersion(version);
+        this.version = Version.getVersion(version);
     }
 
     public void setDatabaseVersion(Version version) {
-		this.version = version;
+        this.version = version;
     }
 
     /**
@@ -166,178 +166,178 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return
      */
     protected Version getVersion() {
-    	if (version == null) {
-    		throw new IllegalStateException("version not set"); //$NON-NLS-1$
-    	}
-    	return this.version;
+        if (version == null) {
+            throw new IllegalStateException("version not set"); //$NON-NLS-1$
+        }
+        return this.version;
     }
 
-	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
-	public boolean useBindVariables() {
-		return this.useBindVariables;
-	}
+    @TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)
+    public boolean useBindVariables() {
+        return this.useBindVariables;
+    }
 
-	public void setUseBindVariables(boolean useBindVariables) {
-		this.useBindVariables = useBindVariables;
-	}
+    public void setUseBindVariables(boolean useBindVariables) {
+        this.useBindVariables = useBindVariables;
+    }
 
-	@TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
-	public String getDatabaseTimeZone() {
-		return this.databaseTimeZone;
-	}
+    @TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
+    public String getDatabaseTimeZone() {
+        return this.databaseTimeZone;
+    }
 
-	public void setDatabaseTimeZone(String databaseTimeZone) {
-		this.databaseTimeZone = databaseTimeZone;
-	}
+    public void setDatabaseTimeZone(String databaseTimeZone) {
+        this.databaseTimeZone = databaseTimeZone;
+    }
 
-	@TranslatorProperty(display="Trim string flag", description="Right Trim fixed character types returned as Strings - note that the native type must be char or nchar and the source must support the rtrim function.",advanced=true)
-	public boolean isTrimStrings() {
-		return this.trimStrings;
-	}
+    @TranslatorProperty(display="Trim string flag", description="Right Trim fixed character types returned as Strings - note that the native type must be char or nchar and the source must support the rtrim function.",advanced=true)
+    public boolean isTrimStrings() {
+        return this.trimStrings;
+    }
 
-	public void setTrimStrings(boolean trimStrings) {
-		this.trimStrings = trimStrings;
-	}
+    public void setTrimStrings(boolean trimStrings) {
+        this.trimStrings = trimStrings;
+    }
 
-	@TranslatorProperty(display="Use informational comments in Source Queries", description="This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes", advanced=true)
-	public boolean useCommentsInSourceQuery() {
-		return this.useCommentsInSourceQuery;
-	}
+    @TranslatorProperty(display="Use informational comments in Source Queries", description="This will embed a /*comment*/ leading comment with session/request id in source SQL query for informational purposes", advanced=true)
+    public boolean useCommentsInSourceQuery() {
+        return this.useCommentsInSourceQuery;
+    }
 
-	public void setUseCommentsInSourceQuery(boolean useCommentsInSourceQuery) {
-		this.useCommentsInSourceQuery = useCommentsInSourceQuery;
-	}
+    public void setUseCommentsInSourceQuery(boolean useCommentsInSourceQuery) {
+        this.useCommentsInSourceQuery = useCommentsInSourceQuery;
+    }
 
-	@Override
-	public boolean isSourceRequired() {
-		return true;
-	}
+    @Override
+    public boolean isSourceRequired() {
+        return true;
+    }
 
-	@Override
-	public boolean isSourceRequiredForCapabilities() {
-		return isSourceRequired() && this.version == null && usesDatabaseVersion();
-	}
+    @Override
+    public boolean isSourceRequiredForCapabilities() {
+        return isSourceRequired() && this.version == null && usesDatabaseVersion();
+    }
 
-	protected boolean usesDatabaseVersion() {
-		return false;
-	}
+    protected boolean usesDatabaseVersion() {
+        return false;
+    }
 
-	@Override
-	public void initCapabilities(Connection connection)
-			throws TranslatorException {
-		if (connection == null) {
-			return;
-		}
-		DatabaseMetaData metadata = null;
-    	try {
-			metadata = connection.getMetaData();
-    		if (this.version == null) {
-    			String fullVersion = metadata.getDatabaseProductVersion();
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
-    			setDatabaseVersion(fullVersion);
-    		}
-		} catch (SQLException e) {
-			if (version == null) {
-				throw new TranslatorException(e);
-			}
-		}
-    	if (metadata != null) {
-	    	try {
-	    		supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
-	    	} catch (SQLException e) {
-	    		//ignore -- it's not supported
-			}
-    	}
-	}
+    @Override
+    public void initCapabilities(Connection connection)
+            throws TranslatorException {
+        if (connection == null) {
+            return;
+        }
+        DatabaseMetaData metadata = null;
+        try {
+            metadata = connection.getMetaData();
+            if (this.version == null) {
+                String fullVersion = metadata.getDatabaseProductVersion();
+                LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+                setDatabaseVersion(fullVersion);
+            }
+        } catch (SQLException e) {
+            if (version == null) {
+                throw new TranslatorException(e);
+            }
+        }
+        if (metadata != null) {
+            try {
+                supportsGeneratedKeys = metadata.supportsGetGeneratedKeys();
+            } catch (SQLException e) {
+                //ignore -- it's not supported
+            }
+        }
+    }
 
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-    		throws TranslatorException {
-    	return new JDBCQueryExecution(command, conn, executionContext, this);
+            throws TranslatorException {
+        return new JDBCQueryExecution(command, conn, executionContext, this);
     }
 
     @Override
     public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-    		throws TranslatorException {
-    	return new JDBCDirectQueryExecution(arguments, command, conn, executionContext, this);
+            throws TranslatorException {
+        return new JDBCDirectQueryExecution(arguments, command, conn, executionContext, this);
     }
 
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-    		throws TranslatorException {
-		return new JDBCProcedureExecution(command, conn, executionContext, this);
+            throws TranslatorException {
+        return new JDBCProcedureExecution(command, conn, executionContext, this);
     }
 
     @Override
     public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
-    		throws TranslatorException {
-		return new JDBCUpdateExecution(command, conn, executionContext, this);
+            throws TranslatorException {
+        return new JDBCUpdateExecution(command, conn, executionContext, this);
     }
 
     @Override
     public Connection getConnection(DataSource ds)
-    		throws TranslatorException {
-		try {
-	    	Connection c = ds.getConnection();
-	    	obtainedConnection(c);
-	    	return c;
-		} catch (SQLException e) {
-			 throw new TranslatorException(JDBCPlugin.Event.TEIID11009, e);
-		}
+            throws TranslatorException {
+        try {
+            Connection c = ds.getConnection();
+            obtainedConnection(c);
+            return c;
+        } catch (SQLException e) {
+             throw new TranslatorException(JDBCPlugin.Event.TEIID11009, e);
+        }
     }
 
     @Override
     public void closeConnection(Connection connection, DataSource factory) {
-    	if (connection == null) {
-    		return;
-    	}
-    	try {
-			connection.close();
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
-		}
+        if (connection == null) {
+            return;
+        }
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Error closing"); //$NON-NLS-1$
+        }
     }
 
-	@Override
-	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
-		try {
-			if (conn == null) {
-				throw new TranslatorException(JDBCPlugin.Event.TEIID11018, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11018));
-			}
-			JDBCMetadataProcessor metadataProcessor = createMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
-		} catch (SQLException e) {
-			 throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
-		}
-	}
+    @Override
+    public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
+        try {
+            if (conn == null) {
+                throw new TranslatorException(JDBCPlugin.Event.TEIID11018, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11018));
+            }
+            JDBCMetadataProcessor metadataProcessor = createMetadataProcessor();
+            PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+            metadataProcessor.getConnectorMetadata(conn, metadataFactory);
+        } catch (SQLException e) {
+             throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
+        }
+    }
 
-	/**
-	 * @deprecated
-	 * @see getMetadataProcessor
-	 */
+    /**
+     * @deprecated
+     * @see getMetadataProcessor
+     */
     @Deprecated
     protected JDBCMetadataProcessor createMetadataProcessor() {
-		return (JDBCMetadataProcessor)getMetadataProcessor();
-	}
+        return (JDBCMetadataProcessor)getMetadataProcessor();
+    }
 
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
         return new JDBCMetadataProcessor();
     }
 
-	@Override
+    @Override
     public List<String> getSupportedFunctions() {
         return getDefaultSupportedFunctions();
     }
 
-	public List<String> getDefaultSupportedFunctions(){
-		return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	}
+    public List<String> getDefaultSupportedFunctions(){
+        return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
 
     @Override
     public boolean supportsGroupBy() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -432,7 +432,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
     @Override
     public boolean supportsOrderByUnrelated() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -477,32 +477,32 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
     @Override
     public boolean supportsBulkUpdate() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsBatchedUpdates() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsCompareCriteriaOrdered() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsHaving() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsSelectExpression() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsInsertWithQueryExpression() {
-    	return true;
+        return true;
     }
 
     /**
@@ -511,15 +511,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      */
     @TranslatorProperty(display="Max Prepared Insert Batch Size", description="The max size of a prepared insert batch.  Default 2048.", advanced=true)
     public int getMaxPreparedInsertBatchSize() {
-    	return maxInsertBatchSize;
+        return maxInsertBatchSize;
     }
 
     public void setMaxPreparedInsertBatchSize(int maxInsertBatchSize) {
-    	if (maxInsertBatchSize < 1) {
-    		throw new AssertionError("Max prepared batch insert size must be greater than 0"); //$NON-NLS-1$
-    	}
-		this.maxInsertBatchSize = maxInsertBatchSize;
-	}
+        if (maxInsertBatchSize < 1) {
+            throw new AssertionError("Max prepared batch insert size must be greater than 0"); //$NON-NLS-1$
+        }
+        this.maxInsertBatchSize = maxInsertBatchSize;
+    }
 
     /**
      * Gets the database calendar.  This will be set to the time zone
@@ -528,7 +528,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the database calendar
      */
     public Calendar getDatabaseCalendar() {
-    	return this.databaseCalender.get();
+        return this.databaseCalender.get();
     }
 
     /**
@@ -539,43 +539,43 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return list of translated parts
      */
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-		List<?> parts = null;
-    	if (obj instanceof Function) {
-    		Function function = (Function)obj;
-    		if (functionModifiers != null) {
-    			String name = function.getName();
-    			while (true) {
-	    			FunctionModifier modifier = functionModifiers.get(name);
-	    			if (modifier != null) {
-	    				parts = modifier.translate(function);
-	    				break;
-	    			}
-	    			int index = name.indexOf('.');
-	    			if (index < 0 || index == name.length() - 1) {
-	    				break;
-	    			}
-    				name = name.substring(index + 1);
-    			}
-    		}
-    	} else if (obj instanceof Command) {
-    		parts = translateCommand((Command)obj, context);
-    	} else if (obj instanceof Limit) {
-    		parts = translateLimit((Limit)obj, context);
-    	} else if (obj instanceof ColumnReference) {
-    		ColumnReference elem = (ColumnReference)obj;
-			if (isTrimStrings() && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING && elem.getMetadataObject() != null
-					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
-				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new Expression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
-			}
-    	} else if (obj instanceof DerivedColumn) {
+        List<?> parts = null;
+        if (obj instanceof Function) {
+            Function function = (Function)obj;
+            if (functionModifiers != null) {
+                String name = function.getName();
+                while (true) {
+                    FunctionModifier modifier = functionModifiers.get(name);
+                    if (modifier != null) {
+                        parts = modifier.translate(function);
+                        break;
+                    }
+                    int index = name.indexOf('.');
+                    if (index < 0 || index == name.length() - 1) {
+                        break;
+                    }
+                    name = name.substring(index + 1);
+                }
+            }
+        } else if (obj instanceof Command) {
+            parts = translateCommand((Command)obj, context);
+        } else if (obj instanceof Limit) {
+            parts = translateLimit((Limit)obj, context);
+        } else if (obj instanceof ColumnReference) {
+            ColumnReference elem = (ColumnReference)obj;
+            if (isTrimStrings() && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING && elem.getMetadataObject() != null
+                    && ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
+                return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new Expression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
+            }
+        } else if (obj instanceof DerivedColumn) {
             DerivedColumn dc = (DerivedColumn) obj;
             if (dc.isProjected()) {
-	            Expression expr = dc.getExpression();
-	            if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
-	                dc.setExpression(translateGeometrySelect(expr));
-	            } else if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOGRAPHY) {
-	                dc.setExpression(translateGeographySelect(expr));
-	            }
+                Expression expr = dc.getExpression();
+                if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOMETRY) {
+                    dc.setExpression(translateGeometrySelect(expr));
+                } else if (expr.getType() == TypeFacility.RUNTIME_TYPES.GEOGRAPHY) {
+                    dc.setExpression(translateGeographySelect(expr));
+                }
             }
         } else if (obj instanceof Literal) {
             Literal l = (Literal) obj;
@@ -594,7 +594,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                 return translateGeographyParameter(p);
             }
         }
-    	if (!supportsBooleanExpressions() && obj instanceof Condition) {
+        if (!supportsBooleanExpressions() && obj instanceof Condition) {
             Condition c = (Condition)obj;
             if (c.isExpression()) {
                 if (c instanceof IsNull) {
@@ -607,7 +607,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                         new SearchedWhenClause(new Not(c), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER))), null, TypeFacility.RUNTIME_TYPES.BOOLEAN));
             }
         }
-    	return parts;
+        return parts;
     }
 
     /**
@@ -758,8 +758,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
 
     public GeometryType retrieveGeometryValue(CallableStatement results, int parameterIndex) throws SQLException {
-    	throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
-	}
+        throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
+    }
 
     public GeographyType retrieveGeographyValue(CallableStatement results, int parameterIndex) throws SQLException {
         throw new SQLException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11022));
@@ -773,7 +773,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return a list of translated parts
      */
     public List<?> translateCommand(Command command, ExecutionContext context) {
-    	return null;
+        return null;
     }
 
     /**
@@ -784,7 +784,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return a list of translated parts
      */
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	return null;
+        return null;
     }
 
     /**
@@ -792,7 +792,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return Map of function name to FunctionModifier.
      */
     public Map<String, FunctionModifier> getFunctionModifiers() {
-    	return functionModifiers;
+        return functionModifiers;
     }
 
     /**
@@ -801,7 +801,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param modifier
      */
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
-    	this.functionModifiers.put(name, modifier);
+        this.functionModifiers.put(name, modifier);
     }
 
     /**
@@ -865,20 +865,20 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return Formatted string
      */
     public String formatDateValue(java.util.Date dateObject, boolean useTimezone) {
-    	if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
-        	Timestamp ts = (Timestamp)dateObject;
-        	Timestamp newTs = new Timestamp(ts.getTime());
-        	if (getTimestampNanoPrecision() > 0) {
-	        	int mask = (int)Math.pow(10, 9-getTimestampNanoPrecision());
-	        	newTs.setNanos(ts.getNanos()/mask*mask);
-        	} else {
-        		newTs.setNanos(0);
-        	}
-        	dateObject = newTs;
+        if (dateObject instanceof Timestamp && getTimestampNanoPrecision() < 9) {
+            Timestamp ts = (Timestamp)dateObject;
+            Timestamp newTs = new Timestamp(ts.getTime());
+            if (getTimestampNanoPrecision() > 0) {
+                int mask = (int)Math.pow(10, 9-getTimestampNanoPrecision());
+                newTs.setNanos(ts.getNanos()/mask*mask);
+            } else {
+                newTs.setNanos(0);
+            }
+            dateObject = newTs;
         }
-    	if (!useTimezone) {
-    		return dateObject.toString();
-    	}
+        if (!useTimezone) {
+            return dateObject.toString();
+        }
         return getTypeFacility().convertDate(dateObject, getDatabaseCalendar().getTimeZone(), TimestampWithTimezone.getCalendar(), dateObject.getClass()).toString();
     }
 
@@ -889,7 +889,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return Formatted string
      */
     public String formatDateValue(java.util.Date dateObject) {
-    	return formatDateValue(dateObject, true);
+        return formatDateValue(dateObject, true);
     }
 
 
@@ -900,9 +900,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @param obj value, never null
      * @return Translated string
      */
-	public String translateLiteralBinaryType(BinaryType obj) {
-    	return "X'" + obj + "'"; //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    public String translateLiteralBinaryType(BinaryType obj) {
+        return "X'" + obj + "'"; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     /**
      * Returns true to indicate that SQL should include a comment
@@ -930,7 +930,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * can be used to force a literal to be a bind value.
      */
     public boolean usePreparedStatements() {
-    	return useBindVariables();
+        return useBindVariables();
     }
 
     /**
@@ -939,7 +939,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return true if parenthesis should be used for each set branch
      */
     public boolean useParensForSetQueries() {
-    	return false;
+        return false;
     }
 
     /**
@@ -948,7 +948,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return true if database has a time type
      */
     public boolean hasTimeType() {
-    	return true;
+        return true;
     }
 
     /**
@@ -957,7 +957,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the name for the set operation
      */
     public String getSetOperationString(SetQuery.Operation operation) {
-    	return operation.toString();
+        return operation.toString();
     }
 
     /**
@@ -967,11 +967,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the comment
      */
     public String getSourceComment(ExecutionContext context, Command command) {
-	    if (addSourceComment() && context != null) {
+        if (addSourceComment() && context != null) {
             return comment.get().format(new Object[] {context.getConnectionId(), context.getRequestId(), context.getPartIdentifier(),
-            		context.getExecutionCountIdentifier(), context.getSession().getUserName(), context.getVdbName(), context.getVdbVersion(), context.isTransactional() });
-	    }
-	    return ""; //$NON-NLS-1$
+                    context.getExecutionCountIdentifier(), context.getSession().getUserName(), context.getVdbName(), context.getVdbVersion(), context.isTransactional() });
+        }
+        return ""; //$NON-NLS-1$
     }
 
     /**
@@ -981,7 +981,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return thre replacement name
      */
     public String replaceElementName(String group, String element) {
-    	return null;
+        return null;
     }
 
     /**
@@ -989,7 +989,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return digits of timestamp nano precision.
      */
     public int getTimestampNanoPrecision() {
-    	return 9;
+        return 9;
     }
 
     /**
@@ -1060,11 +1060,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
 
         if (param == null) {
-        	if (type == Types.JAVA_OBJECT) {
-        		stmt.setNull(i, Types.OTHER);
-        	} else {
-        		stmt.setNull(i, type);
-        	}
+            if (type == Types.JAVA_OBJECT) {
+                stmt.setNull(i, Types.OTHER);
+            } else {
+                stmt.setNull(i, type);
+            }
             return;
         }
         //if this is a Date object, then use the database calendar
@@ -1082,7 +1082,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         //not all drivers handle the setObject call with BigDecimal correctly (namely jConnect 6.05)
         if (TypeFacility.RUNTIME_TYPES.BIG_DECIMAL.equals(paramType)) {
-        	stmt.setBigDecimal(i, (BigDecimal)param);
+            stmt.setBigDecimal(i, (BigDecimal)param);
             return;
         }
 
@@ -1093,26 +1093,26 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
 
         if (useStreamsForLobs()) {
-        	if (param instanceof Blob) {
-        		Blob blob = (Blob)param;
-        		long length = blob.length();
-        		if (length <= Integer.MAX_VALUE) {
-        		    stmt.setBinaryStream(i, blob.getBinaryStream(), (int)length);
-        		} else {
-        		    stmt.setBinaryStream(i, blob.getBinaryStream(), length);
-        		}
-        		return;
-        	}
-        	if (param instanceof Clob) {
-        		Clob clob = (Clob)param;
-        		long length = clob.length();
-        		if (length <= Integer.MAX_VALUE) {
-        		    stmt.setCharacterStream(i, clob.getCharacterStream(), (int)clob.length());
-        		} else {
-        		    stmt.setCharacterStream(i, clob.getCharacterStream(), length);
-        		}
-        		return;
-        	}
+            if (param instanceof Blob) {
+                Blob blob = (Blob)param;
+                long length = blob.length();
+                if (length <= Integer.MAX_VALUE) {
+                    stmt.setBinaryStream(i, blob.getBinaryStream(), (int)length);
+                } else {
+                    stmt.setBinaryStream(i, blob.getBinaryStream(), length);
+                }
+                return;
+            }
+            if (param instanceof Clob) {
+                Clob clob = (Clob)param;
+                long length = clob.length();
+                if (length <= Integer.MAX_VALUE) {
+                    stmt.setCharacterStream(i, clob.getCharacterStream(), (int)clob.length());
+                } else {
+                    stmt.setCharacterStream(i, clob.getCharacterStream(), length);
+                }
+                return;
+            }
         }
         //convert these the following to jdbc safe values
         if (TypeFacility.RUNTIME_TYPES.BIG_INTEGER.equals(paramType)) {
@@ -1122,7 +1122,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         } else if (TypeFacility.RUNTIME_TYPES.CHAR.equals(paramType)) {
             param = ((Character)param).toString();
         } else if (paramType.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
-        	param = ((BinaryType)param).getBytesDirect();
+            param = ((BinaryType)param).getBytesDirect();
         }
 
         if (type != Types.JAVA_OBJECT) {
@@ -1141,9 +1141,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                     type = Types.NCLOB;
                 }
             }
-        	stmt.setObject(i, param, type);
+            stmt.setObject(i, param, type);
         } else {
-        	stmt.setObject(i, param);
+            stmt.setObject(i, param);
         }
     }
 
@@ -1152,17 +1152,17 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return
      */
     public boolean useStreamsForLobs() {
-    	return false;
+        return false;
     }
 
-	/**
-	 * Retrieve the value on the current resultset row for the given column index.
-	 * @param results
-	 * @param columnIndex
-	 * @param expectedType
-	 * @return the value
-	 * @throws SQLException
-	 */
+    /**
+     * Retrieve the value on the current resultset row for the given column index.
+     * @param results
+     * @param columnIndex
+     * @param expectedType
+     * @return the value
+     * @throws SQLException
+     */
     public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
         Integer code = DataTypeManager.getTypeCode(expectedType);
         if(code != null) {
@@ -1211,71 +1211,71 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                     return Float.valueOf(value);
                 }
                 case DataTypeManager.DefaultTypeCodes.TIME: {
-            		return results.getTime(columnIndex, getDatabaseCalendar());
+                    return results.getTime(columnIndex, getDatabaseCalendar());
                 }
                 case DataTypeManager.DefaultTypeCodes.DATE: {
-            		return results.getDate(columnIndex, getDatabaseCalendar());
+                    return results.getDate(columnIndex, getDatabaseCalendar());
                 }
                 case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
-            		return results.getTimestamp(columnIndex, getDatabaseCalendar());
+                    return results.getTimestamp(columnIndex, getDatabaseCalendar());
                 }
-    			case DataTypeManager.DefaultTypeCodes.BLOB: {
-    				try {
-    					return results.getBlob(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				try {
-    					return results.getBytes(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}
-    			case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
+                case DataTypeManager.DefaultTypeCodes.BLOB: {
+                    try {
+                        return results.getBlob(columnIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    try {
+                        return results.getBytes(columnIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    break;
+                }
+                case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
                     return retrieveGeographyValue(results, columnIndex);
                 }
-    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+                case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
                     return retrieveGeometryValue(results, columnIndex);
-    			}
-    			case DataTypeManager.DefaultTypeCodes.JSON:
-    			    try {
+                }
+                case DataTypeManager.DefaultTypeCodes.JSON:
+                    try {
                         return new JsonType(results.getClob(columnIndex));
                     } catch (SQLException e) {
                         // ignore
                     }
                     break;
-    			case DataTypeManager.DefaultTypeCodes.CLOB: {
-    				try {
-    					return results.getClob(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}
-    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
-    				boolean result = results.getBoolean(columnIndex);
-    				if(results.wasNull()) {
+                case DataTypeManager.DefaultTypeCodes.CLOB: {
+                    try {
+                        return results.getClob(columnIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    break;
+                }
+                case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
+                    boolean result = results.getBoolean(columnIndex);
+                    if(results.wasNull()) {
                         return null;
                     }
-    				return result;
-    			}
-    			case DataTypeManager.DefaultTypeCodes.VARBINARY: {
-    				try {
-    					return results.getBytes(columnIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}
+                    return result;
+                }
+                case DataTypeManager.DefaultTypeCodes.VARBINARY: {
+                    try {
+                        return results.getBytes(columnIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    break;
+                }
             }
         }
 
         Object result = results.getObject(columnIndex);
         if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
-        	return convertObject(result);
+            return convertObject(result);
         }
-		return result;
+        return result;
     }
 
     /**
@@ -1329,87 +1329,87 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
                     return new Float(value);
                 }
                 case DataTypeManager.DefaultTypeCodes.TIME: {
-            		return results.getTime(parameterIndex, getDatabaseCalendar());
+                    return results.getTime(parameterIndex, getDatabaseCalendar());
                 }
                 case DataTypeManager.DefaultTypeCodes.DATE: {
-            		return results.getDate(parameterIndex, getDatabaseCalendar());
+                    return results.getDate(parameterIndex, getDatabaseCalendar());
                 }
                 case DataTypeManager.DefaultTypeCodes.TIMESTAMP: {
-            		return results.getTimestamp(parameterIndex, getDatabaseCalendar());
+                    return results.getTimestamp(parameterIndex, getDatabaseCalendar());
                 }
-    			case DataTypeManager.DefaultTypeCodes.BLOB: {
-    				try {
-    					return results.getBlob(parameterIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				try {
-    					return results.getBytes(parameterIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    			}
-    			case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
+                case DataTypeManager.DefaultTypeCodes.BLOB: {
+                    try {
+                        return results.getBlob(parameterIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    try {
+                        return results.getBytes(parameterIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                }
+                case DataTypeManager.DefaultTypeCodes.GEOGRAPHY: {
                     return retrieveGeographyValue(results, parameterIndex);
                 }
-    			case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
-    				return retrieveGeometryValue(results, parameterIndex);
-    			}
-    			case DataTypeManager.DefaultTypeCodes.JSON:
-    			    try {
+                case DataTypeManager.DefaultTypeCodes.GEOMETRY: {
+                    return retrieveGeometryValue(results, parameterIndex);
+                }
+                case DataTypeManager.DefaultTypeCodes.JSON:
+                    try {
                         new JsonType(results.getClob(parameterIndex));
                     } catch (SQLException e) {
                         // ignore
                     }
-    			case DataTypeManager.DefaultTypeCodes.CLOB: {
-    				try {
-    					return results.getClob(parameterIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    			}
-    			case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
-    				boolean result = results.getBoolean(parameterIndex);
-    				if(results.wasNull()) {
+                case DataTypeManager.DefaultTypeCodes.CLOB: {
+                    try {
+                        return results.getClob(parameterIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                }
+                case DataTypeManager.DefaultTypeCodes.BOOLEAN: {
+                    boolean result = results.getBoolean(parameterIndex);
+                    if(results.wasNull()) {
                         return null;
                     }
-    				return result;
-    			}
-    			case DataTypeManager.DefaultTypeCodes.VARBINARY: {
-    				try {
-    					return results.getBytes(parameterIndex);
-    				} catch (SQLException e) {
-    					// ignore
-    				}
-    				break;
-    			}
+                    return result;
+                }
+                case DataTypeManager.DefaultTypeCodes.VARBINARY: {
+                    try {
+                        return results.getBytes(parameterIndex);
+                    } catch (SQLException e) {
+                        // ignore
+                    }
+                    break;
+                }
             }
         }
 
         // otherwise fall through and call getObject() and rely on the normal
-		// translation routines
+        // translation routines
         Object result = results.getObject(parameterIndex);
         if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
-        	return convertObject(result);
+            return convertObject(result);
         }
-		return result;
+        return result;
     }
 
     protected Object convertObject(Object object) throws SQLException {
-    	if (object instanceof Struct) {
-    		switch (structRetrieval) {
-    		case OBJECT:
-    			return object;
-    		case ARRAY:
-    			return new ArrayImpl(((Struct)object).getAttributes());
-    		case COPY:
-    			return new SerialStruct((Struct)object, Collections.<String, Class<?>> emptyMap());
-    		}
-    	}
-    	return object;
-	}
+        if (object instanceof Struct) {
+            switch (structRetrieval) {
+            case OBJECT:
+                return object;
+            case ARRAY:
+                return new ArrayImpl(((Struct)object).getAttributes());
+            case COPY:
+                return new SerialStruct((Struct)object, Collections.<String, Class<?>> emptyMap());
+            }
+        }
+        return object;
+    }
 
-	/**
+    /**
      * Called exactly once for this source.
      * @param connection
      */
@@ -1451,7 +1451,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return the {@link SQLConversionVisitor}
      */
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new SQLConversionVisitor(this);
+        return new SQLConversionVisitor(this);
     }
 
     /**
@@ -1460,12 +1460,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return true if every branch of a join should use parenthesis
      */
     public boolean useParensForJoins() {
-    	return false;
+        return false;
     }
 
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.LOW;
+        return NullOrder.LOW;
     }
 
     /**
@@ -1473,262 +1473,262 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * @return true if the limit clause is part of the select
      */
     public boolean useSelectLimit() {
-    	return false;
+        return false;
     }
 
-	/**
-	 * Get the predicate name for LIKE_REGEX
-	 * @return
-	 */
-	public String getLikeRegexString() {
-		return SQLConstants.Reserved.LIKE_REGEX;
-	}
+    /**
+     * Get the predicate name for LIKE_REGEX
+     * @return
+     */
+    public String getLikeRegexString() {
+        return SQLConstants.Reserved.LIKE_REGEX;
+    }
 
-	/**
-	 * Set the fetch size on the given statement.
-	 * @param context
-	 * @param command
-	 * @param statement
-	 * @param fetchSize
-	 * @throws SQLException
-	 */
-	public void setFetchSize(Command command, ExecutionContext context, Statement statement, int fetchSize) throws SQLException {
-		statement.setFetchSize(fetchSize);
-	}
+    /**
+     * Set the fetch size on the given statement.
+     * @param context
+     * @param command
+     * @param statement
+     * @param fetchSize
+     * @throws SQLException
+     */
+    public void setFetchSize(Command command, ExecutionContext context, Statement statement, int fetchSize) throws SQLException {
+        statement.setFetchSize(fetchSize);
+    }
 
-	public boolean supportsGeneratedKeys() {
-		return supportsGeneratedKeys;
-	}
+    public boolean supportsGeneratedKeys() {
+        return supportsGeneratedKeys;
+    }
 
-	@TranslatorProperty(display="Struct retrieval", description="Struct retrieval mode (OBJECT, COPY, ARRAY)",advanced=true)
-	public StructRetrieval getStructRetrieval() {
-		return structRetrieval;
-	}
+    @TranslatorProperty(display="Struct retrieval", description="Struct retrieval mode (OBJECT, COPY, ARRAY)",advanced=true)
+    public StructRetrieval getStructRetrieval() {
+        return structRetrieval;
+    }
 
-	public void setStructRetrieval(StructRetrieval structRetrieval) {
-		this.structRetrieval = structRetrieval;
-	}
+    public void setStructRetrieval(StructRetrieval structRetrieval) {
+        this.structRetrieval = structRetrieval;
+    }
 
-	/**
-	 *
-	 * @param context
-	 * @param command
-	 * @return true if generated keys can be returned
-	 */
-	protected boolean supportsGeneratedKeys(ExecutionContext context,
-			Command command) {
-		return supportsGeneratedKeys() && command instanceof Insert;
-	}
+    /**
+     *
+     * @param context
+     * @param command
+     * @return true if generated keys can be returned
+     */
+    protected boolean supportsGeneratedKeys(ExecutionContext context,
+            Command command) {
+        return supportsGeneratedKeys() && command instanceof Insert;
+    }
 
     /**
      * Create a temp table with the given name prefix and columns
      * @param prefix
-	 * @param cols
-	 * @param context
-	 * @param connection
-	 * @return the name of the table created
-	 * @throws SQLException
-	 */
-	public String createTempTable(String prefix, List<ColumnReference> cols, ExecutionContext context, Connection connection) throws SQLException {
-    	String name = getTemporaryTableName(prefix);
-		String sql = getCreateTempTableSQL(name, cols, !connection.getAutoCommit());
-    	Statement s = connection.createStatement();
-    	try {
-    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary table with:", sql); //$NON-NLS-1$
-    		s.execute(sql);
-    	} finally {
-    		try {
-    			s.close();
-    		} catch (SQLException e) {
+     * @param cols
+     * @param context
+     * @param connection
+     * @return the name of the table created
+     * @throws SQLException
+     */
+    public String createTempTable(String prefix, List<ColumnReference> cols, ExecutionContext context, Connection connection) throws SQLException {
+        String name = getTemporaryTableName(prefix);
+        String sql = getCreateTempTableSQL(name, cols, !connection.getAutoCommit());
+        Statement s = connection.createStatement();
+        try {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary table with:", sql); //$NON-NLS-1$
+            s.execute(sql);
+        } finally {
+            try {
+                s.close();
+            } catch (SQLException e) {
 
-    		}
-    	}
-    	return name;
-	}
+            }
+        }
+        return name;
+    }
 
-	public String getCreateTempTableSQL(String name, List<ColumnReference> cols, boolean transactional) {
-		SQLDialect d = getDialect();
-    	StringBuilder sb = new StringBuilder(getCreateTemporaryTableString(transactional)).append(" "); //$NON-NLS-1$
-    	sb.append(name).append(" ("); //$NON-NLS-1$
-    	for (Iterator<ColumnReference> iter = cols.iterator(); iter.hasNext();) {
-    		ColumnReference col = iter.next();
-    		sb.append(col.getName());
-    		sb.append(" "); //$NON-NLS-1$
-    		Integer defaultValue = JDBCSQLTypeInfo.getDefaultPrecision(col.getType());
-    		int precision = defaultValue == null?255:defaultValue;
-    		int scale = col.getType() == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL?2:0;
-    		long length = precision;
-    		if (col.getMetadataObject() != null) {
-    			precision = col.getMetadataObject().getPrecision();
-    			scale = col.getMetadataObject().getScale();
-    			length = col.getMetadataObject().getLength();
-    		}
-    		sb.append(d.getTypeName(TypeFacility.getSQLTypeFromRuntimeType(col.getType()), length, precision, scale));
-    		//sb.append(" NOT NULL"); -- needed if we will add an index
-    		if (iter.hasNext()) {
-    			sb.append(", "); //$NON-NLS-1$
-    		}
-    	}
-    	sb.append(") ");
-    	if (getCreateTemporaryTablePostfix(transactional) != null) {
-    	    sb.append(getCreateTemporaryTablePostfix(transactional));
-    	}
-    	String sql = sb.toString();
-		return sql;
-	}
+    public String getCreateTempTableSQL(String name, List<ColumnReference> cols, boolean transactional) {
+        SQLDialect d = getDialect();
+        StringBuilder sb = new StringBuilder(getCreateTemporaryTableString(transactional)).append(" "); //$NON-NLS-1$
+        sb.append(name).append(" ("); //$NON-NLS-1$
+        for (Iterator<ColumnReference> iter = cols.iterator(); iter.hasNext();) {
+            ColumnReference col = iter.next();
+            sb.append(col.getName());
+            sb.append(" "); //$NON-NLS-1$
+            Integer defaultValue = JDBCSQLTypeInfo.getDefaultPrecision(col.getType());
+            int precision = defaultValue == null?255:defaultValue;
+            int scale = col.getType() == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL?2:0;
+            long length = precision;
+            if (col.getMetadataObject() != null) {
+                precision = col.getMetadataObject().getPrecision();
+                scale = col.getMetadataObject().getScale();
+                length = col.getMetadataObject().getLength();
+            }
+            sb.append(d.getTypeName(TypeFacility.getSQLTypeFromRuntimeType(col.getType()), length, precision, scale));
+            //sb.append(" NOT NULL"); -- needed if we will add an index
+            if (iter.hasNext()) {
+                sb.append(", "); //$NON-NLS-1$
+            }
+        }
+        sb.append(") ");
+        if (getCreateTemporaryTablePostfix(transactional) != null) {
+            sb.append(getCreateTemporaryTablePostfix(transactional));
+        }
+        String sql = sb.toString();
+        return sql;
+    }
 
-	/**
-	 *
-	 * @param prefix
-	 * @return a valid temporary table name
-	 */
-	public String getTemporaryTableName(String prefix) {
-		return prefix;
-	}
+    /**
+     *
+     * @param prefix
+     * @return a valid temporary table name
+     */
+    public String getTemporaryTableName(String prefix) {
+        return prefix;
+    }
 
-	/**
-	 *
-	 * @param inTransaction
-	 * @return the post script for the temp table create
-	 */
-	public String getCreateTemporaryTablePostfix(boolean inTransaction) {
-		return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableStatementOptions();
-	}
+    /**
+     *
+     * @param inTransaction
+     * @return the post script for the temp table create
+     */
+    public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+        return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableStatementOptions();
+    }
 
-	/**
-	 *
-	 * @param inTransaction
-	 * @return the temp table creation ddl
-	 */
-	public String getCreateTemporaryTableString(boolean inTransaction) {
-		return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableCommand();
-	}
+    /**
+     *
+     * @param inTransaction
+     * @return the temp table creation ddl
+     */
+    public String getCreateTemporaryTableString(boolean inTransaction) {
+        return getDialect().getDefaultMultiTableBulkIdStrategy().getIdTableSupport().getCreateIdTableCommand();
+    }
 
-	public SQLDialect getDialect() {
-		if (dialect == null) {
-			String name = getHibernateDialectClassName();
-			if (name != null) {
-				try {
-					Object impl = ReflectionHelper.create(name, null, this.getClass().getClassLoader());
-					InvocationHandler handler = new MixinProxy(new Object[] {impl});
-					this.dialect = (SQLDialect) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[]{SQLDialect.class}, handler);
-				} catch (TeiidException e) {
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, name, "could not be loaded"); //$NON-NLS-1$
-				}
-			}
-			if (dialect == null) {
-				dialect = new DefaultSQLDialect();
-			}
-		}
-		return dialect;
-	}
+    public SQLDialect getDialect() {
+        if (dialect == null) {
+            String name = getHibernateDialectClassName();
+            if (name != null) {
+                try {
+                    Object impl = ReflectionHelper.create(name, null, this.getClass().getClassLoader());
+                    InvocationHandler handler = new MixinProxy(new Object[] {impl});
+                    this.dialect = (SQLDialect) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[]{SQLDialect.class}, handler);
+                } catch (TeiidException e) {
+                    LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, name, "could not be loaded"); //$NON-NLS-1$
+                }
+            }
+            if (dialect == null) {
+                dialect = new DefaultSQLDialect();
+            }
+        }
+        return dialect;
+    }
 
-	public String getHibernateDialectClassName() {
-		return null;
-	}
+    public String getHibernateDialectClassName() {
+        return null;
+    }
 
-	@Override
-	public boolean supportsDependentJoins() {
-		return enableDependentJoins && getDialect().getDefaultMultiTableBulkIdStrategy() != null;
-	}
+    @Override
+    public boolean supportsDependentJoins() {
+        return enableDependentJoins && getDialect().getDefaultMultiTableBulkIdStrategy() != null;
+    }
 
-	@Override
-	public boolean supportsFullDependentJoins() {
-		return this.supportsDependentJoins();
-	}
+    @Override
+    public boolean supportsFullDependentJoins() {
+        return this.supportsDependentJoins();
+    }
 
-	public boolean tempTableRequiresTransaction() {
-		return false;
-	}
+    public boolean tempTableRequiresTransaction() {
+        return false;
+    }
 
-	/**
-	 * Called after the temporary table has been loaded
-	 * @param tableName
-	 * @param context
-	 * @param connection
-	 * @throws SQLException
-	 */
-	public void loadedTemporaryTable(String tableName,
-			ExecutionContext context, Connection connection) throws SQLException {
+    /**
+     * Called after the temporary table has been loaded
+     * @param tableName
+     * @param context
+     * @param connection
+     * @throws SQLException
+     */
+    public void loadedTemporaryTable(String tableName,
+            ExecutionContext context, Connection connection) throws SQLException {
 
-	}
+    }
 
-	@TranslatorProperty(display="Enable Dependent Joins", description="Enable Dependent Join Pushdown",advanced=true)
-	public boolean isEnableDependentJoins() {
-		return enableDependentJoins;
-	}
+    @TranslatorProperty(display="Enable Dependent Joins", description="Enable Dependent Join Pushdown",advanced=true)
+    public boolean isEnableDependentJoins() {
+        return enableDependentJoins;
+    }
 
-	public void setEnableDependentJoins(boolean enableDependentJoins) {
-		this.enableDependentJoins = enableDependentJoins;
-	}
+    public void setEnableDependentJoins(boolean enableDependentJoins) {
+        this.enableDependentJoins = enableDependentJoins;
+    }
 
-	/**
-	 * @return true if the rollup syntax is WITH ROLLUP
-	 */
-	public boolean useWithRollup() {
-		return false;
-	}
+    /**
+     * @return true if the rollup syntax is WITH ROLLUP
+     */
+    public boolean useWithRollup() {
+        return false;
+    }
 
-	@TranslatorProperty(display="Comment Format", description= "Comment format string used with useCommentsInSourceQuery")
-	public String getCommentFormat() {
-		return commentFormat;
-	}
+    @TranslatorProperty(display="Comment Format", description= "Comment format string used with useCommentsInSourceQuery")
+    public String getCommentFormat() {
+        return commentFormat;
+    }
 
-	public void setCommentFormat(String commentFormat) {
-		this.commentFormat = commentFormat;
-	}
+    public void setCommentFormat(String commentFormat) {
+        this.commentFormat = commentFormat;
+    }
 
-	/**
-	 * @return true if scientific notation should be used for float/double types
-	 */
-	public boolean useScientificNotation() {
-		return false;
-	}
+    /**
+     * @return true if scientific notation should be used for float/double types
+     */
+    public boolean useScientificNotation() {
+        return false;
+    }
 
-	/**
-	 * @return true if the N prefix an N* type binding should be used for strings containing non-ascii characters
-	 */
-	public boolean useUnicodePrefix() {
-		return false;
-	}
+    /**
+     * @return true if the N prefix an N* type binding should be used for strings containing non-ascii characters
+     */
+    public boolean useUnicodePrefix() {
+        return false;
+    }
 
-	/**
+    /**
      * @return true if an N type (NVARCHAR, NCLOB) should be used when a non-ascii value is encountered
      */
-	public boolean useNBindingType() {
+    public boolean useNBindingType() {
         return useUnicodePrefix();
     }
 
-	/**
-	 *
-	 * @return true if the database code page includes extended characters values in the 128-255 range
-	 */
-	public boolean isExtendedAscii() {
-	    //TODO: we may need to look this up from the database - but it could be down to a specific column collation
-	    return true;
-	}
+    /**
+     *
+     * @return true if the database code page includes extended characters values in the 128-255 range
+     */
+    public boolean isExtendedAscii() {
+        //TODO: we may need to look this up from the database - but it could be down to a specific column collation
+        return true;
+    }
 
-	/**
+    /**
      *
      * @param val
      * @return true if the string is non-ascii
      */
-	protected boolean isNonAscii(String val) {
-	    int max = isExtendedAscii()?255:127;
-	    for (int i = 0; i < val.length(); i++) {
+    protected boolean isNonAscii(String val) {
+        int max = isExtendedAscii()?255:127;
+        for (int i = 0; i < val.length(); i++) {
             if (val.codePointAt(i) > max) {
                 return true;
             }
         }
         return false;
-	}
+    }
 
-	/**
-	 *
-	 * @param obj
-	 * @return true if the string expression is possibly non-ascii
-	 */
-	protected boolean isNonAscii(Expression obj) {
+    /**
+     *
+     * @param obj
+     * @return true if the string expression is possibly non-ascii
+     */
+    protected boolean isNonAscii(Expression obj) {
         if (obj == null
                 || !isCharacterType(obj.getType())) {
             return false;
@@ -1783,83 +1783,83 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return result[0];
     }
 
-	/**
-	 *
-	 * @param type
-	 * @return true if type is for characters
-	 */
+    /**
+     *
+     * @param type
+     * @return true if type is for characters
+     */
     protected boolean isCharacterType(Class<?> type) {
         return type == TypeFacility.RUNTIME_TYPES.STRING || type == TypeFacility.RUNTIME_TYPES.CHAR
         || type == TypeFacility.RUNTIME_TYPES.CLOB || type == TypeFacility.RUNTIME_TYPES.JSON;
     }
 
-	/**
-	 *
-	 * @param f
-	 * @return true if the function is a conversion function to a non-ascii string type
-	 *
-	 * An implementation is not required if no such function exists, or the source can handle unicode string using the standard types.
-	 */
-	protected boolean isNonAsciiFunction(Function f) {
-	    return false;
-	}
+    /**
+     *
+     * @param f
+     * @return true if the function is a conversion function to a non-ascii string type
+     *
+     * An implementation is not required if no such function exists, or the source can handle unicode string using the standard types.
+     */
+    protected boolean isNonAsciiFunction(Function f) {
+        return false;
+    }
 
-	/**
-	 * Implemented if the {@link Connection} needs initialized after a statement cancel
-	 * @param c
-	 * @throws SQLException
-	 */
-	public void intializeConnectionAfterCancel(Connection c) throws SQLException {
-	}
+    /**
+     * Implemented if the {@link Connection} needs initialized after a statement cancel
+     * @param c
+     * @throws SQLException
+     */
+    public void intializeConnectionAfterCancel(Connection c) throws SQLException {
+    }
 
-	@Override
-	@TranslatorProperty(display="Use Bindings For Dependent Join", description= "If PreparedStatement bindings should be used for dependent join values.")
-	public boolean useBindingsForDependentJoin() {
-		return useBindingsForDependentJoin;
-	}
+    @Override
+    @TranslatorProperty(display="Use Bindings For Dependent Join", description= "If PreparedStatement bindings should be used for dependent join values.")
+    public boolean useBindingsForDependentJoin() {
+        return useBindingsForDependentJoin;
+    }
 
-	public void setUseBindingsForDependentJoin(
-			boolean useBindingsForDependentJoin) {
-		this.useBindingsForDependentJoin = useBindingsForDependentJoin;
-	}
+    public void setUseBindingsForDependentJoin(
+            boolean useBindingsForDependentJoin) {
+        this.useBindingsForDependentJoin = useBindingsForDependentJoin;
+    }
 
-	/**
-	 *
-	 * @return true if column names are required to retrieve generated keys
-	 */
-	public boolean useColumnNamesForGeneratedKeys() {
-		return false;
-	}
+    /**
+     *
+     * @return true if column names are required to retrieve generated keys
+     */
+    public boolean useColumnNamesForGeneratedKeys() {
+        return false;
+    }
 
-	public String getLateralKeyword() {
-		return SQLConstants.Reserved.LATERAL;
-	}
+    public String getLateralKeyword() {
+        return SQLConstants.Reserved.LATERAL;
+    }
 
-	@TranslatorProperty(display="Remove Pushdown Characters", description="A case-sensitive regular expression of character strings to remove from string values that are pushed down.")
-	public String getRemovePushdownCharacters() {
-	    if (this.removePushdownCharacters == null) {
-	        return null;
-	    }
+    @TranslatorProperty(display="Remove Pushdown Characters", description="A case-sensitive regular expression of character strings to remove from string values that are pushed down.")
+    public String getRemovePushdownCharacters() {
+        if (this.removePushdownCharacters == null) {
+            return null;
+        }
         return removePushdownCharacters.pattern();
     }
 
-	Pattern getRemovePushdownCharactersPattern() {
-	    return removePushdownCharacters;
-	}
+    Pattern getRemovePushdownCharactersPattern() {
+        return removePushdownCharacters;
+    }
 
-	public void setRemovePushdownCharacters(String removePushdownCharacters) {
+    public void setRemovePushdownCharacters(String removePushdownCharacters) {
         this.removePushdownCharacters = Pattern.compile(removePushdownCharacters);
     }
 
-	/**
-	 *
-	 * @return true if the translator is using the VM default TimeZone
-	 */
-	public boolean isDefaultTimeZone() {
-	    if (defaultTimeZone == null) {
-	        this.defaultTimeZone = getDatabaseCalendar().getTimeZone().hasSameRules(TimeZone.getDefault());
-	    }
-	    return defaultTimeZone;
-	}
+    /**
+     *
+     * @return true if the translator is using the VM default TimeZone
+     */
+    public boolean isDefaultTimeZone() {
+        if (defaultTimeZone == null) {
+            this.defaultTimeZone = getDatabaseCalendar().getTimeZone().hasSameRules(TimeZone.getDefault());
+        }
+        return defaultTimeZone;
+    }
 
 }

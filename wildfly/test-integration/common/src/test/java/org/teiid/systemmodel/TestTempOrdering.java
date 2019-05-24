@@ -35,36 +35,36 @@ import org.teiid.runtime.EmbeddedConfiguration;
 @SuppressWarnings("nls")
 public class TestTempOrdering {
 
-	private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
+    private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
 
-	private static FakeServer server;
+    private static FakeServer server;
 
     @BeforeClass public static void setup() throws Exception {
-    	server = new FakeServer(false);
-    	EmbeddedConfiguration ec = new EmbeddedConfiguration();
-    	Properties p = new Properties();
-    	p.setProperty("org.teiid.defaultNullOrder", "HIGH");
-    	ec.setProperties(p);
-    	server.start(ec, false);
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+        server = new FakeServer(false);
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        Properties p = new Properties();
+        p.setProperty("org.teiid.defaultNullOrder", "HIGH");
+        ec.setProperties(p);
+        server.start(ec, false);
+        server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     }
 
     @AfterClass public static void teardown() throws Exception {
-    	server.stop();
+        server.stop();
     }
 
     @Test public void testNullOrder() throws Exception {
-    	Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
-    	Statement s = c.createStatement();
-    	s.execute("insert into #temp (a) values (null),(1)");
+        Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
+        Statement s = c.createStatement();
+        s.execute("insert into #temp (a) values (null),(1)");
 
-    	//will be high based upon the system property
-    	ResultSet rs = s.executeQuery("select * from #temp order by a");
-    	rs.next();
-    	assertNotNull(rs.getObject(1));
+        //will be high based upon the system property
+        ResultSet rs = s.executeQuery("select * from #temp order by a");
+        rs.next();
+        assertNotNull(rs.getObject(1));
 
-    	rs = s.executeQuery("select * from #temp order by a nulls first");
-    	rs.next();
-    	assertNull(rs.getObject(1));
+        rs = s.executeQuery("select * from #temp order by a nulls first");
+        rs.next();
+        assertNull(rs.getObject(1));
     }
 }

@@ -33,11 +33,11 @@ public class QueryTest  {
     private String queryScenarioID;
 
     public QueryTest(String queryScenarioID, String queryID, String querySetID, QuerySQL[] queries, boolean isException) {
-	this.queryID = queryID;
-	this.queries = queries;
-	this.isException = isException;
-	this.querySetID = querySetID;
-	this.queryScenarioID = queryScenarioID;
+    this.queryID = queryID;
+    this.queries = queries;
+    this.isException = isException;
+    this.querySetID = querySetID;
+    this.queryScenarioID = queryScenarioID;
     }
 
     public QuerySQL[] getQueries() {
@@ -49,15 +49,15 @@ public class QueryTest  {
     }
 
     public boolean isException() {
-	return this.isException;
+    return this.isException;
     }
 
     public String geQuerySetID() {
-	return this.querySetID;
+    return this.querySetID;
     }
 
     public String getQueryScenarioID() {
-	return this.queryScenarioID;
+    return this.queryScenarioID;
     }
 
 }

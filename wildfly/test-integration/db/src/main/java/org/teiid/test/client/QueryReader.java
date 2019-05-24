@@ -29,13 +29,13 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * The querySetID identifies a set of queries to executed.
  * The Map structure is as follows:
  *
- * Map: 	Key		-	Value
- * 		QueryIdentifier		SQL Query
+ * Map:     Key        -    Value
+ *         QueryIdentifier        SQL Query
  *
  *
  * Where:
- * -	QueryIdentifier uniquely identifies a sql query in the set.
- * 	SQL Query is the query to be executed.
+ * -    QueryIdentifier uniquely identifies a sql query in the set.
+ *     SQL Query is the query to be executed.
  *
  * @author vanhalbert
  *
@@ -75,7 +75,7 @@ public interface QueryReader {
      * @since
      */
     List<QueryTest> getQueries(String querySetID)
-	    throws QueryTestFailedException;
-																					// Map<String, String> - key = queryIdentifier
+        throws QueryTestFailedException;
+                                                                                    // Map<String, String> - key = queryIdentifier
 
 }

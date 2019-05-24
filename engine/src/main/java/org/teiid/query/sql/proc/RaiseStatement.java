@@ -30,76 +30,76 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class RaiseStatement extends Statement implements ExpressionStatement {
 
-	private Expression expression;
-	private boolean warning;
+    private Expression expression;
+    private boolean warning;
 
-	public RaiseStatement() {
-	}
+    public RaiseStatement() {
+    }
 
-	/**
-	 * Constructor for RaiseErrorStatement.
-	 * @param message The error message
-	 */
-	public RaiseStatement(Expression message) {
-		expression = message;
-	}
+    /**
+     * Constructor for RaiseErrorStatement.
+     * @param message The error message
+     */
+    public RaiseStatement(Expression message) {
+        expression = message;
+    }
 
-	public RaiseStatement(Expression message, boolean warning) {
-		expression = message;
-		this.warning = warning;
-	}
+    public RaiseStatement(Expression message, boolean warning) {
+        expression = message;
+        this.warning = warning;
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
     public Expression getExpression() {
-		return expression;
-	}
+        return expression;
+    }
 
     public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
+        this.expression = expression;
+    }
 
     public int getType() {
         return TYPE_ERROR;
     }
 
-	@Override
-	public RaiseStatement clone() {
-		return new RaiseStatement((Expression) this.expression.clone(), warning);
-	}
+    @Override
+    public RaiseStatement clone() {
+        return new RaiseStatement((Expression) this.expression.clone(), warning);
+    }
 
-	@Override
-	public int hashCode() {
-		return expression.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return expression.hashCode();
+    }
 
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
 
-		if (!(obj instanceof RaiseStatement)) {
-			return false;
-		}
+        if (!(obj instanceof RaiseStatement)) {
+            return false;
+        }
 
-		RaiseStatement other = (RaiseStatement)obj;
+        RaiseStatement other = (RaiseStatement)obj;
 
-		return other.expression.equals(this.expression) && this.warning == other.warning;
-	}
+        return other.expression.equals(this.expression) && this.warning == other.warning;
+    }
 
-	@Override
-	public Class<?> getExpectedType() {
-		return DataTypeManager.DefaultDataClasses.OBJECT;
-	}
+    @Override
+    public Class<?> getExpectedType() {
+        return DataTypeManager.DefaultDataClasses.OBJECT;
+    }
 
-	public boolean isWarning() {
-		return warning;
-	}
+    public boolean isWarning() {
+        return warning;
+    }
 
-	public void setWarning(boolean warning) {
-		this.warning = warning;
-	}
+    public void setWarning(boolean warning) {
+        this.warning = warning;
+    }
 
 } // END CLASS

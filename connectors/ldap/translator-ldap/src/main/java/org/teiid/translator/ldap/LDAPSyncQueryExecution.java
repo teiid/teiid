@@ -89,103 +89,103 @@ import org.teiid.translator.TranslatorException;
  */
 public class LDAPSyncQueryExecution implements ResultSetExecution {
 
-	protected LdapContext ldapConnection;
-	private Select query;
-	protected LDAPExecutionFactory executionFactory;
-	protected ExecutionContext executionContext;
-	protected LDAPQueryExecution delegate;
+    protected LdapContext ldapConnection;
+    private Select query;
+    protected LDAPExecutionFactory executionFactory;
+    protected ExecutionContext executionContext;
+    protected LDAPQueryExecution delegate;
 
-	/**
-	 * Constructor
-	 * @param executionMode the execution mode.
-	 * @param ctx the execution context.
-	 * @param logger the ConnectorLogger
-	 * @param connection the LDAP Context
-	 */
-	public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, ExecutionContext context, LdapContext connection) {
-		this.ldapConnection = connection;
-		this.query = query;
-		this.executionFactory = factory;
-		this.executionContext = context;
-	}
+    /**
+     * Constructor
+     * @param executionMode the execution mode.
+     * @param ctx the execution context.
+     * @param logger the ConnectorLogger
+     * @param connection the LDAP Context
+     */
+    public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, ExecutionContext context, LdapContext connection) {
+        this.ldapConnection = connection;
+        this.query = query;
+        this.executionFactory = factory;
+        this.executionContext = context;
+    }
 
-	/**
-	 * method to execute the supplied query
-	 * @param query the query object.
-	 * @param maxBatchSize the max batch size.
-	 */
-	@Override
-	public void execute() throws TranslatorException {
-		// Parse the IQuery, and translate it into an appropriate LDAP search.
-		IQueryToLdapSearchParser parser = new IQueryToLdapSearchParser(this.executionFactory);
-		LDAPSearchDetails searchDetails = parser.translateSQLQueryToLDAPSearch(query);
+    /**
+     * method to execute the supplied query
+     * @param query the query object.
+     * @param maxBatchSize the max batch size.
+     */
+    @Override
+    public void execute() throws TranslatorException {
+        // Parse the IQuery, and translate it into an appropriate LDAP search.
+        IQueryToLdapSearchParser parser = new IQueryToLdapSearchParser(this.executionFactory);
+        LDAPSearchDetails searchDetails = parser.translateSQLQueryToLDAPSearch(query);
 
-		// Create and configure the new search context.
-		LdapContext context =  createSearchContext(searchDetails.getContextName());
-		SearchControls ctrls = setSearchControls(searchDetails);
+        // Create and configure the new search context.
+        LdapContext context =  createSearchContext(searchDetails.getContextName());
+        SearchControls ctrls = setSearchControls(searchDetails);
 
-		this.delegate = new LDAPQueryExecution(context, searchDetails, ctrls, this.executionFactory, this.executionContext);
-		this.delegate.execute();
-	}
+        this.delegate = new LDAPQueryExecution(context, searchDetails, ctrls, this.executionFactory, this.executionContext);
+        this.delegate.execute();
+    }
 
 
 
-	/**
-	 * Perform a lookup against the initial LDAP context, which
-	 * sets the context to something appropriate for the search that is about to occur.
-	 *
-	 */
-	protected LdapContext createSearchContext(String contextName) throws TranslatorException {
-		try {
-			return (LdapContext) this.ldapConnection.lookup(contextName);
-		} catch (NamingException ne) {
-			throw new TranslatorException(LDAPPlugin.Event.TEIID12002, ne, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
-		}
-	}
+    /**
+     * Perform a lookup against the initial LDAP context, which
+     * sets the context to something appropriate for the search that is about to occur.
+     *
+     */
+    protected LdapContext createSearchContext(String contextName) throws TranslatorException {
+        try {
+            return (LdapContext) this.ldapConnection.lookup(contextName);
+        } catch (NamingException ne) {
+            throw new TranslatorException(LDAPPlugin.Event.TEIID12002, ne, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12002, contextName));
+        }
+    }
 
-	/**
-	 * Set the search controls
-	 */
-	private SearchControls setSearchControls(LDAPSearchDetails searchDetails) {
-		SearchControls ctrls = new SearchControls();
-		//ArrayList modelAttrList = searchDetails.getAttributeList();
-		ArrayList<Column> modelAttrList = searchDetails.getElementList();
-		String[] attrs = new String[modelAttrList.size()];
-		for (int i = 0; i < attrs.length; i++) {
-			attrs[i] = modelAttrList.get(i).getSourceName();
-		}
+    /**
+     * Set the search controls
+     */
+    private SearchControls setSearchControls(LDAPSearchDetails searchDetails) {
+        SearchControls ctrls = new SearchControls();
+        //ArrayList modelAttrList = searchDetails.getAttributeList();
+        ArrayList<Column> modelAttrList = searchDetails.getElementList();
+        String[] attrs = new String[modelAttrList.size()];
+        for (int i = 0; i < attrs.length; i++) {
+            attrs[i] = modelAttrList.get(i).getSourceName();
+        }
 
-		ctrls.setSearchScope(searchDetails.getSearchScope());
-		ctrls.setReturningAttributes(attrs);
+        ctrls.setSearchScope(searchDetails.getSearchScope());
+        ctrls.setReturningAttributes(attrs);
 
-		long limit = searchDetails.getCountLimit();
-		if(limit != -1) {
-			ctrls.setCountLimit(limit);
-		}
-		return ctrls;
-	}
+        long limit = searchDetails.getCountLimit();
+        if(limit != -1) {
+            ctrls.setCountLimit(limit);
+        }
+        return ctrls;
+    }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		return this.delegate.next();
-	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        return this.delegate.next();
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-	    if (this.delegate != null) {
+    @Override
+    public void cancel() throws TranslatorException {
+        if (this.delegate != null) {
             this.delegate.cancel();
         }
-	}
+    }
 
-	@Override
-	public void close() {
-	    if (this.delegate != null) {
-	        this.delegate.close();
-	    }
-	}
+    @Override
+    public void close() {
+        if (this.delegate != null) {
+            this.delegate.close();
+        }
+    }
 
-	// testing
-	LDAPQueryExecution getDelegate() {
-		return this.delegate;
-	}
+    // testing
+    LDAPQueryExecution getDelegate() {
+        return this.delegate;
+    }
 }

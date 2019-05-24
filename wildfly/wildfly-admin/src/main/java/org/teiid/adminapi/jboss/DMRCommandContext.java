@@ -35,256 +35,256 @@ import org.jboss.as.controller.client.Operation;
 import org.jboss.dmr.ModelNode;
 
 public class DMRCommandContext implements CommandContext {
-	private CommandContext delegate;
-	private ModelControllerClient mcc;
+    private CommandContext delegate;
+    private ModelControllerClient mcc;
 
-	public CliConfig getConfig() {
-		return delegate.getConfig();
-	}
+    public CliConfig getConfig() {
+        return delegate.getConfig();
+    }
 
-	public String getArgumentsString() {
-		return delegate.getArgumentsString();
-	}
+    public String getArgumentsString() {
+        return delegate.getArgumentsString();
+    }
 
-	public ParsedCommandLine getParsedCommandLine() {
-		return delegate.getParsedCommandLine();
-	}
+    public ParsedCommandLine getParsedCommandLine() {
+        return delegate.getParsedCommandLine();
+    }
 
-	public void printLine(String message) {
-		delegate.printLine(message);
-	}
+    public void printLine(String message) {
+        delegate.printLine(message);
+    }
 
-	public void printColumns(Collection<String> col) {
-		delegate.printColumns(col);
-	}
+    public void printColumns(Collection<String> col) {
+        delegate.printColumns(col);
+    }
 
-	public void clearScreen() {
-		delegate.clearScreen();
-	}
+    public void clearScreen() {
+        delegate.clearScreen();
+    }
 
-	public void terminateSession() {
-		delegate.terminateSession();
-	}
+    public void terminateSession() {
+        delegate.terminateSession();
+    }
 
-	public boolean isTerminated() {
-		return delegate.isTerminated();
-	}
+    public boolean isTerminated() {
+        return delegate.isTerminated();
+    }
 
-	public void set(Scope scope, String key, Object value) {
-		delegate.set(scope, key, value);
-	}
+    public void set(Scope scope, String key, Object value) {
+        delegate.set(scope, key, value);
+    }
 
-	public Object get(Scope scope, String key) {
-		return delegate.get(scope, key);
-	}
+    public Object get(Scope scope, String key) {
+        return delegate.get(scope, key);
+    }
 
-	public void clear(Scope scope) {
-		delegate.clear(scope);
-	}
+    public void clear(Scope scope) {
+        delegate.clear(scope);
+    }
 
-	public Object remove(Scope scope, String key) {
-		return delegate.remove(scope, key);
-	}
+    public Object remove(Scope scope, String key) {
+        return delegate.remove(scope, key);
+    }
 
-	public ModelControllerClient getModelControllerClient() {
-		return mcc;
-	}
+    public ModelControllerClient getModelControllerClient() {
+        return mcc;
+    }
 
-	public void setModelControllerClient(ModelControllerClient mcc) {
-		this.mcc = mcc;
-	}
+    public void setModelControllerClient(ModelControllerClient mcc) {
+        this.mcc = mcc;
+    }
 
-	public void connectController() throws CommandLineException {
-		delegate.connectController();
-	}
+    public void connectController() throws CommandLineException {
+        delegate.connectController();
+    }
 
-	public void connectController(String controller) throws CommandLineException {
-		delegate.connectController(controller);
-	}
+    public void connectController(String controller) throws CommandLineException {
+        delegate.connectController(controller);
+    }
 
-	public void connectController(String host, int port) throws CommandLineException {
-		delegate.connectController(host, port);
-	}
+    public void connectController(String host, int port) throws CommandLineException {
+        delegate.connectController(host, port);
+    }
 
-	public void bindClient(ModelControllerClient newClient) {
-		delegate.bindClient(newClient);
-	}
+    public void bindClient(ModelControllerClient newClient) {
+        delegate.bindClient(newClient);
+    }
 
-	public void disconnectController() {
-		delegate.disconnectController();
-	}
+    public void disconnectController() {
+        delegate.disconnectController();
+    }
 
-	public String getDefaultControllerHost() {
-		return delegate.getDefaultControllerHost();
-	}
+    public String getDefaultControllerHost() {
+        return delegate.getDefaultControllerHost();
+    }
 
-	public int getDefaultControllerPort() {
-		return delegate.getDefaultControllerPort();
-	}
+    public int getDefaultControllerPort() {
+        return delegate.getDefaultControllerPort();
+    }
 
-	public ControllerAddress getDefaultControllerAddress() {
-		return delegate.getDefaultControllerAddress();
-	}
+    public ControllerAddress getDefaultControllerAddress() {
+        return delegate.getDefaultControllerAddress();
+    }
 
-	public String getControllerHost() {
-		return delegate.getControllerHost();
-	}
+    public String getControllerHost() {
+        return delegate.getControllerHost();
+    }
 
-	public int getControllerPort() {
-		return delegate.getControllerPort();
-	}
+    public int getControllerPort() {
+        return delegate.getControllerPort();
+    }
 
-	public CommandLineParser getCommandLineParser() {
-		return delegate.getCommandLineParser();
-	}
+    public CommandLineParser getCommandLineParser() {
+        return delegate.getCommandLineParser();
+    }
 
-	public OperationRequestAddress getCurrentNodePath() {
-		return delegate.getCurrentNodePath();
-	}
+    public OperationRequestAddress getCurrentNodePath() {
+        return delegate.getCurrentNodePath();
+    }
 
-	public NodePathFormatter getNodePathFormatter() {
-		return delegate.getNodePathFormatter();
-	}
+    public NodePathFormatter getNodePathFormatter() {
+        return delegate.getNodePathFormatter();
+    }
 
-	public OperationCandidatesProvider getOperationCandidatesProvider() {
-		return delegate.getOperationCandidatesProvider();
-	}
+    public OperationCandidatesProvider getOperationCandidatesProvider() {
+        return delegate.getOperationCandidatesProvider();
+    }
 
-	public CommandHistory getHistory() {
-		return delegate.getHistory();
-	}
+    public CommandHistory getHistory() {
+        return delegate.getHistory();
+    }
 
-	public boolean isBatchMode() {
-		return delegate.isBatchMode();
-	}
+    public boolean isBatchMode() {
+        return delegate.isBatchMode();
+    }
 
-	public boolean isWorkflowMode() {
-		return delegate.isWorkflowMode();
-	}
+    public boolean isWorkflowMode() {
+        return delegate.isWorkflowMode();
+    }
 
-	public BatchManager getBatchManager() {
-		return delegate.getBatchManager();
-	}
+    public BatchManager getBatchManager() {
+        return delegate.getBatchManager();
+    }
 
-	public BatchedCommand toBatchedCommand(String line) throws CommandFormatException {
-		return delegate.toBatchedCommand(line);
-	}
+    public BatchedCommand toBatchedCommand(String line) throws CommandFormatException {
+        return delegate.toBatchedCommand(line);
+    }
 
-	public ModelNode buildRequest(String line) throws CommandFormatException {
-		return delegate.buildRequest(line);
-	}
+    public ModelNode buildRequest(String line) throws CommandFormatException {
+        return delegate.buildRequest(line);
+    }
 
-	public CommandLineCompleter getDefaultCommandCompleter() {
-		return delegate.getDefaultCommandCompleter();
-	}
+    public CommandLineCompleter getDefaultCommandCompleter() {
+        return delegate.getDefaultCommandCompleter();
+    }
 
-	public boolean isDomainMode() {
-		return delegate.isDomainMode();
-	}
+    public boolean isDomainMode() {
+        return delegate.isDomainMode();
+    }
 
-	public void addEventListener(CliEventListener listener) {
-		delegate.addEventListener(listener);
-	}
+    public void addEventListener(CliEventListener listener) {
+        delegate.addEventListener(listener);
+    }
 
-	public int getExitCode() {
-		return delegate.getExitCode();
-	}
+    public int getExitCode() {
+        return delegate.getExitCode();
+    }
 
-	public void handle(String line) throws CommandLineException {
-		delegate.handle(line);
-	}
+    public void handle(String line) throws CommandLineException {
+        delegate.handle(line);
+    }
 
-	public void handleSafe(String line) {
-		delegate.handleSafe(line);
-	}
+    public void handleSafe(String line) {
+        delegate.handleSafe(line);
+    }
 
-	public void interact() {
-		delegate.interact();
-	}
+    public void interact() {
+        delegate.interact();
+    }
 
-	public File getCurrentDir() {
-		return delegate.getCurrentDir();
-	}
+    public File getCurrentDir() {
+        return delegate.getCurrentDir();
+    }
 
-	public void setCurrentDir(File dir) {
-		delegate.setCurrentDir(dir);
-	}
+    public void setCurrentDir(File dir) {
+        delegate.setCurrentDir(dir);
+    }
 
-	public boolean isResolveParameterValues() {
-		return delegate.isResolveParameterValues();
-	}
+    public boolean isResolveParameterValues() {
+        return delegate.isResolveParameterValues();
+    }
 
-	public void setResolveParameterValues(boolean resolve) {
-		delegate.setResolveParameterValues(resolve);
-	}
+    public void setResolveParameterValues(boolean resolve) {
+        delegate.setResolveParameterValues(resolve);
+    }
 
-	public boolean isSilent() {
-		return delegate.isSilent();
-	}
+    public boolean isSilent() {
+        return delegate.isSilent();
+    }
 
-	public void setSilent(boolean silent) {
-		delegate.setSilent(silent);
-	}
+    public void setSilent(boolean silent) {
+        delegate.setSilent(silent);
+    }
 
-	public int getTerminalWidth() {
-		return delegate.getTerminalWidth();
-	}
+    public int getTerminalWidth() {
+        return delegate.getTerminalWidth();
+    }
 
-	public int getTerminalHeight() {
-		return delegate.getTerminalHeight();
-	}
+    public int getTerminalHeight() {
+        return delegate.getTerminalHeight();
+    }
 
-	public void setVariable(String name, String value) throws CommandLineException {
-		delegate.setVariable(name, value);
-	}
+    public void setVariable(String name, String value) throws CommandLineException {
+        delegate.setVariable(name, value);
+    }
 
-	public String getVariable(String name) {
-		return delegate.getVariable(name);
-	}
+    public String getVariable(String name) {
+        return delegate.getVariable(name);
+    }
 
-	public Collection<String> getVariables() {
-		return delegate.getVariables();
-	}
+    public Collection<String> getVariables() {
+        return delegate.getVariables();
+    }
 
-	public void registerRedirection(CommandLineRedirection redirection) throws CommandLineException {
-		delegate.registerRedirection(redirection);
-	}
+    public void registerRedirection(CommandLineRedirection redirection) throws CommandLineException {
+        delegate.registerRedirection(redirection);
+    }
 
-	public ConnectionInfo getConnectionInfo() {
-		return delegate.getConnectionInfo();
-	}
+    public ConnectionInfo getConnectionInfo() {
+        return delegate.getConnectionInfo();
+    }
 
-	public void captureOutput(PrintStream captor) {
-		delegate.captureOutput(captor);
-	}
+    public void captureOutput(PrintStream captor) {
+        delegate.captureOutput(captor);
+    }
 
-	public void releaseOutput() {
-		delegate.releaseOutput();
-	}
+    public void releaseOutput() {
+        delegate.releaseOutput();
+    }
 
-	public void setCommandTimeout(int numSeconds) {
-		delegate.setCommandTimeout(numSeconds);
-	}
+    public void setCommandTimeout(int numSeconds) {
+        delegate.setCommandTimeout(numSeconds);
+    }
 
-	public int getCommandTimeout() {
-		return delegate.getCommandTimeout();
-	}
+    public int getCommandTimeout() {
+        return delegate.getCommandTimeout();
+    }
 
-	public void resetTimeout(TIMEOUT_RESET_VALUE value) {
-		delegate.resetTimeout(value);
-	}
+    public void resetTimeout(TIMEOUT_RESET_VALUE value) {
+        delegate.resetTimeout(value);
+    }
 
-	public ModelNode execute(ModelNode mn, String description) throws CommandLineException, IOException {
-		return delegate.execute(mn, description);
-	}
+    public ModelNode execute(ModelNode mn, String description) throws CommandLineException, IOException {
+        return delegate.execute(mn, description);
+    }
 
-	public ModelNode execute(Operation op, String description) throws CommandLineException, IOException {
-		return delegate.execute(op, description);
-	}
+    public ModelNode execute(Operation op, String description) throws CommandLineException, IOException {
+        return delegate.execute(op, description);
+    }
 
-	public DMRCommandContext(CommandContext delegate) {
-		this.delegate = delegate;
-	}
+    public DMRCommandContext(CommandContext delegate) {
+        this.delegate = delegate;
+    }
 
     @Override
     public void connectController(String arg0, String arg1)

@@ -68,92 +68,92 @@ import org.teiid.translator.TypeFacility;
  */
 public class LocateFunctionModifier extends AliasModifier {
 
-	public static String LOCATE = "LOCATE"; //$NON-NLS-1$
+    public static String LOCATE = "LOCATE"; //$NON-NLS-1$
 
     private LanguageFactory langFactory;
     private boolean sourceStringFirst;
 
-	/**
-	 * Translates the scalar function LOCATE() to a source specific scalar
-	 * function or expression.
-	 *
-	 * @param langFactory the language factory associated with translation
-	 */
+    /**
+     * Translates the scalar function LOCATE() to a source specific scalar
+     * function or expression.
+     *
+     * @param langFactory the language factory associated with translation
+     */
     public LocateFunctionModifier(LanguageFactory langFactory) {
-    	this(langFactory, LOCATE, false);
+        this(langFactory, LOCATE, false);
     }
 
-	/**
-	 * Translates the scalar function LOCATE() to a source specific scalar
-	 * function or expression.
-	 *
-	 * @param langFactory the language factory associated with translation
-	 * @param functionName the function name or alias to be used instead of LOCATE
-	 * @param sourceStringFirst
-	 */
+    /**
+     * Translates the scalar function LOCATE() to a source specific scalar
+     * function or expression.
+     *
+     * @param langFactory the language factory associated with translation
+     * @param functionName the function name or alias to be used instead of LOCATE
+     * @param sourceStringFirst
+     */
     public LocateFunctionModifier(LanguageFactory langFactory, final String functionName, boolean sourceStringFirst) {
-    	super(functionName);
-    	this.langFactory = langFactory;
-    	this.sourceStringFirst = sourceStringFirst;
+        super(functionName);
+        this.langFactory = langFactory;
+        this.sourceStringFirst = sourceStringFirst;
     }
 
-	/**
-	 * Returns a version of <code>function</code> suitable for executing at the
-	 * data source.
-	 * <p>
-	 * For example:
-	 * <ul>
-	 * <code>locate('a', 'abcdefg')  --->  LOCATE('a', 'abcdefg')</code><br />
-	 * <code>locate('a', 'abcdefg', 1)  --->  LOCATE('a', 'abcdefg', 1)</code><br />
-	 * <code>locate('a', 'abcdefg', 1)  --->  INSTR('abcdefg', 'a', 1)</code><br />
-	 * <code>locate('a', 'abcdefg', -5)  --->  INSTR('abcdefg', 'a', 1)</code><br />
-	 * <code>locate('a', 'abcdefg', 1)  --->  FINDSTR('a', 'abcdefg', 1)</code><br />
-	 * <code>locate('a', 'abcdefg', myCol)  --->  LOCATE('a', 'abcdefg', CASE WHEN myCol < 1 THEN 1 ELSE myCol END)</code>
-	 * </ul>
-	 *
-	 * @param function the LOCATE function that may need to be modified
-	 */
+    /**
+     * Returns a version of <code>function</code> suitable for executing at the
+     * data source.
+     * <p>
+     * For example:
+     * <ul>
+     * <code>locate('a', 'abcdefg')  --->  LOCATE('a', 'abcdefg')</code><br />
+     * <code>locate('a', 'abcdefg', 1)  --->  LOCATE('a', 'abcdefg', 1)</code><br />
+     * <code>locate('a', 'abcdefg', 1)  --->  INSTR('abcdefg', 'a', 1)</code><br />
+     * <code>locate('a', 'abcdefg', -5)  --->  INSTR('abcdefg', 'a', 1)</code><br />
+     * <code>locate('a', 'abcdefg', 1)  --->  FINDSTR('a', 'abcdefg', 1)</code><br />
+     * <code>locate('a', 'abcdefg', myCol)  --->  LOCATE('a', 'abcdefg', CASE WHEN myCol < 1 THEN 1 ELSE myCol END)</code>
+     * </ul>
+     *
+     * @param function the LOCATE function that may need to be modified
+     */
     public void modify(Function function) {
-    	super.modify(function);
+        super.modify(function);
         List<Expression> args = function.getParameters();
         Expression searchStr = args.get(0);
         Expression sourceStr = args.get(1);
 
         // if startIndex was given then we may need to do additional work
         if (args.size() > 2) {
-        	args.set(2, ensurePositiveStartIndex(args.get(2)));
+            args.set(2, ensurePositiveStartIndex(args.get(2)));
         }
         if (sourceStringFirst) {
-			args.set(0, sourceStr);
-			args.set(1, searchStr);
+            args.set(0, sourceStr);
+            args.set(1, searchStr);
         }
     }
 
-	private Expression ensurePositiveStartIndex(Expression startIndex) {
-		if (startIndex instanceof Literal) {
-			Literal literal = (Literal)startIndex;
-			if (literal.getValue() instanceof Integer && ((Integer)literal.getValue() < 1)) {
-				literal.setValue(1);
-			}
-		} else {
-			Comparison whenExpr = langFactory.createCompareCriteria(
-					Operator.LT,
-					startIndex,
-					langFactory.createLiteral(1, Integer.class)
-				);
-			Literal thenExpr = langFactory.createLiteral(1, Integer.class);
-			startIndex = langFactory.createSearchedCaseExpression(Arrays.asList(langFactory.createSearchedWhenCondition(whenExpr, thenExpr)), startIndex, TypeFacility.RUNTIME_TYPES.INTEGER);
-		}
-		return startIndex;
-	}
+    private Expression ensurePositiveStartIndex(Expression startIndex) {
+        if (startIndex instanceof Literal) {
+            Literal literal = (Literal)startIndex;
+            if (literal.getValue() instanceof Integer && ((Integer)literal.getValue() < 1)) {
+                literal.setValue(1);
+            }
+        } else {
+            Comparison whenExpr = langFactory.createCompareCriteria(
+                    Operator.LT,
+                    startIndex,
+                    langFactory.createLiteral(1, Integer.class)
+                );
+            Literal thenExpr = langFactory.createLiteral(1, Integer.class);
+            startIndex = langFactory.createSearchedCaseExpression(Arrays.asList(langFactory.createSearchedWhenCondition(whenExpr, thenExpr)), startIndex, TypeFacility.RUNTIME_TYPES.INTEGER);
+        }
+        return startIndex;
+    }
 
-	/**
+    /**
      * Get the instance of {@link LanguageFactory} set during construction.
      *
      * @return the <code>ILanguageFactory</code> instance
      */
-	protected LanguageFactory getLanguageFactory() {
-		return this.langFactory;
-	}
+    protected LanguageFactory getLanguageFactory() {
+        return this.langFactory;
+    }
 
 }

@@ -26,59 +26,59 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class WindowSpecification extends BaseLanguageObject {
 
-	private List<Expression> partition;
-	private OrderBy orderBy;
-	private WindowFrame windowFrame;
+    private List<Expression> partition;
+    private OrderBy orderBy;
+    private WindowFrame windowFrame;
 
-	public WindowSpecification() {
+    public WindowSpecification() {
 
-	}
+    }
 
-	public List<Expression> getPartition() {
-		return partition;
-	}
+    public List<Expression> getPartition() {
+        return partition;
+    }
 
-	public void setPartition(List<Expression> grouping) {
-		this.partition = grouping;
-	}
+    public void setPartition(List<Expression> grouping) {
+        this.partition = grouping;
+    }
 
-	public OrderBy getOrderBy() {
-		return orderBy;
-	}
+    public OrderBy getOrderBy() {
+        return orderBy;
+    }
 
-	public void setOrderBy(OrderBy orderBy) {
-		this.orderBy = orderBy;
-	}
+    public void setOrderBy(OrderBy orderBy) {
+        this.orderBy = orderBy;
+    }
 
-	public WindowFrame getWindowFrame() {
+    public WindowFrame getWindowFrame() {
         return windowFrame;
     }
 
-	public void setWindowFrame(WindowFrame windowFrame) {
+    public void setWindowFrame(WindowFrame windowFrame) {
         this.windowFrame = windowFrame;
     }
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(partition.hashCode(), orderBy, windowFrame);
-	}
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(partition.hashCode(), orderBy, windowFrame);
+    }
 
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof WindowSpecification)) {
-			return false;
-		}
-		WindowSpecification other = (WindowSpecification)obj;
-		return EquivalenceUtil.areEqual(this.partition, other.partition) &&
-		EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
-		EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
-	}
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof WindowSpecification)) {
+            return false;
+        }
+        WindowSpecification other = (WindowSpecification)obj;
+        return EquivalenceUtil.areEqual(this.partition, other.partition) &&
+        EquivalenceUtil.areEqual(this.orderBy, other.orderBy) &&
+        EquivalenceUtil.areEqual(this.windowFrame, other.windowFrame);
+    }
 
 }

@@ -46,44 +46,44 @@ public class ExpectedResultsImpl implements ExpectedResults {
     protected Map<String, ResultsHolder> loadedResults = new HashMap<String, ResultsHolder>();
 
     public ExpectedResultsImpl(String querySetIdentifier, Properties properties) {
-	this.props = properties;
-	this.querySetIdentifier = querySetIdentifier;
+    this.props = properties;
+    this.querySetIdentifier = querySetIdentifier;
 
-	this.results_dir_loc = props.getProperty(PROP_EXPECTED_RESULTS_DIR_LOC,
-		"");
+    this.results_dir_loc = props.getProperty(PROP_EXPECTED_RESULTS_DIR_LOC,
+        "");
 
-	String expected_root_loc = this.props
-		.getProperty(PROP_EXPECTED_RESULTS_ROOT_DIR);
+    String expected_root_loc = this.props
+        .getProperty(PROP_EXPECTED_RESULTS_ROOT_DIR);
 
-	if (expected_root_loc != null) {
-	    File dir = new File(expected_root_loc, results_dir_loc);
-	    this.results_dir_loc = dir.getAbsolutePath();
-	}
+    if (expected_root_loc != null) {
+        File dir = new File(expected_root_loc, results_dir_loc);
+        this.results_dir_loc = dir.getAbsolutePath();
+    }
 
-	TestLogger.logInfo("Expected results loc: " + this.results_dir_loc);
+    TestLogger.logInfo("Expected results loc: " + this.results_dir_loc);
     }
 
     @Override
     public boolean isExceptionExpected(String queryidentifier)
-	    throws QueryTestFailedException {
-	return false;
+        throws QueryTestFailedException {
+    return false;
     }
 
-	public boolean isExpectedResultsNeeded() {
-    	return true;
+    public boolean isExpectedResultsNeeded() {
+        return true;
 
-	}
+    }
 
 
     @Override
     public String getQuerySetID() {
-	return this.querySetIdentifier;
+    return this.querySetIdentifier;
     }
 
     @Override
     public synchronized File getResultsFile(String queryidentifier)
-	    throws QueryTestFailedException {
-	return findExpectedResultsFile(queryidentifier, this.querySetIdentifier);
+        throws QueryTestFailedException {
+    return findExpectedResultsFile(queryidentifier, this.querySetIdentifier);
 
     }
 
@@ -109,110 +109,110 @@ public class ExpectedResultsImpl implements ExpectedResults {
      *             If comparison fails.
      */
     public Object compareResults(final String queryIdentifier, final String sql,
-	    final ResultSet resultSet, final Throwable actualException,
-	    final int testStatus, final boolean isOrdered, final int updateCnt,
-	    final boolean resultFromQuery) throws QueryTestFailedException {
+        final ResultSet resultSet, final Throwable actualException,
+        final int testStatus, final boolean isOrdered, final int updateCnt,
+        final boolean resultFromQuery) throws QueryTestFailedException {
 
-	File expectedResultsFile = getResultsFile(queryIdentifier);
+    File expectedResultsFile = getResultsFile(queryIdentifier);
 
-	List<?> results = null;
-	if (actualException != null) {
-	    try {
-		results = TestResultSetUtil.compareThrowable(
-			actualException, sql, expectedResultsFile, false);
+    List<?> results = null;
+    if (actualException != null) {
+        try {
+        results = TestResultSetUtil.compareThrowable(
+            actualException, sql, expectedResultsFile, false);
 
-	    } catch (Throwable e) {
-		QueryTestFailedException t = new QueryTestFailedException(
-			e.getMessage());
-		t.initCause(e);
-		throw t;
-	    }
+        } catch (Throwable e) {
+        QueryTestFailedException t = new QueryTestFailedException(
+            e.getMessage());
+        t.initCause(e);
+        throw t;
+        }
 
-	    if (results != null && results.size() > 0) {
-		return results;
-	    }
+        if (results != null && results.size() > 0) {
+        return results;
+        }
 
-	    return null;
+        return null;
 
-	}
+    }
 
-	// update sql or procedure(with no results) has no results set
-	if (!resultFromQuery) {
+    // update sql or procedure(with no results) has no results set
+    if (!resultFromQuery) {
 
-	    if (SqlUtil.isUpdateSql(sql)) {
-		if (updateCnt == 0 && expectedResultsFile.length() > 0) {
-		    throw new QueryTestFailedException("Update cnt was zero: " + expectedResultsFile.getName());
-		}
-		if (updateCnt > 0 && expectedResultsFile.length() == 0) {
-		    throw new QueryTestFailedException(
-			    "Update cnt was greater than zero, but didnt expected any updates");
-		}
+        if (SqlUtil.isUpdateSql(sql)) {
+        if (updateCnt == 0 && expectedResultsFile.length() > 0) {
+            throw new QueryTestFailedException("Update cnt was zero: " + expectedResultsFile.getName());
+        }
+        if (updateCnt > 0 && expectedResultsFile.length() == 0) {
+            throw new QueryTestFailedException(
+                "Update cnt was greater than zero, but didnt expected any updates");
+        }
 
-	    } else {
-		if (expectedResultsFile.length() > 0) {
-		    throw new QueryTestFailedException("No results from query, but expected results");
-		}
-	    }
-
-
-	} else {
-
-	    try {
-		if (expectedResultsFile.length() == 0) {
-		    // if the expectedResult file is empty
-		    // and the result doesnt have a first row-meaning its empty
-		    // then this is good
-		    if (!resultSet.first()) {
-			throw new QueryTestFailedException(
-				"Expected results is empty, but query produced results");
-		    }
-		    return results;
-		}
-
-		resultSet.beforeFirst();
-
-		results = TestResultSetUtil.writeAndCompareResultSet(resultSet, sql,
-			MAX_COL_WIDTH, false, null, expectedResultsFile, false);
-
-	    } catch (QueryTestFailedException qe) {
-		throw qe;
-	    } catch (Throwable e) {
-		QueryTestFailedException t = new QueryTestFailedException(
-			e.getMessage());
-		t.initCause(e);
-		throw t;
-	    }
+        } else {
+        if (expectedResultsFile.length() > 0) {
+            throw new QueryTestFailedException("No results from query, but expected results");
+        }
+        }
 
 
-	    if (results != null && results.size() > 0) {
-		return results;
-	    }
+    } else {
 
-	    return null;
+        try {
+        if (expectedResultsFile.length() == 0) {
+            // if the expectedResult file is empty
+            // and the result doesnt have a first row-meaning its empty
+            // then this is good
+            if (!resultSet.first()) {
+            throw new QueryTestFailedException(
+                "Expected results is empty, but query produced results");
+            }
+            return results;
+        }
 
-	}
+        resultSet.beforeFirst();
 
-	return results;
+        results = TestResultSetUtil.writeAndCompareResultSet(resultSet, sql,
+            MAX_COL_WIDTH, false, null, expectedResultsFile, false);
+
+        } catch (QueryTestFailedException qe) {
+        throw qe;
+        } catch (Throwable e) {
+        QueryTestFailedException t = new QueryTestFailedException(
+            e.getMessage());
+        t.initCause(e);
+        throw t;
+        }
+
+
+        if (results != null && results.size() > 0) {
+        return results;
+        }
+
+        return null;
+
+    }
+
+    return results;
 
     }
 
     @Override
     public Object getMetaData(String queryidentifier) {
-	// TODO Auto-generated method stub
-	return null;
+    // TODO Auto-generated method stub
+    return null;
     }
 
     private File findExpectedResultsFile(String queryIdentifier,
-	    String querySetIdentifier) throws QueryTestFailedException {
-	String resultFileName = queryIdentifier + ".txt"; //$NON-NLS-1$
-	File file = new File(results_dir_loc + "/" + querySetIdentifier,
-		resultFileName);
-	if (!file.exists()) {
-	    throw new QueryTestFailedException("Query results file "
-		    + file.getAbsolutePath() + " cannot be found");
-	}
+        String querySetIdentifier) throws QueryTestFailedException {
+    String resultFileName = queryIdentifier + ".txt"; //$NON-NLS-1$
+    File file = new File(results_dir_loc + "/" + querySetIdentifier,
+        resultFileName);
+    if (!file.exists()) {
+        throw new QueryTestFailedException("Query results file "
+            + file.getAbsolutePath() + " cannot be found");
+    }
 
-	return file;
+    return file;
 
     }
 

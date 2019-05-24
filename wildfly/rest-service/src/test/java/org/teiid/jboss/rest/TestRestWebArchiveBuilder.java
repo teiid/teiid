@@ -192,19 +192,19 @@ public class TestRestWebArchiveBuilder {
     }
 
 
-	@Test
-	public void testOtherModels() throws Exception {
+    @Test
+    public void testOtherModels() throws Exception {
 
-		MetadataStore ms = new MetadataStore();
+        MetadataStore ms = new MetadataStore();
 
-		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
-		vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
-		ModelMetaData model = new ModelMetaData();
-		model.setName("other");
-		model.setModelType(Type.OTHER);
-		vdb.getVDB().addModel(model);
+        CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
+        vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
+        ModelMetaData model = new ModelMetaData();
+        model.setName("other");
+        model.setModelType(Type.OTHER);
+        vdb.getVDB().addModel(model);
 
-		RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-		builder.getContent(vdb.getVDB(), "vdb");
-	}
+        RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+        builder.getContent(vdb.getVDB(), "vdb");
+    }
 }

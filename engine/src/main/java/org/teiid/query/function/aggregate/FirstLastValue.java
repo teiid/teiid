@@ -66,20 +66,20 @@ public class FirstLastValue extends SingleArgumentAggregateFunction {
 
     @Override
     public void getState(List<Object> state) {
-    	state.add(value);
-    	state.add(set);
+        state.add(value);
+        state.add(set);
     }
 
     @Override
     public int setState(List<?> state, int index) {
-    	value = state.get(index);
-    	set = (Boolean)state.get(index++);
-    	return index++;
+        value = state.get(index);
+        set = (Boolean)state.get(index++);
+        return index++;
     }
 
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	return Arrays.asList(type, Boolean.class);
+        return Arrays.asList(type, Boolean.class);
     }
 
     @Override

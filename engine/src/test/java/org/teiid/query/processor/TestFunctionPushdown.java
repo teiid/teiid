@@ -55,8 +55,8 @@ import org.teiid.translator.SourceSystemFunctions;
 @SuppressWarnings({"nls", "unchecked"})
 public class TestFunctionPushdown {
 
-	@Test public void testMustPushdownOverMultipleSourcesWithoutSupport() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+    @Test public void testMustPushdownOverMultipleSourcesWithoutSupport() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -67,10 +67,10 @@ public class TestFunctionPushdown {
 
         helpPlan(sql, metadata, null, capFinder,
                                       new String[] {}, ComparisonMode.FAILED_PLANNING); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testMustPushdownOverMultipleSources() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+    @Test public void testMustPushdownOverMultipleSources() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -89,42 +89,42 @@ public class TestFunctionPushdown {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(metadata);
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("a")});
-	}
+    }
 
-	@Test public void testSimpleFunctionPushdown() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
-		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+    @Test public void testSimpleFunctionPushdown() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
 
-			@Override
-			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-					CommandContext commandContext, QueryMetadataInterface metadata)
-					throws TeiidProcessingException, TeiidComponentException {
-				return null;
-			}
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
 
-			@Override
-			public CapabilitiesFinder getCapabiltiesFinder() {
-				return capFinder;
-			}
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
 
-			@Override
-			public QueryProcessor createQueryProcessor(String query,
-					String recursionGroup, CommandContext commandContext,
-					Object... params) throws TeiidProcessingException,
-					TeiidComponentException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        });
         cc.setMetadata(tm);
 
-		String sql = "select func(1)"; //$NON-NLS-1$
+        String sql = "select func(1)"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, tm, null, capFinder,
                                       new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -171,44 +171,44 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
 
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(2)});
-	}
+    }
 
-	@Test public void testSimpleFunctionPushdown1() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+    @Test public void testSimpleFunctionPushdown1() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
-		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
-		bsc.setFunctionSupport("parseDate_", true);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        bsc.setFunctionSupport("parseDate_", true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
 
-			@Override
-			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-					CommandContext commandContext, QueryMetadataInterface metadata)
-					throws TeiidProcessingException, TeiidComponentException {
-				return null;
-			}
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
 
-			@Override
-			public CapabilitiesFinder getCapabiltiesFinder() {
-				return capFinder;
-			}
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
 
-			@Override
-			public QueryProcessor createQueryProcessor(String query,
-					String recursionGroup, CommandContext commandContext,
-					Object... params) throws TeiidProcessingException,
-					TeiidComponentException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        });
         cc.setMetadata(tm);
 
-		String sql = "select parseDate_('2011-11-11')"; //$NON-NLS-1$
+        String sql = "select parseDate_('2011-11-11')"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, tm, null, capFinder,
                                       new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -218,7 +218,7 @@ public class TestFunctionPushdown {
         cc.setDQPWorkContext(RealMetadataFactory.buildWorkContext(tm));
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
 
-		sql = "select misc.namespace.func('2011-11-11')"; //$NON-NLS-1$
+        sql = "select misc.namespace.func('2011-11-11')"; //$NON-NLS-1$
 
         plan = helpPlan(sql, tm, null, capFinder,
                                       new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -226,45 +226,45 @@ public class TestFunctionPushdown {
         dataManager = new HardcodedDataManager(tm);
         dataManager.addData("SELECT parseDate_('2011-11-11')", new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
         try {
-        	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
-        	fail();
+            TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(TimestampUtil.createDate(0, 0, 0))});
+            fail();
         } catch (TeiidProcessingException e) {
-        	//not supported by any source
+            //not supported by any source
         }
-	}
+    }
 
-	@Test public void testSimpleFunctionPushdown2() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "CREATE FOREIGN FUNCTION func(a object, b object) RETURNS string;"),
-				new DDLHolder("z", "CREATE FOREIGN FUNCTION func1(a object, b object) RETURNS string; create foreign table g1 (e1 object)"));
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
-		bsc.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+    @Test public void testSimpleFunctionPushdown2() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x", new DDLHolder("y", "CREATE FOREIGN FUNCTION func(a object, b object) RETURNS string;"),
+                new DDLHolder("z", "CREATE FOREIGN FUNCTION func1(a object, b object) RETURNS string; create foreign table g1 (e1 object)"));
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
 
-			@Override
-			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-					CommandContext commandContext, QueryMetadataInterface metadata)
-					throws TeiidProcessingException, TeiidComponentException {
-				return null;
-			}
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
 
-			@Override
-			public CapabilitiesFinder getCapabiltiesFinder() {
-				return capFinder;
-			}
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
 
-			@Override
-			public QueryProcessor createQueryProcessor(String query,
-					String recursionGroup, CommandContext commandContext,
-					Object... params) throws TeiidProcessingException,
-					TeiidComponentException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        });
         cc.setMetadata(tm);
 
         String sql = "select e1 from g1 where func(1, 1) = '2'"; //$NON-NLS-1$
@@ -274,20 +274,20 @@ public class TestFunctionPushdown {
 
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         dataManager.addData("SELECT func(1, 1)", new List[] {Arrays.asList("hello world")});
-    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {});
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {});
 
-    	sql = "select e1 from g1 where func1(1, 1) = '2'"; //$NON-NLS-1$
+        sql = "select e1 from g1 where func1(1, 1) = '2'"; //$NON-NLS-1$
 
         plan = helpPlan(sql, tm, null, capFinder,
                                       new String[] {"SELECT z.g1.e1 FROM z.g1 WHERE func1(1, 1) = '2'"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         dataManager = new HardcodedDataManager(tm);
         dataManager.addData("SELECT g1.e1 FROM g1 WHERE func1(1, 1) = '2'", new List[] {Arrays.asList("hello world")});
-    	TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("hello world")});
-	}
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("hello world")});
+    }
 
-	@Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+    @Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -306,10 +306,10 @@ public class TestFunctionPushdown {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(metadata);
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("aa")});
-	}
+    }
 
-	@Test public void testMustPushdownOverMultipleSourcesWithViewDupRemoval() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
+    @Test public void testMustPushdownOverMultipleSourcesWithViewDupRemoval() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource()));
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -321,22 +321,22 @@ public class TestFunctionPushdown {
 
         helpPlan(sql, metadata, null, capFinder,
                                       new String[] {}, ComparisonMode.FAILED_PLANNING); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testDDLMetadata() throws Exception {
-		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(msg varchar) RETURNS varchar " +
-				"OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
-				"\"NULL-ON-NULL\" 'true', JAVA_CLASS '"+TestFunctionPushdown.class.getName()+"', JAVA_METHOD 'sourceFunc');" +
-				"CREATE VIEW X (Y varchar) as SELECT e1 from pm1.g1;";
+    @Test public void testDDLMetadata() throws Exception {
+        String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(msg varchar) RETURNS varchar " +
+                "OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
+                "\"NULL-ON-NULL\" 'true', JAVA_CLASS '"+TestFunctionPushdown.class.getName()+"', JAVA_METHOD 'sourceFunc');" +
+                "CREATE VIEW X (Y varchar) as SELECT e1 from pm1.g1;";
 
-		MetadataFactory mf = TestDDLParser.helpParse(ddl, "model");
-		mf.getSchema().setPhysical(false);
-		MetadataStore ms = mf.asMetadataStore();
-		ms.merge(RealMetadataFactory.example1Cached().getMetadataStore());
+        MetadataFactory mf = TestDDLParser.helpParse(ddl, "model");
+        mf.getSchema().setPhysical(false);
+        MetadataStore ms = mf.asMetadataStore();
+        ms.merge(RealMetadataFactory.example1Cached().getMetadataStore());
 
-		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(ms, "example1");
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(ms, "example1");
 
-		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setFunctionSupport("model.SourceFunc", true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -348,16 +348,16 @@ public class TestFunctionPushdown {
 
         helpPlan("select sourceFunc(y) from x", metadata, null, capFinder,
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testDDLMetadata1() throws Exception {
-		String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc'); " +
-		              "CREATE foreign FUNCTION \"b.sourceFunc\"(msg varchar) RETURNS varchar; " +
-				"CREATE foreign table X (Y varchar);";
+    @Test public void testDDLMetadata1() throws Exception {
+        String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc'); " +
+                      "CREATE foreign FUNCTION \"b.sourceFunc\"(msg varchar) RETURNS varchar; " +
+                "CREATE foreign table X (Y varchar);";
 
-		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 
-		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("phy", caps); //$NON-NLS-1$
 
@@ -370,24 +370,24 @@ public class TestFunctionPushdown {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(metadata);
         TestProcessor.helpProcess(plan, cc, dm, new List[0]);
-	}
+    }
 
-	@Test public void testDDLMetadataNameConflict() throws Exception {
-		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar; " +
-				"CREATE foreign table X (Y integer);";
+    @Test public void testDDLMetadataNameConflict() throws Exception {
+        String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar; " +
+                "CREATE foreign table X (Y integer);";
 
-		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 
-		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         capFinder.addCapabilities("phy", caps); //$NON-NLS-1$
 
         helpPlan("select phy.convert(y, 'z') from x", metadata, null, capFinder,
                 new String[] {"SELECT phy.convert(g_0.Y, 'z') FROM phy.X AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testConcat2() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    @Test public void testConcat2() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
@@ -415,40 +415,40 @@ public class TestFunctionPushdown {
         //will get replaced in the LanguageBridgeFactory
         helpPlan(sql, metadata, null, capFinder,
                 new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-	}
+    }
 
-	@Test
-	public void testFromUnitTime() throws Exception {
-	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    @Test
+    public void testFromUnitTime() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
-	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-	    String sql = "SELECT from_unixtime(x.e2) from pm1.g1 as x"; //$NON-NLS-1$
+        String sql = "SELECT from_unixtime(x.e2) from pm1.g1 as x"; //$NON-NLS-1$
 
-	    // can pushdown
-	    String expected = "SELECT from_unixtime(convert(g_0.e2, long)) FROM pm1.g1 AS g_0"; //$NON-NLS-1$
-	    caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, true);
-	    caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
-	    helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
+        // can pushdown
+        String expected = "SELECT from_unixtime(convert(g_0.e2, long)) FROM pm1.g1 AS g_0"; //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, true);
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
 
-	    // can not pushdown
-	    expected = "SELECT g_0.e2 FROM pm1.g1 AS g_0"; //$NON-NLS-1$
-	    caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, false);
-	    ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
-	    HardcodedDataManager dataManager = new HardcodedDataManager();
-	    dataManager.addData(expected, new List[] {Arrays.asList(1500000000)});
-	    TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
-	    try {
+        // can not pushdown
+        expected = "SELECT g_0.e2 FROM pm1.g1 AS g_0"; //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.FROM_UNIXTIME, false);
+        ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, new String[] {expected}, ComparisonMode.EXACT_COMMAND_STRING);
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData(expected, new List[] {Arrays.asList(1500000000)});
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+        try {
             TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("2017-07-13 20:40:00")}); //$NON-NLS-1$
         } finally {
             TimestampWithTimezone.resetCalendar(null);
         }
-	}
+    }
 
-	@Test public void testPartialProjectPushdown() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    @Test public void testPartialProjectPushdown() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
@@ -458,39 +458,39 @@ public class TestFunctionPushdown {
         HardcodedDataManager dm = new HardcodedDataManager(metadata);
         dm.addData("SELECT CASE WHEN g_0.e1 = '1' THEN 1 ELSE 0 END, g_0.e2, g_0.e4 FROM g1 AS g_0", new List[] {Arrays.asList(1, 2, 3.1)});
         TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList(1, 5.1)});
-	}
+    }
 
-	@Test public void testMustPushdownOverGrouping() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
-		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+    @Test public void testMustPushdownOverGrouping() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
 
-			@Override
-			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-					CommandContext commandContext, QueryMetadataInterface metadata)
-					throws TeiidProcessingException, TeiidComponentException {
-				return null;
-			}
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
 
-			@Override
-			public CapabilitiesFinder getCapabiltiesFinder() {
-				return capFinder;
-			}
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
 
-			@Override
-			public QueryProcessor createQueryProcessor(String query,
-					String recursionGroup, CommandContext commandContext,
-					Object... params) throws TeiidProcessingException,
-					TeiidComponentException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        });
         cc.setMetadata(tm);
 
         String sql = "select func(e1) from g1 group by e1"; //$NON-NLS-1$
@@ -504,39 +504,39 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
 
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
-	}
+    }
 
-	@Test public void testMustPushdownSubexpressionOverGrouping() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer, e2 integer)", "x", "y");
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
-		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+    @Test public void testMustPushdownSubexpressionOverGrouping() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer, e2 integer)", "x", "y");
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
 
-			@Override
-			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
-					CommandContext commandContext, QueryMetadataInterface metadata)
-					throws TeiidProcessingException, TeiidComponentException {
-				return null;
-			}
+            @Override
+            public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+                    CommandContext commandContext, QueryMetadataInterface metadata)
+                    throws TeiidProcessingException, TeiidComponentException {
+                return null;
+            }
 
-			@Override
-			public CapabilitiesFinder getCapabiltiesFinder() {
-				return capFinder;
-			}
+            @Override
+            public CapabilitiesFinder getCapabiltiesFinder() {
+                return capFinder;
+            }
 
-			@Override
-			public QueryProcessor createQueryProcessor(String query,
-					String recursionGroup, CommandContext commandContext,
-					Object... params) throws TeiidProcessingException,
-					TeiidComponentException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		});
+            @Override
+            public QueryProcessor createQueryProcessor(String query,
+                    String recursionGroup, CommandContext commandContext,
+                    Object... params) throws TeiidProcessingException,
+                    TeiidComponentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+        });
         cc.setMetadata(tm);
 
         String sql = "select max(func(e2)) from g1 group by e1"; //$NON-NLS-1$
@@ -548,14 +548,14 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT y.g1.e1, func(y.g1.e2) FROM y.g1", new List[] {Arrays.asList(1, 2), Arrays.asList(2, 3)});
 
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2), Arrays.asList(3)});
-	}
+    }
 
-	public static String sourceFunc(String msg) {
-		return msg;
-	}
+    public static String sourceFunc(String msg) {
+        return msg;
+    }
 
-	@Test public void testPartialProjectPushdownCorrelatedSubquery() throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    @Test public void testPartialProjectPushdownCorrelatedSubquery() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
@@ -568,18 +568,18 @@ public class TestFunctionPushdown {
         HardcodedDataManager dm = new HardcodedDataManager(metadata);
         dm.addData("SELECT v_0.c_0, g_0.e1, (SELECT g_2.e1 FROM g1 AS g_2 WHERE g_2.e1 = g_0.e1) FROM g2 AS g_0, (SELECT MAX(g_1.e1) AS c_0 FROM g2 AS g_1) AS v_0 WHERE v_0.c_0 = g_0.e1", new List[] {Arrays.asList("a", "a", "a")});
         TestProcessor.helpProcess(plan, dm, new List[] {Arrays.asList("a", 0, "a")});
-	}
+    }
 
-	@Test public void testMustPushdownSubexpression() throws Exception {
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
-		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
-		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
-		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+    @Test public void testMustPushdownSubexpression() throws Exception {
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
 
-		CommandContext cc = TestProcessor.createCommandContext();
+        CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(tm);
 
-		String sql = "select concat('x', func(1) + e1) from g1"; //$NON-NLS-1$
+        String sql = "select concat('x', func(1) + e1) from g1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, tm, null, capFinder,
                                       new String[] {"SELECT func(1), y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -588,19 +588,19 @@ public class TestFunctionPushdown {
         dataManager.addData("SELECT func(1), g1.e1 FROM g1", new List[] {Arrays.asList(2, 0)});
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("x2")});
 
-	}
+    }
 
     @Test public void testParseFormatNameCase() throws Exception {
-    	BasicSourceCapabilities caps = getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
-    	caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
-    	caps.setTranslator(new ExecutionFactory<Object, Object> () {
-    		@Override
-    		public boolean supportsFormatLiteral(String literal,
-    				org.teiid.translator.ExecutionFactory.Format format) {
-    			return literal.equals("yyyy");
-    		}
-    	});
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
+        caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
+        caps.setTranslator(new ExecutionFactory<Object, Object> () {
+            @Override
+            public boolean supportsFormatLiteral(String literal,
+                    org.teiid.translator.ExecutionFactory.Format format) {
+                return literal.equals("yyyy");
+            }
+        });
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formatTimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, 'yyyy') = 1 and formatTimestamp(timestampvalue, stringkey) = '19'", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {

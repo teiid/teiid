@@ -73,94 +73,94 @@ public class TestODataUpdateExecution {
         TranslationUtility utility = new TranslationUtility(
                 TestODataMetadataProcessor.getTransformationMetadata(mf,translator));
 
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		WSConnection connection = Mockito.mock(WSConnection.class);
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
 
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
-		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
 
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
-		        Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
 
-		DataSource ds = new DataSource() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return new ByteArrayOutputStream();
-			}
-			@Override
-			public String getName() {
-				return "result";
-			}
-			@Override
-			public InputStream getInputStream() throws IOException {
-				ByteArrayInputStream in = new ByteArrayInputStream(resultJson.getBytes());
-				return in;
-			}
-			@Override
-			public String getContentType() {
-				return "application/json";
-			}
-		};
-		ArgumentCaptor<DataSource> data = ArgumentCaptor.forClass(DataSource.class);
-		Mockito.stub(dispatch.invoke(data.capture())).toReturn(ds);
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultJson.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/json";
+            }
+        };
+        ArgumentCaptor<DataSource> data = ArgumentCaptor.forClass(DataSource.class);
+        Mockito.stub(dispatch.invoke(data.capture())).toReturn(ds);
 
-		UpdateExecution execution = translator
+        UpdateExecution execution = translator
                 .createUpdateExecution(cmd, context,
                         utility.createRuntimeMetadata(), connection);
-		execution.execute();
+        execution.execute();
 
-		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
 
 
         Mockito.verify(connection).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
-		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
-		String payload = new String(ObjectConverterUtil.convertToByteArray(
-		        ((ClobInputStreamFactory)data.getValue()).getInputStream()));
-		assertEquals(expectedPayload, payload);
-		assertEquals(expectedMethod, dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_METHOD));
-		return execution;
-	}
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        String payload = new String(ObjectConverterUtil.convertToByteArray(
+                ((ClobInputStreamFactory)data.getValue()).getInputStream()));
+        assertEquals(expectedPayload, payload);
+        assertEquals(expectedMethod, dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_METHOD));
+        return execution;
+    }
 
 
-	@Test
-	public void testInsertEntitySet() throws Exception {
-		String query = "INSERT INTO People(UserName,FirstName,LastName, EMails, Gender, Concurrency) "
-		        + "values ('jdoe', 'John', 'Doe', ('jdoe@cantfind.ws',), 'Male', 1234)";
-		String expectedURL = "People";
-		String returnResponse = "{\n" +
-		        "   \"UserName\":\"russellwhyte\",\n" +
-		        "   \"FirstName\":\"Russell\",\n" +
-		        "   \"LastName\":\"Whyte\"\n" +
-		        "}";
-		String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Person\","
-		        + "\"UserName@odata.type\":\"String\",\"UserName\":\"jdoe\","
-		        + "\"FirstName@odata.type\":\"String\",\"FirstName\":\"John\","
-		        + "\"LastName@odata.type\":\"String\",\"LastName\":\"Doe\","
-		        + "\"Emails@odata.type\":\"#Collection(String)\",\"Emails\":[\"jdoe@cantfind.ws\"],"
-		        + "\"Gender@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.PersonGender\","
-		        + "\"Gender\":\"Male\","
-		        + "\"Concurrency@odata.type\":\"Int64\",\"Concurrency\":1234}";
-		UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
-		        query, expectedPayload, returnResponse, expectedURL, "POST", 201);
+    @Test
+    public void testInsertEntitySet() throws Exception {
+        String query = "INSERT INTO People(UserName,FirstName,LastName, EMails, Gender, Concurrency) "
+                + "values ('jdoe', 'John', 'Doe', ('jdoe@cantfind.ws',), 'Male', 1234)";
+        String expectedURL = "People";
+        String returnResponse = "{\n" +
+                "   \"UserName\":\"russellwhyte\",\n" +
+                "   \"FirstName\":\"Russell\",\n" +
+                "   \"LastName\":\"Whyte\"\n" +
+                "}";
+        String expectedPayload = "{\"@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.Person\","
+                + "\"UserName@odata.type\":\"String\",\"UserName\":\"jdoe\","
+                + "\"FirstName@odata.type\":\"String\",\"FirstName\":\"John\","
+                + "\"LastName@odata.type\":\"String\",\"LastName\":\"Doe\","
+                + "\"Emails@odata.type\":\"#Collection(String)\",\"Emails\":[\"jdoe@cantfind.ws\"],"
+                + "\"Gender@odata.type\":\"#Microsoft.OData.SampleService.Models.TripPin.PersonGender\","
+                + "\"Gender\":\"Male\","
+                + "\"Concurrency@odata.type\":\"Int64\",\"Concurrency\":1234}";
+        UpdateExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, expectedPayload, returnResponse, expectedURL, "POST", 201);
 
-	}
+    }
 
-	@Test
-	public void testInsertComplexType() throws Exception {
-		String query = "INSERT INTO Persons_address(street, city, state, Persons_ssn) "
-		        + "VALUES('sesame street', 'Newyork', 'NY', 1234)";
-		String expectedURL = "Persons(1234)/address";
+    @Test
+    public void testInsertComplexType() throws Exception {
+        String query = "INSERT INTO Persons_address(street, city, state, Persons_ssn) "
+                + "VALUES('sesame street', 'Newyork', 'NY', 1234)";
+        String expectedURL = "Persons(1234)/address";
 
-		String returnResponse = "{\n" +
+        String returnResponse = "{\n" +
                 "   \"UserName\":\"russellwhyte\",\n" +
                 "   \"FirstName\":\"Russell\",\n" +
                 "   \"LastName\":\"Whyte\"\n" +
@@ -171,10 +171,10 @@ public class TestODataUpdateExecution {
                 + "\"state@odata.type\":\"String\",\"state\":\"NY\"}";
 
         // single complex requires PATCH
-		UpdateExecution excution = helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
-		        query, expectedPayload, returnResponse, expectedURL, "PATCH", 201);
+        UpdateExecution excution = helpExecute(TestODataMetadataProcessor.getEntityWithComplexProperty(),
+                query, expectedPayload, returnResponse, expectedURL, "PATCH", 201);
 
-	}
+    }
 
     @Test
     public void testInsertComplexTypeTripPin() throws Exception {

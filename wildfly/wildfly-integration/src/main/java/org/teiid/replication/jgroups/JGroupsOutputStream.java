@@ -32,9 +32,9 @@ import org.jgroups.blocks.RpcDispatcher;
 
 public class JGroupsOutputStream extends OutputStream {
 
-	static final int CHUNK_SIZE=1<<15; //need to stay under the default of 64000 for the JGroups bundling size
+    static final int CHUNK_SIZE=1<<15; //need to stay under the default of 64000 for the JGroups bundling size
 
-	protected final RpcDispatcher disp;
+    protected final RpcDispatcher disp;
     protected final List<Address> dests;
     protected final Serializable stateId;
     protected final short methodOffset;
@@ -49,11 +49,11 @@ public class JGroupsOutputStream extends OutputStream {
         this.stateId=stateId;
         this.methodOffset = methodOffset;
         if (sendCreate) {
-	        try {
-	        	disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
-	        } catch(Exception e) {
-	        	throw new IOException(e);
-	        }
+            try {
+                disp.callRemoteMethods(this.dests, new MethodCall(methodOffset, new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
+            } catch(Exception e) {
+                throw new IOException(e);
+            }
         }
     }
 
@@ -63,7 +63,7 @@ public class JGroupsOutputStream extends OutputStream {
         }
         flush();
         try {
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
+            disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 2), new Object[] {stateId}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
         } catch(Exception e) {
         }
         closed=true;
@@ -75,18 +75,18 @@ public class JGroupsOutputStream extends OutputStream {
             if(index == 0) {
                 return;
             }
-        	disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
+            disp.callRemoteMethods(dests, new MethodCall((short)(methodOffset + 1), new Object[] {stateId, Arrays.copyOf(buffer, index)}), new RequestOptions(ResponseMode.GET_NONE, 0).setAnycasting(dests != null));
             index=0;
         } catch(Exception e) {
-        	throw new IOException(e);
+            throw new IOException(e);
         }
     }
 
-	private void checkClosed() throws IOException {
-		if(closed) {
+    private void checkClosed() throws IOException {
+        if(closed) {
             throw new IOException("output stream is closed"); //$NON-NLS-1$
-		}
-	}
+        }
+    }
 
     public void write(int b) throws IOException {
         checkClosed();

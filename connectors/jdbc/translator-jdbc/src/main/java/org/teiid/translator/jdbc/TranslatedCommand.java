@@ -52,8 +52,8 @@ public class TranslatedCommand {
      * @param visitor a SQLConversionVisitor subclass
      */
     public TranslatedCommand(ExecutionContext context, JDBCExecutionFactory executionFactory){
-    	this.executionFactory = executionFactory;
-    	this.context = context;
+        this.executionFactory = executionFactory;
+        this.context = context;
     }
 
     /**
@@ -64,14 +64,14 @@ public class TranslatedCommand {
      * @throws TranslatorException
      */
     public void translateCommand(Command command) throws TranslatorException {
-    	SQLConversionVisitor sqlConversionVisitor = executionFactory.getSQLConversionVisitor();
+        SQLConversionVisitor sqlConversionVisitor = executionFactory.getSQLConversionVisitor();
         sqlConversionVisitor.setExecutionContext(context);
         if (executionFactory.usePreparedStatements() || hasBindValue(command)) {
-        	sqlConversionVisitor.setPrepared(true);
+            sqlConversionVisitor.setPrepared(true);
         }
 
-		sqlConversionVisitor.append(command);
-		this.sql = sqlConversionVisitor.toString();
+        sqlConversionVisitor.append(command);
+        this.sql = sqlConversionVisitor.toString();
         this.preparedValues = sqlConversionVisitor.getPreparedValues();
         this.prepared = command instanceof BulkCommand?sqlConversionVisitor.isUsingBinding():sqlConversionVisitor.isPrepared();
     }
@@ -99,9 +99,9 @@ public class TranslatedCommand {
      * @return
      */
     static boolean isBindEligible(Literal l) {
-		return DataTypeManager.isLOB(l.getType())
-				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
-	}
+        return DataTypeManager.isLOB(l.getType())
+                || TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
+    }
 
     /**
      * Return List of values to set on a prepared statement, if
@@ -130,12 +130,12 @@ public class TranslatedCommand {
 
     @Override
     public String toString() {
-    	StringBuffer sb = new StringBuffer();
-    	if (prepared) {
-    		sb.append("Prepared Values: ").append(preparedValues).append(" "); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    	sb.append("SQL: ").append(sql); //$NON-NLS-1$
-    	return sb.toString();
+        StringBuffer sb = new StringBuffer();
+        if (prepared) {
+            sb.append("Prepared Values: ").append(preparedValues).append(" "); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        sb.append("SQL: ").append(sql); //$NON-NLS-1$
+        return sb.toString();
     }
 
 }

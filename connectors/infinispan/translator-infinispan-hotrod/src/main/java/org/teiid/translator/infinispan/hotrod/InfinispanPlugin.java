@@ -27,27 +27,27 @@ public class InfinispanPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
             PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
 
-	public static enum Event implements BundleUtil.Event{
-		TEIID25000,
-		TEIID25001,
-		TEIID25002,
-		TEIID25003,
-		TEIID25004,
-		TEIID25005,
-		TEIID25006,
-		TEIID25007,
-		TEIID25008,
-		TEIID25009,
-		TEIID25010,
-		TEIID25011,
-		TEIID25012,
-		TEIID25013,
-		TEIID25014,
-		TEIID25015,
-		TEIID25016,
-		TEIID25017,
-		TEIID25018,
-		TEIID25019,
-		TEIID25020
-	}
+    public static enum Event implements BundleUtil.Event{
+        TEIID25000,
+        TEIID25001,
+        TEIID25002,
+        TEIID25003,
+        TEIID25004,
+        TEIID25005,
+        TEIID25006,
+        TEIID25007,
+        TEIID25008,
+        TEIID25009,
+        TEIID25010,
+        TEIID25011,
+        TEIID25012,
+        TEIID25013,
+        TEIID25014,
+        TEIID25015,
+        TEIID25016,
+        TEIID25017,
+        TEIID25018,
+        TEIID25019,
+        TEIID25020
+    }
 }

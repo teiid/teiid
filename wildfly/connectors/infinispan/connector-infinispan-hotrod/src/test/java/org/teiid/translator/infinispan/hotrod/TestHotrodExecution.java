@@ -95,7 +95,7 @@ public class TestHotrodExecution {
     }
 
     public InfinispanConnection getConnection(String cache) throws ResourceException {
-    	return SERVER.getConnection(cache);
+        return SERVER.getConnection(cache);
     }
 
 
@@ -278,13 +278,13 @@ public class TestHotrodExecution {
         Time time = new Time(1504889513361L);
 
         String sql = "UPSERT INTO G5 (e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14, e15, e16, e17, e18) "
-        		+ "values (512, 'one', convert(512.34, double), 512.25, 256, 1, 't', 1504889513361, convert(123445656.12313, bigdecimal), "
-        		+ "convert(1332434343, biginteger), "
-        		+ "{t '"+new SimpleDateFormat("HH:mm:ss").format(time)+"'}, "
-        		+ "{ts '"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timestamp)+"'}, "
-        		+ "{d '"+new SimpleDateFormat("yyyy-MM-dd").format(date)+"'}, "
-        		+ "null, null, "
-        		+ "convert('clob contents', clob), xmlparse(CONTENT '<a>foo</a>'), null)";
+                + "values (512, 'one', convert(512.34, double), 512.25, 256, 1, 't', 1504889513361, convert(123445656.12313, bigdecimal), "
+                + "convert(1332434343, biginteger), "
+                + "{t '"+new SimpleDateFormat("HH:mm:ss").format(time)+"'}, "
+                + "{ts '"+new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timestamp)+"'}, "
+                + "{d '"+new SimpleDateFormat("yyyy-MM-dd").format(date)+"'}, "
+                + "null, null, "
+                + "convert('clob contents', clob), xmlparse(CONTENT '<a>foo</a>'), null)";
 
         command = UTILITY.parseCommand(sql);
 
@@ -322,7 +322,7 @@ public class TestHotrodExecution {
     // TEIID-5165 - test large cache delete
     @Test
     public void testServer_Teiid_5165() throws Exception {
-    	EF.setSupportsUpsert(false);
+        EF.setSupportsUpsert(false);
 
         ResultSetExecution exec = null;
         Command command = null;
@@ -350,9 +350,9 @@ public class TestHotrodExecution {
 
         int cnt = 0;
         while(true) {
-        	List<?> results = exec.next();
-        	if (results == null) break;
-        	cnt++;
+            List<?> results = exec.next();
+            if (results == null) break;
+            cnt++;
         }
 
         assertEquals(new Integer(rows), new Integer(cnt));

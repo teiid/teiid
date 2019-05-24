@@ -108,7 +108,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
     @Override
     public void execute() throws TranslatorException {
         try {
-        	String  parameters = getQueryParameters(this.command);
+            String  parameters = getQueryParameters(this.command);
 
             InputStream response = null;
             Procedure procedure = this.command.getMetadataObject();
@@ -124,8 +124,8 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
         } catch (ODataDeserializerException e) {
             throw new TranslatorException(e);
         } catch (EdmPrimitiveTypeException e) {
-        	throw new TranslatorException(e);
-		}
+            throw new TranslatorException(e);
+        }
     }
 
     private void handleResponse(final Procedure procedure, final String baseUri, final InputStream payload)

@@ -50,25 +50,25 @@ public class TestODataSQLVistor {
 
     @Test
     public void testSelectStar() throws Exception {
-    	helpExecute("select * from People",
-    	        "People?$select=UserName,FirstName,LastName,Emails,Gender,Concurrency");
+        helpExecute("select * from People",
+                "People?$select=UserName,FirstName,LastName,Emails,Gender,Concurrency");
     }
 
     @Test
     public void testSelectSpecificColumns() throws Exception {
-    	helpExecute("select UserName from People", "People?$select=UserName");
+        helpExecute("select UserName from People", "People?$select=UserName");
     }
 
     @Test
     public void testPKBasedFilter() throws Exception {
-    	helpExecute("select UserName from People where UserName = 'ALSK'",
-    	        "People?$select=UserName&$filter=UserName eq 'ALSK'");
+        helpExecute("select UserName from People where UserName = 'ALSK'",
+                "People?$select=UserName&$filter=UserName eq 'ALSK'");
     }
 
     @Test
     public void testMultiKeyKeyBasedFilter() throws Exception {
-    	helpExecute("select Price from PurchaseDetails where ItemId = 1 and SaleId = 12 and Quantity = 2",
-    	        "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and SaleId eq 12 and Quantity eq 2");
+        helpExecute("select Price from PurchaseDetails where ItemId = 1 and SaleId = 12 and Quantity = 2",
+                "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and SaleId eq 12 and Quantity eq 2");
     }
 
     @Test
@@ -89,27 +89,27 @@ public class TestODataSQLVistor {
 
     @Test
     public void testAddFilter() throws Exception {
-    	helpExecute("select Price from PurchaseDetails where ItemId = 1 and (Quantity+2) > ItemId",
-    	        "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and cast((Quantity add 2),Edm.Int64) gt ItemId");
+        helpExecute("select Price from PurchaseDetails where ItemId = 1 and (Quantity+2) > ItemId",
+                "PurchaseDetails?$select=Price&$filter=ItemId eq 1 and cast((Quantity add 2),Edm.Int64) gt ItemId");
     }
 
     @Test
     public void testMultiKeyKeyBasedFilterOr() throws Exception {
-    	helpExecute("select Price from PurchaseDetails where (ItemId = 1 and SaleId = 12) or Quantity = 2",
-    	        "PurchaseDetails?$select=Price&$filter=(ItemId eq 1 and SaleId eq 12) or Quantity eq 2");
+        helpExecute("select Price from PurchaseDetails where (ItemId = 1 and SaleId = 12) or Quantity = 2",
+                "PurchaseDetails?$select=Price&$filter=(ItemId eq 1 and SaleId eq 12) or Quantity eq 2");
     }
 
     @Test
     public void testPartialPK() throws Exception {
-    	helpExecute("select Price from PurchaseDetails where Quantity >= 2 and SaleId = 12",
-    	        "PurchaseDetails?$select=Price&$filter=Quantity ge 2 and SaleId eq 12");
+        helpExecute("select Price from PurchaseDetails where Quantity >= 2 and SaleId = 12",
+                "PurchaseDetails?$select=Price&$filter=Quantity ge 2 and SaleId eq 12");
     }
 
     @Test
     public void testSimpleJoinWithAnotherEntity() throws Exception {
-    	helpExecute("SELECT p.UserName, pf.UserName FROM People p "
-    	        + "JOIN People_Friends pf ON p.UserName=pf.People_UserName and p.UserName='russlwhyte'",
-    	        "People?$select=UserName&$filter=UserName eq 'russlwhyte'&$expand=Friends($select=UserName)");
+        helpExecute("SELECT p.UserName, pf.UserName FROM People p "
+                + "JOIN People_Friends pf ON p.UserName=pf.People_UserName and p.UserName='russlwhyte'",
+                "People?$select=UserName&$filter=UserName eq 'russlwhyte'&$expand=Friends($select=UserName)");
     }
 
     @Test
@@ -173,35 +173,35 @@ public class TestODataSQLVistor {
 
     @Test
     public void testFunction() throws Exception {
-    	helpExecute("SELECT UserName FROM People WHERE odata.startswith(UserName, 'CN')",
-    	        "People?$select=UserName&$filter=startswith(UserName,'CN') eq true");
+        helpExecute("SELECT UserName FROM People WHERE odata.startswith(UserName, 'CN')",
+                "People?$select=UserName&$filter=startswith(UserName,'CN') eq true");
     }
 
     @Test
     public void testLimit() throws Exception {
-    	helpExecute("SELECT UserName FROM People limit 10",
-    	        "People?$select=UserName&$top=10");
+        helpExecute("SELECT UserName FROM People limit 10",
+                "People?$select=UserName&$top=10");
     }
 
     @Test
     public void testLimitOffset() throws Exception {
-    	helpExecute("SELECT UserName FROM People limit 10, 19",
-    	        "People?$select=UserName&$skip=10&$top=19");
+        helpExecute("SELECT UserName FROM People limit 10, 19",
+                "People?$select=UserName&$skip=10&$top=19");
     }
 
     @Test
     public void testUseAirthmaticFunction() throws Exception {
-    	helpExecute("SELECT UserName FROM People WHERE Concurrency/10 > Concurrency",
-    	        "People?$select=UserName&$filter=(Concurrency div 10) gt Concurrency");
+        helpExecute("SELECT UserName FROM People WHERE Concurrency/10 > Concurrency",
+                "People?$select=UserName&$filter=(Concurrency div 10) gt Concurrency");
 
-    	helpExecute("SELECT UserName FROM People WHERE 10/Concurrency > Concurrency",
+        helpExecute("SELECT UserName FROM People WHERE 10/Concurrency > Concurrency",
                 "People?$select=UserName&$filter=(10 div Concurrency) gt Concurrency");
     }
 
     @Test
     public void testOrderBy() throws Exception {
-    	helpExecute("SELECT UserName FROM People Order By UserName",
-    	        "People?$select=UserName&$orderby=UserName");
+        helpExecute("SELECT UserName FROM People Order By UserName",
+                "People?$select=UserName&$orderby=UserName");
     }
 
     @Test
@@ -212,14 +212,14 @@ public class TestODataSQLVistor {
 
     @Test
     public void testOrderByMultiple() throws Exception {
-    	helpExecute("SELECT UserName FROM People Order By UserName DESC, FirstName",
-    	        "People?$select=UserName&$orderby=UserName desc,FirstName");
+        helpExecute("SELECT UserName FROM People Order By UserName DESC, FirstName",
+                "People?$select=UserName&$orderby=UserName desc,FirstName");
     }
 
     @Test
     public void testisNotNull() throws Exception {
-    	helpExecute("SELECT UserName FROM People WHERE UserName is NOT NULL",
-    	        "People?$select=UserName&$filter=UserName ne null");
+        helpExecute("SELECT UserName FROM People WHERE UserName is NOT NULL",
+                "People?$select=UserName&$filter=UserName ne null");
     }
 
     @Test
@@ -230,7 +230,7 @@ public class TestODataSQLVistor {
 
     @Test
     public void testCountStar() throws Exception {
-    	helpExecute("SELECT count(*) FROM People", "People/$count");
+        helpExecute("SELECT count(*) FROM People", "People/$count");
     }
 
     @Test

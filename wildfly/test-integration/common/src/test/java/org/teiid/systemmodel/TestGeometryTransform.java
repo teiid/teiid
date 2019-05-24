@@ -42,16 +42,16 @@ public class TestGeometryTransform extends AbstractQueryTest {
 
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
 
-	private static FakeServer server;
+    private static FakeServer server;
 
     @BeforeClass public static void setup() throws Exception {
-    	server = new FakeServer(true);
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"); //$NON-NLS-1$
+        server = new FakeServer(true);
+        server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb"); //$NON-NLS-1$
     }
 
     @Before public void setUp() throws Exception {
-    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$
-   	}
+        this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$
+       }
 
     @AfterClass public static void teardown() throws Exception {
         server.stop();
@@ -128,9 +128,9 @@ public class TestGeometryTransform extends AbstractQueryTest {
     }
 
     @Test public void testTransformForKml() throws Exception {
-    	String wkt= "POINT(390084.12 5025551.73)";
-    	int srcSrid = 32632;
-    	String sql = String.format("select ST_AsKML(ST_GeomFromText('%s',%d))", wkt, srcSrid); //$NON-NLS-1$
+        String wkt= "POINT(390084.12 5025551.73)";
+        int srcSrid = 32632;
+        String sql = String.format("select ST_AsKML(ST_GeomFromText('%s',%d))", wkt, srcSrid); //$NON-NLS-1$
         execute(sql);
         internalResultSet.next();
         String result = ClobType.getString(internalResultSet.getClob(1));

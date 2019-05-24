@@ -38,14 +38,14 @@ public class HanaSpatialFunctionModifier extends FunctionModifier {
      */
     public List<?> translate(Function function) {
         List<Expression> params = function.getParameters();
-    	List<Object> objs = new ArrayList<Object>();
+        List<Object> objs = new ArrayList<Object>();
 
-    	Expression exp1 = params.get(0);
+        Expression exp1 = params.get(0);
 
-    	objs.add(exp1+"."+function.getName());
+        objs.add(exp1+"."+function.getName());
         objs.add("("); //$NON-NLS-1$
         if (params.size()>1){
-        	objs.add(params.get(1));
+            objs.add(params.get(1));
         }
         objs.add(")"); //$NON-NLS-1$
         return objs;

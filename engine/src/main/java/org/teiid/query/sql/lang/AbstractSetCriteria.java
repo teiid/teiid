@@ -75,7 +75,7 @@ public abstract class AbstractSetCriteria extends PredicateCriteria implements N
 
     @Override
     public void negate() {
-    	this.negated = !this.negated;
+        this.negated = !this.negated;
     }
 
     /**

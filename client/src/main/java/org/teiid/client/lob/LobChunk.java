@@ -54,15 +54,15 @@ public class LobChunk implements Externalizable {
 
     @Override
     public void readExternal(ObjectInput in) throws IOException,
-    		ClassNotFoundException {
-    	data = (byte[])in.readObject();
-    	last = in.readBoolean();
+            ClassNotFoundException {
+        data = (byte[])in.readObject();
+        last = in.readBoolean();
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-    	out.writeObject(data);
-    	out.writeBoolean(last);
+        out.writeObject(data);
+        out.writeBoolean(last);
     }
 
 }

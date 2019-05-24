@@ -36,17 +36,17 @@ import org.teiid.query.sql.symbol.ElementSymbol;
  */
 public class CreateCursorResultSetInstruction extends ProgramInstruction {
 
-	public enum Mode {
-		UPDATE,
-		HOLD,
-		NOHOLD
-	}
+    public enum Mode {
+        UPDATE,
+        HOLD,
+        NOHOLD
+    }
 
     protected String rsName;
     protected ProcessorPlan plan;
     private Mode mode;
     private Map<ElementSymbol, ElementSymbol> procAssignments;
-	private boolean usesLocalTemp;
+    private boolean usesLocalTemp;
 
     public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, Mode mode){
         this.rsName = rsName;
@@ -55,9 +55,9 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     }
 
     public void setProcAssignments(
-			Map<ElementSymbol, ElementSymbol> procAssignments) {
-		this.procAssignments = procAssignments;
-	}
+            Map<ElementSymbol, ElementSymbol> procAssignments) {
+        this.procAssignments = procAssignments;
+    }
 
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
@@ -92,16 +92,16 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     }
 
     public Mode getMode() {
-		return mode;
-	}
+        return mode;
+    }
 
-	public void setUsesLocalTemp(boolean b) {
-		this.usesLocalTemp = b;
-	}
+    public void setUsesLocalTemp(boolean b) {
+        this.usesLocalTemp = b;
+    }
 
-	@Override
-	public Boolean requiresTransaction(boolean transactionalReads) {
-	    return plan.requiresTransaction(transactionalReads);
-	}
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return plan.requiresTransaction(transactionalReads);
+    }
 
 }

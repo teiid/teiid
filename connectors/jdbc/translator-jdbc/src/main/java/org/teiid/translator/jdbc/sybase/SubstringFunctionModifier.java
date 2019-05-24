@@ -37,7 +37,7 @@ public class SubstringFunctionModifier extends FunctionModifier {
     private LanguageFactory languageFactory;
 
     public SubstringFunctionModifier(LanguageFactory languageFactory) {
-    	this.languageFactory = languageFactory;
+        this.languageFactory = languageFactory;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SubstringFunctionModifier extends FunctionModifier {
         if(args.size() == 2) {
             args.add(languageFactory.createFunction(SourceSystemFunctions.LENGTH, Arrays.asList(args.get(0)), TypeFacility.RUNTIME_TYPES.INTEGER));
         }
-    	return null;
+        return null;
     }
 
 }

@@ -29,8 +29,8 @@ import org.teiid.query.util.CommandContext;
 
 public interface ProcessorDataManager {
 
-	TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject)
-		throws TeiidComponentException, TeiidProcessingException;
+    TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject)
+        throws TeiidComponentException, TeiidProcessingException;
 
     /**
      * Lookup a value from a cached code table.  If the code table is not loaded, it will be
@@ -45,5 +45,5 @@ public interface ProcessorDataManager {
                                            Object keyValue) throws BlockedException,
                                                            TeiidComponentException, TeiidProcessingException;
 
-	EventDistributor getEventDistributor();
+    EventDistributor getEventDistributor();
 }

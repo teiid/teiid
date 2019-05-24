@@ -28,7 +28,7 @@ public class UDFSource implements FunctionMetadataSource {
     private ClassLoader classLoader;
 
     public UDFSource(Collection <FunctionMethod> methods) {
-    	this.functions = methods;
+        this.functions = methods;
     }
 
     public Collection<FunctionMethod> getFunctionMethods() {
@@ -40,11 +40,11 @@ public class UDFSource implements FunctionMetadataSource {
     }
 
     public void setClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-	}
+        this.classLoader = classLoader;
+    }
 
     @Override
     public ClassLoader getClassLoader() {
-		return classLoader;
-	}
+        return classLoader;
+    }
 }

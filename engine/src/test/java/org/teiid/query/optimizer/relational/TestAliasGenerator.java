@@ -47,20 +47,20 @@ public class TestAliasGenerator {
                           String expected,
                           boolean aliasGroups,
                           boolean stripColumnAliases, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
-    	AliasGenerator visitor = new AliasGenerator(aliasGroups, stripColumnAliases);
-    	return helpTest(sql, expected, metadata, visitor);
+        AliasGenerator visitor = new AliasGenerator(aliasGroups, stripColumnAliases);
+        return helpTest(sql, expected, metadata, visitor);
     }
 
-	private Command helpTest(String sql, String expected,
-			QueryMetadataInterface metadata, AliasGenerator visitor)
-			throws TeiidComponentException, TeiidProcessingException {
-		Command command = TestResolver.helpResolve(sql, metadata);
+    private Command helpTest(String sql, String expected,
+            QueryMetadataInterface metadata, AliasGenerator visitor)
+            throws TeiidComponentException, TeiidProcessingException {
+        Command command = TestResolver.helpResolve(sql, metadata);
         command = QueryRewriter.rewrite(command, metadata, null);
         command = (Command) command.clone();
         command.acceptVisitor(visitor);
         assertEquals(expected, command.toString());
         return command;
-	}
+    }
 
     /**
      * Ensures that views are named with v_ even without metadata
@@ -130,61 +130,61 @@ public class TestAliasGenerator {
     }
 
     @Test public void testDuplicateShortElementName() throws Exception {
-    	String sql = "select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 order by pm1.g1.e1, pm1.g2.e1"; //$NON-NLS-1$
+        String sql = "select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g2 order by pm1.g1.e1, pm1.g2.e1"; //$NON-NLS-1$
         String expected = "SELECT g_0.e1 AS c_0, g_1.e1 AS c_1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 ORDER BY c_0, c_1"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testCorrelatedRefernce() throws Exception {
-    	String sql = "select intnum, stringnum from (select intnum, stringnum from bqt1.smallb) b where intnum in (select b.stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
+        String sql = "select intnum, stringnum from (select intnum, stringnum from bqt1.smallb) b where intnum in (select b.stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
         String expected = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.IntNum AS c_0, g_0.StringNum AS c_1 FROM BQT1.SmallB AS g_0) AS v_0 WHERE convert(v_0.c_0, string) IN (SELECT concat(v_0.c_1, convert(v_1.c_0, string)) FROM (SELECT g_1.IntNum AS c_0 FROM BQT1.SmallA AS g_1) AS v_1)"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testCorrelatedRefernce1() throws Exception {
-    	String sql = "select intnum, stringnum from bqt1.smallb where intnum in (select stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
+        String sql = "select intnum, stringnum from bqt1.smallb where intnum in (select stringnum || b.intnum from (select intnum from bqt1.smalla) b) "; //$NON-NLS-1$
         String expected = "SELECT g_0.IntNum, g_0.StringNum FROM BQT1.SmallB AS g_0 WHERE convert(g_0.IntNum, string) IN (SELECT concat(g_0.StringNum, convert(v_0.c_0, string)) FROM (SELECT g_1.IntNum AS c_0 FROM BQT1.SmallA AS g_1) AS v_0)"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testGroupAliasNotSupported() throws Exception {
-    	String sql = "select b.intkey from bqt1.smalla b"; //$NON-NLS-1$
+        String sql = "select b.intkey from bqt1.smalla b"; //$NON-NLS-1$
         String expected = "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA"; //$NON-NLS-1$
         helpTest(sql, expected, false, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testUnionAliasing() throws Exception {
-    	String sql = "SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA"; //$NON-NLS-1$
+        String sql = "SELECT IntKey FROM BQT1.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA"; //$NON-NLS-1$
         String expected = "SELECT BQT1.SmallA.IntKey AS c_0 FROM BQT1.SmallA UNION ALL SELECT BQT1.SmallA.IntNum AS c_0 FROM BQT1.SmallA"; //$NON-NLS-1$
         helpTest(sql, expected, false, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testUnrelatedOrderBy() throws Exception {
-    	String sql = "SELECT b.IntKey FROM BQT1.SmallA a, BQT1.SmallA b ORDER BY a.StringKey"; //$NON-NLS-1$
+        String sql = "SELECT b.IntKey FROM BQT1.SmallA a, BQT1.SmallA b ORDER BY a.StringKey"; //$NON-NLS-1$
         String expected = "SELECT g_1.IntKey AS c_0 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 ORDER BY g_0.StringKey"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testUnrelatedOrderBy1() throws Exception {
-    	String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey"; //$NON-NLS-1$
+        String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey"; //$NON-NLS-1$
         String expected = "SELECT v_1.c_0 FROM (SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0, (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM BQT1.SmallA AS g_1) AS v_1 ORDER BY v_0.c_1"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testUnrelatedOrderBy2() throws Exception {
-    	String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey || b.intKey"; //$NON-NLS-1$
+        String sql = "SELECT b.IntKey FROM (select intkey, stringkey from BQT1.SmallA) a, (select intkey, stringkey from BQT1.SmallA) b ORDER BY a.StringKey || b.intKey"; //$NON-NLS-1$
         String expected = "SELECT v_1.c_0 FROM (SELECT g_0.IntKey AS c_0, g_0.StringKey AS c_1 FROM BQT1.SmallA AS g_0) AS v_0, (SELECT g_1.IntKey AS c_0, g_1.StringKey AS c_1 FROM BQT1.SmallA AS g_1) AS v_1 ORDER BY concat(v_0.c_1, convert(v_1.c_0, string))"; //$NON-NLS-1$
         helpTest(sql, expected, true, false, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testStripAliases() throws Exception {
-    	String sql = "select intkey as a, stringkey as b from BQT1.SmallA ORDER BY a, b"; //$NON-NLS-1$
+        String sql = "select intkey as a, stringkey as b from BQT1.SmallA ORDER BY a, b"; //$NON-NLS-1$
         String expected = "SELECT g_0.IntKey, g_0.StringKey FROM BQT1.SmallA AS g_0 ORDER BY g_0.IntKey, g_0.StringKey"; //$NON-NLS-1$
         helpTest(sql, expected, true, true, RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testStripAliases1() throws Exception {
-    	String sql = "select intkey as a, stringkey as b from BQT1.SmallA ORDER BY a, b"; //$NON-NLS-1$
+        String sql = "select intkey as a, stringkey as b from BQT1.SmallA ORDER BY a, b"; //$NON-NLS-1$
         String expected = "SELECT BQT1.SmallA.IntKey, BQT1.SmallA.StringKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey, BQT1.SmallA.StringKey"; //$NON-NLS-1$
         Command command = helpTest(sql, expected, false, true, RealMetadataFactory.exampleBQTCached());
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.exampleBQTCached());
@@ -193,7 +193,7 @@ public class TestAliasGenerator {
     }
 
     @Test public void testKeepAliases() throws Exception {
-    	String sql = "select g.intkey as a, g.stringkey as b from BQT1.SmallA g, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
+        String sql = "select g.intkey as a, g.stringkey as b from BQT1.SmallA g, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
         String expected = "SELECT g.IntKey AS c_0, g.StringKey AS c_1 FROM BQT1.SmallA AS g, BQT1.SmallB AS g_1 ORDER BY c_0, c_1"; //$NON-NLS-1$
         AliasGenerator av = new AliasGenerator(true, false);
         Map<String, String> aliasMap = new HashMap<String, String>();
@@ -203,7 +203,7 @@ public class TestAliasGenerator {
     }
 
     @Test(expected=TeiidRuntimeException.class) public void testKeepAliases1() throws Exception {
-    	String sql = "select g_1.intkey as a, g_1.stringkey as b from BQT1.SmallA g_1, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
+        String sql = "select g_1.intkey as a, g_1.stringkey as b from BQT1.SmallA g_1, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
         String expected = "SELECT g.IntKey AS c_0, g.StringKey AS c_1 FROM BQT1.SmallA AS g ORDER BY c_0, c_1"; //$NON-NLS-1$
         AliasGenerator av = new AliasGenerator(true, false);
         Map<String, String> aliasMap = new HashMap<String, String>();

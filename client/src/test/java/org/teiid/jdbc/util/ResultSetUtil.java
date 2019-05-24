@@ -43,9 +43,9 @@ public class ResultSetUtil {
     private static final String MORE = "$ ";
 
     public static void printResultSet(ResultSet rs) throws SQLException, IOException {
-    	PrintWriter pw = new PrintWriter(System.out);
-    	printResultSet(rs, 100, true, pw);
-    	pw.flush();
+        PrintWriter pw = new PrintWriter(System.out);
+        printResultSet(rs, 100, true, pw);
+        pw.flush();
     }
 
     /**
@@ -93,11 +93,11 @@ public class ResultSetUtil {
             for (int j = 1; j <= count; j++) {
                 Object obj = rs.getObject(j);
                 if (obj instanceof SQLXML) {
-                	obj = ((SQLXML)obj).getString();
+                    obj = ((SQLXML)obj).getString();
                 } else if (obj instanceof Clob) {
-                	obj = "Clob[" + ((Clob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                    obj = "Clob[" + ((Clob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
                 } else if (obj instanceof Blob) {
-                	obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+                    obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 if (maxColWidth == 0) {
                     out.append(obj == null ? NULL : obj.toString());

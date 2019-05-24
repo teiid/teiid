@@ -26,29 +26,29 @@ import junit.framework.*;
 
 public class TestBetweenCriteria extends TestCase {
 
-	// ################################## FRAMEWORK ################################
+    // ################################## FRAMEWORK ################################
 
-	public TestBetweenCriteria(String name) {
-		super(name);
-	}
+    public TestBetweenCriteria(String name) {
+        super(name);
+    }
 
-	// ################################## TEST HELPERS ################################
+    // ################################## TEST HELPERS ################################
 
-	public static BetweenCriteria example(String element, int lower, int upper, boolean negated) {
+    public static BetweenCriteria example(String element, int lower, int upper, boolean negated) {
         BetweenCriteria criteria = new BetweenCriteria(new ElementSymbol(element),
                                                        new Constant(new Integer(lower)),
                                                        new Constant(new Integer(upper)));
         criteria.setNegated(negated);
-		return criteria;
+        return criteria;
     }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
-	public void testEquals1() {
+    public void testEquals1() {
         BetweenCriteria c1 = example("x", 1, 20, false); //$NON-NLS-1$
         BetweenCriteria c2 = example("x", 1, 20, false); //$NON-NLS-1$
-		assertTrue("Equivalent between criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));				 //$NON-NLS-1$ //$NON-NLS-2$
-	}
+        assertTrue("Equivalent between criteria don't compare as equal: " + c1 + ", " + c2, c1.equals(c2));                 //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     public void testEquals2() {
         BetweenCriteria c1 = example("x", 1, 20, true); //$NON-NLS-1$
@@ -63,25 +63,25 @@ public class TestBetweenCriteria extends TestCase {
         assertFalse("Criteria should not be equal: " + c1 + ", " + c2, c1.equals(c2));              //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	public void testSelfEquivalence(){
+    public void testSelfEquivalence(){
         BetweenCriteria c1 = example("x", 1, 20, false); //$NON-NLS-1$
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c1);
-	}
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c1);
+    }
 
-	public void testEquivalence(){
+    public void testEquivalence(){
         BetweenCriteria c1 = example("x", 1, 20, false); //$NON-NLS-1$
         BetweenCriteria c2 = example("x", 1, 20, false); //$NON-NLS-1$
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
 
-	public void testCloneEquivalence(){
+    public void testCloneEquivalence(){
         BetweenCriteria c1 = example("x", 1, 20, true); //$NON-NLS-1$
         BetweenCriteria c2 = (BetweenCriteria)c1.clone();
-		int equals = 0;
-		UnitTestUtil.helpTestEquivalence(equals, c1, c2);
-	}
+        int equals = 0;
+        UnitTestUtil.helpTestEquivalence(equals, c1, c2);
+    }
 
     public void testNonEquivalence1(){
         //test transitivity with two nonequal Objects

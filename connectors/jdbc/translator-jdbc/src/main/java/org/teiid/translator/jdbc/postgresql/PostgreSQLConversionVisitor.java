@@ -42,14 +42,14 @@ public class PostgreSQLConversionVisitor
 
     @Override
     protected void appendWithKeyword(With obj) {
-    	super.appendWithKeyword(obj);
-    	for (WithItem with : obj.getItems()) {
-    		if (with.isRecusive()) {
-    			buffer.append(SQLConstants.Tokens.SPACE);
-    			buffer.append(SQLConstants.Reserved.RECURSIVE);
-    			break;
-    		}
-    	}
+        super.appendWithKeyword(obj);
+        for (WithItem with : obj.getItems()) {
+            if (with.isRecusive()) {
+                buffer.append(SQLConstants.Tokens.SPACE);
+                buffer.append(SQLConstants.Reserved.RECURSIVE);
+                break;
+            }
+        }
     }
 
     /**
@@ -57,19 +57,19 @@ public class PostgreSQLConversionVisitor
      */
     @Override
     public void visit(DerivedColumn obj) {
-    	if (obj.getExpression() instanceof Literal) {
-    		String castType = null;
-    		if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.STRING) {
-    			castType = "bpchar"; //$NON-NLS-1$
-    		} else if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.VARBINARY) {
-    			castType = "bytea"; //$NON-NLS-1$
-    		}
-    		if (castType != null) {
-    			obj.setExpression(postgreSQLExecutionFactory.getLanguageFactory().createFunction("cast", //$NON-NLS-1$
-    					new Expression[] {obj.getExpression(),  postgreSQLExecutionFactory.getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)},
-    					TypeFacility.RUNTIME_TYPES.STRING));
-    		}
-    	} else if (obj.isProjected() && obj.getExpression() instanceof ColumnReference) {
+        if (obj.getExpression() instanceof Literal) {
+            String castType = null;
+            if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.STRING) {
+                castType = "bpchar"; //$NON-NLS-1$
+            } else if (obj.getExpression().getType() == TypeFacility.RUNTIME_TYPES.VARBINARY) {
+                castType = "bytea"; //$NON-NLS-1$
+            }
+            if (castType != null) {
+                obj.setExpression(postgreSQLExecutionFactory.getLanguageFactory().createFunction("cast", //$NON-NLS-1$
+                        new Expression[] {obj.getExpression(),  postgreSQLExecutionFactory.getLanguageFactory().createLiteral(castType, TypeFacility.RUNTIME_TYPES.STRING)},
+                        TypeFacility.RUNTIME_TYPES.STRING));
+            }
+        } else if (obj.isProjected() && obj.getExpression() instanceof ColumnReference) {
             ColumnReference elem = (ColumnReference)obj.getExpression();
             if (elem.getMetadataObject() != null) {
                 String nativeType = elem.getMetadataObject().getNativeType();
@@ -83,7 +83,7 @@ public class PostgreSQLConversionVisitor
                 }
             }
         }
-    	super.visit(obj);
+        super.visit(obj);
     }
 
     @Override

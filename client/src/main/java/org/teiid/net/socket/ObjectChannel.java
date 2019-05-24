@@ -25,16 +25,16 @@ import java.util.concurrent.Future;
 
 public interface ObjectChannel {
 
-	Object read() throws IOException, ClassNotFoundException;
+    Object read() throws IOException, ClassNotFoundException;
 
-	SocketAddress getRemoteAddress();
+    SocketAddress getRemoteAddress();
 
-	Future<?> write(Object msg);
+    Future<?> write(Object msg);
 
-	boolean isOpen();
+    boolean isOpen();
 
-	void close();
+    void close();
 
-	InetAddress getLocalAddress();
+    InetAddress getLocalAddress();
 
 }

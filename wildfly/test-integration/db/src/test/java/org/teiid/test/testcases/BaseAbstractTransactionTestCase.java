@@ -16,8 +16,8 @@ public abstract class BaseAbstractTransactionTestCase {
 
     @BeforeClass
     public static void beforeAll() throws Exception {
-	ConfigPropertyLoader.reset();
-	ConfigPropertyLoader.getInstance();
+    ConfigPropertyLoader.reset();
+    ConfigPropertyLoader.getInstance();
     }
 
     @Before
@@ -32,13 +32,13 @@ public abstract class BaseAbstractTransactionTestCase {
 
     protected void addProperty(String key, String value) {
 
-	ConfigPropertyLoader.getInstance().setProperty(key, value);
+    ConfigPropertyLoader.getInstance().setProperty(key, value);
 
     }
 
     @AfterClass
     public static void afterAll() {
-	DataSourceMgr.getInstance().shutdown();
+    DataSourceMgr.getInstance().shutdown();
     }
 
 

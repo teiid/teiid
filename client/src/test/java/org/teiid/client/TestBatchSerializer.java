@@ -98,7 +98,7 @@ public class TestBatchSerializer {
         List<?>[] batch = new List[rows];
 
         for (int i = 0; i < rows; i++) {
-        	java.util.Date d = new java.util.Date();
+            java.util.Date d = new java.util.Date();
             int mod = i%16;
             Object[] data = { (mod == 0) ? null : new BigDecimal("" + i), //$NON-NLS-1$
                               (mod == 1) ? null : new BigInteger(Integer.toString(i)),
@@ -115,7 +115,7 @@ public class TestBatchSerializer {
                               (mod == 12) ? null : TimestampWithTimezone.createTime(d),
                               (mod == 13) ? null : TimestampWithTimezone.createTimestamp(d),
                               (mod == 14) ? null : TimestampWithTimezone.createTimestamp(d),
-                    		  (mod == 15) ? null : new BinaryType(new byte[] {(byte)i}),
+                              (mod == 15) ? null : new BinaryType(new byte[] {(byte)i}),
                             };
             batch[i] = Arrays.asList(data);
         }
@@ -155,23 +155,23 @@ public class TestBatchSerializer {
     }
 
     @Test public void testStringArray() throws IOException, ClassNotFoundException {
-    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1L, new ArrayImpl(new String[] {"Silly String", "Silly String"}))}, BatchSerializer.CURRENT_VERSION);
+        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1L, new ArrayImpl(new String[] {"Silly String", "Silly String"}))}, BatchSerializer.CURRENT_VERSION);
     }
 
     @Test public void testGeometry() throws IOException, ClassNotFoundException {
-    	GeometryType geometryType = new GeometryType(new byte[0]);
-    	geometryType.setReferenceStreamId(null);
-    	geometryType.setSrid(10000);
-		Object val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, BatchSerializer.VERSION_GEOMETRY).get(0).get(0);
-		assertTrue(val instanceof GeometryType);
-		assertEquals(10000, ((GeometryType)val).getSrid());
-    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
+        GeometryType geometryType = new GeometryType(new byte[0]);
+        geometryType.setReferenceStreamId(null);
+        geometryType.setSrid(10000);
+        Object val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, BatchSerializer.VERSION_GEOMETRY).get(0).get(0);
+        assertTrue(val instanceof GeometryType);
+        assertEquals(10000, ((GeometryType)val).getSrid());
+        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)0); //object serialization - should fail on the client side
 
-    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
-    	assertFalse(val instanceof GeometryType);
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.GEOMETRY}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
+        assertFalse(val instanceof GeometryType);
 
-    	val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
-    	assertFalse(val instanceof GeometryType);
+        val = helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.OBJECT}, new List[] {Arrays.asList(geometryType)}, (byte)1).get(0).get(0); //blob serialization
+        assertFalse(val instanceof GeometryType);
     }
 
     @Test public void testGeography() throws IOException, ClassNotFoundException {

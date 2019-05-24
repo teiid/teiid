@@ -77,61 +77,61 @@ public class TestODataQueryExecution {
         TranslationUtility utility = new TranslationUtility(
                 TestODataMetadataProcessor.getTransformationMetadata(mf,translator));
 
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		WSConnection connection = Mockito.mock(WSConnection.class);
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
 
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
-		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
 
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
-		        Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(),
+                Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
 
-		DataSource ds = new DataSource() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return new ByteArrayOutputStream();
-			}
-			@Override
-			public String getName() {
-				return "result";
-			}
-			@Override
-			public InputStream getInputStream() throws IOException {
-				ByteArrayInputStream in = new ByteArrayInputStream(resultJson.getBytes());
-				return in;
-			}
-			@Override
-			public String getContentType() {
-				return "application/xml";
-			}
-		};
-		Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultJson.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/xml";
+            }
+        };
+        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
 
         ResultSetExecution execution = translator
                 .createResultSetExecution((QueryExpression) cmd, context,
                         utility.createRuntimeMetadata(), connection);
-		execution.execute();
+        execution.execute();
 
-		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
 
         Mockito.verify(connection).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
-		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
-		return execution;
-	}
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        return execution;
+    }
 
     private ProcedureExecution helpProcedureExecute(MetadataFactory mf, String query,
             final String resultJson, String expectedURL, int responseCode)
-            		throws Exception {
-    	return helpProcedureExecute(mf, query, resultJson, expectedURL, responseCode, true);
+                    throws Exception {
+        return helpProcedureExecute(mf, query, resultJson, expectedURL, responseCode, true);
     }
 
     private ProcedureExecution helpProcedureExecute(MetadataFactory mf, String query,
@@ -195,23 +195,23 @@ public class TestODataQueryExecution {
         return execution;
     }
 
-	@Test
-	public void testSimpleSelectNoAssosiations() throws Exception {
-		String query = "SELECT UserName,FirstName,LastName FROM People";
-		String expectedURL = "People?$select=UserName,FirstName,LastName";
+    @Test
+    public void testSimpleSelectNoAssosiations() throws Exception {
+        String query = "SELECT UserName,FirstName,LastName FROM People";
+        String expectedURL = "People?$select=UserName,FirstName,LastName";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-		ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
-		        query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
 
-		assertArrayEquals(new Object[] {"russellwhyte", "Russell", "Whyte"},
-		        excution.next().toArray(new Object[3]));
-		assertArrayEquals(new Object[] {"scottketchum", "Scott", "Ketchum"},
-		        excution.next().toArray(new Object[3]));
-		assertArrayEquals(new Object[] {"ronaldmundy", "Ronald", "Mundy"},
-		        excution.next().toArray(new Object[3]));
-		reader.close();
-	}
+        assertArrayEquals(new Object[] {"russellwhyte", "Russell", "Whyte"},
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"scottketchum", "Scott", "Ketchum"},
+                excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {"ronaldmundy", "Ronald", "Mundy"},
+                excution.next().toArray(new Object[3]));
+        reader.close();
+    }
 
     @Test
     public void testReadArray() throws Exception {
@@ -231,18 +231,18 @@ public class TestODataQueryExecution {
         reader.close();
     }
 
-	@Test
-	public void testComplexType_InnerJoin() throws Exception {
-		String query = "select p.UserName, pa.Address from People p JOIN People_AddressInfo pa "
-		        + "ON p.UserName = pa.People_UserName";
-		String expectedURL = "People?$select=UserName,AddressInfo";
+    @Test
+    public void testComplexType_InnerJoin() throws Exception {
+        String query = "select p.UserName, pa.Address from People p JOIN People_AddressInfo pa "
+                + "ON p.UserName = pa.People_UserName";
+        String expectedURL = "People?$select=UserName,AddressInfo";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
-		ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
-		        query, ObjectConverterUtil.convertToString(reader), expectedURL);
-		reader.close();
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("people.json"));
+        ResultSetExecution excution = helpExecute(TestODataMetadataProcessor.tripPinMetadata(),
+                query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
 
-		assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln."},
+        assertArrayEquals(new Object[] {"russellwhyte", "187 Suffolk Ln."},
                 excution.next().toArray(new Object[2]));
         assertArrayEquals(new Object[] {"scottketchum", "2817 Milton Dr."},
                 excution.next().toArray(new Object[2]));
@@ -252,7 +252,7 @@ public class TestODataQueryExecution {
                 excution.next().toArray(new Object[2]));
         assertNull(excution.next());
 
-	}
+    }
 
     @Test
     public void testComplexType_LeftOuterJoin() throws Exception {

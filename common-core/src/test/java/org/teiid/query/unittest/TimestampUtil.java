@@ -37,10 +37,10 @@ import java.util.TimeZone;
 public class TimestampUtil {
 
     private static ThreadLocal<Calendar> CAL = new ThreadLocal<Calendar>() {
-    	@Override
-    	protected Calendar initialValue() {
-    		return Calendar.getInstance();
-    	}
+        @Override
+        protected Calendar initialValue() {
+            return Calendar.getInstance();
+        }
     };
 
     /**

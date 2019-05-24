@@ -25,49 +25,49 @@ import javax.resource.cci.ResultSetInfo;
 
 public class WrappedConnection implements Connection, org.teiid.resource.api.WrappedConnection {
 
-	private BasicManagedConnection mc;
-	boolean closed = false;
+    private BasicManagedConnection mc;
+    boolean closed = false;
 
-	public WrappedConnection(BasicManagedConnection mc) {
-		this.mc = mc;
-	}
+    public WrappedConnection(BasicManagedConnection mc) {
+        this.mc = mc;
+    }
 
-	@Override
-	public void close() throws ResourceException {
-		if (!this.closed && this.mc != null) {
-			this.closed = true;
-			this.mc.connectionClosed(this);
-			this.mc = null;
-		}
-	}
+    @Override
+    public void close() throws ResourceException {
+        if (!this.closed && this.mc != null) {
+            this.closed = true;
+            this.mc.connectionClosed(this);
+            this.mc = null;
+        }
+    }
 
-	// Called by managed connection for the connection management
-	void setManagedConnection(BasicManagedConnection mc) {
-		this.mc = mc;
-	}
+    // Called by managed connection for the connection management
+    void setManagedConnection(BasicManagedConnection mc) {
+        this.mc = mc;
+    }
 
-	@Override
-	public Interaction createInteraction() throws ResourceException {
-		return this.mc.getConnection().createInteraction();
-	}
+    @Override
+    public Interaction createInteraction() throws ResourceException {
+        return this.mc.getConnection().createInteraction();
+    }
 
-	@Override
-	public javax.resource.cci.LocalTransaction getLocalTransaction() throws ResourceException {
-		return this.mc.getConnection().getLocalTransaction();
-	}
+    @Override
+    public javax.resource.cci.LocalTransaction getLocalTransaction() throws ResourceException {
+        return this.mc.getConnection().getLocalTransaction();
+    }
 
-	@Override
-	public ConnectionMetaData getMetaData() throws ResourceException {
-		return this.mc.getConnection().getMetaData();
-	}
+    @Override
+    public ConnectionMetaData getMetaData() throws ResourceException {
+        return this.mc.getConnection().getMetaData();
+    }
 
-	@Override
-	public ResultSetInfo getResultSetInfo() throws ResourceException {
-		return this.mc.getConnection().getResultSetInfo();
-	}
+    @Override
+    public ResultSetInfo getResultSetInfo() throws ResourceException {
+        return this.mc.getConnection().getResultSetInfo();
+    }
 
-	public Connection unwrap() throws ResourceException {
-		return this.mc.getConnection();
-	}
+    public Connection unwrap() throws ResourceException {
+        return this.mc.getConnection();
+    }
 
 }

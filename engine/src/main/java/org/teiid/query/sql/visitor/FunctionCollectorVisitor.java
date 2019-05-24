@@ -56,9 +56,9 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-	public FunctionCollectorVisitor(Collection<Function> functions) {
+    public FunctionCollectorVisitor(Collection<Function> functions) {
         this(functions, null);
-	}
+    }
 
     /**
      * Construct a new visitor with the specified collection, which should
@@ -146,19 +146,19 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
      * @param ex
      * @return
      */
-	public static boolean isNonDeterministic(LanguageObject ex) {
-		Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
-		for (Function function : functions) {
-			if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
-				return true;
-			}
-		}
-		for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex)) {
-		    if (container.getCommand().getCorrelatedReferences() != null && isNonDeterministic(container.getCommand())) {
-	            return true;
-		    }
-		}
-		return false;
-	}
+    public static boolean isNonDeterministic(LanguageObject ex) {
+        Collection<Function> functions = FunctionCollectorVisitor.getFunctions(ex, true, false);
+        for (Function function : functions) {
+            if ( function.getFunctionDescriptor().getDeterministic() == Determinism.NONDETERMINISTIC) {
+                return true;
+            }
+        }
+        for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex)) {
+            if (container.getCommand().getCorrelatedReferences() != null && isNonDeterministic(container.getCommand())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

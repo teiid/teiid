@@ -45,61 +45,61 @@ import org.teiid.translator.file.FileExecutionFactory;
 @SuppressWarnings("nls")
 public class TestTeiidPlatform {
 
-	static EmbeddedServer server;
-	static EntityManagerFactory factory;
+    static EmbeddedServer server;
+    static EntityManagerFactory factory;
 
-	@BeforeClass
-	public static void init() throws Exception {
+    @BeforeClass
+    public static void init() throws Exception {
 
-		server = new EmbeddedServer();
-		FileExecutionFactory executionFactory = new FileExecutionFactory();
-		server.addTranslator("file", executionFactory);
+        server = new EmbeddedServer();
+        FileExecutionFactory executionFactory = new FileExecutionFactory();
+        server.addTranslator("file", executionFactory);
 
-		server.addConnectionFactory("java:/marketdata-file", new ConnectionFactory<VirtualFileConnection>() {
-		    @Override
-		    public VirtualFileConnection getConnection() throws Exception {
-		        VirtualFileConnection result = Mockito.mock(VirtualFileConnection.class);
-		        JavaVirtualFile javaVirtualFile = new JavaVirtualFile(UnitTestUtil.getTestDataFile("file/marketdata.csv"));
+        server.addConnectionFactory("java:/marketdata-file", new ConnectionFactory<VirtualFileConnection>() {
+            @Override
+            public VirtualFileConnection getConnection() throws Exception {
+                VirtualFileConnection result = Mockito.mock(VirtualFileConnection.class);
+                JavaVirtualFile javaVirtualFile = new JavaVirtualFile(UnitTestUtil.getTestDataFile("file/marketdata.csv"));
                 Mockito.stub(result.getFiles(Mockito.anyString())).toReturn(new VirtualFile[] {javaVirtualFile});
-		        return result;
-		    }
+                return result;
+            }
         });
 
-		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		server.start(config);
-		DriverManager.registerDriver(server.getDriver());
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        server.start(config);
+        DriverManager.registerDriver(server.getDriver());
 
-		server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("vdb"+File.separator+"marketdata-vdb.xml")));
+        server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("vdb"+File.separator+"marketdata-vdb.xml")));
 
-		factory = Persistence.createEntityManagerFactory("org.teiid.eclipselink.test");
-	}
+        factory = Persistence.createEntityManagerFactory("org.teiid.eclipselink.test");
+    }
 
-	@Test
-	public void testInit() throws Exception {
-		assertNotNull(factory);
-		EntityManager em = factory.createEntityManager();
-		assertNotNull(em);
-		em.close();
-	}
+    @Test
+    public void testInit() throws Exception {
+        assertNotNull(factory);
+        EntityManager em = factory.createEntityManager();
+        assertNotNull(em);
+        em.close();
+    }
 
-	@Test
-	public void testJPQLQuery() {
-		EntityManager em = factory.createEntityManager();
-		List list = em.createQuery("SELECT m FROM Marketdata m").getResultList();
-		assertNotNull(list);
-		assertEquals(10, list.size());
-		em.close();
-	}
+    @Test
+    public void testJPQLQuery() {
+        EntityManager em = factory.createEntityManager();
+        List list = em.createQuery("SELECT m FROM Marketdata m").getResultList();
+        assertNotNull(list);
+        assertEquals(10, list.size());
+        em.close();
+    }
 
-	@AfterClass
-	public static void destory() {
+    @AfterClass
+    public static void destory() {
 
-		factory.close();
-		try {
-			DriverManager.deregisterDriver(server.getDriver());
-		} catch (SQLException e) {
-		}
-		server.stop();
-	}
+        factory.close();
+        try {
+            DriverManager.deregisterDriver(server.getDriver());
+        } catch (SQLException e) {
+        }
+        server.stop();
+    }
 
 }

@@ -42,7 +42,7 @@ public class TestSQLConversionVisitor {
 
     @Test
     public void testUpdate() throws TranslatorException {
-    	String sql = "update Customer set city = 'Beijing' where name = 'Kylin Soong'";
+        String sql = "update Customer set city = 'Beijing' where name = 'Kylin Soong'";
         String expected = "UPSERT INTO \"Customer\" (\"city\", ROW_ID) SELECT 'Beijing', \"Customer\".ROW_ID FROM \"Customer\" WHERE \"Customer\".\"name\" = 'Kylin Soong'";
         helpTest(sql, expected);
 
@@ -179,21 +179,21 @@ public class TestSQLConversionVisitor {
 
     @Test
     public void testBooleanLiterals() throws Exception {
-    	String sql = "SELECT true, false FROM Customer";
+        String sql = "SELECT true, false FROM Customer";
         String expected = "SELECT true, false FROM \"Customer\"";
         helpTest(sql, expected);
     }
 
     @Test
     public void testBigDecimalLiteral() throws Exception {
-    	String sql = "SELECT cast(1 as bigdecimal) FROM Customer";
+        String sql = "SELECT cast(1 as bigdecimal) FROM Customer";
         String expected = "SELECT 1.0 FROM \"Customer\"";
         helpTest(sql, expected);
     }
 
     @Test
     public void testDateTimeLiterals() throws Exception {
-    	String sql = "SELECT {d '2001-01-01'}, {t '23:00:02'}, {ts '2004-02-01 11:11:11.001'} FROM Customer";
+        String sql = "SELECT {d '2001-01-01'}, {t '23:00:02'}, {ts '2004-02-01 11:11:11.001'} FROM Customer";
         String expected = "SELECT DATE '2001-01-01 00:00:00.0', TIME '1970-01-01 23:00:02.0', TIMESTAMP '2004-02-01 11:11:11.001' FROM \"Customer\"";
         helpTest(sql, expected);
     }

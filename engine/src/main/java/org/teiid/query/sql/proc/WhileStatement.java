@@ -53,12 +53,12 @@ public class WhileStatement extends Statement implements Labeled {
     }
 
     public void setLabel(String label) {
-		this.label = label;
-	}
+        this.label = label;
+    }
 
     public String getLabel() {
-		return label;
-	}
+        return label;
+    }
 
     /**
      * Get the condition that determines which block needs to be executed.

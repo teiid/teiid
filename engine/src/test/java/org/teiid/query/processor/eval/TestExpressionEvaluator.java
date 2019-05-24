@@ -77,7 +77,7 @@ public class TestExpressionEvaluator {
         }
         List<Object> tuple = null;
         if (valueList != null) {
-        	tuple = Arrays.asList(valueList);
+            tuple = Arrays.asList(valueList);
         }
         return new Evaluator(elements, dataMgr, context).evaluate(expr, tuple);
     }
@@ -172,7 +172,7 @@ public class TestExpressionEvaluator {
             helpEval(e2, elements, values, null, null);
             fail("Exception expected"); //$NON-NLS-1$
         } catch (TeiidComponentException e){
-        	//this should be a componentexception, since it is unexpected
+            //this should be a componentexception, since it is unexpected
             assertEquals("TEIID30328 Unable to evaluate e2: No value was available", e.getMessage()); //$NON-NLS-1$
         }
     }
@@ -254,22 +254,22 @@ public class TestExpressionEvaluator {
         helpTestWithValueIterator(expr, values, expected);
     }
 
-	private void helpTestWithValueIterator(ScalarSubquery expr,
-			List<?> values, Object expected)
-			throws BlockedException,
-			TeiidComponentException, ExpressionEvaluationException {
-		final CollectionValueIterator valueIter = new CollectionValueIterator(values);
+    private void helpTestWithValueIterator(ScalarSubquery expr,
+            List<?> values, Object expected)
+            throws BlockedException,
+            TeiidComponentException, ExpressionEvaluationException {
+        final CollectionValueIterator valueIter = new CollectionValueIterator(values);
         CommandContext cc = new CommandContext();
         assertEquals(expected, new Evaluator(Collections.emptyMap(), null, cc) {
-        	@Override
-        	protected ValueIterator evaluateSubquery(
-        			SubqueryContainer container, List tuple)
-        			throws TeiidProcessingException, BlockedException,
-        			TeiidComponentException {
-        		return valueIter;
-        	}
+            @Override
+            protected ValueIterator evaluateSubquery(
+                    SubqueryContainer container, List tuple)
+                    throws TeiidProcessingException, BlockedException,
+                    TeiidComponentException {
+                return valueIter;
+            }
         }.evaluate(expr, null) );
-	}
+    }
 
     @Test public void testScalarSubquery2() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
@@ -290,7 +290,7 @@ public class TestExpressionEvaluator {
         values.add("b"); //$NON-NLS-1$
 
         try {
-        	helpTestWithValueIterator(expr, values, null);
+            helpTestWithValueIterator(expr, values, null);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
             assertEquals("TEIID30328 Unable to evaluate (SELECT x FROM y): TEIID30345 The command of this scalar subquery returned more than one value: SELECT x FROM y", e.getMessage()); //$NON-NLS-1$
@@ -368,133 +368,133 @@ public class TestExpressionEvaluator {
     }
 
     @Test public void testBigDecimalFromDoubleDivision() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("convert(1.0, bigdecimal)/3");
-    	assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("convert(1.0, bigdecimal)/3");
+        assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
     }
 
     @Test public void testBigDecimalDivision() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("1/convert('3.0', bigdecimal)");
-    	assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("1/convert('3.0', bigdecimal)");
+        assertEquals(new BigDecimal("0.3333333333333333"), Evaluator.evaluate(ex));
     }
 
     @Test public void testIsNull() throws Exception {
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN))));
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN))));
     }
 
     @Test public void testIsNull1() throws Exception {
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN))));
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN))));
     }
 
     @Test public void testIsNull3() throws Exception {
-    	IsNullCriteria inc = new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN));
-    	inc.setNegated(true);
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(inc));
+        IsNullCriteria inc = new IsNullCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN));
+        inc.setNegated(true);
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(inc));
     }
 
     @Test public void testIsNull4() throws Exception {
-    	IsNullCriteria inc = new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN));
-    	inc.setNegated(true);
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
+        IsNullCriteria inc = new IsNullCriteria(new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN));
+        inc.setNegated(true);
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(inc));
     }
 
     @Test public void testSubstring() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("substring('abcd' from 2 for 2)");
-    	assertEquals("bc", Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("substring('abcd' from 2 for 2)");
+        assertEquals("bc", Evaluator.evaluate(ex));
     }
 
     @Test public void testExtract() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("extract(year from cast('2011-01-01' as date))");
-    	assertEquals(2011, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("extract(year from cast('2011-01-01' as date))");
+        assertEquals(2011, Evaluator.evaluate(ex));
     }
 
     @Test public void testExtract1() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("extract(day from cast('2011-01-01' as date))");
-    	assertEquals(1, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("extract(day from cast('2011-01-01' as date))");
+        assertEquals(1, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' similar to 'a+%'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'aaaxy' similar to 'a+%'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo1() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo2() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,3}y'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,3}y'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test(expected=ExpressionEvaluationException.class) public void testSimilarTo3() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to '{'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' similar to '{'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo4() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,}y'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' similar to 'xa{2,}y'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo5() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'x1y' similar to 'x([a-z]+|[0-9])_'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'x1y' similar to 'x([a-z]+|[0-9])_'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testSimilarTo6() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xx' similar to 'x([a-z]+|[0-9])_'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xx' similar to 'x([a-z]+|[0-9])_'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test public void testLikeRegex() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'aaaxy' like_regex 'a+.*'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'aaaxy' like_regex 'a+.*'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testLikeRegex1() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xaay' similar to 'xa{2,3}y'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testLikeRegex2() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'xa{2,3}y'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'xa{2,3}y'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test(expected=ExpressionEvaluationException.class) public void testLikeRegex3() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex '{'");
-    	assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' like_regex '{'");
+        assertEquals(Boolean.FALSE, Evaluator.evaluate(ex));
     }
 
     @Test public void testLikeRegex4() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'a'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'xay' like_regex 'a'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testLikePlus() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+        Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
     }
 
     @Test public void testArrayEquality() throws Exception {
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))))));
-    	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(null)))), null));
+        assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))))));
+        assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(null)))), null));
     }
 
     @Test public void testToCharsBytesWellformed() throws Exception {
-    	Expression ex = TestFunctionResolving.getExpression("to_chars(to_bytes('abc', 'utf-8', false), 'utf-8', true)");
-    	assertEquals("abc", ((Clob)Evaluator.evaluate(ex)).getSubString(1, 3));
+        Expression ex = TestFunctionResolving.getExpression("to_chars(to_bytes('abc', 'utf-8', false), 'utf-8', true)");
+        assertEquals("abc", ((Clob)Evaluator.evaluate(ex)).getSubString(1, 3));
 
-    	try {
-    		ex = TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
-    		Evaluator.evaluate(ex);
-    		fail("expected exception");
-    	} catch (ExpressionEvaluationException e) {
+        try {
+            ex = TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
+            Evaluator.evaluate(ex);
+            fail("expected exception");
+        } catch (ExpressionEvaluationException e) {
 
-    	}
+        }
 
-    	TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
+        TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
     }
 
     @Test public void testRegexpReplaceOkay() throws Exception {
@@ -512,8 +512,8 @@ public class TestExpressionEvaluator {
     }
 
     @Test public void testTimestampResolving() throws Exception {
-    	assertEval("TIMESTAMPDIFF(SQL_TSI_YEAR, '2000-01-01', '2002-01-01')", "2");
-	}
+        assertEval("TIMESTAMPDIFF(SQL_TSI_YEAR, '2000-01-01', '2002-01-01')", "2");
+    }
 
     @Test public void testEndsWith() throws Exception {
         // Test replace-first vs replace-all.

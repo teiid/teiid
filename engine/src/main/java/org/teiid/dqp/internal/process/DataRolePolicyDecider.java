@@ -40,133 +40,133 @@ public class DataRolePolicyDecider implements PolicyDecider {
     private boolean allowCreateTemporaryTablesByDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.allowCreateTemporaryTablesByDefault", false, Boolean.class); //$NON-NLS-1$
     private boolean allowFunctionCallsByDefault = PropertiesUtils.getHierarchicalProperty("org.teiid.allowFunctionCallsByDefault", false, Boolean.class); //$NON-NLS-1$
 
-	@Override
-	public Set<String> getInaccessibleResources(PermissionType action,
-			Set<String> resources, Context context, CommandContext commandContext) {
-		if ((action == PermissionType.EXECUTE || action == null) && context == Context.FUNCTION && allowFunctionCallsByDefault) {
-			return Collections.emptySet();
-		}
-		Collection<DataPolicy> policies = commandContext.getAllowedDataPolicies().values();
-		int policyCount = policies.size();
-		boolean[] exclude = new boolean[policyCount];
-		Boolean[] results = null;
-		List<PermissionType> metadataPermissions = null;
-		if (context == Context.METADATA) {
-		    Assertion.assertTrue(resources.size() == 1);
-		    if (action == PermissionType.READ) {
-		        results = new Boolean[5];
+    @Override
+    public Set<String> getInaccessibleResources(PermissionType action,
+            Set<String> resources, Context context, CommandContext commandContext) {
+        if ((action == PermissionType.EXECUTE || action == null) && context == Context.FUNCTION && allowFunctionCallsByDefault) {
+            return Collections.emptySet();
+        }
+        Collection<DataPolicy> policies = commandContext.getAllowedDataPolicies().values();
+        int policyCount = policies.size();
+        boolean[] exclude = new boolean[policyCount];
+        Boolean[] results = null;
+        List<PermissionType> metadataPermissions = null;
+        if (context == Context.METADATA) {
+            Assertion.assertTrue(resources.size() == 1);
+            if (action == PermissionType.READ) {
+                results = new Boolean[5];
                 metadataPermissions = Arrays.asList(
                         PermissionType.ALTER, PermissionType.CREATE,
                         PermissionType.UPDATE, PermissionType.READ,
                         PermissionType.DELETE);
-		    } else {
-	            results = new Boolean[2];
-	            metadataPermissions = Arrays.asList(PermissionType.ALTER, action);
-		    }
-		}
-		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
-			String resource = iter.next();
-			Arrays.fill(exclude, false);
-			int excludeCount = 0;
-			while (resource.length() > 0) {
-				Iterator<DataPolicy> policyIter = policies.iterator();
-				for (int j = 0; j < policyCount; j++) {
-					DataPolicyMetadata policy = (DataPolicyMetadata)policyIter.next();
-					if (exclude[j]) {
-						continue;
-					}
-					if (policy.isGrantAll()) {
-						if (policy.getSchemas() == null) {
-							resources.clear();
-							return resources;
-						}
-						if (action == PermissionType.LANGUAGE) {
-							iter.remove();
-							continue outer;
-						}
-						//imported grant all must be checked against the schemas
-						if (resource.indexOf('.') > 0) {
-							continue;
-						}
-						if (policy.getSchemas().contains(resource)) {
-							iter.remove();
-							continue outer;
-						}
-						continue;
-					}
-					if (context == Context.METADATA) {
-					    for (int i = 0; i < results.length; i++) {
-	                        Boolean allows = policy.allows(resource, metadataPermissions.get(i));
-	                        if (allows != null && allows && results[i] == null) {
+            } else {
+                results = new Boolean[2];
+                metadataPermissions = Arrays.asList(PermissionType.ALTER, action);
+            }
+        }
+        outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
+            String resource = iter.next();
+            Arrays.fill(exclude, false);
+            int excludeCount = 0;
+            while (resource.length() > 0) {
+                Iterator<DataPolicy> policyIter = policies.iterator();
+                for (int j = 0; j < policyCount; j++) {
+                    DataPolicyMetadata policy = (DataPolicyMetadata)policyIter.next();
+                    if (exclude[j]) {
+                        continue;
+                    }
+                    if (policy.isGrantAll()) {
+                        if (policy.getSchemas() == null) {
+                            resources.clear();
+                            return resources;
+                        }
+                        if (action == PermissionType.LANGUAGE) {
+                            iter.remove();
+                            continue outer;
+                        }
+                        //imported grant all must be checked against the schemas
+                        if (resource.indexOf('.') > 0) {
+                            continue;
+                        }
+                        if (policy.getSchemas().contains(resource)) {
+                            iter.remove();
+                            continue outer;
+                        }
+                        continue;
+                    }
+                    if (context == Context.METADATA) {
+                        for (int i = 0; i < results.length; i++) {
+                            Boolean allows = policy.allows(resource, metadataPermissions.get(i));
+                            if (allows != null && allows && results[i] == null) {
                                 resources.clear();
                                 return resources;
                             }
-	                        if (results[i] == null) {
-					            results[i] = allows;
-					        }
-					    }
-					}
-					Boolean allows = policy.allows(resource, action);
-					if (allows != null) {
-						if (allows) {
-							iter.remove();
-							continue outer;
-						}
-						exclude[j] = true;
-						excludeCount++;
-					}
-				}
-				if (excludeCount == policyCount || action == PermissionType.LANGUAGE) {
-					break; //don't check less specific permissions
-				}
-				resource = resource.substring(0, Math.max(0, resource.lastIndexOf('.')));
-			}
-		}
-		return resources;
-	}
+                            if (results[i] == null) {
+                                results[i] = allows;
+                            }
+                        }
+                    }
+                    Boolean allows = policy.allows(resource, action);
+                    if (allows != null) {
+                        if (allows) {
+                            iter.remove();
+                            continue outer;
+                        }
+                        exclude[j] = true;
+                        excludeCount++;
+                    }
+                }
+                if (excludeCount == policyCount || action == PermissionType.LANGUAGE) {
+                    break; //don't check less specific permissions
+                }
+                resource = resource.substring(0, Math.max(0, resource.lastIndexOf('.')));
+            }
+        }
+        return resources;
+    }
 
-	@Override
-	public boolean hasRole(String roleName, CommandContext context) {
-		return context.getAllowedDataPolicies().containsKey(roleName);
-	}
+    @Override
+    public boolean hasRole(String roleName, CommandContext context) {
+        return context.getAllowedDataPolicies().containsKey(roleName);
+    }
 
-	@Override
-	public boolean isTempAccessible(PermissionType action, String resource,
-			Context context, CommandContext commandContext) {
-		if (resource != null) {
-			return getInaccessibleResources(action, new HashSet<String>(Arrays.asList(resource)), context, commandContext).isEmpty();
-		}
-		Boolean result = null;
-    	for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
-			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			if (policy.isGrantAll()) {
-				return true;
-			}
-			if (policy.isAllowCreateTemporaryTables() != null) {
-				if (policy.isAllowCreateTemporaryTables()) {
-					return true;
-				}
-				result = policy.isAllowCreateTemporaryTables();
-			}
-		}
-    	if (result != null) {
-    		return result;
-    	}
-    	return allowCreateTemporaryTablesByDefault;
-	}
+    @Override
+    public boolean isTempAccessible(PermissionType action, String resource,
+            Context context, CommandContext commandContext) {
+        if (resource != null) {
+            return getInaccessibleResources(action, new HashSet<String>(Arrays.asList(resource)), context, commandContext).isEmpty();
+        }
+        Boolean result = null;
+        for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
+            DataPolicyMetadata policy = (DataPolicyMetadata)p;
+            if (policy.isGrantAll()) {
+                return true;
+            }
+            if (policy.isAllowCreateTemporaryTables() != null) {
+                if (policy.isAllowCreateTemporaryTables()) {
+                    return true;
+                }
+                result = policy.isAllowCreateTemporaryTables();
+            }
+        }
+        if (result != null) {
+            return result;
+        }
+        return allowCreateTemporaryTablesByDefault;
+    }
 
     public void setAllowCreateTemporaryTablesByDefault(
-			boolean allowCreateTemporaryTablesByDefault) {
-		this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
-	}
+            boolean allowCreateTemporaryTablesByDefault) {
+        this.allowCreateTemporaryTablesByDefault = allowCreateTemporaryTablesByDefault;
+    }
 
     public void setAllowFunctionCallsByDefault(boolean allowFunctionCallsDefault) {
-		this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
-	}
+        this.allowFunctionCallsByDefault = allowFunctionCallsDefault;
+    }
 
     @Override
     public boolean validateCommand(CommandContext commandContext) {
-    	return !commandContext.getVdb().getDataPolicies().isEmpty();
+        return !commandContext.getVdb().getDataPolicies().isEmpty();
     }
 
 }

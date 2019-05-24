@@ -21,7 +21,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
 
     @Override
     protected TransactionContainer getTransactionContainter() {
-	 return new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+     return new TxnAutoTransaction(TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
     }
 
 
@@ -35,7 +35,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
     @Test
     public void testSingleSourceSelect() throws Exception {
 
-	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceSelect") {
+    AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceSelect") {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
@@ -56,7 +56,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      */
     @Test
     public void testSingleSourceUpdate() throws Exception {
-	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceUpdate") {
+    AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceUpdate") {
             public void testCase() throws Exception {
                 execute("insert into pm1.g1 (e1, e2) values(100, '100')");
             }
@@ -79,7 +79,7 @@ public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
      */
     @Test
     public void testSingleSourceMultipleCommands() throws Exception {
-	AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommands") {
+    AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommands") {
             public void testCase() throws Exception {
                 execute("delete from pm1.g1 where pm1.g1.e1 >= ?", new Object[] {new Integer(100)});
                 execute("select * from pm1.g1");

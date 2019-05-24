@@ -37,46 +37,46 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
  *
  */
 public class SpreadsheetInsertVisitor extends SQLStringVisitor {
-	private String worksheetKey;
-	private Map<String, Object> columnNameValuePair = new LinkedHashMap<String, Object>();
-	SpreadsheetInfo info;
-	private String worksheetTitle;
+    private String worksheetKey;
+    private Map<String, Object> columnNameValuePair = new LinkedHashMap<String, Object>();
+    SpreadsheetInfo info;
+    private String worksheetTitle;
 
-	public SpreadsheetInsertVisitor(SpreadsheetInfo info) {
-		this.info = info;
-	}
+    public SpreadsheetInsertVisitor(SpreadsheetInfo info) {
+        this.info = info;
+    }
 
-	public void visit(Insert obj) {
-		worksheetTitle = obj.getTable().getName();
-		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-			worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-		}
-		worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
-		ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
-		for (int i = 0; i < evs.getValues().size(); i++) {
-		    Expression e = evs.getValues().get(i);
-		    if (!(e instanceof Literal)) {
+    public void visit(Insert obj) {
+        worksheetTitle = obj.getTable().getName();
+        if (obj.getTable().getMetadataObject().getNameInSource() != null) {
+            worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
+        }
+        worksheetKey = info.getWorksheetByName(worksheetTitle).getId();
+        ExpressionValueSource evs = (ExpressionValueSource)obj.getValueSource();
+        for (int i = 0; i < evs.getValues().size(); i++) {
+            Expression e = evs.getValues().get(i);
+            if (!(e instanceof Literal)) {
                 throw new SpreadsheetOperationException("Only literals are allowed in the values section");
             }
-		    Literal l = (Literal)e;
-		    if (l.getValue() == null) {
-		        continue;
-	        }
-	        ColumnReference columnReference = obj.getColumns().get(i);
-	        columnNameValuePair.put(columnReference.getMetadataObject().getSourceName(), l.getValue());
-		}
-	}
+            Literal l = (Literal)e;
+            if (l.getValue() == null) {
+                continue;
+            }
+            ColumnReference columnReference = obj.getColumns().get(i);
+            columnNameValuePair.put(columnReference.getMetadataObject().getSourceName(), l.getValue());
+        }
+    }
 
-	public String getWorksheetKey() {
-		return worksheetKey;
-	}
+    public String getWorksheetKey() {
+        return worksheetKey;
+    }
 
-	public Map<String, Object> getColumnNameValuePair() {
-		return columnNameValuePair;
-	}
+    public Map<String, Object> getColumnNameValuePair() {
+        return columnNameValuePair;
+    }
 
-	public String getWorksheetTitle() {
-		return worksheetTitle;
-	}
+    public String getWorksheetTitle() {
+        return worksheetTitle;
+    }
 
 }

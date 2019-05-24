@@ -28,21 +28,21 @@ import org.teiid.core.TeiidComponentException;
  */
 public interface BatchManager {
 
-	List<List<?>> getBatch(Long batch, boolean retain) throws TeiidComponentException;
+    List<List<?>> getBatch(Long batch, boolean retain) throws TeiidComponentException;
 
-	void remove(Long batch);
+    void remove(Long batch);
 
-	void setPrefersMemory(boolean prefers);
+    void setPrefersMemory(boolean prefers);
 
-	boolean prefersMemory();
+    boolean prefersMemory();
 
-	Long createManagedBatch(List<? extends List<?>> batch, Long previous, boolean removeOld) throws TeiidComponentException;
+    Long createManagedBatch(List<? extends List<?>> batch, Long previous, boolean removeOld) throws TeiidComponentException;
 
-	void remove();
+    void remove();
 
-	Reference<? extends BatchManager> getBatchManagerReference();
+    Reference<? extends BatchManager> getBatchManagerReference();
 
-	String[] getTypes();
+    String[] getTypes();
 
-	int getRowSizeEstimate();
+    int getRowSizeEstimate();
 }

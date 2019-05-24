@@ -24,19 +24,19 @@ import org.teiid.core.TeiidComponentException;
  */
 public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
 
-	private static final BasicSourceCapabilities defaultInstance = new BasicSourceCapabilities();
-	public static final DefaultCapabilitiesFinder INSTANCE = new DefaultCapabilitiesFinder();
+    private static final BasicSourceCapabilities defaultInstance = new BasicSourceCapabilities();
+    public static final DefaultCapabilitiesFinder INSTANCE = new DefaultCapabilitiesFinder();
 
-	private SourceCapabilities capabilities;
+    private SourceCapabilities capabilities;
     /**
      *
      */
     public DefaultCapabilitiesFinder() {
-    	this.capabilities = defaultInstance;
+        this.capabilities = defaultInstance;
     }
 
     public DefaultCapabilitiesFinder(SourceCapabilities capabilities) {
-    	this.capabilities = capabilities;
+        this.capabilities = capabilities;
     }
 
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
@@ -45,7 +45,7 @@ public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
 
     @Override
     public boolean isValid(String fullName) {
-    	return true;
+        return true;
     }
 
 }

@@ -37,19 +37,19 @@ import java.util.List;
 public interface VDB extends AdminObject, DomainAware {
 
     public enum Status{
-    	/**
-    	 * Initial state waiting for metadata to load
-    	 */
-    	LOADING,
-    	/**
-    	 * In the vdb repository and querable, but not necessarily valid
-    	 */
-    	ACTIVE,
-    	/**
-    	 * A vdb that cannot be successfully loaded - and cannot later transition to active
-    	 */
-    	FAILED,
-    	REMOVED
+        /**
+         * Initial state waiting for metadata to load
+         */
+        LOADING,
+        /**
+         * In the vdb repository and querable, but not necessarily valid
+         */
+        ACTIVE,
+        /**
+         * A vdb that cannot be successfully loaded - and cannot later transition to active
+         */
+        FAILED,
+        REMOVED
     };
 
     public enum ConnectionType {NONE, BY_VERSION, ANY}
@@ -121,11 +121,11 @@ public interface VDB extends AdminObject, DomainAware {
      * @param modelName
      * @return
      */
-	boolean isVisible(String modelName);
+    boolean isVisible(String modelName);
 
-	/**
-	 * @return the name of the vdb.  If this vdb is using semantic versioning, that version will be included in the name.
-	 */
-	@Override
-	public String getName();
+    /**
+     * @return the name of the vdb.  If this vdb is using semantic versioning, that version will be included in the name.
+     */
+    @Override
+    public String getName();
 }

@@ -34,42 +34,42 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
 public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFactory{
-	private static final long serialVersionUID = -4945630936957298180L;
+    private static final long serialVersionUID = -4945630936957298180L;
 
-	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBManagedConnectionFactory.class);
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBManagedConnectionFactory.class);
 
-	public enum SecurityType {None, SCRAM_SHA_1, MONGODB_CR, Kerberos, X509};
-	private String remoteServerList=null;
-	private String username;
-	private String password;
-	private String database;
-	private String securityType = SecurityType.SCRAM_SHA_1.name();
-	private String authDatabase;
-	private Boolean ssl;
+    public enum SecurityType {None, SCRAM_SHA_1, MONGODB_CR, Kerberos, X509};
+    private String remoteServerList=null;
+    private String username;
+    private String password;
+    private String database;
+    private String securityType = SecurityType.SCRAM_SHA_1.name();
+    private String authDatabase;
+    private Boolean ssl;
 
-	@Override
-	@SuppressWarnings("serial")
-	public BasicConnectionFactory<MongoDBConnectionImpl> createConnectionFactory() throws ResourceException {
-		if (this.remoteServerList == null) {
-			throw new InvalidPropertyException(UTIL.getString("no_server")); //$NON-NLS-1$
-		}
-		if (this.database == null) {
-			throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
-		}
+    @Override
+    @SuppressWarnings("serial")
+    public BasicConnectionFactory<MongoDBConnectionImpl> createConnectionFactory() throws ResourceException {
+        if (this.remoteServerList == null) {
+            throw new InvalidPropertyException(UTIL.getString("no_server")); //$NON-NLS-1$
+        }
+        if (this.database == null) {
+            throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+        }
 
-		final List<ServerAddress> servers = getServers();
-		if (servers != null) {
-    		return new BasicConnectionFactory<MongoDBConnectionImpl>() {
-    			@Override
-    			public MongoDBConnectionImpl getConnection() throws ResourceException {
+        final List<ServerAddress> servers = getServers();
+        if (servers != null) {
+            return new BasicConnectionFactory<MongoDBConnectionImpl>() {
+                @Override
+                public MongoDBConnectionImpl getConnection() throws ResourceException {
                     return new MongoDBConnectionImpl(
                             MongoDBManagedConnectionFactory.this.database,
                             servers, getCredential(), getOptions());
-    			}
-    		};
-		}
+                }
+            };
+        }
 
-		// Make connection using the URI format
+        // Make connection using the URI format
         return new BasicConnectionFactory<MongoDBConnectionImpl>() {
             @Override
             public MongoDBConnectionImpl getConnection() throws ResourceException {
@@ -77,9 +77,9 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
             }
         };
 
-	}
+    }
 
-	private MongoCredential getCredential() {
+    private MongoCredential getCredential() {
 
         MongoCredential credential = null;
         if (this.securityType.equals(SecurityType.SCRAM_SHA_1.name())) {
@@ -98,7 +98,7 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         else if (this.securityType.equals(SecurityType.X509.name())) {
             credential = MongoCredential.createMongoX509Credential(this.username);
         } else if (this.securityType.equals(SecurityType.None.name())) {
-        	// skip
+            // skip
         }
         else if (this.username != null && this.password != null) {
             // to support legacy pre-3.0 authentication
@@ -108,22 +108,22 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
                     this.password.toCharArray());
         }
         return credential;
-	}
+    }
 
-	private MongoClientOptions getOptions() {
+    private MongoClientOptions getOptions() {
         //if options needed then use URL format
         final MongoClientOptions.Builder builder = MongoClientOptions.builder();
         if (getSsl()) {
             builder.sslEnabled(true);
         }
         return builder.build();
-	}
+    }
 
-	/**
-	 * Returns the <code>host:port[;host:port...]</code> list that identifies the remote servers
-	 * to include in this cluster;
-	 * @return <code>host:port[;host:port...]</code> list
-	 */
+    /**
+     * Returns the <code>host:port[;host:port...]</code> list that identifies the remote servers
+     * to include in this cluster;
+     * @return <code>host:port[;host:port...]</code> list
+     */
    public String getRemoteServerList() {
         return this.remoteServerList;
     }
@@ -136,21 +136,21 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         this.remoteServerList = remoteServerList;
     }
 
-	public String getUsername() {
-		return this.username;
-	}
+    public String getUsername() {
+        return this.username;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getPassword() {
-		return this.password;
-	}
+    public String getPassword() {
+        return this.password;
+    }
 
-	public void setPassword(String googlePassword) {
-		this.password = googlePassword;
-	}
+    public void setPassword(String googlePassword) {
+        this.password = googlePassword;
+    }
 
     public Boolean getSsl() {
         return this.ssl != null?this.ssl:false;
@@ -160,13 +160,13 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         this.ssl = ssl;
     }
 
-	public String getDatabase() {
-		return this.database;
-	}
+    public String getDatabase() {
+        return this.database;
+    }
 
-	public void setDatabase(String database) {
-		this.database = database;
-	}
+    public void setDatabase(String database) {
+        this.database = database;
+    }
 
     public String getSecurityType() {
         return this.securityType;
@@ -184,31 +184,31 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         this.authDatabase = database;
     }
 
-	protected MongoClientURI getConnectionURI() {
+    protected MongoClientURI getConnectionURI() {
         String serverlist = getRemoteServerList();
         if (serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
             return new MongoClientURI(getRemoteServerList());
         }
         return null;
-	}
+    }
 
-	protected List<ServerAddress> getServers() throws ResourceException {
-	    String serverlist = getRemoteServerList();
-	    if (!serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
-    		List<ServerAddress> addresses = new ArrayList<ServerAddress>();
-    		StringTokenizer st = new StringTokenizer(serverlist, ";"); //$NON-NLS-1$
-    		while (st.hasMoreTokens()) {
-    			String token = st.nextToken();
-    			int idx = token.indexOf(':');
-    			if (idx < 0) {
-    				throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
-    			}
-    			addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
-    		}
-    		return addresses;
-	    }
-	    return null;
-	}
+    protected List<ServerAddress> getServers() throws ResourceException {
+        String serverlist = getRemoteServerList();
+        if (!serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
+            List<ServerAddress> addresses = new ArrayList<ServerAddress>();
+            StringTokenizer st = new StringTokenizer(serverlist, ";"); //$NON-NLS-1$
+            while (st.hasMoreTokens()) {
+                String token = st.nextToken();
+                int idx = token.indexOf(':');
+                if (idx < 0) {
+                    throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+                }
+                addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
+            }
+            return addresses;
+        }
+        return null;
+    }
 
     @Override
     public int hashCode() {

@@ -28,27 +28,27 @@ import org.junit.Test;
 @SuppressWarnings("nls")
 public class TestDhKeyGenerator {
 
-	@Test
-	public void testKeyGenerationDefault() throws CryptoException {
-		DhKeyGenerator keyGenServer = new DhKeyGenerator();
-		DhKeyGenerator keyGenClient = new DhKeyGenerator();
-		byte[] serverKey = keyGenServer.createPublicKey(true);
-		byte[] clientKey = keyGenClient.createPublicKey(true);
-		SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
-		SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
+    @Test
+    public void testKeyGenerationDefault() throws CryptoException {
+        DhKeyGenerator keyGenServer = new DhKeyGenerator();
+        DhKeyGenerator keyGenClient = new DhKeyGenerator();
+        byte[] serverKey = keyGenServer.createPublicKey(true);
+        byte[] clientKey = keyGenClient.createPublicKey(true);
+        SymmetricCryptor serverCryptor = keyGenServer.getSymmetricCryptor(clientKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
+        SymmetricCryptor clientCryptor = keyGenClient.getSymmetricCryptor(serverKey, false, TestDhKeyGenerator.class.getClassLoader(), true, true);
 
-		String cleartext = "cleartext!"; //$NON-NLS-1$
+        String cleartext = "cleartext!"; //$NON-NLS-1$
 
-		byte[] ciphertext = serverCryptor.encrypt(cleartext.getBytes(Charset.forName("UTF-8")));
-		byte[] cleartext2 = clientCryptor.decrypt(ciphertext);
+        byte[] ciphertext = serverCryptor.encrypt(cleartext.getBytes(Charset.forName("UTF-8")));
+        byte[] cleartext2 = clientCryptor.decrypt(ciphertext);
 
-		assertArrayEquals(cleartext.getBytes(Charset.forName("UTF-8")), cleartext2);
+        assertArrayEquals(cleartext.getBytes(Charset.forName("UTF-8")), cleartext2);
 
-		Object sealed = serverCryptor.sealObject(cleartext);
-		Object unsealed = clientCryptor.unsealObject(sealed);
+        Object sealed = serverCryptor.sealObject(cleartext);
+        Object unsealed = clientCryptor.unsealObject(sealed);
 
-		assertEquals(cleartext, unsealed);
-		assertTrue(!sealed.equals(unsealed));
-	}
+        assertEquals(cleartext, unsealed);
+        assertTrue(!sealed.equals(unsealed));
+    }
 
 }

@@ -19,30 +19,30 @@ import java.io.IOException;
  */
 
 public interface IIndex {
-	/**
-	 * Returns the number of documents indexed.
-	 */
-	int getNumDocuments() throws IOException;
-	/**
-	 * Returns the number of unique words indexed.
-	 */
-	int getNumWords() throws IOException;
-	/**
-	 * Returns the paths of the documents containing the given word.
-	 */
-	IQueryResult[] query(String word) throws IOException;
-	/**
-	 * Returns all entries for a given word.
-	 */
-	IEntryResult[] queryEntries(char[] pattern) throws IOException;
-	/**
-	 * Returns the paths of the documents whose names contain the given word.
-	 */
-	IQueryResult[] queryInDocumentNames(String word) throws IOException;
-	/**
-	 * Returns the paths of the documents containing the given word prefix.
-	 */
-	IQueryResult[] queryPrefix(char[] prefix) throws IOException;
+    /**
+     * Returns the number of documents indexed.
+     */
+    int getNumDocuments() throws IOException;
+    /**
+     * Returns the number of unique words indexed.
+     */
+    int getNumWords() throws IOException;
+    /**
+     * Returns the paths of the documents containing the given word.
+     */
+    IQueryResult[] query(String word) throws IOException;
+    /**
+     * Returns all entries for a given word.
+     */
+    IEntryResult[] queryEntries(char[] pattern) throws IOException;
+    /**
+     * Returns the paths of the documents whose names contain the given word.
+     */
+    IQueryResult[] queryInDocumentNames(String word) throws IOException;
+    /**
+     * Returns the paths of the documents containing the given word prefix.
+     */
+    IQueryResult[] queryPrefix(char[] prefix) throws IOException;
 
     /**
      * Closes the index file if open

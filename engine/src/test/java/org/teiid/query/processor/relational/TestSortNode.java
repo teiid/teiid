@@ -71,28 +71,28 @@ public class TestSortNode {
         dataNode.initialize(context, mgr, null);
 
         SortNode sortNode = new SortNode(1);
-    	sortNode.setSortElements(new OrderBy(sortElements, sortTypes).getOrderByItems());
+        sortNode.setSortElements(new OrderBy(sortElements, sortTypes).getOrderByItems());
         sortNode.setMode(mode);
         sortNode.setElements(elements);
         sortNode.addChild(dataNode);
         sortNode.initialize(context, mgr, null);
 
         sortNode.open();
-    	assertTrue(sortNode.hasBuffer());
+        assertTrue(sortNode.hasBuffer());
         int currentRow = 1;
         while(true) {
-        	try {
-	            TupleBatch batch = sortNode.nextBatch();
+            try {
+                TupleBatch batch = sortNode.nextBatch();
                 for(int row = currentRow; row <= batch.getEndRow(); row++) {
                     assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
                 }
-	            currentRow += batch.getRowCount();
-	            if(batch.getTerminationFlag()) {
-	                break;
-	            }
-        	} catch (BlockedException e) {
+                currentRow += batch.getRowCount();
+                if(batch.getTerminationFlag()) {
+                    break;
+                }
+            } catch (BlockedException e) {
 
-        	}
+            }
         }
         assertEquals(expected.length, currentRow - 1);
         assertEquals(reserve, mgr.getReserveBatchBytes());
@@ -162,14 +162,14 @@ public class TestSortNode {
         Arrays.sort(expected, comparator);
 
         for (Mode mode : Mode.values()) {
-    		helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
+            helpTestSort(elements, data, sortElements, sortTypes, mode==Mode.SORT?expected:expectedDistinct, mode);
         }
     }
 
     @Test public void testComparatorNullOrdering() {
-    	ListNestedSortComparator<Integer> comparator = new ListNestedSortComparator<Integer>(new int[] {0}, OrderBy.DESC);
-    	comparator.setNullOrdering(Arrays.asList(NullOrdering.FIRST));
-    	List<Integer>[] data = new List[3];
+        ListNestedSortComparator<Integer> comparator = new ListNestedSortComparator<Integer>(new int[] {0}, OrderBy.DESC);
+        comparator.setNullOrdering(Arrays.asList(NullOrdering.FIRST));
+        List<Integer>[] data = new List[3];
         data[0] = Arrays.asList(1);
         data[1] = Arrays.asList((Integer)null);
         data[2] = Arrays.asList(2);
@@ -245,7 +245,7 @@ public class TestSortNode {
     }
 
     @Test public void testBasicSortRemoveDupSort() throws Exception {
-    	List[] expected = new List[] {
+        List[] expected = new List[] {
                 Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
                 Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
                 Arrays.asList(new Object[] { new Integer(1), "2" }),    //$NON-NLS-1$
@@ -279,7 +279,7 @@ public class TestSortNode {
     }
 
     @Test public void testDistinct() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -288,13 +288,13 @@ public class TestSortNode {
         tsid.addTuple(Arrays.asList(1, 1));
         tsid.addTuple(Arrays.asList(1, 2));
         tsid.close();
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE_SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	su.sort();
-    	assertFalse(su.isDistinct());
+        SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE_SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+        su.sort();
+        assertFalse(su.isDistinct());
     }
 
     @Test public void testOnePass() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -303,10 +303,10 @@ public class TestSortNode {
         tsid.addTuple(Arrays.asList(1, 1));
         tsid.addTuple(Arrays.asList(1, 2));
         tsid.close();
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	List<TupleBuffer> buffers = su.onePassSort(true);
-    	assertEquals(1, buffers.size());
-    	assertTrue(!buffers.get(0).isForwardOnly());
+        SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+        List<TupleBuffer> buffers = su.onePassSort(true);
+        assertEquals(1, buffers.size());
+        assertTrue(!buffers.get(0).isForwardOnly());
     }
 
     @Test public void testSortUsingWorkingBuffer() throws TeiidException {
@@ -330,51 +330,51 @@ public class TestSortNode {
     }
 
     @Test public void testStableSort() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         tsid.addTuple(Arrays.asList(1, 1));
-    	tsid.addTuple(Arrays.asList(1, 2));
-    	tsid.addTuple(Arrays.asList(1, 3));
-    	tsid.close();
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	su.setBatchSize(1);
-    	su.setStableSort(true);
-    	TupleBuffer out = su.sort();
-    	TupleSource ts = out.createIndexedTupleSource();
-    	assertEquals(Arrays.asList(1,1), ts.nextTuple());
-    	assertEquals(Arrays.asList(1,2), ts.nextTuple());
-    	assertEquals(Arrays.asList(1,3), ts.nextTuple());
-    	assertNull(ts.nextTuple());
+        tsid.addTuple(Arrays.asList(1, 2));
+        tsid.addTuple(Arrays.asList(1, 3));
+        tsid.close();
+        SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+        su.setBatchSize(1);
+        su.setStableSort(true);
+        TupleBuffer out = su.sort();
+        TupleSource ts = out.createIndexedTupleSource();
+        assertEquals(Arrays.asList(1,1), ts.nextTuple());
+        assertEquals(Arrays.asList(1,2), ts.nextTuple());
+        assertEquals(Arrays.asList(1,3), ts.nextTuple());
+        assertNull(ts.nextTuple());
     }
 
     @Test public void testSortLimit() throws Exception {
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
         TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         tsid.addTuple(Arrays.asList(4));
-    	tsid.addTuple(Arrays.asList(3));
-    	tsid.addTuple(Arrays.asList(2));
-    	tsid.addTuple(Arrays.asList(1));
-    	tsid.close();
-    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	su.setBatchSize(2);
-    	TupleBuffer out = su.sort(2);
-    	TupleSource ts = out.createIndexedTupleSource();
-    	assertEquals(Arrays.asList(1), ts.nextTuple());
-    	assertEquals(Arrays.asList(2), ts.nextTuple());
-    	assertNull(ts.nextTuple());
+        tsid.addTuple(Arrays.asList(3));
+        tsid.addTuple(Arrays.asList(2));
+        tsid.addTuple(Arrays.asList(1));
+        tsid.close();
+        SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+        su.setBatchSize(2);
+        TupleBuffer out = su.sort(2);
+        TupleSource ts = out.createIndexedTupleSource();
+        assertEquals(Arrays.asList(1), ts.nextTuple());
+        assertEquals(Arrays.asList(2), ts.nextTuple());
+        assertNull(ts.nextTuple());
 
 
-    	su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
-    	su.setBatchSize(10);
-    	out = su.sort(2);
-    	ts = out.createIndexedTupleSource();
-    	assertEquals(Arrays.asList(1), ts.nextTuple());
-    	assertEquals(Arrays.asList(2), ts.nextTuple());
-    	assertNull(ts.nextTuple());
+        su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+        su.setBatchSize(10);
+        out = su.sort(2);
+        ts = out.createIndexedTupleSource();
+        assertEquals(Arrays.asList(1), ts.nextTuple());
+        assertEquals(Arrays.asList(2), ts.nextTuple());
+        assertNull(ts.nextTuple());
     }
 
 }

@@ -41,22 +41,22 @@ class WarningUtil {
      * @param ex Throwable object which needs to be wrapped.
      */
     static SQLWarning createWarning(Throwable ex) {
-    	String sourceName = null;
-    	String modelName = null;
+        String sourceName = null;
+        String modelName = null;
         if(ex instanceof SourceWarning) {
-        	SourceWarning exception = (SourceWarning)ex;
-        	if (exception.isPartialResultsError()) {
-        		PartialResultsWarning warning = new PartialResultsWarning(JDBCPlugin.Util.getString("WarningUtil.Failures_occurred")); //$NON-NLS-1$
-        		warning.addConnectorFailure(exception.getConnectorBindingName(), TeiidSQLException.create(exception));
-        		return warning;
-        	}
-        	ex = exception.getCause();
-        	sourceName = exception.getConnectorBindingName();
-        	modelName = exception.getModelName();
+            SourceWarning exception = (SourceWarning)ex;
+            if (exception.isPartialResultsError()) {
+                PartialResultsWarning warning = new PartialResultsWarning(JDBCPlugin.Util.getString("WarningUtil.Failures_occurred")); //$NON-NLS-1$
+                warning.addConnectorFailure(exception.getConnectorBindingName(), TeiidSQLException.create(exception));
+                return warning;
+            }
+            ex = exception.getCause();
+            sourceName = exception.getConnectorBindingName();
+            modelName = exception.getModelName();
         }
         String code = null;
         if (ex instanceof TeiidException) {
-        	code = ((TeiidException)ex).getCode();
+            code = ((TeiidException)ex).getCode();
         }
         return new TeiidSQLWarning(ex.getMessage(), code, ex, sourceName, modelName);
     }

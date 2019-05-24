@@ -57,160 +57,160 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestExecutionReuse {
 
-	private static final int EXEC_COUNT = 3;
-	private static FakeServer server;
+    private static final int EXEC_COUNT = 3;
+    private static FakeServer server;
 
-	private static class FakeReusableExecution implements ResultSetExecution, ReusableExecution<Object> {
+    private static class FakeReusableExecution implements ResultSetExecution, ReusableExecution<Object> {
 
-		@Override
-		public List<?> next() throws TranslatorException,
-				DataNotAvailableException {
-			return null;
-		}
+        @Override
+        public List<?> next() throws TranslatorException,
+                DataNotAvailableException {
+            return null;
+        }
 
-		@Override
-		public void cancel() throws TranslatorException {
-		}
+        @Override
+        public void cancel() throws TranslatorException {
+        }
 
-		@Override
-		public void close() {
-		}
+        @Override
+        public void close() {
+        }
 
-		@Override
-		public void execute() throws TranslatorException {
-		}
+        @Override
+        public void execute() throws TranslatorException {
+        }
 
-		@Override
-		public void dispose() {
-		}
+        @Override
+        public void dispose() {
+        }
 
-		@Override
-		public void reset(Command c, ExecutionContext executionContext,
-				Object connection) {
-		}
+        @Override
+        public void reset(Command c, ExecutionContext executionContext,
+                Object connection) {
+        }
 
-	}
+    }
 
-	private static FakeReusableExecution execution;
-	private static boolean isDisposed;
+    private static FakeReusableExecution execution;
+    private static boolean isDisposed;
 
-	@Before public void setup() throws DataNotAvailableException, TranslatorException {
-		execution = Mockito.mock(FakeReusableExecution.class);
-		ec = null;
-		DeprecatedOngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
-		for (int i = 1; i < EXEC_COUNT; i++) {
-			stubbing.toReturn(Arrays.asList((Object)null)).toReturn(null);
-		}
-		Mockito.doAnswer(new Answer<Void>() {
-			@Override
-			public Void answer(InvocationOnMock invocation) throws Throwable {
-				synchronized (TestExecutionReuse.class) {
-					isDisposed = true;
-					TestExecutionReuse.class.notify();
-				}
-				return null;
-			}
-		}).when(execution).dispose();
-	}
+    @Before public void setup() throws DataNotAvailableException, TranslatorException {
+        execution = Mockito.mock(FakeReusableExecution.class);
+        ec = null;
+        DeprecatedOngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
+        for (int i = 1; i < EXEC_COUNT; i++) {
+            stubbing.toReturn(Arrays.asList((Object)null)).toReturn(null);
+        }
+        Mockito.doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                synchronized (TestExecutionReuse.class) {
+                    isDisposed = true;
+                    TestExecutionReuse.class.notify();
+                }
+                return null;
+            }
+        }).when(execution).dispose();
+    }
 
-	private static ExecutionContext ec;
+    private static ExecutionContext ec;
 
     @BeforeClass public static void oneTimeSetUp() throws Exception {
-    	EmbeddedConfiguration config = new EmbeddedConfiguration();
-    	config.setUserRequestSourceConcurrency(1);
-    	server = new FakeServer(false);
-		server.setConnectorManagerRepository(new ConnectorManagerRepository() {
-			private ConnectorManager cm = new ConnectorManager("x", "y") {
-				private ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object>() {
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setUserRequestSourceConcurrency(1);
+        server = new FakeServer(false);
+        server.setConnectorManagerRepository(new ConnectorManagerRepository() {
+            private ConnectorManager cm = new ConnectorManager("x", "y") {
+                private ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object>() {
 
-					@Override
-					public ResultSetExecution createResultSetExecution(
-							QueryExpression command,
-							ExecutionContext executionContext,
-							RuntimeMetadata metadata, Object connection)
-							throws TranslatorException {
-						ec = executionContext;
-						return execution;
-					};
+                    @Override
+                    public ResultSetExecution createResultSetExecution(
+                            QueryExpression command,
+                            ExecutionContext executionContext,
+                            RuntimeMetadata metadata, Object connection)
+                            throws TranslatorException {
+                        ec = executionContext;
+                        return execution;
+                    };
 
-					public boolean isSourceRequired() {
-						return false;
-					};
-				};
-				@Override
-				public ExecutionFactory<Object, Object> getExecutionFactory() {
-					return ef;
-				}
+                    public boolean isSourceRequired() {
+                        return false;
+                    };
+                };
+                @Override
+                public ExecutionFactory<Object, Object> getExecutionFactory() {
+                    return ef;
+                }
 
-				@Override
-				public Object getConnectionFactory()
-						throws TranslatorException {
-					return null;
-				}
+                @Override
+                public Object getConnectionFactory()
+                        throws TranslatorException {
+                    return null;
+                }
 
-			};
-			@Override
-			public ConnectorManager getConnectorManager(String connectorName) {
-				return cm;
-			}
-		});
-		server.start(config, false);
-		server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+            };
+            @Override
+            public ConnectorManager getConnectorManager(String connectorName) {
+                return cm;
+            }
+        });
+        server.start(config, false);
+        server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     }
 
     @AfterClass public static void oneTimeTearDown() throws Exception {
-    	server.stop();
+        server.stop();
     }
 
-	@Test public void testReusableAsynchContinuous() throws Exception {
-		Connection c = server.createConnection("jdbc:teiid:partssupplier");
-		Statement s = c.createStatement();
-		TeiidStatement ts = s.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-		ts.submitExecute("select part_id from parts order by part_id", new StatementCallback() {
-			int rowCount;
-			@Override
-			public void onRow(Statement stmt, ResultSet rs) throws SQLException {
-				rowCount++;
-				if (rowCount == EXEC_COUNT) {
-					stmt.close();
-				}
-			}
+    @Test public void testReusableAsynchContinuous() throws Exception {
+        Connection c = server.createConnection("jdbc:teiid:partssupplier");
+        Statement s = c.createStatement();
+        TeiidStatement ts = s.unwrap(TeiidStatement.class);
+        final ResultsFuture<Integer> result = new ResultsFuture<Integer>();
+        ts.submitExecute("select part_id from parts order by part_id", new StatementCallback() {
+            int rowCount;
+            @Override
+            public void onRow(Statement stmt, ResultSet rs) throws SQLException {
+                rowCount++;
+                if (rowCount == EXEC_COUNT) {
+                    stmt.close();
+                }
+            }
 
-			@Override
-			public void onException(Statement stmt, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
+            @Override
+            public void onException(Statement stmt, Exception e) {
+                result.getResultsReceiver().exceptionOccurred(e);
+            }
 
-			@Override
-			public void onComplete(Statement stmt) {
-				result.getResultsReceiver().receiveResults(rowCount);
-			}
-		}, new RequestOptions().continuous(true));
-		synchronized (TestExecutionReuse.class) {
-			while (!isDisposed) {
-				TestExecutionReuse.class.wait();
-			}
-		}
-		assertEquals(EXEC_COUNT, result.get().intValue());
-		assertTrue(ec.getCommandContext().isContinuous());
-		Mockito.verify(execution, Mockito.times(1)).dispose();
-		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();
-		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
-		Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset((Command)Mockito.anyObject(), (ExecutionContext)Mockito.anyObject(), Mockito.anyObject());
-	}
+            @Override
+            public void onComplete(Statement stmt) {
+                result.getResultsReceiver().receiveResults(rowCount);
+            }
+        }, new RequestOptions().continuous(true));
+        synchronized (TestExecutionReuse.class) {
+            while (!isDisposed) {
+                TestExecutionReuse.class.wait();
+            }
+        }
+        assertEquals(EXEC_COUNT, result.get().intValue());
+        assertTrue(ec.getCommandContext().isContinuous());
+        Mockito.verify(execution, Mockito.times(1)).dispose();
+        Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();
+        Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
+        Mockito.verify(execution, Mockito.times(EXEC_COUNT - 1)).reset((Command)Mockito.anyObject(), (ExecutionContext)Mockito.anyObject(), Mockito.anyObject());
+    }
 
-	@Test public void testCommandContext() {
-		CommandContext cc = new CommandContext();
-		FakeReusableExecution fe = new FakeReusableExecution();
-		cc.putReusableExecution("a", fe);
-		cc.putReusableExecution("a", new FakeReusableExecution());
+    @Test public void testCommandContext() {
+        CommandContext cc = new CommandContext();
+        FakeReusableExecution fe = new FakeReusableExecution();
+        cc.putReusableExecution("a", fe);
+        cc.putReusableExecution("a", new FakeReusableExecution());
 
-		ReusableExecution<?> re = cc.getReusableExecution("a");
-		ReusableExecution<?> re1 = cc.getReusableExecution("a");
-		assertSame(fe, re);
-		assertNotSame(fe, re1);
-		assertNull(cc.getReusableExecution("a"));
-	}
+        ReusableExecution<?> re = cc.getReusableExecution("a");
+        ReusableExecution<?> re1 = cc.getReusableExecution("a");
+        assertSame(fe, re);
+        assertNotSame(fe, re1);
+        assertNull(cc.getReusableExecution("a"));
+    }
 
 }

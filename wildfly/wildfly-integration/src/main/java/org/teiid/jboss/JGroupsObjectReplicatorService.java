@@ -30,30 +30,30 @@ import org.wildfly.clustering.jgroups.ChannelFactory;
 
 class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
 
-	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
-	final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-	private JGroupsObjectReplicator replicator;
+    public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
+    final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+    private JGroupsObjectReplicator replicator;
 
 
-	@Override
-	public void start(StartContext context) throws StartException {
-		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
-			@Override
-			public JChannel createChannel(String id) throws Exception {
-			    JChannel c = channelFactoryInjector.getValue().createChannel(id);
-				 c.connect(id);
-				 return c;
-			}
-		}, executorInjector.getValue());
-	}
+    @Override
+    public void start(StartContext context) throws StartException {
+        this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
+            @Override
+            public JChannel createChannel(String id) throws Exception {
+                JChannel c = channelFactoryInjector.getValue().createChannel(id);
+                 c.connect(id);
+                 return c;
+            }
+        }, executorInjector.getValue());
+    }
 
-	@Override
-	public void stop(StopContext context) {
-	}
+    @Override
+    public void stop(StopContext context) {
+    }
 
-	@Override
-	public JGroupsObjectReplicator getValue() throws IllegalStateException,IllegalArgumentException {
-		return replicator;
-	}
+    @Override
+    public JGroupsObjectReplicator getValue() throws IllegalStateException,IllegalArgumentException {
+        return replicator;
+    }
 
 }

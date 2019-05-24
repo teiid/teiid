@@ -23,98 +23,98 @@ public class XMLQuery implements Expression {
 
     @Override
     public Class<?> getType() {
-    	return DataTypeManager.DefaultDataClasses.XML;
+        return DataTypeManager.DefaultDataClasses.XML;
     }
 
     public Boolean getEmptyOnEmpty() {
-		return emptyOnEmpty;
-	}
+        return emptyOnEmpty;
+    }
 
     public void setEmptyOnEmpty(Boolean emptyOnEmpty) {
-		this.emptyOnEmpty = emptyOnEmpty;
-	}
+        this.emptyOnEmpty = emptyOnEmpty;
+    }
 
     public List<DerivedColumn> getPassing() {
-		return passing;
-	}
+        return passing;
+    }
 
     //TODO: display the analysis record info
     public void compileXqueryExpression() throws QueryResolverException {
-    	this.xqueryExpression = XMLHelper.getInstance().compile(xquery, namespaces, passing, null);
-    	this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
+        this.xqueryExpression = XMLHelper.getInstance().compile(xquery, namespaces, passing, null);
+        this.xqueryExpression.useDocumentProjection(null, new AnalysisRecord(false, false));
     }
 
     public XQueryExpression getXQueryExpression() {
-		return xqueryExpression;
-	}
+        return xqueryExpression;
+    }
 
     public void setPassing(List<DerivedColumn> passing) {
-		this.passing = passing;
-	}
+        this.passing = passing;
+    }
 
     public String getXquery() {
-		return xquery;
-	}
+        return xquery;
+    }
 
     public void setXquery(String xquery) {
-		this.xquery = xquery;
-	}
+        this.xquery = xquery;
+    }
 
     public XMLNamespaces getNamespaces() {
-		return namespaces;
-	}
+        return namespaces;
+    }
 
     public void setNamespaces(XMLNamespaces namespaces) {
-		this.namespaces = namespaces;
-	}
+        this.namespaces = namespaces;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	@Override
-	public XMLQuery clone() {
-		XMLQuery clone = new XMLQuery();
-		if (this.namespaces != null) {
-			clone.namespaces = this.namespaces.clone();
-		}
-		if (this.passing != null) {
-			for (DerivedColumn col : this.passing) {
-				clone.passing.add(col.clone());
-			}
-		}
-		clone.xquery = this.xquery;
-		if (this.xqueryExpression != null) {
-			clone.xqueryExpression = this.xqueryExpression.clone();
-		}
-		clone.emptyOnEmpty = this.emptyOnEmpty;
-		return clone;
-	}
+    @Override
+    public XMLQuery clone() {
+        XMLQuery clone = new XMLQuery();
+        if (this.namespaces != null) {
+            clone.namespaces = this.namespaces.clone();
+        }
+        if (this.passing != null) {
+            for (DerivedColumn col : this.passing) {
+                clone.passing.add(col.clone());
+            }
+        }
+        clone.xquery = this.xquery;
+        if (this.xqueryExpression != null) {
+            clone.xqueryExpression = this.xqueryExpression.clone();
+        }
+        clone.emptyOnEmpty = this.emptyOnEmpty;
+        return clone;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof XMLQuery)) {
-			return false;
-		}
-		XMLQuery other = (XMLQuery)obj;
-		return EquivalenceUtil.areEqual(this.namespaces, other.namespaces)
-			  && this.passing.equals(other.passing)
-			  && this.xquery.equals(other.xquery)
-			  && EquivalenceUtil.areEqual(this.emptyOnEmpty, other.emptyOnEmpty);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof XMLQuery)) {
+            return false;
+        }
+        XMLQuery other = (XMLQuery)obj;
+        return EquivalenceUtil.areEqual(this.namespaces, other.namespaces)
+              && this.passing.equals(other.passing)
+              && this.xquery.equals(other.xquery)
+              && EquivalenceUtil.areEqual(this.emptyOnEmpty, other.emptyOnEmpty);
+    }
 
-	@Override
-	public int hashCode() {
-		return this.xquery.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return this.xquery.hashCode();
+    }
 
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
 
 }

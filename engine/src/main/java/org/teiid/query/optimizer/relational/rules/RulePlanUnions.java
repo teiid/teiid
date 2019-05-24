@@ -101,11 +101,11 @@ public class RulePlanUnions implements OptimizerRule {
 
             for (Map.Entry<Object, List<PlanNode>> entry : sourceNodes.entrySet()) {
                 if (entry.getKey() != null
-                		&& entry.getValue().size() > 1
-            			&& CapabilitiesUtil.supportsSetOp(entry.getKey(), (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
-            		shouldRebuild = true;
-            		break;
-            	}
+                        && entry.getValue().size() > 1
+                        && CapabilitiesUtil.supportsSetOp(entry.getKey(), (Operation)unionNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capabilitiesFinder)) {
+                    shouldRebuild = true;
+                    break;
+                }
             }
 
             if (!shouldRebuild) {
@@ -159,10 +159,10 @@ public class RulePlanUnions implements OptimizerRule {
                                                  TeiidComponentException {
         for (PlanNode child : unionNode.getChildren()) {
             if (child.getType() == NodeConstants.Types.SET_OP) {
-            	if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
-            		//allow the parent to handle the dup removal
-            		child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
-            	}
+                if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
+                    //allow the parent to handle the dup removal
+                    child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
+                }
                 if ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
                     List<PlanNode> accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
 
@@ -237,17 +237,17 @@ public class RulePlanUnions implements OptimizerRule {
         List<PlanNode> accessNodes = accessMap.get(accessModelID);
 
         if (accessNodes == null) {
-	        for (Map.Entry<Object, List<PlanNode>> entry : accessMap.entrySet() ) {
-	            if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
-	                accessNodes = entry.getValue();
-	                break;
-	            }
-	        }
+            for (Map.Entry<Object, List<PlanNode>> entry : accessMap.entrySet() ) {
+                if (accessModelID == entry.getKey() || CapabilitiesUtil.isSameConnector(accessModelID, entry.getKey(), metadata, capFinder)) {
+                    accessNodes = entry.getValue();
+                    break;
+                }
+            }
 
-	        if (accessNodes == null) {
-	            accessNodes = new ArrayList<PlanNode>();
-	            accessMap.put(accessModelID, accessNodes);
-	        }
+            if (accessNodes == null) {
+                accessNodes = new ArrayList<PlanNode>();
+                accessMap.put(accessModelID, accessNodes);
+            }
         }
         accessNodes.add(node);
     }

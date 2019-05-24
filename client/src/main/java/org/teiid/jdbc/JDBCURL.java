@@ -45,51 +45,51 @@ public class JDBCURL {
     static final String URL_PATTERN = JDBC_PROTOCOL + "([^@^;]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
-	public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
+    public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
 
-	private static Map<String, String> buildProps() {
-		Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		for (String key : new String[] {ExecutionProperties.PROP_TXN_AUTO_WRAP,
-	            ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
-	            ExecutionProperties.RESULT_SET_CACHE_MODE,
-	            ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
-	            ExecutionProperties.SQL_OPTION_SHOWPLAN,
-	            ExecutionProperties.NOEXEC,
-	            ExecutionProperties.PROP_FETCH_SIZE,
-	            LocalProfile.USE_CALLING_THREAD,
-	            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-	            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
-			result.put(key, key);
-		}
-		return result;
-	}
+    private static Map<String, String> buildProps() {
+        Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        for (String key : new String[] {ExecutionProperties.PROP_TXN_AUTO_WRAP,
+                ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
+                ExecutionProperties.RESULT_SET_CACHE_MODE,
+                ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
+                ExecutionProperties.SQL_OPTION_SHOWPLAN,
+                ExecutionProperties.NOEXEC,
+                ExecutionProperties.PROP_FETCH_SIZE,
+                LocalProfile.USE_CALLING_THREAD,
+                ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
+                ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
+            result.put(key, key);
+        }
+        return result;
+    }
 
     public static final Map<String, String> KNOWN_PROPERTIES = getKnownProperties();
 
     private static Map<String, String> getKnownProperties() {
-    	Set<String> props = new HashSet<String>(Arrays.asList(
-    	        BaseDataSource.APP_NAME,
-    	        BaseDataSource.VDB_NAME,
-    	        BaseDataSource.VERSION,
-    	        BaseDataSource.VDB_VERSION,
-    	        BaseDataSource.USER_NAME,
-    	        BaseDataSource.PASSWORD,
-    	        LocalProfile.WAIT_FOR_LOAD,
-    	        TeiidURL.CONNECTION.AUTO_FAILOVER,
-    	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
-    	        TeiidURL.CONNECTION.JAAS_NAME,
-    	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
-    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
-    	        TeiidURL.CONNECTION.LOGIN_TIMEOUT,
-    	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
-    	        DatabaseMetaDataImpl.NULL_SORT,
-    	        ResultSetImpl.DISABLE_FETCH_SIZE));
-    	props.addAll(EXECUTION_PROPERTIES.keySet());
-    	Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-    	for (String string : props) {
-			result.put(string, string);
-		}
-    	return Collections.unmodifiableMap(result);
+        Set<String> props = new HashSet<String>(Arrays.asList(
+                BaseDataSource.APP_NAME,
+                BaseDataSource.VDB_NAME,
+                BaseDataSource.VERSION,
+                BaseDataSource.VDB_VERSION,
+                BaseDataSource.USER_NAME,
+                BaseDataSource.PASSWORD,
+                LocalProfile.WAIT_FOR_LOAD,
+                TeiidURL.CONNECTION.AUTO_FAILOVER,
+                TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
+                TeiidURL.CONNECTION.JAAS_NAME,
+                TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
+                TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
+                TeiidURL.CONNECTION.LOGIN_TIMEOUT,
+                DatabaseMetaDataImpl.REPORT_AS_VIEWS,
+                DatabaseMetaDataImpl.NULL_SORT,
+                ResultSetImpl.DISABLE_FETCH_SIZE));
+        props.addAll(EXECUTION_PROPERTIES.keySet());
+        Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        for (String string : props) {
+            result.put(string, string);
+        }
+        return Collections.unmodifiableMap(result);
     }
 
     private String vdbName;
@@ -97,16 +97,16 @@ public class JDBCURL {
     private Properties properties = new Properties();
 
     public enum ConnectionType {
-    	Embedded,
-    	Socket
+        Embedded,
+        Socket
     }
 
     public static ConnectionType acceptsUrl(String url) {
-    	Matcher m = urlPattern.matcher(url);
-    	if (m.matches()) {
-    		return m.group(2) != null?ConnectionType.Socket:ConnectionType.Embedded;
-    	}
-    	return null;
+        Matcher m = urlPattern.matcher(url);
+        if (m.matches()) {
+            return m.group(2) != null?ConnectionType.Socket:ConnectionType.Embedded;
+        }
+        return null;
     }
 
     private String urlString;
@@ -153,16 +153,16 @@ public class JDBCURL {
 
         Matcher m = urlPattern.matcher(jdbcURL);
         if (!m.matches()) {
-        	throw new IllegalArgumentException();
+            throw new IllegalArgumentException();
         }
         vdbName = getValidValue(m.group(1));
         connectionURL = m.group(2);
         if (connectionURL != null) {
-        	connectionURL = getValidValue(connectionURL.trim());
+            connectionURL = getValidValue(connectionURL.trim());
         }
         String props = m.group(3);
         if (props != null) {
-        	parseConnectionProperties(props, this.properties);
+            parseConnectionProperties(props, this.properties);
         }
     }
 
@@ -200,9 +200,9 @@ public class JDBCURL {
         if (urlString == null) {
             StringBuffer buf = new StringBuffer(JDBC_PROTOCOL)
                 .append(safeEncode(vdbName));
-            	if (this.connectionURL != null) {
-            		buf.append('@').append(connectionURL);
-            	}
+                if (this.connectionURL != null) {
+                    buf.append('@').append(connectionURL);
+                }
             TreeMap sorted = new TreeMap();
             sorted.putAll(properties);
 
@@ -210,10 +210,10 @@ public class JDBCURL {
                 Map.Entry entry = (Map.Entry)i.next();
                 if (entry.getValue() instanceof String) {
                     // get only the string properties, because a non-string property could not have been set on the url.
-					buf.append(';')
-					   .append(entry.getKey())
-					   .append('=')
-					   .append(safeEncode((String)entry.getValue()));
+                    buf.append(';')
+                       .append(entry.getKey())
+                       .append('=')
+                       .append(safeEncode((String)entry.getValue()));
                 }
             }
             urlString = buf.toString();
@@ -235,7 +235,7 @@ public class JDBCURL {
 
     public String getVDBVersion() {
         if (properties.contains(BaseDataSource.VDB_VERSION)) {
-        	return properties.getProperty(BaseDataSource.VDB_VERSION);
+            return properties.getProperty(BaseDataSource.VDB_VERSION);
         }
         return properties.getProperty(BaseDataSource.VERSION);
     }
@@ -287,11 +287,11 @@ public class JDBCURL {
     }
 
     public static String getValidKey(String key) {
-    	String result = KNOWN_PROPERTIES.get(key);
-    	if (result != null) {
-    		return result;
-    	}
-    	return key;
+        String result = KNOWN_PROPERTIES.get(key);
+        if (result != null) {
+            return result;
+        }
+        return key;
     }
 
     private static String getValidValue(String value) {

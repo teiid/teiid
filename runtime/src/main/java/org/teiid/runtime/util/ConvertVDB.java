@@ -67,12 +67,12 @@ public class ConvertVDB {
         }
 
         if (f.getName().toLowerCase().endsWith(".xml")) {
-			if (args.length > 1 && args[1] != null) {
-				System.out.println("Writing to file " + args[1]);
-				ObjectConverterUtil.write(convert(f).getBytes("UTF-8"), new File(args[1]).getAbsolutePath() );
-			} else {
-				System.out.println(convert(f));
-			}
+            if (args.length > 1 && args[1] != null) {
+                System.out.println("Writing to file " + args[1]);
+                ObjectConverterUtil.write(convert(f).getBytes("UTF-8"), new File(args[1]).getAbsolutePath() );
+            } else {
+                System.out.println(convert(f));
+            }
         } else {
             System.out.println("Unknown file type supplied, only .XML based VDBs are supported");
         }

@@ -27,36 +27,36 @@ import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 
 public class BigDecimalToBigIntegerTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		return ((BigDecimal) value).toBigInteger();
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        return ((BigDecimal) value).toBigInteger();
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DefaultDataClasses.BIG_DECIMAL;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DefaultDataClasses.BIG_DECIMAL;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DefaultDataClasses.BIG_INTEGER;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DefaultDataClasses.BIG_INTEGER;
+    }
 
-	public boolean isExplicit() {
-		return true;
-	}
+    public boolean isExplicit() {
+        return true;
+    }
 
 }

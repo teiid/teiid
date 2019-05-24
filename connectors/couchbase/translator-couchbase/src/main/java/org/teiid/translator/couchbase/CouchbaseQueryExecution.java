@@ -38,38 +38,38 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 
 public class CouchbaseQueryExecution extends CouchbaseExecution implements ResultSetExecution {
 
-	private QueryExpression command;
-	private Class<?>[] expectedTypes;
+    private QueryExpression command;
+    private Class<?>[] expectedTypes;
 
-	private N1QLVisitor visitor;
-	private Iterator<N1qlQueryRow> results;
+    private N1QLVisitor visitor;
+    private Iterator<N1qlQueryRow> results;
 
-	public CouchbaseQueryExecution(
-			CouchbaseExecutionFactory executionFactory,
-			QueryExpression command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, CouchbaseConnection connection) {
-		super(executionFactory, executionContext, metadata, connection);
-		this.command = command;
-		this.expectedTypes = command.getColumnTypes();
-	}
+    public CouchbaseQueryExecution(
+            CouchbaseExecutionFactory executionFactory,
+            QueryExpression command, ExecutionContext executionContext,
+            RuntimeMetadata metadata, CouchbaseConnection connection) {
+        super(executionFactory, executionContext, metadata, connection);
+        this.command = command;
+        this.expectedTypes = command.getColumnTypes();
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		this.visitor = this.executionFactory.getN1QLVisitor();
-		this.visitor.append(this.command);
-		String n1ql = this.visitor.toString();
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
-		executionContext.logCommand(n1ql);
+    @Override
+    public void execute() throws TranslatorException {
+        this.visitor = this.executionFactory.getN1QLVisitor();
+        this.visitor.append(this.command);
+        String n1ql = this.visitor.toString();
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CouchbasePlugin.Util.gs(CouchbasePlugin.Event.TEIID29001, n1ql));
+        executionContext.logCommand(n1ql);
 
-		N1qlQueryResult queryResult = connection.execute(n1ql);
-		this.results = queryResult.iterator();
-	}
+        N1qlQueryResult queryResult = connection.execute(n1ql);
+        this.results = queryResult.iterator();
+    }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-	    if (this.results == null || !this.results.hasNext()) {
-	        return null;
-	    }
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        if (this.results == null || !this.results.hasNext()) {
+            return null;
+        }
         N1qlQueryRow queryRow = this.results.next();
         if(queryRow == null) {
             return null;
@@ -104,14 +104,14 @@ public class CouchbaseQueryExecution extends CouchbaseExecution implements Resul
             row.add(this.executionFactory.retrieveValue(type, value));
         }
         return row;
-	}
+    }
 
     @Override
-	public void close() {
-	    this.results = null;
-	}
+    public void close() {
+        this.results = null;
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 }

@@ -44,22 +44,22 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class AssignmentInstruction extends ProgramInstruction {
 
-	// variable whose value is updated in the context
-	private ElementSymbol variable;
-	// expression to be processed
-	private Expression expression;
+    // variable whose value is updated in the context
+    private ElementSymbol variable;
+    // expression to be processed
+    private Expression expression;
 
-	public AssignmentInstruction() {
-	}
+    public AssignmentInstruction() {
+    }
 
     /**
-	 * <p> Updates the current variable context with a value for the Variable
-	 * defined using a DeclareInstruction, the variable value is obtained by either processing
-	 * a expression or a command(stored as a processplan). The Processing of the command is
-	 * expected to result in 1 column, 1 row tuple, if more than a row is returned an exception
-	 * is thrown. Also updates the program counter.</p>
+     * <p> Updates the current variable context with a value for the Variable
+     * defined using a DeclareInstruction, the variable value is obtained by either processing
+     * a expression or a command(stored as a processplan). The Processing of the command is
+     * expected to result in 1 column, 1 row tuple, if more than a row is returned an exception
+     * is thrown. Also updates the program counter.</p>
      * @throws BlockedException
-	 * @throws TeiidComponentException if error processing command or expression on this instruction
+     * @throws TeiidComponentException if error processing command or expression on this instruction
      */
     public void process(ProcedurePlan procEnv) throws BlockedException,
                                                TeiidComponentException, TeiidProcessingException {
@@ -67,7 +67,7 @@ public class AssignmentInstruction extends ProgramInstruction {
         VariableContext varContext = procEnv.getCurrentVariableContext();
         Object value = null;
         if (this.expression != null) {
-	        value = procEnv.evaluateExpression(this.expression);
+            value = procEnv.evaluateExpression(this.expression);
         }
         varContext.setValue(getVariable(), value);
         LogManager.logTrace(LogConstants.CTX_DQP,
@@ -79,7 +79,7 @@ public class AssignmentInstruction extends ProgramInstruction {
         PlanNode props = new PlanNode("ASSIGNMENT"); //$NON-NLS-1$
         props.addProperty(PROP_VARIABLE, this.variable.toString());
         if (this.expression != null) {
-        	AnalysisRecord.addLanaguageObjects(props, PROP_EXPRESSION, Arrays.asList(this.expression));
+            AnalysisRecord.addLanaguageObjects(props, PROP_EXPRESSION, Arrays.asList(this.expression));
         }
         return props;
     }

@@ -24,36 +24,36 @@ import org.teiid.translator.TranslatorException;
 
 public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
 
-	public DeleteVisitor(RuntimeMetadata metadata) {
-		super(metadata);
-	}
+    public DeleteVisitor(RuntimeMetadata metadata) {
+        super(metadata);
+    }
 
-	@Override
-	public void visit(Delete delete) {
-		super.visit(delete);
-		try {
-			loadColumnMetadata(delete.getTable());
-		} catch (TranslatorException ce) {
-			exceptions.add(ce);
-		}
-	}
+    @Override
+    public void visit(Delete delete) {
+        super.visit(delete);
+        try {
+            loadColumnMetadata(delete.getTable());
+        } catch (TranslatorException ce) {
+            exceptions.add(ce);
+        }
+    }
 
-	/*
-	 * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
-	 * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
-	 * LIMIT ?
-	 */
+    /*
+     * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
+     * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
+     * LIMIT ?
+     */
 
-	public String getQuery() throws TranslatorException {
-		if (!exceptions.isEmpty()) {
-			throw exceptions.get(0);
-		}
-		StringBuilder result = new StringBuilder();
-		result.append(SELECT).append(SPACE);
-		result.append("Id").append(SPACE); //$NON-NLS-1$
-		result.append(FROM).append(SPACE);
-		result.append(table.getSourceName()).append(SPACE);
-		addCriteriaString(result);
-		return result.toString();
-	}
+    public String getQuery() throws TranslatorException {
+        if (!exceptions.isEmpty()) {
+            throw exceptions.get(0);
+        }
+        StringBuilder result = new StringBuilder();
+        result.append(SELECT).append(SPACE);
+        result.append("Id").append(SPACE); //$NON-NLS-1$
+        result.append(FROM).append(SPACE);
+        result.append(table.getSourceName()).append(SPACE);
+        addCriteriaString(result);
+        return result.toString();
+    }
 }

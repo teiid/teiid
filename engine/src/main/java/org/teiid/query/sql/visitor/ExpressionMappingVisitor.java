@@ -63,16 +63,16 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
 
     protected boolean createAliases() {
-    	return true;
+        return true;
     }
 
     public void visit(Select obj) {
-    	List<Expression> symbols = obj.getSymbols();
-    	for (int i = 0; i < symbols.size(); i++) {
+        List<Expression> symbols = obj.getSymbols();
+        for (int i = 0; i < symbols.size(); i++) {
             Expression symbol = symbols.get(i);
 
             if (symbol instanceof MultipleElementSymbol) {
-            	continue;
+                continue;
             }
 
             Expression replacmentSymbol = replaceSymbol(symbol, true);
@@ -82,69 +82,69 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
 
     public boolean isClone() {
-		return clone;
-	}
+        return clone;
+    }
 
     public void setClone(boolean clone) {
-		this.clone = clone;
-	}
+        this.clone = clone;
+    }
 
     @Override
     public void visit(DerivedColumn obj) {
-    	Expression original = obj.getExpression();
-    	obj.setExpression(replaceExpression(original));
-    	if (obj.isPropagateName() && obj.getAlias() == null && original instanceof ElementSymbol) {
-    		obj.setAlias(((ElementSymbol)original).getShortName());
-    	}
+        Expression original = obj.getExpression();
+        obj.setExpression(replaceExpression(original));
+        if (obj.isPropagateName() && obj.getAlias() == null && original instanceof ElementSymbol) {
+            obj.setAlias(((ElementSymbol)original).getShortName());
+        }
     }
 
     @Override
     public void visit(XMLTable obj) {
-    	for (XMLColumn col : obj.getColumns()) {
-    		Expression exp = col.getDefaultExpression();
-    		if (exp != null) {
-    			col.setDefaultExpression(replaceExpression(exp));
-    		}
-		}
+        for (XMLColumn col : obj.getColumns()) {
+            Expression exp = col.getDefaultExpression();
+            if (exp != null) {
+                col.setDefaultExpression(replaceExpression(exp));
+            }
+        }
     }
 
     @Override
     public void visit(ObjectTable obj) {
-    	for (ObjectColumn col : obj.getColumns()) {
-    		Expression exp = col.getDefaultExpression();
-    		if (exp != null) {
-    			col.setDefaultExpression(replaceExpression(exp));
-    		}
-		}
+        for (ObjectColumn col : obj.getColumns()) {
+            Expression exp = col.getDefaultExpression();
+            if (exp != null) {
+                col.setDefaultExpression(replaceExpression(exp));
+            }
+        }
     }
 
     @Override
     public void visit(XMLSerialize obj) {
-    	obj.setExpression(replaceExpression(obj.getExpression()));
+        obj.setExpression(replaceExpression(obj.getExpression()));
     }
 
     @Override
     public void visit(XMLParse obj) {
-    	obj.setExpression(replaceExpression(obj.getExpression()));
+        obj.setExpression(replaceExpression(obj.getExpression()));
     }
 
-	private Expression replaceSymbol(Expression ses,
-			boolean alias) {
-		Expression expr = ses;
-		String name = Symbol.getShortName(ses);
-		if (ses instanceof ExpressionSymbol) {
-		    expr = ((ExpressionSymbol)ses).getExpression();
-		}
+    private Expression replaceSymbol(Expression ses,
+            boolean alias) {
+        Expression expr = ses;
+        String name = Symbol.getShortName(ses);
+        if (ses instanceof ExpressionSymbol) {
+            expr = ((ExpressionSymbol)ses).getExpression();
+        }
 
-		Expression replacmentSymbol = replaceExpression(expr);
+        Expression replacmentSymbol = replaceExpression(expr);
 
-		if (!(replacmentSymbol instanceof Symbol)) {
-			replacmentSymbol = new ExpressionSymbol(name, replacmentSymbol);
-		} else if (alias && createAliases() && !Symbol.getShortName(replacmentSymbol).equals(name)) {
-	        replacmentSymbol = new AliasSymbol(name, replacmentSymbol);
-		}
-		return replacmentSymbol;
-	}
+        if (!(replacmentSymbol instanceof Symbol)) {
+            replacmentSymbol = new ExpressionSymbol(name, replacmentSymbol);
+        } else if (alias && createAliases() && !Symbol.getShortName(replacmentSymbol).equals(name)) {
+            replacmentSymbol = new AliasSymbol(name, replacmentSymbol);
+        }
+        return replacmentSymbol;
+    }
 
     /**
      * @see org.teiid.query.sql.LanguageVisitor#visit(org.teiid.query.sql.symbol.AliasSymbol)
@@ -243,7 +243,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         obj.setExpression( replaceExpression(obj.getExpression()) );
 
         if (obj.isAllConstants()) {
-        	return;
+            return;
         }
 
         Collection newValues = new ArrayList(obj.getValues().size());
@@ -265,7 +265,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public void visit(SubqueryCompareCriteria obj) {
         obj.setLeftExpression( replaceExpression(obj.getLeftExpression()) );
         if (obj.getArrayExpression() != null) {
-        	obj.setArrayExpression(replaceExpression(obj.getArrayExpression()));
+            obj.setArrayExpression(replaceExpression(obj.getArrayExpression()));
         }
     }
 
@@ -277,32 +277,32 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
 
     public Expression replaceExpression(Expression element) {
-    	if (elementSymbolsOnly && !(element instanceof ElementSymbol)) {
-    		return element;
-    	}
+        if (elementSymbolsOnly && !(element instanceof ElementSymbol)) {
+            return element;
+        }
         Expression mapped = (Expression) this.symbolMap.get(element);
         if(mapped != null) {
-        	if (clone) {
-        		return (Expression)mapped.clone();
-        	}
-        	return mapped;
+            if (clone) {
+                return (Expression)mapped.clone();
+            }
+            return mapped;
         }
         return element;
     }
 
     public void visit(StoredProcedure obj) {
-    	for (Iterator<SPParameter> paramIter = obj.getInputParameters().iterator(); paramIter.hasNext();) {
-			SPParameter param = paramIter.next();
+        for (Iterator<SPParameter> paramIter = obj.getInputParameters().iterator(); paramIter.hasNext();) {
+            SPParameter param = paramIter.next();
             Expression expr = param.getExpression();
             param.setExpression(replaceExpression(expr));
         }
     }
 
     public void visit(AggregateSymbol obj) {
-    	visit((Function)obj);
-    	if (obj.getCondition() != null) {
-    		obj.setCondition(replaceExpression(obj.getCondition()));
-    	}
+        visit((Function)obj);
+        if (obj.getCondition() != null) {
+            obj.setCondition(replaceExpression(obj.getCondition()));
+        }
     }
 
     /**
@@ -310,8 +310,8 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      * @param obj Object to remap
      */
     public void visit(GroupBy obj) {
-    	List<Expression> symbols = obj.getSymbols();
-		for (int i = 0; i < symbols.size(); i++) {
+        List<Expression> symbols = obj.getSymbols();
+        for (int i = 0; i < symbols.size(); i++) {
             Expression symbol = symbols.get(i);
             symbols.set(i, replaceExpression(symbol));
         }
@@ -319,7 +319,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 
     @Override
     public void visit(OrderByItem obj) {
-    	obj.setSymbol(replaceSymbol(obj.getSymbol(), obj.getExpressionPosition() != -1));
+        obj.setSymbol(replaceSymbol(obj.getSymbol(), obj.getExpressionPosition() != -1));
     }
 
     public void visit(Limit obj) {
@@ -332,24 +332,24 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public void visit(DynamicCommand obj) {
         obj.setSql(replaceExpression(obj.getSql()));
         if (obj.getUsing() != null) {
-	        for (SetClause clause : obj.getUsing().getClauses()) {
-				visit(clause);
-			}
+            for (SetClause clause : obj.getUsing().getClauses()) {
+                visit(clause);
+            }
         }
     }
 
     public void visit(SetClause obj) {
-    	obj.setValue(replaceExpression(obj.getValue()));
+        obj.setValue(replaceExpression(obj.getValue()));
     }
 
     @Override
     public void visit(QueryString obj) {
-    	obj.setPath(replaceExpression(obj.getPath()));
+        obj.setPath(replaceExpression(obj.getPath()));
     }
 
     @Override
     public void visit(ExpressionCriteria obj) {
-    	obj.setExpression(replaceExpression(obj.getExpression()));
+        obj.setExpression(replaceExpression(obj.getExpression()));
     }
 
     /**
@@ -358,7 +358,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
      * @param exprMap Expression map, Expression to Expression
      */
     public static void mapExpressions(LanguageObject obj, Map<? extends Expression, ? extends Expression> exprMap) {
-    	mapExpressions(obj, exprMap, false);
+        mapExpressions(obj, exprMap, false);
     }
 
     /**
@@ -375,37 +375,37 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
         boolean preOrder = true;
         boolean useReverseMapping = true;
         for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
-        	if (!(entry.getKey() instanceof ElementSymbol)) {
-        		visitor.elementSymbolsOnly = false;
-        		break;
-        	}
-		}
+            if (!(entry.getKey() instanceof ElementSymbol)) {
+                visitor.elementSymbolsOnly = false;
+                break;
+            }
+        }
         if (!visitor.elementSymbolsOnly) {
-        	for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
-            	if (!(entry.getValue() instanceof ElementSymbol)) {
-            		useReverseMapping = !Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(exprMap.keySet()),
-                    		GroupsUsedByElementsVisitor.getGroups(exprMap.values()));
-            		break;
-            	}
-    		}
+            for (Map.Entry<? extends Expression, ? extends Expression> entry : exprMap.entrySet()) {
+                if (!(entry.getValue() instanceof ElementSymbol)) {
+                    useReverseMapping = !Collections.disjoint(GroupsUsedByElementsVisitor.getGroups(exprMap.keySet()),
+                            GroupsUsedByElementsVisitor.getGroups(exprMap.values()));
+                    break;
+                }
+            }
         } else {
-        	preOrder = false;
-        	useReverseMapping = false;
+            preOrder = false;
+            useReverseMapping = false;
         }
 
         if (useReverseMapping) {
-	        final Set<Expression> reverseSet = new HashSet<Expression>(exprMap.values());
-	        PreOrPostOrderNavigator pon = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, deep) {
-	        	@Override
-	        	protected void visitNode(LanguageObject obj) {
-	        		if (!(obj instanceof Expression) || !reverseSet.contains(obj)) {
-	            		super.visitNode(obj);
-	        		}
-	        	}
-	        };
-	        obj.acceptVisitor(pon);
+            final Set<Expression> reverseSet = new HashSet<Expression>(exprMap.values());
+            PreOrPostOrderNavigator pon = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, deep) {
+                @Override
+                protected void visitNode(LanguageObject obj) {
+                    if (!(obj instanceof Expression) || !reverseSet.contains(obj)) {
+                        super.visitNode(obj);
+                    }
+                }
+            };
+            obj.acceptVisitor(pon);
         } else {
-        	PreOrPostOrderNavigator.doVisit(obj, visitor, preOrder, deep);
+            PreOrPostOrderNavigator.doVisit(obj, visitor, preOrder, deep);
         }
     }
 
@@ -437,51 +437,51 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
 
     @Override
     public void visit(XMLElement obj) {
-    	for (int i = 0; i < obj.getContent().size(); i++) {
-    		obj.getContent().set(i, replaceExpression(obj.getContent().get(i)));
-    	}
+        for (int i = 0; i < obj.getContent().size(); i++) {
+            obj.getContent().set(i, replaceExpression(obj.getContent().get(i)));
+        }
     }
 
     @Override
     public void visit(WindowSpecification windowSpecification) {
-    	if (windowSpecification.getPartition() == null) {
-    		return;
-    	}
-    	List<Expression> partition = windowSpecification.getPartition();
-		for (int i = 0; i < partition.size(); i++) {
-    		partition.set(i, replaceExpression(partition.get(i)));
-    	}
+        if (windowSpecification.getPartition() == null) {
+            return;
+        }
+        List<Expression> partition = windowSpecification.getPartition();
+        for (int i = 0; i < partition.size(); i++) {
+            partition.set(i, replaceExpression(partition.get(i)));
+        }
     }
 
     @Override
     public void visit(Array array) {
-    	List<Expression> exprs = array.getExpressions();
-		for (int i = 0; i < exprs.size(); i++) {
-    		exprs.set(i, replaceExpression(exprs.get(i)));
-    	}
+        List<Expression> exprs = array.getExpressions();
+        for (int i = 0; i < exprs.size(); i++) {
+            exprs.set(i, replaceExpression(exprs.get(i)));
+        }
     }
 
     @Override
     public void visit(ExceptionExpression exceptionExpression) {
-    	if (exceptionExpression.getMessage() != null) {
-    		exceptionExpression.setMessage(replaceExpression(exceptionExpression.getMessage()));
-    	}
-    	if (exceptionExpression.getSqlState() != null) {
-    		exceptionExpression.setSqlState(replaceExpression(exceptionExpression.getSqlState()));
-    	}
-    	if (exceptionExpression.getErrorCode() != null) {
-    		exceptionExpression.setErrorCode(replaceExpression(exceptionExpression.getErrorCode()));
-    	}
-    	if (exceptionExpression.getParent() != null) {
-    		exceptionExpression.setParent(replaceExpression(exceptionExpression.getParent()));
-    	}
+        if (exceptionExpression.getMessage() != null) {
+            exceptionExpression.setMessage(replaceExpression(exceptionExpression.getMessage()));
+        }
+        if (exceptionExpression.getSqlState() != null) {
+            exceptionExpression.setSqlState(replaceExpression(exceptionExpression.getSqlState()));
+        }
+        if (exceptionExpression.getErrorCode() != null) {
+            exceptionExpression.setErrorCode(replaceExpression(exceptionExpression.getErrorCode()));
+        }
+        if (exceptionExpression.getParent() != null) {
+            exceptionExpression.setParent(replaceExpression(exceptionExpression.getParent()));
+        }
     }
 
     @Override
     public void visit(ReturnStatement obj) {
-    	if (obj.getExpression() != null) {
-    		obj.setExpression(replaceExpression(obj.getExpression()));
-    	}
+        if (obj.getExpression() != null) {
+            obj.setExpression(replaceExpression(obj.getExpression()));
+        }
     }
 
 }

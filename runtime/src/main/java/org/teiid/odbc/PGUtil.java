@@ -21,26 +21,26 @@ import java.sql.Types;
 
 public class PGUtil {
 
-	public static final int PG_TYPE_UNSPECIFIED = 0;
+    public static final int PG_TYPE_UNSPECIFIED = 0;
 
-	public static final int PG_TYPE_VARCHAR = 1043;
+    public static final int PG_TYPE_VARCHAR = 1043;
 
-	public static final int PG_TYPE_BOOL = 16;
-	public static final int PG_TYPE_BYTEA = 17;
-	public static final int PG_TYPE_CHAR = 18;
-	public static final int PG_TYPE_BPCHAR = 1042;
-	public static final int PG_TYPE_INT8 = 20;
-	public static final int PG_TYPE_INT2 = 21;
-	public static final int PG_TYPE_INT4 = 23;
-	public static final int PG_TYPE_TEXT = 25;
-	public static final int PG_TYPE_XML = 142;
+    public static final int PG_TYPE_BOOL = 16;
+    public static final int PG_TYPE_BYTEA = 17;
+    public static final int PG_TYPE_CHAR = 18;
+    public static final int PG_TYPE_BPCHAR = 1042;
+    public static final int PG_TYPE_INT8 = 20;
+    public static final int PG_TYPE_INT2 = 21;
+    public static final int PG_TYPE_INT4 = 23;
+    public static final int PG_TYPE_TEXT = 25;
+    public static final int PG_TYPE_XML = 142;
     //private static final int PG_TYPE_OID = 26;
-	public static final int PG_TYPE_FLOAT4 = 700;
-	public static final int PG_TYPE_FLOAT8 = 701;
-	public static final int PG_TYPE_UNKNOWN = 705;
+    public static final int PG_TYPE_FLOAT4 = 700;
+    public static final int PG_TYPE_FLOAT8 = 701;
+    public static final int PG_TYPE_UNKNOWN = 705;
 
-	public static final int PG_TYPE_GEOMETRY = 32816;
-	public static final int PG_TYPE_GEOMETRYARRAY = 32824;
+    public static final int PG_TYPE_GEOMETRY = 32816;
+    public static final int PG_TYPE_GEOMETRYARRAY = 32824;
 
     public static final int PG_TYPE_GEOGRAPHY = 33454;
     public static final int PG_TYPE_GEOGRAPHYARRAY = 33462;
@@ -48,18 +48,18 @@ public class PGUtil {
     public static final int PG_TYPE_JSON = 3803;
     public static final int PG_TYPE_JSONARRAY = 3811;
 
-	public static final int PG_TYPE_OIDVECTOR = 30;
-	public static final int PG_TYPE_INT2VECTOR = 22;
+    public static final int PG_TYPE_OIDVECTOR = 30;
+    public static final int PG_TYPE_INT2VECTOR = 22;
     public static final int PG_TYPE_OIDARRAY = 1028;
     public static final int PG_TYPE_CHARARRAY = 1002;
     public static final int PG_TYPE_TEXTARRAY = 1009;
 
-	public static final int PG_TYPE_DATE = 1082;
-	public static final int PG_TYPE_TIME = 1083;
-	public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
-	public static final int PG_TYPE_NUMERIC = 1700;
+    public static final int PG_TYPE_DATE = 1082;
+    public static final int PG_TYPE_TIME = 1083;
+    public static final int PG_TYPE_TIMESTAMP_NO_TMZONE = 1114;
+    public static final int PG_TYPE_NUMERIC = 1700;
 
-	public static final int PG_TYPE_BOOLARRAY = 1000;
+    public static final int PG_TYPE_BOOLARRAY = 1000;
     public static final int PG_TYPE_BYTEAARRAY = 1001;
     public static final int PG_TYPE_INT8ARRAY = 1026;
     public static final int PG_TYPE_INT2ARRAY = 1005;
@@ -72,19 +72,19 @@ public class PGUtil {
     public static final int PG_TYPE_NUMERICARRAY = 1031;
     public static final int PG_TYPE_XMLARRAY = 143;
 
-	public static class PgColInfo {
-		public String name;
-		public int reloid;
-		public short attnum;
-		public int type;
-		public int precision;
-		public int mod = -1;
-	}
+    public static class PgColInfo {
+        public String name;
+        public int reloid;
+        public short attnum;
+        public int type;
+        public int precision;
+        public int mod = -1;
+    }
 
-	/**
-	 * Types.ARRAY is not supported
-	 */
-	public static int convertType(final int type, final String typeName) {
+    /**
+     * Types.ARRAY is not supported
+     */
+    public static int convertType(final int type, final String typeName) {
         switch (type) {
         case Types.BIT:
         case Types.BOOLEAN:
@@ -95,7 +95,7 @@ public class PGUtil {
             return PG_TYPE_BPCHAR;
         case Types.TINYINT:
         case Types.SMALLINT:
-        	return PG_TYPE_INT2;
+            return PG_TYPE_INT2;
         case Types.INTEGER:
             return PG_TYPE_INT4;
         case Types.BIGINT:
@@ -125,7 +125,7 @@ public class PGUtil {
             if (typeName.equalsIgnoreCase("geography")) { //$NON-NLS-1$
                 return PG_TYPE_GEOGRAPHY;
             }
-        	return PG_TYPE_BYTEA;
+            return PG_TYPE_BYTEA;
 
         case Types.SQLXML:
             return PG_TYPE_XML;
@@ -176,5 +176,5 @@ public class PGUtil {
         default:
             return PG_TYPE_UNKNOWN;
         }
-	}
+    }
 }

@@ -29,7 +29,7 @@ import org.teiid.common.buffer.impl.EncryptedStorageManager.EncryptedFileStore;
 public class TestEncryptedStorageManager {
 
     @Test public void testSetLength() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         EncryptedStorageManager ssm = new EncryptedStorageManager(msm);
         ssm.initialize();
         String tsID = "0";     //$NON-NLS-1$
@@ -53,28 +53,28 @@ public class TestEncryptedStorageManager {
     }
 
     @Test public void testReadWrite() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         EncryptedStorageManager ssm = new EncryptedStorageManager(msm);
         ssm.initialize();
         String tsID = "0";     //$NON-NLS-1$
         EncryptedFileStore store = ssm.createFileStore(tsID);
         for (int i = 0; i < 500; i++) {
-        	byte[] b = new byte[i];
-        	Arrays.fill(b, (byte)i);
-        	store.write(b, 0, i);
-        	store.readFully(store.getLength()-b.length, b, 0, b.length);
-        	for (int j = 0; j < b.length; j++) {
-        		assertEquals((byte)i, b[j]);
-        	}
+            byte[] b = new byte[i];
+            Arrays.fill(b, (byte)i);
+            store.write(b, 0, i);
+            store.readFully(store.getLength()-b.length, b, 0, b.length);
+            for (int j = 0; j < b.length; j++) {
+                assertEquals((byte)i, b[j]);
+            }
         }
         int start = 0;
         for (int i = 0; i < 500; i++) {
-        	byte[] b = new byte[i];
-        	store.readFully(start, b, 0, b.length);
-        	for (int j = 0; j < b.length; j++) {
-        		assertEquals((byte)i, b[j]);
-        	}
-        	start += i;
+            byte[] b = new byte[i];
+            store.readFully(start, b, 0, b.length);
+            for (int j = 0; j < b.length; j++) {
+                assertEquals((byte)i, b[j]);
+            }
+            start += i;
         }
         store.readFully(0, new byte[(int) store.getLength()], 0, (int) store.getLength());
         store.write(16, new byte[100], 0, 100);
@@ -82,7 +82,7 @@ public class TestEncryptedStorageManager {
     }
 
     @Test(expected=IOException.class) public void testInvalidRead() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         EncryptedStorageManager ssm = new EncryptedStorageManager(msm);
         ssm.initialize();
         String tsID = "0";     //$NON-NLS-1$

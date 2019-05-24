@@ -30,20 +30,20 @@ import org.jboss.security.auth.spi.UsernamePasswordLoginModule;
  */
 public class SimpleLoginModule extends UsernamePasswordLoginModule {
 
-	@Override
-	protected boolean validatePassword(String inputPassword, String expectedPassword) {
-		return true;
-	}
+    @Override
+    protected boolean validatePassword(String inputPassword, String expectedPassword) {
+        return true;
+    }
 
-	@Override
-	protected String getUsersPassword() throws LoginException {
-		return null;
-	}
+    @Override
+    protected String getUsersPassword() throws LoginException {
+        return null;
+    }
 
-	@Override
-	protected Group[] getRoleSets() throws LoginException {
-		SimpleGroup roles = new SimpleGroup("Roles"); //$NON-NLS-1$
-		Group[] roleSets = { roles };
-		return roleSets;
-	}
+    @Override
+    protected Group[] getRoleSets() throws LoginException {
+        SimpleGroup roles = new SimpleGroup("Roles"); //$NON-NLS-1$
+        Group[] roleSets = { roles };
+        return roleSets;
+    }
 }

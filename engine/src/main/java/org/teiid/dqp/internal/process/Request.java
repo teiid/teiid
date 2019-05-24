@@ -98,8 +98,8 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request {
 
-	private static final String CLEAN_LOBS_ONCLOSE = "clean_lobs_onclose"; //$NON-NLS-1$
-	// init state
+    private static final String CLEAN_LOBS_ONCLOSE = "clean_lobs_onclose"; //$NON-NLS-1$
+    // init state
     protected RequestMessage requestMsg;
     private String vdbName;
     private String vdbVersion;
@@ -128,14 +128,14 @@ public class Request {
 
     protected Command userCommand;
     protected boolean returnsUpdateCount;
-	private GlobalTableStore globalTables;
-	private SessionAwareCache<PreparedPlan> planCache;
-	private boolean resultSetCacheEnabled = true;
-	private int userRequestConcurrency;
-	private AuthorizationValidator authorizationValidator;
-	private Executor executor;
-	protected Options options;
-	protected PreParser preParser;
+    private GlobalTableStore globalTables;
+    private SessionAwareCache<PreparedPlan> planCache;
+    private boolean resultSetCacheEnabled = true;
+    private int userRequestConcurrency;
+    private AuthorizationValidator authorizationValidator;
+    private Executor executor;
+    protected Options options;
+    protected PreParser preParser;
 
     void initialize(RequestMessage requestMsg,
                               BufferManager bufferManager,
@@ -159,38 +159,38 @@ public class Request {
     }
 
     public void setOptions(Options options) {
-		this.options = options;
-	}
+        this.options = options;
+    }
 
-	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata) {
-		this.capabilitiesFinder = capabilitiesFinder;
-		this.metadata = metadata;
-	}
+    void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata) {
+        this.capabilitiesFinder = capabilitiesFinder;
+        this.metadata = metadata;
+    }
 
-	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
-		this.resultSetCacheEnabled = resultSetCacheEnabled;
-	}
+    public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
+        this.resultSetCacheEnabled = resultSetCacheEnabled;
+    }
 
-	public void setAuthorizationValidator(
-			AuthorizationValidator authorizationValidator) {
-		this.authorizationValidator = authorizationValidator;
-	}
+    public void setAuthorizationValidator(
+            AuthorizationValidator authorizationValidator) {
+        this.authorizationValidator = authorizationValidator;
+    }
 
-	/**
-	 * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
-	 *
-	 * @throws TeiidComponentException
-	 */
+    /**
+     * if the metadata has not been supplied via setMetadata, this method will create the appropriate state
+     *
+     * @throws TeiidComponentException
+     */
     protected void initMetadata() throws TeiidComponentException {
         if (this.metadata != null) {
-        	return;
+            return;
         }
-    	// Prepare dependencies for running the optimizer
+        // Prepare dependencies for running the optimizer
         this.capabilitiesFinder = new CachedFinder(this.connectorManagerRepo, workContext.getVDB());
         if (this.bufferManager.getOptions() != null) {
-        	this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder, this.bufferManager.getOptions().getDefaultNullOrder());
+            this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder, this.bufferManager.getOptions().getDefaultNullOrder());
         } else {
-        	this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
+            this.capabilitiesFinder = new TempCapabilitiesFinder(this.capabilitiesFinder);
         }
 
         VDBMetaData vdbMetadata = workContext.getVDB();
@@ -207,10 +207,10 @@ public class Request {
     }
 
     protected void createCommandContext() {
-    	if (this.context != null) {
-    		return;
-    	}
-    	// Create command context, used in rewriting, planning, and processing
+        if (this.context != null) {
+            return;
+        }
+        // Create command context, used in rewriting, planning, and processing
         // Identifies a "group" of requests on a per-connection basis to allow later
         // cleanup of all resources in the group on connection shutdown
         String groupName = workContext.getSessionId();
@@ -228,21 +228,21 @@ public class Request {
         this.context.setGlobalTableStore(this.globalTables);
         boolean autoCleanLobs = true;
         if (this.workContext.getSession().isEmbedded()) {
-	        Object value = this.workContext.getSession().getSessionVariables().get(CLEAN_LOBS_ONCLOSE);
-	        if (value != null) {
-				value = DataTypeManager.convertToRuntimeType(value, false);
-				try {
-					value = DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.BOOLEAN);
-			        if (!(Boolean)value) {
-			        	autoCleanLobs = false;
-			        }
-				} catch (TransformationException e) {
-					LogManager.logDetail(LogConstants.CTX_DQP, e, "Improper value for", CLEAN_LOBS_ONCLOSE); //$NON-NLS-1$
-				}
-			}
+            Object value = this.workContext.getSession().getSessionVariables().get(CLEAN_LOBS_ONCLOSE);
+            if (value != null) {
+                value = DataTypeManager.convertToRuntimeType(value, false);
+                try {
+                    value = DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.BOOLEAN);
+                    if (!(Boolean)value) {
+                        autoCleanLobs = false;
+                    }
+                } catch (TransformationException e) {
+                    LogManager.logDetail(LogConstants.CTX_DQP, e, "Improper value for", CLEAN_LOBS_ONCLOSE); //$NON-NLS-1$
+                }
+            }
         }
         if (!autoCleanLobs) {
-        	context.disableAutoCleanLobs();
+            context.disableAutoCleanLobs();
         }
         context.setExecutor(this.executor);
         context.setAuthoriziationValidator(authorizationValidator);
@@ -263,23 +263,23 @@ public class Request {
     }
 
     public void setUserRequestConcurrency(int userRequestConcurrency) {
-		this.userRequestConcurrency = userRequestConcurrency;
-	}
+        this.userRequestConcurrency = userRequestConcurrency;
+    }
 
     protected void checkReferences(List<Reference> references) throws QueryValidatorException {
-    	referenceCheck(references);
+        referenceCheck(references);
     }
 
     static void referenceCheck(List<Reference> references) throws QueryValidatorException {
-    	if (references != null && !references.isEmpty()) {
-    		 throw new QueryValidatorException(QueryPlugin.Event.TEIID30491, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491));
-    	}
+        if (references != null && !references.isEmpty()) {
+             throw new QueryValidatorException(QueryPlugin.Event.TEIID30491, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491));
+        }
     }
 
     protected void resolveCommand(Command command) throws QueryResolverException, TeiidComponentException {
-    	//ensure that the user command is distinct from the processing command
+        //ensure that the user command is distinct from the processing command
         //rewrite and planning may alter options, symbols, etc.
-    	QueryResolver.resolveCommand(command, metadata);
+        QueryResolver.resolveCommand(command, metadata);
     }
 
     private void validateQuery(Command command)
@@ -291,42 +291,42 @@ public class Request {
     }
 
     private Command parseCommand() throws QueryParserException {
-    	if (requestMsg.getCommand() != null) {
-    		return (Command)requestMsg.getCommand();
-    	}
+        if (requestMsg.getCommand() != null) {
+            return (Command)requestMsg.getCommand();
+        }
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg, this.workContext.getSession());
         QueryParser queryParser = QueryParser.getQueryParser();
-		if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
-        	String commandStr = commands[0];
-        	if (preParser != null) {
-        		commandStr = preParser.preParse(commandStr, this.context);
-        	}
+        if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {
+            String commandStr = commands[0];
+            if (preParser != null) {
+                commandStr = preParser.preParse(commandStr, this.context);
+            }
             return queryParser.parseCommand(commandStr, parseInfo);
         }
         List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
-        	String updateCommand = commands[i];
-        	if (preParser != null) {
-        		updateCommand = preParser.preParse(updateCommand, this.context);
-        	}
+            String updateCommand = commands[i];
+            if (preParser != null) {
+                updateCommand = preParser.preParse(updateCommand, this.context);
+            }
             parsedCommands.add(queryParser.parseCommand(updateCommand, parseInfo));
         }
         return new BatchedUpdateCommand(parsedCommands);
     }
 
-	public static ParseInfo createParseInfo(RequestMessage requestMsg, SessionMetadata sessionMetadata) {
-		ParseInfo parseInfo = new ParseInfo();
-    	parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
-    	Object value = sessionMetadata.getSessionVariables().get("backslashDefaultMatchEscape"); //$NON-NLS-1$
-    	try {
+    public static ParseInfo createParseInfo(RequestMessage requestMsg, SessionMetadata sessionMetadata) {
+        ParseInfo parseInfo = new ParseInfo();
+        parseInfo.ansiQuotedIdentifiers = requestMsg.isAnsiQuotedIdentifiers();
+        Object value = sessionMetadata.getSessionVariables().get("backslashDefaultMatchEscape"); //$NON-NLS-1$
+        try {
             if (value != null && Boolean.TRUE.equals(DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.BOOLEAN))) {
                 parseInfo.setBackslashDefaultMatchEscape(true);
             }
         } catch (TransformationException e) {
         }
-		return parseInfo;
-	}
+        return parseInfo;
+    }
 
     public static void validateWithVisitor(
         AbstractValidationVisitor visitor,
@@ -343,43 +343,43 @@ public class Request {
     }
 
     private void createProcessor() throws TeiidComponentException {
-    	if (this.userCommand instanceof CreateProcedureCommand && this.processPlan instanceof ProcedurePlan) {
-    		((ProcedurePlan)this.processPlan).setValidateAccess(true);
-    	}
-    	this.context.setTransactionContext(getTransactionContext(true));
+        if (this.userCommand instanceof CreateProcedureCommand && this.processPlan instanceof ProcedurePlan) {
+            ((ProcedurePlan)this.processPlan).setValidateAccess(true);
+        }
+        this.context.setTransactionContext(getTransactionContext(true));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     }
 
-	TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {
-		if (this.transactionContext != null) {
-			return this.transactionContext;
-		}
-		TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
+    TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {
+        if (this.transactionContext != null) {
+            return this.transactionContext;
+        }
+        TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
 
-		if (tc.getTransactionType() == TransactionContext.Scope.REQUEST && this.workContext.isDerived()) {
-		    //to a sub-request, request scope should appear as global - which means associated and non-suspendable
-	        tc = tc.clone();
-	        tc.setTransactionType(TransactionContext.Scope.INHERITED);
-		}
+        if (tc.getTransactionType() == TransactionContext.Scope.REQUEST && this.workContext.isDerived()) {
+            //to a sub-request, request scope should appear as global - which means associated and non-suspendable
+            tc = tc.clone();
+            tc.setTransactionType(TransactionContext.Scope.INHERITED);
+        }
 
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
         // If local or global transaction is not started.
         if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec()) {
             if (!startAutoWrap) {
-            	return null;
+                return null;
             }
             Boolean startAutoWrapTxn = false;
 
             if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){
                 startAutoWrapTxn = true;
             } else if (RequestMessage.TXN_WRAP_DETECT.equals(requestMsg.getTxnAutoWrapMode())){
-            	boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
-						|| requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
-        		startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
-        		if (startAutoWrapTxn == null) {
-        			startAutoWrapTxn = false;
-        		}
+                boolean transactionalRead = requestMsg.getTransactionIsolation() == Connection.TRANSACTION_REPEATABLE_READ
+                        || requestMsg.getTransactionIsolation() == Connection.TRANSACTION_SERIALIZABLE;
+                startAutoWrapTxn = processPlan.requiresTransaction(transactionalRead);
+                if (startAutoWrapTxn == null) {
+                    startAutoWrapTxn = false;
+                }
             }
 
             if (startAutoWrapTxn) {
@@ -394,21 +394,21 @@ public class Request {
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
         return this.transactionContext;
-	}
+    }
 
     /**
      * state side effects:
      *      creates the analysis record
-     * 		creates the command context
-     * 		sets the pre-rewrite command on the request
-     * 		adds a limit clause if the row limit is specified
-     * 		sets the processor plan
+     *         creates the command context
+     *         sets the pre-rewrite command on the request
+     *         adds a limit clause if the row limit is specified
+     *         sets the processor plan
      *
      * @throws TeiidComponentException
      * @throws TeiidProcessingException
      */
     protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
-    	createCommandContext();
+        createCommandContext();
         Command command = parseCommand();
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
@@ -421,15 +421,15 @@ public class Request {
 
         validateAccess(requestMsg.getCommands(), command, CommandType.USER);
 
-    	this.userCommand = (Command) command.clone();
+        this.userCommand = (Command) command.clone();
 
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
-			if (groupSymbol.isTempTable()) {
-				this.context.setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
-				break;
-			}
-		}
+            if (groupSymbol.isTempTable()) {
+                this.context.setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
+                break;
+            }
+        }
 
         validateQuery(command);
 
@@ -448,38 +448,38 @@ public class Request {
         }
 
         boolean debug = analysisRecord.recordDebug();
-		if(debug) {
-			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
-            analysisRecord.println("USER COMMAND:\n" + command);		 //$NON-NLS-1$
+        if(debug) {
+            analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
+            analysisRecord.println("USER COMMAND:\n" + command);         //$NON-NLS-1$
         }
         // Run the optimizer
         try {
-			CommandContext.pushThreadLocalContext(context);
+            CommandContext.pushThreadLocalContext(context);
             processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, context);
         } finally {
-			CommandContext.popThreadLocalContext();
+            CommandContext.popThreadLocalContext();
             String debugLog = analysisRecord.getDebugLog();
             if(debugLog != null && debugLog.length() > 0) {
                 LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);
             }
             if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
-            	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
+                LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
             }
         }
         LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
     }
 
-	private AnalysisRecord getAnalysisRecord() {
-		if (this.analysisRecord == null) {
-			this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
-		}
-		return this.analysisRecord;
-	}
+    private AnalysisRecord getAnalysisRecord() {
+        if (this.analysisRecord == null) {
+            this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
+        }
+        return this.analysisRecord;
+    }
 
     public void processRequest()
         throws TeiidComponentException, TeiidProcessingException {
 
-    	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         initMetadata();
 
@@ -488,52 +488,52 @@ public class Request {
         createProcessor();
     }
 
-	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
-		boolean returnsResultSet = command.returnsResultSet();
-    	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
-    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet)
-    			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
-        	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-		createCommandContext();
-		if (this.requestMsg.isReturnAutoGeneratedKeys() && command instanceof Insert) {
-		    Insert insert = (Insert)command;
-		    List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
-		    variables.removeAll(insert.getVariables());
-		    Object pk = metadata.getPrimaryKey(insert.getGroup().getMetadataID());
-		    if (pk != null) {
-		        List<?> cols = metadata.getElementIDsInKey(pk);
-		        int colCount = 0;
-	            for (Iterator<ElementSymbol> iter = variables.iterator(); iter.hasNext();) {
-	                ElementSymbol variable = iter.next();
-	                if (!(metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.NULL) ||
-	                        metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT))
-	                        || !cols.contains(variable.getMetadataID())) {
-	                    iter.remove();
-	                }
-	                colCount++;
-	            }
-	            if (colCount == cols.size()) {
-	                context.setReturnAutoGeneratedKeys(variables);
-	            }
-		    }
+    protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
+        boolean returnsResultSet = command.returnsResultSet();
+        this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
+        if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet)
+                || (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
+            throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
         }
-		if (!this.workContext.isAdmin() && this.authorizationValidator != null) {
-			return this.authorizationValidator.validate(commandStr, command, metadata, context, type);
-		}
-		return false;
-	}
+        createCommandContext();
+        if (this.requestMsg.isReturnAutoGeneratedKeys() && command instanceof Insert) {
+            Insert insert = (Insert)command;
+            List<ElementSymbol> variables = ResolverUtil.resolveElementsInGroup(insert.getGroup(), metadata);
+            variables.removeAll(insert.getVariables());
+            Object pk = metadata.getPrimaryKey(insert.getGroup().getMetadataID());
+            if (pk != null) {
+                List<?> cols = metadata.getElementIDsInKey(pk);
+                int colCount = 0;
+                for (Iterator<ElementSymbol> iter = variables.iterator(); iter.hasNext();) {
+                    ElementSymbol variable = iter.next();
+                    if (!(metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.NULL) ||
+                            metadata.elementSupports(variable.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT))
+                            || !cols.contains(variable.getMetadataID())) {
+                        iter.remove();
+                    }
+                    colCount++;
+                }
+                if (colCount == cols.size()) {
+                    context.setReturnAutoGeneratedKeys(variables);
+                }
+            }
+        }
+        if (!this.workContext.isAdmin() && this.authorizationValidator != null) {
+            return this.authorizationValidator.validate(commandStr, command, metadata, context, type);
+        }
+        return false;
+    }
 
-	public void setExecutor(Executor executor) {
-		this.executor = executor;
-	}
+    public void setExecutor(Executor executor) {
+        this.executor = executor;
+    }
 
-	public boolean isReturingParams() {
-		return false;
-	}
+    public boolean isReturingParams() {
+        return false;
+    }
 
-	public void setPreParser(PreParser preParser) {
-		this.preParser = preParser;
-	}
+    public void setPreParser(PreParser preParser) {
+        this.preParser = preParser;
+    }
 
 }

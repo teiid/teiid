@@ -36,37 +36,37 @@ public interface LanguageObject extends Cloneable {
      */
     void acceptVisitor(LanguageVisitor visitor);
 
-	/**
-	 * Implement clone to make objects cloneable.
-	 * @return Deep clone of this object
-	 */
+    /**
+     * Implement clone to make objects cloneable.
+     * @return Deep clone of this object
+     */
     Object clone();
 
     public static class Util {
 
-		public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(Collection<T> collection, Class<S> type) {
-			if (collection == null) {
-				return null;
-			}
-			ArrayList<S> result = new ArrayList<S>(collection.size());
-			for (LanguageObject obj : collection) {
-				result.add(type.cast(obj.clone()));
-			}
-			return result;
-		}
+        public static <S extends LanguageObject, T extends S> ArrayList<S> deepClone(Collection<T> collection, Class<S> type) {
+            if (collection == null) {
+                return null;
+            }
+            ArrayList<S> result = new ArrayList<S>(collection.size());
+            for (LanguageObject obj : collection) {
+                result.add(type.cast(obj.clone()));
+            }
+            return result;
+        }
 
-		@SuppressWarnings("unchecked")
-		public static <T extends LanguageObject> T[] deepClone(T[] collection) {
-			if (collection == null) {
-				return null;
-			}
-			T[] copy = Arrays.copyOf(collection, collection.length);
-			for (int i = 0; i < copy.length; i++) {
-				LanguageObject t = copy[i];
-				copy[i] = (T) t.clone();
-			}
-			return copy;
-		}
+        @SuppressWarnings("unchecked")
+        public static <T extends LanguageObject> T[] deepClone(T[] collection) {
+            if (collection == null) {
+                return null;
+            }
+            T[] copy = Arrays.copyOf(collection, collection.length);
+            for (int i = 0; i < copy.length; i++) {
+                LanguageObject t = copy[i];
+                copy[i] = (T) t.clone();
+            }
+            return copy;
+        }
 
     }
 

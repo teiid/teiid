@@ -27,35 +27,35 @@ import org.teiid.script.io.StringLineReader;
 
 public class MetadataReader extends StringLineReader {
 
-	ResultSetMetaData source;
+    ResultSetMetaData source;
     String delimiter = "    "; //$NON-NLS-1$
 
     boolean firsttime = true;
-	int currentColumn = 0;
+    int currentColumn = 0;
 
-	public MetadataReader(ResultSetMetaData metadata, String delimiter) {
-		this.source = metadata;
-		this.delimiter = delimiter;
-	}
+    public MetadataReader(ResultSetMetaData metadata, String delimiter) {
+        this.source = metadata;
+        this.delimiter = delimiter;
+    }
 
-	@Override
-	protected String nextLine() throws IOException {
-		if (firsttime) {
-			this.firsttime = false;
-			return firstLine();
-		}
+    @Override
+    protected String nextLine() throws IOException {
+        if (firsttime) {
+            this.firsttime = false;
+            return firstLine();
+        }
 
-		try {
-			int count = this.source.getColumnCount();
-			if (this.currentColumn < count) {
-				this.currentColumn++;
-				return getNextRow();
-			}
-		} catch (SQLException e) {
-			 throw new IOException(e.getMessage());
-		}
-		return null;
-	}
+        try {
+            int count = this.source.getColumnCount();
+            if (this.currentColumn < count) {
+                this.currentColumn++;
+                return getNextRow();
+            }
+        } catch (SQLException e) {
+             throw new IOException(e.getMessage());
+        }
+        return null;
+    }
 
     String firstLine() {
         StringBuffer sb = new StringBuffer();
@@ -71,19 +71,19 @@ public class MetadataReader extends StringLineReader {
         return sb.toString();
     }
 
-	String getNextRow() throws SQLException {
-		StringBuffer sb = new StringBuffer();
+    String getNextRow() throws SQLException {
+        StringBuffer sb = new StringBuffer();
 
-		sb.append(source.getColumnName(currentColumn)).append(delimiter);
-		sb.append(source.getColumnType(currentColumn)).append(delimiter);
-		sb.append(source.getColumnTypeName(currentColumn)).append(delimiter);
-		sb.append(source.getColumnClassName(currentColumn)).append(delimiter);
-		sb.append(source.isNullable(currentColumn)).append(delimiter);
-		sb.append(source.getTableName(currentColumn)).append(delimiter);
-		sb.append(source.getSchemaName(currentColumn)).append(delimiter);
-		sb.append(source.getCatalogName(currentColumn)).append(delimiter);
-		sb.append("\n"); //$NON-NLS-1$
+        sb.append(source.getColumnName(currentColumn)).append(delimiter);
+        sb.append(source.getColumnType(currentColumn)).append(delimiter);
+        sb.append(source.getColumnTypeName(currentColumn)).append(delimiter);
+        sb.append(source.getColumnClassName(currentColumn)).append(delimiter);
+        sb.append(source.isNullable(currentColumn)).append(delimiter);
+        sb.append(source.getTableName(currentColumn)).append(delimiter);
+        sb.append(source.getSchemaName(currentColumn)).append(delimiter);
+        sb.append(source.getCatalogName(currentColumn)).append(delimiter);
+        sb.append("\n"); //$NON-NLS-1$
 
-		return sb.toString();
-	}
+        return sb.toString();
+    }
 }

@@ -26,17 +26,17 @@ import org.teiid.translator.Translator;
 @Translator(name="greenplum", description="A translator for the Greenplum Database")
 public class GreenplumExecutionFactory extends PostgreSQLExecutionFactory {
 
-	@Override
-	public boolean supportsCorrelatedSubqueries() {
-		return false;
-	}
+    @Override
+    public boolean supportsCorrelatedSubqueries() {
+        return false;
+    }
 
-	@Override
-	public boolean supportsElementaryOlapOperations() {
-	    //greenplum is/was based upon postgresql 8.2, but added extensions for window functions
-	    //this can be verified back to greenplum 4.1.  Since that and earlier releases are eol
-	    //it suffices to just return true
-	    return true;
-	}
+    @Override
+    public boolean supportsElementaryOlapOperations() {
+        //greenplum is/was based upon postgresql 8.2, but added extensions for window functions
+        //this can be verified back to greenplum 4.1.  Since that and earlier releases are eol
+        //it suffices to just return true
+        return true;
+    }
 
 }

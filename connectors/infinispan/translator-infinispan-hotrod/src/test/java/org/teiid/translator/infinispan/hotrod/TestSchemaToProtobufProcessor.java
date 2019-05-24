@@ -35,7 +35,7 @@ import org.teiid.query.parser.QueryParser;
 public class TestSchemaToProtobufProcessor {
 
     @SuppressWarnings("rawtypes")
-	@Test
+    @Test
     public void testConverstion() throws Exception {
         SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
         //tool.setIndexMessages(true);
@@ -200,7 +200,7 @@ public class TestSchemaToProtobufProcessor {
     }
 
     @SuppressWarnings("rawtypes")
-	@Test
+    @Test
     public void testConverstionUsingCacheAnnotation() throws Exception {
         SchemaToProtobufProcessor tool = new SchemaToProtobufProcessor();
         tool.setIndexMessages(true);

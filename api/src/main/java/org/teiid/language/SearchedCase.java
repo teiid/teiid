@@ -43,8 +43,8 @@ public class SearchedCase extends BaseLanguageObject implements Expression {
     }
 
     public List<SearchedWhenClause> getCases() {
-		return cases;
-	}
+        return cases;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

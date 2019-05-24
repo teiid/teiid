@@ -116,11 +116,11 @@ public class TestSocketProfile {
 
     @Test
     public void testIPV6() throws SQLException{
-    	assertEquals(ConnectionType.Socket, JDBCURL.acceptsUrl("jdbc:teiid:vdb@mm://[::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
-    	assertEquals(ConnectionType.Socket, JDBCURL.acceptsUrl("jdbc:teiid:vdb@mm://[3ffe:ffff:0100:f101::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Socket, JDBCURL.acceptsUrl("jdbc:teiid:vdb@mm://[::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
+        assertEquals(ConnectionType.Socket, JDBCURL.acceptsUrl("jdbc:teiid:vdb@mm://[3ffe:ffff:0100:f101::1]:53535,127.0.0.1:1234")); //$NON-NLS-1$
 
-    	Properties p = new Properties();
-    	TeiidDriver.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234;version=3", p); //$NON-NLS-1$
+        Properties p = new Properties();
+        TeiidDriver.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://[3ffe:ffff:0100:f101::1]:1234")); //$NON-NLS-1$
@@ -129,8 +129,8 @@ public class TestSocketProfile {
 
     @Test
     public void testIPV6MultipleHosts() throws SQLException{
-    	Properties p = new Properties();
-    	TeiidDriver.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234,[::1]:31000,127.0.0.1:2134;version=3", p); //$NON-NLS-1$
+        Properties p = new Properties();
+        TeiidDriver.parseURL("jdbc:teiid:BQT@mms://[3ffe:ffff:0100:f101::1]:1234,[::1]:31000,127.0.0.1:2134;version=3", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(TeiidURL.CONNECTION.SERVER_URL).equals("mms://[3ffe:ffff:0100:f101::1]:1234,[::1]:31000,127.0.0.1:2134")); //$NON-NLS-1$

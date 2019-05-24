@@ -26,10 +26,10 @@ import org.teiid.language.BatchedUpdates;
  */
 public class TranslatorBatchException extends TranslatorException {
 
-	private static final long serialVersionUID = 1981353880269174140L;
-	private int[] updateCounts;
+    private static final long serialVersionUID = 1981353880269174140L;
+    private int[] updateCounts;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public TranslatorBatchException() {
@@ -42,6 +42,6 @@ public class TranslatorBatchException extends TranslatorException {
     }
 
     public int[] getUpdateCounts() {
-		return updateCounts;
-	}
+        return updateCounts;
+    }
 }

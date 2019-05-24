@@ -92,8 +92,8 @@ public class TestSalesForceDirectQueryExecution {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
-    	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+        execution.execute();
     }
 
     @Test public void testDelete() throws Exception {
@@ -105,18 +105,18 @@ public class TestSalesForceDirectQueryExecution {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
-		ArgumentCaptor<String[]> payloadArgument = ArgumentCaptor.forClass(String[].class);
-		Mockito.stub(connection.delete(payloadArgument.capture())).toReturn(23);
+        ArgumentCaptor<String[]> payloadArgument = ArgumentCaptor.forClass(String[].class);
+        Mockito.stub(connection.delete(payloadArgument.capture())).toReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		Mockito.verify(connection, Mockito.times(1)).delete(payloadArgument.capture());
+        Mockito.verify(connection, Mockito.times(1)).delete(payloadArgument.capture());
 
-		assertEquals("id1", payloadArgument.getValue()[0]);
-		assertEquals("id2", payloadArgument.getValue()[1]);
+        assertEquals("id1", payloadArgument.getValue()[0]);
+        assertEquals("id2", payloadArgument.getValue()[1]);
 
-		assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
+        assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
     }
 
     @Test public void testUpdate() throws Exception {
@@ -129,23 +129,23 @@ public class TestSalesForceDirectQueryExecution {
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
         ArgumentCaptor<List> payloadArgument = ArgumentCaptor.forClass(List.class);
-		Mockito.stub(connection.update(payloadArgument.capture())).toReturn(23);
+        Mockito.stub(connection.update(payloadArgument.capture())).toReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		Mockito.verify(connection).update(payloadArgument.capture());
+        Mockito.verify(connection).update(payloadArgument.capture());
 
-		assertEquals(1, payloadArgument.getValue().size());
-		assertEquals("pk", ((DataPayload)payloadArgument.getValue().get(0)).getID());
-		assertEquals("table", ((DataPayload)payloadArgument.getValue().get(0)).getType());
-		assertEquals(3, ((DataPayload)payloadArgument.getValue().get(0)).getMessageElements().size());
+        assertEquals(1, payloadArgument.getValue().size());
+        assertEquals("pk", ((DataPayload)payloadArgument.getValue().get(0)).getID());
+        assertEquals("table", ((DataPayload)payloadArgument.getValue().get(0)).getType());
+        assertEquals(3, ((DataPayload)payloadArgument.getValue().get(0)).getMessageElements().size());
 
-		assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
+        assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
     }
 
     @Test public void testCreate() throws Exception {
-    	String input = "exec native('create;id=pk;type=table;attributes=one,two,three', 'one', 2, 3.0)";
+        String input = "exec native('create;id=pk;type=table;attributes=one,two,three', 'one', 2, 3.0)";
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -157,20 +157,20 @@ public class TestSalesForceDirectQueryExecution {
         Mockito.stub(connection.create(payloadArgument.capture())).toReturn(23);
 
         DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
 
-		Mockito.verify(connection).create(payloadArgument.capture());
+        Mockito.verify(connection).create(payloadArgument.capture());
 
-		assertEquals("pk", payloadArgument.getValue().getID());
-		assertEquals("table", payloadArgument.getValue().getType());
-		assertEquals(3, payloadArgument.getValue().getMessageElements().size());
+        assertEquals("pk", payloadArgument.getValue().getID());
+        assertEquals("table", payloadArgument.getValue().getType());
+        assertEquals(3, payloadArgument.getValue().getMessageElements().size());
 
-		assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
+        assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
     }
 
     @Test(expected=TranslatorException.class) public void testCreateFail() throws Exception {
-    	String input = "exec native('create;id=pk;type=table;attributes=one,two,three', 'one')";
+        String input = "exec native('create;id=pk;type=table;attributes=one,two,three', 'one')";
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -178,7 +178,7 @@ public class TestSalesForceDirectQueryExecution {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
 
-    	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+        execution.execute();
     }
 }

@@ -53,7 +53,7 @@ public class FakeCapabilitiesFinder implements CapabilitiesFinder {
 
     @Override
     public boolean isValid(String fullName) {
-    	return true;
+        return true;
     }
 
 }

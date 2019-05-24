@@ -30,14 +30,14 @@ public class SolrPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
     public static enum Event implements BundleUtil.Event{
-    	TEIID20001,
-    	TEIID20002,
-    	TEIID20003,
-    	TEIID20004,
-    	TEIID20005,
-    	TEIID20006,
-    	TEIID20007,
-    	TEIID20008,
-    	TEIID20009
+        TEIID20001,
+        TEIID20002,
+        TEIID20003,
+        TEIID20004,
+        TEIID20005,
+        TEIID20006,
+        TEIID20007,
+        TEIID20008,
+        TEIID20009
     }
 }

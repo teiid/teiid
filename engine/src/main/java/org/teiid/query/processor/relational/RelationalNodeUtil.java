@@ -48,7 +48,7 @@ public class RelationalNodeUtil {
      * @since 4.2
      */
     public static boolean shouldExecute(Command command, boolean simplifyCriteria) throws TeiidComponentException, ExpressionEvaluationException {
-    	return shouldExecute(command, simplifyCriteria, false);
+        return shouldExecute(command, simplifyCriteria, false);
     }
 
     public static boolean shouldExecute(Command command, boolean simplifyCriteria, boolean duringPlanning) throws TeiidComponentException, ExpressionEvaluationException {
@@ -74,7 +74,7 @@ public class RelationalNodeUtil {
                     for (QueryCommand innerQuery : union.getQueryCommands()) {
                         boolean shouldInner = shouldExecute(innerQuery, simplifyCriteria, duringPlanning);
                         if(shouldInner) {
-                        	shouldExecute = true;
+                            shouldExecute = true;
                             break;
                         }
                     }
@@ -97,17 +97,17 @@ public class RelationalNodeUtil {
                 }
 
                 if (query.hasAggregates() && query.getGroupBy() == null) {
-                	return true;
+                    return true;
                 }
 
                 break;
             case Command.TYPE_INSERT:
-            	Insert insert = (Insert) command;
-            	QueryCommand expr = insert.getQueryExpression();
-            	if (expr != null) {
-            		return shouldExecute(expr, simplifyCriteria);
-            	}
-            	return true;
+                Insert insert = (Insert) command;
+                QueryCommand expr = insert.getQueryExpression();
+                if (expr != null) {
+                    return shouldExecute(expr, simplifyCriteria);
+                }
+                return true;
             case Command.TYPE_UPDATE:
                 Update update = (Update) command;
 
@@ -119,7 +119,7 @@ public class RelationalNodeUtil {
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
                 if (criteria == null) {
-                	return true;
+                    return true;
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
@@ -136,7 +136,7 @@ public class RelationalNodeUtil {
                 // If there are elements present in the criteria,
                 // then we don't know the result, so assume we need to execute
                 if (criteria == null) {
-                	return true;
+                    return true;
                 }
                 if(!EvaluatableVisitor.isFullyEvaluatable(criteria, duringPlanning)) {
                     return true;
@@ -189,13 +189,13 @@ public class RelationalNodeUtil {
                commandType == Command.TYPE_DELETE;
     }
 
-	public static boolean hasOutputParams(Command command) {
-		boolean hasOutParams = false;
+    public static boolean hasOutputParams(Command command) {
+        boolean hasOutParams = false;
         if (command instanceof StoredProcedure) {
-        	StoredProcedure sp = (StoredProcedure)command;
-        	hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
+            StoredProcedure sp = (StoredProcedure)command;
+            hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
         }
-		return hasOutParams;
-	}
+        return hasOutParams;
+    }
 
 }

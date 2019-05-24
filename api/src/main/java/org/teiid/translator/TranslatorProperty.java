@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
 @Documented
 public @interface TranslatorProperty {
 
-	public static final String EMPTY_STRING = ""; //$NON-NLS-1$
+    public static final String EMPTY_STRING = ""; //$NON-NLS-1$
 
     public enum PropertyType {
         /*
@@ -53,45 +53,45 @@ public @interface TranslatorProperty {
         EXTENSION_METADATA
     }
 
-	/**
-	 * Description to be shown in tools
-	 * @return
-	 */
-	String description() default EMPTY_STRING;
+    /**
+     * Description to be shown in tools
+     * @return
+     */
+    String description() default EMPTY_STRING;
 
-	/**
-	 * Display name to be shown in tools
-	 * @return
-	 */
-	String display() default EMPTY_STRING;
+    /**
+     * Display name to be shown in tools
+     * @return
+     */
+    String display() default EMPTY_STRING;
 
-	/**
-	 * True if a non-null value must be supplied
-	 * @return
-	 */
-	boolean required() default false;
+    /**
+     * True if a non-null value must be supplied
+     * @return
+     */
+    boolean required() default false;
 
-	/**
-	 * True if the property has no setter
-	 * @return
-	 */
-	boolean readOnly() default false;
+    /**
+     * True if the property has no setter
+     * @return
+     */
+    boolean readOnly() default false;
 
-	/**
-	 * True if this property should be shown in an advanced panel of properties.
-	 * @return
-	 */
-	boolean advanced() default false;
+    /**
+     * True if this property should be shown in an advanced panel of properties.
+     * @return
+     */
+    boolean advanced() default false;
 
-	/**
-	 * True if this is property should be masked when displayed - this has no effect on how the value is persisted.
-	 * @return
-	 */
-	boolean masked() default false;
+    /**
+     * True if this is property should be masked when displayed - this has no effect on how the value is persisted.
+     * @return
+     */
+    boolean masked() default false;
 
-	/**
-	 * Defines the type of the translator property.
-	 * @return
-	 */
-	PropertyType category() default PropertyType.OVERRIDE;
+    /**
+     * Defines the type of the translator property.
+     * @return
+     */
+    PropertyType category() default PropertyType.OVERRIDE;
 }

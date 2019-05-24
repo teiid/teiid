@@ -61,8 +61,8 @@ public class SymmetricCryptor extends BasicCryptor {
         return new SymmetricCryptor(key, cbc);
     }
 
-	public static SecretKey generateKey() throws CryptoException {
-		try {
+    public static SecretKey generateKey() throws CryptoException {
+        try {
             synchronized(SymmetricCryptor.class) {
                 if (keyGen == null) {
                     keyGen = KeyGenerator.getInstance(DEFAULT_SYM_KEY_ALGORITHM);
@@ -73,7 +73,7 @@ public class SymmetricCryptor extends BasicCryptor {
         } catch (GeneralSecurityException e) {
               throw new CryptoException(CorePlugin.Event.TEIID10021, e);
         }
-	}
+    }
 
     /**
      * Creates a SymmetricCryptor using the supplied URL contents as the key
@@ -84,18 +84,18 @@ public class SymmetricCryptor extends BasicCryptor {
      * @throws IOException
      */
     public static SymmetricCryptor getSymmectricCryptor(URL keyResource) throws CryptoException, IOException {
-		ArgCheck.isNotNull(keyResource);
-		InputStream stream = keyResource.openStream();
-		try {
-	    	KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
-	    	store.load(stream, DEFAULT_STORE_PASSWORD.toCharArray());
-	    	Key key = store.getKey(DEFAULT_ALIAS, DEFAULT_STORE_PASSWORD.toCharArray());
-	    	return new SymmetricCryptor(key, true);
+        ArgCheck.isNotNull(keyResource);
+        InputStream stream = keyResource.openStream();
+        try {
+            KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
+            store.load(stream, DEFAULT_STORE_PASSWORD.toCharArray());
+            Key key = store.getKey(DEFAULT_ALIAS, DEFAULT_STORE_PASSWORD.toCharArray());
+            return new SymmetricCryptor(key, true);
         } catch (GeneralSecurityException e) {
               throw new CryptoException(CorePlugin.Event.TEIID10022, e);
-		} finally {
-			stream.close();
-		}
+        } finally {
+            stream.close();
+        }
     }
 
     /**
@@ -116,23 +116,23 @@ public class SymmetricCryptor extends BasicCryptor {
     }
 
     public static void generateAndSaveKey(String file) throws CryptoException, IOException {
-    	SecretKey key = generateKey();
-    	saveKey(file, key);
+        SecretKey key = generateKey();
+        saveKey(file, key);
     }
 
     private static void saveKey(String file, SecretKey key) throws CryptoException, IOException {
-    	ArgCheck.isNotNull(file);
-    	FileOutputStream fos = new FileOutputStream(file);
-    	try {
-        	KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
-        	store.load(null,null);
-    		store.setKeyEntry(DEFAULT_ALIAS, key, DEFAULT_STORE_PASSWORD.toCharArray(),null);
-    		store.store(fos, DEFAULT_STORE_PASSWORD.toCharArray());
-    	} catch (GeneralSecurityException e) {
-    		  throw new CryptoException(CorePlugin.Event.TEIID10023, e);
-    	} finally {
-    		fos.close();
-    	}
+        ArgCheck.isNotNull(file);
+        FileOutputStream fos = new FileOutputStream(file);
+        try {
+            KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
+            store.load(null,null);
+            store.setKeyEntry(DEFAULT_ALIAS, key, DEFAULT_STORE_PASSWORD.toCharArray(),null);
+            store.store(fos, DEFAULT_STORE_PASSWORD.toCharArray());
+        } catch (GeneralSecurityException e) {
+              throw new CryptoException(CorePlugin.Event.TEIID10023, e);
+        } finally {
+            fos.close();
+        }
     }
 
     SymmetricCryptor(Key key, boolean cbc) throws CryptoException {
@@ -147,11 +147,11 @@ public class SymmetricCryptor extends BasicCryptor {
         return this.decryptKey.getEncoded();
     }
 
-	public static void main(String[] args) throws Exception {
-		if (args.length != 1) {
-			System.out.println("The file to create must be supplied as the only argument."); //$NON-NLS-1$
-			System.exit(-1);
-		}
-		SymmetricCryptor.generateAndSaveKey(args[0]);
-	}
+    public static void main(String[] args) throws Exception {
+        if (args.length != 1) {
+            System.out.println("The file to create must be supplied as the only argument."); //$NON-NLS-1$
+            System.exit(-1);
+        }
+        SymmetricCryptor.generateAndSaveKey(args[0]);
+    }
 }

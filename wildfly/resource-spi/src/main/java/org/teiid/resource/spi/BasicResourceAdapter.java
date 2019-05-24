@@ -28,37 +28,37 @@ import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.XAResource;
 
 public class BasicResourceAdapter implements ResourceAdapter {
-	BootstrapContext ctx;
+    BootstrapContext ctx;
 
-	@Override
-	public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) throws ResourceException {
-		throw new UnsupportedOperationException("not supported"); //$NON-NLS-1$
-	}
+    @Override
+    public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) throws ResourceException {
+        throw new UnsupportedOperationException("not supported"); //$NON-NLS-1$
+    }
 
-	@Override
-	public void endpointDeactivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) {
-		throw new UnsupportedOperationException("not supported"); //$NON-NLS-1$
-	}
+    @Override
+    public void endpointDeactivation(MessageEndpointFactory endpointFactory, ActivationSpec spec) {
+        throw new UnsupportedOperationException("not supported"); //$NON-NLS-1$
+    }
 
-	@Override
-	public XAResource[] getXAResources(ActivationSpec[] specs) throws ResourceException {
-		return new XAResource[0];
-	}
+    @Override
+    public XAResource[] getXAResources(ActivationSpec[] specs) throws ResourceException {
+        return new XAResource[0];
+    }
 
-	@Override
-	public void start(BootstrapContext ctx) throws ResourceAdapterInternalException {
-		this.ctx = ctx;
-	}
+    @Override
+    public void start(BootstrapContext ctx) throws ResourceAdapterInternalException {
+        this.ctx = ctx;
+    }
 
-	@Override
-	public void stop() {
-	}
+    @Override
+    public void stop() {
+    }
 
-	public WorkManager getWorkManager() {
-		return ctx.getWorkManager();
-	}
+    public WorkManager getWorkManager() {
+        return ctx.getWorkManager();
+    }
 
-	public XATerminator getXATerminator() {
-		return ctx.getXATerminator();
-	}
+    public XATerminator getXATerminator() {
+        return ctx.getXATerminator();
+    }
 }

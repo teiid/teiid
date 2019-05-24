@@ -35,28 +35,28 @@ import org.teiid.metadata.MetadataStore;
 @SuppressWarnings("nls")
 public class TestResteasyEnabler {
 
-	@Test public void testOtherModels() throws VirtualDatabaseException {
-		RestWarGenerator generator = Mockito.mock(RestWarGenerator.class);
-		ResteasyEnabler resteasyEnabler = new ResteasyEnabler(generator) {
-			Admin getAdmin() {
-				return Mockito.mock(Admin.class);
-			}
+    @Test public void testOtherModels() throws VirtualDatabaseException {
+        RestWarGenerator generator = Mockito.mock(RestWarGenerator.class);
+        ResteasyEnabler resteasyEnabler = new ResteasyEnabler(generator) {
+            Admin getAdmin() {
+                return Mockito.mock(Admin.class);
+            }
 
-			Executor getExecutor() {
-				return ExecutorUtils.getDirectExecutor();
-			}
-		};
+            Executor getExecutor() {
+                return ExecutorUtils.getDirectExecutor();
+            }
+        };
 
-		MetadataStore ms = new MetadataStore();
+        MetadataStore ms = new MetadataStore();
 
-		CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
-		vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
-		ModelMetaData model = new ModelMetaData();
-		model.setName("other");
-		model.setModelType(Type.OTHER);
-		vdb.getVDB().addModel(model);
+        CompositeVDB vdb = TestCompositeVDB.createCompositeVDB(ms, "x");
+        vdb.getVDB().addProperty("{http://teiid.org/rest}auto-generate", "true");
+        ModelMetaData model = new ModelMetaData();
+        model.setName("other");
+        model.setModelType(Type.OTHER);
+        vdb.getVDB().addModel(model);
 
-		resteasyEnabler.finishedDeployment("x", vdb);
-	}
+        resteasyEnabler.finishedDeployment("x", vdb);
+    }
 
 }

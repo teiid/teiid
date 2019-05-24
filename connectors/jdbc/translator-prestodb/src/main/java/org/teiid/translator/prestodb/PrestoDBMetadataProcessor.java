@@ -36,16 +36,16 @@ import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
 public class PrestoDBMetadataProcessor extends JDBCMetadataProcessor implements MetadataProcessor<Connection>{
 
-	private boolean trimColumnNames;
+    private boolean trimColumnNames;
 
     @Override
-	public void process(MetadataFactory metadataFactory, Connection conn)	throws TranslatorException {
-		try {
-		    getConnectorMetadata(conn, metadataFactory);
+    public void process(MetadataFactory metadataFactory, Connection conn)    throws TranslatorException {
+        try {
+            getConnectorMetadata(conn, metadataFactory);
         } catch (SQLException e) {
             throw new TranslatorException(e);
         }
-	}
+    }
 
     @Override
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
@@ -95,20 +95,20 @@ public class PrestoDBMetadataProcessor extends JDBCMetadataProcessor implements 
         return schemas;
     }
 
-	private List<String> getTables(Connection conn, String catalog, String schema) throws SQLException {
-		ArrayList<String> tables = new ArrayList<String>();
-		Statement stmt = conn.createStatement();
-		ResultSet rs =  stmt.executeQuery("SHOW TABLES FROM "+catalog+"."+schema); //$NON-NLS-1$ //$NON-NLS-2$
-		while (rs.next()){
-			tables.add(rs.getString(1));
-		}
-		rs.close();
-		return tables;
-	}
+    private List<String> getTables(Connection conn, String catalog, String schema) throws SQLException {
+        ArrayList<String> tables = new ArrayList<String>();
+        Statement stmt = conn.createStatement();
+        ResultSet rs =  stmt.executeQuery("SHOW TABLES FROM "+catalog+"."+schema); //$NON-NLS-1$ //$NON-NLS-2$
+        while (rs.next()){
+            tables.add(rs.getString(1));
+        }
+        rs.close();
+        return tables;
+    }
 
-	private String getRuntimeType(String type) {
+    private String getRuntimeType(String type) {
 
-	    if (type.equalsIgnoreCase("boolean")) { //$NON-NLS-1$
+        if (type.equalsIgnoreCase("boolean")) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.BOOLEAN;
         }
         else if (type.equalsIgnoreCase("bigint")) { //$NON-NLS-1$
@@ -135,38 +135,38 @@ public class PrestoDBMetadataProcessor extends JDBCMetadataProcessor implements 
         else if (type.equalsIgnoreCase("json")) { //$NON-NLS-1$
             return TypeFacility.RUNTIME_NAMES.BLOB;
         }
-	    //TODO: Array, MAP, INETERVAL support.
-		return TypeFacility.RUNTIME_NAMES.OBJECT;
-	}
+        //TODO: Array, MAP, INETERVAL support.
+        return TypeFacility.RUNTIME_NAMES.OBJECT;
+    }
 
-	private void addTable(String tableName, Connection conn, String catalog, String schema, MetadataFactory metadataFactory) throws SQLException {
-		Table table = addTable(metadataFactory, null, null, tableName, null, tableName);
-		if (table == null) {
-			return;
-		}
-		String nis = catalog+"."+schema+"."+tableName; //$NON-NLS-1$ //$NON-NLS-2$
-		table.setNameInSource(nis);
+    private void addTable(String tableName, Connection conn, String catalog, String schema, MetadataFactory metadataFactory) throws SQLException {
+        Table table = addTable(metadataFactory, null, null, tableName, null, tableName);
+        if (table == null) {
+            return;
+        }
+        String nis = catalog+"."+schema+"."+tableName; //$NON-NLS-1$ //$NON-NLS-2$
+        table.setNameInSource(nis);
 
-		Statement stmt = conn.createStatement();
-		ResultSet rs =  stmt.executeQuery("SHOW COLUMNS FROM "+nis); //$NON-NLS-1$
-		while (rs.next()){
-			String name = rs.getString(1);
-			if (this.trimColumnNames) {
-				name = name.trim();
-			}
-			String type = rs.getString(2);
-			if (type != null) {
-				type = type.trim();
-			}
-			String runtimeType = getRuntimeType(type);
+        Statement stmt = conn.createStatement();
+        ResultSet rs =  stmt.executeQuery("SHOW COLUMNS FROM "+nis); //$NON-NLS-1$
+        while (rs.next()){
+            String name = rs.getString(1);
+            if (this.trimColumnNames) {
+                name = name.trim();
+            }
+            String type = rs.getString(2);
+            if (type != null) {
+                type = type.trim();
+            }
+            String runtimeType = getRuntimeType(type);
 
             NullType nt = Boolean.valueOf(rs.getString(3))?NullType.Nullable:NullType.No_Nulls;
 
-			Column column = metadataFactory.addColumn(name, runtimeType, table);
-			column.setNameInSource(name);
-			column.setUpdatable(true);
-		    column.setNullType(nt);
-		}
-		rs.close();
-	}
+            Column column = metadataFactory.addColumn(name, runtimeType, table);
+            column.setNameInSource(name);
+            column.setUpdatable(true);
+            column.setNullType(nt);
+        }
+        rs.close();
+    }
 }

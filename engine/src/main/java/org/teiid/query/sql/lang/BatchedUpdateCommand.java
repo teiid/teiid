@@ -34,7 +34,7 @@ import org.teiid.query.sql.util.VariableContext;
  */
 public class BatchedUpdateCommand extends Command {
 
-	protected List<Command> commands;
+    protected List<Command> commands;
     private List<VariableContext> variableContexts; //processing state
     private boolean singleResult;
 
@@ -96,75 +96,75 @@ public class BatchedUpdateCommand extends Command {
         return copy;
     }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable() {
-		return false;
-	}
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable() {
+        return false;
+    }
 
     public String toString() {
        return getStringForm(false);
     }
 
-	public void setVariableContexts(List<VariableContext> variableContexts) {
-		this.variableContexts = variableContexts;
-	}
+    public void setVariableContexts(List<VariableContext> variableContexts) {
+        this.variableContexts = variableContexts;
+    }
 
-	public List<VariableContext> getVariableContexts() {
-		return variableContexts;
-	}
+    public List<VariableContext> getVariableContexts() {
+        return variableContexts;
+    }
 
     @Override
-	public int hashCode() {
-    	return commands.hashCode();
-	}
+    public int hashCode() {
+        return commands.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof BatchedUpdateCommand)) {
-			return false;
-		}
-		BatchedUpdateCommand other = (BatchedUpdateCommand)obj;
-		return EquivalenceUtil.areEqual(commands, other.commands) && this.singleResult == other.singleResult;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof BatchedUpdateCommand)) {
+            return false;
+        }
+        BatchedUpdateCommand other = (BatchedUpdateCommand)obj;
+        return EquivalenceUtil.areEqual(commands, other.commands) && this.singleResult == other.singleResult;
+    }
 
-	public void setSingleResult(boolean singleResult) {
-		this.singleResult = singleResult;
-	}
+    public void setSingleResult(boolean singleResult) {
+        this.singleResult = singleResult;
+    }
 
-	public boolean isSingleResult() {
-		return singleResult;
-	}
+    public boolean isSingleResult() {
+        return singleResult;
+    }
 
-	public String getStringForm(boolean full) {
-		StringBuffer val = new StringBuffer();
-		if (!full) {
-			val.append("BatchedUpdate{"); //$NON-NLS-1$
-		}
+    public String getStringForm(boolean full) {
+        StringBuffer val = new StringBuffer();
+        if (!full) {
+            val.append("BatchedUpdate{"); //$NON-NLS-1$
+        }
         if (commands != null && commands.size() > 0) {
             for (int i = 0; i < commands.size(); i++) {
-            	if (i > 0) {
-            		if (full) {
-            			val.append(";\n"); //$NON-NLS-1$
-            		} else {
-            			val.append(","); //$NON-NLS-1$
-            		}
-            	}
-            	if (full) {
-            		val.append(commands.get(i));
-            	} else {
-            		val.append(getCommandToken(commands.get(i).getType()));
-            	}
+                if (i > 0) {
+                    if (full) {
+                        val.append(";\n"); //$NON-NLS-1$
+                    } else {
+                        val.append(","); //$NON-NLS-1$
+                    }
+                }
+                if (full) {
+                    val.append(commands.get(i));
+                } else {
+                    val.append(getCommandToken(commands.get(i).getType()));
+                }
             }
         }
         if (!full) {
-        	val.append('}');
+            val.append('}');
         }
-	    return val.toString();
-	}
+        return val.toString();
+    }
 
 }

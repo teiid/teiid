@@ -44,22 +44,22 @@ public class SymbolMap {
     private Map<ElementSymbol, Expression> unmodifiableMap = Collections.unmodifiableMap(map);
 
     public SymbolMap() {
-	}
+    }
 
     public SymbolMap clone() {
-    	SymbolMap clonedMap = new SymbolMap();
-    	for (Map.Entry<ElementSymbol, Expression> entry : map.entrySet()) {
-			clonedMap.addMapping(entry.getKey().clone(), (Expression)entry.getValue().clone());
-		}
-    	return clonedMap;
+        SymbolMap clonedMap = new SymbolMap();
+        for (Map.Entry<ElementSymbol, Expression> entry : map.entrySet()) {
+            clonedMap.addMapping(entry.getKey().clone(), (Expression)entry.getValue().clone());
+        }
+        return clonedMap;
     }
 
     public Map<Expression, ElementSymbol> inserseMapping() {
-    	HashMap<Expression, ElementSymbol> inverseMap = new HashMap<Expression, ElementSymbol>();
-		for (Map.Entry<ElementSymbol, Expression> entry : this.map.entrySet()) {
-			inverseMap.put(entry.getValue(), entry.getKey());
-		}
-		return inverseMap;
+        HashMap<Expression, ElementSymbol> inverseMap = new HashMap<Expression, ElementSymbol>();
+        for (Map.Entry<ElementSymbol, Expression> entry : this.map.entrySet()) {
+            inverseMap.put(entry.getValue(), entry.getKey());
+        }
+        return inverseMap;
     }
 
     /**
@@ -88,7 +88,7 @@ public class SymbolMap {
     }
 
     public Map<ElementSymbol, Expression> asUpdatableMap() {
-    	return this.map;
+        return this.map;
     }
 
     public Map<ElementSymbol, Expression> asMap() {

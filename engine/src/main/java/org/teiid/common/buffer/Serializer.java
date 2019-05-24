@@ -27,9 +27,9 @@ import java.io.ObjectOutput;
  * @param <T>
  */
 public interface Serializer<T> {
-	void serialize(T obj, ObjectOutput oos) throws IOException;
-	T deserialize(ObjectInput ois) throws IOException, ClassNotFoundException;
-	boolean useSoftCache();
-	Long getId();
-	String describe(T obj);
+    void serialize(T obj, ObjectOutput oos) throws IOException;
+    T deserialize(ObjectInput ois) throws IOException, ClassNotFoundException;
+    boolean useSoftCache();
+    Long getId();
+    String describe(T obj);
 }

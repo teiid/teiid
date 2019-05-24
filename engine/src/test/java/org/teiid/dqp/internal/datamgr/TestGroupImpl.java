@@ -46,7 +46,7 @@ public class TestGroupImpl extends TestCase {
     public static GroupSymbol helpExample(String groupName, String definition, Object metadataID) {
         GroupSymbol symbol = new GroupSymbol(groupName, definition);
         if (metadataID != null) {
-        	symbol.setMetadataID(metadataID);
+            symbol.setMetadataID(metadataID);
         }
         return symbol;
     }

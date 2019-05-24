@@ -41,7 +41,7 @@ public class Drop extends Command implements TargetedCommand {
 
     @Override
     public GroupSymbol getGroup() {
-    	return table;
+        return table;
     }
 
     public void setTable(GroupSymbol table) {

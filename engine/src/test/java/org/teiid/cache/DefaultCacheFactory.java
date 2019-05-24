@@ -30,59 +30,59 @@ import org.teiid.query.QueryPlugin;
  * Provides a non-thread safe simple map backed cache suitable for testing
  */
 public class DefaultCacheFactory implements CacheFactory, Serializable {
-	private static final long serialVersionUID = -5541424157695857527L;
-	private static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100, "default"); // 1 hours with 100 nodes. //$NON-NLS-1$
+    private static final long serialVersionUID = -5541424157695857527L;
+    private static CacheConfiguration DEFAULT = new CacheConfiguration(Policy.LRU, 60*60, 100, "default"); // 1 hours with 100 nodes. //$NON-NLS-1$
 
-	public static DefaultCacheFactory INSTANCE = new DefaultCacheFactory(DEFAULT);
+    public static DefaultCacheFactory INSTANCE = new DefaultCacheFactory(DEFAULT);
 
-	private volatile boolean destroyed = false;
-	private CacheConfiguration config;
+    private volatile boolean destroyed = false;
+    private CacheConfiguration config;
 
-	public DefaultCacheFactory(CacheConfiguration config) {
-		this.config = config;
-	}
+    public DefaultCacheFactory(CacheConfiguration config) {
+        this.config = config;
+    }
 
-	@Override
-	public void destroy() {
-		this.destroyed = true;
-	}
+    @Override
+    public void destroy() {
+        this.destroyed = true;
+    }
 
-	@Override
-	public <K, V> Cache<K, V> get(String cacheName) {
-		if (!destroyed) {
-			return new MockCache<K, V>(cacheName, config.getMaxEntries());
-		}
-		 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30562, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30562));
-	}
+    @Override
+    public <K, V> Cache<K, V> get(String cacheName) {
+        if (!destroyed) {
+            return new MockCache<K, V>(cacheName, config.getMaxEntries());
+        }
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30562, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30562));
+    }
 
-	@SuppressWarnings("serial")
-	private static class MockCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
+    @SuppressWarnings("serial")
+    private static class MockCache<K, V> extends LRUCache<K, V> implements Cache<K, V> {
 
-		private String name;
+        private String name;
 
-		public MockCache(String cacheName, int maxSize) {
-			super(maxSize<0?Integer.MAX_VALUE:maxSize);
-			this.name = cacheName;
-		}
+        public MockCache(String cacheName, int maxSize) {
+            super(maxSize<0?Integer.MAX_VALUE:maxSize);
+            this.name = cacheName;
+        }
 
-		@Override
-		public V put(K key, V value, Long ttl) {
-			return put(key, value);
-		}
+        @Override
+        public V put(K key, V value, Long ttl) {
+            return put(key, value);
+        }
 
-		@Override
-		public Set<K> keySet() {
-		    return new HashSet<K>(super.keySet());
-		}
+        @Override
+        public Set<K> keySet() {
+            return new HashSet<K>(super.keySet());
+        }
 
-		@Override
-		public String getName() {
-			return this.name;
-		}
+        @Override
+        public String getName() {
+            return this.name;
+        }
 
-		@Override
-		public boolean isTransactional() {
-			return false;
-		}
-	}
+        @Override
+        public boolean isTransactional() {
+            return false;
+        }
+    }
 }

@@ -518,9 +518,9 @@ public class TestOracleConvertModifier {
     }
 
     @Test public void testTimestampToString1() throws Exception {
-    	Column column = new Column();
-    	column.setNativeType("DATE");
-    	column.setNameInSource("dt");
+        Column column = new Column();
+        column.setNativeType("DATE");
+        column.setNameInSource("dt");
         helpTest(LANG_FACTORY.createColumnReference("dt", LANG_FACTORY.createNamedTable("x", null, null), column, Timestamp.class), "string", "to_char(x.dt, 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -535,7 +535,7 @@ public class TestOracleConvertModifier {
     }
 
     @Test public void testClobToString() throws Exception {
-    	assertTrue(TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.CLOB, TypeFacility.RUNTIME_CODES.STRING));
+        assertTrue(TRANSLATOR.supportsConvert(TypeFacility.RUNTIME_CODES.CLOB, TypeFacility.RUNTIME_CODES.STRING));
         helpTest(new ColumnReference(null, "x", null, DataTypeManager.DefaultDataClasses.CLOB), "string", "DBMS_LOB.substr(x, 4000)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 

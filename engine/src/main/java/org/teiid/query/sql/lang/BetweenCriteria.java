@@ -30,7 +30,7 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class BetweenCriteria extends PredicateCriteria implements Negatable {
 
-	private Expression expression;
+    private Expression expression;
     private Expression lowerExpression;
     private Expression upperExpression;
 
@@ -49,7 +49,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
     public BetweenCriteria(Expression expression,
                             Expression lowerExpression,
                             Expression upperExpression ) {
-		this.expression = expression;
+        this.expression = expression;
         this.lowerExpression = lowerExpression;
         this.upperExpression = upperExpression;
     }
@@ -128,19 +128,19 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
         visitor.visit(this);
     }
 
-	/**
-	 * Get hash code.  WARNING: The hash code is based on data in the criteria.
-	 * If data values are changed, the hash code will change - don't hash this
-	 * object and change values.
-	 * @return Hash code for object
-	 */
-	public int hashCode() {
+    /**
+     * Get hash code.  WARNING: The hash code is based on data in the criteria.
+     * If data values are changed, the hash code will change - don't hash this
+     * object and change values.
+     * @return Hash code for object
+     */
+    public int hashCode() {
         int hc = 0;
         hc = HashCodeUtil.hashCode(hc, getExpression());
         hc = HashCodeUtil.hashCode(hc, getLowerExpression());
         hc = HashCodeUtil.hashCode(hc, getUpperExpression());
         return hc;
-	}
+    }
 
     /**
      * Comparees this criteria to another object for equality
@@ -148,15 +148,15 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
      * @return True if objects are equal
      */
     public boolean equals(Object obj) {
-		if(this == obj) {
-			return true;
-		}
+        if(this == obj) {
+            return true;
+        }
 
-		if(!(obj instanceof BetweenCriteria)) {
-			return false;
-		}
+        if(!(obj instanceof BetweenCriteria)) {
+            return false;
+        }
 
-		BetweenCriteria other = (BetweenCriteria) obj;
+        BetweenCriteria other = (BetweenCriteria) obj;
         if (isNegated() ^ other.isNegated()) {
             return false;
         }
@@ -164,13 +164,13 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
                 EquivalenceUtil.areEqual(getLowerExpression(), other.getLowerExpression()) &&
                 EquivalenceUtil.areEqual(getUpperExpression(), other.getUpperExpression());
 
-	}
+    }
 
-	/**
-	 * Deep copy of object
-	 * @return Deep copy of object
-	 */
-	public Object clone() {
+    /**
+     * Deep copy of object
+     * @return Deep copy of object
+     */
+    public Object clone() {
         Expression copy = null;
         Expression lowerCopy = null;
         Expression upperCopy = null;
@@ -185,13 +185,13 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
         }
         BetweenCriteria criteriaCopy = new BetweenCriteria(copy, lowerCopy, upperCopy);
         criteriaCopy.setNegated(isNegated());
-		return criteriaCopy;
-	}
+        return criteriaCopy;
+    }
 
-	@Override
-	public void negate() {
-		this.negated = !this.negated;
-	}
+    @Override
+    public void negate() {
+        this.negated = !this.negated;
+    }
 
 }
 

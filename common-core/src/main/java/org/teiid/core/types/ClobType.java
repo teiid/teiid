@@ -37,7 +37,7 @@ public final class ClobType extends BaseClobType {
         TEXT, JSON
     }
 
-	private static final long serialVersionUID = 2753412502127824104L;
+    private static final long serialVersionUID = 2753412502127824104L;
 
     private Type type = Type.TEXT;
 
@@ -45,7 +45,7 @@ public final class ClobType extends BaseClobType {
     }
 
     public ClobType(Clob clob) {
-    	super(clob);
+        super(clob);
     }
 
     public Type getType() {

@@ -91,7 +91,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
-	final static int MAX_EXPAND_LEVEL = 3;
+    final static int MAX_EXPAND_LEVEL = 3;
 
     private final MetadataStore metadata;
     private boolean prepared = true;
@@ -176,7 +176,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     public Query selectQuery() throws TeiidException, ODataLibraryException, ODataApplicationException {
 
-    	if (!this.exceptions.isEmpty()) {
+        if (!this.exceptions.isEmpty()) {
             Exception e = this.exceptions.get(0);
             if (e instanceof ODataLibraryException) {
                 throw (ODataLibraryException)e;
@@ -196,12 +196,12 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             Select select = new Select(Arrays.asList(aggregateSymbol));
             query.setSelect(select);
         } else if (this.orderBy != null) {
-        	if (this.context.getIterator() != null) {
-        		//currently this doesn't matter as the ordering can only be based upon the parent entity
-        		((AggregateSymbol)((AliasSymbol)query.getSelect().getSymbol(query.getSelect().getProjectedSymbols().size() - 1)).getSymbol()).setOrderBy(this.orderBy);
-        	} else {
-        		query.setOrderBy(this.orderBy);
-        	}
+            if (this.context.getIterator() != null) {
+                //currently this doesn't matter as the ordering can only be based upon the parent entity
+                ((AggregateSymbol)((AliasSymbol)query.getSelect().getSymbol(query.getSelect().getProjectedSymbols().size() - 1)).getSymbol()).setOrderBy(this.orderBy);
+            } else {
+                query.setOrderBy(this.orderBy);
+            }
         }
 
         if (this.expandOption != null) {
@@ -213,9 +213,9 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
     private void processExpandOption(ExpandOption option, DocumentNode node, Query outerQuery, int expandLevel, Integer cyclicLevel) throws TeiidException {
         checkExpandLevel(expandLevel);
-    	int starLevels = 0;
-    	HashSet<String> seen = new HashSet<String>();
-    	for (ExpandItem ei : option.getExpandItems()) {
+        int starLevels = 0;
+        HashSet<String> seen = new HashSet<String>();
+        for (ExpandItem ei : option.getExpandItems()) {
             if (ei.getSearchOption() != null) {
                 throw new TeiidNotImplementedException(
                         ODataPlugin.Event.TEIID16035, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16035));
@@ -226,34 +226,34 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             if (cyclicLevel != null) {
                 levels = cyclicLevel - 1;
             } else if (ei.getLevelsOption() != null) {
-            	if (ei.getLevelsOption().isMax()) {
-            		levels = MAX_EXPAND_LEVEL - expandLevel + 1;
-            	} else {
-            		levels = ei.getLevelsOption().getValue();
-            		checkExpandLevel(expandLevel + levels - 1);
-            	}
+                if (ei.getLevelsOption().isMax()) {
+                    levels = MAX_EXPAND_LEVEL - expandLevel + 1;
+                } else {
+                    levels = ei.getLevelsOption().getValue();
+                    checkExpandLevel(expandLevel + levels - 1);
+                }
             }
 
-        	ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
+            ExpandSQLBuilder esb = new ExpandSQLBuilder(ei);
             EdmNavigationProperty property = esb.getNavigationProperty();
             if (property == null) {
-            	if (ei.isStar()) {
-            		if (starLevels > 0) {
-            			throw new TeiidProcessingException(
+                if (ei.isStar()) {
+                    if (starLevels > 0) {
+                        throw new TeiidProcessingException(
                                 ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, "*")); //$NON-NLS-1$
-            		}
-            		if (levels != null) {
-            			starLevels = levels;
-            		} else {
-            			starLevels = 1;
-            		}
-            		continue;
-            	}
-            	throw new TeiidNotImplementedException(
+                    }
+                    if (levels != null) {
+                        starLevels = levels;
+                    } else {
+                        starLevels = 1;
+                    }
+                    continue;
+                }
+                throw new TeiidNotImplementedException(
                         ODataPlugin.Event.TEIID16057, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16057));
             }
             if (!seen.add(property.getName())) {
-            	throw new TeiidProcessingException(
+                throw new TeiidProcessingException(
                         ODataPlugin.Event.TEIID16058, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16058, property.getName()));
             }
             //always pass in the root as the parent as that seems to be the definition of the current context
@@ -279,7 +279,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 expandOrder = new OrderBy();
                 processOrderBy(expandOrder, ei.getOrderByOption().getOrders(), expandResource);
             } else {
-            	expandOrder = expandResource.addDefaultOrderBy();
+                expandOrder = expandResource.addDefaultOrderBy();
             }
 
             // process $select
@@ -289,91 +289,91 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             //but it's messier - select array_agg(cols) from (select ... where ... order by .. limit) x
 
             if (ei.getSkipOption() != null) {
-        		expandResource.setSkip(ei.getSkipOption().getValue());
+                expandResource.setSkip(ei.getSkipOption().getValue());
             }
 
             if (ei.getTopOption() != null) {
-            	expandResource.setTop(ei.getTopOption().getValue());
+                expandResource.setTop(ei.getTopOption().getValue());
             }
 
             Query query = expandResource.buildQuery();
 
             if (ei.getExpandOption() != null) {
-            	processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1, null);
+                processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1, null);
             } else if (levels != null) {
-            	//self reference check
-            	if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
-            		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
-            	}
+                //self reference check
+                if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
+                    throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
+                }
 
-            	if (levels > 1) {
-                	ExpandOptionImpl eoi = new ExpandOptionImpl();
-                	eoi.addExpandItem(ei);
-                	processExpandOption(eoi, expandResource, query, expandLevel + 1, levels);
-            	}
+                if (levels > 1) {
+                    ExpandOptionImpl eoi = new ExpandOptionImpl();
+                    eoi.addExpandItem(ei);
+                    processExpandOption(eoi, expandResource, query, expandLevel + 1, levels);
+                }
             }
 
             buildAggregateQuery(node, outerQuery, expandResource,
-					expandOrder, query, property);
-    	}
+                    expandOrder, query, property);
+        }
 
-    	if (starLevels > 0) {
-    		List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
-    		EdmEntityType edmEntityType = node.getEdmEntityType();
-			buildExpandGraph(seen, starExpand, edmEntityType, starLevels - 1);
-    		if (!starExpand.isEmpty()) {
-    			processExpand(starExpand, node, outerQuery, expandLevel);
-    		}
-    	}
+        if (starLevels > 0) {
+            List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
+            EdmEntityType edmEntityType = node.getEdmEntityType();
+            buildExpandGraph(seen, starExpand, edmEntityType, starLevels - 1);
+            if (!starExpand.isEmpty()) {
+                processExpand(starExpand, node, outerQuery, expandLevel);
+            }
+        }
     }
 
-	private void buildExpandGraph(HashSet<String> seen,
-			List<ExpandNode> starExpand, EdmEntityType edmEntityType, int remainingLevels) {
-		for (String name : edmEntityType.getNavigationPropertyNames()) {
-			if (seen != null && seen.contains(name)) {
-				continue; //explicit expand supersedes
-			}
-			EdmNavigationProperty property = edmEntityType.getNavigationProperty(name);
-			ExpandNode en = new ExpandNode();
-			en.navigationProperty = property;
-			starExpand.add(en);
-			if (remainingLevels > 0) {
-				buildExpandGraph(null, en.children, property.getType(), remainingLevels - 1);
-			}
-		}
-	}
+    private void buildExpandGraph(HashSet<String> seen,
+            List<ExpandNode> starExpand, EdmEntityType edmEntityType, int remainingLevels) {
+        for (String name : edmEntityType.getNavigationPropertyNames()) {
+            if (seen != null && seen.contains(name)) {
+                continue; //explicit expand supersedes
+            }
+            EdmNavigationProperty property = edmEntityType.getNavigationProperty(name);
+            ExpandNode en = new ExpandNode();
+            en.navigationProperty = property;
+            starExpand.add(en);
+            if (remainingLevels > 0) {
+                buildExpandGraph(null, en.children, property.getType(), remainingLevels - 1);
+            }
+        }
+    }
 
-	public static void checkExpandLevel(int expandLevel)
-			throws TeiidProcessingException {
-		if (expandLevel > MAX_EXPAND_LEVEL) {
-        	throw new TeiidProcessingException(
+    public static void checkExpandLevel(int expandLevel)
+            throws TeiidProcessingException {
+        if (expandLevel > MAX_EXPAND_LEVEL) {
+            throw new TeiidProcessingException(
                     ODataPlugin.Event.TEIID16059, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16059, MAX_EXPAND_LEVEL));
         }
-	}
+    }
 
-	private void buildAggregateQuery(DocumentNode node, Query outerQuery,
-			ExpandDocumentNode expandResource, OrderBy expandOrder, Query query, EdmNavigationProperty navigationProperty) throws TeiidException {
-		Select select = query.getSelect();
-		Array array = new Array(Object.class, new ArrayList<Expression>(select.getSymbols()));
-		select.getSymbols().clear();
-		AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, array);
-		select.addSymbol(symbol);
-		symbol.setOrderBy(expandOrder);
+    private void buildAggregateQuery(DocumentNode node, Query outerQuery,
+            ExpandDocumentNode expandResource, OrderBy expandOrder, Query query, EdmNavigationProperty navigationProperty) throws TeiidException {
+        Select select = query.getSelect();
+        Array array = new Array(Object.class, new ArrayList<Expression>(select.getSymbols()));
+        select.getSymbols().clear();
+        AggregateSymbol symbol = new AggregateSymbol(AggregateSymbol.Type.ARRAY_AGG.name(), false, array);
+        select.addSymbol(symbol);
+        symbol.setOrderBy(expandOrder);
 
-		Criteria crit = node.buildJoinCriteria(expandResource, navigationProperty);
+        Criteria crit = node.buildJoinCriteria(expandResource, navigationProperty);
 
-		if (crit != null) {
-			query.setCriteria(Criteria.combineCriteria(crit, query.getCriteria()));
-		} // else assertion error?
+        if (crit != null) {
+            query.setCriteria(Criteria.combineCriteria(crit, query.getCriteria()));
+        } // else assertion error?
 
-		expandResource.setColumnIndex(outerQuery.getSelect().getCount() + 1);
-		ScalarSubquery agg = new ScalarSubquery(query);
-		SubqueryHint subqueryHint = new SubqueryHint();
-		subqueryHint.setMergeJoin(true);
+        expandResource.setColumnIndex(outerQuery.getSelect().getCount() + 1);
+        ScalarSubquery agg = new ScalarSubquery(query);
+        SubqueryHint subqueryHint = new SubqueryHint();
+        subqueryHint.setMergeJoin(true);
         agg.setSubqueryHint(subqueryHint);
         outerQuery.getSelect().addSymbol(agg);
         outerQuery.getFrom().getClauses().get(0).setMakeInd(new MakeDep());
-	}
+    }
 
     private Expression processFilterOption(FilterOption option, DocumentNode resource) throws TeiidException {
         ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
@@ -419,10 +419,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             return;
         }
         try {
-			processSelectOption(option, this.context, this.reference);
-		} catch (TeiidException e) {
-			this.exceptions.add(e);
-		}
+            processSelectOption(option, this.context, this.reference);
+        } catch (TeiidException e) {
+            this.exceptions.add(e);
+        }
     }
 
     private void processSelectOption(SelectOption option, DocumentNode resource, boolean onlyReference) throws TeiidException {
@@ -465,10 +465,10 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         else {
             List<OrderByItem> orderBys = option.getOrders();
             try {
-				this.orderBy = processOrderBy(new OrderBy(), orderBys, this.context);
-			} catch (TeiidException e) {
-				this.exceptions.add(e);
-			}
+                this.orderBy = processOrderBy(new OrderBy(), orderBys, this.context);
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+            }
         }
     }
 
@@ -520,7 +520,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
         Expression filter = null;
         try {
-        	filter = visitor.getExpression(info.getExpression());
+            filter = visitor.getExpression(info.getExpression());
         } catch (TeiidException e) {
             this.exceptions.add(e);
         }
@@ -585,19 +585,19 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         Insert insert = new Insert();
         insert.setGroup(resource.getGroupSymbol());
         if (keys != null) {
-	        for (UriParameter key : keys) {
-	            EdmProperty edmProperty = (EdmProperty)entityType.getProperty(key.getName());
-	            Column column = entityTable.getColumnByName(edmProperty.getName());
-	            Object propertyValue = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), key.getText());
-	            Property existing = entity.getProperty(edmProperty.getName());
-	            if (existing == null ||
-	                    (existing.getValue() == null && propertyValue != null) ||
-	                    (existing.getValue() != null && propertyValue == null) ||
-	                    (existing.getValue() != null && !existing.getValue().equals(propertyValue))) {
-	            	throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16048,
-	            	        edmProperty.getName()));
-	            }
-	        }
+            for (UriParameter key : keys) {
+                EdmProperty edmProperty = (EdmProperty)entityType.getProperty(key.getName());
+                Column column = entityTable.getColumnByName(edmProperty.getName());
+                Object propertyValue = ODataTypeManager.parseLiteral(edmProperty, column.getJavaType(), key.getText());
+                Property existing = entity.getProperty(edmProperty.getName());
+                if (existing == null ||
+                        (existing.getValue() == null && propertyValue != null) ||
+                        (existing.getValue() != null && propertyValue == null) ||
+                        (existing.getValue() != null && !existing.getValue().equals(propertyValue))) {
+                    throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16048,
+                            edmProperty.getName()));
+                }
+            }
         }
         int i = 0;
         for (Property prop : entity.getProperties()) {
@@ -707,15 +707,15 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         return query;
     }
 
-	private void processExpand(List<ExpandNode> expand, DocumentNode resource, Query outerQuery, int expandLevel)
-			throws TeiidException {
-		if (expand.isEmpty()) {
-			return;
-		}
-		checkExpandLevel(expandLevel);
-		for (ExpandNode expandNode: expand) {
+    private void processExpand(List<ExpandNode> expand, DocumentNode resource, Query outerQuery, int expandLevel)
+            throws TeiidException {
+        if (expand.isEmpty()) {
+            return;
+        }
+        checkExpandLevel(expandLevel);
+        for (ExpandNode expandNode: expand) {
             ExpandDocumentNode expandResource = ExpandDocumentNode.buildExpand(
-            		expandNode.navigationProperty, this.metadata, this.odata, this.nameGenerator,
+                    expandNode.navigationProperty, this.metadata, this.odata, this.nameGenerator,
                     this.aliasedGroups, getUriInfo(), this.parseService, this.context);
 
             OrderBy expandOrder = expandResource.addDefaultOrderBy();
@@ -729,7 +729,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
             buildAggregateQuery(resource, outerQuery, expandResource, expandOrder, query, expandNode.navigationProperty);
         }
-	}
+    }
 
     public Update update(EdmEntityType entityType, Entity entity, boolean prepared) throws TeiidException {
         Update update = new Update();

@@ -35,100 +35,100 @@ import com.datastax.driver.core.*;
  * Represents a connection to Cassandra database.
  * */
 public class CassandraConnectionImpl extends BasicConnection implements CassandraConnection{
-	private CassandraManagedConnectionFactory config;
-	private Cluster cluster = null;
-	private Session session = null;
-	private Metadata metadata = null;
-	private VersionNumber version;
+    private CassandraManagedConnectionFactory config;
+    private Cluster cluster = null;
+    private Session session = null;
+    private Metadata metadata = null;
+    private VersionNumber version;
 
-	public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
-		this.config = config;
-		this.metadata = metadata;
-	}
+    public CassandraConnectionImpl(CassandraManagedConnectionFactory config, Metadata metadata) {
+        this.config = config;
+        this.metadata = metadata;
+    }
 
-	public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
-		this.config = config;
+    public CassandraConnectionImpl(CassandraManagedConnectionFactory config) {
+        this.config = config;
 
-		Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
+        Cluster.Builder builder  = Cluster.builder().addContactPoint(config.getAddress());
 
-		if (this.config.getUsername() != null) {
-		    builder.withCredentials(this.config.getUsername(), this.config.getPassword());
-		}
+        if (this.config.getUsername() != null) {
+            builder.withCredentials(this.config.getUsername(), this.config.getPassword());
+        }
 
-		if (this.config.getPort() != null) {
-		    builder.withPort(this.config.getPort());
-		}
+        if (this.config.getPort() != null) {
+            builder.withPort(this.config.getPort());
+        }
 
-		this.cluster = builder.build();
+        this.cluster = builder.build();
 
-		this.metadata = cluster.getMetadata();
+        this.metadata = cluster.getMetadata();
 
-		this.session = cluster.connect(config.getKeyspace());
+        this.session = cluster.connect(config.getKeyspace());
 
-		Set<Host> allHosts = cluster.getMetadata().getAllHosts();
-		if (!allHosts.isEmpty()) {
+        Set<Host> allHosts = cluster.getMetadata().getAllHosts();
+        if (!allHosts.isEmpty()) {
             Host host = allHosts.iterator().next();
             this.version = host.getCassandraVersion();
-		}
-	}
+        }
+    }
 
-	@Override
-	public void close() throws ResourceException {
-		if(cluster != null){
-			cluster.close();
-		}
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
-	}
+    @Override
+    public void close() throws ResourceException {
+        if(cluster != null){
+            cluster.close();
+        }
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("shutting_down")); //$NON-NLS-1$
+    }
 
-	@Override
-	public boolean isAlive() {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("alive")); //$NON-NLS-1$
-		return true;
-	}
+    @Override
+    public boolean isAlive() {
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, CassandraManagedConnectionFactory.UTIL.getString("alive")); //$NON-NLS-1$
+        return true;
+    }
 
-	@Override
-	public ResultSetFuture executeQuery(String query){
-		return session.executeAsync(query);
-	}
+    @Override
+    public ResultSetFuture executeQuery(String query){
+        return session.executeAsync(query);
+    }
 
-	@Override
-	public ResultSetFuture executeBatch(List<String> updates){
-		BatchStatement bs = new BatchStatement();
-		for (String update : updates) {
-			bs.add(new SimpleStatement(update));
-		}
-		return session.executeAsync(bs);
-	}
+    @Override
+    public ResultSetFuture executeBatch(List<String> updates){
+        BatchStatement bs = new BatchStatement();
+        for (String update : updates) {
+            bs.add(new SimpleStatement(update));
+        }
+        return session.executeAsync(bs);
+    }
 
-	@Override
-	public ResultSetFuture executeBatch(String update, List<Object[]> values) {
-		PreparedStatement ps = session.prepare(update);
-		BatchStatement bs = new BatchStatement();
-		for (Object[] bindValues : values) {
-			BoundStatement bound = ps.bind(bindValues);
-			bs.add(bound);
-		}
-		return session.executeAsync(bs);
-	}
+    @Override
+    public ResultSetFuture executeBatch(String update, List<Object[]> values) {
+        PreparedStatement ps = session.prepare(update);
+        BatchStatement bs = new BatchStatement();
+        for (Object[] bindValues : values) {
+            BoundStatement bound = ps.bind(bindValues);
+            bs.add(bound);
+        }
+        return session.executeAsync(bs);
+    }
 
-	@Override
-	public KeyspaceMetadata keyspaceInfo() throws TranslatorException {
-		String keyspace = config.getKeyspace();
-		KeyspaceMetadata result = metadata.getKeyspace(keyspace);
-		if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
-			//try unquoted
-			keyspace = keyspace.substring(1, keyspace.length() - 1);
-			result = metadata.getKeyspace(keyspace);
-		}
-		if (result == null) {
-			throw new TranslatorException(keyspace);
-		}
-		return result;
-	}
+    @Override
+    public KeyspaceMetadata keyspaceInfo() throws TranslatorException {
+        String keyspace = config.getKeyspace();
+        KeyspaceMetadata result = metadata.getKeyspace(keyspace);
+        if (result == null && keyspace.length() > 2 && keyspace.charAt(0) == '"' && keyspace.charAt(keyspace.length() - 1) == '"') {
+            //try unquoted
+            keyspace = keyspace.substring(1, keyspace.length() - 1);
+            result = metadata.getKeyspace(keyspace);
+        }
+        if (result == null) {
+            throw new TranslatorException(keyspace);
+        }
+        return result;
+    }
 
-	@Override
-	public VersionNumber getVersion() {
-		return version;
-	}
+    @Override
+    public VersionNumber getVersion() {
+        return version;
+    }
 
 }

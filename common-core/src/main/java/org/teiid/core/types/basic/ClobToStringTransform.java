@@ -31,9 +31,9 @@ import org.teiid.core.types.TransformationException;
 
 public class ClobToStringTransform extends AnyToStringTransform {
 
-	public ClobToStringTransform() {
-		super(DefaultDataClasses.CLOB);
-	}
+    public ClobToStringTransform() {
+        super(DefaultDataClasses.CLOB);
+    }
 
     public ClobToStringTransform(Class<? extends BaseClobType> fromType) {
         super(fromType);
@@ -65,12 +65,12 @@ public class ClobToStringTransform extends AnyToStringTransform {
         } catch(IOException e) {
               throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, new Object[] {getSourceType().getName(), getTargetType().getName()}));
         } finally {
-        	if (reader != null) {
-        		try {
-					reader.close();
-				} catch (IOException e) {
-				}
-        	}
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                }
+            }
         }
     }
 

@@ -33,20 +33,20 @@ public class ParameterInfo implements Externalizable {
     private int type;           // used outbound
     private int numColumns;     // if type is a result set - used outbound
 
-	/** Constant identifying an IN parameter */
-	public static final int IN = 1;
+    /** Constant identifying an IN parameter */
+    public static final int IN = 1;
 
-	/** Constant identifying an OUT parameter */
-	public static final int OUT = 2;
+    /** Constant identifying an OUT parameter */
+    public static final int OUT = 2;
 
-	/** Constant identifying an INOUT parameter */
-	public static final int INOUT = 3;
+    /** Constant identifying an INOUT parameter */
+    public static final int INOUT = 3;
 
-	/** Constant identifying a RETURN parameter */
-	public static final int RETURN_VALUE = 4;
+    /** Constant identifying a RETURN parameter */
+    public static final int RETURN_VALUE = 4;
 
-	/** Constant identifying a RESULT SET parameter */
-	public static final int RESULT_SET = 5;
+    /** Constant identifying a RESULT SET parameter */
+    public static final int RESULT_SET = 5;
 
     // needed for Externalizable
     public ParameterInfo() {

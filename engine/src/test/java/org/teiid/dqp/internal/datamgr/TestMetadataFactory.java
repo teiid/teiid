@@ -41,18 +41,18 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class TestMetadataFactory {
     private static final String MY_RESOURCE_PATH = "my/resource/path";
-	private RuntimeMetadataImpl metadataFactory;
+    private RuntimeMetadataImpl metadataFactory;
 
-	@BeforeClass public static void beforeClass() throws IOException {
-    	FileWriter f = new FileWriter(UnitTestUtil.getTestScratchPath()+"/foo");
-    	f.write("ResourceContents");
-    	f.close();
-	}
+    @BeforeClass public static void beforeClass() throws IOException {
+        FileWriter f = new FileWriter(UnitTestUtil.getTestScratchPath()+"/foo");
+        f.write("ResourceContents");
+        f.close();
+    }
 
     @Before public void setUp() {
         VDBMetaData vdbMetaData = RealMetadataFactory.example1VDB();
         vdbMetaData.getModel("pm1").setVisible(false);
-    	Map<String, VDBResources.Resource> vdbEntries = new LinkedHashMap<String, VDBResources.Resource>();
+        Map<String, VDBResources.Resource> vdbEntries = new LinkedHashMap<String, VDBResources.Resource>();
         vdbEntries.put(MY_RESOURCE_PATH,
                 new VDBResources.Resource(new NioVirtualFile(
                         UnitTestUtil.getTestScratchFile("foo").toPath())));

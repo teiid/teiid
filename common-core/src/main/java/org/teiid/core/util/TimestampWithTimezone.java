@@ -42,32 +42,32 @@ import org.teiid.core.types.DataTypeManager;
  */
 public class TimestampWithTimezone {
 
-	public static final String ISO8601_WEEK_PROP = "org.teiid.iso8601Week"; //$NON-NLS-1$
-	public static final boolean ISO8601_WEEK = PropertiesUtils.getHierarchicalProperty(ISO8601_WEEK_PROP, true, Boolean.class);
+    public static final String ISO8601_WEEK_PROP = "org.teiid.iso8601Week"; //$NON-NLS-1$
+    public static final boolean ISO8601_WEEK = PropertiesUtils.getHierarchicalProperty(ISO8601_WEEK_PROP, true, Boolean.class);
 
-	private static ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
-		protected Calendar initialValue() {
-			return initialCalendar();
-		}
-	};
+    private static ThreadLocal<Calendar> CALENDAR = new ThreadLocal<Calendar>() {
+        protected Calendar initialValue() {
+            return initialCalendar();
+        }
+    };
 
-	public static Calendar getCalendar() {
-		return CALENDAR.get();
-	}
+    public static Calendar getCalendar() {
+        return CALENDAR.get();
+    }
 
-	public static void resetCalendar(TimeZone tz) {
-		TimeZone.setDefault(tz);
-		CALENDAR.set(initialCalendar());
-	}
+    public static void resetCalendar(TimeZone tz) {
+        TimeZone.setDefault(tz);
+        CALENDAR.set(initialCalendar());
+    }
 
-	static Calendar initialCalendar() {
-		Calendar result = Calendar.getInstance();
-		if (ISO8601_WEEK) {
-			result.setMinimalDaysInFirstWeek(4);
-			result.setFirstDayOfWeek(Calendar.MONDAY);
-		}
-		return result;
-	}
+    static Calendar initialCalendar() {
+        Calendar result = Calendar.getInstance();
+        if (ISO8601_WEEK) {
+            result.setMinimalDaysInFirstWeek(4);
+            result.setFirstDayOfWeek(Calendar.MONDAY);
+        }
+        return result;
+    }
 
     public static Object create(java.util.Date date, TimeZone initial, Calendar target, Class<?> type) {
         if (type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
@@ -192,10 +192,10 @@ public class TimestampWithTimezone {
     private static void adjustCalendar(java.util.Date date,
                                        TimeZone initial,
                                        Calendar target) {
-    	assert initial != null;
+        assert initial != null;
         if (initial.hasSameRules(target.getTimeZone())) {
             target.setTime(date);
-        	return;
+            return;
         }
 
         //start with base time

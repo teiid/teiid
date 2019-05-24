@@ -55,13 +55,13 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
         for(int i = 0; i < obj.getDerivedColumns().size(); i++) {
             DerivedColumn dc = obj.getDerivedColumns().get(i);
             if (!(dc.getExpression() instanceof ColumnReference)) {
-            	otherCols = true;
-            	break;
+                otherCols = true;
+                break;
             }
             ColumnReference column = (ColumnReference)dc.getExpression();
             if (!SimpleDBMetadataProcessor.isItemName(column.getMetadataObject())) {
-            	otherCols = true;
-            	break;
+                otherCols = true;
+                break;
             }
         }
 
@@ -71,18 +71,18 @@ public class SimpleDBSQLVisitor extends SQLStringVisitor {
             if (dc.getExpression() instanceof ColumnReference) {
                 ColumnReference column = (ColumnReference)dc.getExpression();
                 if (SimpleDBMetadataProcessor.isItemName(column.getMetadataObject())) {
-                	if (!addedItemName && !otherCols) {
-	                	allowedColumns.add(dc);
-	                	addedItemName = true;
-                	}
+                    if (!addedItemName && !otherCols) {
+                        allowedColumns.add(dc);
+                        addedItemName = true;
+                    }
                 }
                 else {
                     allowedColumns.add(dc);
                 }
                 projectedColumns.add(SimpleDBMetadataProcessor.getName(column.getMetadataObject()));
             } else if (dc.getExpression() instanceof AggregateFunction) {
-            	allowedColumns.add(dc);
-            	projectedColumns.add("Count"); //$NON-NLS-1$
+                allowedColumns.add(dc);
+                projectedColumns.add("Count"); //$NON-NLS-1$
             }
             else {
                 this.exceptions.add(new TranslatorException(SimpleDBPlugin.Event.TEIID24004, SimpleDBPlugin.Util.gs(SimpleDBPlugin.Event.TEIID24004, dc)));

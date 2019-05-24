@@ -55,9 +55,9 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     private TeiidTableMarsheller marshaller;
     private boolean useAliasCache;
 
-	public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection,
-			boolean useAliasCache) throws TranslatorException {
+    public InfinispanQueryExecution(InfinispanExecutionFactory translator, QueryExpression command,
+            ExecutionContext executionContext, RuntimeMetadata metadata, InfinispanConnection connection,
+            boolean useAliasCache) throws TranslatorException {
         this.command = (Select)command;
         this.connection = connection;
         this.metadata = metadata;
@@ -69,7 +69,7 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     public void execute() throws TranslatorException {
         try {
             if (useAliasCache) {
-            	useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
+                useModifiedGroups(this.connection, this.executionContext, this.metadata, this.command);
             }
 
             final IckleConversionVisitor visitor = new IckleConversionVisitor(metadata, false);
@@ -97,35 +97,35 @@ public class InfinispanQueryExecution implements ResultSetExecution {
 
             // if the message in defined in different cache than the default, switch it out now.
             RemoteCache<Object, Object> cache =  getCache(table, connection);
-			results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
-					visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
-					visitor.getDocumentNode());
+            results = new InfinispanResponse(cache, queryStr, this.executionContext.getBatchSize(),
+                    visitor.getRowLimit(), visitor.getRowOffset(), visitor.getProjectedDocumentAttributes(),
+                    visitor.getDocumentNode());
         } finally {
             this.connection.unRegisterMarshaller(this.marshaller);
         }
     }
 
-	static void useModifiedGroups(InfinispanConnection connection, ExecutionContext context, RuntimeMetadata metadata,
-			Command command) throws TranslatorException {
-		BasicCache<String, String> aliasCache = InfinispanDirectQueryExecution.getAliasCache(connection);
-		CollectorVisitor.collectGroups(command).forEach(namedTable -> {
-			try {
-				Table table = InfinispanDirectQueryExecution.getAliasTable(context, metadata, aliasCache,
-						namedTable.getMetadataObject());
-				Collection<ColumnReference> columns = CollectorVisitor.collectElements(command);
-				columns.forEach(reference -> {
-					if (reference.getTable().getMetadataObject().equals(namedTable.getMetadataObject())) {
-						Column column = table.getColumnByName(reference.getMetadataObject().getName());
-						reference.getTable().setMetadataObject(table);
-						reference.setMetadataObject(column);
-					}
-				});
-				namedTable.setMetadataObject(table);
-			} catch (TranslatorException e) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
-			}
-		});
-	}
+    static void useModifiedGroups(InfinispanConnection connection, ExecutionContext context, RuntimeMetadata metadata,
+            Command command) throws TranslatorException {
+        BasicCache<String, String> aliasCache = InfinispanDirectQueryExecution.getAliasCache(connection);
+        CollectorVisitor.collectGroups(command).forEach(namedTable -> {
+            try {
+                Table table = InfinispanDirectQueryExecution.getAliasTable(context, metadata, aliasCache,
+                        namedTable.getMetadataObject());
+                Collection<ColumnReference> columns = CollectorVisitor.collectElements(command);
+                columns.forEach(reference -> {
+                    if (reference.getTable().getMetadataObject().equals(namedTable.getMetadataObject())) {
+                        Column column = table.getColumnByName(reference.getMetadataObject().getName());
+                        reference.getTable().setMetadataObject(table);
+                        reference.setMetadataObject(column);
+                    }
+                });
+                namedTable.setMetadataObject(table);
+            } catch (TranslatorException e) {
+                LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+            }
+        });
+    }
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
@@ -133,7 +133,7 @@ public class InfinispanQueryExecution implements ResultSetExecution {
             this.connection.registerMarshaller(this.marshaller);
             return results.getNextRow();
         } catch(IOException e) {
-        	throw new TranslatorException(e);
+            throw new TranslatorException(e);
         }
         finally {
             this.connection.unRegisterMarshaller(this.marshaller);
@@ -149,12 +149,12 @@ public class InfinispanQueryExecution implements ResultSetExecution {
     }
 
     static RemoteCache<Object, Object> getCache(Table table, InfinispanConnection connection) throws TranslatorException {
-    	RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
+        RemoteCache<Object, Object> cache = (RemoteCache<Object, Object>)connection.getCache();
         String cacheName = table.getProperty(ProtobufMetadataProcessor.CACHE, false);
         if (cacheName != null && !cacheName.equals(connection.getCache().getName())) {
             cache = (RemoteCache<Object, Object>)connection.getCache(cacheName, true);
             if (cache == null) {
-            	throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
+                throw new TranslatorException(InfinispanPlugin.Util.gs(InfinispanPlugin.Event.TEIID25020, cacheName));
             }
         }
         return cache;

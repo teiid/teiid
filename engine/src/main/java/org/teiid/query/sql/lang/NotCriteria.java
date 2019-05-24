@@ -30,19 +30,19 @@ import org.teiid.query.sql.*;
  */
 public class NotCriteria extends AtomicCriteria {
 
-	/**
-	 * Constructs a default instance of this class.
-	 */
-	public NotCriteria() {
-	}
+    /**
+     * Constructs a default instance of this class.
+     */
+    public NotCriteria() {
+    }
 
-	/**
-	 * Constructs an instance of this class with sub-criteria.
-	 * @param crit Contained criteria
-	 */
-	public NotCriteria(Criteria crit) {
-		super(crit);
-	}
+    /**
+     * Constructs an instance of this class with sub-criteria.
+     * @param crit Contained criteria
+     */
+    public NotCriteria(Criteria crit) {
+        super(crit);
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
@@ -74,12 +74,12 @@ public class NotCriteria extends AtomicCriteria {
         return HashCodeUtil.hashCode(0, getCriteria());
     }
 
-	/**
-	 * Deep copy of object
-	 * @return Deep copy of object
-	 */
-	public Object clone() {
-		return new NotCriteria( (Criteria) getCriteria().clone() );
-	}
+    /**
+     * Deep copy of object
+     * @return Deep copy of object
+     */
+    public Object clone() {
+        return new NotCriteria( (Criteria) getCriteria().clone() );
+    }
 
 }

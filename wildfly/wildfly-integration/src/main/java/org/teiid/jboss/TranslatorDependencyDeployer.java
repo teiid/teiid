@@ -31,23 +31,23 @@ import org.jboss.modules.ModuleLoader;
 
 public class TranslatorDependencyDeployer implements DeploymentUnitProcessor {
 
-	@Override
-	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-		DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
+    @Override
+    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+        DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         try {
-			final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
-			final ModuleLoader moduleLoader = Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getModuleLoader(); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.api"), false, false, false, false)); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false, false)); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false, false)); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.resource.api"), false, false, false, false)); //$NON-NLS-1$
-		} catch (ModuleLoadException e) {
-			throw new DeploymentUnitProcessingException(e);
-		}
-	}
+            final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
+            final ModuleLoader moduleLoader = Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getModuleLoader(); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.api"), false, false, false, false)); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false, false)); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false, false)); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.resource.api"), false, false, false, false)); //$NON-NLS-1$
+        } catch (ModuleLoadException e) {
+            throw new DeploymentUnitProcessingException(e);
+        }
+    }
 
-	@Override
-	public void undeploy(DeploymentUnit context) {
-	}
+    @Override
+    public void undeploy(DeploymentUnit context) {
+    }
 
 }

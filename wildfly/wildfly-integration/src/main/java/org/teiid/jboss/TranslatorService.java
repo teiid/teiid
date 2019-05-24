@@ -30,30 +30,30 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 
 class TranslatorService implements Service<VDBTranslatorMetaData> {
-	private VDBTranslatorMetaData translator;
+    private VDBTranslatorMetaData translator;
 
-	final InjectedValue<TranslatorRepository> repositoryInjector = new InjectedValue<TranslatorRepository>();
-	final InjectedValue<VDBStatusChecker> statusCheckerInjector = new InjectedValue<VDBStatusChecker>();
+    final InjectedValue<TranslatorRepository> repositoryInjector = new InjectedValue<TranslatorRepository>();
+    final InjectedValue<VDBStatusChecker> statusCheckerInjector = new InjectedValue<VDBStatusChecker>();
 
-	public TranslatorService(VDBTranslatorMetaData translator) {
-		this.translator = translator;
-	}
+    public TranslatorService(VDBTranslatorMetaData translator) {
+        this.translator = translator;
+    }
 
-	@Override
-	public void start(StartContext context) throws StartException {
-		this.repositoryInjector.getValue().addTranslatorMetadata(this.translator.getName(), this.translator);
-		this.statusCheckerInjector.getValue().translatorAdded(this.translator.getName());
-	}
+    @Override
+    public void start(StartContext context) throws StartException {
+        this.repositoryInjector.getValue().addTranslatorMetadata(this.translator.getName(), this.translator);
+        this.statusCheckerInjector.getValue().translatorAdded(this.translator.getName());
+    }
 
-	@Override
-	public void stop(StopContext context) {
-		this.repositoryInjector.getValue().removeTranslatorMetadata(this.translator.getName());
-		this.statusCheckerInjector.getValue().translatorRemoved(this.translator.getName());
-		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50010, this.translator.getName()));
-	}
+    @Override
+    public void stop(StopContext context) {
+        this.repositoryInjector.getValue().removeTranslatorMetadata(this.translator.getName());
+        this.statusCheckerInjector.getValue().translatorRemoved(this.translator.getName());
+        LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50010, this.translator.getName()));
+    }
 
-	@Override
-	public VDBTranslatorMetaData getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.translator;
-	}
+    @Override
+    public VDBTranslatorMetaData getValue() throws IllegalStateException, IllegalArgumentException {
+        return this.translator;
+    }
 }

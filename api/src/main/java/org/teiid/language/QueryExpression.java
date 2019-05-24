@@ -55,8 +55,8 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
         String[] columnNames = new String[selectSymbols.size()];
         int symbolIndex = 0;
         for (DerivedColumn column : selectSymbols) {
-        	columnNames[symbolIndex++] = column.getAlias();
-		}
+            columnNames[symbolIndex++] = column.getAlias();
+        }
         return columnNames;
     }
 
@@ -70,8 +70,8 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
         Class<?>[] columnTypes = new Class[selectSymbols.size()];
         int symbolIndex = 0;
         for (DerivedColumn column : selectSymbols) {
-        	columnTypes[symbolIndex++] = column.getExpression().getType();
-		}
+            columnTypes[symbolIndex++] = column.getExpression().getType();
+        }
         return columnTypes;
     }
 
@@ -92,10 +92,10 @@ public abstract class QueryExpression extends BaseLanguageObject implements Comm
     }
 
     public With getWith() {
-		return with;
-	}
+        return with;
+    }
 
     public void setWith(With with) {
-		this.with = with;
-	}
+        this.with = with;
+    }
 }

@@ -78,25 +78,25 @@ public class TestSecurityFunctions {
         CommandContext context = new CommandContext();
         context.setAuthoriziationValidator(new AuthorizationValidator() {
 
-			@Override
-			public boolean validate(String[] originalSql, Command command,
-					QueryMetadataInterface metadata,
-					CommandContext commandContext, CommandType commandType)
-					throws QueryValidatorException, TeiidComponentException {
-				return false;
-			}
+            @Override
+            public boolean validate(String[] originalSql, Command command,
+                    QueryMetadataInterface metadata,
+                    CommandContext commandContext, CommandType commandType)
+                    throws QueryValidatorException, TeiidComponentException {
+                return false;
+            }
 
-			@Override
-			public boolean hasRole(String roleName,
-					CommandContext commandContext) {
-				return false;
-			}
+            @Override
+            public boolean hasRole(String roleName,
+                    CommandContext commandContext) {
+                return false;
+            }
 
-			@Override
-			public boolean isAccessible(AbstractMetadataRecord record,
-					CommandContext commandContext) {
-				return true;
-			}
+            @Override
+            public boolean isAccessible(AbstractMetadataRecord record,
+                    CommandContext commandContext) {
+                return true;
+            }
 
         });
 

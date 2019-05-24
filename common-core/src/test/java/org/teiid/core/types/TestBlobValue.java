@@ -58,7 +58,7 @@ public class TestBlobValue extends TestCase {
     }
 
     @Test public void testReferencePersistence() throws Exception {
-    	String testString = "this is test clob"; //$NON-NLS-1$
+        String testString = "this is test clob"; //$NON-NLS-1$
         SerialBlob blob = new SerialBlob(testString.getBytes());
 
         BlobType bv = new BlobType(blob);
@@ -82,28 +82,28 @@ public class TestBlobValue extends TestCase {
     }
 
     public void testBlobImplGetBytes() throws Exception {
-    	BlobImpl b = new BlobImpl(new InputStreamFactory() {
+        BlobImpl b = new BlobImpl(new InputStreamFactory() {
 
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ByteArrayInputStream(new byte[0]);
-			}
-		});
-    	byte[] b1 = b.getBytes(1, 0);
-    	assertEquals(0, b1.length);
-    	byte[] b2 = b.getBytes(1, 1);
-    	assertEquals(0, b2.length);
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(new byte[0]);
+            }
+        });
+        byte[] b1 = b.getBytes(1, 0);
+        assertEquals(0, b1.length);
+        byte[] b2 = b.getBytes(1, 1);
+        assertEquals(0, b2.length);
 
-    	b = new BlobImpl(new InputStreamFactory() {
+        b = new BlobImpl(new InputStreamFactory() {
 
-			@Override
-			public InputStream getInputStream() throws IOException {
-				return new ByteArrayInputStream(new byte[]{1,2});
-			}
-		});
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream(new byte[]{1,2});
+            }
+        });
 
-    	byte[] b3 = b.getBytes(1, 1);
-    	assertEquals(1, b3.length);
+        byte[] b3 = b.getBytes(1, 1);
+        assertEquals(1, b3.length);
     }
 
 }

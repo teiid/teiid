@@ -36,12 +36,12 @@ public class AliasModifier extends FunctionModifier {
 
     @Override
     public List<?> translate(Function function) {
-    	modify(function);
-    	return null;
+        modify(function);
+        return null;
     }
 
-	protected void modify(Function function) {
-		function.setName(alias);
-	}
+    protected void modify(Function function) {
+        function.setName(alias);
+    }
 
 }

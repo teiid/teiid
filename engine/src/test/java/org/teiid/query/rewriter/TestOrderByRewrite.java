@@ -76,9 +76,9 @@ public class TestOrderByRewrite  {
 
     private void helpCheckExpressionsSymbols(OrderBy langObj,
                                              String[] functionsNames) {
-    	int expCount = 0;
+        int expCount = 0;
         for (Iterator<Expression> i = langObj.getSortKeys().iterator(); i.hasNext();) {
-        	Expression ses = i.next();
+            Expression ses = i.next();
             if (ses instanceof ExpressionSymbol) {
                 assertEquals("Expression Symbols does not match: ", functionsNames[expCount++], ses.toString()); //$NON-NLS-1$
             }

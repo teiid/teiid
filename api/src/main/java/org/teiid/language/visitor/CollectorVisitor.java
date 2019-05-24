@@ -48,7 +48,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
-    	super.visitNode(obj);
+        super.visitNode(obj);
     }
 
     public Collection<T> getCollectedObjects() {

@@ -27,7 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class JGroupsInputStream extends InputStream {
 
-	private long timeout = 15000;
+    private long timeout = 15000;
     private volatile byte[] buf;
     private volatile int index=0;
     private ReentrantLock lock = new ReentrantLock();
@@ -35,79 +35,79 @@ public class JGroupsInputStream extends InputStream {
     private Condition doneReading = lock.newCondition();
 
     public JGroupsInputStream(long timeout) {
-    	this.timeout = timeout;
-	}
+        this.timeout = timeout;
+    }
 
     @Override
     public int read() throws IOException {
         if (index < 0) {
-        	return -1;
+            return -1;
         }
         if (buf == null) {
-        	lock.lock();
+            lock.lock();
             try {
-            	long waitTime = TimeUnit.MILLISECONDS.toNanos(timeout);
-            	while (buf == null) {
-            		waitTime = write.awaitNanos(waitTime);
-					if (waitTime <= 0) {
-	            		throw new IOException(new TimeoutException());
-	            	}
-            	}
+                long waitTime = TimeUnit.MILLISECONDS.toNanos(timeout);
+                while (buf == null) {
+                    waitTime = write.awaitNanos(waitTime);
+                    if (waitTime <= 0) {
+                        throw new IOException(new TimeoutException());
+                    }
+                }
                 if (index < 0) {
-                	return -1;
+                    return -1;
                 }
             } catch(InterruptedException e) {
-            	throw new IOException(e);
+                throw new IOException(e);
             } finally {
-            	lock.unlock();
+                lock.unlock();
             }
         }
         if (index == buf.length) {
-        	lock.lock();
-        	try {
-	        	buf = null;
-	        	index = 0;
-	        	doneReading.signal();
-        	} finally {
-        		lock.unlock();
-        	}
-        	return read();
+            lock.lock();
+            try {
+                buf = null;
+                index = 0;
+                doneReading.signal();
+            } finally {
+                lock.unlock();
+            }
+            return read();
         }
         return buf[index++] & 0xff;
     }
 
     @Override
     public void close() {
-    	lock.lock();
-    	try {
-    		buf = null;
-    		index = -1;
-    		doneReading.signal();
-    	} finally {
-    		lock.unlock();
-    	}
+        lock.lock();
+        try {
+            buf = null;
+            index = -1;
+            doneReading.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void receive(byte[] bytes) throws InterruptedException {
-    	lock.lock();
-    	try {
-    		if (index == -1) {
-    			return;
-    		}
-    		while (buf != null) {
-    			doneReading.await();
-    		}
-    		if (index == -1) {
-    			return;
-    		}
-    		buf = bytes;
-    		if (bytes == null) {
-    			index = -1;
-    		}
-    		write.signal();
-    	} finally {
-    		lock.unlock();
-    	}
+        lock.lock();
+        try {
+            if (index == -1) {
+                return;
+            }
+            while (buf != null) {
+                doneReading.await();
+            }
+            if (index == -1) {
+                return;
+            }
+            buf = bytes;
+            if (bytes == null) {
+                index = -1;
+            }
+            write.signal();
+        } finally {
+            lock.unlock();
+        }
     }
 
 }

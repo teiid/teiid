@@ -39,7 +39,7 @@ import com.amazonaws.services.simpledb.model.SelectResult;
 
 public class SimpleDBQueryExecution implements ResultSetExecution {
     private static final int MAX_PAGE_SIZE = 2500;
-	private Class<?>[] expectedColumnTypes;
+    private Class<?>[] expectedColumnTypes;
     @SuppressWarnings("unused")
     private ExecutionContext executionContext;
     @SuppressWarnings("unused")

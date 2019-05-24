@@ -118,15 +118,15 @@ public class JoinUtil {
             if (isNullDepdendent && !isNullDepdendentOther) {
                 result =  JoinType.JOIN_LEFT_OUTER;
             } else if (!isNullDepdendent && isNullDepdendentOther) {
-            	if (modifyJoin) {
-	                JoinUtil.swapJoinChildren(joinNode);
-	                result = JoinType.JOIN_LEFT_OUTER;
-            	}
+                if (modifyJoin) {
+                    JoinUtil.swapJoinChildren(joinNode);
+                    result = JoinType.JOIN_LEFT_OUTER;
+                }
             }
         }
 
         if (modifyJoin) {
-        	joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
+            joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, result);
         }
 
         return result;

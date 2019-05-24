@@ -20,6 +20,6 @@ package org.teiid.adminapi.jboss;
 import org.jboss.dmr.ModelNode;
 
 public interface MetadataMapper<T> {
-	ModelNode wrap(T obj, ModelNode node);
-	T unwrap(ModelNode node);
+    ModelNode wrap(T obj, ModelNode node);
+    T unwrap(ModelNode node);
 }

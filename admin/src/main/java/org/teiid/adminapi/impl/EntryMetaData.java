@@ -20,26 +20,26 @@ package org.teiid.adminapi.impl;
 import org.teiid.adminapi.Entry;
 
 public class EntryMetaData extends AdminObjectImpl implements Entry {
-	private static final long serialVersionUID = -3602627159192411780L;
+    private static final long serialVersionUID = -3602627159192411780L;
 
-	private String path;
-	private String description;
+    private String path;
+    private String description;
 
-	@Override
-	public String getDescription() {
-		return description;
-	}
+    @Override
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	@Override
-	public String getPath() {
-		return this.path;
-	}
+    @Override
+    public String getPath() {
+        return this.path;
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public void setPath(String path) {
+        this.path = path;
+    }
 }

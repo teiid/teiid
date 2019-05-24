@@ -29,7 +29,7 @@ import org.teiid.logging.LogManager;
 public abstract class AbstractWorkItem implements Runnable {
 
     enum ThreadState {
-    	MORE_WORK, WORKING, IDLE, DONE
+        MORE_WORK, WORKING, IDLE, DONE
     }
 
     private ThreadState threadState = ThreadState.MORE_WORK;
@@ -37,92 +37,92 @@ public abstract class AbstractWorkItem implements Runnable {
     private Object processLock = new Object();
 
     public void run() {
-		startProcessing();
-		try {
-			synchronized (processLock) {
-				process();
-			}
-		} finally {
-			endProcessing();
-		}
+        startProcessing();
+        try {
+            synchronized (processLock) {
+                process();
+            }
+        } finally {
+            endProcessing();
+        }
     }
 
     synchronized ThreadState getThreadState() {
-    	return this.threadState;
+        return this.threadState;
     }
 
     public boolean isProcessing() {
-		return isProcessing;
-	}
+        return isProcessing;
+    }
 
     private synchronized void startProcessing() {
-    	isProcessing = true;
-    	logTrace("start processing"); //$NON-NLS-1$
-		if (this.threadState != ThreadState.MORE_WORK) {
-			throw new IllegalStateException("Must be in MORE_WORK"); //$NON-NLS-1$
-		}
-    	this.threadState = ThreadState.WORKING;
-	}
+        isProcessing = true;
+        logTrace("start processing"); //$NON-NLS-1$
+        if (this.threadState != ThreadState.MORE_WORK) {
+            throw new IllegalStateException("Must be in MORE_WORK"); //$NON-NLS-1$
+        }
+        this.threadState = ThreadState.WORKING;
+    }
 
     private synchronized void endProcessing() {
-    	isProcessing = false;
-    	logTrace("end processing"); //$NON-NLS-1$
-    	switch (this.threadState) {
-	    	case WORKING:
-	    		if (isDoneProcessing()) {
-	    			logTrace("done processing"); //$NON-NLS-1$
-	        		this.threadState = ThreadState.DONE;
-	        	} else {
-		    		this.threadState = ThreadState.IDLE;
-		    		pauseProcessing();
-	        	}
-	    		break;
-	    	case MORE_WORK:
-	    		if (isDoneProcessing()) {
-	    			logTrace("done processing - ignoring more"); //$NON-NLS-1$
-	        		this.threadState = ThreadState.DONE;
-	        	} else {
-	        		resumeProcessing();
-	        	}
-	    		break;
-    		default:
-    			throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
-    	}
+        isProcessing = false;
+        logTrace("end processing"); //$NON-NLS-1$
+        switch (this.threadState) {
+            case WORKING:
+                if (isDoneProcessing()) {
+                    logTrace("done processing"); //$NON-NLS-1$
+                    this.threadState = ThreadState.DONE;
+                } else {
+                    this.threadState = ThreadState.IDLE;
+                    pauseProcessing();
+                }
+                break;
+            case MORE_WORK:
+                if (isDoneProcessing()) {
+                    logTrace("done processing - ignoring more"); //$NON-NLS-1$
+                    this.threadState = ThreadState.DONE;
+                } else {
+                    resumeProcessing();
+                }
+                break;
+            default:
+                throw new IllegalStateException("Should not END on " + this.threadState); //$NON-NLS-1$
+        }
     }
 
     public void moreWork() {
-    	moreWork(true);
+        moreWork(true);
     }
 
     protected synchronized void moreWork(boolean ignoreDone) {
-    	logTrace("more work"); //$NON-NLS-1$
-    	this.notifyAll();
-    	switch (this.threadState) {
-	    	case WORKING:
-	    		this.threadState = ThreadState.MORE_WORK;
-	    		break;
-	    	case MORE_WORK:
-	    		break;
-	    	case IDLE:
-	    		this.threadState = ThreadState.MORE_WORK;
-	    		resumeProcessing();
-	    		break;
-			default:
-				if (!ignoreDone) {
-					throw new IllegalStateException("More work is not valid once DONE"); //$NON-NLS-1$
-				}
-				LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, this, "ignoring more work, since the work item is done"); //$NON-NLS-1$
-    	}
+        logTrace("more work"); //$NON-NLS-1$
+        this.notifyAll();
+        switch (this.threadState) {
+            case WORKING:
+                this.threadState = ThreadState.MORE_WORK;
+                break;
+            case MORE_WORK:
+                break;
+            case IDLE:
+                this.threadState = ThreadState.MORE_WORK;
+                resumeProcessing();
+                break;
+            default:
+                if (!ignoreDone) {
+                    throw new IllegalStateException("More work is not valid once DONE"); //$NON-NLS-1$
+                }
+                LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, this, "ignoring more work, since the work item is done"); //$NON-NLS-1$
+        }
     }
 
-	private void logTrace(String msg) {
-		LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, this, msg, this.threadState);
-	}
+    private void logTrace(String msg) {
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, this, msg, this.threadState);
+    }
 
     protected abstract void process();
 
-	protected void pauseProcessing() {
-	}
+    protected void pauseProcessing() {
+    }
 
     protected abstract void resumeProcessing();
 

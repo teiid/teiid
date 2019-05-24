@@ -72,7 +72,7 @@ public class TestMultiSourceMetadataWrapper {
         TempMetadataAdapter tma = new TempMetadataAdapter(wrapper, new TempMetadataStore());
         ElementSymbol elementSymbol = new ElementSymbol("y");
         elementSymbol.setType(DataTypeManager.DefaultDataClasses.STRING);
-		TempMetadataID id = tma.getMetadataStore().addTempGroup("x", Arrays.asList(elementSymbol));
+        TempMetadataID id = tma.getMetadataStore().addTempGroup("x", Arrays.asList(elementSymbol));
 
         assertFalse(tma.isMultiSourceElement(id.getElements().get(0)));
         assertTrue(tma.isMultiSourceElement(instanceElementID));

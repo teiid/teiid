@@ -32,29 +32,29 @@ import org.teiid.util.Version;
 @Translator(name="sap-iq", description="A translator for hte Sybase/SAP IQ and Database")
 public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
 
-	public static final Version FIFTEEN_4 = Version.getVersion("15.4"); //$NON-NLS-1$
+    public static final Version FIFTEEN_4 = Version.getVersion("15.4"); //$NON-NLS-1$
 
-	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
+    protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 
     private Boolean jConnectDriver;
 
-	public SAPIQExecutionFactory() {
-		setSupportsFullOuterJoins(false);
-		setMaxInCriteriaSize(250);
-		setMaxDependentInPredicates(7);
-	}
+    public SAPIQExecutionFactory() {
+        setSupportsFullOuterJoins(false);
+        setMaxInCriteriaSize(250);
+        setMaxDependentInPredicates(7);
+    }
 
     public void start() throws TranslatorException {
         super.start();
 
-    	registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()) {
-    		@Override
-    		public List<?> translate(Function function) {
-    			function.setName("||"); //$NON-NLS-1$
-    			return super.translate(function);
-    		}
-    	});
-    	registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("STRING")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()) {
+            @Override
+            public List<?> translate(Function function) {
+                function.setName("||"); //$NON-NLS-1$
+                return super.translate(function);
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("STRING")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new TemplateFunctionModifier("DATEPART(dy,",0, ")")); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new EscapeSyntaxModifier());
@@ -80,20 +80,20 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
         convertModifier.addNumericBooleanConversions();
         //boolean isn't treated as bit, since it doesn't support null
         //byte is treated as smallint, since tinyint is unsigned
-    	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38, 0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
+        convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+        convertModifier.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+        convertModifier.addTypeMapping("numeric(38, 0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+        convertModifier.addTypeMapping("numeric(38, 19)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+        convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varbinary", FunctionModifier.VARBINARY); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new FunctionModifier() {
             @Override
             public List<?> translate(Function function) {
                 return convertTimeToString(function);
@@ -111,7 +111,7 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
                 return convertTimestampToString(function);
             }
         });
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
 
     private List<Object> convertTimeToString(Function function) {
@@ -211,66 +211,66 @@ public class SAPIQExecutionFactory extends BaseSybaseExecutionFactory {
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
 
     public boolean booleanNullable() {
-    	return false;
+        return false;
     }
 
     @Override
     public String translateLiteralTime(Time timeValue) {
-    	return "CAST('" + formatDateValue(timeValue) +"' AS TIME)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(timeValue) +"' AS TIME)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-    	return "CAST('" + formatDateValue(timestampValue) +"' AS TIMESTAMP)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(timestampValue) +"' AS TIMESTAMP)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
     public String translateLiteralDate(Date dateValue) {
-    	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Override
-	public boolean supportsRowLimit() {
-		return getVersion().compareTo(FIFTEEN_4) >= 0;
-	}
+    @Override
+    public boolean supportsRowLimit() {
+        return getVersion().compareTo(FIFTEEN_4) >= 0;
+    }
 
-	@Override
-	protected boolean usesDatabaseVersion() {
-		return true;
-	}
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 
     @Override
     public String getHibernateDialectClassName() {
-    	return "org.hibernate.dialect.SybaseAnywhereDialect"; //$NON-NLS-1$
+        return "org.hibernate.dialect.SybaseAnywhereDialect"; //$NON-NLS-1$
     }
 
     @Override
     public boolean supportsGroupByRollup() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean useUnicodePrefix() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean hasTimeType() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean useAsInGroupAlias() {
-    	return true;
+        return true;
     }
 
     @Override

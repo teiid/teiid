@@ -31,83 +31,83 @@ import org.teiid.core.util.StringUtil;
  */
 public class Version implements Comparable<Version> {
 
-	public static Version DEFAULT_VERSION = new Version(new Integer[] {0});
-	private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+)"); //$NON-NLS-1$
+    public static Version DEFAULT_VERSION = new Version(new Integer[] {0});
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+)"); //$NON-NLS-1$
 
-	private Integer[] parts;
+    private Integer[] parts;
 
-	public static Version getVersion(String version) {
-		if (version == null) {
-			return null;
-		}
-		String[] parts = version.split("\\."); //$NON-NLS-1$
-		List<Integer> versionParts = new ArrayList<Integer>();
-		for (String part : parts) {
-			Integer val = null;
-			Matcher m = NUMBER_PATTERN.matcher(part);
-			if (!m.find()) {
-				continue;
-			}
+    public static Version getVersion(String version) {
+        if (version == null) {
+            return null;
+        }
+        String[] parts = version.split("\\."); //$NON-NLS-1$
+        List<Integer> versionParts = new ArrayList<Integer>();
+        for (String part : parts) {
+            Integer val = null;
+            Matcher m = NUMBER_PATTERN.matcher(part);
+            if (!m.find()) {
+                continue;
+            }
 
-			String num = m.group(1);
-			try {
-				val = Integer.parseInt(num);
-			} catch (NumberFormatException e) {
+            String num = m.group(1);
+            try {
+                val = Integer.parseInt(num);
+            } catch (NumberFormatException e) {
 
-			}
-			versionParts.add(val == null ? 0 : val);
-		}
-		if (versionParts.isEmpty()) {
-			return DEFAULT_VERSION;
-		}
-		return new Version(versionParts.toArray(new Integer[versionParts.size()]));
-	}
+            }
+            versionParts.add(val == null ? 0 : val);
+        }
+        if (versionParts.isEmpty()) {
+            return DEFAULT_VERSION;
+        }
+        return new Version(versionParts.toArray(new Integer[versionParts.size()]));
+    }
 
-	public Version(Integer[] parts) {
-		this.parts = parts;
-	}
+    public Version(Integer[] parts) {
+        this.parts = parts;
+    }
 
-	@Override
-	public String toString() {
-		return StringUtil.toString(this.parts, ".", false); //$NON-NLS-1$
-	}
+    @Override
+    public String toString() {
+        return StringUtil.toString(this.parts, ".", false); //$NON-NLS-1$
+    }
 
-	public int getMajorVersion() {
-		return parts[0];
-	}
+    public int getMajorVersion() {
+        return parts[0];
+    }
 
-	@Override
-	public int compareTo(Version o) {
-		int length = Math.min(this.parts.length, o.parts.length);
-		for (int i = 0; i < length; i++) {
-			int comp = this.parts[i].compareTo(o.parts[i]);
-			if (comp != 0) {
-				return comp;
-			}
-		}
-		if (this.parts.length > length) {
-			return 1;
-		}
-		if (o.parts.length > length) {
-			return -1;
-		}
-		return 0;
-	}
+    @Override
+    public int compareTo(Version o) {
+        int length = Math.min(this.parts.length, o.parts.length);
+        for (int i = 0; i < length; i++) {
+            int comp = this.parts[i].compareTo(o.parts[i]);
+            if (comp != 0) {
+                return comp;
+            }
+        }
+        if (this.parts.length > length) {
+            return 1;
+        }
+        if (o.parts.length > length) {
+            return -1;
+        }
+        return 0;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof Version)) {
-			return false;
-		}
-		return this.compareTo((Version)obj) == 0;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Version)) {
+            return false;
+        }
+        return this.compareTo((Version)obj) == 0;
+    }
 
-	@Override
-	public int hashCode() {
-		return Arrays.hashCode(parts);
-	}
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(parts);
+    }
 
 }

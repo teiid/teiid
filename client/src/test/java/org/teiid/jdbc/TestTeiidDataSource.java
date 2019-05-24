@@ -110,7 +110,7 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     protected String getReasonWhyInvalid( final String propertyName, final int value ) {
-    	if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
+        if ( propertyName.equals("PortNumber") ) { //$NON-NLS-1$
             return TeiidDataSource.reasonWhyInvalidPortNumber(value);
         }
         fail("Unknown property name \"" + propertyName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -145,8 +145,8 @@ public class TestTeiidDataSource extends TestCase {
                                      final boolean secure, final String expectedURL) {
 
 
-    		helpTestBuildingURL2(vdbName, vdbVersion, serverName, portNumber, alternateServers,
-    					txnAutoWrap, partialMode, fetchSize, showPlan, secure, true, expectedURL);
+            helpTestBuildingURL2(vdbName, vdbVersion, serverName, portNumber, alternateServers,
+                        txnAutoWrap, partialMode, fetchSize, showPlan, secure, true, expectedURL);
     }
 
     public void helpTestBuildingURL2( final String vdbName, final String vdbVersion,
@@ -173,12 +173,12 @@ public class TestTeiidDataSource extends TestCase {
         ds.setUseJDBC4ColumnNameAndLabelSemantics(useJDBC4Semantics);
 
         String url;
-		try {
-			url = ds.buildURL().getJDBCURL();
-		} catch (TeiidSQLException e) {
-			throw new RuntimeException(e);
-		}
-		compareUrls(expectedURL, url);
+        try {
+            url = ds.buildURL().getJDBCURL();
+        } catch (TeiidSQLException e) {
+            throw new RuntimeException(e);
+        }
+        compareUrls(expectedURL, url);
     }
 
     /**
@@ -188,10 +188,10 @@ public class TestTeiidDataSource extends TestCase {
      */
     private void compareUrls(final String expectedURL, String url) {
         String parts[] = url.split(";", 2);
-		String expectedParts[] = expectedURL.split(";", 2);
+        String expectedParts[] = expectedURL.split(";", 2);
 
-		assertEquals(parts[0], expectedParts[0]);
-		assertEquals(new HashSet<String>(Arrays.asList(parts[1].split(";"))), new HashSet<String>(Arrays.asList(expectedParts[1].split(";"))));
+        assertEquals(parts[0], expectedParts[0]);
+        assertEquals(new HashSet<String>(Arrays.asList(parts[1].split(";"))), new HashSet<String>(Arrays.asList(expectedParts[1].split(";"))));
     }
 
     public Connection helpTestConnection( final String vdbName, final String vdbVersion,
@@ -202,7 +202,7 @@ public class TestTeiidDataSource extends TestCase {
                                     final String configFile )
                                     throws SQLException {
 
-    	TeiidDataSource ds = new TeiidDataSource();
+        TeiidDataSource ds = new TeiidDataSource();
 
         ds.setServerName(serverName);
         ds.setDatabaseVersion(vdbVersion);
@@ -249,7 +249,7 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void testGetApplicationName() {
-    	dataSource.setApplicationName("ClientApp"); //$NON-NLS-1$
+        dataSource.setApplicationName("ClientApp"); //$NON-NLS-1$
         final String result = dataSource.getApplicationName();
         assertEquals(result,"ClientApp"); //$NON-NLS-1$
     }
@@ -300,14 +300,14 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void testGetAlternateServers() {
-    	String result = dataSource.getAlternateServers();
-    	assertEquals(result,STD_ALTERNATE_SERVERS);
-    	dataSource.setAlternateServers(null);
-    	result = dataSource.getAlternateServers();
-    	assertNull(result);
-    	dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
-    	result = dataSource.getAlternateServers();
-    	assertEquals(result,STD_ALTERNATE_SERVERS);
+        String result = dataSource.getAlternateServers();
+        assertEquals(result,STD_ALTERNATE_SERVERS);
+        dataSource.setAlternateServers(null);
+        result = dataSource.getAlternateServers();
+        assertNull(result);
+        dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
+        result = dataSource.getAlternateServers();
+        assertEquals(result,STD_ALTERNATE_SERVERS);
     }
 
     // ----------------------------------------------------------------
@@ -441,75 +441,75 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void helpTestAlternateServer(String altServers, boolean valid) {
-    	this.dataSource.setAlternateServers(altServers);
-    	try {
-			this.dataSource.buildURL();
-			if (!valid) {
-				fail("expected exception");
-			}
-		} catch (TeiidSQLException e) {
-			if (valid) {
-				throw new RuntimeException(e);
-			}
-		}
+        this.dataSource.setAlternateServers(altServers);
+        try {
+            this.dataSource.buildURL();
+            if (!valid) {
+                fail("expected exception");
+            }
+        } catch (TeiidSQLException e) {
+            if (valid) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void testReasonWhyInvalidAlternateServers1() {
-    	helpTestAlternateServer(null, VALID);
+        helpTestAlternateServer(null, VALID);
     }
     public void testReasonWhyInvalidAlternateServers2() {
-    	helpTestAlternateServer("", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers3() {
-    	helpTestAlternateServer("server", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers4() {
-    	helpTestAlternateServer("server:100", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server:100", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers5() {
-    	helpTestAlternateServer("server:port", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server:port", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers6() {
-    	helpTestAlternateServer("server:100:1", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server:100:1", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers7() {
-    	helpTestAlternateServer("server:100:abc", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server:100:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers8() {
-    	helpTestAlternateServer("server:abc:100", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server:abc:100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers9() {
-    	helpTestAlternateServer(":100", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer(":100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers10() {
-    	helpTestAlternateServer(":abc", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer(":abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers11() {
-    	helpTestAlternateServer("server1:100,server2", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1:100,server2", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers12() {
-    	helpTestAlternateServer("server1:100,server2:101", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1:100,server2:101", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers13() {
-    	helpTestAlternateServer("server1:100,", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1:100,", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers14() {
-    	helpTestAlternateServer("server1:100,server2:abc", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1:100,server2:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers15() {
-    	helpTestAlternateServer("server1:100,server2:101:abc", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1:100,server2:101:abc", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers16() {
-    	helpTestAlternateServer("server1,server2:100", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1,server2:100", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers17() {
-    	helpTestAlternateServer("server1,server2", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1,server2", VALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers18() {
-    	helpTestAlternateServer(",server2:100", INVALID); //$NON-NLS-1$
+        helpTestAlternateServer(",server2:100", INVALID); //$NON-NLS-1$
     }
     public void testReasonWhyInvalidAlternateServers19() {
-    	helpTestAlternateServer("server1,server2,server3,server4:500", VALID); //$NON-NLS-1$
+        helpTestAlternateServer("server1,server2,server3,server4:500", VALID); //$NON-NLS-1$
     }
 
 
@@ -676,20 +676,20 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void testBuildURL_AdditionalProperties() throws TeiidSQLException {
-    	final TeiidDataSource ds = new TeiidDataSource();
-    	ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
-    	ds.setServerName("hostName"); //$NON-NLS-1$
-    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
-    	ds.setPortNumber(1);
-    	assertEquals("jdbc:teiid:vdbName@mm://hostname:1;ApplicationName=JDBC;VirtualDatabaseName=vdbName;a=b;fetchSize=2048;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+        final TeiidDataSource ds = new TeiidDataSource();
+        ds.setAdditionalProperties("foo=bar;a=b"); //$NON-NLS-1$
+        ds.setServerName("hostName"); //$NON-NLS-1$
+        ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+        ds.setPortNumber(1);
+        assertEquals("jdbc:teiid:vdbName@mm://hostname:1;ApplicationName=JDBC;VirtualDatabaseName=vdbName;a=b;fetchSize=2048;foo=bar", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
 
     public void testBuildURLEncryptRequests() throws TeiidSQLException {
-    	final TeiidDataSource ds = new TeiidDataSource();
-    	ds.setServerName("hostName"); //$NON-NLS-1$
-    	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
-    	ds.setEncryptRequests(true);
-    	compareUrls("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
+        final TeiidDataSource ds = new TeiidDataSource();
+        ds.setServerName("hostName"); //$NON-NLS-1$
+        ds.setDatabaseName("vdbName"); //$NON-NLS-1$
+        ds.setEncryptRequests(true);
+        compareUrls("jdbc:teiid:vdbName@mm://hostname:0;fetchSize=2048;ApplicationName=JDBC;encryptRequests=true;VirtualDatabaseName=vdbName", ds.buildURL().getJDBCURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {
@@ -725,7 +725,7 @@ public class TestTeiidDataSource extends TestCase {
         final String configFile = UnitTestUtil.getTestDataPath() + "/config.txt"; //$NON-NLS-1$
         try {
             helpTestConnection(vdbName, vdbVersion, serverName, portNumber,
-            		alternateServers, null, null, dataSourceName, transactionAutoWrap, "false", configFile);     //$NON-NLS-1$  // TRUE TO OVERRIDE USERNAME & PASSWORD
+                    alternateServers, null, null, dataSourceName, transactionAutoWrap, "false", configFile);     //$NON-NLS-1$  // TRUE TO OVERRIDE USERNAME & PASSWORD
             fail("Unexpectedly able to connect"); //$NON-NLS-1$
         } catch ( SQLException e) {
             // this is expected!
@@ -733,55 +733,55 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void testUrlEncodedProperties() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setServerName("x");
-    	tds.getConnection();
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setServerName("x");
+        tds.getConnection();
 
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("%25user", p.getProperty(BaseDataSource.USER_NAME));
     }
 
     public void testLoginTimeout() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setServerName("x");
-    	tds.setLoginTimeout(2);
-    	tds.getConnection();
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setServerName("x");
+        tds.setLoginTimeout(2);
+        tds.getConnection();
 
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("2", p.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("2", p.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT));
     }
 
     public void testGetConnectionWithUser() throws SQLException {
-    	TeiidDriver td = Mockito.mock(TeiidDriver.class);
-    	TeiidDataSource tds = new TeiidDataSource(td);
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setServerName("x");
-    	tds.getConnection("user", "password");
+        TeiidDriver td = Mockito.mock(TeiidDriver.class);
+        TeiidDataSource tds = new TeiidDataSource(td);
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setServerName("x");
+        tds.getConnection("user", "password");
 
         ArgumentCaptor<Properties> argument = ArgumentCaptor.forClass(Properties.class);
-    	Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
-    	Properties p = argument.getValue();
-    	assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
+        Mockito.verify(td).connect(Mockito.eq("jdbc:teiid:y@mm://x:0"), argument.capture());
+        Properties p = argument.getValue();
+        assertEquals("user", p.getProperty(BaseDataSource.USER_NAME));
     }
 
     public void testKerberos() throws SQLException {
-    	TeiidDataSource tds = new TeiidDataSource();
-    	tds.setDatabaseName("y");
-    	tds.setUser("%25user");
-    	tds.setJaasName("x");
-    	tds.setKerberosServicePrincipleName("z");
-    	tds.setServerName("t");
-    	compareUrls("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
+        TeiidDataSource tds = new TeiidDataSource();
+        tds.setDatabaseName("y");
+        tds.setUser("%25user");
+        tds.setJaasName("x");
+        tds.setKerberosServicePrincipleName("z");
+        tds.setServerName("t");
+        compareUrls("jdbc:teiid:y@mm://t:0;fetchSize=2048;ApplicationName=JDBC;user=%2525user;jaasName=x;VirtualDatabaseName=y;kerberosServicePrincipleName=z", tds.buildURL().getJDBCURL());
 
     }
 

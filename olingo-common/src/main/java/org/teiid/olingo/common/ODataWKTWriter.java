@@ -256,7 +256,7 @@ class ODataWKTWriter
   {
       writer.write("(");
       if (coordinate != null) {
-    	  appendCoordinate(coordinate, writer);
+          appendCoordinate(coordinate, writer);
       }
       writer.write(")");
   }
@@ -288,10 +288,10 @@ class ODataWKTWriter
    */
   private String writeNumber(double d) {
     try {
-		return EdmDouble.getInstance().valueToString(d, false, null, null, null, false);
-	} catch (EdmPrimitiveTypeException e) {
-		throw new TeiidRuntimeException(e);
-	}
+        return EdmDouble.getInstance().valueToString(d, false, null, null, null, false);
+    } catch (EdmPrimitiveTypeException e) {
+        throw new TeiidRuntimeException(e);
+    }
   }
 
   /**

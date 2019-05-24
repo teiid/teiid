@@ -28,39 +28,39 @@ import org.teiid.core.types.TransformationException;
 
 public class JsonToClobTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-	    JsonType json = (JsonType)value;
-	    ClobType clob = new ClobType(json.getReference());
-	    clob.setType(Type.JSON);
-		return clob;
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        JsonType json = (JsonType)value;
+        ClobType clob = new ClobType(json.getReference());
+        clob.setType(Type.JSON);
+        return clob;
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DefaultDataClasses.JSON;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DefaultDataClasses.JSON;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DefaultDataClasses.CLOB;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DefaultDataClasses.CLOB;
+    }
 
-	public boolean isExplicit() {
-		return false;
-	}
+    public boolean isExplicit() {
+        return false;
+    }
 
 }

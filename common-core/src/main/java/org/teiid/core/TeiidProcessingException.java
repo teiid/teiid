@@ -26,9 +26,9 @@ package org.teiid.core;
  */
 public class TeiidProcessingException extends TeiidException {
 
-	private static final long serialVersionUID = -4013536109023540872L;
+    private static final long serialVersionUID = -4013536109023540872L;
 
-	/**
+    /**
      * No-arg Constructor
      */
     public TeiidProcessingException() {
@@ -50,7 +50,7 @@ public class TeiidProcessingException extends TeiidException {
      * @param e An exception to chain to this exception
      */
     public TeiidProcessingException( Throwable e ) {
-		super( e );
+        super( e );
     }
 
     /**

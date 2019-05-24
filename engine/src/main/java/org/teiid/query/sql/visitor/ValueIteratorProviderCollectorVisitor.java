@@ -48,7 +48,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
 
     private List<SubqueryContainer<?>> valueIteratorProviders;
-	private boolean collectLateral;
+    private boolean collectLateral;
 
     /**
      * Construct a new visitor with the default collection type, which is a
@@ -58,14 +58,14 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
         this.valueIteratorProviders = new ArrayList<SubqueryContainer<?>>();
     }
 
-	/**
-	 * Construct a new visitor with the given Collection to accumulate
+    /**
+     * Construct a new visitor with the given Collection to accumulate
      * ValueIteratorProvider instances
-	 * @param valueIteratorProviders Collection to accumulate found
-	 */
-	ValueIteratorProviderCollectorVisitor(List<SubqueryContainer<?>> valueIteratorProviders) {
-		this.valueIteratorProviders = valueIteratorProviders;
-	}
+     * @param valueIteratorProviders Collection to accumulate found
+     */
+    ValueIteratorProviderCollectorVisitor(List<SubqueryContainer<?>> valueIteratorProviders) {
+        this.valueIteratorProviders = valueIteratorProviders;
+    }
 
     /**
      * Get the value iterator providers collected by the visitor.  This should best be called
@@ -92,9 +92,9 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(SubqueryCompareCriteria obj) {
-    	if (obj.getCommand() != null) {
-    		this.valueIteratorProviders.add(obj);
-    	}
+        if (obj.getCommand() != null) {
+            this.valueIteratorProviders.add(obj);
+        }
     }
 
     /**
@@ -116,11 +116,11 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
     }
 
     public void visit(SubqueryFromClause obj) {
-    	if (collectLateral && obj.isLateral()) {
-    		this.valueIteratorProviders.add(obj);
-    	} else {
-    	    getValueIteratorProviders(obj.getCommand(), this.valueIteratorProviders);
-    	}
+        if (collectLateral && obj.isLateral()) {
+            this.valueIteratorProviders.add(obj);
+        } else {
+            getValueIteratorProviders(obj.getCommand(), this.valueIteratorProviders);
+        }
     }
 
     /**
@@ -134,16 +134,16 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
         return visitor.getValueIteratorProviders();
     }
 
-	public static final void getValueIteratorProviders(LanguageObject obj, List<SubqueryContainer<?>> valueIteratorProviders) {
-		ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
+    public static final void getValueIteratorProviders(LanguageObject obj, List<SubqueryContainer<?>> valueIteratorProviders) {
+        ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
         PreOrderNavigator.doVisit(obj, visitor);
-	}
+    }
 
     public static final List<SubqueryContainer<?>> getValueIteratorProviders(Collection<? extends LanguageObject> languageObjects) {
-    	if (languageObjects == null || languageObjects.isEmpty()) {
-    		return Collections.emptyList();
-    	}
-    	List<SubqueryContainer<?>> result = new LinkedList<SubqueryContainer<?>>();
+        if (languageObjects == null || languageObjects.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<SubqueryContainer<?>> result = new LinkedList<SubqueryContainer<?>>();
         ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(result);
         for (LanguageObject obj : languageObjects) {
             PreOrderNavigator.doVisit(obj, visitor);
@@ -151,7 +151,7 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
         return result;
     }
 
-	public void setCollectLateral(boolean b) {
-		this.collectLateral = b;
-	}
+    public void setCollectLateral(boolean b) {
+        this.collectLateral = b;
+    }
 }

@@ -40,7 +40,7 @@ import org.teiid.query.sql.lang.Command;
  */
 public class TestDQPCoreRequestHandling extends TestCase {
 
-	private static final String SESSION_STRING = "2"; //$NON-NLS-1$
+    private static final String SESSION_STRING = "2"; //$NON-NLS-1$
 
     public TestDQPCoreRequestHandling(String name) {
         super(name);
@@ -69,9 +69,9 @@ public class TestDQPCoreRequestHandling extends TestCase {
      * Test for Collection getRequests(SessionToken) - 1 request
      */
     public void testGetRequestsSessionToken2() {
-    	DQPCore rm = new DQPCore();
-    	rm.setTransactionService(new FakeTransactionService());
-    	Set<RequestID> reqs = new HashSet<RequestID>();
+        DQPCore rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
+        Set<RequestID> reqs = new HashSet<RequestID>();
         RequestID id = addRequest(rm, SESSION_STRING, 1);
         reqs.add(id);
 
@@ -79,12 +79,12 @@ public class TestDQPCoreRequestHandling extends TestCase {
         compareReqInfos(reqs, actualReqs);
     }
 
-	private RequestID addRequest(DQPCore rm, String sessionId, int executionId) {
-		RequestMessage r0 = new RequestMessage("test command"); //$NON-NLS-1$
+    private RequestID addRequest(DQPCore rm, String sessionId, int executionId) {
+        RequestMessage r0 = new RequestMessage("test command"); //$NON-NLS-1$
         RequestID id = new RequestID(sessionId, executionId);
         addRequest(rm, r0, id, null, null);
-		return id;
-	}
+        return id;
+    }
 
     /**
      * Test for Collection getRequests(SessionToken) - 3 requests
@@ -103,7 +103,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
     }
 
     private SourceWarning getSourceFailures(String model, String binding, String message) {
-    	return new SourceWarning(model, binding, new TeiidException(message), true);
+        return new SourceWarning(model, binding, new TeiidException(message), true);
     }
 
     public void testAddRequest() {
@@ -120,11 +120,11 @@ public class TestDQPCoreRequestHandling extends TestCase {
                     Command originalCommand,
                     DQPWorkContext workContext) {
 
-    	if (workContext == null) {
-	    	workContext = new DQPWorkContext();
-	    	workContext.getSession().setSessionId(id.getConnectionID());
-	    	workContext.getSession().setUserName("foo"); //$NON-NLS-1$
-    	}
+        if (workContext == null) {
+            workContext = new DQPWorkContext();
+            workContext.getSession().setSessionId(id.getConnectionID());
+            workContext.getSession().setUserName("foo"); //$NON-NLS-1$
+        }
         RequestWorkItem workItem = new RequestWorkItem(rm, requestMsg, null, null, id, workContext);
         workItem.setOriginalCommand(originalCommand);
         ClientState state = rm.getClientState(id.getConnectionID(), true);

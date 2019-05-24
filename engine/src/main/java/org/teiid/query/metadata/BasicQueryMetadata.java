@@ -74,7 +74,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
      */
     public Collection getGroupsForPartialName(String partialGroupName)
         throws TeiidComponentException, QueryMetadataException {
-		return Collections.EMPTY_LIST;
+        return Collections.EMPTY_LIST;
     }
 
     /**
@@ -128,7 +128,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     public String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
-	}
+    }
 
     public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         return null;
@@ -167,10 +167,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return 0;
     }
 
-	@Override
-	public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
-		return null;
-	}
+    @Override
+    public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
+        return null;
+    }
 
     public int getScale(Object elementID) throws TeiidComponentException, QueryMetadataException {
         return 0;
@@ -228,31 +228,31 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return null;
     }
 
-	/**
-	 * Get procedure defining the insert plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the insert plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     public String getInsertPlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
     }
 
-	/**
-	 * Get procedure defining the update plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the update plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     public String getUpdatePlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
     }
 
-	/**
-	 * Get procedure defining the delete plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the delete plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     public String getDeletePlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
@@ -365,9 +365,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     public float getCardinality(Object groupID)
-    	throws TeiidComponentException, QueryMetadataException{
+        throws TeiidComponentException, QueryMetadataException{
 
-    	return QueryMetadataInterface.UNKNOWN_CARDINALITY;
+        return QueryMetadataInterface.UNKNOWN_CARDINALITY;
     }
 
     public List getXMLSchemas(Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -392,9 +392,9 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return null;
     }
 
-	public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
-		return false;
-	}
+    public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
+        return false;
+    }
 
     public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
         return null;
@@ -440,146 +440,146 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return false;
     }
 
-	public Object addToMetadataCache(Object metadataID, String key, Object value)
-			throws TeiidComponentException, QueryMetadataException {
-		return null;
-	}
+    public Object addToMetadataCache(Object metadataID, String key, Object value)
+            throws TeiidComponentException, QueryMetadataException {
+        return null;
+    }
 
-	public Object getFromMetadataCache(Object metadataID, String key)
-			throws TeiidComponentException, QueryMetadataException {
-		return null;
-	}
+    public Object getFromMetadataCache(Object metadataID, String key)
+            throws TeiidComponentException, QueryMetadataException {
+        return null;
+    }
 
-	public boolean isScalarGroup(Object groupID)
-			throws TeiidComponentException, QueryMetadataException {
-		return false;
-	}
+    public boolean isScalarGroup(Object groupID)
+            throws TeiidComponentException, QueryMetadataException {
+        return false;
+    }
 
-	@Override
-	public FunctionLibrary getFunctionLibrary() {
-		return null;
-	}
+    @Override
+    public FunctionLibrary getFunctionLibrary() {
+        return null;
+    }
 
-	@Override
-	public Object getPrimaryKey(Object metadataID) {
-		return null;
-	}
+    @Override
+    public Object getPrimaryKey(Object metadataID) {
+        return null;
+    }
 
-	@Override
-	public boolean isMultiSource(Object modelId) {
-		return false;
-	}
+    @Override
+    public boolean isMultiSource(Object modelId) {
+        return false;
+    }
 
-	@Override
-	public boolean isMultiSourceElement(Object elementId) {
-		return false;
-	}
+    @Override
+    public boolean isMultiSourceElement(Object elementId) {
+        return false;
+    }
 
-	@Override
-	public QueryMetadataInterface getDesignTimeMetadata() {
-		return this;
-	}
+    @Override
+    public QueryMetadataInterface getDesignTimeMetadata() {
+        return this;
+    }
 
-	@Override
-	public boolean hasProcedure(String name) throws TeiidComponentException {
-		return false;
-	}
+    @Override
+    public boolean hasProcedure(String name) throws TeiidComponentException {
+        return false;
+    }
 
-	@Override
-	public String getName(Object metadataID) throws TeiidComponentException,
-			QueryMetadataException {
-		return null;
-	}
+    @Override
+    public String getName(Object metadataID) throws TeiidComponentException,
+            QueryMetadataException {
+        return null;
+    }
 
-	@Override
-	public QueryMetadataInterface getSessionMetadata() {
-		return null;
-	}
+    @Override
+    public QueryMetadataInterface getSessionMetadata() {
+        return null;
+    }
 
-	@Override
-	public Set<String> getImportedModels() {
-		return Collections.emptySet();
-	}
+    @Override
+    public Set<String> getImportedModels() {
+        return Collections.emptySet();
+    }
 
-	@Override
-	public ScriptEngine getScriptEngine(String language) throws TeiidProcessingException {
-		if (language == null || ObjectTable.DEFAULT_LANGUAGE.equals(language)) {
-			return new TeiidScriptEngine();
-		}
-		return getScriptEngineDirect(language);
-	}
+    @Override
+    public ScriptEngine getScriptEngine(String language) throws TeiidProcessingException {
+        if (language == null || ObjectTable.DEFAULT_LANGUAGE.equals(language)) {
+            return new TeiidScriptEngine();
+        }
+        return getScriptEngineDirect(language);
+    }
 
-	/**
-	 *
-	 * @param language
-	 * @return
-	 * @throws TeiidProcessingException
-	 */
-	public ScriptEngine getScriptEngineDirect(String language) throws TeiidProcessingException {
-		return null;
-	}
+    /**
+     *
+     * @param language
+     * @return
+     * @throws TeiidProcessingException
+     */
+    public ScriptEngine getScriptEngineDirect(String language) throws TeiidProcessingException {
+        return null;
+    }
 
-	@Override
-	public boolean isVariadic(Object metadataID) {
-		return false;
-	}
+    @Override
+    public boolean isVariadic(Object metadataID) {
+        return false;
+    }
 
-	@Override
-	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
-		return null;
-	}
+    @Override
+    public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
+        return null;
+    }
 
-	@Override
-	public boolean isPseudo(Object elementId) {
-		return false;
-	}
+    @Override
+    public boolean isPseudo(Object elementId) {
+        return false;
+    }
 
-	@Override
-	public Object getModelID(String modelName) throws TeiidComponentException,
-			QueryMetadataException {
-		return null;
-	}
+    @Override
+    public Object getModelID(String modelName) throws TeiidComponentException,
+            QueryMetadataException {
+        return null;
+    }
 
-	@Override
-	public String getExtensionProperty(Object metadataID, String key,
-			boolean checkUnqualified) {
-		return null;
-	}
+    @Override
+    public String getExtensionProperty(Object metadataID, String key,
+            boolean checkUnqualified) {
+        return null;
+    }
 
-	@Override
-	public boolean findShortName() {
-		return false;
-	}
+    @Override
+    public boolean findShortName() {
+        return false;
+    }
 
-	@Override
-	public boolean useOutputName() {
-		return true;
-	}
+    @Override
+    public boolean useOutputName() {
+        return true;
+    }
 
-	@Override
-	public boolean widenComparisonToString() {
-		return true;
-	}
+    @Override
+    public boolean widenComparisonToString() {
+        return true;
+    }
 
-	@Override
-	public Class<?> getDataTypeClass(String typeName)
-	        throws QueryMetadataException {
-	    return DataTypeManager.getDataTypeClass(typeName);
-	}
+    @Override
+    public Class<?> getDataTypeClass(String typeName)
+            throws QueryMetadataException {
+        return DataTypeManager.getDataTypeClass(typeName);
+    }
 
-	@Override
-	public boolean isEnvAllowed() {
-	    return true;
-	}
+    @Override
+    public boolean isEnvAllowed() {
+        return true;
+    }
 
-	@Override
-	public boolean isLongRanks() {
-	    return false;
-	}
+    @Override
+    public boolean isLongRanks() {
+        return false;
+    }
 
-	@Override
-	public List<? extends Object> getModelIDs() {
-	    return Collections.emptyList();
-	}
+    @Override
+    public List<? extends Object> getModelIDs() {
+        return Collections.emptyList();
+    }
 
 }

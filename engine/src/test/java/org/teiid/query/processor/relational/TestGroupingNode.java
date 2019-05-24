@@ -57,40 +57,40 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestGroupingNode {
 
-	public static FakeTupleSource createTupleSource1() {
-		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
-		symbols.add(new ElementSymbol("col1")); //$NON-NLS-1$
-		symbols.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
-		symbols.add(new ElementSymbol("col2")); //$NON-NLS-1$
-		symbols.get(1).setType(DataTypeManager.DefaultDataClasses.INTEGER);
-		List[] tuples = new List[] {
-			Arrays.asList(new Object[] { new Integer(5), new Integer(3) }),
-			Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
-			Arrays.asList(new Object[] { new Integer(4), null }),
-			Arrays.asList(new Object[] { null, new Integer(3) }),
-			Arrays.asList(new Object[] { new Integer(0), new Integer(4) }),
-			Arrays.asList(new Object[] { new Integer(1), new Integer(2) }),
-			Arrays.asList(new Object[] { new Integer(4), new Integer(2) }),
-			Arrays.asList(new Object[] { new Integer(6), new Integer(4) }),
-			Arrays.asList(new Object[] { new Integer(6), new Integer(3) }),
-			Arrays.asList(new Object[] { new Integer(3), new Integer(0) }),
-			Arrays.asList(new Object[] { new Integer(4), new Integer(3) }),
-			Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
-			Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
-			Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
-			Arrays.asList(new Object[] { null, null }),
-		};
+    public static FakeTupleSource createTupleSource1() {
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
+        symbols.add(new ElementSymbol("col1")); //$NON-NLS-1$
+        symbols.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        symbols.add(new ElementSymbol("col2")); //$NON-NLS-1$
+        symbols.get(1).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        List[] tuples = new List[] {
+            Arrays.asList(new Object[] { new Integer(5), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(4), null }),
+            Arrays.asList(new Object[] { null, new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(0), new Integer(4) }),
+            Arrays.asList(new Object[] { new Integer(1), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(4), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(6), new Integer(4) }),
+            Arrays.asList(new Object[] { new Integer(6), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(3), new Integer(0) }),
+            Arrays.asList(new Object[] { new Integer(4), new Integer(3) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { null, null }),
+        };
 
-		return new FakeTupleSource(symbols, tuples);
-	}
+        return new FakeTupleSource(symbols, tuples);
+    }
 
-	private void helpProcess(BufferManager mgr,
+    private void helpProcess(BufferManager mgr,
                              GroupingNode node,
                              CommandContext context,
                              List[] expected, ProcessorDataManager dataMgr) throws TeiidComponentException,
                                              BlockedException,
                                              TeiidProcessingException {
-		FakeTupleSource dataSource = createTupleSource1();
+        FakeTupleSource dataSource = createTupleSource1();
         helpProcess(mgr, node, context, expected, dataSource, dataMgr);
     }
 
@@ -126,35 +126,35 @@ public class TestGroupingNode {
         assertEquals(expected.length, currentRow -1);
     }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
-	@Test public void test1() throws Exception {
+    @Test public void test1() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
         // Set up
-		GroupingNode node = new GroupingNode(1);
-		List outputElements = new ArrayList();
-		ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
-		col1.setType(Integer.class);
-		ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
-		col2.setType(Integer.class);
-		outputElements.add(col1);
-		outputElements.add(new AggregateSymbol("COUNT", false, null)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("COUNT", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("SUM", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("SUM", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("AVG", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("AVG", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("MIN", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("MIN", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("MAX", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("MAX", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		node.setElements(outputElements);
+        GroupingNode node = new GroupingNode(1);
+        List outputElements = new ArrayList();
+        ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
+        col1.setType(Integer.class);
+        ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
+        col2.setType(Integer.class);
+        outputElements.add(col1);
+        outputElements.add(new AggregateSymbol("COUNT", false, null)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("COUNT", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("MIN", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("MIN", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("MAX", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("MAX", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        node.setElements(outputElements);
 
-		List groupingElements = new ArrayList();
-		groupingElements.add(col1);
-		node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
+        List groupingElements = new ArrayList();
+        groupingElements.add(col1);
+        node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
 
         List[] expected = new List[] {
@@ -175,7 +175,7 @@ public class TestGroupingNode {
         AggregateFunction countDist = functions[5][0];
         SortingFilter dup = (SortingFilter)countDist;
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, dup.getElements().get(0).getType());
-	}
+    }
 
     @Test public void test2() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
@@ -199,7 +199,7 @@ public class TestGroupingNode {
 
     // Same as test2, but uses processor batch size smaller than number of groups
     @Test public void test3() throws Exception {
-    	BufferManagerImpl mgr = BufferManagerFactory.createBufferManager();
+        BufferManagerImpl mgr = BufferManagerFactory.createBufferManager();
         mgr.setProcessorBatchSize(5);
 
         GroupingNode node = getExampleGroupingNode();
@@ -478,8 +478,8 @@ public class TestGroupingNode {
         helpProcess(mgr, node, context, expected, null);
     }
 
-	private GroupingNode getExampleGroupingNode() {
-		GroupingNode node = new GroupingNode(1);
+    private GroupingNode getExampleGroupingNode() {
+        GroupingNode node = new GroupingNode(1);
         List outputElements = new ArrayList();
         ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
         col1.setType(Integer.class);
@@ -492,16 +492,16 @@ public class TestGroupingNode {
         List groupingElements = new ArrayList();
         groupingElements.add(col1);
         node.setOrderBy(new OrderBy(groupingElements).getOrderByItems());
-		return node;
-	}
+        return node;
+    }
 
-	@Test public void testDescriptionProperties() {
-		GroupingNode node = getExampleGroupingNode();
-		SymbolMap outputMapping = new SymbolMap();
-		outputMapping.addMapping(new ElementSymbol("agg0"), new AggregateSymbol("count", false, null));
-		node.setOutputMapping(outputMapping);
-		PlanNode pn = node.getDescriptionProperties();
-		assertTrue(pn.toString().contains("agg0=count(*)"));
-	}
+    @Test public void testDescriptionProperties() {
+        GroupingNode node = getExampleGroupingNode();
+        SymbolMap outputMapping = new SymbolMap();
+        outputMapping.addMapping(new ElementSymbol("agg0"), new AggregateSymbol("count", false, null));
+        node.setOutputMapping(outputMapping);
+        PlanNode pn = node.getDescriptionProperties();
+        assertTrue(pn.toString().contains("agg0=count(*)"));
+    }
 
 }

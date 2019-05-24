@@ -72,26 +72,26 @@ import org.teiid.query.util.CommandContext;
 
 public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 
-	private static final List<Integer> SINGLE_VALUE_ID = Arrays.asList(0);
+    private static final List<Integer> SINGLE_VALUE_ID = Arrays.asList(0);
 
-	private enum Phase {
-		COLLECT,
-		PROCESS,
-		OUTPUT
-	}
+    private enum Phase {
+        COLLECT,
+        PROCESS,
+        OUTPUT
+    }
 
-	private static class WindowFunctionInfo {
-		WindowFunction function;
-		int outputIndex;
+    private static class WindowFunctionInfo {
+        WindowFunction function;
+        int outputIndex;
         public WindowFunction primaryFunction;
-	}
+    }
 
-	private static class WindowSpecificationInfo {
-		List<Integer> groupIndexes = new ArrayList<Integer>();
-		List<Integer> sortIndexes = new ArrayList<Integer>();
-		List<NullOrdering> nullOrderings = new ArrayList<NullOrdering>();
-		List<Boolean> orderType = new ArrayList<Boolean>();
-		List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
+    private static class WindowSpecificationInfo {
+        List<Integer> groupIndexes = new ArrayList<Integer>();
+        List<Integer> sortIndexes = new ArrayList<Integer>();
+        List<NullOrdering> nullOrderings = new ArrayList<NullOrdering>();
+        List<Boolean> orderType = new ArrayList<Boolean>();
+        List<WindowFunctionInfo> functions = new ArrayList<WindowFunctionInfo>();
         WindowFrame windowFrame;
         boolean emptyOrdering = false;
 
@@ -142,106 +142,106 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                     (windowFrame.getStart().getBound() != null || windowFrame.getStart().getBoundMode() == BoundMode.CURRENT_ROW
                     || (windowFrame.getEnd() != null && windowFrame.getEnd().getBound() != null));
         }
-	}
+    }
 
-	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
-	private LinkedHashMap<Expression, Integer> expressionIndexes;
-	private List<int[]> passThrough = new ArrayList<int[]>();
+    private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
+    private LinkedHashMap<Expression, Integer> expressionIndexes;
+    private List<int[]> passThrough = new ArrayList<int[]>();
 
-	private Map<Expression, Integer> elementMap;
+    private Map<Expression, Integer> elementMap;
 
-	//processing state
-	private Phase phase = Phase.COLLECT;
-	private TupleBuffer tb;
-	private TupleSource inputTs;
-	private STree[] partitionMapping;
-	private STree[] valueMapping;
-	private IndexedTupleSource outputTs;
+    //processing state
+    private Phase phase = Phase.COLLECT;
+    private TupleBuffer tb;
+    private TupleSource inputTs;
+    private STree[] partitionMapping;
+    private STree[] valueMapping;
+    private IndexedTupleSource outputTs;
 
-	public WindowFunctionProjectNode(int nodeId) {
-		super(nodeId);
-	}
+    public WindowFunctionProjectNode(int nodeId) {
+        super(nodeId);
+    }
 
-	protected WindowFunctionProjectNode() {
-	}
+    protected WindowFunctionProjectNode() {
+    }
 
-	@Override
-	public void reset() {
-		super.reset();
-		this.tb = null;
-		this.inputTs = null;
-		this.phase = Phase.COLLECT;
-		this.partitionMapping = null;
-		this.valueMapping = null;
-		this.outputTs = null;
-	}
+    @Override
+    public void reset() {
+        super.reset();
+        this.tb = null;
+        this.inputTs = null;
+        this.phase = Phase.COLLECT;
+        this.partitionMapping = null;
+        this.valueMapping = null;
+        this.outputTs = null;
+    }
 
-	@Override
-	public void closeDirect() {
-		if (tb != null) {
-			tb.remove();
-			tb = null;
-		}
-		removeMappings(partitionMapping);
-		partitionMapping = null;
-		removeMappings(valueMapping);
-		valueMapping = null;
-	}
+    @Override
+    public void closeDirect() {
+        if (tb != null) {
+            tb.remove();
+            tb = null;
+        }
+        removeMappings(partitionMapping);
+        partitionMapping = null;
+        removeMappings(valueMapping);
+        valueMapping = null;
+    }
 
-	private void removeMappings(STree[] mappings) {
-		if (mappings != null) {
-			for (STree tree : mappings) {
-				if (tree != null) {
-					tree.remove();
-				}
-			}
-		}
-	}
+    private void removeMappings(STree[] mappings) {
+        if (mappings != null) {
+            for (STree tree : mappings) {
+                if (tree != null) {
+                    tree.remove();
+                }
+            }
+        }
+    }
 
-	public Object clone(){
-		WindowFunctionProjectNode clonedNode = new WindowFunctionProjectNode();
+    public Object clone(){
+        WindowFunctionProjectNode clonedNode = new WindowFunctionProjectNode();
         this.copyTo(clonedNode);
         clonedNode.windows = windows;
         clonedNode.expressionIndexes = expressionIndexes;
         clonedNode.passThrough = passThrough;
-		return clonedNode;
-	}
+        return clonedNode;
+    }
 
-	/**
-	 * This state can be determined prior to initialize and is the same for all nodes,
-	 * so it is moved into it's own init routine
-	 */
-	public void init() {
-		expressionIndexes = new LinkedHashMap<Expression, Integer>();
-		List<? extends Expression> elements = getElements();
+    /**
+     * This state can be determined prior to initialize and is the same for all nodes,
+     * so it is moved into it's own init routine
+     */
+    public void init() {
+        expressionIndexes = new LinkedHashMap<Expression, Integer>();
+        List<? extends Expression> elements = getElements();
         for (int i = 0; i < elements.size(); i++) {
-			Expression ex = SymbolMap.getExpression(elements.get(i));
-			if (ex instanceof WindowFunction) {
-				WindowFunction wf = (WindowFunction)ex;
-				WindowSpecification ws = wf.getWindowSpecification();
-				if (wf.getFunction().isRowValueFunction()) {
-				    //something like row_number is actually computed over rows unbounded preceding
-				    Assertion.assertTrue(ws.getWindowFrame() == null);
-				    ws = ws.clone();
-				    WindowFrame frame = new WindowFrame(FrameMode.ROWS);
-				    frame.setStart(new FrameBound(BoundMode.PRECEDING));
-				    ws.setWindowFrame(frame);
-				}
-				WindowSpecificationInfo wsi = getOrCreateWindowSpecInfo(ws);
-				WindowFunctionInfo wfi = createWindowFunctionInfo(wf);
-				wfi.outputIndex = i;
-				wsi.functions.add(wfi);
-				if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK
-				        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.CUME_DIST
-				        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
+            Expression ex = SymbolMap.getExpression(elements.get(i));
+            if (ex instanceof WindowFunction) {
+                WindowFunction wf = (WindowFunction)ex;
+                WindowSpecification ws = wf.getWindowSpecification();
+                if (wf.getFunction().isRowValueFunction()) {
+                    //something like row_number is actually computed over rows unbounded preceding
+                    Assertion.assertTrue(ws.getWindowFrame() == null);
+                    ws = ws.clone();
+                    WindowFrame frame = new WindowFrame(FrameMode.ROWS);
+                    frame.setStart(new FrameBound(BoundMode.PRECEDING));
+                    ws.setWindowFrame(frame);
+                }
+                WindowSpecificationInfo wsi = getOrCreateWindowSpecInfo(ws);
+                WindowFunctionInfo wfi = createWindowFunctionInfo(wf);
+                wfi.outputIndex = i;
+                wsi.functions.add(wfi);
+                if (wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.PERCENT_RANK
+                        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.CUME_DIST
+                        || wf.getFunction().getAggregateFunction() == AggregateSymbol.Type.NTILE) {
                     addPartitionCount(i, wf);
                 }
-			} else {
-				int index = GroupingNode.getIndex(ex, expressionIndexes);
-				passThrough.add(new int[] {i, index});
-			}
-		}
-	}
+            } else {
+                int index = GroupingNode.getIndex(ex, expressionIndexes);
+                passThrough.add(new int[] {i, index});
+            }
+        }
+    }
 
     private void addPartitionCount(int i, WindowFunction wf) {
         WindowFunction wf2 = new WindowFunction();
@@ -262,15 +262,15 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         wfi.function = wf;
         //collect the agg expressions
         for (Expression e : wf.getFunction().getArgs()) {
-        	GroupingNode.getIndex(e, expressionIndexes);
+            GroupingNode.getIndex(e, expressionIndexes);
         }
         if (wf.getFunction().getOrderBy() != null) {
-        	for (OrderByItem item : wf.getFunction().getOrderBy().getOrderByItems()) {
-        		GroupingNode.getIndex(item.getSymbol(), expressionIndexes);
-        	}
+            for (OrderByItem item : wf.getFunction().getOrderBy().getOrderByItems()) {
+                GroupingNode.getIndex(item.getSymbol(), expressionIndexes);
+            }
         }
         if (wf.getFunction().getCondition() != null) {
-        	GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
+            GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
         }
         return wfi;
     }
@@ -279,85 +279,85 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
             WindowSpecification ws) {
         WindowSpecificationInfo wsi = windows.get(ws);
         if (wsi == null) {
-        	wsi = new WindowSpecificationInfo();
-        	windows.put(ws, wsi);
-        	if (ws.getPartition() != null) {
-        		for (Expression ex1 : ws.getPartition()) {
-        		    if (EvaluatableVisitor.willBecomeConstant(ex1)) {
-        		        wsi.emptyOrdering = true;
-        		        continue;
-        		    }
-        			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
-        			wsi.groupIndexes.add(index);
-        			wsi.orderType.add(OrderBy.ASC);
-        			wsi.nullOrderings.add(null);
-        		}
-        	}
-        	if (ws.getOrderBy() != null) {
-        		for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
-        		    if (EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(item.getSymbol()))) {
-        		        wsi.emptyOrdering = true;
+            wsi = new WindowSpecificationInfo();
+            windows.put(ws, wsi);
+            if (ws.getPartition() != null) {
+                for (Expression ex1 : ws.getPartition()) {
+                    if (EvaluatableVisitor.willBecomeConstant(ex1)) {
+                        wsi.emptyOrdering = true;
                         continue;
                     }
-        			Expression ex1 = SymbolMap.getExpression(item.getSymbol());
-        			Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
-        			wsi.sortIndexes.add(index);
-        			wsi.orderType.add(item.isAscending());
-        			wsi.nullOrderings.add(item.getNullOrdering());
-        		}
+                    Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
+                    wsi.groupIndexes.add(index);
+                    wsi.orderType.add(OrderBy.ASC);
+                    wsi.nullOrderings.add(null);
+                }
+            }
+            if (ws.getOrderBy() != null) {
+                for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
+                    if (EvaluatableVisitor.willBecomeConstant(SymbolMap.getExpression(item.getSymbol()))) {
+                        wsi.emptyOrdering = true;
+                        continue;
+                    }
+                    Expression ex1 = SymbolMap.getExpression(item.getSymbol());
+                    Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
+                    wsi.sortIndexes.add(index);
+                    wsi.orderType.add(item.isAscending());
+                    wsi.nullOrderings.add(item.getNullOrdering());
+                }
                 wsi.windowFrame = ws.getWindowFrame();
-        	}
+            }
         }
         return wsi;
     }
 
-	@Override
-	protected TupleBatch nextBatchDirect() throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
+    @Override
+    protected TupleBatch nextBatchDirect() throws BlockedException,
+            TeiidComponentException, TeiidProcessingException {
 
-		if (phase == Phase.COLLECT) {
-			saveInput();
-			phase = Phase.PROCESS;
-			partitionMapping = new STree[this.windows.size()];
-			valueMapping = new STree[this.windows.size()];
-		}
+        if (phase == Phase.COLLECT) {
+            saveInput();
+            phase = Phase.PROCESS;
+            partitionMapping = new STree[this.windows.size()];
+            valueMapping = new STree[this.windows.size()];
+        }
 
-		if (phase == Phase.PROCESS) {
-			buildResults();
-			phase = Phase.OUTPUT;
-		}
+        if (phase == Phase.PROCESS) {
+            buildResults();
+            phase = Phase.OUTPUT;
+        }
 
-		if (phase == Phase.OUTPUT) {
-			if (outputTs == null) {
-				outputTs = tb.createIndexedTupleSource(true);
-			}
-			while (outputTs.hasNext()) {
-				List<?> tuple = outputTs.nextTuple();
-				Integer rowId = (Integer)tuple.get(tuple.size() - 1);
-				int size = getElements().size();
-				ArrayList<Object> outputRow = new ArrayList<Object>(size);
-				for (int i = 0; i < size; i++) {
-					outputRow.add(null);
-				}
-				for (int[] entry : passThrough) {
-					outputRow.set(entry[0], tuple.get(entry[1]));
-				}
-				List<Map.Entry<WindowSpecification, WindowSpecificationInfo>> specs = new ArrayList<Map.Entry<WindowSpecification,WindowSpecificationInfo>>(windows.entrySet());
-				for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
-					Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
-					List<?> idRow = Arrays.asList(rowId);
-					List<WindowFunctionInfo> functions = entry.getValue().functions;
-					if (partitionMapping[specIndex] != null) {
-						idRow = partitionMapping[specIndex].find(idRow);
-						idRow = idRow.subList(1, 2);
-					} else {
-						idRow = SINGLE_VALUE_ID;
-					}
-					List<?> valueRow = valueMapping[specIndex].find(idRow);
-					for (int i = 0; i < functions.size(); i++) {
-						WindowFunctionInfo wfi = functions.get(i);
-						Object value = valueRow.get(i+1);
-						//special handling for lead lag
+        if (phase == Phase.OUTPUT) {
+            if (outputTs == null) {
+                outputTs = tb.createIndexedTupleSource(true);
+            }
+            while (outputTs.hasNext()) {
+                List<?> tuple = outputTs.nextTuple();
+                Integer rowId = (Integer)tuple.get(tuple.size() - 1);
+                int size = getElements().size();
+                ArrayList<Object> outputRow = new ArrayList<Object>(size);
+                for (int i = 0; i < size; i++) {
+                    outputRow.add(null);
+                }
+                for (int[] entry : passThrough) {
+                    outputRow.set(entry[0], tuple.get(entry[1]));
+                }
+                List<Map.Entry<WindowSpecification, WindowSpecificationInfo>> specs = new ArrayList<Map.Entry<WindowSpecification,WindowSpecificationInfo>>(windows.entrySet());
+                for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
+                    Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
+                    List<?> idRow = Arrays.asList(rowId);
+                    List<WindowFunctionInfo> functions = entry.getValue().functions;
+                    if (partitionMapping[specIndex] != null) {
+                        idRow = partitionMapping[specIndex].find(idRow);
+                        idRow = idRow.subList(1, 2);
+                    } else {
+                        idRow = SINGLE_VALUE_ID;
+                    }
+                    List<?> valueRow = valueMapping[specIndex].find(idRow);
+                    for (int i = 0; i < functions.size(); i++) {
+                        WindowFunctionInfo wfi = functions.get(i);
+                        Object value = valueRow.get(i+1);
+                        //special handling for lead lag
                         //an array value encodes what we need to know about
                         //the offset, default, and partition
                         Type aggregateFunction = wfi.function.getFunction().getAggregateFunction();
@@ -422,126 +422,126 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
                             }
                             }
                         }
-						outputRow.set(wfi.outputIndex, value);
-					}
-				}
-				this.addBatchRow(outputRow);
-				if (this.isBatchFull()) {
-					return pullBatch();
-				}
-			}
-			terminateBatches();
-		}
-		return this.pullBatch();
-	}
+                        outputRow.set(wfi.outputIndex, value);
+                    }
+                }
+                this.addBatchRow(outputRow);
+                if (this.isBatchFull()) {
+                    return pullBatch();
+                }
+            }
+            terminateBatches();
+        }
+        return this.pullBatch();
+    }
 
-	/**
-	 * Build the results by maintaining indexes that map
-	 * rowid->partitionid and partitionid->values
-	 *
-	 * TODO use the size hint for tree balancing
-	 */
-	private void buildResults() throws TeiidComponentException,
-			TeiidProcessingException, FunctionExecutionException,
-			ExpressionEvaluationException {
-		List<Map.Entry<WindowSpecification, WindowSpecificationInfo>> specs = new ArrayList<Map.Entry<WindowSpecification,WindowSpecificationInfo>>(windows.entrySet());
-		for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
-			Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
-			WindowSpecificationInfo info = entry.getValue();
-			IndexedTupleSource specificationTs = tb.createIndexedTupleSource();
-			boolean multiGroup = false;
-			int[] partitionIndexes = null;
-			int[] orderIndexes = null;
-			TupleBuffer sorted = null;
-			//if there is partitioning or ordering, then sort
-			if (!info.orderType.isEmpty() || info.emptyOrdering) {
-				multiGroup = true;
-				int[] sortKeys = new int[info.orderType.size()];
-				int i = 0;
-				if (!info.groupIndexes.isEmpty()) {
-					for (Integer sortIndex : info.groupIndexes) {
-						sortKeys[i++] = sortIndex;
-					}
-					partitionIndexes = Arrays.copyOf(sortKeys, info.groupIndexes.size());
-				}
-				if (!info.sortIndexes.isEmpty()) {
-					for (Integer sortIndex : info.sortIndexes) {
-						sortKeys[i++] = sortIndex;
-					}
-					orderIndexes = Arrays.copyOfRange(sortKeys, info.groupIndexes.size(), info.groupIndexes.size() + info.sortIndexes.size());
-				}
-				if (!info.functions.isEmpty()) {
-					ElementSymbol key = new ElementSymbol("rowId"); //$NON-NLS-1$
-					key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-					ElementSymbol value = new ElementSymbol("partitionId"); //$NON-NLS-1$
-					value.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-					List<ElementSymbol> elements = Arrays.asList(key, value);
-					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-				}
-				if (!info.orderType.isEmpty()) {
-    				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
-    				su.setWorkingBuffer(tb);
-    				su.setNonBlocking(true);
-    				boolean success = false;
-    				try {
-    				    sorted = su.sort();
-    				    success = true;
-    				} finally {
-    				    if (!success) {
-    				        su.remove();
-    				    }
-    				}
-    				specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
-    			}
-			}
+    /**
+     * Build the results by maintaining indexes that map
+     * rowid->partitionid and partitionid->values
+     *
+     * TODO use the size hint for tree balancing
+     */
+    private void buildResults() throws TeiidComponentException,
+            TeiidProcessingException, FunctionExecutionException,
+            ExpressionEvaluationException {
+        List<Map.Entry<WindowSpecification, WindowSpecificationInfo>> specs = new ArrayList<Map.Entry<WindowSpecification,WindowSpecificationInfo>>(windows.entrySet());
+        for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
+            Map.Entry<WindowSpecification, WindowSpecificationInfo> entry = specs.get(specIndex);
+            WindowSpecificationInfo info = entry.getValue();
+            IndexedTupleSource specificationTs = tb.createIndexedTupleSource();
+            boolean multiGroup = false;
+            int[] partitionIndexes = null;
+            int[] orderIndexes = null;
+            TupleBuffer sorted = null;
+            //if there is partitioning or ordering, then sort
+            if (!info.orderType.isEmpty() || info.emptyOrdering) {
+                multiGroup = true;
+                int[] sortKeys = new int[info.orderType.size()];
+                int i = 0;
+                if (!info.groupIndexes.isEmpty()) {
+                    for (Integer sortIndex : info.groupIndexes) {
+                        sortKeys[i++] = sortIndex;
+                    }
+                    partitionIndexes = Arrays.copyOf(sortKeys, info.groupIndexes.size());
+                }
+                if (!info.sortIndexes.isEmpty()) {
+                    for (Integer sortIndex : info.sortIndexes) {
+                        sortKeys[i++] = sortIndex;
+                    }
+                    orderIndexes = Arrays.copyOfRange(sortKeys, info.groupIndexes.size(), info.groupIndexes.size() + info.sortIndexes.size());
+                }
+                if (!info.functions.isEmpty()) {
+                    ElementSymbol key = new ElementSymbol("rowId"); //$NON-NLS-1$
+                    key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+                    ElementSymbol value = new ElementSymbol("partitionId"); //$NON-NLS-1$
+                    value.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+                    List<ElementSymbol> elements = Arrays.asList(key, value);
+                    partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+                }
+                if (!info.orderType.isEmpty()) {
+                    SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+                    su.setWorkingBuffer(tb);
+                    su.setNonBlocking(true);
+                    boolean success = false;
+                    try {
+                        sorted = su.sort();
+                        success = true;
+                    } finally {
+                        if (!success) {
+                            su.remove();
+                        }
+                    }
+                    specificationTs = sorted.createIndexedTupleSource(!info.processEachFrame());
+                }
+            }
 
-			try {
-    			List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex);
+            try {
+                List<AggregateFunction> aggs = initializeAccumulators(info.functions, specIndex);
 
-    			if (info.processEachFrame()) {
-    			    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs);
+                if (info.processEachFrame()) {
+                    processEachFrame(specIndex, info, specificationTs, partitionIndexes, orderIndexes, sorted, aggs);
                     return;
                 }
 
-    			int groupId = 0;
+                int groupId = 0;
                 List<?> lastRow = null;
-    			//rolling creation of the output
-    			while (specificationTs.hasNext()) {
-    				List<?> tuple = specificationTs.nextTuple();
-    				if (multiGroup) {
-    				    if (lastRow != null) {
-    				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
-    				    	if (!samePartition || (!info.isUnboundedFollowing()
-    				    	        && ((info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS)
-    				    	                || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1))) {
-    			        		saveValues(specIndex, aggs, groupId, samePartition);
-    		        			groupId++;
-    				    	}
-    		        	}
-			        	List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
-						partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
-    		        }
-    		        for (AggregateFunction function : aggs) {
-    		        	function.addInput(tuple, getContext());
-    		        }
-    		        lastRow = tuple;
-    			}
-    		    if(lastRow != null) {
-    		    	saveValues(specIndex, aggs, groupId, true);
-    		    }
-			} finally {
-			    if (sorted != null) {
-			        sorted.remove();
-			    }
-			}
-		}
-	}
+                //rolling creation of the output
+                while (specificationTs.hasNext()) {
+                    List<?> tuple = specificationTs.nextTuple();
+                    if (multiGroup) {
+                        if (lastRow != null) {
+                            boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
+                            if (!samePartition || (!info.isUnboundedFollowing()
+                                    && ((info.windowFrame != null && info.windowFrame.getMode() == FrameMode.ROWS)
+                                            || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1))) {
+                                saveValues(specIndex, aggs, groupId, samePartition);
+                                groupId++;
+                            }
+                        }
+                        List<Object> partitionTuple = Arrays.asList(tuple.get(tuple.size() - 1), groupId);
+                        partitionMapping[specIndex].insert(partitionTuple, InsertMode.NEW, -1);
+                    }
+                    for (AggregateFunction function : aggs) {
+                        function.addInput(tuple, getContext());
+                    }
+                    lastRow = tuple;
+                }
+                if(lastRow != null) {
+                    saveValues(specIndex, aggs, groupId, true);
+                }
+            } finally {
+                if (sorted != null) {
+                    sorted.remove();
+                }
+            }
+        }
+    }
 
-	/**
-	 * The frame clause requires us to recompute over reach frame, rather than using
-	 * the rolling strategy.
-	 *
-	 */
+    /**
+     * The frame clause requires us to recompute over reach frame, rather than using
+     * the rolling strategy.
+     *
+     */
     private void processEachFrame(int specIndex, WindowSpecificationInfo info,
             IndexedTupleSource specificationTs, int[] partitionIndexes, int[] orderIndexes,
             TupleBuffer sorted, List<AggregateFunction> aggs)
@@ -652,120 +652,120 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
         }
     }
 
-	private void saveValues(int specIndex,
-			List<AggregateFunction> aggs, Object id,
-			boolean samePartition) throws FunctionExecutionException,
-			ExpressionEvaluationException, TeiidComponentException,
-			TeiidProcessingException {
-		if (aggs.isEmpty()) {
-			return;
-		}
-		List<Object> row = new ArrayList<Object>(aggs.size() + 1);
-		row.add(id);
-		for (AggregateFunction function : aggs) {
-			row.add(function.getResult(getContext()));
-			if (!samePartition) {
-				function.reset();
-			}
-		}
-		valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);
-	}
+    private void saveValues(int specIndex,
+            List<AggregateFunction> aggs, Object id,
+            boolean samePartition) throws FunctionExecutionException,
+            ExpressionEvaluationException, TeiidComponentException,
+            TeiidProcessingException {
+        if (aggs.isEmpty()) {
+            return;
+        }
+        List<Object> row = new ArrayList<Object>(aggs.size() + 1);
+        row.add(id);
+        for (AggregateFunction function : aggs) {
+            row.add(function.getResult(getContext()));
+            if (!samePartition) {
+                function.reset();
+            }
+        }
+        valueMapping[specIndex].insert(row, InsertMode.ORDERED, -1);
+    }
 
-	/**
-	 * @param functions
-	 * @param specIndex
-	 * @param rowValues
-	 * @return
-	 */
-	private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex) {
-		List<AggregateFunction> aggs = new ArrayList<AggregateFunction>(functions.size());
-		if (functions.isEmpty()) {
-			return aggs;
-		}
-		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
-		ElementSymbol key = new ElementSymbol("key"); //$NON-NLS-1$
-	    key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-	    elements.add(key);
-		for (WindowFunctionInfo wfi : functions) {
-			AggregateFunction aggregateFunction = GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes);
+    /**
+     * @param functions
+     * @param specIndex
+     * @param rowValues
+     * @return
+     */
+    private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex) {
+        List<AggregateFunction> aggs = new ArrayList<AggregateFunction>(functions.size());
+        if (functions.isEmpty()) {
+            return aggs;
+        }
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
+        ElementSymbol key = new ElementSymbol("key"); //$NON-NLS-1$
+        key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        elements.add(key);
+        for (WindowFunctionInfo wfi : functions) {
+            AggregateFunction aggregateFunction = GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes);
             aggs.add(aggregateFunction);
             Class<?> outputType = aggregateFunction.getOutputType(wfi.function.getFunction());
-		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
-		    value.setType(outputType);
-		    elements.add(value);
-		}
-		valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-		return aggs;
-	}
+            ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
+            value.setType(outputType);
+            elements.add(value);
+        }
+        valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+        return aggs;
+    }
 
-	/**
-	 * Save the input generating any necessary expressions and adding a row id
-	 * @param collectedExpressions
-	 * @return
-	 * @throws TeiidComponentException
-	 * @throws TeiidProcessingException
-	 */
-	private void saveInput()
-			throws TeiidComponentException, TeiidProcessingException {
-		if (inputTs == null) {
-			List<Expression> collectedExpressions = new ArrayList<Expression>(expressionIndexes.keySet());
-			Evaluator eval = new Evaluator(elementMap, getDataManager(), getContext());
-			final RelationalNode sourceNode = this.getChildren()[0];
-			inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions, elementMap) {
-				int index = 0;
-				@Override
-				public List<Object> nextTuple() throws TeiidComponentException,
-						TeiidProcessingException {
-					List<Object> tuple = super.nextTuple();
-					if (tuple != null) {
-						tuple.add(index++);
-					}
-					return tuple;
-				}
-			};
-			List<ElementSymbol> schema = new ArrayList<ElementSymbol>(collectedExpressions.size() + 1);
-			int index = 0;
-			for (Expression ex : collectedExpressions) {
-				ElementSymbol es = new ElementSymbol(String.valueOf(index++));
-				es.setType(ex.getType());
-				schema.add(es);
-			}
-			//add in the row id
-			ElementSymbol es = new ElementSymbol(String.valueOf(index++));
-			es.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-			schema.add(es);
-			tb = this.getBufferManager().createTupleBuffer(schema, this.getConnectionID(), TupleSourceType.PROCESSOR);
-		}
+    /**
+     * Save the input generating any necessary expressions and adding a row id
+     * @param collectedExpressions
+     * @return
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    private void saveInput()
+            throws TeiidComponentException, TeiidProcessingException {
+        if (inputTs == null) {
+            List<Expression> collectedExpressions = new ArrayList<Expression>(expressionIndexes.keySet());
+            Evaluator eval = new Evaluator(elementMap, getDataManager(), getContext());
+            final RelationalNode sourceNode = this.getChildren()[0];
+            inputTs = new ProjectingTupleSource(sourceNode, eval, collectedExpressions, elementMap) {
+                int index = 0;
+                @Override
+                public List<Object> nextTuple() throws TeiidComponentException,
+                        TeiidProcessingException {
+                    List<Object> tuple = super.nextTuple();
+                    if (tuple != null) {
+                        tuple.add(index++);
+                    }
+                    return tuple;
+                }
+            };
+            List<ElementSymbol> schema = new ArrayList<ElementSymbol>(collectedExpressions.size() + 1);
+            int index = 0;
+            for (Expression ex : collectedExpressions) {
+                ElementSymbol es = new ElementSymbol(String.valueOf(index++));
+                es.setType(ex.getType());
+                schema.add(es);
+            }
+            //add in the row id
+            ElementSymbol es = new ElementSymbol(String.valueOf(index++));
+            es.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+            schema.add(es);
+            tb = this.getBufferManager().createTupleBuffer(schema, this.getConnectionID(), TupleSourceType.PROCESSOR);
+        }
 
-		List<?> tuple = null;
-		while ((tuple = inputTs.nextTuple()) != null) {
-			tb.addTuple(tuple);
-		}
-		tb.close();
-		inputTs.closeSource();
-		inputTs = null;
-	}
+        List<?> tuple = null;
+        while ((tuple = inputTs.nextTuple()) != null) {
+            tb.addTuple(tuple);
+        }
+        tb.close();
+        inputTs.closeSource();
+        inputTs = null;
+    }
 
-	@Override
-	public void initialize(CommandContext context, BufferManager bufferManager,
-			ProcessorDataManager dataMgr) {
-		super.initialize(context, bufferManager, dataMgr);
-		if (this.elementMap == null) {
-			List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
-			this.elementMap = createLookupMap(sourceElements);
-		}
-	}
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+            ProcessorDataManager dataMgr) {
+        super.initialize(context, bufferManager, dataMgr);
+        if (this.elementMap == null) {
+            List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
+            this.elementMap = createLookupMap(sourceElements);
+        }
+    }
 
-	@Override
-	public Collection<? extends LanguageObject> getObjects() {
-		return getElements();
-	}
+    @Override
+    public Collection<? extends LanguageObject> getObjects() {
+        return getElements();
+    }
 
-	@Override
-	public PlanNode getDescriptionProperties() {
-    	PlanNode props = super.getDescriptionProperties();
-    	AnalysisRecord.addLanaguageObjects(props, PROP_WINDOW_FUNCTIONS, this.windows.keySet());
+    @Override
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, PROP_WINDOW_FUNCTIONS, this.windows.keySet());
         return props;
-	}
+    }
 
 }

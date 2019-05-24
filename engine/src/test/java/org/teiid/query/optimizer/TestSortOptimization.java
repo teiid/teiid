@@ -468,7 +468,7 @@ public class TestSortOptimization {
     }
 
     @Test public void testUnionWithAggregation() throws Exception{
-    	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table items (item_id varchar)", "x", "y");
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("create foreign table items (item_id varchar)", "x", "y");
 
         String sql = "select FOO.SOURCE SOURCE, FOO.FOO_ID FOO_ID from ("
                 + "(select 'X' SOURCE, ITEMS.ITEM_ID FOO_ID from ITEMS ITEMS group by ITEMS.ITEM_ID) "

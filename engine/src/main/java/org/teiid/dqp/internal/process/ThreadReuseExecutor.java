@@ -66,67 +66,67 @@ import org.teiid.query.QueryPlugin;
  */
 public class ThreadReuseExecutor implements TeiidExecutor {
 
-	public interface PrioritizedRunnable extends Runnable {
+    public interface PrioritizedRunnable extends Runnable {
 
-		final static int NO_WAIT_PRIORITY = 0;
+        final static int NO_WAIT_PRIORITY = 0;
 
-		/**
-		 * The execution priority - higher is lower
-		 */
-		int getPriority();
+        /**
+         * The execution priority - higher is lower
+         */
+        int getPriority();
 
-		long getCreationTime();
+        long getCreationTime();
 
-		DQPWorkContext getDqpWorkContext();
+        DQPWorkContext getDqpWorkContext();
 
-	}
+    }
 
-	private static AtomicLong ID_GEN = new AtomicLong();
+    private static AtomicLong ID_GEN = new AtomicLong();
 
-	public static class RunnableWrapper implements PrioritizedRunnable, Comparable<RunnableWrapper> {
-		Runnable r;
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		long creationTime;
-		int priority;
-		long id = ID_GEN.getAndIncrement();
+    public static class RunnableWrapper implements PrioritizedRunnable, Comparable<RunnableWrapper> {
+        Runnable r;
+        DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+        long creationTime;
+        int priority;
+        long id = ID_GEN.getAndIncrement();
 
-		public RunnableWrapper(Runnable r) {
-			if (r instanceof PrioritizedRunnable) {
-				PrioritizedRunnable pr = (PrioritizedRunnable)r;
-				creationTime = pr.getCreationTime();
-				priority = pr.getPriority();
-				workContext = pr.getDqpWorkContext();
-			} else {
-			    //this will be considered optional work that will only get completed
-			    //when the queue is drained
-				creationTime = System.currentTimeMillis();
-				priority = Integer.MAX_VALUE;
-			}
-			this.r = r;
-		}
+        public RunnableWrapper(Runnable r) {
+            if (r instanceof PrioritizedRunnable) {
+                PrioritizedRunnable pr = (PrioritizedRunnable)r;
+                creationTime = pr.getCreationTime();
+                priority = pr.getPriority();
+                workContext = pr.getDqpWorkContext();
+            } else {
+                //this will be considered optional work that will only get completed
+                //when the queue is drained
+                creationTime = System.currentTimeMillis();
+                priority = Integer.MAX_VALUE;
+            }
+            this.r = r;
+        }
 
-		@Override
-		public long getCreationTime() {
-			return creationTime;
-		}
+        @Override
+        public long getCreationTime() {
+            return creationTime;
+        }
 
-		@Override
-		public int getPriority() {
-			return priority;
-		}
+        @Override
+        public int getPriority() {
+            return priority;
+        }
 
-		@Override
-		public void run() {
-			if (workContext.getSecurityHelper() != null) {
-				//if using the inheritable thread local security or if unassocation has been sloppy, there may a security context associated
-				workContext.getSecurityHelper().clearSecurityContext();
-			}
-			workContext.runInContext(r);
-		}
+        @Override
+        public void run() {
+            if (workContext.getSecurityHelper() != null) {
+                //if using the inheritable thread local security or if unassocation has been sloppy, there may a security context associated
+                workContext.getSecurityHelper().clearSecurityContext();
+            }
+            workContext.runInContext(r);
+        }
 
-		public DQPWorkContext getDqpWorkContext() {
-			return workContext;
-		}
+        public DQPWorkContext getDqpWorkContext() {
+            return workContext;
+        }
 
         @Override
         public int compareTo(RunnableWrapper o) {
@@ -138,187 +138,187 @@ public class ThreadReuseExecutor implements TeiidExecutor {
             return Long.compare(this.id, o.id);
         }
 
-	}
+    }
 
-	private final ThreadPoolExecutor tpe;
+    private final ThreadPoolExecutor tpe;
 
-	private volatile int activeCount;
-	private volatile int highestActiveCount;
-	private volatile int highestQueueSize;
-	private volatile boolean terminated;
-	private volatile int submittedCount;
-	private volatile int completedCount;
-	private Object poolLock = new Object();
-	private AtomicInteger threadCounter = new AtomicInteger();
-	private Set<Thread> threads = Collections.newSetFromMap(new ConcurrentHashMap<Thread, Boolean>());
+    private volatile int activeCount;
+    private volatile int highestActiveCount;
+    private volatile int highestQueueSize;
+    private volatile boolean terminated;
+    private volatile int submittedCount;
+    private volatile int completedCount;
+    private Object poolLock = new Object();
+    private AtomicInteger threadCounter = new AtomicInteger();
+    private Set<Thread> threads = Collections.newSetFromMap(new ConcurrentHashMap<Thread, Boolean>());
 
-	private String poolName;
-	private int maximumPoolSize;
-	private Queue<RunnableWrapper> queue = new PriorityBlockingQueue<RunnableWrapper>(11);
+    private String poolName;
+    private int maximumPoolSize;
+    private Queue<RunnableWrapper> queue = new PriorityBlockingQueue<RunnableWrapper>(11);
 
-	private long warnWaitTime = 500;
+    private long warnWaitTime = 500;
 
-	public ThreadReuseExecutor(String name, int maximumPoolSize) {
-		this.maximumPoolSize = maximumPoolSize;
-		this.poolName = name;
+    public ThreadReuseExecutor(String name, int maximumPoolSize) {
+        this.maximumPoolSize = maximumPoolSize;
+        this.poolName = name;
 
-		tpe = new ThreadPoolExecutor(0,
-				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
-				new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$
-			@Override
-			protected void afterExecute(Runnable r, Throwable t) {
-				if (t != null) {
-					LogManager.logError(LogConstants.CTX_RUNTIME, t, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30021));
-				}
-			}
+        tpe = new ThreadPoolExecutor(0,
+                Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
+                new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$
+            @Override
+            protected void afterExecute(Runnable r, Throwable t) {
+                if (t != null) {
+                    LogManager.logError(LogConstants.CTX_RUNTIME, t, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30021));
+                }
+            }
 
-		};
-	}
+        };
+    }
 
-	public void execute(final Runnable command) {
-		executeDirect(new RunnableWrapper(command));
-	}
+    public void execute(final Runnable command) {
+        executeDirect(new RunnableWrapper(command));
+    }
 
-	private void executeDirect(final RunnableWrapper command) {
-	    checkForTermination();
-		synchronized (poolLock) {
-			submittedCount++;
-			boolean atMaxThreads = activeCount == maximumPoolSize;
-			if (atMaxThreads) {
-				queue.add(command);
-				int queueSize = queue.size();
-				if (queueSize > highestQueueSize) {
-					highestQueueSize = queueSize;
-				}
-				return;
-			}
-			activeCount++;
-			highestActiveCount = Math.max(activeCount, highestActiveCount);
-		}
-		tpe.execute(new Runnable() {
-			@Override
-			public void run() {
-				Thread t = Thread.currentThread();
-				threads.add(t);
-				String name = t.getName();
-				t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$
-				}
-				PrioritizedRunnable r = command;
-				while (r != null) {
-					boolean success = false;
-					try {
-						r.run();
-						success = true;
-					} finally {
-						synchronized (poolLock) {
-							if (success) {
-								completedCount++;
-								//we only poll if successful, to let the exception handling happen immediately otherwise
-								r = queue.poll();
-							}
-							if (!success || r == null) {
-								threads.remove(t);
-								activeCount--;
-								if (activeCount == 0 && terminated) {
-									poolLock.notifyAll();
-								}
-							}
-						}
-						if (success) {
-							long warnTime = warnWaitTime;
-							if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
-								logWaitMessage(warnTime, maximumPoolSize, poolName, highestQueueSize);
-								warnWaitTime*=2; //we don't really care if this is synchronized
-							}
-						}
-						t.setName(name);
-					}
-				}
-			}
+    private void executeDirect(final RunnableWrapper command) {
+        checkForTermination();
+        synchronized (poolLock) {
+            submittedCount++;
+            boolean atMaxThreads = activeCount == maximumPoolSize;
+            if (atMaxThreads) {
+                queue.add(command);
+                int queueSize = queue.size();
+                if (queueSize > highestQueueSize) {
+                    highestQueueSize = queueSize;
+                }
+                return;
+            }
+            activeCount++;
+            highestActiveCount = Math.max(activeCount, highestActiveCount);
+        }
+        tpe.execute(new Runnable() {
+            @Override
+            public void run() {
+                Thread t = Thread.currentThread();
+                threads.add(t);
+                String name = t.getName();
+                t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
+                if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+                    LogManager.logTrace(LogConstants.CTX_RUNTIME, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$
+                }
+                PrioritizedRunnable r = command;
+                while (r != null) {
+                    boolean success = false;
+                    try {
+                        r.run();
+                        success = true;
+                    } finally {
+                        synchronized (poolLock) {
+                            if (success) {
+                                completedCount++;
+                                //we only poll if successful, to let the exception handling happen immediately otherwise
+                                r = queue.poll();
+                            }
+                            if (!success || r == null) {
+                                threads.remove(t);
+                                activeCount--;
+                                if (activeCount == 0 && terminated) {
+                                    poolLock.notifyAll();
+                                }
+                            }
+                        }
+                        if (success) {
+                            long warnTime = warnWaitTime;
+                            if (r != null && System.currentTimeMillis() - r.getCreationTime() > warnTime) {
+                                logWaitMessage(warnTime, maximumPoolSize, poolName, highestQueueSize);
+                                warnWaitTime*=2; //we don't really care if this is synchronized
+                            }
+                        }
+                        t.setName(name);
+                    }
+                }
+            }
 
-		});
-	}
+        });
+    }
 
-	protected void logWaitMessage(long warnTime, int maximumPoolSize, String poolName, int highestQueueSize) {
+    protected void logWaitMessage(long warnTime, int maximumPoolSize, String poolName, int highestQueueSize) {
         LogManager.logWarning(LogConstants.CTX_RUNTIME, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30009, maximumPoolSize, poolName, highestQueueSize, warnTime));
     }
 
-	private void checkForTermination() {
-		if (terminated) {
-			throw new RejectedExecutionException();
-		}
-	}
+    private void checkForTermination() {
+        if (terminated) {
+            throw new RejectedExecutionException();
+        }
+    }
 
-	public int getActiveCount() {
-		return activeCount;
-	}
+    public int getActiveCount() {
+        return activeCount;
+    }
 
-	public long getSubmittedCount() {
-		return submittedCount;
-	}
+    public long getSubmittedCount() {
+        return submittedCount;
+    }
 
-	public long getCompletedCount() {
-		return completedCount;
-	}
+    public long getCompletedCount() {
+        return completedCount;
+    }
 
-	public boolean isTerminated() {
-		return terminated;
-	}
+    public boolean isTerminated() {
+        return terminated;
+    }
 
-	public void shutdown() {
-		this.terminated = true;
-	}
+    public void shutdown() {
+        this.terminated = true;
+    }
 
-	public int getLargestPoolSize() {
-		return this.highestActiveCount;
-	}
+    public int getLargestPoolSize() {
+        return this.highestActiveCount;
+    }
 
-	public int getQueued() {
+    public int getQueued() {
         return queue.size();
-	}
+    }
 
-	public WorkerPoolStatisticsMetadata getStats() {
-		WorkerPoolStatisticsMetadata stats = new WorkerPoolStatisticsMetadata();
-		stats.setName(poolName);
-		stats.setQueued(queue.size());
-		stats.setHighestQueued(highestQueueSize);
-		stats.setActiveThreads(getActiveCount());
-		stats.setMaxThreads(this.maximumPoolSize);
-		stats.setTotalSubmitted(getSubmittedCount());
-		stats.setHighestActiveThreads(getLargestPoolSize());
-		stats.setTotalCompleted(getCompletedCount());
-		return stats;
-	}
+    public WorkerPoolStatisticsMetadata getStats() {
+        WorkerPoolStatisticsMetadata stats = new WorkerPoolStatisticsMetadata();
+        stats.setName(poolName);
+        stats.setQueued(queue.size());
+        stats.setHighestQueued(highestQueueSize);
+        stats.setActiveThreads(getActiveCount());
+        stats.setMaxThreads(this.maximumPoolSize);
+        stats.setTotalSubmitted(getSubmittedCount());
+        stats.setHighestActiveThreads(getLargestPoolSize());
+        stats.setTotalCompleted(getCompletedCount());
+        return stats;
+    }
 
-	public List<Runnable> shutdownNow() {
-		this.shutdown();
-		synchronized (poolLock) {
-			for (Thread t : threads) {
-				t.interrupt();
-			}
-			List<Runnable> result = new ArrayList<Runnable>(queue);
-			queue.clear();
-			result.addAll(this.tpe.shutdownNow());
-			return result;
-		}
-	}
+    public List<Runnable> shutdownNow() {
+        this.shutdown();
+        synchronized (poolLock) {
+            for (Thread t : threads) {
+                t.interrupt();
+            }
+            List<Runnable> result = new ArrayList<Runnable>(queue);
+            queue.clear();
+            result.addAll(this.tpe.shutdownNow());
+            return result;
+        }
+    }
 
-	public boolean awaitTermination(long timeout, TimeUnit unit)
-			throws InterruptedException {
-		long timeoutMillis = unit.toMillis(timeout);
-		long finalMillis = System.currentTimeMillis() + timeoutMillis;
-		synchronized (poolLock) {
-			while (this.activeCount > 0 || !terminated) {
-				if (timeoutMillis < 1) {
-					return false;
-				}
-				poolLock.wait(timeoutMillis);
-				timeoutMillis = finalMillis - System.currentTimeMillis();
-			}
-		}
-		return true;
-	}
+    public boolean awaitTermination(long timeout, TimeUnit unit)
+            throws InterruptedException {
+        long timeoutMillis = unit.toMillis(timeout);
+        long finalMillis = System.currentTimeMillis() + timeoutMillis;
+        synchronized (poolLock) {
+            while (this.activeCount > 0 || !terminated) {
+                if (timeoutMillis < 1) {
+                    return false;
+                }
+                poolLock.wait(timeoutMillis);
+                timeoutMillis = finalMillis - System.currentTimeMillis();
+            }
+        }
+        return true;
+    }
 
 }

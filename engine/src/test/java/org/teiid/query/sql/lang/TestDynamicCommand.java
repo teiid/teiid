@@ -47,7 +47,7 @@ public class TestDynamicCommand extends TestCase {
     }
 
     public void testClone1() {
-    	List symbols = new ArrayList();
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -66,7 +66,7 @@ public class TestDynamicCommand extends TestCase {
     }
 
     public void testClone2() {
-    	List symbols = new ArrayList();
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -83,7 +83,7 @@ public class TestDynamicCommand extends TestCase {
 
     public void testClone3() {
 
-    	List symbols = new ArrayList();
+        List symbols = new ArrayList();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);

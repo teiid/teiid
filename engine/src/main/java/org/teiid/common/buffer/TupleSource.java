@@ -39,12 +39,12 @@ public interface TupleSource {
      * exception such as a communication exception, or other such
      * nondeterministic exception
      */
-	List<?> nextTuple()
-		throws TeiidComponentException, TeiidProcessingException;
+    List<?> nextTuple()
+        throws TeiidComponentException, TeiidProcessingException;
 
     /**
      * Closes the Tuple Source.
      */
-	void closeSource();
+    void closeSource();
 
 }

@@ -79,54 +79,54 @@ import java.lang.reflect.Proxy;
 public final class LogManager {
 
     public static class LoggingProxy implements InvocationHandler {
-		private final Object instance;
-		private final String loggingContext;
-		private final int level;
+        private final Object instance;
+        private final String loggingContext;
+        private final int level;
 
-		public LoggingProxy(Object instance, String loggingContext, int level) {
-			this.instance = instance;
-			this.loggingContext = loggingContext;
-			this.level = level;
-		}
+        public LoggingProxy(Object instance, String loggingContext, int level) {
+            this.instance = instance;
+            this.loggingContext = loggingContext;
+            this.level = level;
+        }
 
-		public Object invoke(Object proxy,
-		                     Method method,
-		                     Object[] args) throws Throwable {
-		    boolean log = LogManager.isMessageToBeRecorded(loggingContext, level);
-		    if (log) {
-		        StringBuffer message = new StringBuffer();
-		        message.append("before "); //$NON-NLS-1$
-		        message.append(method.getName());
-		        message.append(":"); //$NON-NLS-1$
-		        message.append(instance);
-		        message.append("("); //$NON-NLS-1$
-		        if (args != null) {
-		            for (int i = 0; i < args.length; i++) {
-		                if (args[i] != null) {
-		                	message.append(args[i]);
-		                } else {
-		                	message.append("null"); //$NON-NLS-1$
-		                }
-		                if (i != args.length - 1) {
-		                	message.append(","); //$NON-NLS-1$
-		                }
-		            }
-		        }
-		        message.append(")"); //$NON-NLS-1$
-		        LogManager.log(level, loggingContext, message.toString());
-		    }
-		    try {
-		        Object result = method.invoke(instance, args);
-		        if (log) {
-		            LogManager.log(level, loggingContext,
-		                "after " + method.getName()+ " : "+result); //$NON-NLS-1$ //$NON-NLS-2$
-		        }
-		        return result;
-		    } catch (InvocationTargetException e) {
-		        throw e.getTargetException();
-		    }
-		}
-	}
+        public Object invoke(Object proxy,
+                             Method method,
+                             Object[] args) throws Throwable {
+            boolean log = LogManager.isMessageToBeRecorded(loggingContext, level);
+            if (log) {
+                StringBuffer message = new StringBuffer();
+                message.append("before "); //$NON-NLS-1$
+                message.append(method.getName());
+                message.append(":"); //$NON-NLS-1$
+                message.append(instance);
+                message.append("("); //$NON-NLS-1$
+                if (args != null) {
+                    for (int i = 0; i < args.length; i++) {
+                        if (args[i] != null) {
+                            message.append(args[i]);
+                        } else {
+                            message.append("null"); //$NON-NLS-1$
+                        }
+                        if (i != args.length - 1) {
+                            message.append(","); //$NON-NLS-1$
+                        }
+                    }
+                }
+                message.append(")"); //$NON-NLS-1$
+                LogManager.log(level, loggingContext, message.toString());
+            }
+            try {
+                Object result = method.invoke(instance, args);
+                if (log) {
+                    LogManager.log(level, loggingContext,
+                        "after " + method.getName()+ " : "+result); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                return result;
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
+        }
+    }
 
     static volatile Logger logListener = new JavaLogger(); // either injected or manually set using the set methods
 
@@ -145,7 +145,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logCritical(String context, Object message) {
-    	logMessage(MessageLevel.CRITICAL, context, message);
+        logMessage(MessageLevel.CRITICAL, context, message);
     }
 
     /**
@@ -164,7 +164,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logCritical(String context, Throwable e, Object message) {
-    	log(MessageLevel.CRITICAL,context,e,message);
+        log(MessageLevel.CRITICAL,context,e,message);
     }
 
     /**
@@ -180,7 +180,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logError(String context, Object message) {
-    	logMessage(MessageLevel.ERROR, context,message);
+        logMessage(MessageLevel.ERROR, context,message);
     }
 
     /**
@@ -197,7 +197,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logError(String context, Throwable e, Object message) {
-    	log(MessageLevel.ERROR,context,e,message);
+        log(MessageLevel.ERROR,context,e,message);
     }
 
     /**
@@ -213,7 +213,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logWarning(String context, Object message) {
-    	logMessage(MessageLevel.WARNING, context,message);
+        logMessage(MessageLevel.WARNING, context,message);
     }
 
     /**
@@ -230,7 +230,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logWarning(String context, Throwable e, Object message) {
-    	log(MessageLevel.WARNING,context,e,message);
+        log(MessageLevel.WARNING,context,e,message);
     }
 
     /**
@@ -247,7 +247,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logInfo(String context, Object message) {
-    	logMessage(MessageLevel.INFO, context,message);
+        logMessage(MessageLevel.INFO, context,message);
     }
 
     /**
@@ -292,7 +292,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logDetail(String context, Throwable e, Object ... message) {
-    	log(MessageLevel.DETAIL,context,e,message);
+        log(MessageLevel.DETAIL,context,e,message);
     }
 
     /**
@@ -354,7 +354,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, Object message) {
-    	logMessage(msgLevel, context, message);
+        logMessage(msgLevel, context, message);
     }
 
     /**
@@ -370,22 +370,22 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, Throwable e, Object... message) {
-		if (!isMessageToBeRecorded(context, msgLevel)) {
-			return;
-		}
-    	logListener.log(msgLevel, context, e, message);
+        if (!isMessageToBeRecorded(context, msgLevel)) {
+            return;
+        }
+        logListener.log(msgLevel, context, e, message);
     }
 
     public static Logger setLogListener(Logger listener) {
-    	Logger old = logListener;
+        Logger old = logListener;
         logListener.shutdown();
-    	if (listener != null) {
-    		logListener = listener;
-    	}
-    	else {
-    		logListener = new JavaLogger();
-    	}
-    	return old;
+        if (listener != null) {
+            logListener = listener;
+        }
+        else {
+            logListener = new JavaLogger();
+        }
+        return old;
     }
 
     /**
@@ -397,38 +397,38 @@ public final class LogManager {
      * or false if it would be discarded by the LogManager.
      */
     public static boolean isMessageToBeRecorded(String context, int msgLevel) {
-    	if (logListener != null) {
-    		return logListener.isEnabled(context, msgLevel);
-    	}
-    	return true;
+        if (logListener != null) {
+            return logListener.isEnabled(context, msgLevel);
+        }
+        return true;
     }
 
     private static void logMessage(int level, String context, Object ... msgParts) {
-		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
-			return;
-		}
-		logListener.log(level, context, msgParts);
+        if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
+            return;
+        }
+        logListener.log(level, context, msgParts);
     }
 
     private static void logMessage(int level, String context, Object msgPart) {
-		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
-			return;
-		}
-		logListener.log(level, context, msgPart);
+        if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+            return;
+        }
+        logListener.log(level, context, msgPart);
     }
 
     private static void logMessage(int level, String context, Object msgPart, Object msgPart1) {
-		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
-			return;
-		}
-		logListener.log(level, context, msgPart, msgPart1);
+        if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+            return;
+        }
+        logListener.log(level, context, msgPart, msgPart1);
     }
 
     private static void logMessage(int level, String context, Object msgPart, Object msgPart1, Object msgPart2) {
-		if (msgPart == null || !isMessageToBeRecorded(context, level)) {
-			return;
-		}
-		logListener.log(level, context, msgPart, msgPart1, msgPart2);
+        if (msgPart == null || !isMessageToBeRecorded(context, level)) {
+            return;
+        }
+        logListener.log(level, context, msgPart, msgPart1, msgPart2);
     }
 
     /**
@@ -446,14 +446,14 @@ public final class LogManager {
             final Class<?>[] interfaces,
             final int level,
             ClassLoader classLoader) {
-    		return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
+            return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
     }
 
     public static void putMdc(String key, String val) {
-    	logListener.putMdc(key, val);
+        logListener.putMdc(key, val);
     }
 
-	public static void removeMdc(String key) {
-    	logListener.removeMdc(key);
-	}
+    public static void removeMdc(String key) {
+        logListener.removeMdc(key);
+    }
 }

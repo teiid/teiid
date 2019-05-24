@@ -55,9 +55,9 @@ import org.teiid.net.TeiidURL;
  */
 public class TeiidDataSource extends BaseDataSource {
 
-	private static final long serialVersionUID = -5170316154373144878L;
+    private static final long serialVersionUID = -5170316154373144878L;
 
-	/**
+    /**
      * The port number where a server is listening for requests.
      * This property name is one of the standard property names defined by the JDBC 2.0 specification,
      * and is <i>required</i>.
@@ -101,7 +101,7 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private String jaasName;
 
-	/**
+    /**
      * Name of Kerberos KDC service principle name
      */
     private String kerberosServicePrincipleName;
@@ -112,13 +112,13 @@ public class TeiidDataSource extends BaseDataSource {
 
     private final TeiidDriver driver;
 
-	public TeiidDataSource() {
-		this.driver = new TeiidDriver();
+    public TeiidDataSource() {
+        this.driver = new TeiidDriver();
     }
 
-	TeiidDataSource(TeiidDriver driver) {
-		this.driver = driver;
-	}
+    TeiidDataSource(TeiidDriver driver) {
+        this.driver = driver;
+    }
 
     // --------------------------------------------------------------------------------------------
     //                             H E L P E R   M E T H O D S
@@ -132,83 +132,83 @@ public class TeiidDataSource extends BaseDataSource {
         }
 
         if (this.encryptRequests) {
-        	props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
+            props.setProperty(TeiidURL.CONNECTION.ENCRYPT_REQUESTS, Boolean.TRUE.toString());
         }
 
         if (getLoginTimeout() > 0) {
-        	props.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, String.valueOf(getLoginTimeout()));
+            props.setProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT, String.valueOf(getLoginTimeout()));
         }
 
         if (getJaasName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
-		}
-		if (getKerberosServicePrincipleName() != null) {
-			props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
-		}
+            props.setProperty(TeiidURL.CONNECTION.JAAS_NAME, getJaasName());
+        }
+        if (getKerberosServicePrincipleName() != null) {
+            props.setProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME, getKerberosServicePrincipleName());
+        }
 
         return props;
     }
 
     protected String buildServerURL() throws TeiidSQLException {
-    	if (serverName == null) {
-    		return null;
-    	}
+        if (serverName == null) {
+            return null;
+        }
 
-    	if ( this.alternateServers == null || this.alternateServers.length() == 0) {
-    		// Format:  "mm://server:port"
-    		return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
-    	}
+        if ( this.alternateServers == null || this.alternateServers.length() == 0) {
+            // Format:  "mm://server:port"
+            return new TeiidURL(this.serverName, this.portNumber, this.secure).getAppServerURL();
+        }
 
-    	// Format: "mm://server1:port,server2:port,..."
-		String serverURL = this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL;
+        // Format: "mm://server1:port,server2:port,..."
+        String serverURL = this.secure ? TeiidURL.SECURE_PROTOCOL : TeiidURL.DEFAULT_PROTOCOL;
 
-		if (this.serverName.indexOf(':') != -1 && !this.serverName.startsWith("[")) { //$NON-NLS-1$
-			serverURL += "[" + this.serverName + "]"; //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			serverURL += this.serverName;
-		}
+        if (this.serverName.indexOf(':') != -1 && !this.serverName.startsWith("[")) { //$NON-NLS-1$
+            serverURL += "[" + this.serverName + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+        } else {
+            serverURL += this.serverName;
+        }
 
-		serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
+        serverURL += TeiidURL.COLON_DELIMITER + this.portNumber;
 
-		//add in the port number if not specified
+        //add in the port number if not specified
 
-    	String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
+        String[] as = this.alternateServers.split( TeiidURL.COMMA_DELIMITER);
 
-    	for ( int i = 0; i < as.length; i++ ) {
-    		String server = as[i].trim();
-    		//ipv6 without port
-    		if (server.startsWith("[") && server.endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
-    			String msg = reasonWhyInvalidServerName(server.substring(1, server.length() - 1));
-    			if (msg != null) {
-    				throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
-    			}
-    			serverURL += (TeiidURL.COMMA_DELIMITER +as[i] + TeiidURL.COLON_DELIMITER + this.portNumber);
-    		} else {
-        		String[] serverParts = server.split(TeiidURL.COLON_DELIMITER, 2);
-        		String msg = reasonWhyInvalidServerName(serverParts[0]);
-    			if (msg != null) {
-    				throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
-    			}
-    			serverURL += (TeiidURL.COMMA_DELIMITER + serverParts[0] + TeiidURL.COLON_DELIMITER);
-    			if ( serverParts.length > 1 ) {
-    				try {
-						TeiidURL.validatePort(serverParts[1]);
-					} catch (MalformedURLException e) {
-						throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", e.getMessage())); //$NON-NLS-1$
-					}
+        for ( int i = 0; i < as.length; i++ ) {
+            String server = as[i].trim();
+            //ipv6 without port
+            if (server.startsWith("[") && server.endsWith("]")) { //$NON-NLS-1$ //$NON-NLS-2$
+                String msg = reasonWhyInvalidServerName(server.substring(1, server.length() - 1));
+                if (msg != null) {
+                    throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
+                }
+                serverURL += (TeiidURL.COMMA_DELIMITER +as[i] + TeiidURL.COLON_DELIMITER + this.portNumber);
+            } else {
+                String[] serverParts = server.split(TeiidURL.COLON_DELIMITER, 2);
+                String msg = reasonWhyInvalidServerName(serverParts[0]);
+                if (msg != null) {
+                    throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", msg)); //$NON-NLS-1$
+                }
+                serverURL += (TeiidURL.COMMA_DELIMITER + serverParts[0] + TeiidURL.COLON_DELIMITER);
+                if ( serverParts.length > 1 ) {
+                    try {
+                        TeiidURL.validatePort(serverParts[1]);
+                    } catch (MalformedURLException e) {
+                        throw createConnectionError(JDBCPlugin.Util.getString("MMDataSource.alternateServer_is_invalid", e.getMessage())); //$NON-NLS-1$
+                    }
 
-    				serverURL += serverParts[1];
-    			} else {
-    				serverURL += this.portNumber;
-    			}
-    		}
-    	}
+                    serverURL += serverParts[1];
+                } else {
+                    serverURL += this.portNumber;
+                }
+            }
+        }
 
-		try {
-			return new TeiidURL(serverURL).getAppServerURL();
-		} catch (MalformedURLException e) {
-			throw TeiidSQLException.create(e);
-		}
+        try {
+            return new TeiidURL(serverURL).getAppServerURL();
+        } catch (MalformedURLException e) {
+            throw TeiidSQLException.create(e);
+        }
     }
 
     protected JDBCURL buildURL() throws TeiidSQLException {
@@ -258,35 +258,35 @@ public class TeiidDataSource extends BaseDataSource {
      */
     public Connection getConnection(String userName, String password) throws java.sql.SQLException {
 
-    	// check if this is embedded connection
-    	if (getServerName() == null) {
-    		super.validateProperties(userName, password);
-	        final Properties props = buildEmbeddedProperties(userName, password);
-	        String url = new JDBCURL(getDatabaseName(), null, null).getJDBCURL();
-	        return driver.connect(url, props);
-    	}
+        // check if this is embedded connection
+        if (getServerName() == null) {
+            super.validateProperties(userName, password);
+            final Properties props = buildEmbeddedProperties(userName, password);
+            String url = new JDBCURL(getDatabaseName(), null, null).getJDBCURL();
+            return driver.connect(url, props);
+        }
 
-    	// if not proceed with socket connection.
+        // if not proceed with socket connection.
         validateProperties(userName,password);
         final Properties props = buildProperties(userName, password);
         return driver.connect(new JDBCURL(this.getDatabaseName(), buildServerURL(), null).getJDBCURL(), props);
     }
 
-	private Properties buildEmbeddedProperties(final String userName, final String password) {
-		Properties props = buildProperties(userName, password);
-		props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
-		return props;
-	}
+    private Properties buildEmbeddedProperties(final String userName, final String password) {
+        Properties props = buildProperties(userName, password);
+        props.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, Boolean.toString(this.passthroughAuthentication));
+        return props;
+    }
 
    /**
      * @see java.lang.Object#toString()
      */
     public String toString() {
         try {
-			return buildURL().getJDBCURL();
-		} catch (TeiidSQLException e) {
-			return e.getMessage();
-		}
+            return buildURL().getJDBCURL();
+        } catch (TeiidSQLException e) {
+            return e.getMessage();
+        }
     }
 
     // --------------------------------------------------------------------------------------------
@@ -336,8 +336,8 @@ public class TeiidDataSource extends BaseDataSource {
      * @since 5.5
      */
     public String getAlternateServers() {
-    	if ( this.alternateServers != null && this.alternateServers.length() < 1 )
-    		return null;
+        if ( this.alternateServers != null && this.alternateServers.length() < 1 )
+            return null;
         return this.alternateServers;
     }
 
@@ -382,9 +382,9 @@ public class TeiidDataSource extends BaseDataSource {
      * @since 5.5
      */
     public void setAlternateServers(final String servers) {
-    	this.alternateServers = servers;
-    	if ( this.alternateServers != null && this.alternateServers.length() < 1 )
-    		this.alternateServers = null;
+        this.alternateServers = servers;
+        if ( this.alternateServers != null && this.alternateServers.length() < 1 )
+            this.alternateServers = null;
     }
 
 
@@ -400,7 +400,7 @@ public class TeiidDataSource extends BaseDataSource {
      * @see #setPortNumber(int)
      */
     public static String reasonWhyInvalidPortNumber( final int portNumber) {
-    	return TeiidURL.validatePort(portNumber);
+        return TeiidURL.validatePort(portNumber);
     }
 
     /**
@@ -467,97 +467,97 @@ public class TeiidDataSource extends BaseDataSource {
         this.autoFailover = autoFailover;
     }
 
-	/**
-	 * When true, this connection uses the passed in security domain to do the authentication.
-	 * @return
-	 */
+    /**
+     * When true, this connection uses the passed in security domain to do the authentication.
+     * @return
+     */
     public boolean isPassthroughAuthentication() {
-		return passthroughAuthentication;
-	}
+        return passthroughAuthentication;
+    }
 
     /**
      * Same as "isPassthroughAuthentication". Required by the reflection login in connection pools to identify the type
      * @return
      */
     public boolean getPassthroughAuthentication() {
-		return passthroughAuthentication;
-	}
+        return passthroughAuthentication;
+    }
 
-	/**
-	 * When set to true, the connection uses the passed in security domain to do the authentication.
-	 * @since 7.1
-	 * @return
-	 */
-	public void setPassthroughAuthentication(final boolean passthroughAuthentication) {
-		this.passthroughAuthentication = passthroughAuthentication;
-	}
+    /**
+     * When set to true, the connection uses the passed in security domain to do the authentication.
+     * @since 7.1
+     * @return
+     */
+    public void setPassthroughAuthentication(final boolean passthroughAuthentication) {
+        this.passthroughAuthentication = passthroughAuthentication;
+    }
 
-	/**
-	 * Application name from JAAS Login Config file
-	 * @since 7.6
-	 * @return
-	 */
+    /**
+     * Application name from JAAS Login Config file
+     * @since 7.6
+     * @return
+     */
     public String getJaasName() {
-		return jaasName;
-	}
+        return jaasName;
+    }
 
-	/**
-	 * Application name from JAAS Login Config file
-	 * @since 7.6
-	 */
-	public void setJaasName(String jaasApplicationName) {
-		this.jaasName = jaasApplicationName;
-	}
+    /**
+     * Application name from JAAS Login Config file
+     * @since 7.6
+     */
+    public void setJaasName(String jaasApplicationName) {
+        this.jaasName = jaasApplicationName;
+    }
 
-	/**
-	 * Kerberos KDC service principle name
-	 * @since 7.6
-	 * @return
-	 */
-	public String getKerberosServicePrincipleName() {
-		return kerberosServicePrincipleName;
-	}
+    /**
+     * Kerberos KDC service principle name
+     * @since 7.6
+     * @return
+     */
+    public String getKerberosServicePrincipleName() {
+        return kerberosServicePrincipleName;
+    }
 
-	/**
-	 * Kerberos KDC service principle name
-	 * @since 7.6
-	 */
-	public void setKerberosServicePrincipleName(String kerberosServerName) {
-		this.kerberosServicePrincipleName = kerberosServerName;
-	}
+    /**
+     * Kerberos KDC service principle name
+     * @since 7.6
+     */
+    public void setKerberosServicePrincipleName(String kerberosServerName) {
+        this.kerberosServicePrincipleName = kerberosServerName;
+    }
 
-	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-		return TeiidDriver.logger;
-	}
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return TeiidDriver.logger;
+    }
 
-	public void setEncryptRequests(boolean encryptRequests) {
-		this.encryptRequests = encryptRequests;
-	}
+    public void setEncryptRequests(boolean encryptRequests) {
+        this.encryptRequests = encryptRequests;
+    }
 
-	public boolean isEncryptRequests() {
-		return encryptRequests;
-	}
+    public boolean isEncryptRequests() {
+        return encryptRequests;
+    }
 
-	public boolean getEncryptRequests() {
-		return encryptRequests;
-	}
+    public boolean getEncryptRequests() {
+        return encryptRequests;
+    }
 
-	@Deprecated
-	public boolean isLoadBalance() {
-		return false;
-	}
+    @Deprecated
+    public boolean isLoadBalance() {
+        return false;
+    }
 
-	@Deprecated
-	public boolean getLoadBalance() {
-		return false;
-	}
+    @Deprecated
+    public boolean getLoadBalance() {
+        return false;
+    }
 
-	@Deprecated
-	public void setLoadBalance(boolean loadBalance) {
+    @Deprecated
+    public void setLoadBalance(boolean loadBalance) {
 
-	}
+    }
 
-	/**
+    /**
      * Attempt to establish a database connection that can be used with distributed transactions.
      * @param userName the database user on whose behalf the XAConnection is being made
      * @param password the user's password
@@ -566,8 +566,8 @@ public class TeiidDataSource extends BaseDataSource {
      * @see javax.sql.XADataSource#getXAConnection(java.lang.String, java.lang.String)
      */
     public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
-    	XAConnectionImpl result = new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
-    	return result;
+        XAConnectionImpl result = new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
+        return result;
     }
 
 }

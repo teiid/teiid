@@ -279,17 +279,17 @@ public class TestAccessPatterns {
      * Criteria was preventing rule choose dependent from creating the appropriate dependent join
      */
     @Test public void testMultiAccessPatternWithCriteria() throws Exception {
-    	String sql = "SELECT pm1.g1.* FROM pm4.g1, pm5.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1 and pm5.g1.e1 = pm1.g1.e1 and pm5.g1.e2 like '%x' "; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.* FROM pm4.g1, pm5.g1, pm1.g1 where pm4.g1.e1 = pm1.g1.e1 and pm5.g1.e1 = pm1.g1.e1 and pm5.g1.e2 like '%x' "; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         AnalysisRecord record = new AnalysisRecord(true, true);
 
         TestOptimizer.helpPlanCommand(TestOptimizer.helpGetCommand(sql, metadata), metadata, TestOptimizer.getGenericFinder(false), record,
-						new String[] {
-								"SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$
-								"SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
-								"SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                        new String[] {
+                                "SELECT g_0.e2, g_0.e1 FROM pm5.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)", //$NON-NLS-1$
+                                "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0", //$NON-NLS-1$
+                                "SELECT g_0.e1 FROM pm4.g1 AS g_0 WHERE g_0.e1 IN (<dependent values>)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         assertTrue(record.getAnnotations().toString().contains("access pattern not satisfied by join"));
     }

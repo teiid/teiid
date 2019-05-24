@@ -40,17 +40,17 @@ import com.google.api.services.sheets.v4.model.ValueRange;
  */
 public class SheetsAPI {
 
-	private Sheets service;
+    private Sheets service;
 
-	public SheetsAPI(OAuth2HeaderFactory headerFactory) {
-	    this.service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, headerFactory.getCredential())
+    public SheetsAPI(OAuth2HeaderFactory headerFactory) {
+        this.service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, headerFactory.getCredential())
                 .setApplicationName("GdataSpreadsheetBrowser") //$NON-NLS-1$
                 .build();
-	}
+    }
 
-	public Spreadsheet getSpreadsheet(String spreadsheetId) throws IOException {
+    public Spreadsheet getSpreadsheet(String spreadsheetId) throws IOException {
         return this.service.spreadsheets().get(spreadsheetId).execute();
-	}
+    }
 
     /**
      * Insert row into spreadsheet
@@ -59,7 +59,7 @@ public class SheetsAPI {
      * @param worksheet name - value pair that should be inserted into spreadsheet
      * @return 1 if the row is successfully inserted
      */
-	public UpdateResult insert(String spreadsheetId, Map<String, Object> pairs, Worksheet worksheet) {
+    public UpdateResult insert(String spreadsheetId, Map<String, Object> pairs, Worksheet worksheet) {
         ValueRange content = new ValueRange();
 
         List<Object> row = new ArrayList<>();
@@ -77,7 +77,7 @@ public class SheetsAPI {
 
         content.setValues(Arrays.asList(row));
 
-		try {
+        try {
             service.spreadsheets().values()
             .append(spreadsheetId, worksheet.getName(), content)
             .setValueInputOption("USER_ENTERED") //$NON-NLS-1$ -- TODO: this could be configurable
@@ -86,7 +86,7 @@ public class SheetsAPI {
             throw new SpreadsheetOperationException("Error inserting spreadsheet row", e);
         }
 
-		return new UpdateResult(1, 1);
-	}
+        return new UpdateResult(1, 1);
+    }
 
 }

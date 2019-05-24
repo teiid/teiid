@@ -21,39 +21,39 @@ import java.util.Arrays;
 
 public abstract class IndexBlock extends Block {
 
-	public IndexBlock(int blockSize) {
-		super(blockSize);
-	}
-	public WordEntry findEntryPrefixedBy(char[] word, boolean isCaseSensitive) {
-		reset();
-		WordEntry entry= new WordEntry();
-		while (nextEntry(entry)) {
-			if (CharOperation.prefixEquals(entry.getWord(), word, isCaseSensitive)) {
-				return entry;
-			}
-		}
-		return null;
-	}
-	public WordEntry findExactEntry(char[] word) {
-		reset();
-		WordEntry entry= new WordEntry();
-		while (nextEntry(entry)) {
-			if (Arrays.equals(entry.getWord(), word)) {
-				return entry;
-			}
-		}
-		return null;
-	}
-	/**
-	 * Returns whether the block is empty or not (if it doesn't contain any wordEntry).
-	 */
-	public abstract boolean isEmpty();
+    public IndexBlock(int blockSize) {
+        super(blockSize);
+    }
+    public WordEntry findEntryPrefixedBy(char[] word, boolean isCaseSensitive) {
+        reset();
+        WordEntry entry= new WordEntry();
+        while (nextEntry(entry)) {
+            if (CharOperation.prefixEquals(entry.getWord(), word, isCaseSensitive)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+    public WordEntry findExactEntry(char[] word) {
+        reset();
+        WordEntry entry= new WordEntry();
+        while (nextEntry(entry)) {
+            if (Arrays.equals(entry.getWord(), word)) {
+                return entry;
+            }
+        }
+        return null;
+    }
+    /**
+     * Returns whether the block is empty or not (if it doesn't contain any wordEntry).
+     */
+    public abstract boolean isEmpty();
 
-	/**
-	 * Finds the next wordEntry and stores it in the given entry.
-	 */
-	public abstract boolean nextEntry(WordEntry entry);
+    /**
+     * Finds the next wordEntry and stores it in the given entry.
+     */
+    public abstract boolean nextEntry(WordEntry entry);
 
-	public void reset() {
-	}
+    public void reset() {
+    }
 }

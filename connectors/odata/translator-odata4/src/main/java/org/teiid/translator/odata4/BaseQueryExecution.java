@@ -118,22 +118,22 @@ public class BaseQueryExecution {
         try {
             Blob blob = (Blob)execution.getOutputParameterValues().get(0);
             if (blob != null) {
-            	boolean json = false;
-            	String contentTypeString = getHeader(execution, "Content-Type"); //$NON-NLS-1$
-            	if (contentTypeString != null) {
-            		ContentType contentType = ContentType.parse(contentTypeString);
-            		if (contentType != null && ContentType.APPLICATION_JSON.isCompatible(contentType)) {
-            			json = true;
-            		}
-            	}
-            	ODataDeserializer parser = null;
-            	if (json) {
-	                parser = new JsonDeserializer(false);
-	        	} else {
-	        		//TODO: it may not be atom, it could just be xml/html
-	        		parser = new AtomDeserializer();
-	        	}
-             	ODataError error = parser.toError(blob.getBinaryStream());
+                boolean json = false;
+                String contentTypeString = getHeader(execution, "Content-Type"); //$NON-NLS-1$
+                if (contentTypeString != null) {
+                    ContentType contentType = ContentType.parse(contentTypeString);
+                    if (contentType != null && ContentType.APPLICATION_JSON.isCompatible(contentType)) {
+                        json = true;
+                    }
+                }
+                ODataDeserializer parser = null;
+                if (json) {
+                    parser = new JsonDeserializer(false);
+                } else {
+                    //TODO: it may not be atom, it could just be xml/html
+                    parser = new AtomDeserializer();
+                }
+                 ODataError error = parser.toError(blob.getBinaryStream());
 
                 return new TranslatorException(ODataPlugin.Util.gs(
                         ODataPlugin.Event.TEIID17013, execution.getResponseCode(),
@@ -237,13 +237,13 @@ public class BaseQueryExecution {
                 colName = getName(columnParent)+"/"+column.getName(); //$NON-NLS-1$
             }
             Object value;
-			try {
-				value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i],
-						values.get(colName), ODataMetadataProcessor.getNativeType(column),
-						column.getProperty(BaseColumn.SPATIAL_SRID, false));
-			} catch (TeiidException e) {
-				throw new TranslatorException(e);
-			}
+            try {
+                value = ODataTypeManager.convertToTeiidRuntimeType(expectedType[i],
+                        values.get(colName), ODataMetadataProcessor.getNativeType(column),
+                        column.getProperty(BaseColumn.SPATIAL_SRID, false));
+            } catch (TeiidException e) {
+                throw new TranslatorException(e);
+            }
             results.add(value);
         }
         return results;

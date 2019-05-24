@@ -58,13 +58,13 @@ public class Insert extends ProcedureContainer {
     public Insert() {
     }
 
-	/**
-	 * Return type of command.
-	 * @return TYPE_INSERT
-	 */
-	public int getType() {
-		return Command.TYPE_INSERT;
-	}
+    /**
+     * Return type of command.
+     * @return TYPE_INSERT
+     */
+    public int getType() {
+        return Command.TYPE_INSERT;
+    }
 
     /**
      * Construct an instance with group, variable list (may be null), and values
@@ -154,22 +154,22 @@ public class Insert extends ProcedureContainer {
     }
 
     public void setQueryExpression( QueryCommand query ) {
-    	if (query instanceof Query) {
-    		Query expr = (Query)query;
-    		//a single row constructor query is the same as values
-    		if (expr.isRowConstructor()) {
-    			this.values.clear();
-    			this.queryExpression = null;
-    			for (Expression ex : expr.getSelect().getSymbols()) {
-    				addValue(SymbolMap.getExpression(ex));
-    			}
-    			if (expr.getOption() != null && this.getOption() == null) {
-    				//this isn't ideal, parsing associates the option with values
-    				this.setOption(expr.getOption());
-    			}
-    			return;
-    		}
-    	}
+        if (query instanceof Query) {
+            Query expr = (Query)query;
+            //a single row constructor query is the same as values
+            if (expr.isRowConstructor()) {
+                this.values.clear();
+                this.queryExpression = null;
+                for (Expression ex : expr.getSelect().getSymbols()) {
+                    addValue(SymbolMap.getExpression(ex));
+                }
+                if (expr.getOption() != null && this.getOption() == null) {
+                    //this isn't ideal, parsing associates the option with values
+                    this.setOption(expr.getOption());
+                }
+                return;
+            }
+        }
         this.queryExpression = query;
     }
 
@@ -189,11 +189,11 @@ public class Insert extends ProcedureContainer {
      * @return Hash code for object
      */
     public int hashCode() {
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.group);
-		myHash = HashCodeUtil.hashCode(myHash, this.variables);
-		return myHash;
-	}
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.group);
+        myHash = HashCodeUtil.hashCode(myHash, this.variables);
+        return myHash;
+    }
 
     /**
      * Compare two Insert commands for equality.  Will only evaluate to equal if
@@ -202,17 +202,17 @@ public class Insert extends ProcedureContainer {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof Insert)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof Insert)) {
+            return false;
+        }
 
-		Insert other = (Insert) obj;
+        Insert other = (Insert) obj;
 
         return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
                EquivalenceUtil.areEqual(getValues(), other.getValues()) &&
@@ -223,75 +223,75 @@ public class Insert extends ProcedureContainer {
 
     }
 
-	/**
-	 * Return a deep copy of this Insert.
-	 * @return Deep copy of Insert
-	 */
-	public Object clone() {
-	    GroupSymbol copyGroup = null;
-	    if(group != null) {
-	    	copyGroup = group.clone();
-	    }
+    /**
+     * Return a deep copy of this Insert.
+     * @return Deep copy of Insert
+     */
+    public Object clone() {
+        GroupSymbol copyGroup = null;
+        if(group != null) {
+            copyGroup = group.clone();
+        }
 
-	    List<ElementSymbol> copyVars = LanguageObject.Util.deepClone(getVariables(), ElementSymbol.class);
+        List<ElementSymbol> copyVars = LanguageObject.Util.deepClone(getVariables(), ElementSymbol.class);
 
         List<Expression> copyVals = null;
 
         if ( getValues() != null) {
-        	copyVals = LanguageObject.Util.deepClone(getValues(), Expression.class);
+            copyVals = LanguageObject.Util.deepClone(getValues(), Expression.class);
         }
 
-	    Insert copy = new Insert(copyGroup, copyVars, copyVals);
-	    if (this.queryExpression != null) {
-	    	copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
-	    }
+        Insert copy = new Insert(copyGroup, copyVars, copyVals);
+        if (this.queryExpression != null) {
+            copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
+        }
         this.copyMetadataState(copy);
         if (this.constraint != null) {
-        	copy.constraint = (Criteria) this.constraint.clone();
+            copy.constraint = (Criteria) this.constraint.clone();
         }
         copy.upsert = this.upsert;
-		return copy;
-	}
+        return copy;
+    }
 
-	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List<Expression> getProjectedSymbols(){
+    /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List<Expression> getProjectedSymbols(){
         return Command.getUpdateCommandSymbol();
-	}
+    }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable() {
-		return false;
-	}
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable() {
+        return false;
+    }
 
-	public void setTupleSource(TupleSource tupleSource) {
-		this.tupleSource = tupleSource;
-	}
+    public void setTupleSource(TupleSource tupleSource) {
+        this.tupleSource = tupleSource;
+    }
 
-	public TupleSource getTupleSource() {
-		return tupleSource;
-	}
+    public TupleSource getTupleSource() {
+        return tupleSource;
+    }
 
-	public Criteria getConstraint() {
-		return constraint;
-	}
+    public Criteria getConstraint() {
+        return constraint;
+    }
 
-	public void setConstraint(Criteria constraint) {
-		this.constraint = constraint;
-	}
+    public void setConstraint(Criteria constraint) {
+        this.constraint = constraint;
+    }
 
-	public boolean isUpsert() {
-		return upsert;
-	}
+    public boolean isUpsert() {
+        return upsert;
+    }
 
-	public void setUpsert(boolean merge) {
-		this.upsert = merge;
-	}
+    public void setUpsert(boolean merge) {
+        this.upsert = merge;
+    }
 
 }

@@ -25,17 +25,17 @@ import org.mockito.Mockito;
 
 public class TestForeignKey {
 
-	@Test
-	public void testReferenceTableName() {
-		Table table = Mockito.mock(Table.class);
-		Mockito.stub(table.getName()).toReturn("table"); //$NON-NLS-1$
+    @Test
+    public void testReferenceTableName() {
+        Table table = Mockito.mock(Table.class);
+        Mockito.stub(table.getName()).toReturn("table"); //$NON-NLS-1$
 
-		KeyRecord pk = Mockito.mock(KeyRecord.class);
-		Mockito.stub(pk.getParent()).toReturn(table);
+        KeyRecord pk = Mockito.mock(KeyRecord.class);
+        Mockito.stub(pk.getParent()).toReturn(table);
 
-		ForeignKey fk = new ForeignKey();
-		fk.setPrimaryKey(pk);
+        ForeignKey fk = new ForeignKey();
+        fk.setPrimaryKey(pk);
 
-		assertEquals("table", fk.getReferenceTableName()); //$NON-NLS-1$
-	}
+        assertEquals("table", fk.getReferenceTableName()); //$NON-NLS-1$
+    }
 }

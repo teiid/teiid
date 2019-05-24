@@ -36,8 +36,8 @@ public class RestServicePlugin {
     }
 
     public static enum Event implements BundleUtil.Event {
-    	TEIID28001,
-    	TEIID28002,
-    	TEIID28003,
+        TEIID28001,
+        TEIID28002,
+        TEIID28003,
     }
 }

@@ -44,7 +44,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable, Comparable<BaseClobType> {
 
 
-	private static final long serialVersionUID = 2753412502127824104L;
+    private static final long serialVersionUID = 2753412502127824104L;
 
     private int hash;
 
@@ -52,7 +52,7 @@ public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable
     }
 
     public BaseClobType(Clob clob) {
-    	super(clob);
+        super(clob);
     }
 
     /**
@@ -141,18 +141,18 @@ public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable
     public static String getString(Clob clob) throws SQLException, IOException {
         Reader reader = clob.getCharacterStream();
         try {
-	        StringWriter writer = new StringWriter();
-	        int c = reader.read();
-	        while (c != -1) {
-	            writer.write((char)c);
-	            c = reader.read();
-	        }
-	        reader.close();
-	        String data = writer.toString();
-	        writer.close();
-	        return data;
+            StringWriter writer = new StringWriter();
+            int c = reader.read();
+            while (c != -1) {
+                writer.write((char)c);
+                c = reader.read();
+            }
+            reader.close();
+            String data = writer.toString();
+            writer.close();
+            return data;
         } finally {
-        	reader.close();
+            reader.close();
         }
     }
 
@@ -161,10 +161,10 @@ public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable
     public CharSequence getCharSequence() {
         return new CharSequence() {
 
-        	private char[] buffer = new char[CHAR_SEQUENCE_BUFFER_SIZE];
-        	private int bufLength;
-        	private Reader reader;
-        	private int beginPosition;
+            private char[] buffer = new char[CHAR_SEQUENCE_BUFFER_SIZE];
+            private int bufLength;
+            private Reader reader;
+            private int beginPosition;
 
             public int length() {
                 long result;
@@ -185,20 +185,20 @@ public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable
                         reader.close();
                         reader = null;
                     }
-                	if (buffer == null || index < beginPosition || index >= beginPosition + bufLength) {
-                	    if (reference instanceof ClobImpl) {
-                    	    if (reader == null) {
+                    if (buffer == null || index < beginPosition || index >= beginPosition + bufLength) {
+                        if (reference instanceof ClobImpl) {
+                            if (reader == null) {
                                 reader = getCharacterStream();
-                    	    }
-                    	    bufLength = reader.read(buffer, 0, buffer.length);
-                	    } else {
-                	        String stringBuffer = BaseClobType.this.getSubString(index + 1, CHAR_SEQUENCE_BUFFER_SIZE);
-                	        bufLength = stringBuffer.length();
-                	        buffer = stringBuffer.toCharArray();
-                	    }
+                            }
+                            bufLength = reader.read(buffer, 0, buffer.length);
+                        } else {
+                            String stringBuffer = BaseClobType.this.getSubString(index + 1, CHAR_SEQUENCE_BUFFER_SIZE);
+                            bufLength = stringBuffer.length();
+                            buffer = stringBuffer.toCharArray();
+                        }
                         beginPosition = index;
-                	}
-                	return buffer[index - beginPosition];
+                    }
+                    return buffer[index - beginPosition];
                 } catch (IOException err) {
                     throw new TeiidRuntimeException(CorePlugin.Event.TEIID10053, err);
                 } catch (SQLException err) {
@@ -219,118 +219,118 @@ public class BaseClobType extends Streamable<Clob> implements NClob, Sequencable
     }
 
     public void free() throws SQLException {
-		this.reference.free();
-	}
+        this.reference.free();
+    }
 
-	public Reader getCharacterStream(long pos, long len) throws SQLException {
-		return this.reference.getCharacterStream(pos, len);
-	}
+    public Reader getCharacterStream(long pos, long len) throws SQLException {
+        return this.reference.getCharacterStream(pos, len);
+    }
 
-	@Override
-	protected void readReference(ObjectInput in) throws IOException {
-		char[] chars = new char[(int)length];
-		for (int i = 0; i < chars.length; i++) {
-			chars[i] = in.readChar();
-		}
-		this.reference = ClobImpl.createClob(chars);
-	}
+    @Override
+    protected void readReference(ObjectInput in) throws IOException {
+        char[] chars = new char[(int)length];
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = in.readChar();
+        }
+        this.reference = ClobImpl.createClob(chars);
+    }
 
-	/**
-	 * Since we have the length in chars we'll just write out in double byte format.
-	 * These clobs should be small, so the wasted space should be minimal.
-	 */
-	@Override
-	protected void writeReference(final DataOutput out) throws IOException {
-		Writer w = new Writer() {
+    /**
+     * Since we have the length in chars we'll just write out in double byte format.
+     * These clobs should be small, so the wasted space should be minimal.
+     */
+    @Override
+    protected void writeReference(final DataOutput out) throws IOException {
+        Writer w = new Writer() {
 
-			@Override
-			public void write(char[] cbuf, int off, int len) throws IOException {
-				for (int i = off; i < len; i++) {
-					out.writeChar(cbuf[i]);
-				}
-			}
+            @Override
+            public void write(char[] cbuf, int off, int len) throws IOException {
+                for (int i = off; i < len; i++) {
+                    out.writeChar(cbuf[i]);
+                }
+            }
 
-			@Override
-			public void flush() throws IOException {
-			}
+            @Override
+            public void flush() throws IOException {
+            }
 
-			@Override
-			public void close() throws IOException {
-			}
-		};
-		Reader r;
-		try {
-			r = getCharacterStream();
-		} catch (SQLException e) {
-			throw new IOException(e);
-		}
-		try {
-			int chars = ObjectConverterUtil.write(w, r, (int)length, false);
-			if (length != chars) {
-				throw new IOException("Expected length " + length + " but was " + chars + " for " + this.reference); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		} finally {
-			r.close();
-		}
-	}
+            @Override
+            public void close() throws IOException {
+            }
+        };
+        Reader r;
+        try {
+            r = getCharacterStream();
+        } catch (SQLException e) {
+            throw new IOException(e);
+        }
+        try {
+            int chars = ObjectConverterUtil.write(w, r, (int)length, false);
+            if (length != chars) {
+                throw new IOException("Expected length " + length + " but was " + chars + " for " + this.reference); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        } finally {
+            r.close();
+        }
+    }
 
-	@Override
-	public int compareTo(BaseClobType o) {
-		try {
-    		Reader cs1 = this.getCharacterStream();
-    		Reader cs2 = o.getCharacterStream();
-    		long len1 = this.length();
-    		long len2 = o.length();
-    		long n = Math.min(len1, len2);
-		    for (long i = 0; i < n; i++) {
-				int c1 = cs1.read();
-				int c2 = cs2.read();
-				if (c1 != c2) {
-				    return c1 - c2;
-				}
-		    }
-    		return Long.signum(len1 - len2);
-		} catch (SQLException e) {
-			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10056, e);
-		} catch (IOException e) {
-			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10057, e);
-		}
-	}
+    @Override
+    public int compareTo(BaseClobType o) {
+        try {
+            Reader cs1 = this.getCharacterStream();
+            Reader cs2 = o.getCharacterStream();
+            long len1 = this.length();
+            long len2 = o.length();
+            long n = Math.min(len1, len2);
+            for (long i = 0; i < n; i++) {
+                int c1 = cs1.read();
+                int c2 = cs2.read();
+                if (c1 != c2) {
+                    return c1 - c2;
+                }
+            }
+            return Long.signum(len1 - len2);
+        } catch (SQLException e) {
+              throw new TeiidRuntimeException(CorePlugin.Event.TEIID10056, e);
+        } catch (IOException e) {
+              throw new TeiidRuntimeException(CorePlugin.Event.TEIID10057, e);
+        }
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof BaseClobType)) {
-			return false;
-		}
-		BaseClobType other = (BaseClobType)obj;
-		if (EquivalenceUtil.areEqual(reference, other.reference)) {
-			return true;
-		}
-		try {
-		    if (length() != other.length()) {
-		        return false;
-		    }
-			return this.compareTo(other) == 0;
-		} catch (SQLException e) {
-		    return false;
-		} catch (TeiidRuntimeException e) {
-			return false;
-		}
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof BaseClobType)) {
+            return false;
+        }
+        BaseClobType other = (BaseClobType)obj;
+        if (EquivalenceUtil.areEqual(reference, other.reference)) {
+            return true;
+        }
+        try {
+            if (length() != other.length()) {
+                return false;
+            }
+            return this.compareTo(other) == 0;
+        } catch (SQLException e) {
+            return false;
+        } catch (TeiidRuntimeException e) {
+            return false;
+        }
+    }
 
-	@Override
-	public int hashCode() {
-	    try {
-	        if (hash == 0) {
-	            hash = HashCodeUtil.expHashCode(this.getCharSequence());
-	        }
-	        return hash;
-	    } catch (TeiidRuntimeException e) {
-	        return 0;
-	    }
-	}
+    @Override
+    public int hashCode() {
+        try {
+            if (hash == 0) {
+                hash = HashCodeUtil.expHashCode(this.getCharSequence());
+            }
+            return hash;
+        } catch (TeiidRuntimeException e) {
+            return 0;
+        }
+    }
 
 }

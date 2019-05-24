@@ -57,79 +57,79 @@ import org.teiid.translator.google.api.SpreadsheetAuthException;
  *
  */
 public class OAuth2Authenticator {
-	final static String CLIENT_ID = "217138521084.apps.googleusercontent.com"; //$NON-NLS-1$
-	final static String CLIENT_SECRET = "gXQ6-lOkEjE1lVcz7giB4Poy"; //$NON-NLS-1$
-//	private final String SCOPE_DRIVE = "https://docs.google.com/feeds";
-	private final String TOKEN_URL = "https://accounts.google.com/o/oauth2/token"; //$NON-NLS-1$
+    final static String CLIENT_ID = "217138521084.apps.googleusercontent.com"; //$NON-NLS-1$
+    final static String CLIENT_SECRET = "gXQ6-lOkEjE1lVcz7giB4Poy"; //$NON-NLS-1$
+//    private final String SCOPE_DRIVE = "https://docs.google.com/feeds";
+    private final String TOKEN_URL = "https://accounts.google.com/o/oauth2/token"; //$NON-NLS-1$
 
 
-	/**
-	 *
-	 * @param clientSecret
-	 * @param clientId
-	 * @param new immutable instance of OAuth2Tokens
-	 * @return
-	 */
-//	curl --data-urlencode client_id=217138521084.apps.googleusercontent.com \
-//	--data-urlencode client_secret=gXQ6-lOkEjE1lVcz7giB4Poy \
-//	--data-urlencode refresh_token=1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs \
-//	--data-urlencode grant_type=refresh_token \
-//	https://accounts.google.com/o/oauth2/token
-	public OAuth2Tokens refreshToken(OAuth2Tokens at, String clientId, String clientSecret) {
+    /**
+     *
+     * @param clientSecret
+     * @param clientId
+     * @param new immutable instance of OAuth2Tokens
+     * @return
+     */
+//    curl --data-urlencode client_id=217138521084.apps.googleusercontent.com \
+//    --data-urlencode client_secret=gXQ6-lOkEjE1lVcz7giB4Poy \
+//    --data-urlencode refresh_token=1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs \
+//    --data-urlencode grant_type=refresh_token \
+//    https://accounts.google.com/o/oauth2/token
+    public OAuth2Tokens refreshToken(OAuth2Tokens at, String clientId, String clientSecret) {
 
-		List<NameValuePair> nvps = new ArrayList<NameValuePair>();
-		nvps.add(new BasicNameValuePair("client_id", clientId)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("client_secret", clientSecret)); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("refresh_token", at.getRefreshToken())); //$NON-NLS-1$
-		nvps.add(new BasicNameValuePair("grant_type", "refresh_token")); //$NON-NLS-1$ //$NON-NLS-2$
-		Map<?, ?> json = jsonResponseHttpPost(TOKEN_URL, nvps);
-		return new OAuth2Tokens(json.get("access_token"), //$NON-NLS-1$
-				at.getRefreshToken(), json.get("expires_in")); //$NON-NLS-1$
-	}
+        List<NameValuePair> nvps = new ArrayList<NameValuePair>();
+        nvps.add(new BasicNameValuePair("client_id", clientId)); //$NON-NLS-1$
+        nvps.add(new BasicNameValuePair("client_secret", clientSecret)); //$NON-NLS-1$
+        nvps.add(new BasicNameValuePair("refresh_token", at.getRefreshToken())); //$NON-NLS-1$
+        nvps.add(new BasicNameValuePair("grant_type", "refresh_token")); //$NON-NLS-1$ //$NON-NLS-2$
+        Map<?, ?> json = jsonResponseHttpPost(TOKEN_URL, nvps);
+        return new OAuth2Tokens(json.get("access_token"), //$NON-NLS-1$
+                at.getRefreshToken(), json.get("expires_in")); //$NON-NLS-1$
+    }
 
-	private Map<?, ?> jsonResponseHttpPost(String url, List<NameValuePair> data) {
-		DefaultHttpClient httpclient = new DefaultHttpClient();
-		HttpPost httpPost = new HttpPost(url);
+    private Map<?, ?> jsonResponseHttpPost(String url, List<NameValuePair> data) {
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost(url);
 
-		HttpResponse response = null;
-		try {
-			httpPost.setEntity(new UrlEncodedFormEntity(data));
-			response = httpclient.execute(httpPost);
-		} catch (Exception ex) {
-			throw new SpreadsheetAuthException(
-					"Error when attempting Http Request to OAuth2", ex);
-		}
+        HttpResponse response = null;
+        try {
+            httpPost.setEntity(new UrlEncodedFormEntity(data));
+            response = httpclient.execute(httpPost);
+        } catch (Exception ex) {
+            throw new SpreadsheetAuthException(
+                    "Error when attempting Http Request to OAuth2", ex);
+        }
 
-		if (response.getStatusLine().getStatusCode() != 200) {
-			String msg = null;
-			msg = response.getStatusLine().getStatusCode() + ": "
-					+ response.getStatusLine().getReasonPhrase();
-			throw new SpreadsheetAuthException(
-					"Error when attempting OAuth2 process: " + msg);
-		}
+        if (response.getStatusLine().getStatusCode() != 200) {
+            String msg = null;
+            msg = response.getStatusLine().getStatusCode() + ": "
+                    + response.getStatusLine().getReasonPhrase();
+            throw new SpreadsheetAuthException(
+                    "Error when attempting OAuth2 process: " + msg);
+        }
 
-		InputStream is = null;
-		try {
-			//Parse JSON response
-			is = response.getEntity().getContent();
-			GoogleJSONParser parser = new GoogleJSONParser();
-			Map<?,?> jsonResponse = (Map<?, ?>) parser.parseObject(new InputStreamReader(is, Charset.forName(GoogleDataProtocolAPI.ENCODING)), false);
+        InputStream is = null;
+        try {
+            //Parse JSON response
+            is = response.getEntity().getContent();
+            GoogleJSONParser parser = new GoogleJSONParser();
+            Map<?,?> jsonResponse = (Map<?, ?>) parser.parseObject(new InputStreamReader(is, Charset.forName(GoogleDataProtocolAPI.ENCODING)), false);
 
-			//Report errors
-			if (jsonResponse.get("error") != null){ //$NON-NLS-1$
-				throw new SpreadsheetAuthException("OAuth2 service says: "+ jsonResponse.get("error")); //$NON-NLS-2$
-			}
-			return jsonResponse;
+            //Report errors
+            if (jsonResponse.get("error") != null){ //$NON-NLS-1$
+                throw new SpreadsheetAuthException("OAuth2 service says: "+ jsonResponse.get("error")); //$NON-NLS-2$
+            }
+            return jsonResponse;
 
-		} catch (IOException e) {
-			throw new SpreadsheetAuthException(
-					"Error reading Client Login response", e);
-		} finally {
-			if (is != null)
-				try {
-					is.close();
-				} catch (IOException e) {
-				}
-		}
-	}
+        } catch (IOException e) {
+            throw new SpreadsheetAuthException(
+                    "Error reading Client Login response", e);
+        } finally {
+            if (is != null)
+                try {
+                    is.close();
+                } catch (IOException e) {
+                }
+        }
+    }
 }

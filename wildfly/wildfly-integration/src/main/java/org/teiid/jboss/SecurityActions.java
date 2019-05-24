@@ -29,75 +29,75 @@ import org.jboss.security.SecurityContextAssociation;
 import org.jboss.security.SecurityContextFactory;
 
 class SecurityActions {
-	   static void setSecurityContext(final SecurityContext sc)
-	   {
-	      AccessController.doPrivileged(new PrivilegedAction<Object>()
-	      {
-	         public Object run()
-	         {
-	            SecurityContextAssociation.setSecurityContext(sc);
-	            return null;
-	         }
-	      });
-	   }
+       static void setSecurityContext(final SecurityContext sc)
+       {
+          AccessController.doPrivileged(new PrivilegedAction<Object>()
+          {
+             public Object run()
+             {
+                SecurityContextAssociation.setSecurityContext(sc);
+                return null;
+             }
+          });
+       }
 
-	   static SecurityContext getSecurityContext()
-	   {
-	      return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
-	      {
-	         public SecurityContext run()
-	         {
-	            return SecurityContextAssociation.getSecurityContext();
-	         }
-	      });
-	   }
+       static SecurityContext getSecurityContext()
+       {
+          return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
+          {
+             public SecurityContext run()
+             {
+                return SecurityContextAssociation.getSecurityContext();
+             }
+          });
+       }
 
-	   static SecurityContext clearSecurityContext()
-	   {
-	      return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
-	      {
-	         public SecurityContext run()
-	         {
-	            SecurityContextAssociation.clearSecurityContext();
-	            return null;
-	         }
-	      });
-	   }
+       static SecurityContext clearSecurityContext()
+       {
+          return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>()
+          {
+             public SecurityContext run()
+             {
+                SecurityContextAssociation.clearSecurityContext();
+                return null;
+             }
+          });
+       }
 
-	   static SecurityContext createSecurityContext(final Principal p, final Object cred, final Subject subject, final String securityDomain)
-	   {
-			return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>() {
-				public SecurityContext run() {
-					SecurityContext sc;
-					try {
-						sc = SecurityContextFactory.createSecurityContext(p, cred, subject, securityDomain);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-					return sc;
-				}
-			});
-	   }
+       static SecurityContext createSecurityContext(final Principal p, final Object cred, final Subject subject, final String securityDomain)
+       {
+            return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>() {
+                public SecurityContext run() {
+                    SecurityContext sc;
+                    try {
+                        sc = SecurityContextFactory.createSecurityContext(p, cred, subject, securityDomain);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return sc;
+                }
+            });
+       }
 
-	   static class AddCredentialsAction implements PrivilegedAction
-	   {
-	      Subject subject;
-	      PasswordCredential cred;
-	      AddCredentialsAction(Subject subject, PasswordCredential cred)
-	      {
-	         this.subject = subject;
-	         this.cred = cred;
-	      }
-	      public Object run()
-	      {
-	         subject.getPrivateCredentials().add(cred);
-	         return null;
-	      }
-	   }
+       static class AddCredentialsAction implements PrivilegedAction
+       {
+          Subject subject;
+          PasswordCredential cred;
+          AddCredentialsAction(Subject subject, PasswordCredential cred)
+          {
+             this.subject = subject;
+             this.cred = cred;
+          }
+          public Object run()
+          {
+             subject.getPrivateCredentials().add(cred);
+             return null;
+          }
+       }
 
-	   static void addCredentials(Subject subject, PasswordCredential cred)
-	   {
-	      AddCredentialsAction action = new AddCredentialsAction(subject, cred);
-	      AccessController.doPrivileged(action);
-	   }
+       static void addCredentials(Subject subject, PasswordCredential cred)
+       {
+          AddCredentialsAction action = new AddCredentialsAction(subject, cred);
+          AccessController.doPrivileged(action);
+       }
 }

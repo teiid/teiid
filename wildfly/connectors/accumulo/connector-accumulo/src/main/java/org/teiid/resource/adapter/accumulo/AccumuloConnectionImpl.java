@@ -43,35 +43,35 @@ import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.accumulo.AccumuloConnection;
 
 public class AccumuloConnectionImpl extends BasicConnection implements AccumuloConnection {
-	private ConnectorImpl conn;
-	private String[] roles;
+    private ConnectorImpl conn;
+    private String[] roles;
 
-	public AccumuloConnectionImpl(AccumuloManagedConnectionFactory mcf, ZooKeeperInstance inst) throws ResourceException {
-		try {
-			if (mcf.getRoles() != null) {
-				List<String> auths = StringUtil.getTokens(mcf.getRoles(), ",");  //$NON-NLS-1$
-				this.roles = auths.toArray(new String[auths.size()]);
-			}
+    public AccumuloConnectionImpl(AccumuloManagedConnectionFactory mcf, ZooKeeperInstance inst) throws ResourceException {
+        try {
+            if (mcf.getRoles() != null) {
+                List<String> auths = StringUtil.getTokens(mcf.getRoles(), ",");  //$NON-NLS-1$
+                this.roles = auths.toArray(new String[auths.size()]);
+            }
 
-			String userName = mcf.getUsername();
-			String password = mcf.getPassword();
+            String userName = mcf.getUsername();
+            String password = mcf.getPassword();
 
-			// if security-domain is specified and caller identity is used; then use
-			// credentials from subject
-			Subject subject = ConnectionContext.getSubject();
-			if (subject != null) {
-				userName = ConnectionContext.getUserName(subject, mcf, userName);
-				password = ConnectionContext.getPassword(subject, mcf, userName, password);
-				this.roles = ConnectionContext.getRoles(subject, this.roles);
-			}
-			checkTabletServerExists(inst, userName, password);
-			this.conn = (ConnectorImpl) inst.getConnector(userName, new PasswordToken(password));
-		} catch (AccumuloException e) {
-			throw new ResourceException(e);
-		} catch (AccumuloSecurityException e) {
-			throw new ResourceException(e);
-		}
-	}
+            // if security-domain is specified and caller identity is used; then use
+            // credentials from subject
+            Subject subject = ConnectionContext.getSubject();
+            if (subject != null) {
+                userName = ConnectionContext.getUserName(subject, mcf, userName);
+                password = ConnectionContext.getPassword(subject, mcf, userName, password);
+                this.roles = ConnectionContext.getRoles(subject, this.roles);
+            }
+            checkTabletServerExists(inst, userName, password);
+            this.conn = (ConnectorImpl) inst.getConnector(userName, new PasswordToken(password));
+        } catch (AccumuloException e) {
+            throw new ResourceException(e);
+        } catch (AccumuloSecurityException e) {
+            throw new ResourceException(e);
+        }
+    }
 
     private void checkTabletServerExists(ZooKeeperInstance inst, String userName, String password)
             throws ResourceException {
@@ -88,22 +88,22 @@ public class AccumuloConnectionImpl extends BasicConnection implements AccumuloC
         }
     }
 
-	@Override
-	public Connector getInstance() {
-		return conn;
-	}
+    @Override
+    public Connector getInstance() {
+        return conn;
+    }
 
-	@Override
-	public void close() throws ResourceException {
-		// Where is the close call on instance Accumulo? Am I supposed to
-		// waste resources??
-	}
+    @Override
+    public void close() throws ResourceException {
+        // Where is the close call on instance Accumulo? Am I supposed to
+        // waste resources??
+    }
 
-	@Override
-	public Authorizations getAuthorizations() {
-		if (roles != null && roles.length > 0) {
-			return new Authorizations(roles);
-		}
-		return new Authorizations();
-	}
+    @Override
+    public Authorizations getAuthorizations() {
+        if (roles != null && roles.length > 0) {
+            return new Authorizations(roles);
+        }
+        return new Authorizations();
+    }
 }

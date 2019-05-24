@@ -63,7 +63,7 @@ public class TestPostgreSQLTranslator {
     }
 
     @Test public void testStartWithoutVersion() throws TranslatorException {
-    	new PostgreSQLExecutionFactory().start();
+        new PostgreSQLExecutionFactory().start();
     }
 
     @Test public void testConversion1() throws Exception {
@@ -583,8 +583,8 @@ public class TestPostgreSQLTranslator {
     }
 
     @Test public void testTempTable() throws Exception {
-    	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) on commit drop", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
-    	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
+        assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) on commit drop", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+        assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
 
     @Test public void testFormatTimestampFrac() throws Exception {
@@ -606,12 +606,12 @@ public class TestPostgreSQLTranslator {
     }
 
     @Test public void testGeometryFunctions() throws Exception {
-    	PostgreSQLExecutionFactory pgef = new PostgreSQLExecutionFactory();
-    	pgef.setPostGisVersion("1.5");
-    	pgef.setDatabaseVersion(Version.DEFAULT_VERSION);
-    	pgef.start();
-    	assertTrue(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_ASBINARY));
-    	assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));
+        PostgreSQLExecutionFactory pgef = new PostgreSQLExecutionFactory();
+        pgef.setPostGisVersion("1.5");
+        pgef.setDatabaseVersion(Version.DEFAULT_VERSION);
+        pgef.start();
+        assertTrue(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_ASBINARY));
+        assertFalse(pgef.getSupportedFunctions().contains(SourceSystemFunctions.ST_GEOMFROMGEOJSON));
     }
 
     @Test public void testGeographyFunctions() throws Exception {

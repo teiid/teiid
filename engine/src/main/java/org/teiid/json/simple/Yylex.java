@@ -272,7 +272,7 @@ class Yylex {
 private StringBuffer sb=new StringBuffer();
 
 int getPosition(){
-	return yychar;
+    return yychar;
 }
 
 
@@ -365,7 +365,7 @@ int getPosition(){
       }
     }
 
-	// numRead < 0
+    // numRead < 0
     return true;
   }
 
@@ -645,12 +645,12 @@ int getPosition(){
         case 41: break;
         case 24:
           { try{
-														int ch=Integer.parseInt(yytext().substring(2),16);
-														sb.append((char)ch);
-													}
-													catch(Exception e){
-														throw new ParseException(yychar, ParseException.ERROR_UNEXPECTED_EXCEPTION, e);
-													}
+                                                        int ch=Integer.parseInt(yytext().substring(2),16);
+                                                        sb.append((char)ch);
+                                                    }
+                                                    catch(Exception e){
+                                                        throw new ParseException(yychar, ParseException.ERROR_UNEXPECTED_EXCEPTION, e);
+                                                    }
           }
         case 42: break;
         case 20:

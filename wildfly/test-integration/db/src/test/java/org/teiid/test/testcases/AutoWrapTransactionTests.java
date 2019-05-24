@@ -20,7 +20,7 @@ public class AutoWrapTransactionTests extends CommonTransactionTests {
 
     protected TransactionContainer getTransactionContainter() {
 
-	return new TxnAutoTransaction(ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
+    return new TxnAutoTransaction(ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_AUTO);
     }
 
     /**

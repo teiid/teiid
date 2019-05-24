@@ -37,8 +37,8 @@ public final class TestFileUtils extends TestCase {
 
     private final static String TEMP_DIR_NAME = "tempdir"; //$NON-NLS-1$
     File tempDir;
-	public static final String TEMP_FILE = "delete.me"; //$NON-NLS-1$
-	public static final String TEMP_FILE_RENAMED = "delete.me.old"; //$NON-NLS-1$
+    public static final String TEMP_FILE = "delete.me"; //$NON-NLS-1$
+    public static final String TEMP_FILE_RENAMED = "delete.me.old"; //$NON-NLS-1$
     private final static String TEMP_FILE_NAME = UnitTestUtil.getTestDataPath() + File.separator + "tempfile.txt"; //$NON-NLS-1$
     private final static String TEMP_FILE_NAME2 = "tempfile2.txt"; //$NON-NLS-1$
 
@@ -122,56 +122,56 @@ public final class TestFileUtils extends TestCase {
         FileUtils.remove(new File(TEMP_FILE_NAME));
     }
 
-	/**
-	 * Test whether it's possible to read and write files in the specified directory.
-	 * @param dirPath Name of the directory to test
-	 * @throws TeiidException
-	 * @since 4.3
-	 */
-	public static void testDirectoryPermissions(String dirPath) throws TeiidException {
+    /**
+     * Test whether it's possible to read and write files in the specified directory.
+     * @param dirPath Name of the directory to test
+     * @throws TeiidException
+     * @since 4.3
+     */
+    public static void testDirectoryPermissions(String dirPath) throws TeiidException {
 
-	    //try to create a file
-	    File tmpFile = new File(dirPath + File.separatorChar + TestFileUtils.TEMP_FILE);
-	    boolean success = false;
-	    try {
-	        success = tmpFile.createNewFile();
-	    } catch (IOException e) {
-	    }
-	    if (!success) {
-	          throw new TeiidException("cannot create file in " + dirPath); //$NON-NLS-1$
-	    }
+        //try to create a file
+        File tmpFile = new File(dirPath + File.separatorChar + TestFileUtils.TEMP_FILE);
+        boolean success = false;
+        try {
+            success = tmpFile.createNewFile();
+        } catch (IOException e) {
+        }
+        if (!success) {
+              throw new TeiidException("cannot create file in " + dirPath); //$NON-NLS-1$
+        }
 
-	    //test if file can be written to
-	    if (!tmpFile.canWrite()) {
-	          throw new TeiidException("cannot write " +dirPath); //$NON-NLS-1$
-	    }
+        //test if file can be written to
+        if (!tmpFile.canWrite()) {
+              throw new TeiidException("cannot write " +dirPath); //$NON-NLS-1$
+        }
 
-	    //test if file can be read
-	    if (!tmpFile.canRead()) {
-	          throw new TeiidException("cannot read " + dirPath); //$NON-NLS-1$
-	    }
+        //test if file can be read
+        if (!tmpFile.canRead()) {
+              throw new TeiidException("cannot read " + dirPath); //$NON-NLS-1$
+        }
 
-	    //test if file can be renamed
-	    File newFile = new File(dirPath + File.separatorChar + TestFileUtils.TEMP_FILE_RENAMED);
-	    success = false;
-	    try {
-	        success = tmpFile.renameTo(newFile);
-	    } catch (Exception e) {
-	    }
-	    if (!success) {
-	          throw new TeiidException("failed to rename " + dirPath); //$NON-NLS-1$
-	    }
+        //test if file can be renamed
+        File newFile = new File(dirPath + File.separatorChar + TestFileUtils.TEMP_FILE_RENAMED);
+        success = false;
+        try {
+            success = tmpFile.renameTo(newFile);
+        } catch (Exception e) {
+        }
+        if (!success) {
+              throw new TeiidException("failed to rename " + dirPath); //$NON-NLS-1$
+        }
 
-	    //test if file can be deleted
-	    success = false;
-	    try {
-	        success = newFile.delete();
-	    } catch (Exception e) {
-	    }
-	    if (!success) {
-	        final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_delete_file_in", dirPath); //$NON-NLS-1$
-	          throw new TeiidException(msg);
-	    }
-	}
+        //test if file can be deleted
+        success = false;
+        try {
+            success = newFile.delete();
+        } catch (Exception e) {
+        }
+        if (!success) {
+            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_delete_file_in", dirPath); //$NON-NLS-1$
+              throw new TeiidException(msg);
+        }
+    }
 
 }

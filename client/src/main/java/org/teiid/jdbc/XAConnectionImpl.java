@@ -70,127 +70,127 @@ public class XAConnectionImpl implements XAConnection, XAResource {
             }
 
             try {
-				return method.invoke(this.proxiedConnection, args);
-			} catch (InvocationTargetException e) {
-				Exception ex = ExceptionUtil.getExceptionOfType(e, InvalidSessionException.class);
-				if (ex == null) {
-					ex = ExceptionUtil.getExceptionOfType(e, CommunicationException.class);
-					if (ex instanceof SingleInstanceCommunicationException) {
-						ServerConnection sc = proxiedConnection.getServerConnection();
-						if (!sc.isOpen(ServerConnection.PING_INTERVAL)) {
-							ex = null;
-						}
-					}
-				}
-				if (ex != null) {
-					SQLException se = null;
-					if (e.getCause() instanceof SQLException) {
-						se = (SQLException)e.getCause();
-					} else {
-						se = TeiidSQLException.create(e.getCause());
-					}
-					notifyListener(se);
-				}
-				throw e.getTargetException();
-			}
+                return method.invoke(this.proxiedConnection, args);
+            } catch (InvocationTargetException e) {
+                Exception ex = ExceptionUtil.getExceptionOfType(e, InvalidSessionException.class);
+                if (ex == null) {
+                    ex = ExceptionUtil.getExceptionOfType(e, CommunicationException.class);
+                    if (ex instanceof SingleInstanceCommunicationException) {
+                        ServerConnection sc = proxiedConnection.getServerConnection();
+                        if (!sc.isOpen(ServerConnection.PING_INTERVAL)) {
+                            ex = null;
+                        }
+                    }
+                }
+                if (ex != null) {
+                    SQLException se = null;
+                    if (e.getCause() instanceof SQLException) {
+                        se = (SQLException)e.getCause();
+                    } else {
+                        se = TeiidSQLException.create(e.getCause());
+                    }
+                    notifyListener(se);
+                }
+                throw e.getTargetException();
+            }
         }
 
-		void close() {
-			this.proxiedConnection.recycleConnection();
-			XAConnectionImpl.this.notifyListener(null);
-		}
+        void close() {
+            this.proxiedConnection.recycleConnection();
+            XAConnectionImpl.this.notifyListener(null);
+        }
     }
 
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
-	private int timeOut;
+    private int timeOut;
     private Set<ConnectionEventListener> listeners;
-	private ConnectionImpl connection;
-	private CloseInterceptor handler;
+    private ConnectionImpl connection;
+    private CloseInterceptor handler;
     private boolean isClosed;
 
-	public XAConnectionImpl(ConnectionImpl conn){
-	    this.connection = conn;
-	}
+    public XAConnectionImpl(ConnectionImpl conn){
+        this.connection = conn;
+    }
 
-	public Connection getConnection() throws SQLException{
+    public Connection getConnection() throws SQLException{
         ConnectionImpl conn = getConnectionImpl();
-		if (handler != null) {
-			handler.close();
-		}
-		handler = new CloseInterceptor(conn);
-		Connection result = (Connection)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {Connection.class}, handler);
-		return result;
-	}
+        if (handler != null) {
+            handler.close();
+        }
+        handler = new CloseInterceptor(conn);
+        Connection result = (Connection)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {Connection.class}, handler);
+        return result;
+    }
 
-	ConnectionImpl getConnectionImpl() throws SQLException {
-	    if(isClosed){
+    ConnectionImpl getConnectionImpl() throws SQLException {
+        if(isClosed){
             throw new SQLException(JDBCPlugin.Util.getString("MMXAConnection.connection_is_closed")); //$NON-NLS-1$
         }
 
         return connection;
-	}
+    }
 
-	public synchronized void addConnectionEventListener(ConnectionEventListener listener){
-		if(listeners == null){
-			listeners = Collections.newSetFromMap(new IdentityHashMap<ConnectionEventListener, Boolean>());
-		}
-		this.listeners.add(listener);
-	}
+    public synchronized void addConnectionEventListener(ConnectionEventListener listener){
+        if(listeners == null){
+            listeners = Collections.newSetFromMap(new IdentityHashMap<ConnectionEventListener, Boolean>());
+        }
+        this.listeners.add(listener);
+    }
 
-	public synchronized void removeConnectionEventListener(ConnectionEventListener listener){
-		if(listeners == null){
-			return;
-		}
-		this.listeners.remove(listener);
-	}
+    public synchronized void removeConnectionEventListener(ConnectionEventListener listener){
+        if(listeners == null){
+            return;
+        }
+        this.listeners.remove(listener);
+    }
 
-	public XAResource getXAResource() throws SQLException{
-		return this;
-	}
+    public XAResource getXAResource() throws SQLException{
+        return this;
+    }
 
-	public void close()throws SQLException{
-		if(connection != null && !connection.isClosed()){
-			connection.close();
-		}
+    public void close()throws SQLException{
+        if(connection != null && !connection.isClosed()){
+            connection.close();
+        }
         isClosed = true;
-	}
+    }
 
-	/**
-	 * Notify listeners, if there is any, about the connection status.
-	 * If e is null, the connection is properly closed.
-	 * @param e
-	 */
-	protected synchronized void notifyListener(SQLException e){
-		if(listeners != null && !listeners.isEmpty()){
-			Iterator<ConnectionEventListener> iter = listeners.iterator();
-			while(iter.hasNext()){
-				ConnectionEventListener listener = iter.next();
-				if(e == null){
-					//no exception
-					listener.connectionClosed(new ConnectionEvent(this));
-				}else{
-					//exception occurred
-					listener.connectionErrorOccurred(new ConnectionEvent(this, e));
-				}
-			}
-		}
-	}
+    /**
+     * Notify listeners, if there is any, about the connection status.
+     * If e is null, the connection is properly closed.
+     * @param e
+     */
+    protected synchronized void notifyListener(SQLException e){
+        if(listeners != null && !listeners.isEmpty()){
+            Iterator<ConnectionEventListener> iter = listeners.iterator();
+            while(iter.hasNext()){
+                ConnectionEventListener listener = iter.next();
+                if(e == null){
+                    //no exception
+                    listener.connectionClosed(new ConnectionEvent(this));
+                }else{
+                    //exception occurred
+                    listener.connectionErrorOccurred(new ConnectionEvent(this, e));
+                }
+            }
+        }
+    }
 
-	public void addStatementEventListener(StatementEventListener arg0) {
-	}
+    public void addStatementEventListener(StatementEventListener arg0) {
+    }
 
-	public void removeStatementEventListener(StatementEventListener arg0) {
-	}
+    public void removeStatementEventListener(StatementEventListener arg0) {
+    }
 
-	public void commit(Xid xid, boolean onePhase) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
-			getMMConnection().commitTransaction(mmXid, onePhase);
-		}catch(SQLException e){
-			String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedCommitTXN", xid, onePhase ? "true":"false"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			throw handleError(e, logMsg);
-		}
+    public void commit(Xid xid, boolean onePhase) throws XAException {
+        XidImpl mmXid = getMMXid(xid);
+        try{
+            getMMConnection().commitTransaction(mmXid, onePhase);
+        }catch(SQLException e){
+            String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedCommitTXN", xid, onePhase ? "true":"false"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            throw handleError(e, logMsg);
+        }
     }
 
     private XAException handleError(Exception e,String logMsg) {
@@ -208,25 +208,25 @@ public class XAConnectionImpl implements XAConnection, XAResource {
         return new XAException(XAException.XAER_RMERR);
     }
 
-	/**
+    /**
      * @see javax.transaction.xa.XAResource#end(javax.transaction.xa.Xid, int)
      */
     public void end(Xid xid, int flag) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
+        XidImpl mmXid = getMMXid(xid);
+        try{
             getMMConnection().endTransaction(mmXid, flag);
-		}catch(SQLException e){
+        }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedEndTXN", xid, new Integer(flag)); //$NON-NLS-1$
             throw handleError(e, logMsg);
-		}
+        }
     }
 
     /**
      * @see javax.transaction.xa.XAResource#forget(javax.transaction.xa.Xid)
      */
     public void forget(Xid xid) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
+        XidImpl mmXid = getMMXid(xid);
+        try{
             getMMConnection().forgetTransaction(mmXid);
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedForgetTXN", xid); //$NON-NLS-1$
@@ -239,24 +239,24 @@ public class XAConnectionImpl implements XAConnection, XAResource {
     }
 
     public boolean isSameRM(XAResource arg0) throws XAException {
-    	if (arg0 == this) {
-    		return true;
-    	}
+        if (arg0 == this) {
+            return true;
+        }
         if (!(arg0 instanceof XAConnectionImpl)) {
-        	return false;
+            return false;
         }
         XAConnectionImpl other = (XAConnectionImpl)arg0;
-		try {
-			return this.getMMConnection().isSameProcess(other.getMMConnection());
-		} catch (CommunicationException e) {
-			throw handleError(e, JDBCPlugin.Util.getString("MMXAResource.FailedISSameRM")); //$NON-NLS-1$
-		}
+        try {
+            return this.getMMConnection().isSameProcess(other.getMMConnection());
+        } catch (CommunicationException e) {
+            throw handleError(e, JDBCPlugin.Util.getString("MMXAResource.FailedISSameRM")); //$NON-NLS-1$
+        }
     }
 
     public int prepare(Xid xid) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
-			return getMMConnection().prepareTransaction(mmXid);
+        XidImpl mmXid = getMMXid(xid);
+        try{
+            return getMMConnection().prepareTransaction(mmXid);
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedPrepareTXN", xid); //$NON-NLS-1$
             throw handleError(e, logMsg);
@@ -268,7 +268,7 @@ public class XAConnectionImpl implements XAConnection, XAResource {
      */
     public Xid[] recover(int flag) throws XAException {
         try{
-			return getMMConnection().recoverTransaction(flag);
+            return getMMConnection().recoverTransaction(flag);
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedRecoverTXN", flag); //$NON-NLS-1$
             throw handleError(e, logMsg);
@@ -276,8 +276,8 @@ public class XAConnectionImpl implements XAConnection, XAResource {
     }
 
     public void rollback(Xid xid) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
+        XidImpl mmXid = getMMXid(xid);
+        try{
             getMMConnection().rollbackTransaction(mmXid);
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedRollbackTXN", xid); //$NON-NLS-1$
@@ -291,9 +291,9 @@ public class XAConnectionImpl implements XAConnection, XAResource {
     }
 
     public void start(Xid xid, int flag) throws XAException {
-    	XidImpl mmXid = getMMXid(xid);
-		try{
-			getMMConnection().startTransaction(mmXid, flag, timeOut);
+        XidImpl mmXid = getMMXid(xid);
+        try{
+            getMMConnection().startTransaction(mmXid, flag, timeOut);
         }catch(SQLException e){
             String logMsg = JDBCPlugin.Util.getString("MMXAResource.FailedStartTXN", xid, new Integer(flag)); //$NON-NLS-1$
             throw handleError(e, logMsg);
@@ -301,19 +301,19 @@ public class XAConnectionImpl implements XAConnection, XAResource {
     }
 
     private ConnectionImpl getMMConnection() throws XAException{
-    	try{
-    	    return this.getConnectionImpl();
-    	}catch(SQLException e){
-    		throw new XAException(XAException.XAER_RMFAIL);
-    	}
+        try{
+            return this.getConnectionImpl();
+        }catch(SQLException e){
+            throw new XAException(XAException.XAER_RMFAIL);
+        }
     }
 
     /**
-	 * @param xid
-	 * @return
+     * @param xid
+     * @return
      * @throws XAException
-	 */
-	private XidImpl getMMXid(Xid originalXid) {
-		return new XidImpl(originalXid);
-	}
+     */
+    private XidImpl getMMXid(Xid originalXid) {
+        return new XidImpl(originalXid);
+    }
 }

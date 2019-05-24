@@ -24,57 +24,57 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 public class Worksheet {
-	private String id;
-	private String name;
-	private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
-	private boolean headerEnabled=false;
+    private String id;
+    private String name;
+    private LinkedHashMap<String, Column> columns = new LinkedHashMap<String, Column>();
+    private boolean headerEnabled=false;
 
-	public LinkedHashMap<String, Column> getColumns() {
-		return columns;
-	}
+    public LinkedHashMap<String, Column> getColumns() {
+        return columns;
+    }
 
-	public List<Column> getColumnsAsList() {
-		return new ArrayList<Column>(columns.values());
-	}
+    public List<Column> getColumnsAsList() {
+        return new ArrayList<Column>(columns.values());
+    }
 
-	public void addColumn(String label, Column column) {
-		columns.put(label, column);
-	}
+    public void addColumn(String label, Column column) {
+        columns.put(label, column);
+    }
 
-	public String getColumnID(String columnLabel) {
-		Column column = columns.get(columnLabel);
-		if (column == null) {
-			return null;
-		}
-		return column.getAlphaName();
-	}
+    public String getColumnID(String columnLabel) {
+        Column column = columns.get(columnLabel);
+        if (column == null) {
+            return null;
+        }
+        return column.getAlphaName();
+    }
 
-	public Worksheet( String name) {
-		this.name = name;
-	}
+    public Worksheet( String name) {
+        this.name = name;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public int getColumnCount() {
-		return columns.size();
-	}
+    public int getColumnCount() {
+        return columns.size();
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public boolean isHeaderEnabled() {
-		return headerEnabled;
-	}
+    public boolean isHeaderEnabled() {
+        return headerEnabled;
+    }
 
-	public void setHeaderEnabled(boolean headerEnabled) {
-		this.headerEnabled = headerEnabled;
-	}
+    public void setHeaderEnabled(boolean headerEnabled) {
+        this.headerEnabled = headerEnabled;
+    }
 
 }

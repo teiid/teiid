@@ -43,7 +43,7 @@ public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
      * By default, this visitor deeply traverses all commands, and there are
      * no symbols to ignore
      */
-	public CheckNoTempMetadataIDsVisitor() {
+    public CheckNoTempMetadataIDsVisitor() {
         symbolsWithTempMetadataIDs = new ArrayList<Symbol>();
     }
 

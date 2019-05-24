@@ -14,9 +14,9 @@ import org.teiid.jdbc.AbstractQueryTest;
  */
 public class QueryExecution extends AbstractQueryTest {
 
-	public QueryExecution(Connection conn) {
-		super(conn);
-	}
+    public QueryExecution(Connection conn) {
+        super(conn);
+    }
 
 
 }

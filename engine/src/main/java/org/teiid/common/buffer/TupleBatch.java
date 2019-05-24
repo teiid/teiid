@@ -33,11 +33,11 @@ import java.util.List;
  */
 public class TupleBatch {
 
-	public static final byte NOT_TERMINATED = 0;
-	public static final byte TERMINATED = 1;
-	public static final byte ITERATION_TERMINATED = 2;
+    public static final byte NOT_TERMINATED = 0;
+    public static final byte TERMINATED = 1;
+    public static final byte ITERATION_TERMINATED = 2;
 
-	private long rowOffset;
+    private long rowOffset;
     protected List<List<?>> tuples;
 
     // Optional state
@@ -102,24 +102,24 @@ public class TupleBatch {
      * @return the tuple at the given index
      */
     public List<?> getTuple(long rowIndex) {
-    	long base = rowIndex - rowOffset;
-    	int intVal = (int)base;
-    	if (base != intVal) {
-    		throw new AssertionError("rowIndex overflow " + rowIndex); //$NON-NLS-1$
-    	}
+        long base = rowIndex - rowOffset;
+        int intVal = (int)base;
+        if (base != intVal) {
+            throw new AssertionError("rowIndex overflow " + rowIndex); //$NON-NLS-1$
+        }
         return tuples.get(intVal);
     }
 
     public List<List<?>> getTuples() {
-		return tuples;
-	}
+        return tuples;
+    }
 
     /**
      * Get all tuples
      * @return All tuples
      */
     public List<?>[] getAllTuples() {
-    	return tuples.toArray(new List[tuples.size()]);
+        return tuples.toArray(new List[tuples.size()]);
     }
 
     /**
@@ -139,15 +139,15 @@ public class TupleBatch {
     }
 
     public void setTermination(byte val) {
-    	this.terminationFlag = val;
+        this.terminationFlag = val;
     }
 
     public byte getTermination() {
-    	return this.terminationFlag;
+        return this.terminationFlag;
     }
 
     public boolean containsRow(long row) {
-    	return rowOffset <= row && getEndRow() >= row;
+        return rowOffset <= row && getEndRow() >= row;
     }
 
     /**
@@ -166,7 +166,7 @@ public class TupleBatch {
     }
 
     public void setRowOffset(long rowOffset) {
-		this.rowOffset = rowOffset;
-	}
+        this.rowOffset = rowOffset;
+    }
 }
 

@@ -28,9 +28,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class ProcedureErrorInstructionException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = 895480748445855790L;
+    private static final long serialVersionUID = 895480748445855790L;
 
-	/**
+    /**
      *
      * @since 4.3
      */

@@ -63,28 +63,28 @@ public class Validator {
         // Reset visitor
         visitor.reset();
 
-		visitor.setMetadata(metadata);
+        visitor.setMetadata(metadata);
         setTempMetadata(metadata, visitor, object);
 
         PreOrderNavigator nav = new PreOrderNavigator(visitor) {
 
-        	protected void visitNode(LanguageObject obj) {
-        		QueryMetadataInterface previous = visitor.getMetadata();
-        		setTempMetadata(metadata, visitor, obj);
-        		super.visitNode(obj);
-        		visitor.setMetadata(previous);
-        	}
+            protected void visitNode(LanguageObject obj) {
+                QueryMetadataInterface previous = visitor.getMetadata();
+                setTempMetadata(metadata, visitor, obj);
+                super.visitNode(obj);
+                visitor.setMetadata(previous);
+            }
 
-        	@Override
-        	protected void preVisitVisitor(LanguageObject obj) {
-        		super.preVisitVisitor(obj);
-        		visitor.stack.add(obj);
-        	}
+            @Override
+            protected void preVisitVisitor(LanguageObject obj) {
+                super.preVisitVisitor(obj);
+                visitor.stack.add(obj);
+            }
 
-        	@Override
-        	protected void postVisitVisitor(LanguageObject obj) {
-        		visitor.stack.pop();
-        	}
+            @Override
+            protected void postVisitVisitor(LanguageObject obj) {
+                visitor.stack.pop();
+            }
 
         };
         object.acceptVisitor(nav);
@@ -96,17 +96,17 @@ public class Validator {
         }
     }
 
-	private static void setTempMetadata(final QueryMetadataInterface metadata,
-			final AbstractValidationVisitor visitor,
-			LanguageObject obj) {
-		if (obj instanceof Command) {
-			Command command = (Command)obj;
-			visitor.currentCommand = command;
-			TempMetadataStore tempMetadata = command.getTemporaryMetadata();
+    private static void setTempMetadata(final QueryMetadataInterface metadata,
+            final AbstractValidationVisitor visitor,
+            LanguageObject obj) {
+        if (obj instanceof Command) {
+            Command command = (Command)obj;
+            visitor.currentCommand = command;
+            TempMetadataStore tempMetadata = command.getTemporaryMetadata();
             if(tempMetadata != null && !tempMetadata.getData().isEmpty()) {
-            	visitor.setMetadata(new TempMetadataAdapter(metadata, tempMetadata));
+                visitor.setMetadata(new TempMetadataAdapter(metadata, tempMetadata));
             }
-		}
-	}
+        }
+    }
 
 }

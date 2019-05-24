@@ -39,19 +39,19 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
 
     private boolean formatStrings;
 
-	public ExcelExecutionFactory() {
-		setSourceRequiredForMetadata(true);
-		setTransactionSupport(TransactionSupport.NONE);
-	}
+    public ExcelExecutionFactory() {
+        setSourceRequiredForMetadata(true);
+        setTransactionSupport(TransactionSupport.NONE);
+    }
 
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, VirtualFileConnection connection)
-    		throws TranslatorException {
-    	ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
-    	if (formatStrings) {
-    	    ex.setDataFormatter(new DataFormatter()); //assume default locale
-    	}
-    	return ex;
+            throws TranslatorException {
+        ExcelExecution ex = new ExcelExecution((Select)command, executionContext, metadata, connection);
+        if (formatStrings) {
+            ex.setDataFormatter(new DataFormatter()); //assume default locale
+        }
+        return ex;
     }
 
     @Override
@@ -70,42 +70,42 @@ public class ExcelExecutionFactory extends ExecutionFactory<ConnectionFactory, V
         return new ExcelMetadataProcessor();
     }
 
-	@Override
-	public boolean supportsCompareCriteriaEquals() {
-		return true; // only on ROW_ID
-	}
+    @Override
+    public boolean supportsCompareCriteriaEquals() {
+        return true; // only on ROW_ID
+    }
 
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true; //Only on ROW_ID
-	}
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true; //Only on ROW_ID
+    }
 
-	@Override
-	public boolean supportsRowLimit() {
-		return true;
-	}
+    @Override
+    public boolean supportsRowLimit() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsRowOffset() {
-		return true;
-	}
+    @Override
+    public boolean supportsRowOffset() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsOnlyLiteralComparison() {
-		return true;
-	}
+    @Override
+    public boolean supportsOnlyLiteralComparison() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsInCriteria() {
-		return true;
-	}
+    @Override
+    public boolean supportsInCriteria() {
+        return true;
+    }
 
-	@TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
-	public boolean isFormatStrings() {
+    @TranslatorProperty(display="Format Strings", description="Format non-string cell values in a string column according to the worksheet format.", advanced=true)
+    public boolean isFormatStrings() {
         return formatStrings;
     }
 
-	public void setFormatStrings(boolean formatStrings) {
+    public void setFormatStrings(boolean formatStrings) {
         this.formatStrings = formatStrings;
     }
 }

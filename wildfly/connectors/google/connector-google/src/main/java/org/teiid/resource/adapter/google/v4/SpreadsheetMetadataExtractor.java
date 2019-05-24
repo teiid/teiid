@@ -38,39 +38,39 @@ import com.google.api.services.sheets.v4.model.Spreadsheet;
  *
  */
 public class SpreadsheetMetadataExtractor {
-	private SheetsAPI sheetsAPI = null;
-	private GoogleDataProtocolAPI dataProtocolAPI;
+    private SheetsAPI sheetsAPI = null;
+    private GoogleDataProtocolAPI dataProtocolAPI;
 
-	public SpreadsheetMetadataExtractor(SheetsAPI api, GoogleDataProtocolAPI dataProtocolAPI) {
-	    this.sheetsAPI = api;
-	    this.dataProtocolAPI = dataProtocolAPI;
+    public SpreadsheetMetadataExtractor(SheetsAPI api, GoogleDataProtocolAPI dataProtocolAPI) {
+        this.sheetsAPI = api;
+        this.dataProtocolAPI = dataProtocolAPI;
     }
 
-	public SpreadsheetInfo extractMetadata(String spreadsheetId){
-		try {
-		    Spreadsheet spreadsheet = sheetsAPI.getSpreadsheet(spreadsheetId);
-	        SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheet.getProperties().getTitle());
-	        metadata.setSpreadsheetKey(spreadsheet.getSpreadsheetId());
-			for (Sheet sheet : spreadsheet.getSheets()) {
-				String title = sheet.getProperties().getTitle();
-				Worksheet worksheet = metadata.createWorksheet(title);
-				worksheet.setId(sheet.getProperties().getSheetId().toString());
-				List<Column> cols = dataProtocolAPI.getMetadata(spreadsheet.getSpreadsheetId(), title);
-				if(!cols.isEmpty()){
-					if(cols.get(0).getLabel()!=null){
-						worksheet.setHeaderEnabled(true);
-					}
-				}
-				for(Column c: cols){
-					worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
-				}
-			}
-			return metadata;
-		} catch (IOException ex) {
-			throw new SpreadsheetOperationException(
-					SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
-		}
-	}
+    public SpreadsheetInfo extractMetadata(String spreadsheetId){
+        try {
+            Spreadsheet spreadsheet = sheetsAPI.getSpreadsheet(spreadsheetId);
+            SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheet.getProperties().getTitle());
+            metadata.setSpreadsheetKey(spreadsheet.getSpreadsheetId());
+            for (Sheet sheet : spreadsheet.getSheets()) {
+                String title = sheet.getProperties().getTitle();
+                Worksheet worksheet = metadata.createWorksheet(title);
+                worksheet.setId(sheet.getProperties().getSheetId().toString());
+                List<Column> cols = dataProtocolAPI.getMetadata(spreadsheet.getSpreadsheetId(), title);
+                if(!cols.isEmpty()){
+                    if(cols.get(0).getLabel()!=null){
+                        worksheet.setHeaderEnabled(true);
+                    }
+                }
+                for(Column c: cols){
+                    worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
+                }
+            }
+            return metadata;
+        } catch (IOException ex) {
+            throw new SpreadsheetOperationException(
+                    SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
+        }
+    }
 
 }
 

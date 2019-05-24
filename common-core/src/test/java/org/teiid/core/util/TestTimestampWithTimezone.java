@@ -35,13 +35,13 @@ import org.junit.Test;
 
 public class TestTimestampWithTimezone {
 
-	@Before public void setUp() {
-		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$
-	}
+    @Before public void setUp() {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$
+    }
 
-	@After public void tearDown() {
-		TimestampWithTimezone.resetCalendar(null);
-	}
+    @After public void tearDown() {
+        TimestampWithTimezone.resetCalendar(null);
+    }
 
     /**
      * Ensures that the same calendar fields in different timezones (initially different UTC) can be converted to the same UTC in
@@ -189,20 +189,20 @@ public class TestTimestampWithTimezone {
      * Even though the id of the timezones are different, this should not change the result
      */
     @Test public void testDateToDateConversion() {
-    	Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
-    	Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("US/Central"))); //$NON-NLS-1$ //$NON-NLS-2$
+        Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
+        Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("US/Central"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	assertEquals(t.getTime(), converted.getTime());
+        assertEquals(t.getTime(), converted.getTime());
     }
 
     @Test public void testDateToDateConversion1() {
-    	Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
-    	Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("GMT"))); //$NON-NLS-1$ //$NON-NLS-2$
+        Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
+        Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("GMT"))); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	Calendar cal = Calendar.getInstance();
-    	cal.setTime(converted);
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(converted);
 
-    	assertEquals(0, cal.get(Calendar.MILLISECOND));
+        assertEquals(0, cal.get(Calendar.MILLISECOND));
     }
 
 }

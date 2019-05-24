@@ -58,13 +58,13 @@ import org.teiid.query.validator.ValidatorReport;
 @SuppressWarnings("nls")
 public class RealMetadataFactory {
 
-	public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
+    public static final SystemFunctionManager SFM = SystemMetadata.getInstance().getSystemFunctionManager();
 
     private static TransformationMetadata CACHED_EXAMPLE1 = example1();
-	private static TransformationMetadata CACHED_BQT = exampleBQT();
-	static TransformationMetadata CACHED_AGGREGATES = exampleAggregates();
+    private static TransformationMetadata CACHED_BQT = exampleBQT();
+    static TransformationMetadata CACHED_AGGREGATES = exampleAggregates();
 
-	private RealMetadataFactory() { }
+    private RealMetadataFactory() { }
 
     public static TransformationMetadata exampleBQTCached() {
         return CACHED_BQT;
@@ -75,7 +75,7 @@ public class RealMetadataFactory {
     }
 
     public static MetadataStore exampleBQTStore() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
 
         Schema bqt1 = createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
         Schema bqt2 = createPhysicalModel("BQT2", metadataStore); //$NON-NLS-1$
@@ -119,10 +119,10 @@ public class RealMetadataFactory {
         nativeProc.setResultSet(nativeProcResults);
 
         createElements( library, new String[] { "CLOB_COLUMN", "BLOB_COLUMN", "KEY_EMULATOR" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER });
+                new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER });
 
         createElements( bin, new String[] { "BIN_COL" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        		new String[] { DataTypeManager.DefaultDataTypes.VARBINARY });
+                new String[] { DataTypeManager.DefaultDataTypes.VARBINARY });
 
         // Create virtual groups
         QueryNode vqtn1 = new QueryNode("SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -296,7 +296,7 @@ public class RealMetadataFactory {
         vsp6.setResultSet(vsprs6);
 
         createStoredProcedure("spRetOut", pm4, Arrays.asList(createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER),
-        		createParameter("x", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER))); //$NON-NLS-1$ //$NON-NLS-2$
+                createParameter("x", ParameterInfo.OUT, DataTypeManager.DefaultDataTypes.INTEGER))); //$NON-NLS-1$ //$NON-NLS-2$
 
         ColumnSet<Procedure> vsprs7 = createResultSet("TEIIDSP7.vsprs1", new String[] { "StringKey" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter vsp7p1 = createParameter("p1", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
@@ -326,49 +326,49 @@ public class RealMetadataFactory {
                 new FunctionParameter[] {new FunctionParameter("columnName", DataTypeManager.DefaultDataTypes.STRING, "")}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, "") ) ); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	 return metadataStore;
+         return metadataStore;
     }
 
-	public static TransformationMetadata exampleBQT() {
-		return createTransformationMetadata(exampleBQTStore(), "bqt");
-	}
+    public static TransformationMetadata exampleBQT() {
+        return createTransformationMetadata(exampleBQTStore(), "bqt");
+    }
 
-	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, FunctionTree... functionModels) {
-		CompositeMetadataStore cms = null;
-		if (metadataStore instanceof CompositeMetadataStore) {
-			cms = (CompositeMetadataStore)metadataStore;
-		} else {
-			cms = new CompositeMetadataStore(metadataStore);
-		}
-		return createTransformationMetadata(cms, vdbName, null, functionModels);
-	}
+    public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, FunctionTree... functionModels) {
+        CompositeMetadataStore cms = null;
+        if (metadataStore instanceof CompositeMetadataStore) {
+            cms = (CompositeMetadataStore)metadataStore;
+        } else {
+            cms = new CompositeMetadataStore(metadataStore);
+        }
+        return createTransformationMetadata(cms, vdbName, null, functionModels);
+    }
 
-	public static TransformationMetadata createTransformationMetadata(CompositeMetadataStore store, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
-    	VDBMetaData vdbMetaData = new VDBMetaData();
-    	vdbMetaData.setName(vdbName); //$NON-NLS-1$
-    	vdbMetaData.setVersion(1);
-    	if (vdbProperties != null) {
-    		vdbMetaData.setProperties(vdbProperties);
-    	}
-    	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
-    	udfs.addAll(Arrays.asList(functionModels));
-    	for (Schema schema : store.getSchemas().values()) {
-			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
-			if (!schema.getFunctions().isEmpty()) {
-				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
-			}
-			if (!schema.getProcedures().isEmpty()) {
-				FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
-				if (ft != null) {
-					udfs.add(ft);
-				}
-			}
-		}
-    	TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
-    	vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
-    	vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
-    	return metadata;
-	}
+    public static TransformationMetadata createTransformationMetadata(CompositeMetadataStore store, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
+        VDBMetaData vdbMetaData = new VDBMetaData();
+        vdbMetaData.setName(vdbName); //$NON-NLS-1$
+        vdbMetaData.setVersion(1);
+        if (vdbProperties != null) {
+            vdbMetaData.setProperties(vdbProperties);
+        }
+        List<FunctionTree> udfs = new ArrayList<FunctionTree>();
+        udfs.addAll(Arrays.asList(functionModels));
+        for (Schema schema : store.getSchemas().values()) {
+            vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
+            if (!schema.getFunctions().isEmpty()) {
+                udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
+            }
+            if (!schema.getProcedures().isEmpty()) {
+                FunctionTree ft = FunctionTree.getFunctionProcedures(schema);
+                if (ft != null) {
+                    udfs.add(ft);
+                }
+            }
+        }
+        TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
+        vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
+        vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
+        return metadata;
+    }
 
     /**
      * Metadata for Materialized Views
@@ -376,7 +376,7 @@ public class RealMetadataFactory {
      * @since 4.2
      */
     public static TransformationMetadata exampleMaterializedView() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema virtModel = createVirtualModel("MatView", metadataStore); //$NON-NLS-1$
         Schema physModel = createPhysicalModel("MatTable", metadataStore); //$NON-NLS-1$
         Schema physModel_virtSrc = createPhysicalModel("MatSrc", metadataStore); //$NON-NLS-1$
@@ -500,9 +500,9 @@ public class RealMetadataFactory {
 
         //non-covering index
         QueryNode vTrans5 = new QueryNode("SELECT x, 'z' || substring(x, 2) as y, 1 as z FROM matsrc "
-        		+ "union all SELECT ifnull(x, ' ') || 'b', 'x' || substring(x, 2) as y, 1 as z FROM matsrc "
-        		+ "union all SELECT ifnull(x, ' ') || 'c', 'y' || substring(x, 2) as y, 1 as z FROM matsrc "
-        		+ "union all SELECT ifnull(x, ' ') || 'd', 'w' || substring(x, 2) as y, 1 as z FROM matsrc");
+                + "union all SELECT ifnull(x, ' ') || 'b', 'x' || substring(x, 2) as y, 1 as z FROM matsrc "
+                + "union all SELECT ifnull(x, ' ') || 'c', 'y' || substring(x, 2) as y, 1 as z FROM matsrc "
+                + "union all SELECT ifnull(x, ' ') || 'd', 'w' || substring(x, 2) as y, 1 as z FROM matsrc");
         Table vGroup5 = createVirtualGroup("VGroup5", virtModel, vTrans5); //$NON-NLS-1$
         vGroup5.setMaterialized(true);
         List<Column> vElements5 = createElements(vGroup5,
@@ -543,52 +543,52 @@ public class RealMetadataFactory {
         return createTransformationMetadata(metadataStore, "");
     }
 
-	public static MetadataStore example1Store() {
-		MetadataStore metadataStore = new MetadataStore();
-		// Create models
-		Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+    public static MetadataStore example1Store() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
 
-		pm1.addFunction(new FakeFunctionMetadataSource().getFunctionMethods().iterator().next());
+        pm1.addFunction(new FakeFunctionMetadataSource().getFunctionMethods().iterator().next());
 
-		Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-		Schema pm3 = createPhysicalModel("pm3", metadataStore); //allows push of SELECT DISTINCT //$NON-NLS-1$
-		Schema pm4 = createPhysicalModel("pm4", metadataStore); //all groups w/ access pattern(s) //$NON-NLS-1$
-		Schema pm5 = createPhysicalModel("pm5", metadataStore); //all groups w/ access pattern(s); model supports join //$NON-NLS-1$
-		Schema pm6 = createPhysicalModel("pm6", metadataStore); //model does not support where all //$NON-NLS-1$
-		Schema vm1 = createVirtualModel("vm1", metadataStore);	 //$NON-NLS-1$
-		Schema vm2 = createVirtualModel("vm2", metadataStore);	 //$NON-NLS-1$
-		Schema xmltest = createVirtualModel("xmltest", metadataStore); //$NON-NLS-1$
+        Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
+        Schema pm3 = createPhysicalModel("pm3", metadataStore); //allows push of SELECT DISTINCT //$NON-NLS-1$
+        Schema pm4 = createPhysicalModel("pm4", metadataStore); //all groups w/ access pattern(s) //$NON-NLS-1$
+        Schema pm5 = createPhysicalModel("pm5", metadataStore); //all groups w/ access pattern(s); model supports join //$NON-NLS-1$
+        Schema pm6 = createPhysicalModel("pm6", metadataStore); //model does not support where all //$NON-NLS-1$
+        Schema vm1 = createVirtualModel("vm1", metadataStore);     //$NON-NLS-1$
+        Schema vm2 = createVirtualModel("vm2", metadataStore);     //$NON-NLS-1$
+        Schema xmltest = createVirtualModel("xmltest", metadataStore); //$NON-NLS-1$
 
-		// Create physical groups
-		Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
-		Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
-		Table pm1g3 = createPhysicalGroup("g3", pm1); //$NON-NLS-1$
-		Table pm1g4 = createPhysicalGroup("g4", pm1); //$NON-NLS-1$
-		Table pm1g5 = createPhysicalGroup("g5", pm1); //$NON-NLS-1$
-		Table pm1g6 = createPhysicalGroup("g6", pm1); //$NON-NLS-1$
-		Table pm1table = createPhysicalGroup("table1", pm1); //$NON-NLS-1$
-		Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
-		Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
-		Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
-		Table pm3g1 = createPhysicalGroup("g1", pm3); //$NON-NLS-1$
-		Table pm3g2 = createPhysicalGroup("g2", pm3); //$NON-NLS-1$
-		Table pm4g1 = createPhysicalGroup("g1", pm4); //$NON-NLS-1$
-		Table pm4g2 = createPhysicalGroup("g2", pm4); //$NON-NLS-1$
-		Table pm5g1 = createPhysicalGroup("g1", pm5); //$NON-NLS-1$
-		Table pm5g2 = createPhysicalGroup("g2", pm5); //$NON-NLS-1$
-		Table pm5g3 = createPhysicalGroup("g3", pm5); //$NON-NLS-1$
-		Table pm6g1 = createPhysicalGroup("g1", pm6); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = createPhysicalGroup("g3", pm1); //$NON-NLS-1$
+        Table pm1g4 = createPhysicalGroup("g4", pm1); //$NON-NLS-1$
+        Table pm1g5 = createPhysicalGroup("g5", pm1); //$NON-NLS-1$
+        Table pm1g6 = createPhysicalGroup("g6", pm1); //$NON-NLS-1$
+        Table pm1table = createPhysicalGroup("table1", pm1); //$NON-NLS-1$
+        Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
+        Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
+        Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
+        Table pm3g1 = createPhysicalGroup("g1", pm3); //$NON-NLS-1$
+        Table pm3g2 = createPhysicalGroup("g2", pm3); //$NON-NLS-1$
+        Table pm4g1 = createPhysicalGroup("g1", pm4); //$NON-NLS-1$
+        Table pm4g2 = createPhysicalGroup("g2", pm4); //$NON-NLS-1$
+        Table pm5g1 = createPhysicalGroup("g1", pm5); //$NON-NLS-1$
+        Table pm5g2 = createPhysicalGroup("g2", pm5); //$NON-NLS-1$
+        Table pm5g3 = createPhysicalGroup("g3", pm5); //$NON-NLS-1$
+        Table pm6g1 = createPhysicalGroup("g1", pm6); //$NON-NLS-1$
 
-		// Create physical elements
-		createElements(pm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical elements
+        createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         List<Column> pm1g4e = createElements(pm1g4,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -604,21 +604,21 @@ public class RealMetadataFactory {
         createElements(pm1table,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm3g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
-		createElements(pm3g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
+        createElements(pm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm3g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
+        createElements(pm3g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP });
         List<Column> pm4g1e = createElements(pm4g1,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -626,14 +626,14 @@ public class RealMetadataFactory {
             new String[] { "e1", "e2", "e3", "e4", "e5", "e6" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         List<Column> pm5g1e = createElements(pm5g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         List<Column> pm5g2e = createElements(pm5g2,
-			new String[] { "e1", "e2", "e3", "e4", "e5", "e6" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-		createElements(pm5g3,
-	        new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT });
+            new String[] { "e1", "e2", "e3", "e4", "e5", "e6" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+        createElements(pm5g3,
+            new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT });
         createElements(pm6g1,
             new String[] { "e1", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
@@ -648,21 +648,21 @@ public class RealMetadataFactory {
         elements.add(iter.next());
         elements.add(iter.next());
         createAccessPattern("pm4.g2.ap1", pm4g2, elements); //e1,e2 //$NON-NLS-1$
-		elements = new ArrayList<Column>(1);
-		elements.add(pm4g2e.get(4)); //"e5"
-		createAccessPattern("pm4.g2.ap2", pm4g2, elements); //e5 //$NON-NLS-1$
-		// Create access patterns - pm5
-		elements = new ArrayList<Column>(1);
-		elements.add(pm5g1e.iterator().next());
-		createAccessPattern("pm5.g1.ap1", pm5g1, elements); //e1 //$NON-NLS-1$
-		elements = new ArrayList<Column>(2);
-		iter = pm5g2e.iterator();
-		elements.add(iter.next());
-		elements.add(iter.next());
-		createAccessPattern("pm5.g2.ap1", pm5g2, elements); //e1,e2 //$NON-NLS-1$
-		elements = new ArrayList<Column>(1);
-		elements.add(pm5g2e.get(4)); //"e5"
-		createAccessPattern("pm5.g2.ap2", pm5g2, elements); //e5 //$NON-NLS-1$
+        elements = new ArrayList<Column>(1);
+        elements.add(pm4g2e.get(4)); //"e5"
+        createAccessPattern("pm4.g2.ap2", pm4g2, elements); //e5 //$NON-NLS-1$
+        // Create access patterns - pm5
+        elements = new ArrayList<Column>(1);
+        elements.add(pm5g1e.iterator().next());
+        createAccessPattern("pm5.g1.ap1", pm5g1, elements); //e1 //$NON-NLS-1$
+        elements = new ArrayList<Column>(2);
+        iter = pm5g2e.iterator();
+        elements.add(iter.next());
+        elements.add(iter.next());
+        createAccessPattern("pm5.g2.ap1", pm5g2, elements); //e1,e2 //$NON-NLS-1$
+        elements = new ArrayList<Column>(1);
+        elements.add(pm5g2e.get(4)); //"e5"
+        createAccessPattern("pm5.g2.ap2", pm5g2, elements); //e5 //$NON-NLS-1$
 
         // Create temp groups
         Table tm1g1 = createXmlStagingTable("doc4.tm1.g1", xmltest, new QueryNode("select null, null, null, null, null")); //$NON-NLS-1$
@@ -672,12 +672,12 @@ public class RealMetadataFactory {
             new String[] { "e1", "e2", "e3", "e4", "node1"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING });
 
-		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        // Create virtual groups
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm2g1n1 = new QueryNode("SELECT pm1.g1.* FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm2g1 = createUpdatableVirtualGroup("g1", vm2, vm2g1n1); //$NON-NLS-1$
+        QueryNode vm2g1n1 = new QueryNode("SELECT pm1.g1.* FROM pm1.g1, pm1.g2 where pm1.g1.e2 = pm1.g2.e2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm2g1 = createUpdatableVirtualGroup("g1", vm2, vm2g1n1); //$NON-NLS-1$
 
         QueryNode vm1g1n1_defect10711 = new QueryNode("SELECT * FROM vm1.g1 as X"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g1_defect10711 = createVirtualGroup("g1a", vm1, vm1g1n1_defect10711); //$NON-NLS-1$
@@ -691,8 +691,8 @@ public class RealMetadataFactory {
         QueryNode vm1g2an1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g2a = createVirtualGroup("g2a", vm1, vm1g2an1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g2 = createVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
+        QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g2 = createVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
         QueryNode vm1g4n1 = new QueryNode("SELECT e1 FROM pm1.g1 UNION ALL SELECT convert(e2, string) as x FROM pm1.g2 ORDER BY e1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g4 = createVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
@@ -801,19 +801,19 @@ public class RealMetadataFactory {
         QueryNode vm1g38n1 = new QueryNode("SELECT a.e1, b.e2 from pm1.g1 as a, pm6.g1 as b where a.e1=b.e1");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g38 = createVirtualGroup("g38", vm1, vm1g38n1); //$NON-NLS-1$
 
-		// Create virtual groups
-		QueryNode vm1g39n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g39 = createUpdatableVirtualGroup("g39", vm1, vm1g39n1, null); //$NON-NLS-1$
-		// Create virtual elements
-		createElements(vm1g39,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm2g1,
-    		new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create virtual groups
+        QueryNode vm1g39n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g39 = createUpdatableVirtualGroup("g39", vm1, vm1g39n1, null); //$NON-NLS-1$
+        // Create virtual elements
+        createElements(vm1g39,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(vm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(vm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
         createElements(vm1g1_defect10711,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
@@ -826,12 +826,12 @@ public class RealMetadataFactory {
         createElements(vm1g2a,
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm1g4,
-			new String[] { "e1" }, //$NON-NLS-1$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING });
+        createElements(vm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(vm1g4,
+            new String[] { "e1" }, //$NON-NLS-1$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING });
         createElements(vm1g5,
             new String[] { "expr", "e2" }, //$NON-NLS-1$ //$NON-NLS-2$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
@@ -1157,8 +1157,8 @@ public class RealMetadataFactory {
         Procedure sq15 = createVirtualProcedure("sq15", pm1, Arrays.asList( rs18p2, rs18p3 ), sq15n1);  //$NON-NLS-1$
         sq15.setResultSet(rs18);
 
-		QueryNode sq16n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( 1, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
-		createVirtualProcedure("sq16", pm1, null, sq16n1);  //$NON-NLS-1$
+        QueryNode sq16n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN INSERT INTO pm1.g1 ( e1, e2 ) VALUES( 1, 2 ); END"); //$NON-NLS-1$ //$NON-NLS-2$
+        createVirtualProcedure("sq16", pm1, null, sq16n1);  //$NON-NLS-1$
 
         ColumnSet<Procedure> rs19 = createResultSet("pm1.rs19", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode sq17n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1167,7 +1167,7 @@ public class RealMetadataFactory {
 
         createStoredProcedure("sp3", pm1, null);  //$NON-NLS-1$ //$NON-NLS-2$
 
-		ColumnSet<Procedure> rs20 = createResultSet("pm1.rs20", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> rs20 = createResultSet("pm1.rs20", new String[] { "xml" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         QueryNode sq18n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN SELECT * FROM xmltest.doc1; END"); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure sq18 = createVirtualProcedure("sq18", pm1, null, sq18n1); //$NON-NLS-1$
         sq18.setResultSet(rs20);
@@ -1399,49 +1399,49 @@ public class RealMetadataFactory {
         Procedure vsp26 = createVirtualProcedure("vsp26", pm1, Arrays.asList( vspp26_1, vspp26_2 ), vspqn26); //$NON-NLS-1$
         vsp26.setResultSet(vsprs3);
 
-		QueryNode vgvpn1 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp1.ve1, vm1.vgvp1.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp1 = createVirtualGroup("vgvp1", vm1, vgvpn1); //$NON-NLS-1$
-		Column vgvp1e1 = createElement("ve1", vgvp1, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn1 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp1.ve1, vm1.vgvp1.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp1 = createVirtualGroup("vgvp1", vm1, vgvpn1); //$NON-NLS-1$
+        Column vgvp1e1 = createElement("ve1", vgvp1, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp1e1.setSelectable(false);
         Column vgvp1e2 = createElement("ve2", vgvp1, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp1e2.setSelectable(false);
         createElement("ve3", vgvp1, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-		QueryNode vgvpn2 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp2 = createVirtualGroup("vgvp2", vm1, vgvpn2); //$NON-NLS-1$
-		Column vgvp2e1 = createElement("ve1", vgvp2, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn2 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp2.ve1, vm1.vgvp2.ve2)) as P where P.e1='a'"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp2 = createVirtualGroup("vgvp2", vm1, vgvpn2); //$NON-NLS-1$
+        Column vgvp2e1 = createElement("ve1", vgvp2, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp2e1.setSelectable(false);
         Column vgvp2e2 = createElement("ve2", vgvp2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp2e2.setSelectable(false);
         createElement("ve3", vgvp2, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-		QueryNode vgvpn3 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp3 = createVirtualGroup("vgvp3", vm1, vgvpn3); //$NON-NLS-1$
-		Column vgvp3e1 = createElement("ve1", vgvp3, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn3 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp3.ve1, vm1.vgvp3.ve2)) as P, pm1.g2 where P.e1=g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp3 = createVirtualGroup("vgvp3", vm1, vgvpn3); //$NON-NLS-1$
+        Column vgvp3e1 = createElement("ve1", vgvp3, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp3e1.setSelectable(false);
         Column vgvp3e2 = createElement("ve2", vgvp3, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp3e2.setSelectable(false);
         createElement("ve3", vgvp3, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-		QueryNode vgvpn4 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp4.ve1, vm1.vgvp4.ve2)) as P, vm1.g1 where P.e1=g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp4 = createVirtualGroup("vgvp4", vm1, vgvpn4); //$NON-NLS-1$
-		Column vgvp4e1 = createElement("ve1", vgvp4, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn4 = new QueryNode("SELECT P.e1 as ve3 FROM (EXEC pm1.vsp26(vm1.vgvp4.ve1, vm1.vgvp4.ve2)) as P, vm1.g1 where P.e1=g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp4 = createVirtualGroup("vgvp4", vm1, vgvpn4); //$NON-NLS-1$
+        Column vgvp4e1 = createElement("ve1", vgvp4, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp4e1.setSelectable(false);
         Column vgvp4e2 = createElement("ve2", vgvp4, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp4e2.setSelectable(false);
         createElement("ve3", vgvp4, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-		QueryNode vgvpn5 = new QueryNode("SELECT * FROM vm1.vgvp4 where vm1.vgvp4.ve1=vm1.vgvp5.ve1 and  vm1.vgvp4.ve2=vm1.vgvp5.ve2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp5 = createVirtualGroup("vgvp5", vm1, vgvpn5); //$NON-NLS-1$
-		Column vgvp5e1 = createElement("ve1", vgvp5, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn5 = new QueryNode("SELECT * FROM vm1.vgvp4 where vm1.vgvp4.ve1=vm1.vgvp5.ve1 and  vm1.vgvp4.ve2=vm1.vgvp5.ve2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp5 = createVirtualGroup("vgvp5", vm1, vgvpn5); //$NON-NLS-1$
+        Column vgvp5e1 = createElement("ve1", vgvp5, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp5e1.setSelectable(false);
         Column vgvp5e2 = createElement("ve2", vgvp5, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp5e2.setSelectable(false);
         createElement("ve3", vgvp5, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
 
-		QueryNode vgvpn6 = new QueryNode("SELECT P.e1 as ve3, P.e2 as ve4 FROM (EXEC pm1.vsp26(vm1.vgvp6.ve1, vm1.vgvp6.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vgvp6 = createVirtualGroup("vgvp6", vm1, vgvpn6); //$NON-NLS-1$
-		Column vgvp6e1 = createElement("ve1", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        QueryNode vgvpn6 = new QueryNode("SELECT P.e1 as ve3, P.e2 as ve4 FROM (EXEC pm1.vsp26(vm1.vgvp6.ve1, vm1.vgvp6.ve2)) as P"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vgvp6 = createVirtualGroup("vgvp6", vm1, vgvpn6); //$NON-NLS-1$
+        Column vgvp6e1 = createElement("ve1", vgvp6, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         vgvp6e1.setSelectable(false);
         Column vgvp6e2 = createElement("ve2", vgvp6, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
         vgvp6e2.setSelectable(false);
@@ -1558,84 +1558,84 @@ public class RealMetadataFactory {
         vsp63.setResultSet(vsprs1());
 
         return metadataStore;
-	}
+    }
 
-	public static TransformationMetadata example1() {
+    public static TransformationMetadata example1() {
         return createTransformationMetadata(example1Store(), "example1");
-	}
+    }
 
-	private static ColumnSet<Procedure> vspp4() {
-		return createResultSet("pm1.vsprs2", new String[] { "e1", "const" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
-	}
+    private static ColumnSet<Procedure> vspp4() {
+        return createResultSet("pm1.vsprs2", new String[] { "e1", "const" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+    }
 
-	private static ColumnSet<Procedure> vsprs1() {
-		return createResultSet("pm1.vsprs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING });
-	}
+    private static ColumnSet<Procedure> vsprs1() {
+        return createResultSet("pm1.vsprs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING });
+    }
 
-	/**
-	 * Create primary key.  The name will be used as the Object metadataID.
-	 * @param name String name of key
-	 * @param group the group for the key
-	 * @param elements the elements of the key (will be used as if they were
-	 * metadata IDs)
-	 * @return key metadata object
-	 */
-	public static KeyRecord createKey(KeyRecord.Type type, String name, Table group, List<Column> elements) {
-		KeyRecord key = new KeyRecord(type);
-		key.setName(name);
-		for (Column column : elements) {
-			key.addColumn(column);
-		}
-		switch (type) {
-		case Primary:
-			group.setPrimaryKey(key);
-			break;
-		case Index:
-			group.getIndexes().add(key);
-			break;
-		case Unique:
-			group.getUniqueKeys().add(key);
-			break;
-		case AccessPattern:
-			group.getAccessPatterns().add(key);
-			break;
-		default:
-			throw new AssertionError("TODO");
-		}
-		return key;
-	}
+    /**
+     * Create primary key.  The name will be used as the Object metadataID.
+     * @param name String name of key
+     * @param group the group for the key
+     * @param elements the elements of the key (will be used as if they were
+     * metadata IDs)
+     * @return key metadata object
+     */
+    public static KeyRecord createKey(KeyRecord.Type type, String name, Table group, List<Column> elements) {
+        KeyRecord key = new KeyRecord(type);
+        key.setName(name);
+        for (Column column : elements) {
+            key.addColumn(column);
+        }
+        switch (type) {
+        case Primary:
+            group.setPrimaryKey(key);
+            break;
+        case Index:
+            group.getIndexes().add(key);
+            break;
+        case Unique:
+            group.getUniqueKeys().add(key);
+            break;
+        case AccessPattern:
+            group.getAccessPatterns().add(key);
+            break;
+        default:
+            throw new AssertionError("TODO");
+        }
+        return key;
+    }
 
-	public static ForeignKey createForeignKey(String name, Table group, List<Column> elements, KeyRecord primaryKey) {
-		ForeignKey key = new ForeignKey();
-		key.setName(name);
-		for (Column column : elements) {
-			key.addColumn(column);
-		}
-		key.setPrimaryKey(primaryKey);
-		group.getForeignKeys().add(key);
-		return key;
-	}
+    public static ForeignKey createForeignKey(String name, Table group, List<Column> elements, KeyRecord primaryKey) {
+        ForeignKey key = new ForeignKey();
+        key.setName(name);
+        for (Column column : elements) {
+            key.addColumn(column);
+        }
+        key.setPrimaryKey(primaryKey);
+        group.getForeignKeys().add(key);
+        return key;
+    }
 
     /**
      * Create a physical model with default settings.
      */
-	public static Schema createPhysicalModel(String name, MetadataStore metadataStore) {
-		Schema schema = new Schema();
-		schema.setName(name);
-		metadataStore.addSchema(schema);
-		return schema;
-	}
+    public static Schema createPhysicalModel(String name, MetadataStore metadataStore) {
+        Schema schema = new Schema();
+        schema.setName(name);
+        metadataStore.addSchema(schema);
+        return schema;
+    }
 
     /**
      * Create a virtual model with default settings.
      */
-	public static Schema createVirtualModel(String name, MetadataStore metadataStore) {
-		Schema schema = new Schema();
-		schema.setName(name);
-		schema.setPhysical(false);
-		metadataStore.addSchema(schema);
-		return schema;
-	}
+    public static Schema createVirtualModel(String name, MetadataStore metadataStore) {
+        Schema schema = new Schema();
+        schema.setName(name);
+        schema.setPhysical(false);
+        metadataStore.addSchema(schema);
+        return schema;
+    }
 
     /**
      * Create a physical group with default settings.
@@ -1643,45 +1643,45 @@ public class RealMetadataFactory {
      * @param model Associated model
      * @return FakeMetadataObject Metadata object for group
      */
-	public static Table createPhysicalGroup(String name, Schema model, boolean fullyQualify) {
-		Table table = new Table();
-		table.setName(name);
-		model.addTable(table);
-		table.setSupportsUpdate(true);
-		table.setNameInSource((fullyQualify || name.lastIndexOf(".") == -1)? name : name.substring(name.lastIndexOf(".") + 1));  //$NON-NLS-1$ //$NON-NLS-2$
-		table.setTableType(org.teiid.metadata.Table.Type.Table);
-		return table;
-	}
+    public static Table createPhysicalGroup(String name, Schema model, boolean fullyQualify) {
+        Table table = new Table();
+        table.setName(name);
+        model.addTable(table);
+        table.setSupportsUpdate(true);
+        table.setNameInSource((fullyQualify || name.lastIndexOf(".") == -1)? name : name.substring(name.lastIndexOf(".") + 1));  //$NON-NLS-1$ //$NON-NLS-2$
+        table.setTableType(org.teiid.metadata.Table.Type.Table);
+        return table;
+    }
 
     public static Table createPhysicalGroup(String name, Schema model) {
-    	return createPhysicalGroup(name, model, false);
+        return createPhysicalGroup(name, model, false);
     }
 
     /**
      * Create a virtual group with default settings.
      */
-	public static Table createVirtualGroup(String name, Schema model, QueryNode plan) {
+    public static Table createVirtualGroup(String name, Schema model, QueryNode plan) {
         Table table = new Table();
         table.setName(name);
         model.addTable(table);
         table.setVirtual(true);
         table.setTableType(org.teiid.metadata.Table.Type.View);
         table.setSelectTransformation(plan.getQuery());
-		return table;
-	}
+        return table;
+    }
 
-	public static Table createXmlStagingTable(String name, Schema model, QueryNode plan) {
-		Table table = createVirtualGroup(name, model, plan);
+    public static Table createXmlStagingTable(String name, Schema model, QueryNode plan) {
+        Table table = createVirtualGroup(name, model, plan);
         table.setTableType(org.teiid.metadata.Table.Type.XmlStagingTable);
         return table;
-	}
+    }
 
     /**
      * Create a virtual group that allows updates with default settings.
      */
-	public static Table createUpdatableVirtualGroup(String name, Schema model, QueryNode plan) {
-		return createUpdatableVirtualGroup(name, model, plan, null);
-	}
+    public static Table createUpdatableVirtualGroup(String name, Schema model, QueryNode plan) {
+        return createUpdatableVirtualGroup(name, model, plan, null);
+    }
 
     public static Table createUpdatableVirtualGroup(String name, Schema model, QueryNode plan, String updatePlan) {
         Table table = createVirtualGroup(name, model, plan);
@@ -1698,9 +1698,9 @@ public class RealMetadataFactory {
         if(type.equals(DataTypeManager.DefaultDataTypes.STRING)) {
             column.setSearchType(SearchType.Searchable);
         } else if (DataTypeManager.isNonComparable(type)){
-        	column.setSearchType(SearchType.Unsearchable);
+            column.setSearchType(SearchType.Unsearchable);
         } else {
-        	column.setSearchType(SearchType.All_Except_Like);
+            column.setSearchType(SearchType.All_Except_Like);
         }
         column.setNullType(NullType.Nullable);
         column.setPosition(group.getColumns().size()); //1 based indexing
@@ -1716,24 +1716,24 @@ public class RealMetadataFactory {
     /**
      * Create a set of elements in batch
      */
-	public static List<Column> createElements(ColumnSet<?> group, String[] names, String[] types) {
-		return createElementsWithDefaults(group, names, types, new String[names.length]);
-	}
+    public static List<Column> createElements(ColumnSet<?> group, String[] names, String[] types) {
+        return createElementsWithDefaults(group, names, types, new String[names.length]);
+    }
 
     /**
      * Create a set of elements in batch
      */
-	public static List<Column> createElementsWithDefaults(ColumnSet<?> group, String[] names, String[] types, String[] defaults) {
-		List<Column> elements = new ArrayList<Column>();
+    public static List<Column> createElementsWithDefaults(ColumnSet<?> group, String[] names, String[] types, String[] defaults) {
+        List<Column> elements = new ArrayList<Column>();
 
-		for(int i=0; i<names.length; i++) {
+        for(int i=0; i<names.length; i++) {
             Column element = createElement(names[i], group, types[i]);
             element.setDefaultValue(defaults[i]);
-			elements.add(element);
-		}
+            elements.add(element);
+        }
 
-		return elements;
-	}
+        return elements;
+    }
 
     /**
      * Create stored procedure parameter.
@@ -1743,19 +1743,19 @@ public class RealMetadataFactory {
         param.setName(name);
         switch (direction) {
         case SPParameter.IN:
-        	param.setType(Type.In);
-        	break;
+            param.setType(Type.In);
+            break;
         case SPParameter.INOUT:
-        	param.setType(Type.InOut);
-        	break;
+            param.setType(Type.InOut);
+            break;
         case SPParameter.OUT:
-        	param.setType(Type.Out);
-        	break;
+            param.setType(Type.Out);
+            break;
         case SPParameter.RESULT_SET:
-        	throw new AssertionError("should not directly create a resultset param"); //$NON-NLS-1$
+            throw new AssertionError("should not directly create a resultset param"); //$NON-NLS-1$
         case SPParameter.RETURN_VALUE:
-        	param.setType(Type.ReturnValue);
-        	break;
+            param.setType(Type.ReturnValue);
+            break;
         }
         param.setRuntimeType(type);
         return param;
@@ -1769,18 +1769,18 @@ public class RealMetadataFactory {
      * @return Metadata object for stored procedure
      */
     public static Procedure createStoredProcedure(String name, Schema model, List<ProcedureParameter> params) {
-    	Procedure proc = new Procedure();
-    	proc.setName(name);
-    	proc.setNameInSource(name);
-    	if (params != null) {
-    		int index = 1;
-	    	for (ProcedureParameter procedureParameter : params) {
-				procedureParameter.setProcedure(proc);
-				procedureParameter.setPosition(index++);
-			}
-	    	proc.setParameters(params);
-    	}
-    	model.addProcedure(proc);
+        Procedure proc = new Procedure();
+        proc.setName(name);
+        proc.setNameInSource(name);
+        if (params != null) {
+            int index = 1;
+            for (ProcedureParameter procedureParameter : params) {
+                procedureParameter.setProcedure(proc);
+                procedureParameter.setPosition(index++);
+            }
+            proc.setParameters(params);
+        }
+        model.addProcedure(proc);
         return proc;
     }
 
@@ -1793,9 +1793,9 @@ public class RealMetadataFactory {
      * @return Metadata object for stored procedure
      */
     public static Procedure createVirtualProcedure(String name, Schema model, List<ProcedureParameter> params, QueryNode queryPlan) {
-    	Procedure proc = createStoredProcedure(name, model, params);
-    	proc.setVirtual(true);
-    	proc.setQueryPlan(queryPlan.getQuery());
+        Procedure proc = createStoredProcedure(name, model, params);
+        proc.setVirtual(true);
+        proc.setQueryPlan(queryPlan.getQuery());
         return proc;
     }
 
@@ -1803,651 +1803,651 @@ public class RealMetadataFactory {
      * Create a result set.
      */
     public static ColumnSet<Procedure> createResultSet(String name, String[] colNames, String[] colTypes) {
-    	ColumnSet<Procedure> rs = new ColumnSet<Procedure>();
-    	int index = name.indexOf('.');
-    	if (index > 0) {
-    		name = name.substring(index + 1);
-    	}
-    	rs.setName(name);
+        ColumnSet<Procedure> rs = new ColumnSet<Procedure>();
+        int index = name.indexOf('.');
+        if (index > 0) {
+            name = name.substring(index + 1);
+        }
+        rs.setName(name);
         for(Column column : createElements(rs, colNames, colTypes)) {
-        	column.setParent(rs);
+            column.setParent(rs);
         }
         return rs;
     }
 
     public static KeyRecord createAccessPattern(String name, Table group, List<Column> elements) {
-    	return createKey(org.teiid.metadata.KeyRecord.Type.AccessPattern, name, group, elements);
+        return createKey(org.teiid.metadata.KeyRecord.Type.AccessPattern, name, group, elements);
     }
 
-	public static VDBMetaData example1VDB() {
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("example1");
-		vdb.setVersion(1);
-		vdb.addModel(RealMetadataFactory.createModel("pm1", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm2", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm3", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm4", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm5", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm6", true));
-		vdb.addModel(RealMetadataFactory.createModel("vm1", false));
-		vdb.addModel(RealMetadataFactory.createModel("vm2", false));
-		vdb.addModel(RealMetadataFactory.createModel("tm1", false));
+    public static VDBMetaData example1VDB() {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("example1");
+        vdb.setVersion(1);
+        vdb.addModel(RealMetadataFactory.createModel("pm1", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm2", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm3", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm4", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm5", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm6", true));
+        vdb.addModel(RealMetadataFactory.createModel("vm1", false));
+        vdb.addModel(RealMetadataFactory.createModel("vm2", false));
+        vdb.addModel(RealMetadataFactory.createModel("tm1", false));
 
-		return vdb;
-	}
+        return vdb;
+    }
 
-	public static VDBMetaData exampleBQTVDB() {
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("example1");
-		vdb.setVersion(1);
-		vdb.addModel(RealMetadataFactory.createModel("BQT1", true));
-		vdb.addModel(RealMetadataFactory.createModel("BQT2", true));
-		vdb.addModel(RealMetadataFactory.createModel("BQT3", true));
-		vdb.addModel(RealMetadataFactory.createModel("LOB", true));
-		vdb.addModel(RealMetadataFactory.createModel("VQT", false));
-		vdb.addModel(RealMetadataFactory.createModel("pm1", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm2", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm3", true));
-		vdb.addModel(RealMetadataFactory.createModel("pm4", true));
+    public static VDBMetaData exampleBQTVDB() {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("example1");
+        vdb.setVersion(1);
+        vdb.addModel(RealMetadataFactory.createModel("BQT1", true));
+        vdb.addModel(RealMetadataFactory.createModel("BQT2", true));
+        vdb.addModel(RealMetadataFactory.createModel("BQT3", true));
+        vdb.addModel(RealMetadataFactory.createModel("LOB", true));
+        vdb.addModel(RealMetadataFactory.createModel("VQT", false));
+        vdb.addModel(RealMetadataFactory.createModel("pm1", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm2", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm3", true));
+        vdb.addModel(RealMetadataFactory.createModel("pm4", true));
 
-		return vdb;
-	}
+        return vdb;
+    }
 
-	public static VDBMetaData exampleMultiBindingVDB() {
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("exampleMultiBinding");
-		vdb.setVersion(1);
+    public static VDBMetaData exampleMultiBindingVDB() {
+        VDBMetaData vdb = new VDBMetaData();
+        vdb.setName("exampleMultiBinding");
+        vdb.setVersion(1);
 
-		ModelMetaData model = new ModelMetaData();
-		model.setName("MultiModel");
-		model.setModelType(Model.Type.PHYSICAL);
-		model.setVisible(true);
+        ModelMetaData model = new ModelMetaData();
+        model.setName("MultiModel");
+        model.setModelType(Model.Type.PHYSICAL);
+        model.setVisible(true);
 
-		model.setSupportsMultiSourceBindings(true);
-		vdb.addModel(model);
-		vdb.addModel(RealMetadataFactory.createModel("Virt", false));
+        model.setSupportsMultiSourceBindings(true);
+        vdb.addModel(model);
+        vdb.addModel(RealMetadataFactory.createModel("Virt", false));
 
-		return vdb;
-	}
+        return vdb;
+    }
 
-	public static DQPWorkContext buildWorkContext(TransformationMetadata metadata) {
-		return buildWorkContext(metadata, metadata.getVdbMetaData());
-	}
+    public static DQPWorkContext buildWorkContext(TransformationMetadata metadata) {
+        return buildWorkContext(metadata, metadata.getVdbMetaData());
+    }
 
-	public static DQPWorkContext buildWorkContext(QueryMetadataInterface metadata, VDBMetaData vdb) {
-		DQPWorkContext workContext = new DQPWorkContext();
-		SessionMetadata session = new SessionMetadata();
-		workContext.setSession(session);
-		session.setVDBName(vdb.getName());
-		session.setVDBVersion(vdb.getVersion());
-		session.setSessionId(String.valueOf(1));
-		session.setUserName("foo"); //$NON-NLS-1$
-		session.setVdb(vdb);
-	    workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
-	    if (metadata instanceof TransformationMetadata) {
-	    	workContext.getVDB().addAttchment(TransformationMetadata.class, (TransformationMetadata)metadata);
-	    }
-	    DQPWorkContext.setWorkContext(workContext);
-		return workContext;
-	}
+    public static DQPWorkContext buildWorkContext(QueryMetadataInterface metadata, VDBMetaData vdb) {
+        DQPWorkContext workContext = new DQPWorkContext();
+        SessionMetadata session = new SessionMetadata();
+        workContext.setSession(session);
+        session.setVDBName(vdb.getName());
+        session.setVDBVersion(vdb.getVersion());
+        session.setSessionId(String.valueOf(1));
+        session.setUserName("foo"); //$NON-NLS-1$
+        session.setVdb(vdb);
+        workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
+        if (metadata instanceof TransformationMetadata) {
+            workContext.getVDB().addAttchment(TransformationMetadata.class, (TransformationMetadata)metadata);
+        }
+        DQPWorkContext.setWorkContext(workContext);
+        return workContext;
+    }
 
-	public static ModelMetaData createModel(String name, boolean source) {
-		ModelMetaData model = new ModelMetaData();
-		model.setName(name);
-		if (source) {
-			model.setModelType(Model.Type.PHYSICAL);
-		}
-		else {
-			model.setModelType(Model.Type.VIRTUAL);
-		}
-		model.setVisible(true);
-		model.setSupportsMultiSourceBindings(false);
-		model.addSourceMapping(name, name, null);
+    public static ModelMetaData createModel(String name, boolean source) {
+        ModelMetaData model = new ModelMetaData();
+        model.setName(name);
+        if (source) {
+            model.setModelType(Model.Type.PHYSICAL);
+        }
+        else {
+            model.setModelType(Model.Type.VIRTUAL);
+        }
+        model.setVisible(true);
+        model.setSupportsMultiSourceBindings(false);
+        model.addSourceMapping(name, name, null);
 
-		return model;
-	}
+        return model;
+    }
 
-	public static TransformationMetadata exampleBitwise() {
-		MetadataStore store = new MetadataStore();
-	    Schema phys = createPhysicalModel("phys", store); //$NON-NLS-1$
-	    Table t = createPhysicalGroup("t", phys); //$NON-NLS-1$
-	    createElements(t,
-	                                new String[] { "ID", "Name", "source_bits" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	                                new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+    public static TransformationMetadata exampleBitwise() {
+        MetadataStore store = new MetadataStore();
+        Schema phys = createPhysicalModel("phys", store); //$NON-NLS-1$
+        Table t = createPhysicalGroup("t", phys); //$NON-NLS-1$
+        createElements(t,
+                                    new String[] { "ID", "Name", "source_bits" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                                    new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
 
-	    Schema virt = createVirtualModel("virt", store); //$NON-NLS-1$
-	    ColumnSet<Procedure> rs = createResultSet("rs", new String[] { "ID", "Name", "source_bits" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	    QueryNode qn = new QueryNode("CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
-		  + "BEGIN " //$NON-NLS-1$
-		  + "        DECLARE integer VARIABLES.BITS;" //$NON-NLS-1$
-		  + "        create local temporary table #temp (id integer, name string, bits integer);" //$NON-NLS-1$
-		  + "        LOOP ON (SELECT DISTINCT phys.t.ID, phys.t.Name FROM phys.t) AS idCursor" //$NON-NLS-1$
-		  + "        BEGIN" //$NON-NLS-1$
-		  + "                VARIABLES.BITS = 0;" //$NON-NLS-1$
-		  + "                LOOP ON (SELECT phys.t.source_bits FROM phys.t WHERE phys.t.ID = idCursor.id) AS bitsCursor" //$NON-NLS-1$
-		  + "                BEGIN" //$NON-NLS-1$
-		  + "                        VARIABLES.BITS = bitor(VARIABLES.BITS, bitsCursor.source_bits);" //$NON-NLS-1$
-		  + "                END" //$NON-NLS-1$
-		  + "                SELECT idCursor.id, idCursor.name, VARIABLES.BITS INTO #temp;" //$NON-NLS-1$
-		  + "        END" //$NON-NLS-1$
-		  + "        SELECT ID, Name, #temp.BITS AS source_bits FROM #temp;" //$NON-NLS-1$
-		  + "END"); //$NON-NLS-1$
-	    Procedure proc = createVirtualProcedure("agg", virt, null, qn); //$NON-NLS-1$
-	    proc.setResultSet(rs);
+        Schema virt = createVirtualModel("virt", store); //$NON-NLS-1$
+        ColumnSet<Procedure> rs = createResultSet("rs", new String[] { "ID", "Name", "source_bits" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        QueryNode qn = new QueryNode("CREATE VIRTUAL PROCEDURE " //$NON-NLS-1$
+          + "BEGIN " //$NON-NLS-1$
+          + "        DECLARE integer VARIABLES.BITS;" //$NON-NLS-1$
+          + "        create local temporary table #temp (id integer, name string, bits integer);" //$NON-NLS-1$
+          + "        LOOP ON (SELECT DISTINCT phys.t.ID, phys.t.Name FROM phys.t) AS idCursor" //$NON-NLS-1$
+          + "        BEGIN" //$NON-NLS-1$
+          + "                VARIABLES.BITS = 0;" //$NON-NLS-1$
+          + "                LOOP ON (SELECT phys.t.source_bits FROM phys.t WHERE phys.t.ID = idCursor.id) AS bitsCursor" //$NON-NLS-1$
+          + "                BEGIN" //$NON-NLS-1$
+          + "                        VARIABLES.BITS = bitor(VARIABLES.BITS, bitsCursor.source_bits);" //$NON-NLS-1$
+          + "                END" //$NON-NLS-1$
+          + "                SELECT idCursor.id, idCursor.name, VARIABLES.BITS INTO #temp;" //$NON-NLS-1$
+          + "        END" //$NON-NLS-1$
+          + "        SELECT ID, Name, #temp.BITS AS source_bits FROM #temp;" //$NON-NLS-1$
+          + "END"); //$NON-NLS-1$
+        Procedure proc = createVirtualProcedure("agg", virt, null, qn); //$NON-NLS-1$
+        proc.setResultSet(rs);
 
-	    return createTransformationMetadata(store, "bitwise");
-	}
+        return createTransformationMetadata(store, "bitwise");
+    }
 
-	public static void setCardinality(String group, int cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
-		if (metadata instanceof TransformationMetadata) {
-			Table t = (Table)metadata.getGroupID(group);
-			t.setCardinality(cardinality);
-		} else {
-			throw new RuntimeException("unknown metadata"); //$NON-NLS-1$
-		}
-	}
+    public static void setCardinality(String group, int cardinality, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        if (metadata instanceof TransformationMetadata) {
+            Table t = (Table)metadata.getGroupID(group);
+            t.setCardinality(cardinality);
+        } else {
+            throw new RuntimeException("unknown metadata"); //$NON-NLS-1$
+        }
+    }
 
-	public static TransformationMetadata exampleAggregatesCached() {
-	    return CACHED_AGGREGATES;
-	}
+    public static TransformationMetadata exampleAggregatesCached() {
+        return CACHED_AGGREGATES;
+    }
 
-	public static TransformationMetadata example3() {
-		MetadataStore metadataStore = new MetadataStore();
-		// Create models
-		Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-		Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-	    Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
+    public static TransformationMetadata example3() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
+        Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
 
-		// Create physical groups
-		Table pm1g1 = createPhysicalGroup("cat1.cat2.cat3.g1", pm1); //$NON-NLS-1$
-		Table pm1g2 = createPhysicalGroup("cat1.g2", pm1); //$NON-NLS-1$
-		Table pm1g3 = createPhysicalGroup("cat2.g3", pm1); //$NON-NLS-1$
-		Table pm2g1 = createPhysicalGroup("cat1.g1", pm2); //$NON-NLS-1$
-		Table pm2g2 = createPhysicalGroup("cat2.g2", pm2); //$NON-NLS-1$
-		Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
-	    Table pm2g4 = createPhysicalGroup("g4", pm3);		 //$NON-NLS-1$
-		Table pm2g5 = createPhysicalGroup("cat3.g1", pm2); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = createPhysicalGroup("cat1.cat2.cat3.g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = createPhysicalGroup("cat1.g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = createPhysicalGroup("cat2.g3", pm1); //$NON-NLS-1$
+        Table pm2g1 = createPhysicalGroup("cat1.g1", pm2); //$NON-NLS-1$
+        Table pm2g2 = createPhysicalGroup("cat2.g2", pm2); //$NON-NLS-1$
+        Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
+        Table pm2g4 = createPhysicalGroup("g4", pm3);         //$NON-NLS-1$
+        Table pm2g5 = createPhysicalGroup("cat3.g1", pm2); //$NON-NLS-1$
 
-		// Create physical elements
-		createElements(pm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g4,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g5,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical elements
+        createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g4,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g5,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-		// Create the facade from the store
-		return createTransformationMetadata(metadataStore, "example3");
-	}
+        // Create the facade from the store
+        return createTransformationMetadata(metadataStore, "example3");
+    }
 
-	public static TransformationMetadata exampleUpdateProc(Table.TriggerEvent event, String procedure) {
-		MetadataStore metadataStore = new MetadataStore();
-		// Create models
-		Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-		Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-		Schema vm1 = createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
+    public static TransformationMetadata exampleUpdateProc(Table.TriggerEvent event, String procedure) {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
+        Schema vm1 = createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
 
-		// Create physical groups
-		Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
-		Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
-	    Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
-	    Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
+        Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
 
-		// Create physical group elements
-		createElements(pm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical group elements
+        createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        // Create virtual groups
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
+        QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, 1 as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g3 = createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
+        QueryNode vm1g3n1 = new QueryNode("SELECT CONCAT(e1, 'm') as x, (e2 +1) as y, 1 as e3, e4*50 as e4 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g3 = createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-		QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g4 = createUpdatableVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
+        QueryNode vm1g4n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g4 = createUpdatableVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
 
-		// Create virtual elements
-		createElementsWithDefaults(vm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
-			new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		createElementsWithDefaults(vm1g2,
-			new String[] { "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN },
-			new String[] { "abc", "456", "false"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		createElementsWithDefaults(vm1g3,
-			new String[] { "x", "y", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.DOUBLE },
-			new String[] { "mno", "789", "true", "789.012"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		createElementsWithDefaults(vm1g4,
-				new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
-				new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        // Create virtual elements
+        createElementsWithDefaults(vm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
+            new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        createElementsWithDefaults(vm1g2,
+            new String[] { "e1", "e2", "e3" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN },
+            new String[] { "abc", "456", "false"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        createElementsWithDefaults(vm1g3,
+            new String[] { "x", "y", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER , DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.DOUBLE },
+            new String[] { "mno", "789", "true", "789.012"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        createElementsWithDefaults(vm1g4,
+                new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
+                new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-		setInsteadOfTriggerDefinition(vm1g1, event, procedure);
-		setInsteadOfTriggerDefinition(vm1g2, event, procedure);
-		setInsteadOfTriggerDefinition(vm1g3, event, procedure);
-		setInsteadOfTriggerDefinition(vm1g4, event, procedure);
+        setInsteadOfTriggerDefinition(vm1g1, event, procedure);
+        setInsteadOfTriggerDefinition(vm1g2, event, procedure);
+        setInsteadOfTriggerDefinition(vm1g3, event, procedure);
+        setInsteadOfTriggerDefinition(vm1g4, event, procedure);
 
-		// Create the facade from the store
-		return createTransformationMetadata(metadataStore, "proc");
-	}
+        // Create the facade from the store
+        return createTransformationMetadata(metadataStore, "proc");
+    }
 
-	public static void setInsteadOfTriggerDefinition(Table view, TriggerEvent event, String proc) {
-		switch (event) {
-		case DELETE:
-			view.setDeletePlan(proc);
-			break;
-		case INSERT:
-			view.setInsertPlan(proc);
-			break;
-		case UPDATE:
-			view.setUpdatePlan(proc);
-			break;
-		}
-	}
+    public static void setInsteadOfTriggerDefinition(Table view, TriggerEvent event, String proc) {
+        switch (event) {
+        case DELETE:
+            view.setDeletePlan(proc);
+            break;
+        case INSERT:
+            view.setInsertPlan(proc);
+            break;
+        case UPDATE:
+            view.setUpdatePlan(proc);
+            break;
+        }
+    }
 
-	public static TransformationMetadata exampleUpdateProc(TriggerEvent procedureType, String procedure1, String procedure2) {
-		MetadataStore metadataStore = new MetadataStore();
-	    // Create models
-	    Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-	    Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-	    Schema vm1 = createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
+    public static TransformationMetadata exampleUpdateProc(TriggerEvent procedureType, String procedure1, String procedure2) {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
+        Schema vm1 = createVirtualModel("vm1", metadataStore); //$NON-NLS-1$
 
-	    // Create physical groups
-	    Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
-	    Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
-	    Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
-	    Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
+        // Create physical groups
+        Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
+        Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
 
-	    // Create physical group elements
-	    createElements(pm1g1,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-	    createElements(pm1g2,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-	    createElements(pm2g1,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-	    createElements(pm2g2,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical group elements
+        createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-	    // Create virtual groups
-	    QueryNode vm1g1n1 = new QueryNode("SELECT * FROM vm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        // Create virtual groups
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM vm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-	    QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
+        QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-	    // Create virtual elements
-	    createElementsWithDefaults(vm1g1,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
-	        new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	    createElementsWithDefaults(vm1g2,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
-	        new String[] { "abc", "456", "false", null}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        // Create virtual elements
+        createElementsWithDefaults(vm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
+            new String[] { "xyz", "123", "true", "123.456"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        createElementsWithDefaults(vm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE },
+            new String[] { "abc", "456", "false", null}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-	    setInsteadOfTriggerDefinition(vm1g1, procedureType, procedure1);
-	    setInsteadOfTriggerDefinition(vm1g2, procedureType, procedure2);
+        setInsteadOfTriggerDefinition(vm1g1, procedureType, procedure1);
+        setInsteadOfTriggerDefinition(vm1g2, procedureType, procedure2);
 
-	    // Create the facade from the store
-	    return createTransformationMetadata(metadataStore, "proc");
-	}
+        // Create the facade from the store
+        return createTransformationMetadata(metadataStore, "proc");
+    }
 
-	public static TransformationMetadata exampleBusObj() {
-	    // Create the facade from the store
-	    return createTransformationMetadata(exampleBusObjStore(), "busObj");
-	}
+    public static TransformationMetadata exampleBusObj() {
+        // Create the facade from the store
+        return createTransformationMetadata(exampleBusObjStore(), "busObj");
+    }
 
-	public static MetadataStore exampleBusObjStore() {
-		MetadataStore metadataStore = new MetadataStore();
-	    // Create db2 tables
-	    Schema db2Model = createPhysicalModel("db2model", metadataStore); //$NON-NLS-1$
+    public static MetadataStore exampleBusObjStore() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create db2 tables
+        Schema db2Model = createPhysicalModel("db2model", metadataStore); //$NON-NLS-1$
 
-	    Table db2Table = createPhysicalGroup("DB2_TABLE", db2Model); //$NON-NLS-1$
-	    createElements(db2Table,
-	        new String[] { "PRODUCT", "REGION", "SALES"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DOUBLE});
+        Table db2Table = createPhysicalGroup("DB2_TABLE", db2Model); //$NON-NLS-1$
+        createElements(db2Table,
+            new String[] { "PRODUCT", "REGION", "SALES"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DOUBLE});
 
-	    Table salesTable = createPhysicalGroup("SALES", db2Model); //$NON-NLS-1$
-	    salesTable.setCardinality(1000000);
-	    createElements(salesTable,
-	        new String[] { "CITY", "MONTH", "SALES"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DOUBLE});
+        Table salesTable = createPhysicalGroup("SALES", db2Model); //$NON-NLS-1$
+        salesTable.setCardinality(1000000);
+        createElements(salesTable,
+            new String[] { "CITY", "MONTH", "SALES"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.DOUBLE});
 
-	    Table geographyTable2 = createPhysicalGroup("GEOGRAPHY2", db2Model); //$NON-NLS-1$
-	    geographyTable2.setCardinality(1000);
-	    List<Column> geographyElem2 = createElements(geographyTable2,
-	        new String[] { "CITY", "REGION"}, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	    List<Column> geoPkElem2 = new ArrayList<Column>();
-	    geoPkElem2.add(geographyElem2.get(0));
-	    createKey(KeyRecord.Type.Primary, "db2model.GEOGRAPHY2.GEOGRAPHY_PK", geographyTable2, geoPkElem2); //$NON-NLS-1$
+        Table geographyTable2 = createPhysicalGroup("GEOGRAPHY2", db2Model); //$NON-NLS-1$
+        geographyTable2.setCardinality(1000);
+        List<Column> geographyElem2 = createElements(geographyTable2,
+            new String[] { "CITY", "REGION"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        List<Column> geoPkElem2 = new ArrayList<Column>();
+        geoPkElem2.add(geographyElem2.get(0));
+        createKey(KeyRecord.Type.Primary, "db2model.GEOGRAPHY2.GEOGRAPHY_PK", geographyTable2, geoPkElem2); //$NON-NLS-1$
 
-	    Table db2Table2 = createPhysicalGroup("DB2TABLE", db2Model); //$NON-NLS-1$
-	    createElements(db2Table2,
-	        new String[] { "c0", "c1", "c2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
+        Table db2Table2 = createPhysicalGroup("DB2TABLE", db2Model); //$NON-NLS-1$
+        createElements(db2Table2,
+            new String[] { "c0", "c1", "c2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
 
-	    // Create oracle tables
-	    Schema oraModel = createPhysicalModel("oraclemodel", metadataStore); //$NON-NLS-1$
+        // Create oracle tables
+        Schema oraModel = createPhysicalModel("oraclemodel", metadataStore); //$NON-NLS-1$
 
-	    Table oraTable = createPhysicalGroup("Oracle_table", oraModel); //$NON-NLS-1$
-	    createElements(oraTable,
-	        new String[] { "COSTS", "REGION", "YEAR"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        Table oraTable = createPhysicalGroup("Oracle_table", oraModel); //$NON-NLS-1$
+        createElements(oraTable,
+            new String[] { "COSTS", "REGION", "YEAR"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-	    Table geographyTable = createPhysicalGroup("GEOGRAPHY", oraModel); //$NON-NLS-1$
-	    geographyTable.setCardinality(1000);
-	    List<Column> geographyElem = createElements(geographyTable,
-	        new String[] { "CITY", "REGION"}, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	    List<Column> geoPkElem = new ArrayList<Column>();
-	    geoPkElem.add(geographyElem.get(0));
-	    createKey(KeyRecord.Type.Primary, "oraclemodel.GEOGRAPHY.GEOGRAPHY_PK", geographyTable, geoPkElem); //$NON-NLS-1$
+        Table geographyTable = createPhysicalGroup("GEOGRAPHY", oraModel); //$NON-NLS-1$
+        geographyTable.setCardinality(1000);
+        List<Column> geographyElem = createElements(geographyTable,
+            new String[] { "CITY", "REGION"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        List<Column> geoPkElem = new ArrayList<Column>();
+        geoPkElem.add(geographyElem.get(0));
+        createKey(KeyRecord.Type.Primary, "oraclemodel.GEOGRAPHY.GEOGRAPHY_PK", geographyTable, geoPkElem); //$NON-NLS-1$
 
-	    Table oraTable2 = createPhysicalGroup("OraTable", oraModel); //$NON-NLS-1$
-	    createElements(oraTable2,
-	        new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        Table oraTable2 = createPhysicalGroup("OraTable", oraModel); //$NON-NLS-1$
+        createElements(oraTable2,
+            new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 
-	    // Create sql server tables
-	    Schema msModel = createPhysicalModel("msmodel", metadataStore); //$NON-NLS-1$
+        // Create sql server tables
+        Schema msModel = createPhysicalModel("msmodel", metadataStore); //$NON-NLS-1$
 
-	    Table timeTable = createPhysicalGroup("TIME", msModel); //$NON-NLS-1$
-	    timeTable.setCardinality(120);
-	    List<Column> timeElem = createElements(timeTable,
-	        new String[] { "MONTH", "YEAR"}, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	    List<Column> timePkElem = new ArrayList<Column>();
-	    timePkElem.add(timeElem.get(0));
-	    createKey(KeyRecord.Type.Primary, "msmodel.TIME.TIME_PK", timeTable, timePkElem); //$NON-NLS-1$
+        Table timeTable = createPhysicalGroup("TIME", msModel); //$NON-NLS-1$
+        timeTable.setCardinality(120);
+        List<Column> timeElem = createElements(timeTable,
+            new String[] { "MONTH", "YEAR"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+        List<Column> timePkElem = new ArrayList<Column>();
+        timePkElem.add(timeElem.get(0));
+        createKey(KeyRecord.Type.Primary, "msmodel.TIME.TIME_PK", timeTable, timePkElem); //$NON-NLS-1$
 
-	    Schema virtModel = createVirtualModel("logical", metadataStore); //$NON-NLS-1$
-	    QueryNode n1 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table logicalTable1 = createVirtualGroup("logicalTable1", virtModel, n1); //$NON-NLS-1$
-	    createElements(logicalTable1,
-	        new String[] { "c0", "c1", "c2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
+        Schema virtModel = createVirtualModel("logical", metadataStore); //$NON-NLS-1$
+        QueryNode n1 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table logicalTable1 = createVirtualGroup("logicalTable1", virtModel, n1); //$NON-NLS-1$
+        createElements(logicalTable1,
+            new String[] { "c0", "c1", "c2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
 
-	    QueryNode n2 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table logicalTable2 = createVirtualGroup("logicalTable2", virtModel, n2); //$NON-NLS-1$
-	    createElements(logicalTable2,
-	        new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
+        QueryNode n2 = new QueryNode("select sum(c0) as c0, c1, c2 from db2Table group by c1, c2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table logicalTable2 = createVirtualGroup("logicalTable2", virtModel, n2); //$NON-NLS-1$
+        createElements(logicalTable2,
+            new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
 
-	    return metadataStore;
-	}
+        return metadataStore;
+    }
 
-	public static TransformationMetadata exampleAggregates() {
-	    MetadataStore store = new MetadataStore();
-	    addAggregateTablesToModel("m1", store); //$NON-NLS-1$
-	    addAggregateTablesToModel("m2", store); //$NON-NLS-1$
+    public static TransformationMetadata exampleAggregates() {
+        MetadataStore store = new MetadataStore();
+        addAggregateTablesToModel("m1", store); //$NON-NLS-1$
+        addAggregateTablesToModel("m2", store); //$NON-NLS-1$
 
-	    // Create the facade from the store
-	    return createTransformationMetadata(store, "exampleAggregates");
-	}
+        // Create the facade from the store
+        return createTransformationMetadata(store, "exampleAggregates");
+    }
 
-	public static void addAggregateTablesToModel(String modelName, MetadataStore metadataStore) {
-	    // Create db2 tables
-	    Schema model = createPhysicalModel(modelName, metadataStore);
+    public static void addAggregateTablesToModel(String modelName, MetadataStore metadataStore) {
+        // Create db2 tables
+        Schema model = createPhysicalModel(modelName, metadataStore);
 
-	    Table orders = createPhysicalGroup("order", model); //$NON-NLS-1$
-	    orders.setCardinality(1000000);
-	    createElements(orders,
-	        new String[] { "O_OrderID", "O_ProductID", "O_DealerID", "O_Amount", "O_Date"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-	        new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.DATE });
+        Table orders = createPhysicalGroup("order", model); //$NON-NLS-1$
+        orders.setCardinality(1000000);
+        createElements(orders,
+            new String[] { "O_OrderID", "O_ProductID", "O_DealerID", "O_Amount", "O_Date"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.DATE });
 
-	    Table products = createPhysicalGroup("product", model); //$NON-NLS-1$
-	    products.setCardinality(1000);
-	    createElements(products,
-	        new String[] { "P_ProductID", "P_Overhead", "P_DivID"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.INTEGER});
+        Table products = createPhysicalGroup("product", model); //$NON-NLS-1$
+        products.setCardinality(1000);
+        createElements(products,
+            new String[] { "P_ProductID", "P_Overhead", "P_DivID"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.INTEGER});
 
-	    Table divisions = createPhysicalGroup("division", model); //$NON-NLS-1$
-	    divisions.setCardinality(100);
-	    createElements(divisions,
-	        new String[] { "V_DIVID", "V_SectorID"}, //$NON-NLS-1$ //$NON-NLS-2$
-	        new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
+        Table divisions = createPhysicalGroup("division", model); //$NON-NLS-1$
+        divisions.setCardinality(100);
+        createElements(divisions,
+            new String[] { "V_DIVID", "V_SectorID"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
 
-	    Table dealers = createPhysicalGroup("dealer", model); //$NON-NLS-1$
-	    dealers.setCardinality(1000);
-	    createElements(dealers,
-	        new String[] { "D_DealerID", "D_State", "D_Address"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	        new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-	}
+        Table dealers = createPhysicalGroup("dealer", model); //$NON-NLS-1$
+        dealers.setCardinality(1000);
+        createElements(dealers,
+            new String[] { "D_DealerID", "D_State", "D_Address"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+    }
 
-	/**
-	 * Metadata for Multi-Binding models
-	 * @return example
-	 * @since 4.2
-	 */
-	public static TransformationMetadata exampleMultiBinding() {
-		MetadataStore metadataStore = new MetadataStore();
-	    Schema virtModel = createVirtualModel("Virt", metadataStore); //$NON-NLS-1$
-	    Schema physModel = createPhysicalModel("MultiModel", metadataStore); //$NON-NLS-1$
+    /**
+     * Metadata for Multi-Binding models
+     * @return example
+     * @since 4.2
+     */
+    public static TransformationMetadata exampleMultiBinding() {
+        MetadataStore metadataStore = new MetadataStore();
+        Schema virtModel = createVirtualModel("Virt", metadataStore); //$NON-NLS-1$
+        Schema physModel = createPhysicalModel("MultiModel", metadataStore); //$NON-NLS-1$
 
-	    Table physGroup = createPhysicalGroup("Phys", physModel); //$NON-NLS-1$
-	    createElements(physGroup,
-	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
-	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-	    Table physGroup1 = createPhysicalGroup("Phys1", physModel); //$NON-NLS-1$
+        Table physGroup = createPhysicalGroup("Phys", physModel); //$NON-NLS-1$
+        createElements(physGroup,
+                                      new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        Table physGroup1 = createPhysicalGroup("Phys1", physModel); //$NON-NLS-1$
         List<Column> cols = createElements(physGroup1,
                 new String[] { "a", "b", "c" }, //$NON-NLS-1$ //$NON-NLS-2$
                 new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
         cols.get(2).setProperty(MultiSourceMetadataWrapper.MULTISOURCE_PARTITIONED_PROPERTY, Boolean.TRUE.toString());
 
-	    Table physGroup2 = createPhysicalGroup("Phys2", physModel); //$NON-NLS-1$
-	    createElements(physGroup2,
-	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
-	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        Table physGroup2 = createPhysicalGroup("Phys2", physModel); //$NON-NLS-1$
+        createElements(physGroup2,
+                                      new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-	    QueryNode virtTrans = new QueryNode("SELECT * FROM MultiModel.Phys");         //$NON-NLS-1$ //$NON-NLS-2$
-	    Table virtGroup = createVirtualGroup("view", virtModel, virtTrans); //$NON-NLS-1$
-	    createElements(virtGroup,
-	                                       new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
-	                                       new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        QueryNode virtTrans = new QueryNode("SELECT * FROM MultiModel.Phys");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table virtGroup = createVirtualGroup("view", virtModel, virtTrans); //$NON-NLS-1$
+        createElements(virtGroup,
+                                           new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$
+                                           new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-	    ColumnSet<Procedure> rs2 = createResultSet("Virt.rs1", new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	    ProcedureParameter rs2p2 = createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
-	    rs2p2.setNullType(org.teiid.metadata.BaseColumn.NullType.Nullable);
-	    QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-	                                    + "execute string 'SELECT a, b FROM MultiModel.Phys where SOURCE_NAME = Virt.sq1.in'; END"); //$NON-NLS-1$
-	    Procedure sq1 = createVirtualProcedure("sq1", virtModel, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
-	    sq1.setResultSet(rs2);
+        ColumnSet<Procedure> rs2 = createResultSet("Virt.rs1", new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs2p2 = createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        rs2p2.setNullType(org.teiid.metadata.BaseColumn.NullType.Nullable);
+        QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + "execute string 'SELECT a, b FROM MultiModel.Phys where SOURCE_NAME = Virt.sq1.in'; END"); //$NON-NLS-1$
+        Procedure sq1 = createVirtualProcedure("sq1", virtModel, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
+        sq1.setResultSet(rs2);
 
-	    ColumnSet<Procedure> rs3 = createResultSet("MultiModel.rs1", new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	    ProcedureParameter rs3p2 = createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
-	    ProcedureParameter rs3p3 = createParameter("source_name", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
-	    rs3p3.setNullType(org.teiid.metadata.BaseColumn.NullType.Nullable);
-	    Procedure sq2 = createStoredProcedure("proc", physModel, Arrays.asList(rs3p2, rs3p3));
-	    sq2.setResultSet(rs3);
-	    return createTransformationMetadata(metadataStore, "multiBinding");
-	}
+        ColumnSet<Procedure> rs3 = createResultSet("MultiModel.rs1", new String[] { "a", "b" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter rs3p2 = createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        ProcedureParameter rs3p3 = createParameter("source_name", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
+        rs3p3.setNullType(org.teiid.metadata.BaseColumn.NullType.Nullable);
+        Procedure sq2 = createStoredProcedure("proc", physModel, Arrays.asList(rs3p2, rs3p3));
+        sq2.setResultSet(rs3);
+        return createTransformationMetadata(metadataStore, "multiBinding");
+    }
 
-	/**
-	 * This example is for testing static costing using cardinality information from
-	 * metadata, as well as key information and maybe access patterns
-	 */
-	public static TransformationMetadata example4() {
-		MetadataStore metadataStore = new MetadataStore();
-		// Create models - physical ones will support joins
-		Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
-		Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
-		Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
-	    Schema pm4 = createPhysicalModel("pm4", metadataStore); //$NON-NLS-1$
-		Schema vm1 = createVirtualModel("vm1", metadataStore);	 //$NON-NLS-1$
+    /**
+     * This example is for testing static costing using cardinality information from
+     * metadata, as well as key information and maybe access patterns
+     */
+    public static TransformationMetadata example4() {
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models - physical ones will support joins
+        Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
+        Schema pm2 = createPhysicalModel("pm2", metadataStore); //$NON-NLS-1$
+        Schema pm3 = createPhysicalModel("pm3", metadataStore); //$NON-NLS-1$
+        Schema pm4 = createPhysicalModel("pm4", metadataStore); //$NON-NLS-1$
+        Schema vm1 = createVirtualModel("vm1", metadataStore);     //$NON-NLS-1$
 
-		// Create physical groups
-		Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
-		Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
-		Table pm1g3 = createPhysicalGroup("g3", pm1); //$NON-NLS-1$
-		Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
-		Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
-		Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
-		Table pm3g1 = createPhysicalGroup("g1", pm3); //$NON-NLS-1$
-		Table pm3g2 = createPhysicalGroup("g2", pm3); //$NON-NLS-1$
-		Table pm3g3 = createPhysicalGroup("g3", pm3); //$NON-NLS-1$
-	    Table pm4g1 = createPhysicalGroup("g1", pm4); //$NON-NLS-1$
-	    Table pm4g2 = createPhysicalGroup("g2", pm4); //$NON-NLS-1$
-		// Add group cardinality metadata
-		pm1g1.setCardinality(10);
-		pm1g2.setCardinality(10);
-		pm1g3.setCardinality(10);
-		pm2g1.setCardinality(1000);
-		pm2g2.setCardinality(1000);
-		pm3g1.setCardinality(100000);
-		pm3g2.setCardinality(100000);
-	    pm3g3.setCardinality(100000);
-	    // leave pm4.g1 as unknown
+        // Create physical groups
+        Table pm1g1 = createPhysicalGroup("g1", pm1); //$NON-NLS-1$
+        Table pm1g2 = createPhysicalGroup("g2", pm1); //$NON-NLS-1$
+        Table pm1g3 = createPhysicalGroup("g3", pm1); //$NON-NLS-1$
+        Table pm2g1 = createPhysicalGroup("g1", pm2); //$NON-NLS-1$
+        Table pm2g2 = createPhysicalGroup("g2", pm2); //$NON-NLS-1$
+        Table pm2g3 = createPhysicalGroup("g3", pm2); //$NON-NLS-1$
+        Table pm3g1 = createPhysicalGroup("g1", pm3); //$NON-NLS-1$
+        Table pm3g2 = createPhysicalGroup("g2", pm3); //$NON-NLS-1$
+        Table pm3g3 = createPhysicalGroup("g3", pm3); //$NON-NLS-1$
+        Table pm4g1 = createPhysicalGroup("g1", pm4); //$NON-NLS-1$
+        Table pm4g2 = createPhysicalGroup("g2", pm4); //$NON-NLS-1$
+        // Add group cardinality metadata
+        pm1g1.setCardinality(10);
+        pm1g2.setCardinality(10);
+        pm1g3.setCardinality(10);
+        pm2g1.setCardinality(1000);
+        pm2g2.setCardinality(1000);
+        pm3g1.setCardinality(100000);
+        pm3g2.setCardinality(100000);
+        pm3g3.setCardinality(100000);
+        // leave pm4.g1 as unknown
 
-		// Create physical elements
-		List<Column> pm1g1e = createElements(pm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm1g3e = createElements(pm1g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm2g1e = createElements(pm2g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm2g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm3g1e = createElements(pm3g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(pm3g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm3g3e = createElements(pm3g3,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm4g1e = createElements(pm4g1,
-	        new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	        new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		List<Column> pm4g2e = createElements(pm4g2,
-	            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-	            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        // Create physical elements
+        List<Column> pm1g1e = createElements(pm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm1g3e = createElements(pm1g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm2g1e = createElements(pm2g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm2g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm3g1e = createElements(pm3g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(pm3g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm3g3e = createElements(pm3g3,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm4g1e = createElements(pm4g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List<Column> pm4g2e = createElements(pm4g2,
+                new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
-		// Add key metadata
-		createKey(KeyRecord.Type.Primary, "pm1.g1.key1", pm1g1, pm1g1e.subList(0, 1)); //e1 //$NON-NLS-1$
-		createKey(KeyRecord.Type.Primary, "pm3.g1.key1", pm3g1, pm3g1e.subList(0, 1)); //e1 //$NON-NLS-1$
-		createKey(KeyRecord.Type.Primary, "pm3.g3.key1", pm3g3, pm3g3e.subList(0, 1)); //e1 //$NON-NLS-1$
-	    KeyRecord pm4g1key1= createKey(KeyRecord.Type.Primary, "pm4.g1.key1", pm4g1, pm4g1e.subList(0, 2)); //e1, e2 //$NON-NLS-1$
-	    createForeignKey("pm4.g2.fk", pm4g2, pm4g2e.subList(0, 2), pm4g1key1); //$NON-NLS-1$
-		// Add access pattern metadata
-		// Create access patterns - pm1
-		List<Column> elements = new ArrayList<Column>(1);
-		elements.add(pm1g1e.iterator().next());
-		createAccessPattern("pm1.g1.ap1", pm1g1, elements); //e1 //$NON-NLS-1$
-		elements = new ArrayList<Column>(2);
-		Iterator<Column> iter = pm1g3e.iterator();
-		elements.add(iter.next());
-		elements.add(iter.next());
-		createAccessPattern("pm1.g3.ap1", pm1g3, elements); //e1,e2 //$NON-NLS-1$
-		// Create access patterns - pm2
-		elements = new ArrayList<Column>(1);
-		elements.add(pm2g1e.iterator().next());
-		createAccessPattern("pm2.g1.ap1", pm2g1, elements); //e1 //$NON-NLS-1$
+        // Add key metadata
+        createKey(KeyRecord.Type.Primary, "pm1.g1.key1", pm1g1, pm1g1e.subList(0, 1)); //e1 //$NON-NLS-1$
+        createKey(KeyRecord.Type.Primary, "pm3.g1.key1", pm3g1, pm3g1e.subList(0, 1)); //e1 //$NON-NLS-1$
+        createKey(KeyRecord.Type.Primary, "pm3.g3.key1", pm3g3, pm3g3e.subList(0, 1)); //e1 //$NON-NLS-1$
+        KeyRecord pm4g1key1= createKey(KeyRecord.Type.Primary, "pm4.g1.key1", pm4g1, pm4g1e.subList(0, 2)); //e1, e2 //$NON-NLS-1$
+        createForeignKey("pm4.g2.fk", pm4g2, pm4g2e.subList(0, 2), pm4g1key1); //$NON-NLS-1$
+        // Add access pattern metadata
+        // Create access patterns - pm1
+        List<Column> elements = new ArrayList<Column>(1);
+        elements.add(pm1g1e.iterator().next());
+        createAccessPattern("pm1.g1.ap1", pm1g1, elements); //e1 //$NON-NLS-1$
+        elements = new ArrayList<Column>(2);
+        Iterator<Column> iter = pm1g3e.iterator();
+        elements.add(iter.next());
+        elements.add(iter.next());
+        createAccessPattern("pm1.g3.ap1", pm1g3, elements); //e1,e2 //$NON-NLS-1$
+        // Create access patterns - pm2
+        elements = new ArrayList<Column>(1);
+        elements.add(pm2g1e.iterator().next());
+        createAccessPattern("pm2.g1.ap1", pm2g1, elements); //e1 //$NON-NLS-1$
 
-		// Create virtual groups
-		QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        // Create virtual groups
+        QueryNode vm1g1n1 = new QueryNode("SELECT * FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = createUpdatableVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-		QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
+        QueryNode vm1g2n1 = new QueryNode("SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3 FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g2 = createUpdatableVirtualGroup("g2", vm1, vm1g2n1); //$NON-NLS-1$
 
-		QueryNode vm1g3n1 = new QueryNode("SELECT pm1.g3.e1 AS x, pm1.g3.e2 AS y from pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
-		Table vm1g3 = createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
+        QueryNode vm1g3n1 = new QueryNode("SELECT pm1.g3.e1 AS x, pm1.g3.e2 AS y from pm1.g3"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g3 = createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-	    QueryNode vm1g4n1 = new QueryNode("SELECT distinct pm1.g2.e1 as ve1, pm1.g1.e1 as ve2 FROM pm1.g2 LEFT OUTER JOIN /* optional */ pm1.g1 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
-	    Table vm1g4 = createVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
-	    createElements(vm1g4,
-	              new String[] { "ve1", "ve2" }, //$NON-NLS-1$ //$NON-NLS-2$
-	              new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        QueryNode vm1g4n1 = new QueryNode("SELECT distinct pm1.g2.e1 as ve1, pm1.g1.e1 as ve2 FROM pm1.g2 LEFT OUTER JOIN /* optional */ pm1.g1 on pm1.g1.e1 = pm1.g2.e1");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g4 = createVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
+        createElements(vm1g4,
+                  new String[] { "ve1", "ve2" }, //$NON-NLS-1$ //$NON-NLS-2$
+                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 
-		// Create virtual elements
-		createElements(vm1g1,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm1g2,
-			new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
-		createElements(vm1g3,
-			new String[] { "e1", "e2","x", "y" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
+        // Create virtual elements
+        createElements(vm1g1,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(vm1g2,
+            new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        createElements(vm1g3,
+            new String[] { "e1", "e2","x", "y" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+            new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER });
 
-		return createTransformationMetadata(metadataStore, "example4");
-	}
+        return createTransformationMetadata(metadataStore, "example4");
+    }
 
-	public static TransformationMetadata fromDDL(String ddl, String vdbName, String modelName) throws Exception {
-		return fromDDL(vdbName, new DDLHolder(modelName, ddl));
-	}
+    public static TransformationMetadata fromDDL(String ddl, String vdbName, String modelName) throws Exception {
+        return fromDDL(vdbName, new DDLHolder(modelName, ddl));
+    }
 
-	public static class DDLHolder {
-		String name;
-		String ddl;
-		public DDLHolder(String name, String ddl) {
-			this.name = name;
-			this.ddl = ddl;
-		}
-	}
+    public static class DDLHolder {
+        String name;
+        String ddl;
+        public DDLHolder(String name, String ddl) {
+            this.name = name;
+            this.ddl = ddl;
+        }
+    }
 
-	public static TransformationMetadata fromDDL(String vdbName, DDLHolder... schemas) throws Exception {
-		CompositeMetadataStore cms = new CompositeMetadataStore(Collections.EMPTY_LIST);
-		for (DDLHolder schema : schemas) {
-			MetadataFactory mf = TestDDLParser.helpParse(schema.ddl, schema.name);
-			cms.merge(mf.asMetadataStore());
-		}
+    public static TransformationMetadata fromDDL(String vdbName, DDLHolder... schemas) throws Exception {
+        CompositeMetadataStore cms = new CompositeMetadataStore(Collections.EMPTY_LIST);
+        for (DDLHolder schema : schemas) {
+            MetadataFactory mf = TestDDLParser.helpParse(schema.ddl, schema.name);
+            cms.merge(mf.asMetadataStore());
+        }
 
-		TransformationMetadata tm = createTransformationMetadata(cms, vdbName);
-    	ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
-    	if (report.hasItems()) {
-    		throw new RuntimeException(report.getFailureMessage());
-    	}
-    	return tm;
-	}
+        TransformationMetadata tm = createTransformationMetadata(cms, vdbName);
+        ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
+        if (report.hasItems()) {
+            throw new RuntimeException(report.getFailureMessage());
+        }
+        return tm;
+    }
 }

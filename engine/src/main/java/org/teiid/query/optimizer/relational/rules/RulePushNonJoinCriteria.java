@@ -58,21 +58,21 @@ import org.teiid.query.util.CommandContext;
  */
 public final class RulePushNonJoinCriteria implements OptimizerRule {
 
-	private boolean firstRun = true;
+    private boolean firstRun = true;
 
-	public RulePushNonJoinCriteria(boolean firstRun) {
-		this.firstRun = firstRun;
-	}
+    public RulePushNonJoinCriteria(boolean firstRun) {
+        this.firstRun = firstRun;
+    }
 
-	/**
-	 * Execute the rule as described in the class comments.
-	 * @param plan Incoming query plan, may be modified during method and may be returned from method
-	 * @param metadata Metadata source
-	 * @param rules Rules from optimizer rule stack, may be manipulated during method
-	 * @return Updated query plan if rule fired, else original query plan
-	 */
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    /**
+     * Execute the rule as described in the class comments.
+     * @param plan Incoming query plan, may be modified during method and may be returned from method
+     * @param metadata Metadata source
+     * @param rules Rules from optimizer rule stack, may be manipulated during method
+     * @return Updated query plan if rule fired, else original query plan
+     */
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         boolean treeChanged = false;
         boolean removeCopiedFlag = false;
@@ -139,8 +139,8 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
             rules.push(RuleConstants.RAISE_NULL);
         }
 
-		return plan;
-	}
+        return plan;
+    }
 
     /**
      * True if the criteria is pushed.
@@ -175,71 +175,71 @@ public final class RulePushNonJoinCriteria implements OptimizerRule {
         }
 
         if (pushed) {
-        	iter.remove();
+            iter.remove();
         } else if (firstRun && tgtCrit instanceof CompareCriteria) {
             CompareCriteria crit = (CompareCriteria) tgtCrit;
 
             Expression leftExpr = crit.getLeftExpression();
             Expression rightExpr = crit.getRightExpression();
 
-        	for (int i = 0; i < innerJoinNodes.length; i++) {
-        		PlanNode node = FrameUtil.findJoinSourceNode(innerJoinNodes[i]);
+            for (int i = 0; i < innerJoinNodes.length; i++) {
+                PlanNode node = FrameUtil.findJoinSourceNode(innerJoinNodes[i]);
 
-        		boolean outer = false;
-        		for (PlanNode child : NodeEditor.findAllNodes(node, NodeConstants.Types.JOIN)) {
-        			if (((JoinType)child.getProperty(Info.JOIN_TYPE)).isOuter()) {
-        				outer = true;
-        				break;
-        			}
-        		}
+                boolean outer = false;
+                for (PlanNode child : NodeEditor.findAllNodes(node, NodeConstants.Types.JOIN)) {
+                    if (((JoinType)child.getProperty(Info.JOIN_TYPE)).isOuter()) {
+                        outer = true;
+                        break;
+                    }
+                }
 
-        		if (!outer) {
-        			continue;
-        		}
+                if (!outer) {
+                    continue;
+                }
 
                 Set<GroupSymbol> leftExprGroups = GroupsUsedByElementsVisitor.getGroups(leftExpr);
                 Set<GroupSymbol> rightExprGroups = GroupsUsedByElementsVisitor.getGroups(rightExpr);
 
                 ArrayList<ElementSymbol> notNull = new ArrayList<ElementSymbol>(2);
 
-        		if (node.getGroups().containsAll(leftExprGroups)) {
-        			collectNotNull(leftExpr, notNull);
-        		} else if (node.getGroups().containsAll(rightExprGroups)) {
-        			collectNotNull(rightExpr, notNull);
-        		}
+                if (node.getGroups().containsAll(leftExprGroups)) {
+                    collectNotNull(leftExpr, notNull);
+                } else if (node.getGroups().containsAll(rightExprGroups)) {
+                    collectNotNull(rightExpr, notNull);
+                }
 
-        		if (!notNull.isEmpty()) {
-        			pushed = true;
-        			for (ElementSymbol es : notNull) {
-        				IsNullCriteria inc = new IsNullCriteria(es);
-        				inc.setNegated(true);
-        				PlanNode notNullCrit = RelationalPlanner.createSelectNode(inc, false);
-        				notNullCrit.setProperty(NodeConstants.Info.IS_TEMPORARY, true);
-        				innerJoinNodes[i].addAsParent(notNullCrit);
-        			}
-        		}
-        	}
+                if (!notNull.isEmpty()) {
+                    pushed = true;
+                    for (ElementSymbol es : notNull) {
+                        IsNullCriteria inc = new IsNullCriteria(es);
+                        inc.setNegated(true);
+                        PlanNode notNullCrit = RelationalPlanner.createSelectNode(inc, false);
+                        notNullCrit.setProperty(NodeConstants.Info.IS_TEMPORARY, true);
+                        innerJoinNodes[i].addAsParent(notNullCrit);
+                    }
+                }
+            }
         }
 
         return pushed;
     }
 
-	private void collectNotNull(Expression leftExpr,
-			ArrayList<ElementSymbol> notNull) {
-		if (leftExpr instanceof ElementSymbol) {
-			notNull.add((ElementSymbol)leftExpr);
-		} else if (leftExpr instanceof Function) {
-			Function f = (Function)leftExpr;
-			if (!f.getFunctionDescriptor().isNullDependent()) {
-				for (Expression arg : f.getArgs()) {
-					collectNotNull(arg, notNull);
-				}
-			}
-		}
-	}
+    private void collectNotNull(Expression leftExpr,
+            ArrayList<ElementSymbol> notNull) {
+        if (leftExpr instanceof ElementSymbol) {
+            notNull.add((ElementSymbol)leftExpr);
+        } else if (leftExpr instanceof Function) {
+            Function f = (Function)leftExpr;
+            if (!f.getFunctionDescriptor().isNullDependent()) {
+                for (Expression arg : f.getArgs()) {
+                    collectNotNull(arg, notNull);
+                }
+            }
+        }
+    }
 
     public String toString() {
-		return "PushNonJoinCriteria"; //$NON-NLS-1$
-	}
+        return "PushNonJoinCriteria"; //$NON-NLS-1$
+    }
 
 }

@@ -30,15 +30,15 @@ import org.teiid.net.CommunicationException;
  * Generic logon interface.
  */
 public interface ILogon {
-	static final String KRB5TOKEN = "KRB5TOKEN"; //$NON-NLS-1$
-	static final String KRB5_ESTABLISHED = "KRB5_CONTEXT_ESTABLISHED"; //$NON-NLS-1$
-	public static final String AUTH_TYPE = "authType"; //$NON-NLS-1$
+    static final String KRB5TOKEN = "KRB5TOKEN"; //$NON-NLS-1$
+    static final String KRB5_ESTABLISHED = "KRB5_CONTEXT_ESTABLISHED"; //$NON-NLS-1$
+    public static final String AUTH_TYPE = "authType"; //$NON-NLS-1$
 
-	@Secure
+    @Secure
     LogonResult logon(Properties connectionProperties)
     throws LogonException, TeiidComponentException, CommunicationException;
 
-	@Secure
+    @Secure
     LogonResult neogitiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
 
    /**
@@ -51,7 +51,7 @@ public interface ILogon {
 
    @Deprecated
    ResultsFuture<?> ping(Collection<String> sessions)
-   		throws TeiidComponentException, CommunicationException;
+           throws TeiidComponentException, CommunicationException;
 
    /**
     * Log off the specified session.

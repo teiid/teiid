@@ -42,44 +42,44 @@ class TupleSourceValueIterator implements ValueIterator{
     TupleSourceValueIterator(IndexedTupleSource tupleSource, int columnIndex){
         this.tupleSourceIterator = tupleSource;
         this.columnIndex = columnIndex;
-	}
+    }
 
-	/**
-	 * @see java.util.Iterator#hasNext()
-	 */
-	public boolean hasNext() throws TeiidComponentException{
-	    try {
+    /**
+     * @see java.util.Iterator#hasNext()
+     */
+    public boolean hasNext() throws TeiidComponentException{
+        try {
             return tupleSourceIterator.hasNext();
         } catch (TeiidProcessingException e) {
              throw new TeiidComponentException(e);
         }
-	}
+    }
 
-	/**
-	 * Returns constant Object values, not Expressions.
-	 * @see java.util.Iterator#next()
-	 */
-	public Object next() throws TeiidComponentException{
-	    return nextTuple().get(columnIndex);
-	}
+    /**
+     * Returns constant Object values, not Expressions.
+     * @see java.util.Iterator#next()
+     */
+    public Object next() throws TeiidComponentException{
+        return nextTuple().get(columnIndex);
+    }
 
-	protected List<?> nextTuple() throws TeiidComponentException {
-		try {
+    protected List<?> nextTuple() throws TeiidComponentException {
+        try {
             return tupleSourceIterator.nextTuple();
         } catch (TeiidProcessingException e) {
              throw new TeiidComponentException(e);
         }
-	}
+    }
 
-	public void close() {
-		this.tupleSourceIterator.closeSource();
-	}
+    public void close() {
+        this.tupleSourceIterator.closeSource();
+    }
 
-	/**
-	 * Flags a reset as being needed
-	 * @see org.teiid.query.sql.util.ValueIterator#reset()
-	 */
-	public void reset() {
-		this.tupleSourceIterator.reset();
-	}
+    /**
+     * Flags a reset as being needed
+     * @see org.teiid.query.sql.util.ValueIterator#reset()
+     */
+    public void reset() {
+        this.tupleSourceIterator.reset();
+    }
 }

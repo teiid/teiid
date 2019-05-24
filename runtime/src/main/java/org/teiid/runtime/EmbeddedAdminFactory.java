@@ -24,32 +24,32 @@ import org.teiid.services.BufferServiceImpl;
 
 public class EmbeddedAdminFactory {
 
-	private static EmbeddedAdminFactory INSTANCE = new EmbeddedAdminFactory();
+    private static EmbeddedAdminFactory INSTANCE = new EmbeddedAdminFactory();
 
-	public static EmbeddedAdminFactory getInstance() {
-		return INSTANCE;
-	}
+    public static EmbeddedAdminFactory getInstance() {
+        return INSTANCE;
+    }
 
-	public static EngineStatisticsMetadata createEngineStats(
-			int activeSessionsCount, BufferServiceImpl bufferService,
-			DQPCore dqp) {
-		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
-		stats.setSessionCount(activeSessionsCount);
-		stats.setTotalMemoryUsedInKB(bufferService.getHeapBufferInUseKb());
-		stats.setMemoryUsedByActivePlansInKB(bufferService.getMemoryReservedByActivePlansKb());
-		stats.setDiskWriteCount(bufferService.getDiskWriteCount());
-		stats.setDiskReadCount(bufferService.getDiskReadCount());
-		stats.setCacheReadCount(bufferService.getStorageReadCount());
-		stats.setCacheWriteCount(bufferService.getStorageWriteCount());
-		stats.setDiskSpaceUsedInMB(bufferService.getUsedDiskBufferSpaceMb());
-		stats.setActivePlanCount(dqp.getActivePlanCount());
-		stats.setWaitPlanCount(dqp.getWaitingPlanCount());
-		stats.setMaxWaitPlanWaterMark(dqp.getMaxWaitingPlanWatermark());
-		return stats;
-	}
+    public static EngineStatisticsMetadata createEngineStats(
+            int activeSessionsCount, BufferServiceImpl bufferService,
+            DQPCore dqp) {
+        EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
+        stats.setSessionCount(activeSessionsCount);
+        stats.setTotalMemoryUsedInKB(bufferService.getHeapBufferInUseKb());
+        stats.setMemoryUsedByActivePlansInKB(bufferService.getMemoryReservedByActivePlansKb());
+        stats.setDiskWriteCount(bufferService.getDiskWriteCount());
+        stats.setDiskReadCount(bufferService.getDiskReadCount());
+        stats.setCacheReadCount(bufferService.getStorageReadCount());
+        stats.setCacheWriteCount(bufferService.getStorageWriteCount());
+        stats.setDiskSpaceUsedInMB(bufferService.getUsedDiskBufferSpaceMb());
+        stats.setActivePlanCount(dqp.getActivePlanCount());
+        stats.setWaitPlanCount(dqp.getWaitingPlanCount());
+        stats.setMaxWaitPlanWaterMark(dqp.getMaxWaitingPlanWatermark());
+        return stats;
+    }
 
-	public Admin createAdmin(EmbeddedServer embeddedServer) {
-		return new EmbeddedAdminImpl(embeddedServer);
-	}
+    public Admin createAdmin(EmbeddedServer embeddedServer) {
+        return new EmbeddedAdminImpl(embeddedServer);
+    }
 
 }

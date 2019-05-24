@@ -18,15 +18,15 @@
 package org.teiid.adminapi;
 
 public interface Entry extends AdminObject {
-	/**
-	 * Get Path to the entry
-	 * @return
-	 */
-	String getPath();
+    /**
+     * Get Path to the entry
+     * @return
+     */
+    String getPath();
 
-	/**
-	 * Description
-	 * @return
-	 */
-	String getDescription();
+    /**
+     * Description
+     * @return
+     */
+    String getDescription();
 }

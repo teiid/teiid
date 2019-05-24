@@ -23,9 +23,9 @@ import org.teiid.core.BundleUtil;
 
 
 public class SessionServiceException extends TeiidSecurityException {
-	private static final long serialVersionUID = 7354291430587008894L;
+    private static final long serialVersionUID = 7354291430587008894L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public SessionServiceException(  ) {
@@ -37,7 +37,7 @@ public class SessionServiceException extends TeiidSecurityException {
      * @param the detail message
      */
     public SessionServiceException(String message) {
-    	super(message);
+        super(message);
     }
     /**
      * Constructs an instance of the exception with no detail message but with a

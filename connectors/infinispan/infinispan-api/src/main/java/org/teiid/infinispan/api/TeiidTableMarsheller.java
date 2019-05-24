@@ -35,8 +35,8 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.document.Document;
 
 public class TeiidTableMarsheller implements RawProtobufMarshaller<InfinispanDocument>, Serializable {
-	private static final long serialVersionUID = 6540991524742624955L;
-	private String documentName;
+    private static final long serialVersionUID = 6540991524742624955L;
+    private String documentName;
     private TreeMap<Integer, TableWireFormat> wireMap = new TreeMap<>();
     private DocumentFilter docFilter;
 

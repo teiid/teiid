@@ -42,7 +42,7 @@ public class TestResultsMessage extends TestCase {
         super(name);
     }
 
-	public static ResultsMessage example() {
+    public static ResultsMessage example() {
         ResultsMessage message = new ResultsMessage();
         message.setColumnNames(new String[] {"A", "B", "C", "D"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         message.setDataTypes(new String[] {DataTypeManager.DefaultDataTypes.BIG_INTEGER,
@@ -76,7 +76,7 @@ public class TestResultsMessage extends TestCase {
         return message;
     }
 
-	public void testSerialize() throws Exception {
+    public void testSerialize() throws Exception {
         ResultsMessage message = example();
 
         ResultsMessage copy = UnitTestUtil.helpSerialize(message);

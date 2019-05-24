@@ -743,10 +743,10 @@ public class JdomHelper {
 
         FileOutputStream out = new FileOutputStream( filename );
         try {
-	        write(doc,out,indent,newlines);
-	        out.flush();
+            write(doc,out,indent,newlines);
+            out.flush();
         } finally {
-        	out.close();
+            out.close();
         }
     }
 

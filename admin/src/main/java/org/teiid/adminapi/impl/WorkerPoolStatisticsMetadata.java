@@ -25,7 +25,7 @@ import org.teiid.adminapi.WorkerPoolStatistics;
  */
 public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements WorkerPoolStatistics {
 
-	private static final long serialVersionUID = -4917902925523802295L;
+    private static final long serialVersionUID = -4917902925523802295L;
 
     // Current state
     private int queued;
@@ -38,78 +38,78 @@ public class WorkerPoolStatisticsMetadata extends AdminObjectImpl implements Wor
 
     @Override
     public int getActiveThreads() {
-		return activeThreads;
-	}
+        return activeThreads;
+    }
 
     @Override
     public int getHighestActiveThreads() {
-		return highestActiveThreads;
-	}
+        return highestActiveThreads;
+    }
 
     @Override
     public long getTotalCompleted() {
-		return totalCompleted;
-	}
+        return totalCompleted;
+    }
 
     @Override
     public long getTotalSubmitted() {
-		return totalSubmitted;
-	}
+        return totalSubmitted;
+    }
 
     @Override
     public String getQueueName() {
-		return getName();
-	}
+        return getName();
+    }
 
     @Override
     public int getQueued() {
-		return queued;
-	}
+        return queued;
+    }
 
     @Override
     public int getHighestQueued() {
-		return highestQueued;
-	}
+        return highestQueued;
+    }
 
     @Override
     public int getMaxThreads() {
-		return maxThreads;
-	}
+        return maxThreads;
+    }
 
-	public void setQueued(int queued) {
-		this.queued = queued;
-	}
+    public void setQueued(int queued) {
+        this.queued = queued;
+    }
 
-	public void setHighestQueued(int highestQueued) {
-		this.highestQueued = highestQueued;
-	}
+    public void setHighestQueued(int highestQueued) {
+        this.highestQueued = highestQueued;
+    }
 
-	public void setMaxThreads(int maxThreads) {
-		this.maxThreads = maxThreads;
-	}
+    public void setMaxThreads(int maxThreads) {
+        this.maxThreads = maxThreads;
+    }
 
-	public void setActiveThreads(int activeThreads) {
-		this.activeThreads = activeThreads;
-	}
+    public void setActiveThreads(int activeThreads) {
+        this.activeThreads = activeThreads;
+    }
 
-	public void setHighestActiveThreads(int highestActiveThreads) {
-		this.highestActiveThreads = highestActiveThreads;
-	}
+    public void setHighestActiveThreads(int highestActiveThreads) {
+        this.highestActiveThreads = highestActiveThreads;
+    }
 
-	public void setTotalSubmitted(long totalSubmitted) {
-		this.totalSubmitted = totalSubmitted;
-	}
+    public void setTotalSubmitted(long totalSubmitted) {
+        this.totalSubmitted = totalSubmitted;
+    }
 
-	public void setTotalCompleted(long totalCompleted) {
-		this.totalCompleted = totalCompleted;
-	}
+    public void setTotalCompleted(long totalCompleted) {
+        this.totalCompleted = totalCompleted;
+    }
 
     public void setQueueName(String name) {
-		setName(name);
-	}
+        setName(name);
+    }
 
     public String toString() {
-    	StringBuilder str = new StringBuilder();
+        StringBuilder str = new StringBuilder();
 
         str.append("WorkerPoolStats:"); //$NON-NLS-1$
         str.append("  queue-name = " + getName()); //$NON-NLS-1$

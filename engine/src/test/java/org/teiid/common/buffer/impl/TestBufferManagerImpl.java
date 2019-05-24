@@ -54,7 +54,7 @@ public class TestBufferManagerImpl {
 
         //restricted by nominal max
         assertEquals(512000, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
-		//forced
+        //forced
         assertEquals(1024000, bufferManager.reserveBuffersBlocking(1024000, new long[] {0,0}, true));
 
         //not forced, so we get noting
@@ -146,46 +146,46 @@ public class TestBufferManagerImpl {
 
     @Test
     public void testProcessorBatchSize(){
-    	BufferManager bm = BufferManagerFactory.createBufferManager();
+        BufferManager bm = BufferManagerFactory.createBufferManager();
 
-    	int processorBatchSize = bm.getProcessorBatchSize();
+        int processorBatchSize = bm.getProcessorBatchSize();
 
-		List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
-		ElementSymbol a = new ElementSymbol("a");
-		a.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        List<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+        ElementSymbol a = new ElementSymbol("a");
+        a.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
-		//we use a somewhat high estimate of string size
-		ElementSymbol b = new ElementSymbol("b");
-		b.setType(DataTypeManager.DefaultDataClasses.STRING);
+        //we use a somewhat high estimate of string size
+        ElementSymbol b = new ElementSymbol("b");
+        b.setType(DataTypeManager.DefaultDataClasses.STRING);
 
-		elements.add(a);
-		//fixed/small
-		assertEquals(processorBatchSize * 8, bm.getProcessorBatchSize(elements));
+        elements.add(a);
+        //fixed/small
+        assertEquals(processorBatchSize * 8, bm.getProcessorBatchSize(elements));
 
-		elements.add(b);
-		//small
-		assertEquals(processorBatchSize * 4, bm.getProcessorBatchSize(elements));
+        elements.add(b);
+        //small
+        assertEquals(processorBatchSize * 4, bm.getProcessorBatchSize(elements));
 
-		elements.add(b);
-		//moderately small
-		assertEquals(processorBatchSize * 2, bm.getProcessorBatchSize(elements));
+        elements.add(b);
+        //moderately small
+        assertEquals(processorBatchSize * 2, bm.getProcessorBatchSize(elements));
 
-		elements.add(b);
-		elements.add(b);
-		//"normal"
-		assertEquals(processorBatchSize, bm.getProcessorBatchSize(elements));
+        elements.add(b);
+        elements.add(b);
+        //"normal"
+        assertEquals(processorBatchSize, bm.getProcessorBatchSize(elements));
 
-		elements.addAll(Collections.nCopies(28, b));
-		//large
-		assertEquals(processorBatchSize/2, bm.getProcessorBatchSize(elements));
+        elements.addAll(Collections.nCopies(28, b));
+        //large
+        assertEquals(processorBatchSize/2, bm.getProcessorBatchSize(elements));
 
-		elements.addAll(Collections.nCopies(100, b));
-		//huge
-		assertEquals(processorBatchSize/4, bm.getProcessorBatchSize(elements));
+        elements.addAll(Collections.nCopies(100, b));
+        //huge
+        assertEquals(processorBatchSize/4, bm.getProcessorBatchSize(elements));
 
-		elements.addAll(Collections.nCopies(375, b));
-		//extreme
-		assertEquals(processorBatchSize/8, bm.getProcessorBatchSize(elements));
+        elements.addAll(Collections.nCopies(375, b));
+        //extreme
+        assertEquals(processorBatchSize/8, bm.getProcessorBatchSize(elements));
     }
 
     @Test public void testRemovedException() throws TeiidComponentException {

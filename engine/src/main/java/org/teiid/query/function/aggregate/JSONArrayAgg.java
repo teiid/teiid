@@ -31,15 +31,15 @@ import org.teiid.query.util.CommandContext;
  */
 public class JSONArrayAgg extends SingleArgumentAggregateFunction {
 
-	private JsonType result;
-	private JSONBuilder concat;
+    private JsonType result;
+    private JSONBuilder concat;
 
     public JSONArrayAgg() {
-	}
+    }
 
     public void reset() {
-    	concat = null;
-    	result = null;
+        concat = null;
+        result = null;
     }
 
     /**
@@ -48,11 +48,11 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
      * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-    	if (concat == null) {
-    		concat = new JSONBuilder(commandContext.getBufferManager());
-    		concat.start(true);
-    	}
-    	concat.addValue(input);
+        if (concat == null) {
+            concat = new JSONBuilder(commandContext.getBufferManager());
+            concat.start(true);
+        }
+        concat.addValue(input);
     }
 
     /**
@@ -61,14 +61,14 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-    	if (result == null) {
-    		if (concat == null) {
-        		return null;
-    		}
-    		concat.end(true);
-    		result = concat.close(commandContext);
-    		concat = null;
-    	}
+        if (result == null) {
+            if (concat == null) {
+                return null;
+            }
+            concat.end(true);
+            result = concat.close(commandContext);
+            concat = null;
+        }
         return result;
     }
 

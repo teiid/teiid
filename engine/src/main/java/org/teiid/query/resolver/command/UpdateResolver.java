@@ -66,8 +66,8 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(update.getGroup());
         for (SetClause clause : update.getChangeList().getClauses()) {
-        	ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
-		}
+            ResolverVisitor.resolveLanguageObject(clause.getSymbol(), groups, null, metadata);
+        }
         QueryResolver.resolveSubqueries(command, metadata, groups);
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
     }
@@ -98,14 +98,14 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         Map<ElementSymbol, Expression> changing = update.getChangeList().getClauseMap();
 
         for (Entry<ElementSymbol, Expression> entry : changing.entrySet()) {
-        	ElementSymbol leftSymbol = entry.getKey().clone();
+            ElementSymbol leftSymbol = entry.getKey().clone();
             leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             leftSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(leftSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	leftSymbol = entry.getKey().clone();
-            	leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-            	result.put(leftSymbol, entry.getValue());
+                leftSymbol = entry.getKey().clone();
+                leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
+                result.put(leftSymbol, entry.getValue());
             }
         }
 

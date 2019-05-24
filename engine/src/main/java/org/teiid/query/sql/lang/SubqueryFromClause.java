@@ -34,12 +34,12 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     private Command command;
     private boolean lateral;
 
-	/**
-	 * Construct default object
-	 */
-	public SubqueryFromClause(String name) {
+    /**
+     * Construct default object
+     */
+    public SubqueryFromClause(String name) {
         setName(name);
-	}
+    }
 
     /**
      * Construct object with specified command and name
@@ -57,12 +57,12 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
     }
 
     public boolean isLateral() {
-		return lateral;
-	}
+        return lateral;
+    }
 
     public void setLateral(boolean table) {
-		this.lateral = table;
-	}
+        this.lateral = table;
+    }
 
     /**
      * Reset the alias for this subquery from clause and it's pseudo-GroupSymbol.
@@ -75,21 +75,21 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         this.symbol = new GroupSymbol(name);
     }
 
-	/**
-	 * Set the command held by the clause
-	 * @param command Command to hold
-	 */
-	public void setCommand(Command command) {
-		this.command = command;
-	}
+    /**
+     * Set the command held by the clause
+     * @param command Command to hold
+     */
+    public void setCommand(Command command) {
+        this.command = command;
+    }
 
-	/**
-	 * Get command held by clause
-	 * @return Command held by clause
-	 */
-	public Command getCommand() {
-		return this.command;
-	}
+    /**
+     * Get command held by clause
+     * @return Command held by clause
+     */
+    public Command getCommand() {
+        return this.command;
+    }
 
     /**
      * Get name of this clause.
@@ -123,39 +123,39 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         visitor.visit(this);
     }
 
-	/**
-	 * Check whether objects are equal
-	 * @param obj Other object
-	 * @return True if equal
-	 */
-	public boolean equals(Object obj) {
+    /**
+     * Check whether objects are equal
+     * @param obj Other object
+     * @return True if equal
+     */
+    public boolean equals(Object obj) {
         if (!super.equals(obj)) {
             return false;
         }
 
-		if(! (obj instanceof SubqueryFromClause)) {
-			return false;
-		}
-		SubqueryFromClause sfc = (SubqueryFromClause) obj;
+        if(! (obj instanceof SubqueryFromClause)) {
+            return false;
+        }
+        SubqueryFromClause sfc = (SubqueryFromClause) obj;
 
         return this.getName().equalsIgnoreCase(sfc.getName()) &&
             sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command)
             && this.lateral == sfc.lateral;
-	}
+    }
 
-	/**
-	 * Get hash code of object
-	 * @return Hash code
-	 */
-	public int hashCode() {
-		return this.symbol.hashCode();
-	}
+    /**
+     * Get hash code of object
+     * @return Hash code
+     */
+    public int hashCode() {
+        return this.symbol.hashCode();
+    }
 
-	/**
-	 * Get deep clone of object
-	 * @return Deep copy of the object
-	 */
-	public FromClause cloneDirect() {
+    /**
+     * Get deep clone of object
+     * @return Deep copy of the object
+     */
+    public FromClause cloneDirect() {
         Command commandCopy = null;
         if(this.command != null) {
             commandCopy = (Command) this.command.clone();
@@ -164,6 +164,6 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
         SubqueryFromClause clause = new SubqueryFromClause(this.symbol.clone(), commandCopy);
         clause.setLateral(this.isLateral());
         return clause;
-	}
+    }
 
 }

@@ -92,15 +92,15 @@ public final class NodeConstants {
         SORT_LEFT,  // SortOption
         SORT_RIGHT,     // SortOption
         IS_OPTIONAL,          // Boolean
-        IS_LEFT_DISTINCT, 	// Boolean
-        IS_RIGHT_DISTINCT, 	// Boolean
-        IS_SEMI_DEP,		// Boolean
+        IS_LEFT_DISTINCT,     // Boolean
+        IS_RIGHT_DISTINCT,     // Boolean
+        IS_SEMI_DEP,        // Boolean
         PRESERVE,
         RIGHT_NESTED_REFERENCES,
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
         INTO_GROUP,         // GroupSymbol
-        HAS_WINDOW_FUNCTIONS,		// Boolean
+        HAS_WINDOW_FUNCTIONS,        // Boolean
         CONSTRAINT,
         UPSERT, //Boolean
 
@@ -118,11 +118,11 @@ public final class NodeConstants {
         // Sort node properties
         SORT_ORDER,         // OrderBy
         UNRELATED_SORT,     // Boolean
-        IS_DUP_REMOVAL,		// Boolean
+        IS_DUP_REMOVAL,        // Boolean
 
         // Source node properties
         SYMBOL_MAP,         // SymbolMap
-        PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
+        PARTITION_INFO,        // Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
         MAKE_DEP,           // Option.Makedep
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
@@ -156,7 +156,7 @@ public final class NodeConstants {
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
-        IS_NON_STRICT,		 // Boolean if the unordered limit should not be enforced strictly
+        IS_NON_STRICT,         // Boolean if the unordered limit should not be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >

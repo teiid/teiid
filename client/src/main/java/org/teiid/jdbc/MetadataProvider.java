@@ -27,14 +27,14 @@ import java.util.Map;
 public class MetadataProvider {
 
     // Map of detail maps -- <columnIndex, Map<propertyName, metadataObject>>
-	protected Map[] metadata;
+    protected Map[] metadata;
 
     public MetadataProvider(Map[] metadata) {
-    	if (metadata == null) {
-    		this.metadata = new Map[0];
-    	} else {
-    		this.metadata = metadata;
-    	}
+        if (metadata == null) {
+            this.metadata = new Map[0];
+        } else {
+            this.metadata = metadata;
+        }
     }
 
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
@@ -55,15 +55,15 @@ public class MetadataProvider {
     }
 
     public int getIntValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-    	return getIntValue(columnIndex, metadataPropertyKey, 0);
+        return getIntValue(columnIndex, metadataPropertyKey, 0);
     }
 
     public int getIntValue(int columnIndex, Integer metadataPropertyKey, int defaultValue) throws SQLException {
-    	Integer val = (Integer) getValue(columnIndex, metadataPropertyKey);
-    	if (val == null) {
-    		return defaultValue;
-    	}
-    	return val;
+        Integer val = (Integer) getValue(columnIndex, metadataPropertyKey);
+        if (val == null) {
+            return defaultValue;
+        }
+        return val;
     }
 
     public boolean getBooleanValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {

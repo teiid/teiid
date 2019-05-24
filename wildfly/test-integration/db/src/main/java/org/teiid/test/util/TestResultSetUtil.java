@@ -75,16 +75,16 @@ public class TestResultSetUtil {
 
       Throwable answer = t;
       if (t instanceof TeiidSQLException) {
-    	  TeiidSQLException sqle = (TeiidSQLException) t;
-    	  SQLException se = sqle.getNextException();
-    	  if (se != null) {
-    		  SQLException s = null;
-	    	  while( (s = se.getNextException()) != null) {
-	    		  se = s;
-	    	  }
+          TeiidSQLException sqle = (TeiidSQLException) t;
+          SQLException se = sqle.getNextException();
+          if (se != null) {
+              SQLException s = null;
+              while( (s = se.getNextException()) != null) {
+                  se = s;
+              }
 
-	    	  answer = se;
-    	  }
+              answer = se;
+          }
       }
 
       out.print(t.getClass().getName() + " : " + answer.getMessage()); //$NON-NLS-1$

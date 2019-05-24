@@ -62,9 +62,9 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class UpdateProcedureResolver implements CommandResolver {
 
-	public static final List<ElementSymbol> exceptionGroup;
-	static {
-		ElementSymbol es1 = new ElementSymbol("STATE"); //$NON-NLS-1$
+    public static final List<ElementSymbol> exceptionGroup;
+    static {
+        ElementSymbol es1 = new ElementSymbol("STATE"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.STRING);
         ElementSymbol es2 = new ElementSymbol("ERRORCODE"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
@@ -75,7 +75,7 @@ public class UpdateProcedureResolver implements CommandResolver {
         ElementSymbol es5 = new ElementSymbol(NonReserved.CHAIN);
         es5.setType(Exception.class);
         exceptionGroup = Arrays.asList(es1, es2, es3, es4, es5);
-	}
+    }
 
     /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
@@ -95,22 +95,22 @@ public class UpdateProcedureResolver implements CommandResolver {
 
         ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);
 
-    	if (command instanceof TriggerAction) {
-    		TriggerAction ta = (TriggerAction)command;
-    		CreateProcedureCommand cmd = new CreateProcedureCommand(ta.getBlock());
-    		cmd.setVirtualGroup(ta.getView());
-    		//TODO: this is not generally correct - we should update the api to set the appropriate type
-    		cmd.setUpdateType(Command.TYPE_INSERT);
+        if (command instanceof TriggerAction) {
+            TriggerAction ta = (TriggerAction)command;
+            CreateProcedureCommand cmd = new CreateProcedureCommand(ta.getBlock());
+            cmd.setVirtualGroup(ta.getView());
+            //TODO: this is not generally correct - we should update the api to set the appropriate type
+            cmd.setUpdateType(Command.TYPE_INSERT);
             resolveBlock(cmd, ta.getBlock(), ta.getExternalGroupContexts(), metadata);
-    		return;
-    	}
+            return;
+        }
 
         CreateProcedureCommand procCommand = (CreateProcedureCommand) command;
 
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
-	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext originalExternalGroups,
+    public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext originalExternalGroups,
                               TempMetadataAdapter original)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
@@ -129,7 +129,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 
         if (block.getExceptionGroup() != null) {
             //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        	store = original.getMetadataStore().clone();
+            store = original.getMetadataStore().clone();
             metadata = new TempMetadataAdapter(original.getMetadata(), store);
             externalGroups = new GroupContext(originalExternalGroups, null);
 
@@ -138,15 +138,15 @@ public class UpdateProcedureResolver implements CommandResolver {
             isValidGroup(metadata, block.getExceptionGroup());
 
             if (block.getExceptionStatements() != null) {
-            	ProcedureContainerResolver.addScalarGroup(block.getExceptionGroup(), store, externalGroups, exceptionGroup, false);
-	            for (Statement statement : block.getExceptionStatements()) {
-	                resolveStatement(command, statement, externalGroups, variables, metadata);
-	            }
+                ProcedureContainerResolver.addScalarGroup(block.getExceptionGroup(), store, externalGroups, exceptionGroup, false);
+                for (Statement statement : block.getExceptionStatements()) {
+                    resolveStatement(command, statement, externalGroups, variables, metadata);
+                }
             }
         }
     }
 
-	private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
+    private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -155,10 +155,10 @@ public class UpdateProcedureResolver implements CommandResolver {
                 IfStatement ifStmt = (IfStatement) statement;
                 Criteria ifCrit = ifStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ifCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
+                    resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
-            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata);
+                resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata);
                 if(ifStmt.hasElseBlock()) {
                     resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata);
                 }
@@ -170,26 +170,26 @@ public class UpdateProcedureResolver implements CommandResolver {
                 TempMetadataStore discoveredMetadata = resolveEmbeddedCommand(metadata, externalGroups, subCommand);
 
                 if (subCommand instanceof StoredProcedure) {
-                	StoredProcedure sp = (StoredProcedure)subCommand;
-                	for (SPParameter param : sp.getParameters()) {
-            			switch (param.getParameterType()) {
-        	            case ParameterInfo.OUT:
-        	            case ParameterInfo.RETURN_VALUE:
-        	            	if (param.getExpression() != null) {
-        	            		if (!isAssignable(metadata, param)) {
-        	            			throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, param.getExpression()));
-        	            		}
-            	            	sp.setCallableStatement(true);
-        	            	}
-        	            	break;
-        	            case ParameterInfo.INOUT:
-        	            	if (!isAssignable(metadata, param)) {
-        	            		continue;
-        	            	}
-        	            	sp.setCallableStatement(true);
-        	            	break;
-        	            }
-					}
+                    StoredProcedure sp = (StoredProcedure)subCommand;
+                    for (SPParameter param : sp.getParameters()) {
+                        switch (param.getParameterType()) {
+                        case ParameterInfo.OUT:
+                        case ParameterInfo.RETURN_VALUE:
+                            if (param.getExpression() != null) {
+                                if (!isAssignable(metadata, param)) {
+                                    throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, param.getExpression()));
+                                }
+                                sp.setCallableStatement(true);
+                            }
+                            break;
+                        case ParameterInfo.INOUT:
+                            if (!isAssignable(metadata, param)) {
+                                continue;
+                            }
+                            sp.setCallableStatement(true);
+                            break;
+                        }
+                    }
                 }
 
                 if (discoveredMetadata != null) {
@@ -201,22 +201,22 @@ public class UpdateProcedureResolver implements CommandResolver {
                     DynamicCommand dynCommand = (DynamicCommand)subCommand;
 
                     if(dynCommand.getIntoGroup() == null
-                    		&& !dynCommand.isAsClauseSet()) {
-            		    if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable() || command.getResultSetColumns() == null) {
-            		    	//we're not interested in the resultset
-            		    	dynCommand.setAsColumns(Collections.EMPTY_LIST);
-            		    } else {
-            		    	//should match the procedure
-            		    	dynCommand.setAsColumns(command.getResultSetColumns());
-            		    }
+                            && !dynCommand.isAsClauseSet()) {
+                        if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable() || command.getResultSetColumns() == null) {
+                            //we're not interested in the resultset
+                            dynCommand.setAsColumns(Collections.EMPTY_LIST);
+                        } else {
+                            //should match the procedure
+                            dynCommand.setAsColumns(command.getResultSetColumns());
+                        }
                     }
                 }
 
                 if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && subCommand.getResultSetColumns() != null && !subCommand.getResultSetColumns().isEmpty()) {
-                	command.setResultSetColumns(subCommand.getResultSetColumns());
-                	if (command.getProjectedSymbols().isEmpty()) {
-                		command.setProjectedSymbols(subCommand.getResultSetColumns());
-                	}
+                    command.setResultSetColumns(subCommand.getResultSetColumns());
+                    if (command.getProjectedSymbols().isEmpty()) {
+                        command.setProjectedSymbols(subCommand.getResultSetColumns());
+                    }
                 }
 
                 break;
@@ -224,23 +224,23 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
             case Statement.TYPE_RETURN:
-				ExpressionStatement exprStmt = (ExpressionStatement) statement;
+                ExpressionStatement exprStmt = (ExpressionStatement) statement;
                 //first resolve the value.  this ensures the value cannot use the variable being defined
-            	if (exprStmt.getExpression() != null) {
+                if (exprStmt.getExpression() != null) {
                     Expression expr = exprStmt.getExpression();
                     for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
-                    	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
+                        resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                     }
                     ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
-            	}
+                }
 
                 //second resolve the variable
-            	switch (statement.getType()) {
-            	case Statement.TYPE_DECLARE:
-            		collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
-            		break;
-            	case Statement.TYPE_ASSIGNMENT:
-            		AssignmentStatement assStmt = (AssignmentStatement)statement;
+                switch (statement.getType()) {
+                case Statement.TYPE_DECLARE:
+                    collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
+                    break;
+                case Statement.TYPE_ASSIGNMENT:
+                    AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
                          throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, assStmt.getVariable()));
@@ -248,37 +248,37 @@ public class UpdateProcedureResolver implements CommandResolver {
                     //don't allow variable assignments to be external
                     assStmt.getVariable().setIsExternalReference(false);
                     break;
-            	case Statement.TYPE_RETURN:
-            		ReturnStatement rs = (ReturnStatement)statement;
-            		if (rs.getExpression() != null) {
-            			if (command.getReturnVariable() == null) {
-            				throw new QueryResolverException(QueryPlugin.Event.TEIID31125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31125, rs));
-            			}
-            			rs.setVariable(command.getReturnVariable().clone());
-            		}
-            		//else - we don't currently require the use of return for backwards compatibility
-            		break;
-            	}
+                case Statement.TYPE_RETURN:
+                    ReturnStatement rs = (ReturnStatement)statement;
+                    if (rs.getExpression() != null) {
+                        if (command.getReturnVariable() == null) {
+                            throw new QueryResolverException(QueryPlugin.Event.TEIID31125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31125, rs));
+                        }
+                        rs.setVariable(command.getReturnVariable().clone());
+                    }
+                    //else - we don't currently require the use of return for backwards compatibility
+                    break;
+                }
 
                 //third ensure the type matches
                 if (exprStmt.getExpression() != null) {
-	                Class<?> varType = exprStmt.getExpectedType();
-	        		Class<?> exprType = exprStmt.getExpression().getType();
-	        		if (exprType == null) {
-	        		     throw new QueryResolverException(QueryPlugin.Event.TEIID30123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30123));
-	        		}
-	        		String varTypeName = DataTypeManager.getDataTypeName(varType);
-	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));
-	        		if (statement.getType() == Statement.TYPE_ERROR) {
-	        			ResolverVisitor.checkException(exprStmt.getExpression());
-	        		}
+                    Class<?> varType = exprStmt.getExpectedType();
+                    Class<?> exprType = exprStmt.getExpression().getType();
+                    if (exprType == null) {
+                         throw new QueryResolverException(QueryPlugin.Event.TEIID30123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30123));
+                    }
+                    String varTypeName = DataTypeManager.getDataTypeName(varType);
+                    exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));
+                    if (statement.getType() == Statement.TYPE_ERROR) {
+                        ResolverVisitor.checkException(exprStmt.getExpression());
+                    }
                 }
                 break;
             case Statement.TYPE_WHILE:
                 WhileStatement whileStmt = (WhileStatement) statement;
                 Criteria whileCrit = whileStmt.getCondition();
                 for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(whileCrit)) {
-                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
+                    resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
                 resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata);
@@ -302,32 +302,32 @@ public class UpdateProcedureResolver implements CommandResolver {
                 resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata);
                 break;
             case Statement.TYPE_COMPOUND:
-            	resolveBlock(command, (Block)statement, externalGroups, metadata);
-            	break;
+                resolveBlock(command, (Block)statement, externalGroups, metadata);
+                break;
         }
     }
 
-	private void isValidGroup(TempMetadataAdapter metadata, String groupName)
-			throws QueryResolverException {
-		if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
-		     throw new QueryResolverException(QueryPlugin.Event.TEIID30124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30124, groupName));
-		}
+    private void isValidGroup(TempMetadataAdapter metadata, String groupName)
+            throws QueryResolverException {
+        if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30124, groupName));
+        }
 
-		//check - cursor name should not start with #
-		if(GroupSymbol.isTempGroupName(groupName)){
-			 throw new QueryResolverException(QueryPlugin.Event.TEIID30125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30125, groupName));
-		}
-	}
+        //check - cursor name should not start with #
+        if(GroupSymbol.isTempGroupName(groupName)){
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30125, groupName));
+        }
+    }
 
-	private boolean isAssignable(TempMetadataAdapter metadata, SPParameter param)
-			throws TeiidComponentException, QueryMetadataException {
-		if (!(param.getExpression() instanceof ElementSymbol)) {
-			return false;
-		}
-		ElementSymbol symbol = (ElementSymbol)param.getExpression();
+    private boolean isAssignable(TempMetadataAdapter metadata, SPParameter param)
+            throws TeiidComponentException, QueryMetadataException {
+        if (!(param.getExpression() instanceof ElementSymbol)) {
+            return false;
+        }
+        ElementSymbol symbol = (ElementSymbol)param.getExpression();
 
-		return metadata.elementSupports(symbol.getMetadataID(), SupportConstants.Element.UPDATE);
-	}
+        return metadata.elementSupports(symbol.getMetadataID(), SupportConstants.Element.UPDATE);
+    }
 
     private TempMetadataStore resolveEmbeddedCommand(TempMetadataAdapter metadata, GroupContext groupContext,
                                 Command cmd) throws TeiidComponentException,
@@ -346,19 +346,19 @@ public class UpdateProcedureResolver implements CommandResolver {
             variable.setGroupSymbol(new GroupSymbol(ProcedureReservedWords.VARIABLES));
             variable.setOutputName(outputName);
         } else {
-        	if (!gs.getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
+            if (!gs.getName().equalsIgnoreCase(ProcedureReservedWords.VARIABLES)) {
                 handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0031", new Object[]{ProcedureReservedWords.VARIABLES, variable})); //$NON-NLS-1$
             }
         }
         boolean exists = false;
         try {
-        	ResolverVisitor.resolveLanguageObject(variable, null, externalGroups, metadata);
-        	exists = true;
+            ResolverVisitor.resolveLanguageObject(variable, null, externalGroups, metadata);
+            exists = true;
         } catch (QueryResolverException e) {
-        	//ignore, not already defined
+            //ignore, not already defined
         }
         if (exists) {
-        	handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0032", variable.getOutputName())); //$NON-NLS-1$
+            handleUnresolvableDeclaration(variable, QueryPlugin.Util.getString("ERR.015.010.0032", variable.getOutputName())); //$NON-NLS-1$
         }
         boolean exception = typeName.equalsIgnoreCase(SQLConstants.NonReserved.EXCEPTION);
         variable.setType(exception?DataTypeManager.DefaultDataClasses.OBJECT:DataTypeManager.getDataTypeClass(typeName));

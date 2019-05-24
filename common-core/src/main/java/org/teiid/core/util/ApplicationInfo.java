@@ -35,51 +35,51 @@ public final class ApplicationInfo implements Serializable {
 
     private static final ApplicationInfo INSTANCE = new ApplicationInfo();
 
-	private Properties props = new Properties();
+    private Properties props = new Properties();
 
     private ApplicationInfo() {
-		InputStream is = this.getClass().getResourceAsStream("application.properties"); //$NON-NLS-1$
-		try {
-			try {
-				props.load(is);
-			} finally {
-				is.close();
-			}
-		} catch (IOException e) {
-			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10045, e);
-		}
+        InputStream is = this.getClass().getResourceAsStream("application.properties"); //$NON-NLS-1$
+        try {
+            try {
+                props.load(is);
+            } finally {
+                is.close();
+            }
+        } catch (IOException e) {
+              throw new TeiidRuntimeException(CorePlugin.Event.TEIID10045, e);
+        }
     }
 
     public String getReleaseNumber() {
-		return props.getProperty("build.releaseNumber"); //$NON-NLS-1$
-	}
+        return props.getProperty("build.releaseNumber"); //$NON-NLS-1$
+    }
 
-	public int getMajorReleaseVersion() {
-		String version = getReleaseNumber().substring(0, getReleaseNumber().indexOf('.'));
-		return Integer.parseInt(version);
-	}
-
-    public int getMinorReleaseVersion() {
-    	int majorIndex = getReleaseNumber().indexOf('.');
-    	String version = getReleaseNumber().substring(majorIndex+1, getReleaseNumber().indexOf('.', majorIndex+1));
+    public int getMajorReleaseVersion() {
+        String version = getReleaseNumber().substring(0, getReleaseNumber().indexOf('.'));
         return Integer.parseInt(version);
     }
 
-	public String getBuildNumber() {
-		return props.getProperty("build.number"); //$NON-NLS-1$
-	}
+    public int getMinorReleaseVersion() {
+        int majorIndex = getReleaseNumber().indexOf('.');
+        String version = getReleaseNumber().substring(majorIndex+1, getReleaseNumber().indexOf('.', majorIndex+1));
+        return Integer.parseInt(version);
+    }
 
-	public String getUrl() {
-		return props.getProperty("url"); //$NON-NLS-1$
-	}
+    public String getBuildNumber() {
+        return props.getProperty("build.number"); //$NON-NLS-1$
+    }
 
-	public String getCopyright() {
-		return props.getProperty("copyright"); //$NON-NLS-1$
-	}
+    public String getUrl() {
+        return props.getProperty("url"); //$NON-NLS-1$
+    }
 
-	public String getBuildDate() {
-		return props.getProperty("build.date"); //$NON-NLS-1$
-	}
+    public String getCopyright() {
+        return props.getProperty("copyright"); //$NON-NLS-1$
+    }
+
+    public String getBuildDate() {
+        return props.getProperty("build.date"); //$NON-NLS-1$
+    }
 
     /**
      * Get the application information instance for this VM.

@@ -41,11 +41,11 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 
     public static final String TEMP_GROUP_PREFIX = "#"; //$NON-NLS-1$
 
-	/** Definition of the symbol, may be null */
-	private String definition;
+    /** Definition of the symbol, may be null */
+    private String definition;
 
-	/** Actual metadata ID */
-	private Object metadataID;
+    /** Actual metadata ID */
+    private Object metadataID;
 
     private boolean isTempTable;
     private boolean isGlobalTable;
@@ -59,105 +59,105 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 
     private Object checkMatViewStatus;
 
-	/**
-	 * Construct a symbol with a name.
-	 * @param name Name of the symbol
-	 * @throws IllegalArgumentException If name is null
-	 */
-	public GroupSymbol(String name) {
-		super(name);
-	}
+    /**
+     * Construct a symbol with a name.
+     * @param name Name of the symbol
+     * @throws IllegalArgumentException If name is null
+     */
+    public GroupSymbol(String name) {
+        super(name);
+    }
 
-	/**
-	 * Construct a symbol with a name.
-	 * @param name Name of the symbol
-	 * @param definition Definition of the symbol, may be null
-	 * @throws IllegalArgumentException If name is null
-	 */
-	public GroupSymbol(String name, String definition) {
-		super(name);
-		setDefinition(definition);
-	}
+    /**
+     * Construct a symbol with a name.
+     * @param name Name of the symbol
+     * @param definition Definition of the symbol, may be null
+     * @throws IllegalArgumentException If name is null
+     */
+    public GroupSymbol(String name, String definition) {
+        super(name);
+        setDefinition(definition);
+    }
 
-	private GroupSymbol(String schema, String shortName, String definition) {
-		this.qualifier = schema;
-		this.setShortName(shortName);
-		this.setDefinition(definition);
-	}
+    private GroupSymbol(String schema, String shortName, String definition) {
+        this.qualifier = schema;
+        this.setShortName(shortName);
+        this.setDefinition(definition);
+    }
 
-	public Object getModelMetadataId() {
-		if (getMetadataID() instanceof TempMetadataID) {
-			return ((TempMetadataID)getMetadataID()).getTableData().getModel();
-		}
-		return null;
-	}
+    public Object getModelMetadataId() {
+        if (getMetadataID() instanceof TempMetadataID) {
+            return ((TempMetadataID)getMetadataID()).getTableData().getModel();
+        }
+        return null;
+    }
 
-	public String getNonCorrelationName() {
-	    if (this.definition == null) {
-	        return this.getName();
-	    }
-	    return this.getDefinition();
-	}
+    public String getNonCorrelationName() {
+        if (this.definition == null) {
+            return this.getName();
+        }
+        return this.getDefinition();
+    }
 
-	/**
-	 * Get the definition for the group symbol, which may be null
-	 * @return Group definition, may be null
-	 */
-	public String getDefinition() {
-		return definition;
-	}
+    /**
+     * Get the definition for the group symbol, which may be null
+     * @return Group definition, may be null
+     */
+    public String getDefinition() {
+        return definition;
+    }
 
-	/**
-	 * Set the definition for the group symbol, which may be null
-	 * @param definition Definition
-	 */
-	public void setDefinition(String definition) {
-		this.definition = definition;
+    /**
+     * Set the definition for the group symbol, which may be null
+     * @param definition Definition
+     */
+    public void setDefinition(String definition) {
+        this.definition = definition;
         this.outputDefinition = definition;
-	}
+    }
 
-	/**
-	 * Get the metadata ID that this group symbol resolves to.  If
-	 * the group symbol has not been resolved yet, this will be null.
-	 * If the symbol has been resolved, this will never be null.
-	 * @return Metadata ID object
-	 */
-	public Object getMetadataID() {
-		return metadataID;
-	}
+    /**
+     * Get the metadata ID that this group symbol resolves to.  If
+     * the group symbol has not been resolved yet, this will be null.
+     * If the symbol has been resolved, this will never be null.
+     * @return Metadata ID object
+     */
+    public Object getMetadataID() {
+        return metadataID;
+    }
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
 
-	/**
-	 * Set the metadata ID that this group symbol resolves to.  It cannot
-	 * be null.
-	 * @param metadataID Metadata ID object
-	 * @throws IllegalArgumentException If metadataID is null
-	 */
-	public void setMetadataID(Object metadataID) {
-		if(metadataID == null) {
+    /**
+     * Set the metadata ID that this group symbol resolves to.  It cannot
+     * be null.
+     * @param metadataID Metadata ID object
+     * @throws IllegalArgumentException If metadataID is null
+     */
+    public void setMetadataID(Object metadataID) {
+        if(metadataID == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0016")); //$NON-NLS-1$
-		}
-		if (this.isImplicitTempGroupSymbol()) {
-			this.isTempTable = true;
-		}
-		this.metadataID = metadataID;
-	}
+        }
+        if (this.isImplicitTempGroupSymbol()) {
+            this.isTempTable = true;
+        }
+        this.metadataID = metadataID;
+    }
 
-	/**
-	 * Returns true if this symbol has been completely resolved with respect
-	 * to actual runtime metadata.  A resolved symbol has been validated that
-	 * it refers to actual metadata and will have references to the real metadata
-	 * IDs if necessary.  Different types of symbols determine their resolution
-	 * in different ways, so this method is abstract and must be implemented
-	 * by subclasses.
-	 * @return True if resolved with runtime metadata
-	 */
-	public boolean isResolved() {
-		return (metadataID != null);
-	}
+    /**
+     * Returns true if this symbol has been completely resolved with respect
+     * to actual runtime metadata.  A resolved symbol has been validated that
+     * it refers to actual metadata and will have references to the real metadata
+     * IDs if necessary.  Different types of symbols determine their resolution
+     * in different ways, so this method is abstract and must be implemented
+     * by subclasses.
+     * @return True if resolved with runtime metadata
+     */
+    public boolean isResolved() {
+        return (metadataID != null);
+    }
 
     /**
      * Returns true if this is a symbol for a temporary (implicit or explicit) group
@@ -174,51 +174,51 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
         return isTempGroupName(getNonCorrelationName());
     }
 
-	/**
-	 * Compare two groups and give an ordering.
-	 * @param o Other group
-	 * @return -1, 0, or 1 depending on how this compares to group
-	 */
+    /**
+     * Compare two groups and give an ordering.
+     * @param o Other group
+     * @return -1, 0, or 1 depending on how this compares to group
+     */
     public int compareTo(GroupSymbol o) {
-    	return getName().compareTo(o.getName());
-	}
+        return getName().compareTo(o.getName());
+    }
 
-	/**
-	 * Return a deep copy of this object.
-	 * @return Deep copy of the object
-	 */
-	public GroupSymbol clone() {
-		GroupSymbol copy = new GroupSymbol(qualifier, getShortName(), getDefinition());
-		copy.metadataID = this.metadataID;
+    /**
+     * Return a deep copy of this object.
+     * @return Deep copy of the object
+     */
+    public GroupSymbol clone() {
+        GroupSymbol copy = new GroupSymbol(qualifier, getShortName(), getDefinition());
+        copy.metadataID = this.metadataID;
         copy.setIsTempTable(isTempTable);
         copy.setProcedure(isProcedure);
         copy.outputDefinition = this.outputDefinition;
         copy.outputName = this.outputName;
         copy.isGlobalTable = isGlobalTable;
         copy.checkMatViewStatus = checkMatViewStatus;
-		return copy;
-	}
+        return copy;
+    }
 
-	/**
-	 * Compare group symbols
-	 * @param obj Other object to compare
-	 * @return True if equivalent
-	 */
-	public boolean equals(Object obj) {
-		if(this == obj) {
-			return true;
-		}
+    /**
+     * Compare group symbols
+     * @param obj Other object to compare
+     * @return True if equivalent
+     */
+    public boolean equals(Object obj) {
+        if(this == obj) {
+            return true;
+        }
 
-		if(!(obj instanceof GroupSymbol)) {
-			return false;
-		}
-		GroupSymbol other = (GroupSymbol) obj;
+        if(!(obj instanceof GroupSymbol)) {
+            return false;
+        }
+        GroupSymbol other = (GroupSymbol) obj;
 
-		if (this.qualifier == null || other.qualifier == null) {
-			return this.getName().equals(other.getName());
-		}
-		return EquivalenceUtil.areEqual(this.qualifier, other.qualifier) && this.getShortName().equals(other.getShortName());
-	}
+        if (this.qualifier == null || other.qualifier == null) {
+            return this.getName().equals(other.getName());
+        }
+        return EquivalenceUtil.areEqual(this.qualifier, other.qualifier) && this.getShortName().equals(other.getShortName());
+    }
 
     public boolean hasAlias() {
         return getDefinition() != null;
@@ -269,38 +269,38 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     }
 
     public boolean isGlobalTable() {
-		return isGlobalTable;
-	}
+        return isGlobalTable;
+    }
 
     public void setGlobalTable(boolean isGlobalTable) {
-		this.isGlobalTable = isGlobalTable;
-	}
+        this.isGlobalTable = isGlobalTable;
+    }
 
     @Override
     public String getName() {
-    	if (this.qualifier != null) {
-    		return this.qualifier + Symbol.SEPARATOR + this.getShortName();
-    	}
-    	return super.getName();
+        if (this.qualifier != null) {
+            return this.qualifier + Symbol.SEPARATOR + this.getShortName();
+        }
+        return super.getName();
     }
 
     @Override
     public int hashCode() {
-    	if (this.qualifier != null) {
-    		return HashCodeUtil.hashCode(this.qualifier.hashCode(), this.getShortName().hashCode());
-    	}
-    	return super.hashCode();
+        if (this.qualifier != null) {
+            return HashCodeUtil.hashCode(this.qualifier.hashCode(), this.getShortName().hashCode());
+        }
+        return super.hashCode();
     }
 
     public void setName(String name) {
-    	int index = name.indexOf('.');
-    	if (index > 0) {
-    		this.qualifier = new String(name.substring(0, index));
-    		name = new String(name.substring(index + 1));
-    	} else {
-    		this.qualifier = null;
-    	}
-    	super.setShortName(name);
+        int index = name.indexOf('.');
+        if (index > 0) {
+            this.qualifier = new String(name.substring(0, index));
+            name = new String(name.substring(index + 1));
+        } else {
+            this.qualifier = null;
+        }
+        super.setShortName(name);
     }
 
     public void setCheckMatStatus(Object viewMatadataId) {

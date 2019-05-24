@@ -41,33 +41,33 @@ import org.teiid.translator.jdbc.sybase.BaseSybaseExecutionFactory;
 @Translator(name="access", description="A translator for Microsoft Access Database")
 public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 
-	public AccessExecutionFactory() {
-		setSupportsOrderBy(false);
-		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
-		setMaxDependentInPredicates(10); //sql length length is 64k
-	}
+    public AccessExecutionFactory() {
+        setSupportsOrderBy(false);
+        setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
+        setMaxDependentInPredicates(10); //sql length length is 64k
+    }
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("Asc")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("Chr")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONCAT, new FunctionModifier() {
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("Asc")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("Chr")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new FunctionModifier() {
 
-			@Override
-			public List<?> translate(Function function) {
-				List<Object> result = new ArrayList<Object>(function.getParameters().size()*2 - 1);
-				for (int i = 0; i < function.getParameters().size(); i++) {
-					if (i > 0) {
-						result.add(" & "); //$NON-NLS-1$
-					}
-					result.add(function.getParameters().get(i));
-				}
-				return result;
-			}
-		});
-		registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("Len")); //$NON-NLS-1$
-	}
+            @Override
+            public List<?> translate(Function function) {
+                List<Object> result = new ArrayList<Object>(function.getParameters().size()*2 - 1);
+                for (int i = 0; i < function.getParameters().size(); i++) {
+                    if (i > 0) {
+                        result.add(" & "); //$NON-NLS-1$
+                    }
+                    result.add(function.getParameters().get(i));
+                }
+                return result;
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("Len")); //$NON-NLS-1$
+    }
 
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -79,24 +79,24 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof AggregateFunction) {
-    		AggregateFunction af = (AggregateFunction)obj;
-    		if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
-    			af.setName("StDevP"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
-    			af.setName("StDev"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.VAR_POP)) {
-    			af.setName("VarP"); //$NON-NLS-1$
-    		} else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
-    			af.setName("Var"); //$NON-NLS-1$
-    		}
-    	}
-    	return super.translate(obj, context);
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction af = (AggregateFunction)obj;
+            if (af.getName().equals(AggregateFunction.STDDEV_POP)) {
+                af.setName("StDevP"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.STDDEV_SAMP)) {
+                af.setName("StDev"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.VAR_POP)) {
+                af.setName("VarP"); //$NON-NLS-1$
+            } else if (af.getName().equals(AggregateFunction.VAR_SAMP)) {
+                af.setName("Var"); //$NON-NLS-1$
+            }
+        }
+        return super.translate(obj, context);
     }
 
     @Override
     public boolean addSourceComment() {
-    	return false;
+        return false;
     }
 
     @Override
@@ -127,15 +127,15 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
 
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	JDBCMetadataProcessor processor = new JDBCMetadataProcessor();
-    	processor.setExcludeTables(".*[.]MSys.*"); //$NON-NLS-1$
-    	processor.setImportKeys(false);
-    	return processor;
+        JDBCMetadataProcessor processor = new JDBCMetadataProcessor();
+        processor.setExcludeTables(".*[.]MSys.*"); //$NON-NLS-1$
+        processor.setImportKeys(false);
+        return processor;
     }
 
 }

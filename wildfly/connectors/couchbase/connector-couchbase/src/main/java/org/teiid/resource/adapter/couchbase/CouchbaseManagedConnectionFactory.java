@@ -42,7 +42,7 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(CouchbaseManagedConnectionFactory.class);
 
-	private Long managementTimeout = TimeUnit.SECONDS.toMillis(75);
+    private Long managementTimeout = TimeUnit.SECONDS.toMillis(75);
 
     private Long queryTimeout = TimeUnit.SECONDS.toMillis(75);
 
@@ -58,30 +58,30 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
     private Boolean dnsSrvEnabled = false;
 
-	/**
+    /**
      * The connection string to identify the remote cluster
      */
-	private String connectionString = null;
+    private String connectionString = null;
 
-	/**
-	 * The Keyspace/Bucket in Couchbase Server
-	 */
-	private String keyspace = null;
+    /**
+     * The Keyspace/Bucket in Couchbase Server
+     */
+    private String keyspace = null;
 
-	private String namespace = null;
+    private String namespace = null;
 
-	/**
-	 * The Keyspace/Bucket password in Couchbase Server
-	 */
-	private String password = null;
+    /**
+     * The Keyspace/Bucket password in Couchbase Server
+     */
+    private String password = null;
 
-	/**
-	 * Pair with connectTimeout, allowed value including MILLISECONDS, SECONDS, etc.
-	 */
-	private String timeUnit = null;
+    /**
+     * Pair with connectTimeout, allowed value including MILLISECONDS, SECONDS, etc.
+     */
+    private String timeUnit = null;
 
 
-	public Long getManagementTimeout() {
+    public Long getManagementTimeout() {
         return managementTimeout;
     }
 
@@ -187,9 +187,9 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
 
     @SuppressWarnings("serial")
     @Override
-	public BasicConnectionFactory<CouchbaseConnectionImpl> createConnectionFactory() throws ResourceException {
+    public BasicConnectionFactory<CouchbaseConnectionImpl> createConnectionFactory() throws ResourceException {
 
-		final CouchbaseEnvironment environment = DefaultCouchbaseEnvironment.builder()
+        final CouchbaseEnvironment environment = DefaultCouchbaseEnvironment.builder()
                 .managementTimeout(managementTimeout)
                 .queryTimeout(queryTimeout)
                 .viewTimeout(viewTimeout)
@@ -199,40 +199,40 @@ public class CouchbaseManagedConnectionFactory extends BasicManagedConnectionFac
                 .dnsSrvEnabled(dnsSrvEnabled)
                 .build();
 
-		if (this.connectionString == null) {
+        if (this.connectionString == null) {
             throw new InvalidPropertyException(UTIL.getString("no_server")); //$NON-NLS-1$
         }
 
-		if (this.keyspace == null) {
+        if (this.keyspace == null) {
             throw new InvalidPropertyException(UTIL.getString("no_keyspace")); //$NON-NLS-1$
         }
 
-		if (this.namespace == null) {
+        if (this.namespace == null) {
             throw new InvalidPropertyException(UTIL.getString("no_namespace")); //$NON-NLS-1$
         }
 
-		final ScanConsistency consistency = ScanConsistency.valueOf(scanConsistency);
+        final ScanConsistency consistency = ScanConsistency.valueOf(scanConsistency);
 
-		TimeUnit unit = TimeUnit.MILLISECONDS;
-		if(this.timeUnit != null) {
-		    try {
+        TimeUnit unit = TimeUnit.MILLISECONDS;
+        if(this.timeUnit != null) {
+            try {
                 unit = TimeUnit.valueOf(timeUnit);
             } catch (IllegalArgumentException e) {
                 throw new InvalidPropertyException(UTIL.getString("invalid_timeUnit", timeUnit)); //$NON-NLS-1$
             }
-		}
-		final TimeUnit timeoutUnit = unit;
+        }
+        final TimeUnit timeoutUnit = unit;
 
-		return new BasicConnectionFactory<CouchbaseConnectionImpl>(){
+        return new BasicConnectionFactory<CouchbaseConnectionImpl>(){
 
             @Override
             public CouchbaseConnectionImpl getConnection() throws ResourceException {
                 return new CouchbaseConnectionImpl(environment, connectionString, keyspace, password, timeoutUnit, namespace, consistency);
             }};
 
-	}
+    }
 
-	@Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

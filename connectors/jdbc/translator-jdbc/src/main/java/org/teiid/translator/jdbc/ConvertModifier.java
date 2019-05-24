@@ -59,31 +59,31 @@ import org.teiid.translator.TypeFacility;
  */
 public class ConvertModifier extends FunctionModifier {
 
-	public static class FormatModifier extends AliasModifier {
+    public static class FormatModifier extends AliasModifier {
 
-		private String format;
+        private String format;
 
-		public FormatModifier(String alias) {
-			super(alias);
-		}
+        public FormatModifier(String alias) {
+            super(alias);
+        }
 
-		public FormatModifier(String alias, String format) {
-			super(alias);
-			this.format = format;
-		}
+        public FormatModifier(String alias, String format) {
+            super(alias);
+            this.format = format;
+        }
 
-		@Override
-		public List<?> translate(Function function) {
-			modify(function);
-			if (format == null) {
-				function.getParameters().remove(1);
-			} else {
-				((Literal)function.getParameters().get(1)).setValue(format);
-			}
-			return null;
-		}
+        @Override
+        public List<?> translate(Function function) {
+            modify(function);
+            if (format == null) {
+                function.getParameters().remove(1);
+            } else {
+                ((Literal)function.getParameters().get(1)).setValue(format);
+            }
+            return null;
+        }
 
-	}
+    }
 
     private Map<Integer, String> typeMapping = new HashMap<Integer, String>();
     private Map<Integer, FunctionModifier> typeModifier = new HashMap<Integer, FunctionModifier>();
@@ -94,79 +94,79 @@ public class ConvertModifier extends FunctionModifier {
     private boolean booleanNullable = true;
 
     public void addTypeConversion(FunctionModifier convert, int ... targetType) {
-    	for (int i : targetType) {
-        	this.typeModifier.put(i, convert);
-		}
+        for (int i : targetType) {
+            this.typeModifier.put(i, convert);
+        }
     }
 
     public void addSourceConversion(FunctionModifier convert, int ... sourceType) {
-    	for (int i : sourceType) {
-        	this.sourceModifier.put(i, convert);
-		}
+        for (int i : sourceType) {
+            this.sourceModifier.put(i, convert);
+        }
     }
 
     public void addTypeMapping(String nativeType, int ... targetType) {
-    	for (int i : targetType) {
-    		typeMapping.put(i, nativeType);
-    	}
+        for (int i : targetType) {
+            typeMapping.put(i, nativeType);
+        }
     }
 
     public void setWideningNumericImplicit(boolean wideningNumericImplicit) {
-		this.wideningNumericImplicit = wideningNumericImplicit;
-	}
+        this.wideningNumericImplicit = wideningNumericImplicit;
+    }
 
     public void addConvert(int sourceType, int targetType, FunctionModifier convert) {
-    	specificConverts.put(Arrays.asList(sourceType, targetType), convert);
+        specificConverts.put(Arrays.asList(sourceType, targetType), convert);
     }
 
     @Override
     public List<?> translate(Function function) {
-    	function.setName("cast"); //$NON-NLS-1$
-    	int targetCode = getCode(function.getType());
-    	List<Expression> args = function.getParameters();
+        function.setName("cast"); //$NON-NLS-1$
+        int targetCode = getCode(function.getType());
+        List<Expression> args = function.getParameters();
         Class<?> srcType = args.get(0).getType();
         int sourceCode = getCode(srcType);
 
-		List<Integer> convesionCode = Arrays.asList(sourceCode, targetCode);
-		FunctionModifier convert = specificConverts.get(convesionCode);
-		if (convert != null) {
-			return convert.translate(function);
-		}
+        List<Integer> convesionCode = Arrays.asList(sourceCode, targetCode);
+        FunctionModifier convert = specificConverts.get(convesionCode);
+        if (convert != null) {
+            return convert.translate(function);
+        }
 
-		boolean implicit = sourceCode == CHAR && targetCode == STRING;
+        boolean implicit = sourceCode == CHAR && targetCode == STRING;
 
-		if (targetCode >= BYTE && targetCode <= BIGDECIMAL) {
-			if (booleanNumeric && sourceCode == BOOLEAN) {
-				sourceCode = BYTE;
-				implicit = targetCode == BYTE;
-			}
-			implicit |= wideningNumericImplicit && sourceCode >= BYTE && sourceCode <= BIGDECIMAL && sourceCode < targetCode;
-		}
+        if (targetCode >= BYTE && targetCode <= BIGDECIMAL) {
+            if (booleanNumeric && sourceCode == BOOLEAN) {
+                sourceCode = BYTE;
+                implicit = targetCode == BYTE;
+            }
+            implicit |= wideningNumericImplicit && sourceCode >= BYTE && sourceCode <= BIGDECIMAL && sourceCode < targetCode;
+        }
 
-		if (!implicit) {
-			convert = this.sourceModifier.get(sourceCode);
-			if (convert != null
-					 && (!convert.equals(sourceModifier.get(targetCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
-				return convert.translate(function);
-			}
+        if (!implicit) {
+            convert = this.sourceModifier.get(sourceCode);
+            if (convert != null
+                     && (!convert.equals(sourceModifier.get(targetCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
+                return convert.translate(function);
+            }
 
-			convert = this.typeModifier.get(targetCode);
-			if (convert != null
-					 && (!convert.equals(typeModifier.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
-				return convert.translate(function);
-			}
+            convert = this.typeModifier.get(targetCode);
+            if (convert != null
+                     && (!convert.equals(typeModifier.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
+                return convert.translate(function);
+            }
 
-	    	String type = typeMapping.get(targetCode);
+            String type = typeMapping.get(targetCode);
 
-	    	if (type != null
-	    			&& (!type.equals(typeMapping.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
-	    		((Literal)function.getParameters().get(1)).setValue(type);
-	    		return null;
-	    	}
-		}
+            if (type != null
+                    && (!type.equals(typeMapping.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
+                ((Literal)function.getParameters().get(1)).setValue(type);
+                return null;
+            }
+        }
 
-    	return Arrays.asList(function.getParameters().get(0));
-	}
+        return Arrays.asList(function.getParameters().get(0));
+    }
 
     /**
      * IMPORTANT: only for use with default runtime type names
@@ -175,60 +175,60 @@ public class ConvertModifier extends FunctionModifier {
      * @param typeName
      * @return
      */
-	public static Function createConvertFunction(LanguageFactory langFactory, Expression expr, String typeName) {
-		Class<?> type = TypeFacility.getDataTypeClass(typeName);
-		return langFactory.createFunction(SourceSystemFunctions.CONVERT,
-				new Expression[] {expr, langFactory.createLiteral(typeName, type)}, type);
-	}
+    public static Function createConvertFunction(LanguageFactory langFactory, Expression expr, String typeName) {
+        Class<?> type = TypeFacility.getDataTypeClass(typeName);
+        return langFactory.createFunction(SourceSystemFunctions.CONVERT,
+                new Expression[] {expr, langFactory.createLiteral(typeName, type)}, type);
+    }
 
-	public void addNumericBooleanConversions() {
-		this.booleanNumeric = true;
-		//number -> boolean
-		this.addTypeConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		}, FunctionModifier.BOOLEAN);
-		this.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				Expression booleanValue = function.getParameters().get(0);
-				if (!booleanNullable) {
-					return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
-    	this.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				Expression stringValue = function.getParameters().get(0);
-				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
-	}
+    public void addNumericBooleanConversions() {
+        this.booleanNumeric = true;
+        //number -> boolean
+        this.addTypeConversion(new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                Expression stringValue = function.getParameters().get(0);
+                return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        }, FunctionModifier.BOOLEAN);
+        this.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                Expression booleanValue = function.getParameters().get(0);
+                if (!booleanNullable) {
+                    return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                return Arrays.asList("CASE WHEN ", booleanValue, " = 0 THEN 'false' WHEN ", booleanValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        this.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                Expression stringValue = function.getParameters().get(0);
+                return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+    }
 
-	public void setBooleanNullable(boolean booleanNullable) {
-		this.booleanNullable = booleanNullable;
-	}
+    public void setBooleanNullable(boolean booleanNullable) {
+        this.booleanNullable = booleanNullable;
+    }
 
-	/**
-	 * Return true if there is a type mapping or simple modifier for the given type
-	 * @param type
-	 * @return
-	 */
-	public boolean hasTypeMapping(int type) {
-		return this.typeMapping.containsKey(type) || this.typeModifier.containsKey(type);
-	}
+    /**
+     * Return true if there is a type mapping or simple modifier for the given type
+     * @param type
+     * @return
+     */
+    public boolean hasTypeMapping(int type) {
+        return this.typeMapping.containsKey(type) || this.typeModifier.containsKey(type);
+    }
 
-	/**
-	 * Return the direct type mapping for a given type code
-	 * @param code
-	 * @return
-	 */
-	public String getSimpleTypeMapping(int code) {
+    /**
+     * Return the direct type mapping for a given type code
+     * @param code
+     * @return
+     */
+    public String getSimpleTypeMapping(int code) {
         return typeMapping.get(code);
     }
 

@@ -162,6 +162,6 @@ public class SimpleDBExecutionFactory extends ExecutionFactory<ConnectionFactory
 
     @Override
     public boolean returnsSingleUpdateCount() {
-    	return true;
+        return true;
     }
 }

@@ -79,16 +79,16 @@ public class TestXMLValue {
         assertEquals(36, xv.length());
 
         xml = new SQLXMLImpl(new InputStreamFactory() {
-        	@Override
-        	public InputStream getInputStream() throws IOException {
-        		return new ByteArrayInputStream("<bar/>".getBytes(Streamable.CHARSET));
-        	}
+            @Override
+            public InputStream getInputStream() throws IOException {
+                return new ByteArrayInputStream("<bar/>".getBytes(Streamable.CHARSET));
+            }
         });
 
         xv = new XMLType(xml);
         try {
-        	xv.length();
-        	fail();
+            xv.length();
+            fail();
         } catch (SQLException e) {
 
         }

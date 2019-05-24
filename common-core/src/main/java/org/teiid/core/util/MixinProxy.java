@@ -26,10 +26,10 @@ import java.util.Map;
 
 public class MixinProxy implements InvocationHandler {
 
-	private static class Target {
-		Object obj;
-		Method m;
-	}
+    private static class Target {
+        Object obj;
+        Method m;
+    }
 
     private Object[] delegates;
     private Map<Method, Target> methodMap = new HashMap<Method, Target>();
@@ -40,28 +40,28 @@ public class MixinProxy implements InvocationHandler {
 
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
-    	Target t = methodMap.get(method);
-    	if (t == null) {
+        Target t = methodMap.get(method);
+        if (t == null) {
             for (int i = 0; i < delegates.length; i++) {
                 Object object = delegates[i];
                 try {
-    				Method m = object.getClass().getMethod(method.getName(), method.getParameterTypes());
-    				t = new Target();
-    				t.m = m;
-    				t.obj = object;
-    				methodMap.put(method, t);
-    				break;
-    			} catch (NoSuchMethodException e) {
-    			}
+                    Method m = object.getClass().getMethod(method.getName(), method.getParameterTypes());
+                    t = new Target();
+                    t.m = m;
+                    t.obj = object;
+                    methodMap.put(method, t);
+                    break;
+                } catch (NoSuchMethodException e) {
+                }
             }
-    	}
-		if (t != null) {
-			try {
-				return t.m.invoke(t.obj, args);
-			} catch (InvocationTargetException e) {
-				throw e.getTargetException();
-			}
-		}
+        }
+        if (t != null) {
+            try {
+                return t.m.invoke(t.obj, args);
+            } catch (InvocationTargetException e) {
+                throw e.getTargetException();
+            }
+        }
         return noSuchMethodFound(proxy, method, args);
     }
 

@@ -342,7 +342,7 @@ public class TestMySQLTranslator {
     }
 
     @Test public void testChar() throws Exception {
-    	String input = "SELECT intkey, CHR(CONVERT(bigintegervalue, integer)) FROM BQT1.MediumA"; //$NON-NLS-1$
+        String input = "SELECT intkey, CHR(CONVERT(bigintegervalue, integer)) FROM BQT1.MediumA"; //$NON-NLS-1$
         String output = "SELECT MediumA.IntKey, char(cast(MediumA.BigIntegerValue AS signed)) FROM MediumA"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
@@ -351,7 +351,7 @@ public class TestMySQLTranslator {
     }
 
     @Test public void testBooleanToString() throws Exception {
-    	String input = "SELECT convert(INTKEY, boolean) FROM BQT1.SmallA"; //$NON-NLS-1$
+        String input = "SELECT convert(INTKEY, boolean) FROM BQT1.SmallA"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END FROM SmallA"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
@@ -360,7 +360,7 @@ public class TestMySQLTranslator {
     }
 
     @Test public void testThreeUnionBranches() throws Exception {
-    	String input = "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id"; //$NON-NLS-1$
         String output = "(SELECT PARTS.PART_ID AS id FROM PARTS) UNION ALL (SELECT PARTS.PART_NAME FROM PARTS) UNION ALL (SELECT PARTS.PART_ID FROM PARTS) ORDER BY id"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -370,7 +370,7 @@ public class TestMySQLTranslator {
 
     @Ignore("There's no good workaround for this case on mysql 4 and for 5 can be done with a suquery, but only if the first union branch has no parens...")
     @Test public void testNestedSetQuery() throws Exception {
-    	String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
+        String input = "select part_id id FROM parts UNION ALL (select part_name FROM parts UNION select part_id FROM parts)"; //$NON-NLS-1$
         String output = ""; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
@@ -387,15 +387,15 @@ public class TestMySQLTranslator {
 
     @Test
     public void testMysqlGeometryRead() throws Exception {
-    	MySQLExecutionFactory msef = new MySQLExecutionFactory();
-    	msef.start();
-    	GeometryType gt = msef.toGeometryType(BlobType.createBlob(new byte[] {01,02,00,00,01,01,00,00,00,00,00,00,00,00,00,(byte)0xf0,(byte)0x3f,00,00,00,00,00,00,(byte)0xf0,0x3f }));
-    	assertEquals(513, gt.getSrid());
-    	GeometryUtils.getGeometry(gt);
+        MySQLExecutionFactory msef = new MySQLExecutionFactory();
+        msef.start();
+        GeometryType gt = msef.toGeometryType(BlobType.createBlob(new byte[] {01,02,00,00,01,01,00,00,00,00,00,00,00,00,00,(byte)0xf0,(byte)0x3f,00,00,00,00,00,00,(byte)0xf0,0x3f }));
+        assertEquals(513, gt.getSrid());
+        GeometryUtils.getGeometry(gt);
     }
 
     @Test public void testStringUnion() throws Exception {
-    	String input = "select intkey FROM bqt1.smalla UNION select stringkey FROM bqt1.smallb"; //$NON-NLS-1$
+        String input = "select intkey FROM bqt1.smalla UNION select stringkey FROM bqt1.smallb"; //$NON-NLS-1$
         String output = "(SELECT SmallA.IntKey AS IntKey FROM SmallA) UNION (SELECT SmallB.StringKey FROM SmallB)"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,

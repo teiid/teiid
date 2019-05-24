@@ -29,17 +29,17 @@ import org.teiid.translator.google.api.metadata.SpreadsheetInfo;
 public class SpreadsheetDeleteVisitor extends SpreadsheetCriteriaVisitor {
 
 
-	public SpreadsheetDeleteVisitor(SpreadsheetInfo info) {
-		super(info);
-	}
+    public SpreadsheetDeleteVisitor(SpreadsheetInfo info) {
+        super(info);
+    }
 
-	public void visit(Delete obj) {
-		if (obj.getTable().getMetadataObject().getNameInSource() != null) {
-			worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
-		}else{
-			worksheetTitle = obj.getTable().getName();
-		}
-		translateWhere(obj.getWhere());
-	}
+    public void visit(Delete obj) {
+        if (obj.getTable().getMetadataObject().getNameInSource() != null) {
+            worksheetTitle = obj.getTable().getMetadataObject().getNameInSource();
+        }else{
+            worksheetTitle = obj.getTable().getName();
+        }
+        translateWhere(obj.getWhere());
+    }
 
 }

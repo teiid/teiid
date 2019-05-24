@@ -60,26 +60,26 @@ import org.teiid.translator.jdbc.LocateFunctionModifier;
 @Translator(name="mysql", description="A translator for open source MySQL Database, used with any version lower than 5")
 public class MySQLExecutionFactory extends JDBCExecutionFactory {
 
-	private static final String TINYINT = "tinyint(1)"; //$NON-NLS-1$
+    private static final String TINYINT = "tinyint(1)"; //$NON-NLS-1$
 
     public MySQLExecutionFactory() {
-		setSupportsFullOuterJoins(false);
-	}
+        setSupportsFullOuterJoins(false);
+    }
 
-	/**
-	 * Adds support for the 2 argument form of padding
-	 */
-	private final class PadFunctionModifier extends FunctionModifier {
-		@Override
-		public List<?> translate(Function function) {
-			if (function.getParameters().size() == 2) {
-				function.getParameters().add(getLanguageFactory().createLiteral(" ", TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
-			}
-			return null;
-		}
-	}
+    /**
+     * Adds support for the 2 argument form of padding
+     */
+    private final class PadFunctionModifier extends FunctionModifier {
+        @Override
+        public List<?> translate(Function function) {
+            if (function.getParameters().size() == 2) {
+                function.getParameters().add(getLanguageFactory().createLiteral(" ", TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
+            }
+            return null;
+        }
+    }
 
-	@Override
+    @Override
     public void start() throws TranslatorException {
         super.start();
         registerFunctionModifier(SourceSystemFunctions.BITAND, new BitFunctionModifier("&", getLanguageFactory())); //$NON-NLS-1$
@@ -99,59 +99,59 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("signed", FunctionModifier.BOOLEAN, FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG); //$NON-NLS-1$
-    	//char(n) assume 4.1 or later
-    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("char", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("DATE")); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("TIME")); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("TIMESTAMP")); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%H:%i:%S")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d %H:%i:%S.%f")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addTypeConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("(", function.getParameters().get(0), " + 0.0)"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		}, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
-    	convertModifier.addNumericBooleanConversions();
-    	convertModifier.setWideningNumericImplicit(true);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+        //char(n) assume 4.1 or later
+        convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addTypeMapping("char", FunctionModifier.STRING); //$NON-NLS-1$
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+        convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("datetime", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("DATE")); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("TIME")); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("TIMESTAMP")); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%H:%i:%S")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("date_format", "%Y-%m-%d %H:%i:%S.%f")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addTypeConversion(new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("(", function.getParameters().get(0), " + 0.0)"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        }, FunctionModifier.BIGDECIMAL, FunctionModifier.BIGINTEGER, FunctionModifier.FLOAT, FunctionModifier.DOUBLE);
+        convertModifier.addNumericBooleanConversions();
+        convertModifier.setWideningNumericImplicit(true);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
 
-    	addPushDownFunction("mysql", "SUBSTRING_INDEX", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
+        addPushDownFunction("mysql", "SUBSTRING_INDEX", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Override
+    @Override
     public String translateLiteralDate(Date dateValue) {
         return "DATE('" + formatDateValue(dateValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
-	@Override
+    @Override
     public String translateLiteralTime(Time timeValue) {
         return "TIME('" + formatDateValue(timeValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
-	@Override
+    @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
         return "{ts '" + formatDateValue(timestampValue) + "'}";  //$NON-NLS-1$//$NON-NLS-2$
     }
 
-	@Override
-	public boolean useParensForSetQueries() {
-		return true;
-	}
+    @Override
+    public boolean useParensForSetQueries() {
+        return true;
+    }
 
-	@Override
-	public int getTimestampNanoPrecision() {
-		return 0;
-	}
+    @Override
+    public int getTimestampNanoPrecision() {
+        return 0;
+    }
 
-	@Override
+    @Override
     public boolean useParensForJoins() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -408,12 +408,12 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 
     @Override
     public String getHibernateDialectClassName() {
-    	return "org.hibernate.dialect.MySQLDialect"; //$NON-NLS-1$
+        return "org.hibernate.dialect.MySQLDialect"; //$NON-NLS-1$
     }
 
     @Override
@@ -422,7 +422,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
             @Override
             protected String getRuntimeType(int type, String typeName, int precision) {
                 //mysql will otherwise report a 0/null type for geometry
-            	if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
+                if ("geometry".equalsIgnoreCase(typeName)) { //$NON-NLS-1$
                     return TypeFacility.RUNTIME_NAMES.GEOMETRY;
                 }
                 return super.getRuntimeType(type, typeName, precision);
@@ -439,44 +439,44 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
                 return c;
             }
 
-    		@Override
-    		protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
-    	        PreparedStatement stmt = null;
-    	        ResultSet rs = null;
-		        try {
-		            stmt = conn.prepareStatement("SELECT cardinality FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ?");  //$NON-NLS-1$
-		            if (catalog != null && schema == null) {
-		            	//mysql jdbc reports the schema as the catalog
-		            	stmt.setString(1, catalog);
-		            } else {
-		            	stmt.setString(1, schema);
-		            }
-		            stmt.setString(2, name);
-		            rs = stmt.executeQuery();
-		            if(rs.next()) {
-		            	int cardinality = rs.getInt(1);
-		            	if (!rs.wasNull()) {
-		            		table.setCardinality(cardinality);
-		            	}
-		            }
-		        } finally {
-		            if(rs != null) {
-		                rs.close();
-		            }
-		            if(stmt != null) {
-		                stmt.close();
-		            }
-		        }
-    		}
+            @Override
+            protected void getTableStatistics(Connection conn, String catalog, String schema, String name, Table table) throws SQLException {
+                PreparedStatement stmt = null;
+                ResultSet rs = null;
+                try {
+                    stmt = conn.prepareStatement("SELECT cardinality FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema = ? AND table_name = ?");  //$NON-NLS-1$
+                    if (catalog != null && schema == null) {
+                        //mysql jdbc reports the schema as the catalog
+                        stmt.setString(1, catalog);
+                    } else {
+                        stmt.setString(1, schema);
+                    }
+                    stmt.setString(2, name);
+                    rs = stmt.executeQuery();
+                    if(rs.next()) {
+                        int cardinality = rs.getInt(1);
+                        if (!rs.wasNull()) {
+                            table.setCardinality(cardinality);
+                        }
+                    }
+                } finally {
+                    if(rs != null) {
+                        rs.close();
+                    }
+                    if(stmt != null) {
+                        stmt.close();
+                    }
+                }
+            }
 
-    		@Override
-    		protected boolean isUnsignedTypeName(String name) {
-    		    if (!name.contains("UNSIGNED")) { //$NON-NLS-1$
-    		        return false;
-    		    }
-    		    return super.isUnsignedTypeName(name);
-    		}
-    	};
+            @Override
+            protected boolean isUnsignedTypeName(String name) {
+                if (!name.contains("UNSIGNED")) { //$NON-NLS-1$
+                    return false;
+                }
+                return super.isUnsignedTypeName(name);
+            }
+        };
     }
 
     @Override
@@ -487,7 +487,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public Expression translateGeometrySelect(Expression expr) {
-    	return expr;
+        return expr;
     }
 
     @Override
@@ -499,7 +499,7 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
-    		Class<?> expectedType) throws SQLException {
+            Class<?> expectedType) throws SQLException {
         Blob val = results.getBlob(parameterIndex);
 
         return toGeometryType(val);
@@ -513,120 +513,120 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
      * @return
      * @throws SQLException
      */
-	GeometryType toGeometryType(final Blob val) throws SQLException {
+    GeometryType toGeometryType(final Blob val) throws SQLException {
         if (val == null) {
-        	return null;
+            return null;
         }
-    	//create a wrapper for that will handle the srid
-    	long length = val.length() - 4;
-    	InputStreamFactory streamFactory = new InputStreamFactory() {
+        //create a wrapper for that will handle the srid
+        long length = val.length() - 4;
+        InputStreamFactory streamFactory = new InputStreamFactory() {
 
-			@Override
-			public InputStream getInputStream() throws IOException {
-				InputStream is;
-				try {
-					is = val.getBinaryStream();
-				} catch (SQLException e) {
-					throw new IOException(e);
-				}
-				for (int i = 0; i < 4; i++) {
-					is.read();
-				}
-				return is;
-			}
+            @Override
+            public InputStream getInputStream() throws IOException {
+                InputStream is;
+                try {
+                    is = val.getBinaryStream();
+                } catch (SQLException e) {
+                    throw new IOException(e);
+                }
+                for (int i = 0; i < 4; i++) {
+                    is.read();
+                }
+                return is;
+            }
 
-		};
+        };
 
-		//read the little endian srid
-		InputStream is = val.getBinaryStream();
-		int srid = 0;
-		try {
-			for (int i = 0; i < 4; i++) {
-				try {
-					int b = is.read();
-					srid += (b << i*8);
-				} catch (IOException e) {
-					srid = GeometryType.UNKNOWN_SRID; //could not determine srid
-				}
-			}
-		} finally {
-			try {
-				is.close();
-			} catch (IOException e) {
-				//i
-			}
-		}
+        //read the little endian srid
+        InputStream is = val.getBinaryStream();
+        int srid = 0;
+        try {
+            for (int i = 0; i < 4; i++) {
+                try {
+                    int b = is.read();
+                    srid += (b << i*8);
+                } catch (IOException e) {
+                    srid = GeometryType.UNKNOWN_SRID; //could not determine srid
+                }
+            }
+        } finally {
+            try {
+                is.close();
+            } catch (IOException e) {
+                //i
+            }
+        }
 
-		streamFactory.setLength(length);
-		Blob b = new BlobImpl(streamFactory);
+        streamFactory.setLength(length);
+        Blob b = new BlobImpl(streamFactory);
 
-		GeometryType geom = new GeometryType(b);
+        GeometryType geom = new GeometryType(b);
         geom.setSrid(srid);
         return geom;
-	}
+    }
 
-	@Override
-	public List<?> translate(LanguageObject obj, ExecutionContext context) {
-	    if (obj instanceof ColumnReference) {
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+        if (obj instanceof ColumnReference) {
             ColumnReference elem = (ColumnReference)obj;
             if (elem.getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN && elem.getMetadataObject() != null
                     && TINYINT.equalsIgnoreCase(elem.getMetadataObject().getNativeType())) {
                 return Arrays.asList("case when ", elem, " is null then null when ", elem, " = -1 or ", elem, " > 0 then 1 else 0 end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             }
-	    }
-	    return super.translate(obj, context);
-	}
+        }
+        return super.translate(obj, context);
+    }
 
-	@Override
-	public List<?> translateCommand(Command command, ExecutionContext context) {
-		if (command instanceof SetQuery) {
-			//mysql may not be able to find a common collation if a cast is used in a union
-			//TODO: it's a little sloppy to do this here as there can be nested set queries
-			SetQuery sq = (SetQuery)command;
-			if (!sq.isAll()) {
-				List<Select> allQueries = new ArrayList<Select>();
-				gatherSelects(sq, allQueries);
-				int size = allQueries.get(0).getDerivedColumns().size();
-				outer: for (int i = 0; i < size; i++) {
-					boolean casted = false;
-					boolean notCasted = false;
-					for (Select select : allQueries) {
-						Expression ex = select.getDerivedColumns().get(i).getExpression();
-						if (ex.getType() != TypeFacility.RUNTIME_TYPES.STRING) {
-							continue outer;
-						}
-						if (ex instanceof Function) {
-							Function f = (Function)ex;
-							if (f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT)) {
-								casted = true;
-								continue;
-							}
-						}
-						notCasted = true;
-					}
-					if (casted && notCasted) {
-						//allow mysql to implicitly convert
-						for (Select select : allQueries) {
-							DerivedColumn dc = select.getDerivedColumns().get(i);
-							if ((dc.getExpression() instanceof Function) &&
-									(((Function)dc.getExpression()).getName().equalsIgnoreCase(SQLConstants.Reserved.CONVERT))) {
-								dc.setExpression(((Function)dc.getExpression()).getParameters().get(0));
-							}
-						}
-					}
-				}
-			}
-		}
-		return super.translateCommand(command, context);
-	}
+    @Override
+    public List<?> translateCommand(Command command, ExecutionContext context) {
+        if (command instanceof SetQuery) {
+            //mysql may not be able to find a common collation if a cast is used in a union
+            //TODO: it's a little sloppy to do this here as there can be nested set queries
+            SetQuery sq = (SetQuery)command;
+            if (!sq.isAll()) {
+                List<Select> allQueries = new ArrayList<Select>();
+                gatherSelects(sq, allQueries);
+                int size = allQueries.get(0).getDerivedColumns().size();
+                outer: for (int i = 0; i < size; i++) {
+                    boolean casted = false;
+                    boolean notCasted = false;
+                    for (Select select : allQueries) {
+                        Expression ex = select.getDerivedColumns().get(i).getExpression();
+                        if (ex.getType() != TypeFacility.RUNTIME_TYPES.STRING) {
+                            continue outer;
+                        }
+                        if (ex instanceof Function) {
+                            Function f = (Function)ex;
+                            if (f.getName().equalsIgnoreCase(SourceSystemFunctions.CONVERT)) {
+                                casted = true;
+                                continue;
+                            }
+                        }
+                        notCasted = true;
+                    }
+                    if (casted && notCasted) {
+                        //allow mysql to implicitly convert
+                        for (Select select : allQueries) {
+                            DerivedColumn dc = select.getDerivedColumns().get(i);
+                            if ((dc.getExpression() instanceof Function) &&
+                                    (((Function)dc.getExpression()).getName().equalsIgnoreCase(SQLConstants.Reserved.CONVERT))) {
+                                dc.setExpression(((Function)dc.getExpression()).getParameters().get(0));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return super.translateCommand(command, context);
+    }
 
-	private void gatherSelects(QueryExpression qe, List<Select> allQueries) {
-		if (qe instanceof Select) {
-			allQueries.add((Select)qe);
-			return;
-		}
-		SetQuery sq = (SetQuery)qe;
-		gatherSelects(sq.getLeftQuery(), allQueries);
-		gatherSelects(sq.getRightQuery(), allQueries);
-	}
+    private void gatherSelects(QueryExpression qe, List<Select> allQueries) {
+        if (qe instanceof Select) {
+            allQueries.add((Select)qe);
+            return;
+        }
+        SetQuery sq = (SetQuery)qe;
+        gatherSelects(sq.getLeftQuery(), allQueries);
+        gatherSelects(sq.getRightQuery(), allQueries);
+    }
 }

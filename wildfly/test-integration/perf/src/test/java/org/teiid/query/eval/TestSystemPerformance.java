@@ -40,69 +40,69 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings({"nls"})
 public class TestSystemPerformance extends AbstractQueryTest {
 
-	private static final int TABLES = 2000;
-	private static final int COLS = 16;
-	EmbeddedServer es;
+    private static final int TABLES = 2000;
+    private static final int COLS = 16;
+    EmbeddedServer es;
 
-	@Before public void setup() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException {
-		es = new EmbeddedServer();
-		es.start(new EmbeddedConfiguration());
-		ModelMetaData mmm = new ModelMetaData();
-		mmm.setName("test");
-		mmm.setSchemaSourceType("native");
-		mmm.addSourceMapping("x", "hc", null);
-		HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory() {
-			@Override
-			public void getMetadata(MetadataFactory metadataFactory, Object conn)
-					throws TranslatorException {
-				String[] colNames = new String[COLS];
-				for (int i = 0; i < colNames.length; i++) {
-					colNames[i] = "col" + i;
-				}
-				for (int i = 0; i < TABLES; i++) {
-					Table t = metadataFactory.addTable("x" + i);
-					for (int j = 0; j < COLS; j++) {
-						metadataFactory.addColumn(colNames[j], "string", t);
-					}
-				}
-			}
+    @Before public void setup() throws VirtualDatabaseException, ConnectorManagerException, TranslatorException {
+        es = new EmbeddedServer();
+        es.start(new EmbeddedConfiguration());
+        ModelMetaData mmm = new ModelMetaData();
+        mmm.setName("test");
+        mmm.setSchemaSourceType("native");
+        mmm.addSourceMapping("x", "hc", null);
+        HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory() {
+            @Override
+            public void getMetadata(MetadataFactory metadataFactory, Object conn)
+                    throws TranslatorException {
+                String[] colNames = new String[COLS];
+                for (int i = 0; i < colNames.length; i++) {
+                    colNames[i] = "col" + i;
+                }
+                for (int i = 0; i < TABLES; i++) {
+                    Table t = metadataFactory.addTable("x" + i);
+                    for (int j = 0; j < COLS; j++) {
+                        metadataFactory.addColumn(colNames[j], "string", t);
+                    }
+                }
+            }
 
-			@Override
-			public boolean isSourceRequiredForMetadata() {
-				return false;
-			}
-		};
-		es.addTranslator("hc", hardCodedExecutionFactory);
-		es.deployVDB("test", mmm);
-	}
+            @Override
+            public boolean isSourceRequiredForMetadata() {
+                return false;
+            }
+        };
+        es.addTranslator("hc", hardCodedExecutionFactory);
+        es.deployVDB("test", mmm);
+    }
 
-	@After public void teardown() {
-		es.stop();
-	}
+    @After public void teardown() {
+        es.stop();
+    }
 
-	@Test public void testColumnPerformance() throws Exception {
-		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
-		setConnection(c);
-		DatabaseMetaData metadata = c.getMetaData();
-		for (int i = 0; i < TABLES; i++) {
-			internalResultSet = metadata.getColumns(null, "test", "x" + i, null);
-			assertRowCount(COLS);
-			internalResultSet.close();
-		}
-	}
+    @Test public void testColumnPerformance() throws Exception {
+        Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+        setConnection(c);
+        DatabaseMetaData metadata = c.getMetaData();
+        for (int i = 0; i < TABLES; i++) {
+            internalResultSet = metadata.getColumns(null, "test", "x" + i, null);
+            assertRowCount(COLS);
+            internalResultSet.close();
+        }
+    }
 
-	@Test public void testSQLXML() throws Exception {
-		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
-		String sql = "select xmlelement(root, xmlelement(root1, xmlagg(x))) from (select xmlelement(x, tablename, xmlagg(xmlforest(name)), '\n') as x from sys.columns group by tablename) as y"; //$NON-NLS-1$
-		PreparedStatement s = c.prepareStatement(sql);
-		for (int i = 0; i < 100; i++) {
-			s.execute();
-			ResultSet rs = s.getResultSet();
-			rs.next();
-			rs.getString(1);
-			rs.close();
-		}
-		c.close();
-	}
+    @Test public void testSQLXML() throws Exception {
+        Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+        String sql = "select xmlelement(root, xmlelement(root1, xmlagg(x))) from (select xmlelement(x, tablename, xmlagg(xmlforest(name)), '\n') as x from sys.columns group by tablename) as y"; //$NON-NLS-1$
+        PreparedStatement s = c.prepareStatement(sql);
+        for (int i = 0; i < 100; i++) {
+            s.execute();
+            ResultSet rs = s.getResultSet();
+            rs.next();
+            rs.getString(1);
+            rs.close();
+        }
+        c.close();
+    }
 
 }

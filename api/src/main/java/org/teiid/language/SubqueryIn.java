@@ -29,7 +29,7 @@ public class SubqueryIn extends BaseInCondition implements SubqueryContainer {
     private QueryExpression rightQuery;
 
     public SubqueryIn(Expression leftExpr, boolean isNegated, QueryExpression rightQuery) {
-    	super(leftExpr, isNegated);
+        super(leftExpr, isNegated);
         this.rightQuery = rightQuery;
     }
 

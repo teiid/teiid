@@ -96,23 +96,23 @@ public class Avg extends Sum {
 
     @Override
     public List<? extends Class<?>> getStateTypes() {
-    	ArrayList<Class<?>> result = new ArrayList<Class<?>>();
-    	result.addAll(super.getStateTypes());
-    	result.add(Long.class);
-    	return result;
+        ArrayList<Class<?>> result = new ArrayList<Class<?>>();
+        result.addAll(super.getStateTypes());
+        result.add(Long.class);
+        return result;
     }
 
     @Override
     public void getState(List<Object> state) {
-    	super.getState(state);
-    	state.add(count);
+        super.getState(state);
+        state.add(count);
     }
 
     @Override
     public int setState(List<?> state, int index) {
-    	index = super.setState(state, index);
-    	count = (Long) state.get(index);
-    	return index++;
+        index = super.setState(state, index);
+        count = (Long) state.get(index);
+        return index++;
     }
 
 }

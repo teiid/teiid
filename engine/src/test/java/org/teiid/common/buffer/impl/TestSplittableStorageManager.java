@@ -26,7 +26,7 @@ import org.teiid.common.buffer.FileStore;
 public class TestSplittableStorageManager {
 
     @Test public void testCreatesSpillFiles() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         SplittableStorageManager ssm = new SplittableStorageManager(msm);
         ssm.setMaxFileSizeDirect(2048);
         String tsID = "0";     //$NON-NLS-1$
@@ -54,7 +54,7 @@ public class TestSplittableStorageManager {
     }
 
     @Test public void testTruncate() throws Exception {
-    	MemoryStorageManager msm = new MemoryStorageManager();
+        MemoryStorageManager msm = new MemoryStorageManager();
         SplittableStorageManager ssm = new SplittableStorageManager(msm);
         ssm.setMaxFileSizeDirect(2048);
         String tsID = "0";     //$NON-NLS-1$

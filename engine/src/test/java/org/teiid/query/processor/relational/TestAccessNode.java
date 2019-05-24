@@ -62,14 +62,14 @@ public class TestAccessNode {
         // Call open()
         node.open();
         if (shouldRegisterRequest) {
-        	assertEquals(Arrays.asList(expectedCommand), dataManager.getQueries());
+            assertEquals(Arrays.asList(expectedCommand), dataManager.getQueries());
         } else {
-        	assertEquals(0, dataManager.getQueries().size());
+            assertEquals(0, dataManager.getQueries().size());
         }
     }
 
     @Test public void testOpen_Defect16059() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
 
@@ -77,7 +77,7 @@ public class TestAccessNode {
     }
 
     @Test public void testOpen_Defect16059_2() throws Exception {
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
 
@@ -87,7 +87,7 @@ public class TestAccessNode {
     @Test public void testExecCount()throws Exception{
         // Setup
         AccessNode node = new AccessNode(1);
-    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         node.setCommand(query);
         CommandContext context = new CommandContext();
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
@@ -125,6 +125,6 @@ public class TestAccessNode {
     }
 
     @Test public void testUninitailizedClose() throws Exception {
-    	new AccessNode().close();
+        new AccessNode().close();
     }
 }

@@ -35,9 +35,9 @@ import org.teiid.translator.TranslatorException;
 public class TestLoopbackExecution  {
 
     public LoopbackExecutionFactory exampleProperties(int waitTime, int rowCount) {
-    	LoopbackExecutionFactory config = new LoopbackExecutionFactory();
-    	config.setWaitTime(waitTime);
-    	config.setRowCount(rowCount);
+        LoopbackExecutionFactory config = new LoopbackExecutionFactory();
+        config.setWaitTime(waitTime);
+        config.setRowCount(rowCount);
         return config;
     }
 
@@ -97,9 +97,9 @@ public class TestLoopbackExecution  {
     }
     @Test
     public void testExecWithoutResultSet() throws Exception {
-    	Object[][] results = new Object[][] {
+        Object[][] results = new Object[][] {
         };
-    	helpTestQuery("exec pm4.spTest9(1)", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), results); //$NON-NLS-1$
+        helpTestQuery("exec pm4.spTest9(1)", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), results); //$NON-NLS-1$
     }
 
     /**
@@ -128,10 +128,10 @@ public class TestLoopbackExecution  {
     }
 
     @Test public void testArrayType() throws TranslatorException {
-    	Object[][] expected = {{new Integer[] {0}, new String[] {"ABCDEFGHIJ"}},
+        Object[][] expected = {{new Integer[] {0}, new String[] {"ABCDEFGHIJ"}},
                 {new Integer[] {0}, new String[] {"ABCDEFGHIJ"}},
                 {new Integer[] {0}, new String[] {"ABCDEFGHIJ"}}};
-    	TestHelper.helpTestQuery(false, "SELECT (1,2), ('a',) FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
+        TestHelper.helpTestQuery(false, "SELECT (1,2), ('a',) FROM BQT1.SmallA LIMIT 3", FakeTranslationFactory.getInstance().getBQTTranslationUtility(), 0, 100, expected); //$NON-NLS-1$
     }
 
 }

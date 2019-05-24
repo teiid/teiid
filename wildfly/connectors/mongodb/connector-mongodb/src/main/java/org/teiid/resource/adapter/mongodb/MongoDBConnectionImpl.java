@@ -38,21 +38,21 @@ import com.mongodb.client.ClientSession;
 
 
 public class MongoDBConnectionImpl extends BasicConnection implements MongoDBConnection {
-	static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBConnectionImpl.class);
+    static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBConnectionImpl.class);
 
-	private MongoClient client;
-	private String database;
+    private MongoClient client;
+    private String database;
 
-	public MongoDBConnectionImpl(String database, List<ServerAddress> servers,
-			MongoCredential credential, MongoClientOptions options) {
-		if (credential == null) {
-			this.client = new MongoClient(servers, options);
-		}
-		else {
-			this.client = new MongoClient(servers, credential, options);
-		}
-		this.database = database;
-	}
+    public MongoDBConnectionImpl(String database, List<ServerAddress> servers,
+            MongoCredential credential, MongoClientOptions options) {
+        if (credential == null) {
+            this.client = new MongoClient(servers, options);
+        }
+        else {
+            this.client = new MongoClient(servers, credential, options);
+        }
+        this.database = database;
+    }
 
     public MongoDBConnectionImpl(String database, MongoClientURI uri) {
         this.database = database;
@@ -62,54 +62,54 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
         this.client = new MongoClient(uri);
     }
 
-	@Override
-	public DB getDatabase() {
-		return this.client.getDB(this.database);
-	}
+    @Override
+    public DB getDatabase() {
+        return this.client.getDB(this.database);
+    }
 
-	@Override
-	public void close() throws ResourceException {
-		if (this.client != null) {
-			this.client.close();
-		}
-	}
+    @Override
+    public void close() throws ResourceException {
+        if (this.client != null) {
+            this.client.close();
+        }
+    }
 
-	@Override
-	public LocalTransaction getLocalTransaction() throws ResourceException {
-	    try {
-	        ClientSession session = this.client.startSession();
+    @Override
+    public LocalTransaction getLocalTransaction() throws ResourceException {
+        try {
+            ClientSession session = this.client.startSession();
 
-	        return new LocalTransaction() {
+            return new LocalTransaction() {
 
-	            @Override
-	            public void rollback() throws ResourceException {
-	                try {
-	                    session.abortTransaction();
-	                } catch (MongoException e) {
-	                    throw new ResourceException(e.getMessage(), e);
-	                }
-	            }
+                @Override
+                public void rollback() throws ResourceException {
+                    try {
+                        session.abortTransaction();
+                    } catch (MongoException e) {
+                        throw new ResourceException(e.getMessage(), e);
+                    }
+                }
 
-	            @Override
-	            public void commit() throws ResourceException {
-	                try {
+                @Override
+                public void commit() throws ResourceException {
+                    try {
                        session.commitTransaction();
                     } catch (MongoException e) {
                         throw new ResourceException(e.getMessage(), e);
                     }
-	            }
+                }
 
-	            @Override
-	            public void begin() throws ResourceException {
-	                try {
+                @Override
+                public void begin() throws ResourceException {
+                    try {
                        session.startTransaction();
                     } catch (MongoException e) {
                         throw new ResourceException(e.getMessage(), e);
                     }
-	            }
-	        };
-	    } catch (MongoException e) {
-	        throw new ResourceException(e.getMessage(), e);
-	    }
-	}
+                }
+            };
+        } catch (MongoException e) {
+            throw new ResourceException(e.getMessage(), e);
+        }
+    }
 }

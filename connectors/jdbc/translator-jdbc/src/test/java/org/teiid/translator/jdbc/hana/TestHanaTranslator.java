@@ -794,7 +794,7 @@ public class TestHanaTranslator {
     }
 
     @Test public void testBooleanExpression() throws Exception {
-    	String input = "SELECT (CASE WHEN BooleanValue THEN 'a' ELSE 'b' END) FROM BQT1.smalla"; //$NON-NLS-1$
+        String input = "SELECT (CASE WHEN BooleanValue THEN 'a' ELSE 'b' END) FROM BQT1.smalla"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN SmallA.BooleanValue = true THEN 'a' ELSE 'b' END FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(getTestBQTVDB(),

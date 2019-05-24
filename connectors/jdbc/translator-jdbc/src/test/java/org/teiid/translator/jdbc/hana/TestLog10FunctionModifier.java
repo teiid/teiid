@@ -33,7 +33,7 @@ import org.teiid.translator.jdbc.hana.Log10FunctionModifier;
 /**
  */
 public class TestLog10FunctionModifier extends TestCase {
-	private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
+    private static final LanguageFactory LANG_FACTORY = new LanguageFactory();
 
     /**
      * Constructor for TestLog10FunctionModifier.

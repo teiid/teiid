@@ -52,7 +52,7 @@ public class TestNetezzaTranslatorTypeMapping {
 
     private String getTestBQTVDB() {
 
-    	return TranslationHelper.BQT_VDB;
+        return TranslationHelper.BQT_VDB;
     }
 
 
@@ -219,24 +219,24 @@ public class TestNetezzaTranslatorTypeMapping {
 
 
     @Test public void testbooleanToIntegerConversion() throws Exception {
-		String input = "SELECT BQT1.SmallA.IntNum, BQT2.SmallB.BooleanValue FROM BQT1.SmallA, BQT2.SmallB WHERE BQT1.SmallA.IntNum = convert(BQT2.SmallB.booleanvalue, integer)";
-		String output = "SELECT SmallA.IntNum, SmallB.BooleanValue FROM SmallA, SmallB WHERE SmallA.IntNum = (CASE WHEN SmallB.BooleanValue IN ( '0', 'FALSE') THEN 0 WHEN SmallB.BooleanValue IS NOT NULL THEN 1 END)";
-		TranslationHelper.helpTestVisitor(getTestBQTVDB(),
-	            input,
-	            output, TRANSLATOR);
+        String input = "SELECT BQT1.SmallA.IntNum, BQT2.SmallB.BooleanValue FROM BQT1.SmallA, BQT2.SmallB WHERE BQT1.SmallA.IntNum = convert(BQT2.SmallB.booleanvalue, integer)";
+        String output = "SELECT SmallA.IntNum, SmallB.BooleanValue FROM SmallA, SmallB WHERE SmallA.IntNum = (CASE WHEN SmallB.BooleanValue IN ( '0', 'FALSE') THEN 0 WHEN SmallB.BooleanValue IS NOT NULL THEN 1 END)";
+        TranslationHelper.helpTestVisitor(getTestBQTVDB(),
+                input,
+                output, TRANSLATOR);
 
 
-	 }
+     }
 
     @Test public void testIntegerToBooleanconversion() throws Exception {
-		String input = "SELECT BQT1.SmallA.IntNum, BQT2.SmallB.BooleanValue FROM BQT1.SmallA, BQT2.SmallB WHERE BQT1.SmallA.booleanvalue = convert(BQT2.SmallB.IntNum, boolean) AND BQT1.SmallA.IntKey >= 0 AND BQT2.SmallB.IntKey >= 0 ORDER BY BQT1.SmallA.IntNum";
-		String output = "SELECT SmallA.IntNum, SmallB.BooleanValue FROM SmallA, SmallB WHERE SmallA.BooleanValue = CASE WHEN SmallB.IntNum = 0 THEN '0' WHEN SmallB.IntNum IS NOT NULL THEN '1' END AND SmallA.IntKey >= 0 AND SmallB.IntKey >= 0 ORDER BY SmallA.IntNum";
-		TranslationHelper.helpTestVisitor(getTestBQTVDB(),
-	            input,
-	            output, TRANSLATOR);
+        String input = "SELECT BQT1.SmallA.IntNum, BQT2.SmallB.BooleanValue FROM BQT1.SmallA, BQT2.SmallB WHERE BQT1.SmallA.booleanvalue = convert(BQT2.SmallB.IntNum, boolean) AND BQT1.SmallA.IntKey >= 0 AND BQT2.SmallB.IntKey >= 0 ORDER BY BQT1.SmallA.IntNum";
+        String output = "SELECT SmallA.IntNum, SmallB.BooleanValue FROM SmallA, SmallB WHERE SmallA.BooleanValue = CASE WHEN SmallB.IntNum = 0 THEN '0' WHEN SmallB.IntNum IS NOT NULL THEN '1' END AND SmallA.IntKey >= 0 AND SmallB.IntKey >= 0 ORDER BY SmallA.IntNum";
+        TranslationHelper.helpTestVisitor(getTestBQTVDB(),
+                input,
+                output, TRANSLATOR);
 
 
-	 }
+     }
 
 
 }

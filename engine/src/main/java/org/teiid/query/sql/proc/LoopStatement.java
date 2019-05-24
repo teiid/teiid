@@ -50,12 +50,12 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
     }
 
     public String getLabel() {
-		return label;
-	}
+        return label;
+    }
 
     public void setLabel(String label) {
-		this.label = label;
-	}
+        this.label = label;
+    }
 
     /**
      * @return

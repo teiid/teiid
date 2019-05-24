@@ -35,52 +35,52 @@ import org.teiid.transport.TestODBCSocketTransport.Mode;
 @SuppressWarnings("nls")
 public class TestODBCSSL {
 
-	FakeOdbcServer odbcServer = new FakeOdbcServer();
+    FakeOdbcServer odbcServer = new FakeOdbcServer();
 
-	@After public void tearDown() {
-		odbcServer.stop();
-	}
+    @After public void tearDown() {
+        odbcServer.stop();
+    }
 
-	@Test public void testSelectSsl() throws Exception {
-		odbcServer.start(Mode.ENABLED);
-		Driver d = new Driver();
-		Properties p = new Properties();
-		p.setProperty("user", "testuser");
-		p.setProperty("password", "testpassword");
-		p.setProperty("ssl", "true");
-		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
-		Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
-		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from sys.tables order by name"));
-		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
+    @Test public void testSelectSsl() throws Exception {
+        odbcServer.start(Mode.ENABLED);
+        Driver d = new Driver();
+        Properties p = new Properties();
+        p.setProperty("user", "testuser");
+        p.setProperty("password", "testpassword");
+        p.setProperty("ssl", "true");
+        p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+        Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+        Statement s = conn.createStatement();
+        assertTrue(s.execute("select * from sys.tables order by name"));
+        TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 
-		p.remove("ssl");
-		try {
-			conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
-			fail("should require ssl");
-		} catch (SQLException e) {
+        p.remove("ssl");
+        try {
+            conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+            fail("should require ssl");
+        } catch (SQLException e) {
 
-		}
-	}
+        }
+    }
 
-	@Test(expected=SQLException.class) public void testLogin() throws Exception {
-		odbcServer.start(Mode.LOGIN);
-		Driver d = new Driver();
-		Properties p = new Properties();
-		p.setProperty("user", "testuser");
-		p.setProperty("password", "testpassword");
-		d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
-	}
+    @Test(expected=SQLException.class) public void testLogin() throws Exception {
+        odbcServer.start(Mode.LOGIN);
+        Driver d = new Driver();
+        Properties p = new Properties();
+        p.setProperty("user", "testuser");
+        p.setProperty("password", "testpassword");
+        d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+    }
 
-	@Test(expected=SQLException.class) public void testNonSSL() throws Exception {
-		odbcServer.start(Mode.DISABLED);
-		Driver d = new Driver();
-		Properties p = new Properties();
-		p.setProperty("user", "testuser");
-		p.setProperty("password", "testpassword");
-		p.setProperty("ssl", "true");
-		p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
-		d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
-	}
+    @Test(expected=SQLException.class) public void testNonSSL() throws Exception {
+        odbcServer.start(Mode.DISABLED);
+        Driver d = new Driver();
+        Properties p = new Properties();
+        p.setProperty("user", "testuser");
+        p.setProperty("password", "testpassword");
+        p.setProperty("ssl", "true");
+        p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+        d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+    }
 
 }

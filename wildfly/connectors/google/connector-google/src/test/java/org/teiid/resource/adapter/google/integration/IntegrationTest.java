@@ -13,5 +13,5 @@ package org.teiid.resource.adapter.google.integration;
 
 @SuppressWarnings("nls")
 public class IntegrationTest {
-	protected static String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
+    protected static String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
 }

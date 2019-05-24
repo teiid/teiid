@@ -59,7 +59,7 @@ public class OptionsUtil {
         record.getProperties().remove(key);
     }
 
-	public static void setOptions(AbstractMetadataRecord record) {
+    public static void setOptions(AbstractMetadataRecord record) {
         if (record instanceof Table) {
             setTableOptions((Table)record);
         }
@@ -72,11 +72,11 @@ public class OptionsUtil {
         if (record instanceof Schema) {
             setSchemaOptions((Schema)record);
         }
-		if (record instanceof Database ||
-				record instanceof DataWrapper ||
-				record instanceof Server) {
-	        Map<String, String> props = record.getProperties();
-	        setCommonProperties(record, props);
+        if (record instanceof Database ||
+                record instanceof DataWrapper ||
+                record instanceof Server) {
+            Map<String, String> props = record.getProperties();
+            setCommonProperties(record, props);
         }
     }
 
@@ -88,20 +88,20 @@ public class OptionsUtil {
         if (value != null) {
             schema.setVisible(isTrue(value));
         }
-	}
+    }
 
     private static void removeSchemaOption(String key, Schema schema) {
         if (schema.getProperty(key, false) != null) {
-        	schema.setProperty(key, null);
+            schema.setProperty(key, null);
         }
         removeCommonProperty(key, schema);
 
         if (key.equals(DDLConstants.VISIBLE)) {
-        	schema.setVisible(false);
+            schema.setVisible(false);
         }
-	}
+    }
 
-	private static void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
+    private static void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
         if (c.getProperty(key, false) != null) {
             c.setProperty(key, null);
         }

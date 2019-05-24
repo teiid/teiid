@@ -50,7 +50,7 @@ import org.teiid.util.WSUtil;
  */
 public class WSWSDLProcedureExecution implements ProcedureExecution {
 
-	RuntimeMetadata metadata;
+    RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
     private StAXSource returnValue;
@@ -73,56 +73,56 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
 
         XMLType docObject = (XMLType)arguments.get(0).getArgumentValue().getValue();
         StAXSource source = null;
-    	try {
-	        source = convertToSource(docObject);
+        try {
+            source = convertToSource(docObject);
 
-	        Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
-	        String operation = this.procedure.getProcedureName();
-	        if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
-	        	operation = this.procedure.getMetadataObject().getNameInSource();
-	        }
-	        QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
-	        dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName);
+            Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
+            String operation = this.procedure.getProcedureName();
+            if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
+                operation = this.procedure.getMetadataObject().getNameInSource();
+            }
+            QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
+            dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName);
 
-			if (source == null) {
-				// JBoss Native DispatchImpl throws exception when the source is null
-				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
-			}
-			this.returnValue = dispatch.invoke(source);
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		} catch (WebServiceException e) {
-			throw new TranslatorException(e);
-		} catch (XMLStreamException e) {
-			throw new TranslatorException(e);
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		} finally {
-			WSUtil.closeSource(source);
-		}
+            if (source == null) {
+                // JBoss Native DispatchImpl throws exception when the source is null
+                source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
+            }
+            this.returnValue = dispatch.invoke(source);
+        } catch (SQLException e) {
+            throw new TranslatorException(e);
+        } catch (WebServiceException e) {
+            throw new TranslatorException(e);
+        } catch (XMLStreamException e) {
+            throw new TranslatorException(e);
+        } catch (IOException e) {
+            throw new TranslatorException(e);
+        } finally {
+            WSUtil.closeSource(source);
+        }
     }
 
-	private StAXSource convertToSource(SQLXML xml) throws SQLException {
-		if (xml == null) {
-			return null;
-		}
-		return xml.getSource(StAXSource.class);
-	}
+    private StAXSource convertToSource(SQLXML xml) throws SQLException {
+        if (xml == null) {
+            return null;
+        }
+        return xml.getSource(StAXSource.class);
+    }
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
-    	return null;
+        return null;
     }
 
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-    	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 1 && Boolean.TRUE.equals(procedure.getArguments().get(1).getArgumentValue().getValue())) {
-			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
-			XMLType xml = new XMLType(sqlXml);
-			xml.setType(Type.DOCUMENT);
-			result = xml;
-		}
+        Object result = returnValue;
+        if (returnValue != null && procedure.getArguments().size() > 1 && Boolean.TRUE.equals(procedure.getArguments().get(1).getArgumentValue().getValue())) {
+            SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
+            XMLType xml = new XMLType(sqlXml);
+            xml.setType(Type.DOCUMENT);
+            result = xml;
+        }
         return Arrays.asList(result);
     }
 

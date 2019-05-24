@@ -122,12 +122,12 @@ public class TeiidRuntimeException extends RuntimeException {
         this.code = code;
     }
 
-	public String getMessage() {
-		String message = super.getMessage();
-		if (code == null || code.length() == 0 || message.startsWith(code)) {
-			return message;
-		}
-		return code+" "+message; //$NON-NLS-1$
-	}
+    public String getMessage() {
+        String message = super.getMessage();
+        if (code == null || code.length() == 0 || message.startsWith(code)) {
+            return message;
+        }
+        return code+" "+message; //$NON-NLS-1$
+    }
 
 }

@@ -42,10 +42,10 @@ import com.datastax.driver.core.ResultSetFuture;
 @SuppressWarnings("nls")
 public class TestUpdates {
 
-	@Test public void testBatchedUpdate() throws TranslatorException {
-		CassandraExecutionFactory cef = new CassandraExecutionFactory();
+    @Test public void testBatchedUpdate() throws TranslatorException {
+        CassandraExecutionFactory cef = new CassandraExecutionFactory();
 
-		String input = "insert into pm1.g1 (e1) values ('a')";
+        String input = "insert into pm1.g1 (e1) values ('a')";
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -62,17 +62,17 @@ public class TestUpdates {
 
         Mockito.stub(connection.executeBatch(Arrays.asList("INSERT INTO g1 (e1) VALUES ('a')", "UPDATE g1 SET e1 = 'b'"))).toReturn(rsf);
 
-		UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
+        UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
         assertArrayEquals(new int[] {2}, execution.getUpdateCounts());
 
         Mockito.verify(connection).executeBatch(Arrays.asList("INSERT INTO g1 (e1) VALUES ('a')", "UPDATE g1 SET e1 = 'b'"));
-	}
+    }
 
-	@Test public void testBulkUpdate() throws Exception {
-		CassandraExecutionFactory cef = new CassandraExecutionFactory();
+    @Test public void testBulkUpdate() throws Exception {
+        CassandraExecutionFactory cef = new CassandraExecutionFactory();
 
-		String input = "insert into pm1.g1 (e1) values ('a')";
+        String input = "insert into pm1.g1 (e1) values ('a')";
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -92,9 +92,9 @@ public class TestUpdates {
 
         Mockito.stub(connection.executeBatch(Mockito.eq("INSERT INTO g1 (e1) VALUES (?)"), (List<Object[]>) Mockito.anyObject())).toReturn(rsf);
 
-		UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
+        UpdateExecution execution = (UpdateExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
         assertArrayEquals(new int[] {2}, execution.getUpdateCounts());
-	}
+    }
 
 }

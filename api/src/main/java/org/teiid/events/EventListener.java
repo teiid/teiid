@@ -26,29 +26,29 @@ import org.teiid.adminapi.VDB;
  */
 public interface EventListener {
 
-	/**
-	 * Invoked when VDB is deployed
-	 * @param vdbName
-	 * @param vdbVersion
-	 */
-	void vdbDeployed(String vdbName, String vdbVersion);
+    /**
+     * Invoked when VDB is deployed
+     * @param vdbName
+     * @param vdbVersion
+     */
+    void vdbDeployed(String vdbName, String vdbVersion);
 
-	/**
-	 * Invoked when VDB undeployed
-	 * @param vdbName
-	 * @param vdbVersion
-	 */
-	void vdbUndeployed(String vdbName, String vdbVersion);
+    /**
+     * Invoked when VDB undeployed
+     * @param vdbName
+     * @param vdbVersion
+     */
+    void vdbUndeployed(String vdbName, String vdbVersion);
 
-	/**
-	 * VDB and all its metadata has been loaded and in ACTIVE state.
-	 * @param vdb
-	 */
-	void vdbLoaded(VDB vdb);
+    /**
+     * VDB and all its metadata has been loaded and in ACTIVE state.
+     * @param vdb
+     */
+    void vdbLoaded(VDB vdb);
 
-	/**
-	 * VDB failed to load and in FAILED state; Note this can be called multiple times for given VDB
-	 * @param vdb
-	 */
-	void vdbLoadFailed(VDB vdb);
+    /**
+     * VDB failed to load and in FAILED state; Note this can be called multiple times for given VDB
+     * @param vdb
+     */
+    void vdbLoadFailed(VDB vdb);
 }

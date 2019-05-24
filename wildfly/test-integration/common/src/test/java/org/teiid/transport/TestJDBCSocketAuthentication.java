@@ -43,21 +43,21 @@ import org.teiid.runtime.EmbeddedConfiguration;
 @SuppressWarnings("nls")
 public class TestJDBCSocketAuthentication {
 
-	static InetSocketAddress addr;
-	static SocketListener jdbcTransport;
-	static FakeServer server;
-	static int delay;
+    static InetSocketAddress addr;
+    static SocketListener jdbcTransport;
+    static FakeServer server;
+    static int delay;
 
-	@BeforeClass public static void oneTimeSetup() throws Exception {
-		SocketConfiguration config = new SocketConfiguration();
-		config.setSSLConfiguration(new SSLConfiguration());
-		addr = new InetSocketAddress(0);
-		config.setBindAddress(addr.getHostName());
-		config.setPortNumber(0);
+    @BeforeClass public static void oneTimeSetup() throws Exception {
+        SocketConfiguration config = new SocketConfiguration();
+        config.setSSLConfiguration(new SSLConfiguration());
+        addr = new InetSocketAddress(0);
+        config.setBindAddress(addr.getHostName());
+        config.setPortNumber(0);
 
-		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
-		dqpConfig.setMaxActivePlans(2);
-		dqpConfig.setSecurityHelper(new DoNothingSecurityHelper() {
+        EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
+        dqpConfig.setMaxActivePlans(2);
+        dqpConfig.setSecurityHelper(new DoNothingSecurityHelper() {
 
             @Override
             public Subject getSubjectInContext(Object context) {
@@ -70,14 +70,14 @@ public class TestJDBCSocketAuthentication {
             }
 
         });
-		server = new FakeServer(false);
-		server.start(dqpConfig, false);
-		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+        server = new FakeServer(false);
+        server.start(dqpConfig, false);
+        server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 
-		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
-			@Override
-			protected SSLAwareChannelHandler createChannelHandler() {
-			    SSLAwareChannelHandler result = new SSLAwareChannelHandler(this) {
+        jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
+            @Override
+            protected SSLAwareChannelHandler createChannelHandler() {
+                SSLAwareChannelHandler result = new SSLAwareChannelHandler(this) {
                     public void messageReceived(io.netty.channel.ChannelHandlerContext ctx,
                             Object msg) throws Exception {
                         if (delay > 0) {
@@ -85,34 +85,34 @@ public class TestJDBCSocketAuthentication {
                         }
                         super.messageReceived(ctx, msg);
                     }
-			    };
+                };
                 return result;
-		    }
-		};
-	}
+            }
+        };
+    }
 
-	@AfterClass public static void oneTimeTearDown() throws Exception {
-		if (jdbcTransport != null) {
-			jdbcTransport.stop();
-		}
-		server.stop();
-	}
+    @AfterClass public static void oneTimeTearDown() throws Exception {
+        if (jdbcTransport != null) {
+            jdbcTransport.stop();
+        }
+        server.stop();
+    }
 
-	Connection conn;
+    Connection conn;
 
-	@After public void tearDown() throws Exception {
-		if (conn != null) {
-			conn.close();
-		}
-	}
+    @After public void tearDown() throws Exception {
+        if (conn != null) {
+            conn.close();
+        }
+    }
 
-	@Test(expected=TeiidSQLException.class) public void testTrustLocalFails() throws Exception {
-	    Properties p = new Properties();
+    @Test(expected=TeiidSQLException.class) public void testTrustLocalFails() throws Exception {
+        Properties p = new Properties();
         p.setProperty("user", "testuser");
         p.setProperty("password", "testpassword");
         p.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true");
         conn = TeiidDriver.getInstance().connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
-	}
+    }
 
     @Test public void testTrustLocal() throws Exception {
         Properties p = new Properties();

@@ -32,9 +32,9 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class Reference implements Expression, ContextReference {
 
-	public interface Constraint {
-		public void validate(Object value) throws QueryValidatorException;
-	}
+    public interface Constraint {
+        public void validate(Object value) throws QueryValidatorException;
+    }
 
     private boolean positional;
     private boolean optional;
@@ -55,12 +55,12 @@ public class Reference implements Expression, ContextReference {
     }
 
     public Constraint getConstraint() {
-		return constraint;
-	}
+        return constraint;
+    }
 
     public void setConstraint(Constraint constraint) {
-		this.constraint = constraint;
-	}
+        this.constraint = constraint;
+    }
 
     /**
      * Constructor for an element Reference.
@@ -71,14 +71,14 @@ public class Reference implements Expression, ContextReference {
     }
 
     private Reference(Reference ref) {
-    	this.refIndex = ref.refIndex;
-    	this.positional = ref.positional;
-    	this.type = ref.type;
-    	if (ref.expression != null) {
-    		this.expression = ref.expression.clone();
-    	}
-    	this.constraint = ref.constraint;
-    	this.optional = ref.optional;
+        this.refIndex = ref.refIndex;
+        this.positional = ref.positional;
+        this.type = ref.type;
+        if (ref.expression != null) {
+            this.expression = ref.expression.clone();
+        }
+        this.constraint = ref.constraint;
+        this.optional = ref.optional;
     }
 
     public int getIndex() {
@@ -87,7 +87,7 @@ public class Reference implements Expression, ContextReference {
 
     @Override
     public String getContextSymbol() {
-    	return "$param/pos" + this.refIndex; //$NON-NLS-1$
+        return "$param/pos" + this.refIndex; //$NON-NLS-1$
     }
 
     public ElementSymbol getExpression() {
@@ -95,10 +95,10 @@ public class Reference implements Expression, ContextReference {
     }
 
     public Class<?> getType() {
-    	if (this.isPositional() && this.expression == null) {
-    		return type;
-    	}
-    	return expression.getType();
+        if (this.isPositional() && this.expression == null) {
+            return type;
+        }
+        return expression.getType();
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -140,19 +140,19 @@ public class Reference implements Expression, ContextReference {
     }
 
     public void setType(Class<?> type) {
-    	Assertion.assertTrue(this.positional);
-		this.type = type;
-	}
+        Assertion.assertTrue(this.positional);
+        this.type = type;
+    }
 
     /**
      * Define hash code to be that of the underlying object to make it stable.
      * @return Hash code, based on value
      */
     public int hashCode() {
-    	if (this.isPositional()) {
-    		return getIndex();
-    	}
-    	return this.expression.hashCode();
+        if (this.isPositional()) {
+            return getIndex();
+        }
+        return this.expression.hashCode();
     }
 
     /**
@@ -164,16 +164,16 @@ public class Reference implements Expression, ContextReference {
     }
 
     public boolean isCorrelated() {
-    	if (this.isPositional()) {
-    		return false;
-    	}
-    	//metadata hack
-    	if (this.expression.getGroupSymbol() == null || !(this.expression.getGroupSymbol().getMetadataID() instanceof TempMetadataID)) {
-    		return true;
-    	}
+        if (this.isPositional()) {
+            return false;
+        }
+        //metadata hack
+        if (this.expression.getGroupSymbol() == null || !(this.expression.getGroupSymbol().getMetadataID() instanceof TempMetadataID)) {
+            return true;
+        }
 
-    	TempMetadataID tid = (TempMetadataID)this.expression.getGroupSymbol().getMetadataID();
-    	return !tid.isScalarGroup();
+        TempMetadataID tid = (TempMetadataID)this.expression.getGroupSymbol().getMetadataID();
+        return !tid.isScalarGroup();
     }
 
     public boolean isPositional() {
@@ -181,16 +181,16 @@ public class Reference implements Expression, ContextReference {
     }
 
     public void setExpression(ElementSymbol expression) {
-    	assert this.expression != null && !this.positional;
-		this.expression = expression;
-	}
+        assert this.expression != null && !this.positional;
+        this.expression = expression;
+    }
 
-	public boolean isOptional() {
-		return optional;
-	}
+    public boolean isOptional() {
+        return optional;
+    }
 
-	public void setOptional(boolean optional) {
-		this.optional = optional;
-	}
+    public void setOptional(boolean optional) {
+        this.optional = optional;
+    }
 
 }

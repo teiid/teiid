@@ -318,9 +318,9 @@ public class TestCalculateCostUtil {
     }
 
     @Test public void testEstimateNdvPostJoin() throws Exception {
-    	String query = "SELECT account FROM US.Accounts, Europe.CustAccts, CustomerMaster.Customers where account + accid + CustomerMaster.Customers.id = 1000000"; //$NON-NLS-1$
+        String query = "SELECT account FROM US.Accounts, Europe.CustAccts, CustomerMaster.Customers where account + accid + CustomerMaster.Customers.id = 1000000"; //$NON-NLS-1$
 
-    	helpTestQuery(1, query, new String[] {"SELECT g_0.accid FROM Europe.CustAccts AS g_0", "SELECT g_0.id FROM CustomerMaster.Customers AS g_0", "SELECT g_0.account FROM US.Accounts AS g_0"});
+        helpTestQuery(1, query, new String[] {"SELECT g_0.accid FROM Europe.CustAccts AS g_0", "SELECT g_0.id FROM CustomerMaster.Customers AS g_0", "SELECT g_0.account FROM US.Accounts AS g_0"});
     }
 
     /**
@@ -768,27 +768,27 @@ public class TestCalculateCostUtil {
         helpTestQuery(cost, query, expected);
     }
 
-	private void helpTestQuery(float cost, String query, String[] expected)
-			throws TeiidComponentException, TeiidProcessingException {
-		RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, TestVirtualDepJoin.exampleVirtualDepJoin(), expected, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+    private void helpTestQuery(float cost, String query, String[] expected)
+            throws TeiidComponentException, TeiidProcessingException {
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(query, TestVirtualDepJoin.exampleVirtualDepJoin(), expected, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         assertEquals(cost, plan.getRootNode().getEstimateNodeCardinality());
-	}
+    }
 
     @Test public void testUnion() throws Exception {
-    	helpTestSetOp("UNION ", 1375000.0f); //$NON-NLS-1$
+        helpTestSetOp("UNION ", 1375000.0f); //$NON-NLS-1$
     }
 
     @Test public void testUnionALL() throws Exception {
-    	helpTestSetOp("UNION ALL ", 1750000.0f); //$NON-NLS-1$
+        helpTestSetOp("UNION ALL ", 1750000.0f); //$NON-NLS-1$
     }
 
     @Test public void testExcept() throws Exception {
-    	helpTestSetOp("EXCEPT ", 250000.0f); //$NON-NLS-1$
+        helpTestSetOp("EXCEPT ", 250000.0f); //$NON-NLS-1$
     }
 
     @Test public void testIntersect() throws Exception {
-    	helpTestSetOp("INTERSECT ", 375000.0f); //$NON-NLS-1$
+        helpTestSetOp("INTERSECT ", 375000.0f); //$NON-NLS-1$
     }
 
     @Test public void testProjectLiteral() throws Exception {

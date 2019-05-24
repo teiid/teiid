@@ -43,8 +43,8 @@ public class InfinispanResponse {
     private DocumentNode documentNode;
     private List<Map<String, Object>> currentDocumentRows;
 
-	public InfinispanResponse(RemoteCache<Object, Object> cache, String queryStr, int batchSize, Integer limit,
-			Integer offset, Map<String, Class<?>> projected, DocumentNode documentNode) {
+    public InfinispanResponse(RemoteCache<Object, Object> cache, String queryStr, int batchSize, Integer limit,
+            Integer offset, Map<String, Class<?>> projected, DocumentNode documentNode) {
         this.batchSize = batchSize;
         this.offset = offset == null?0:offset;
         this.limit = limit;
@@ -69,22 +69,22 @@ public class InfinispanResponse {
             }
         }
         query.maxResults(nextBatch);
-		List<Object> values = query.list();
+        List<Object> values = query.list();
 
-		if (values == null || values.isEmpty()) {
-			this.lastBatch = true;
-			this.responseIter = null;
+        if (values == null || values.isEmpty()) {
+            this.lastBatch = true;
+            this.responseIter = null;
 
-		} else if (values.size() < nextBatch) {
-			this.lastBatch = true;
-			this.responseIter = values.iterator();
-			nextBatch = values.size();
+        } else if (values.size() < nextBatch) {
+            this.lastBatch = true;
+            this.responseIter = values.iterator();
+            nextBatch = values.size();
 
-		} else {
-			this.responseIter = values.iterator();
-		}
+        } else {
+            this.responseIter = values.iterator();
+        }
 
-		offset = offset + nextBatch;
+        offset = offset + nextBatch;
     }
 
     public List<Object> getNextRow() throws IOException {
@@ -96,30 +96,30 @@ public class InfinispanResponse {
             fetchNextBatch();
         }
 
-		if (responseIter != null && responseIter.hasNext()) {
-			Object row = this.responseIter.next();
-			if (row instanceof Object[]) {
-				return buildRow((Object[]) row);
-			}
-			this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
-		} else {
-			if (lastBatch) {
-				return null;
+        if (responseIter != null && responseIter.hasNext()) {
+            Object row = this.responseIter.next();
+            if (row instanceof Object[]) {
+                return buildRow((Object[]) row);
+            }
+            this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
+        } else {
+            if (lastBatch) {
+                return null;
 
-			}
-			fetchNextBatch();
+            }
+            fetchNextBatch();
 
-			if (this.responseIter == null) {
-				return null;
-			}
-			Object row = this.responseIter.next();
-			if (row instanceof Object[]) {
-				return Arrays.asList((Object[]) row);
-			}
-			this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
+            if (this.responseIter == null) {
+                return null;
+            }
+            Object row = this.responseIter.next();
+            if (row instanceof Object[]) {
+                return Arrays.asList((Object[]) row);
+            }
+            this.currentDocumentRows = this.documentNode.tuples((InfinispanDocument) row);
 
-		}
-		return getNextRow();
+        }
+        return getNextRow();
     }
 
     private List<Object> buildRow(Map<String, Object> row) throws IOException {
@@ -131,12 +131,12 @@ public class InfinispanResponse {
     }
 
     private List<Object> buildRow(Object[] values) throws IOException {
-    	ArrayList<Object> result = new ArrayList<>();
-    	int i = 0;
-    	for (Map.Entry<String, Class<?>> attr : this.projected.entrySet()) {
-    		result.add(ProtobufDataManager.convertToRuntime(attr.getValue(), values[i]));
-    		i++;
-    	}
-    	return result;
+        ArrayList<Object> result = new ArrayList<>();
+        int i = 0;
+        for (Map.Entry<String, Class<?>> attr : this.projected.entrySet()) {
+            result.add(ProtobufDataManager.convertToRuntime(attr.getValue(), values[i]));
+            i++;
+        }
+        return result;
     }
 }

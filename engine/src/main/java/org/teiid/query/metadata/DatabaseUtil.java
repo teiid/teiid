@@ -72,30 +72,30 @@ public class DatabaseUtil {
 
         Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
         for (ModelMetaData m:models) {
-        	Schema schema = metadataStore.getSchema(m.getName());
+            Schema schema = metadataStore.getSchema(m.getName());
 
             // add servers
             if (m.isSource()){
-            	Collection<SourceMappingMetadata> sources = m.getSourceMappings();
+                Collection<SourceMappingMetadata> sources = m.getSourceMappings();
 
 
                 for (SourceMappingMetadata s: sources) {
-                	// add translators, that are not override
-                	if (db.getDataWrapper(s.getTranslatorName()) == null) {
+                    // add translators, that are not override
+                    if (db.getDataWrapper(s.getTranslatorName()) == null) {
                         DataWrapper dw = new DataWrapper(s.getTranslatorName());
                         db.addDataWrapper(dw);
                     }
 
-                	// add servers
+                    // add servers
                     Server server = new Server(s.getName());
                     server.setJndiName(s.getConnectionJndiName());
-	                server.setDataWrapper(s.getTranslatorName());
-	                // no need to add duplicate definitions.
-	                if (db.getServer(s.getName()) == null) {
-	                	db.addServer(server);
-	                	schema.addServer(server);
-	                }
-	            }
+                    server.setDataWrapper(s.getTranslatorName());
+                    // no need to add duplicate definitions.
+                    if (db.getServer(s.getName()) == null) {
+                        db.addServer(server);
+                        schema.addServer(server);
+                    }
+                }
             }
 
             db.addSchema(schema);

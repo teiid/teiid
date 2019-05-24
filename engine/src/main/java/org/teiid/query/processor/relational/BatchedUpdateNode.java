@@ -64,7 +64,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
     /** Set containing the indexes of commands that weren't executed. */
     private boolean[] unexecutedCommands;
 
-	private int commandCount;
+    private int commandCount;
 
     /**
      *
@@ -94,8 +94,8 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
             Command updateCommand = (Command)updateCommands.get(i).clone();
             CommandContext context = this.getContext();
             if (this.contexts != null && !this.contexts.isEmpty()) {
-            	context = context.clone();
-            	context.setVariableContext(this.contexts.get(i));
+                context = context.clone();
+                context.setVariableContext(this.contexts.get(i));
             }
             boolean needProcessing = false;
             if(shouldEvaluate != null && shouldEvaluate.get(i)) {
@@ -150,10 +150,10 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
      * @since 4.2
      */
     public void closeDirect() {
-    	super.closeDirect();
+        super.closeDirect();
         if (tupleSource != null) {
-        	tupleSource.closeSource();
-        	tupleSource = null;
+            tupleSource.closeSource();
+            tupleSource = null;
         }
     }
 
@@ -180,19 +180,19 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
 
     @Override
     public Collection<? extends LanguageObject> getObjects() {
-    	return null;
+        return null;
     }
 
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	return null;
+        return null;
     }
 
     @Override
     public PlanNode getDescriptionProperties() {
-    	PlanNode node = super.getDescriptionProperties();
-    	AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
-    	return node;
+        PlanNode node = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(node, AnalysisRecord.PROP_SQL, this.updateCommands);
+        return node;
     }
 
 }

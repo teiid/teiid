@@ -106,9 +106,9 @@ public class TestLDAPDirectQueryExecution {
         LdapContext ctx = Mockito.mock(LdapContext.class);
         Mockito.stub(connection.lookup("corporate")).toReturn(ctx);
 
-		Execution execution = TRANSLATOR.createExecution(command, ec, rm, connection);
-		assertTrue(!(execution instanceof LDAPDirectSearchQueryExecution));
-		execution.execute();
+        Execution execution = TRANSLATOR.createExecution(command, ec, rm, connection);
+        assertTrue(!(execution instanceof LDAPDirectSearchQueryExecution));
+        execution.execute();
     }
 
     @Test public void testDelete() throws Exception {
@@ -123,9 +123,9 @@ public class TestLDAPDirectQueryExecution {
         Mockito.stub(connection.lookup("")).toReturn(ctx);
 
         LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		Mockito.verify(ctx, Mockito.times(1)).destroySubcontext("uid=doe,ou=people,o=teiid.org");
+        Mockito.verify(ctx, Mockito.times(1)).destroySubcontext("uid=doe,ou=people,o=teiid.org");
     }
 
     @Test public void testUpdate() throws Exception {
@@ -140,19 +140,19 @@ public class TestLDAPDirectQueryExecution {
         Mockito.stub(connection.lookup("")).toReturn(ctx);
 
         LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		ArgumentCaptor<String> nameArgument = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<ModificationItem[]> modificationItemArgument = ArgumentCaptor.forClass(ModificationItem[].class);
-		Mockito.verify(ctx).modifyAttributes(nameArgument.capture(),modificationItemArgument.capture());
+        ArgumentCaptor<String> nameArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<ModificationItem[]> modificationItemArgument = ArgumentCaptor.forClass(ModificationItem[].class);
+        Mockito.verify(ctx).modifyAttributes(nameArgument.capture(),modificationItemArgument.capture());
 
-		assertEquals("uid=doe,ou=people,o=teiid.org", nameArgument.getValue());
-		assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().getID());
-		assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().get());
-		assertEquals("two", modificationItemArgument.getValue()[1].getAttribute().getID());
-		assertEquals("2", modificationItemArgument.getValue()[1].getAttribute().get());
-		assertEquals("three", modificationItemArgument.getValue()[2].getAttribute().getID());
-		assertEquals("3.0", modificationItemArgument.getValue()[2].getAttribute().get());
+        assertEquals("uid=doe,ou=people,o=teiid.org", nameArgument.getValue());
+        assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().getID());
+        assertEquals("one", modificationItemArgument.getValue()[0].getAttribute().get());
+        assertEquals("two", modificationItemArgument.getValue()[1].getAttribute().getID());
+        assertEquals("2", modificationItemArgument.getValue()[1].getAttribute().get());
+        assertEquals("three", modificationItemArgument.getValue()[2].getAttribute().getID());
+        assertEquals("3.0", modificationItemArgument.getValue()[2].getAttribute().get());
     }
 
     @Test public void testCreate() throws Exception {
@@ -167,19 +167,19 @@ public class TestLDAPDirectQueryExecution {
         Mockito.stub(connection.lookup("")).toReturn(ctx);
 
         LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		ArgumentCaptor<String> nameArgument = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<BasicAttributes> createItemArgument = ArgumentCaptor.forClass(BasicAttributes.class);
-		Mockito.verify(ctx).createSubcontext(nameArgument.capture(), createItemArgument.capture());
+        ArgumentCaptor<String> nameArgument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<BasicAttributes> createItemArgument = ArgumentCaptor.forClass(BasicAttributes.class);
+        Mockito.verify(ctx).createSubcontext(nameArgument.capture(), createItemArgument.capture());
 
-		assertEquals("uid=doe,ou=people,o=teiid.org", nameArgument.getValue());
-		assertEquals("one", createItemArgument.getValue().get("one").getID());
-		assertEquals("one", createItemArgument.getValue().get("one").get());
-		assertEquals("two", createItemArgument.getValue().get("two").getID());
-		assertEquals("2", createItemArgument.getValue().get("two").get());
-		assertEquals("three", createItemArgument.getValue().get("three").getID());
-		assertEquals("3.0", createItemArgument.getValue().get("three").get());
+        assertEquals("uid=doe,ou=people,o=teiid.org", nameArgument.getValue());
+        assertEquals("one", createItemArgument.getValue().get("one").getID());
+        assertEquals("one", createItemArgument.getValue().get("one").get());
+        assertEquals("two", createItemArgument.getValue().get("two").getID());
+        assertEquals("2", createItemArgument.getValue().get("two").get());
+        assertEquals("three", createItemArgument.getValue().get("three").getID());
+        assertEquals("3.0", createItemArgument.getValue().get("three").get());
     }
 
     @Test(expected=TranslatorException.class) public void testCreateFail() throws Exception {
@@ -193,7 +193,7 @@ public class TestLDAPDirectQueryExecution {
         LdapContext ctx = Mockito.mock(LdapContext.class);
         Mockito.stub(connection.lookup("")).toReturn(ctx);
 
-		LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+        execution.execute();
     }
 }

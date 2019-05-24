@@ -19,18 +19,18 @@ package org.teiid.adminapi;
 
 
 public interface Translator extends AdminObject, DomainAware {
-	public static final String EXECUTION_FACTORY_CLASS = "execution-factory-class"; //$NON-NLS-1$
-	public static final String TRANSLATOR_PROPERTY = "property"; //$NON-NLS-1$
+    public static final String EXECUTION_FACTORY_CLASS = "execution-factory-class"; //$NON-NLS-1$
+    public static final String TRANSLATOR_PROPERTY = "property"; //$NON-NLS-1$
 
-	/**
-	 * Get the Translator type
-	 * @return
-	 */
-	public String getType();
+    /**
+     * Get the Translator type
+     * @return
+     */
+    public String getType();
 
-	/**
-	 * Get the Translator description
-	 * @return
-	 */
-	public String getDescription();
+    /**
+     * Get the Translator description
+     * @return
+     */
+    public String getDescription();
 }

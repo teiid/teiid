@@ -59,49 +59,49 @@ public class ConcatFunctionModifier extends FunctionModifier {
 
         Literal nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
         if (isNull(a)) {
-        	return Arrays.asList(nullValue);
+            return Arrays.asList(nullValue);
         } else if (!isNotNull(a)) {
-        	crits.add(langFactory.createIsNullCriteria(a, false));
+            crits.add(langFactory.createIsNullCriteria(a, false));
         }
         if (isNull(b)) {
-        	return Arrays.asList(nullValue);
+            return Arrays.asList(nullValue);
         } else if (!isNotNull(b)) {
-        	crits.add(langFactory.createIsNullCriteria(b, false));
+            crits.add(langFactory.createIsNullCriteria(b, false));
         }
 
         Condition crit = null;
 
         if (crits.isEmpty()) {
-        	return null;
+            return null;
         } else if (crits.size() == 1) {
-        	crit = crits.get(0);
+            crit = crits.get(0);
         } else {
-        	crit = langFactory.createAndOr(Operator.OR, crits.get(0), crits.get(1));
+            crit = langFactory.createAndOr(Operator.OR, crits.get(0), crits.get(1));
         }
         List<SearchedWhenClause> cases = Arrays.asList(langFactory.createSearchedWhenCondition(crit, nullValue));
         return Arrays.asList(langFactory.createSearchedCaseExpression(cases, function, TypeFacility.RUNTIME_TYPES.STRING));
     }
 
     public static boolean isNotNull(Expression expr) {
-    	if (expr instanceof Literal) {
-    		Literal literal = (Literal)expr;
-    		return literal.getValue() != null;
-    	}
-    	if (expr instanceof Function) {
-    		Function function = (Function)expr;
-    		if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase(SourceSystemFunctions.IFNULL)) { //$NON-NLS-1$
-    			return isNotNull(function.getParameters().get(1));
-    		}
-    	}
-    	return false;
+        if (expr instanceof Literal) {
+            Literal literal = (Literal)expr;
+            return literal.getValue() != null;
+        }
+        if (expr instanceof Function) {
+            Function function = (Function)expr;
+            if (function.getName().equalsIgnoreCase("NVL") || function.getName().equalsIgnoreCase(SourceSystemFunctions.IFNULL)) { //$NON-NLS-1$
+                return isNotNull(function.getParameters().get(1));
+            }
+        }
+        return false;
     }
 
     private boolean isNull(Expression expr) {
-    	if (expr instanceof Literal) {
-    		Literal literal = (Literal)expr;
-    		return literal.getValue() == null;
-    	}
-    	return false;
+        if (expr instanceof Literal) {
+            Literal literal = (Literal)expr;
+            return literal.getValue() == null;
+        }
+        return false;
     }
 
 }

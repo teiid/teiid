@@ -43,7 +43,7 @@ public class TestMetadataObject {
     private static TranslationUtility CONNECTOR_METADATA_UTILITY = createTranslationUtility(getTestVDBName());
 
     private static String getTestVDBName() {
-    	return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
+        return UnitTestUtil.getTestDataPath() + "/ConnectorMetadata.vdb"; //$NON-NLS-1$
     }
 
     public static TranslationUtility createTranslationUtility(String vdbName) {
@@ -138,9 +138,9 @@ public class TestMetadataObject {
         }
 
         if (rsParamName != null) {
-        	assertEquals(rsParamName, procID.getResultSet().getName());
+            assertEquals(rsParamName, procID.getResultSet().getName());
         } else {
-        	assertNull(procID.getResultSet());
+            assertNull(procID.getResultSet());
         }
     }
 

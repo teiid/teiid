@@ -57,7 +57,7 @@ public class TestInCriteriaImpl {
     }
 
     @Test public void testExpansion() throws Exception {
-    	SetCriteria inCriteria = helpExample(false);
+        SetCriteria inCriteria = helpExample(false);
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());
         lbf.setConvertIn(true);
         AndOr or = (AndOr) lbf.translate(inCriteria);
@@ -68,7 +68,7 @@ public class TestInCriteriaImpl {
     }
 
     @Test public void testExpansion1() throws Exception {
-    	SetCriteria inCriteria = helpExample(false);
+        SetCriteria inCriteria = helpExample(false);
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());
         lbf.setMaxInPredicateSize(2);
         AndOr or = (AndOr) lbf.translate(inCriteria);

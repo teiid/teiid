@@ -41,7 +41,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
     private static final String EDM_GEOMETRY = "Edm.Geometry"; //$NON-NLS-1$
     private static final String EDM_GEOGRAPHY = "Edm.Geography"; //$NON-NLS-1$
 
-	public enum ODataType {
+    public enum ODataType {
         COMPLEX,
         NAVIGATION,
         ENTITY,
@@ -691,26 +691,26 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (!TypeFacility.RUNTIME_NAMES.GEOMETRY.equals(c.getDatatype().getName())) {
             return;
         }
-    	if (type.startsWith(EDM_GEOMETRY)) {
-    	    if (type.length() > EDM_GEOMETRY.length()) {
-    	        c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOMETRY.length()).toUpperCase());
-    	    } else {
-    	        c.setProperty(BaseColumn.SPATIAL_TYPE, "GEOMETRY"); //$NON-NLS-1$
-    	    }
-    	} else if (type.startsWith(EDM_GEOGRAPHY)) {
-    	    c.setProperty(BaseColumn.SPATIAL_SRID, "4326"); //$NON-NLS-1$
-    	    if (type.length() > EDM_GEOGRAPHY.length()) {
+        if (type.startsWith(EDM_GEOMETRY)) {
+            if (type.length() > EDM_GEOMETRY.length()) {
+                c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOMETRY.length()).toUpperCase());
+            } else {
+                c.setProperty(BaseColumn.SPATIAL_TYPE, "GEOMETRY"); //$NON-NLS-1$
+            }
+        } else if (type.startsWith(EDM_GEOGRAPHY)) {
+            c.setProperty(BaseColumn.SPATIAL_SRID, "4326"); //$NON-NLS-1$
+            if (type.length() > EDM_GEOGRAPHY.length()) {
                 c.setProperty(BaseColumn.SPATIAL_TYPE, type.substring(EDM_GEOGRAPHY.length()).toUpperCase());
             } else {
                 c.setProperty(BaseColumn.SPATIAL_TYPE, "GEOMETRY"); //$NON-NLS-1$
             }
-    	}
-    	if (srid != null && srid.isNotDefault()) {
-    	    String value = srid.toString();
+        }
+        if (srid != null && srid.isNotDefault()) {
+            String value = srid.toString();
 
-    	    if (!value.equalsIgnoreCase("VARIABLE")) { //$NON-NLS-1$
+            if (!value.equalsIgnoreCase("VARIABLE")) { //$NON-NLS-1$
                 c.setProperty(BaseColumn.SPATIAL_SRID, value);
-    	    }
+            }
         }
     }
 

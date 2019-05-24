@@ -31,38 +31,38 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestFileConnection {
 
-	@Test public void testFileMapping() throws Exception {
-		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
-		fmcf.setParentDirectory("foo");
-		fmcf.setFileMapping("x=y,z=a");
-		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
-		FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
-		File f = fc.getFile("x");
-		assertEquals("foo" + File.separator + "y", f.getPath());
-		f = fc.getFile("n");
-		assertEquals("foo" + File.separator + "n", f.getPath());
-	}
+    @Test public void testFileMapping() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+        fmcf.setParentDirectory("foo");
+        fmcf.setFileMapping("x=y,z=a");
+        BasicConnectionFactory bcf = fmcf.createConnectionFactory();
+        FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
+        File f = fc.getFile("x");
+        assertEquals("foo" + File.separator + "y", f.getPath());
+        f = fc.getFile("n");
+        assertEquals("foo" + File.separator + "n", f.getPath());
+    }
 
-	@Test(expected=TranslatorException.class) public void testParentPaths() throws Exception {
-		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
-		fmcf.setParentDirectory("foo");
-		fmcf.setAllowParentPaths(false);
-		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
-		FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
-		fc.getFile(".." + File.separator + "x");
-	}
+    @Test(expected=TranslatorException.class) public void testParentPaths() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+        fmcf.setParentDirectory("foo");
+        fmcf.setAllowParentPaths(false);
+        BasicConnectionFactory bcf = fmcf.createConnectionFactory();
+        FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
+        fc.getFile(".." + File.separator + "x");
+    }
 
-	@Test public void testParentPaths1() throws Exception {
-		FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
-		fmcf.setParentDirectory("foo");
-		fmcf.setAllowParentPaths(true);
-		BasicConnectionFactory bcf = fmcf.createConnectionFactory();
-		FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
-		fc.getFile(".." + File.separator + "x");
-	}
+    @Test public void testParentPaths1() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+        fmcf.setParentDirectory("foo");
+        fmcf.setAllowParentPaths(true);
+        BasicConnectionFactory bcf = fmcf.createConnectionFactory();
+        FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
+        fc.getFile(".." + File.separator + "x");
+    }
 
-	@Test public void testFileGlob() throws Exception {
-	    FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
+    @Test public void testFileGlob() throws Exception {
+        FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
         fmcf.setParentDirectory(UnitTestUtil.getTestDataPath());
         BasicConnectionFactory bcf = fmcf.createConnectionFactory();
         FileConnectionImpl fc = (FileConnectionImpl)bcf.getConnection();
@@ -74,7 +74,7 @@ public class TestFileConnection {
         assertEquals(0, files.length);
     }
 
-	@Test public void testFileDoesntExist() throws Exception {
+    @Test public void testFileDoesntExist() throws Exception {
         FileManagedConnectionFactory fmcf = new FileManagedConnectionFactory();
         fmcf.setParentDirectory(UnitTestUtil.getTestDataPath()+"xyz");
         BasicConnectionFactory bcf = fmcf.createConnectionFactory();

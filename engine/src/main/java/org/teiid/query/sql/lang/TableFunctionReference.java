@@ -30,83 +30,83 @@ import org.teiid.query.sql.util.SymbolMap;
 
 public abstract class TableFunctionReference extends FromClause {
 
-	public static class ProjectedColumn {
-		private String name;
-		private String type;
-		private ElementSymbol symbol;
+    public static class ProjectedColumn {
+        private String name;
+        private String type;
+        private ElementSymbol symbol;
 
-		public ProjectedColumn(String name, String type) {
-			this.name = name;
-			this.type = type;
-			this.symbol = new ElementSymbol(name);
-			symbol.setType(DataTypeManager.getDataTypeClass(type));
-		}
+        public ProjectedColumn(String name, String type) {
+            this.name = name;
+            this.type = type;
+            this.symbol = new ElementSymbol(name);
+            symbol.setType(DataTypeManager.getDataTypeClass(type));
+        }
 
-		protected ProjectedColumn() {
+        protected ProjectedColumn() {
 
-		}
+        }
 
-		public ElementSymbol getSymbol() {
-			return symbol;
-		}
+        public ElementSymbol getSymbol() {
+            return symbol;
+        }
 
-		public String getName() {
-			return name;
-		}
+        public String getName() {
+            return name;
+        }
 
-		public String getType() {
-			return type;
-		}
+        public String getType() {
+            return type;
+        }
 
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-			if (!(obj instanceof ProjectedColumn)) {
-				return false;
-			}
-			ProjectedColumn other = (ProjectedColumn)obj;
-			return this.symbol.equals(other.symbol)
-				&& this.name.equals(other.name)
-				&& this.type.equals(other.type);
-		}
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof ProjectedColumn)) {
+                return false;
+            }
+            ProjectedColumn other = (ProjectedColumn)obj;
+            return this.symbol.equals(other.symbol)
+                && this.name.equals(other.name)
+                && this.type.equals(other.type);
+        }
 
-		public int hashCode() {
-			return symbol.hashCode();
-		}
+        public int hashCode() {
+            return symbol.hashCode();
+        }
 
-		public ProjectedColumn copyTo(ProjectedColumn copy) {
-			copy.name = this.name;
-			copy.type = this.type;
-			copy.symbol = this.symbol.clone();
-			return copy;
-		}
+        public ProjectedColumn copyTo(ProjectedColumn copy) {
+            copy.name = this.name;
+            copy.type = this.type;
+            copy.symbol = this.symbol.clone();
+            return copy;
+        }
 
-	}
+    }
 
     private GroupSymbol symbol;
     private SymbolMap correlatedReferences;
 
     public SymbolMap getCorrelatedReferences() {
-		return correlatedReferences;
-	}
+        return correlatedReferences;
+    }
 
     public void setCorrelatedReferences(SymbolMap correlatedReferences) {
-		this.correlatedReferences = correlatedReferences;
-	}
+        this.correlatedReferences = correlatedReferences;
+    }
 
-	public void copy(TableFunctionReference copy) {
-		copy.symbol = this.symbol.clone();
-		if (correlatedReferences != null) {
-			copy.correlatedReferences = correlatedReferences.clone();
-		}
-	}
+    public void copy(TableFunctionReference copy) {
+        copy.symbol = this.symbol.clone();
+        if (correlatedReferences != null) {
+            copy.correlatedReferences = correlatedReferences.clone();
+        }
+    }
 
-	@Override
-	public void collectGroups(Collection<GroupSymbol> groups) {
-		groups.add(getGroupSymbol());
-	}
+    @Override
+    public void collectGroups(Collection<GroupSymbol> groups) {
+        groups.add(getGroupSymbol());
+    }
 
     /**
      * Get name of this clause.
@@ -139,31 +139,31 @@ public abstract class TableFunctionReference extends FromClause {
         this.symbol = new GroupSymbol(name);
     }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof TableFunctionReference)) {
-			return false;
-		}
-		TableFunctionReference other = (TableFunctionReference)obj;
-		return EquivalenceUtil.areEqual(symbol, other.symbol);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof TableFunctionReference)) {
+            return false;
+        }
+        TableFunctionReference other = (TableFunctionReference)obj;
+        return EquivalenceUtil.areEqual(symbol, other.symbol);
+    }
 
-	@Override
-	public int hashCode() {
-		return this.symbol.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return this.symbol.hashCode();
+    }
 
-	public abstract List<? extends ProjectedColumn> getColumns();
+    public abstract List<? extends ProjectedColumn> getColumns();
 
-	public List<ElementSymbol> getProjectedSymbols() {
-		ArrayList<ElementSymbol> symbols = new ArrayList<ElementSymbol>(getColumns().size());
-		for (ProjectedColumn col : getColumns()) {
-			symbols.add(col.getSymbol());
-		}
-		return symbols;
-	}
+    public List<ElementSymbol> getProjectedSymbols() {
+        ArrayList<ElementSymbol> symbols = new ArrayList<ElementSymbol>(getColumns().size());
+        for (ProjectedColumn col : getColumns()) {
+            symbols.add(col.getSymbol());
+        }
+        return symbols;
+    }
 
 }

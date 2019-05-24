@@ -46,9 +46,9 @@ public class StaticContentServlet extends HttpServlet {
                     && !pathInfo.substring(1).contains("/")) { //$NON-NLS-1$
                 InputStream contents = getClass().getResourceAsStream(pathInfo);
                 if (contents != null) {
-	                writeContent(response, contents);
-	                response.flushBuffer();
-	                return;
+                    writeContent(response, contents);
+                    response.flushBuffer();
+                    return;
                 }
             }
             throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16055, pathInfo));

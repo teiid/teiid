@@ -31,9 +31,9 @@ import org.teiid.core.BundleUtil;
  */
 public class LogonException extends TeiidSecurityException {
 
-	private static final long serialVersionUID = -4407245748107257061L;
+    private static final long serialVersionUID = -4407245748107257061L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public LogonException(  ) {

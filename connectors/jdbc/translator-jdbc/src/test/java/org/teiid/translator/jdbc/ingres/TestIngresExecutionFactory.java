@@ -35,18 +35,18 @@ public class TestIngresExecutionFactory {
     }
 
     @Ignore
-	@Test public void testLocate() throws Exception {
-		String input = "SELECT INTKEY FROM BQT1.SmallA WHERE LOCATE(1, INTKEY) = 1 ORDER BY INTKEY"; //$NON-NLS-1$
+    @Test public void testLocate() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SmallA WHERE LOCATE(1, INTKEY) = 1 ORDER BY INTKEY"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE locate(cast(SmallA.IntKey AS varchar(4000)), '1') = 1 ORDER BY SmallA.IntKey";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}
+    }
 
     @Test public void testLimit() throws Exception {
-		String input = "SELECT INTKEY FROM BQT1.SmallA LIMIT 1"; //$NON-NLS-1$
+        String input = "SELECT INTKEY FROM BQT1.SmallA LIMIT 1"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA FETCH FIRST 1 ROWS ONLY";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
-	}
+    }
 
 }

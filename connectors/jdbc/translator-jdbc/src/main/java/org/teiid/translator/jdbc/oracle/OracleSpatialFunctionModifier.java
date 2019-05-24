@@ -35,7 +35,7 @@ public class OracleSpatialFunctionModifier extends FunctionModifier {
      */
     public List<?> translate(Function function) {
         List<Expression> params = function.getParameters();
-    	List<Object> objs = new ArrayList<Object>();
+        List<Object> objs = new ArrayList<Object>();
         objs.add(function.getName());
         objs.add("("); //$NON-NLS-1$
         addParamWithConversion(objs, params.get(0));
@@ -50,14 +50,14 @@ public class OracleSpatialFunctionModifier extends FunctionModifier {
         return objs;
     }
 
-	protected void addParamWithConversion(List<Object> objs,
+    protected void addParamWithConversion(List<Object> objs,
                                           Expression expression) {
-		if ((expression instanceof Literal)
-				&& (((Literal) expression).getValue() instanceof String)) {
-			objs.add(((Literal) expression).getValue());
-		} else {
-			objs.add(expression);
-		}
+        if ((expression instanceof Literal)
+                && (((Literal) expression).getValue() instanceof String)) {
+            objs.add(((Literal) expression).getValue());
+        } else {
+            objs.add(expression);
+        }
     }
 
 }

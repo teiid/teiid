@@ -33,7 +33,7 @@ import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TeiidConstants {
-	private static final ModelVersion BUFFER_SERVICE_VERSION = ModelVersion.create(1, 2);
+    private static final ModelVersion BUFFER_SERVICE_VERSION = ModelVersion.create(1, 2);
 
     // Non persistent attributes
     public static SimpleAttributeDefinition ACTIVE_SESSION_COUNT = new SimpleAttributeDefinitionBuilder("active-session-count", ModelType.INT)
@@ -49,7 +49,7 @@ public class TeiidConstants {
         .build();
 
     // VM wide elements
-	public static SimpleAttributeDefinition ASYNC_THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.ASYNC_THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition ASYNC_THREAD_POOL_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.ASYNC_THREAD_POOL_ELEMENT.getModelName(), ModelType.STRING)
         .setXmlName(Element.ASYNC_THREAD_POOL_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -68,28 +68,28 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(false))
         .build();
 
-	public static SimpleAttributeDefinition MAX_THREADS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_THREADS_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition MAX_THREADS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_THREADS_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.MAX_THREADS_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(64))
         .build();
 
-	public static SimpleAttributeDefinition MAX_ACTIVE_PLANS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_ACTIVE_PLANS_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition MAX_ACTIVE_PLANS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_ACTIVE_PLANS_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.MAX_ACTIVE_PLANS_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(20))
         .build();
 
-	public static SimpleAttributeDefinition USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(0))
         .build();
 
-	public static SimpleAttributeDefinition TIME_SLICE_IN_MILLI_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.TIME_SLICE_IN_MILLI_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition TIME_SLICE_IN_MILLI_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.TIME_SLICE_IN_MILLI_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.TIME_SLICE_IN_MILLI_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -97,14 +97,14 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.MILLISECONDS)
         .build();
 
-	public static SimpleAttributeDefinition MAX_ROWS_FETCH_SIZE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_ROWS_FETCH_SIZE_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition MAX_ROWS_FETCH_SIZE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_ROWS_FETCH_SIZE_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.MAX_ROWS_FETCH_SIZE_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(20480))
         .build();
 
-	public static SimpleAttributeDefinition LOB_CHUNK_SIZE_IN_KB_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition LOB_CHUNK_SIZE_IN_KB_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.LOB_CHUNK_SIZE_IN_KB_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -112,7 +112,7 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.KILOBYTES)
         .build();
 
-	public static SimpleAttributeDefinition QUERY_THRESHOLD_IN_SECS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.QUERY_THRESHOLD_IN_SECS_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition QUERY_THRESHOLD_IN_SECS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.QUERY_THRESHOLD_IN_SECS_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.QUERY_THRESHOLD_IN_SECS_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -120,14 +120,14 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.SECONDS)
         .build();
 
-	public static SimpleAttributeDefinition MAX_SOURCE_ROWS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_SOURCE_ROWS_ELEMENT.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition MAX_SOURCE_ROWS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.MAX_SOURCE_ROWS_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.MAX_SOURCE_ROWS_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(-1))
         .build();
 
-	public static SimpleAttributeDefinition EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.getModelName(), ModelType.BOOLEAN)
+    public static SimpleAttributeDefinition EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.EXCEPTION_ON_MAX_SOURCE_ROWS_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -162,10 +162,10 @@ public class TeiidConstants {
         .build();
 
     public static SimpleAttributeDefinition DATA_ROLES_REQUIRED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.DATA_ROLES_REQUIRED_ELEMENT.getModelName(), ModelType.BOOLEAN)
-    	.setXmlName(Element.DATA_ROLES_REQUIRED_ELEMENT.getXMLName())
-    	.setRequired(false)
-    	.setAllowExpression(false)
-    	.build();
+        .setXmlName(Element.DATA_ROLES_REQUIRED_ELEMENT.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .build();
 
     public static SimpleAttributeDefinition AUTHORIZATION_VALIDATOR_MODULE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.getModelName(), ModelType.STRING)
         .setXmlName(Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.getXMLName())
@@ -174,10 +174,10 @@ public class TeiidConstants {
         .build();
 
     public static SimpleAttributeDefinition PREPARSER_MODULE_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PREPARSER_MODULE_ELEMENT.getModelName(), ModelType.STRING)
-    	.setXmlName(Element.PREPARSER_MODULE_ELEMENT.getXMLName())
-    	.setRequired(false)
-    	.setAllowExpression(false)
-    	.build();
+        .setXmlName(Element.PREPARSER_MODULE_ELEMENT.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .build();
 
     /*
      * Deprecated buffer-service attributes
@@ -299,7 +299,7 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(256))
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.BUFFER_MANAGER_MAX_PROCESSING_KB_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -307,7 +307,7 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.KILOBYTES)
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.BUFFER_MANAGER_MAX_RESERVED_MB_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -315,7 +315,7 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.MEGABYTES)
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.getModelName(), ModelType.LONG)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.getModelName(), ModelType.LONG)
         .setXmlName(Element.BUFFER_MANAGER_MAX_FILE_SIZE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -323,21 +323,21 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.MEGABYTES)
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.LONG)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.LONG)
         .setXmlName(Element.BUFFER_MANAGER_MAX_BUFFER_SPACE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setMeasurementUnit(MeasurementUnit.MEGABYTES)
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.BUFFER_MANAGER_MAX_OPEN_FILES_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(64))
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.BUFFER_MANAGER_MEMORY_BUFFER_SPACE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -345,7 +345,7 @@ public class TeiidConstants {
         .setMeasurementUnit(MeasurementUnit.MEGABYTES)
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.BUFFER_MANAGER_MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -367,45 +367,45 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(true))
         .build();
 
-	public static SimpleAttributeDefinition BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    public static SimpleAttributeDefinition BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.BUFFER_MANAGER_ENCRYPT_FILES_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(false))
         .build();
 
-	// prepared-plan-cache-config
-	// PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache",true, false, MeasurementUnit.NONE);
-	public static SimpleAttributeDefinition PPC_ENABLE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_ENABLE_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    // prepared-plan-cache-config
+    // PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache",true, false, MeasurementUnit.NONE);
+    public static SimpleAttributeDefinition PPC_ENABLE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_ENABLE_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.PPC_ENABLE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(true))
         .build();
 
-	public static SimpleAttributeDefinition PPC_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition PPC_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.PPC_NAME_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode("preparedplan"))
         .build();
 
-	public static SimpleAttributeDefinition PPC_CONTAINER_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_CONTAINER_NAME_ELEMENT.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition PPC_CONTAINER_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.PPC_CONTAINER_NAME_ELEMENT.getModelName(), ModelType.STRING)
         .setXmlName(Element.PPC_CONTAINER_NAME_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .build();
 
-	// Object Replicator
-	// DISTRIBUTED_CACHE("distributed-cache",true, false, MeasurementUnit.NONE);
-	public static SimpleAttributeDefinition DC_STACK_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.DC_STACK_ATTRIBUTE.getModelName(), ModelType.STRING)
+    // Object Replicator
+    // DISTRIBUTED_CACHE("distributed-cache",true, false, MeasurementUnit.NONE);
+    public static SimpleAttributeDefinition DC_STACK_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.DC_STACK_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.DC_STACK_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .build();
 
-	// Result set cache
-	public static SimpleAttributeDefinition RSC_ENABLE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.RSC_ENABLE_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+    // Result set cache
+    public static SimpleAttributeDefinition RSC_ENABLE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.RSC_ENABLE_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
         .setXmlName(Element.RSC_ENABLE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -419,7 +419,7 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode("resultset"))
         .build();
 
-	public static SimpleAttributeDefinition RSC_CONTAINER_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.RSC_CONTAINER_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition RSC_CONTAINER_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.RSC_CONTAINER_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.RSC_CONTAINER_NAME_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -432,8 +432,8 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(DQPConfiguration.DEFAULT_MAX_STALENESS_SECONDS))
         .build();
 
-	//transport
-	//TRANSPORT_ELEMENT("transport",true, false, MeasurementUnit.NONE);
+    //transport
+    //TRANSPORT_ELEMENT("transport",true, false, MeasurementUnit.NONE);
     public static SimpleAttributeDefinition TRANSPORT_PROTOCOL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.getXMLName())
         .setRequired(false)
@@ -455,29 +455,29 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_BINDING_REF)*/
         .build();
 
-	public static SimpleAttributeDefinition TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.getModelName(), ModelType.INT)
        .setXmlName(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.getXMLName())
        .setRequired(false)
        .setAllowExpression(false)
        .setDefaultValue(new ModelNode(0))
        .build();
 
-	public static SimpleAttributeDefinition TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
        .setXmlName(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.getXMLName())
        .setRequired(false)
        .setAllowExpression(false)
        .setDefaultValue(new ModelNode(0))
        .build();
 
-	public static SimpleAttributeDefinition TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
+    public static SimpleAttributeDefinition TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.getModelName(), ModelType.INT)
         .setXmlName(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(0))
         .build();
 
-	//AUTHENTICATION_ELEMENT("authentication",false, false, MeasurementUnit.NONE);
-	public static SimpleAttributeDefinition AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.getModelName(), ModelType.STRING)
+    //AUTHENTICATION_ELEMENT("authentication",false, false, MeasurementUnit.NONE);
+    public static SimpleAttributeDefinition AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
         .setRequired(false)
@@ -498,7 +498,7 @@ public class TeiidConstants {
         .setDefaultValue(new ModelNode(0))
         .build();
 
-	public static SimpleAttributeDefinition AUTHENTICATION_TYPE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TYPE_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition AUTHENTICATION_TYPE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TYPE_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.AUTHENTICATION_TYPE_ATTRIBUTE.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
@@ -506,22 +506,22 @@ public class TeiidConstants {
         .setAllowedValues(new ModelNode(AuthenticationType.USERPASSWORD.name()), new ModelNode(AuthenticationType.GSS.name()))
         .build();
 
-	public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
-    	.setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getXMLName())
-    	.setRequired(false)
-    	.setAllowExpression(false)
-    	.setDefaultValue(new ModelNode(true))
-    	.build();
+    public static SimpleAttributeDefinition AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.AUTHENTICATION_TRUST_ALL_LOCAL_ATTRIBUTE.getXMLName())
+        .setRequired(false)
+        .setAllowExpression(false)
+        .setDefaultValue(new ModelNode(true))
+        .build();
 
-	//PG_ELEMENT("pg"), //$NON-NLS-1$
-	public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)
+    //PG_ELEMENT("pg"), //$NON-NLS-1$
+    public static SimpleAttributeDefinition PG_MAX_LOB_SIZE_ALLOWED_ELEMENT = new SimpleAttributeDefinitionBuilder(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getModelName(), ModelType.INT)
         .setXmlName(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.getXMLName())
         .setRequired(false)
         .setAllowExpression(false)
         .setDefaultValue(new ModelNode(5242880))
         .build();
 
-	//SSL_ELEMENT("ssl"),
+    //SSL_ELEMENT("ssl"),
     public static SimpleAttributeDefinition SSL_MODE_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_MODE_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.SSL_MODE_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
@@ -540,7 +540,7 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
-	public static SimpleAttributeDefinition SSL_SSL_PROTOCOL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition SSL_SSL_PROTOCOL_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
         .setRequired(false)
@@ -562,7 +562,7 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
-	//SSL_KETSTORE_ELEMENT("keystore",false, false, MeasurementUnit.NONE);
+    //SSL_KETSTORE_ELEMENT("keystore",false, false, MeasurementUnit.NONE);
     public static SimpleAttributeDefinition SSL_KETSTORE_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_KETSTORE_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.SSL_KETSTORE_NAME_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)
@@ -570,7 +570,7 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
-	public static SimpleAttributeDefinition SSL_KETSTORE_ALIAS_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_KETSTORE_ALIAS_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition SSL_KETSTORE_ALIAS_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_KETSTORE_ALIAS_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.SSL_KETSTORE_ALIAS_ATTRIBUTE.getXMLName())
         .setAllowExpression(true)
         .setRequired(false)
@@ -602,7 +602,7 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
-	//SSL_TRUSTSTORE_ELEMENT("truststore",false, false, MeasurementUnit.NONE);
+    //SSL_TRUSTSTORE_ELEMENT("truststore",false, false, MeasurementUnit.NONE);
     public static SimpleAttributeDefinition SSL_TRUSTSTORE_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.getXMLName())
         .setAllowExpression(true)
@@ -610,7 +610,7 @@ public class TeiidConstants {
         /*.addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
         .build();
 
-	public static SimpleAttributeDefinition SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.getModelName(), ModelType.STRING)
+    public static SimpleAttributeDefinition SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.getModelName(), ModelType.STRING)
          .setXmlName(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.getXMLName())
          .setAllowExpression(true)
          .setRequired(false)
@@ -619,15 +619,15 @@ public class TeiidConstants {
          .addAccessConstraint(SensitiveTargetAccessConstraintDefinition.SOCKET_CONFIG)*/
          .build();
 
-	public static SimpleAttributeDefinition SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
-	    .setXmlName(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getXMLName())
-	    .setAllowExpression(false)
-	    .setRequired(false)
-	    .setDefaultValue(new ModelNode(false))
-	    .build();
+    public static SimpleAttributeDefinition SSL_TRUSTSTORE_CHECK_EXPIRED_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getModelName(), ModelType.BOOLEAN)
+        .setXmlName(Element.SSL_TRUSTSTORE_CHECK_EXIRIED_ATTRIBUTE.getXMLName())
+        .setAllowExpression(false)
+        .setRequired(false)
+        .setDefaultValue(new ModelNode(false))
+        .build();
 
-	// Translator
-	// TRANSLATOR_ELEMENT("translator"),
+    // Translator
+    // TRANSLATOR_ELEMENT("translator"),
     public static SimpleAttributeDefinition TRANSLATOR_NAME_ATTRIBUTE = new SimpleAttributeDefinitionBuilder(Element.TRANSLATOR_NAME_ATTRIBUTE.getModelName(), ModelType.STRING)
         .setXmlName(Element.TRANSLATOR_NAME_ATTRIBUTE.getXMLName())
         .setAllowExpression(false)

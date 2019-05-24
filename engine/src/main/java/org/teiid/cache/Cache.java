@@ -31,7 +31,7 @@ public interface Cache<K, V>  {
     * @param key key under which value is to be retrieved.
     * @return returns data held under specified key in cache
     */
-	V get(K key);
+    V get(K key);
 
    /**
     * Associates the specified value with the specified key this cache.
@@ -41,10 +41,10 @@ public interface Cache<K, V>  {
     * @param value value to be associated with the specified key.
     * @param ttl the time for this entry to live
     * @return previous value associated with specified key, or <code>null</code> if there was no mapping for key.
-    *    	A <code>null</code> return can also indicate that the key previously associated <code>null</code> with the specified key,
-    *    	if the implementation supports null values.
+    *        A <code>null</code> return can also indicate that the key previously associated <code>null</code> with the specified key,
+    *        if the implementation supports null values.
     */
-	V put(K key, V value, Long ttl);
+    V put(K key, V value, Long ttl);
 
    /**
     * Removes the value for this key from a Cache.
@@ -54,35 +54,35 @@ public interface Cache<K, V>  {
     * @param key key whose mapping is to be removed
     * @return previous value associated with specified Node's key
     */
-	V remove(K key);
+    V remove(K key);
 
-	/**
-	 * Size of the cache
-	 * @return number of items in this cache
-	 */
-	int size();
+    /**
+     * Size of the cache
+     * @return number of items in this cache
+     */
+    int size();
 
-	/**
-	 * Removes all the keys and their values from the Cache
-	 */
-	void clear();
+    /**
+     * Removes all the keys and their values from the Cache
+     */
+    void clear();
 
-	/**
-	 * Name of the cache node
-	 * @return
-	 */
-	String getName();
+    /**
+     * Name of the cache node
+     * @return
+     */
+    String getName();
 
-	/**
-	 * Return all the keys
-	 * @return
-	 */
-	Set<K> keySet();
+    /**
+     * Return all the keys
+     * @return
+     */
+    Set<K> keySet();
 
-	/**
-	 * If the cache is transactional
-	 * @return
-	 */
-	boolean isTransactional();
+    /**
+     * If the cache is transactional
+     * @return
+     */
+    boolean isTransactional();
 
 }

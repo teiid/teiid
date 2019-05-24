@@ -116,22 +116,22 @@ public class BaseQueryExecution {
             }
 
             Object value;
-			try {
-			    if (isMapResponse) {
-			        if (colName.equals(SwaggerMetadataProcessor.KEY_NAME)) {
-			            value = values.keySet().iterator().next();
-			        } else if (colName.equals(SwaggerMetadataProcessor.KEY_VALUE)) {
-			            value = values.values().iterator().next();
-			        } else {
-			            value = values.get(colName);
-			        }
-			    } else {
-			        value = values.get(colName);
-			    }
-			    value = SwaggerTypeManager.convertTeiidRuntimeType(value, expectedType[i]);
-			} catch (TeiidException e) {
-				throw new TranslatorException(e);
-			}
+            try {
+                if (isMapResponse) {
+                    if (colName.equals(SwaggerMetadataProcessor.KEY_NAME)) {
+                        value = values.keySet().iterator().next();
+                    } else if (colName.equals(SwaggerMetadataProcessor.KEY_VALUE)) {
+                        value = values.values().iterator().next();
+                    } else {
+                        value = values.get(colName);
+                    }
+                } else {
+                    value = values.get(colName);
+                }
+                value = SwaggerTypeManager.convertTeiidRuntimeType(value, expectedType[i]);
+            } catch (TeiidException e) {
+                throw new TranslatorException(e);
+            }
             results.add(value);
         }
         return results;

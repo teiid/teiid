@@ -320,12 +320,12 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
         for (int i = 0; i < columnDataTypes.length; i++) {
             Property prop = entity.getProperty(columnNames[i]);
             Object value;
-			try {
-				value = ODataTypeManager.convertToTeiidRuntimeType(columnDataTypes[i], prop.getValue(), odataTypes[i],
-				        table.getPrimaryKey().getColumns().get(i).getProperty(BaseColumn.SPATIAL_SRID, false));
-			} catch (TeiidException e) {
-				throw new TranslatorException(e);
-			}
+            try {
+                value = ODataTypeManager.convertToTeiidRuntimeType(columnDataTypes[i], prop.getValue(), odataTypes[i],
+                        table.getPrimaryKey().getColumns().get(i).getProperty(BaseColumn.SPATIAL_SRID, false));
+            } catch (TeiidException e) {
+                throw new TranslatorException(e);
+            }
             vals.add(value);
         }
         generatedKeys.addKey(vals);

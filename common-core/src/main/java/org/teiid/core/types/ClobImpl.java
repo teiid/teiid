@@ -44,43 +44,43 @@ import org.teiid.core.util.SqlUtil;
  */
 public class ClobImpl extends BaseLob implements Clob {
 
-	private static final class StringInputStreamFactory extends
-			InputStreamFactory {
-		String str;
+    private static final class StringInputStreamFactory extends
+            InputStreamFactory {
+        String str;
 
-		private StringInputStreamFactory(String str) {
-			this.str = str;
-		}
+        private StringInputStreamFactory(String str) {
+            this.str = str;
+        }
 
-		@Override
-		public InputStream getInputStream() throws IOException {
-			return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
-		}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
+        }
 
-		@Override
-		public Reader getCharacterStream() throws IOException {
-			return new StringReader(str);
-		}
+        @Override
+        public Reader getCharacterStream() throws IOException {
+            return new StringReader(str);
+        }
 
-		@Override
-		public StorageMode getStorageMode() {
-			return StorageMode.MEMORY;
-		}
-	}
+        @Override
+        public StorageMode getStorageMode() {
+            return StorageMode.MEMORY;
+        }
+    }
 
-	final static class ClobStreamProvider implements
-			LobSearchUtil.StreamProvider {
-		private final Clob searchstr;
+    final static class ClobStreamProvider implements
+            LobSearchUtil.StreamProvider {
+        private final Clob searchstr;
 
-		private ClobStreamProvider(Clob searchstr) {
-			this.searchstr = searchstr;
-		}
+        private ClobStreamProvider(Clob searchstr) {
+            this.searchstr = searchstr;
+        }
 
-		public InputStream getBinaryStream() throws SQLException {
-		    final Reader reader = searchstr.getCharacterStream();
+        public InputStream getBinaryStream() throws SQLException {
+            final Reader reader = searchstr.getCharacterStream();
 
-			return new InputStream() {
-			    int currentChar = -1;
+            return new InputStream() {
+                int currentChar = -1;
                 @Override
                 public int read() throws IOException {
                     if (currentChar == -1) {
@@ -96,36 +96,36 @@ public class ClobImpl extends BaseLob implements Clob {
                     return result;
                 }
             };
-		}
-	}
+        }
+    }
 
-	private long len = -1;
+    private long len = -1;
 
-	public ClobImpl() {
+    public ClobImpl() {
 
-	}
+    }
 
-	/**
-	 * Creates a new ClobImpl.  Note that the length is not taken from the {@link InputStreamFactory} since
-	 * it refers to bytes and not chars.
-	 * @param streamFactory
-	 * @param length
-	 */
+    /**
+     * Creates a new ClobImpl.  Note that the length is not taken from the {@link InputStreamFactory} since
+     * it refers to bytes and not chars.
+     * @param streamFactory
+     * @param length
+     */
     public ClobImpl(InputStreamFactory streamFactory, long length) {
-		super(streamFactory);
-		this.len = length;
-	}
+        super(streamFactory);
+        this.len = length;
+    }
 
     public ClobImpl(final char[] chars) {
-    	this(new StringInputStreamFactory(new String(chars)), chars.length);
+        this(new StringInputStreamFactory(new String(chars)), chars.length);
     }
 
     public ClobImpl(String str) {
-    	this(new StringInputStreamFactory(str), str.length());
+        this(new StringInputStreamFactory(str), str.length());
     }
 
     public InputStream getAsciiStream() throws SQLException {
-    	return new ReaderInputStream(getCharacterStream(), Charset.forName("US-ASCII")); //$NON-NLS-1$
+        return new ReaderInputStream(getCharacterStream(), Charset.forName("US-ASCII")); //$NON-NLS-1$
     }
 
     public String getSubString(long pos, int length) throws SQLException {
@@ -144,18 +144,18 @@ public class ClobImpl extends BaseLob implements Clob {
         }
         Reader in = getCharacterStream();
         try {
-	        try {
-	        	long skipped = 0;
-	        	while (pos > 0) {
-	        		skipped = in.skip(pos);
-	        		pos -= skipped;
-	        	}
-	        	return new String(ObjectConverterUtil.convertToCharArray(in, length));
-	        } finally {
-	        	in.close();
-	        }
+            try {
+                long skipped = 0;
+                while (pos > 0) {
+                    skipped = in.skip(pos);
+                    pos -= skipped;
+                }
+                return new String(ObjectConverterUtil.convertToCharArray(in, length));
+            } finally {
+                in.close();
+            }
         } catch (IOException e) {
-        	throw new SQLException(e);
+            throw new SQLException(e);
         }
     }
 
@@ -165,23 +165,23 @@ public class ClobImpl extends BaseLob implements Clob {
      * @return length of the <code>CLOB</code> in characters
      */
     public long length() throws SQLException {
-    	if (len == -1) {
-    		long length = 0;
-    		Reader r = new BufferedReader(getCharacterStream());
-    		try {
-				while (r.read() != -1) {
-					length++;
-				}
-			} catch (IOException e) {
-				throw new SQLException(e);
-			} finally {
-				try {
-					r.close();
-				} catch (IOException e) {
-				}
-			}
-    		this.len = length;
-    	}
+        if (len == -1) {
+            long length = 0;
+            Reader r = new BufferedReader(getCharacterStream());
+            try {
+                while (r.read() != -1) {
+                    length++;
+                }
+            } catch (IOException e) {
+                throw new SQLException(e);
+            } finally {
+                try {
+                    r.close();
+                } catch (IOException e) {
+                }
+            }
+            this.len = length;
+        }
         return len;
     }
 
@@ -218,39 +218,39 @@ public class ClobImpl extends BaseLob implements Clob {
     * <code>CLOB</code> value
     */
     public long position(String searchstr, long start) throws SQLException {
-    	if (searchstr == null) {
+        if (searchstr == null) {
             return -1;
         }
-    	return position(new ClobImpl(searchstr), start);
+        return position(new ClobImpl(searchstr), start);
     }
 
-	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public OutputStream setAsciiStream(long arg0) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public OutputStream setAsciiStream(long arg0) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public Writer setCharacterStream(long arg0) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public Writer setCharacterStream(long arg0) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public int setString(long arg0, String arg1) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public int setString(long arg0, String arg1) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public int setString(long arg0, String arg1, int arg2, int arg3)
-			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public int setString(long arg0, String arg1, int arg2, int arg3)
+            throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public void truncate(long arg0) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-	}
+    public void truncate(long arg0) throws SQLException {
+        throw SqlUtil.createFeatureNotSupportedException();
+    }
 
-	public static Clob createClob(char[] chars) {
-		return new ClobImpl(chars);
-	}
+    public static Clob createClob(char[] chars) {
+        return new ClobImpl(chars);
+    }
 
 }

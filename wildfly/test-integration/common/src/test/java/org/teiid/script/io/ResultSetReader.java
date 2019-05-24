@@ -101,7 +101,7 @@ public class ResultSetReader extends StringLineReader {
 
             // if you get here then we are ready to read the results.
             if (source.next()) {
-            	rowCount++;
+                rowCount++;
                 StringBuffer sb = new StringBuffer();
                 // Walk through column values in this row
                 for (int col = 1; col <= columnCount; col++) {
@@ -113,8 +113,8 @@ public class ResultSetReader extends StringLineReader {
                         sb.append(anObj != null ? "BLOB" : "null"); //$NON-NLS-1$ //$NON-NLS-2$
                     }
                     else if (columnTypes[col-1] == Types.SQLXML) {
-                    	SQLXML xml = (SQLXML)anObj;
-                    	sb.append(anObj != null ? prettyPrint(xml) : "null"); //$NON-NLS-1$
+                        SQLXML xml = (SQLXML)anObj;
+                        sb.append(anObj != null ? prettyPrint(xml) : "null"); //$NON-NLS-1$
                     }
                     else {
                         sb.append(anObj != null ? anObj : "null"); //$NON-NLS-1$
@@ -133,8 +133,8 @@ public class ResultSetReader extends StringLineReader {
     }
 
     public int getRowCount() {
-		return rowCount;
-	}
+        return rowCount;
+    }
 
     /**
      * Get the first line from the result set. This is the resultset metadata line where
@@ -158,26 +158,26 @@ public class ResultSetReader extends StringLineReader {
         return sb.toString();
     }
 
-	public static String prettyPrint(SQLXML xml) throws SQLException {
-		try {
-			TransformerFactory transFactory = TransformerFactory.newInstance();
-			transFactory.setAttribute("indent-number", new Integer(2)); //$NON-NLS-1$
+    public static String prettyPrint(SQLXML xml) throws SQLException {
+        try {
+            TransformerFactory transFactory = TransformerFactory.newInstance();
+            transFactory.setAttribute("indent-number", new Integer(2)); //$NON-NLS-1$
 
-			Transformer tf = transFactory.newTransformer();
-			tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
-			tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");//$NON-NLS-1$
-			tf.setOutputProperty(OutputKeys.INDENT, "yes");//$NON-NLS-1$
-			tf.setOutputProperty(OutputKeys.METHOD, "xml");//$NON-NLS-1$
-			tf.setOutputProperty(OutputKeys.STANDALONE, "yes");//$NON-NLS-1$
-			tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); //$NON-NLS-1$ //$NON-NLS-2$
+            Transformer tf = transFactory.newTransformer();
+            tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+            tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");//$NON-NLS-1$
+            tf.setOutputProperty(OutputKeys.INDENT, "yes");//$NON-NLS-1$
+            tf.setOutputProperty(OutputKeys.METHOD, "xml");//$NON-NLS-1$
+            tf.setOutputProperty(OutputKeys.STANDALONE, "yes");//$NON-NLS-1$
+            tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); //$NON-NLS-1$ //$NON-NLS-2$
 
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			StreamResult xmlOut = new StreamResult(new BufferedOutputStream(out));
-			tf.transform(xml.getSource(StreamSource.class), xmlOut);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            StreamResult xmlOut = new StreamResult(new BufferedOutputStream(out));
+            tf.transform(xml.getSource(StreamSource.class), xmlOut);
 
-			return out.toString();
-		} catch (Exception e) {
-			return xml.getString();
-		}
-	}
+            return out.toString();
+        } catch (Exception e) {
+            return xml.getString();
+        }
+    }
 }

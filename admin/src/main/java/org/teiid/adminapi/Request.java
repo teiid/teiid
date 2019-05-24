@@ -32,17 +32,17 @@ package org.teiid.adminapi;
  */
 public interface Request extends RequestBean, AdminObject, DomainAware {
 
-	public enum ProcessingState {
-		PROCESSING,
-		DONE,
-		CANCELED
-	}
+    public enum ProcessingState {
+        PROCESSING,
+        DONE,
+        CANCELED
+    }
 
-	public enum ThreadState {
-		RUNNING,
-		QUEUED,
-		IDLE
-	}
+    public enum ThreadState {
+        RUNNING,
+        QUEUED,
+        IDLE
+    }
 
     /**
      * @return Returns whether this is a Source Request.

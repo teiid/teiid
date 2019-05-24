@@ -27,9 +27,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class TransformationException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = -4112567582638012800L;
+    private static final long serialVersionUID = -4112567582638012800L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public TransformationException(  ) {

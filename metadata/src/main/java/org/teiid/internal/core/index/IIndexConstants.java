@@ -15,16 +15,16 @@ package org.teiid.internal.core.index;
  * This interface provides constants used by the search engine.
  */
 public interface IIndexConstants {
-	/**
-	 * The signature of the index file.
-	 */
-	public static final String SIGNATURE= "INDEX FILE 0.012"; //$NON-NLS-1$
-	/**
-	 * The separator for files in the index file.
-	 */
-	public static final char FILE_SEPARATOR= '/';
-	/**
-	 * The size of a block for a <code>Block</code>.
-	 */
-	public static final int BLOCK_SIZE= 8192;
+    /**
+     * The signature of the index file.
+     */
+    public static final String SIGNATURE= "INDEX FILE 0.012"; //$NON-NLS-1$
+    /**
+     * The separator for files in the index file.
+     */
+    public static final char FILE_SEPARATOR= '/';
+    /**
+     * The size of a block for a <code>Block</code>.
+     */
+    public static final int BLOCK_SIZE= 8192;
 }

@@ -25,6 +25,6 @@ import org.teiid.net.HostInfo;
 
 public interface SocketServerInstanceFactory extends HostnameResolver {
 
-	SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException;
+    SocketServerInstance getServerInstance(HostInfo info) throws CommunicationException, IOException;
 
 }

@@ -48,10 +48,10 @@ import org.teiid.metadata.Table;
  * are not reusable, and are not thread-safe.
  */
 public class SQLStringVisitor extends AbstractLanguageVisitor {
-	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
+    public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
 
     private static final Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-    		"&", "|", "^", "#", "&&"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+            "&", "|", "^", "#", "&&"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 
     private static Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
 
@@ -71,12 +71,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     /**
-	 * Get the name in source or the name if
-	 * the name in source is not set.
-	 * @return
-	 */
-	public static String getRecordName(AbstractMetadataRecord object) {
-		return object.getSourceName();
+     * Get the name in source or the name if
+     * the name in source is not set.
+     * @return
+     */
+    public static String getRecordName(AbstractMetadataRecord object) {
+        return object.getSourceName();
     }
 
     /**
@@ -148,23 +148,23 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         if (obj.getParameters().isEmpty()
                 && (SQLConstants.NonReserved.COUNT.equalsIgnoreCase(obj.getName())
                 || SQLConstants.NonReserved.COUNT_BIG.equalsIgnoreCase(obj.getName()))) {
-    		buffer.append(Tokens.ALL_COLS);
+            buffer.append(Tokens.ALL_COLS);
         } else {
-        	append(obj.getParameters());
+            append(obj.getParameters());
         }
         if (obj.getOrderBy() != null) {
-        	buffer.append(Tokens.SPACE);
-        	append(obj.getOrderBy());
+            buffer.append(Tokens.SPACE);
+            append(obj.getOrderBy());
         }
         buffer.append(Tokens.RPAREN);
         if (obj.getCondition() != null) {
-        	buffer.append(Tokens.SPACE);
-        	buffer.append(FILTER);
-        	buffer.append(Tokens.LPAREN);
-        	buffer.append(WHERE);
-        	buffer.append(Tokens.SPACE);
-        	append(obj.getCondition());
-        	buffer.append(Tokens.RPAREN);
+            buffer.append(Tokens.SPACE);
+            buffer.append(FILTER);
+            buffer.append(Tokens.LPAREN);
+            buffer.append(WHERE);
+            buffer.append(Tokens.SPACE);
+            append(obj.getCondition());
+            buffer.append(Tokens.RPAREN);
         }
     }
 
@@ -188,31 +188,31 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
     }
 
-	protected void appendRightComparison(Comparison obj) {
-		append(obj.getRightExpression());
-	}
+    protected void appendRightComparison(Comparison obj) {
+        append(obj.getRightExpression());
+    }
 
     public void visit(AndOr obj) {
         String opString = obj.getOperator().toString();
 
         appendNestedCondition(obj, obj.getLeftCondition());
-	    buffer.append(Tokens.SPACE)
-	          .append(opString)
-	          .append(Tokens.SPACE);
+        buffer.append(Tokens.SPACE)
+              .append(opString)
+              .append(Tokens.SPACE);
         appendNestedCondition(obj, obj.getRightCondition());
     }
 
     protected void appendNestedCondition(AndOr parent, Condition condition) {
-    	if (condition instanceof AndOr) {
-    		AndOr nested = (AndOr)condition;
-    		if (nested.getOperator() != parent.getOperator()) {
-    			buffer.append(Tokens.LPAREN);
-    			append(condition);
-    			buffer.append(Tokens.RPAREN);
-    			return;
-    		}
-    	}
-    	append(condition);
+        if (condition instanceof AndOr) {
+            AndOr nested = (AndOr)condition;
+            if (nested.getOperator() != parent.getOperator()) {
+                buffer.append(Tokens.LPAREN);
+                append(condition);
+                buffer.append(Tokens.RPAREN);
+                return;
+            }
+        }
+        append(condition);
     }
 
     public void visit(Delete obj) {
@@ -230,13 +230,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
     }
 
-	private void appendSourceComment(Command obj) {
-		if (appendedSourceComment) {
-			return;
-		}
-		appendedSourceComment = true;
-		buffer.append(getSourceComment(obj));
-	}
+    private void appendSourceComment(Command obj) {
+        if (appendedSourceComment) {
+            return;
+        }
+        appendedSourceComment = true;
+        buffer.append(getSourceComment(obj));
+    }
 
     /**
      * Take the specified derived group and element short names and determine a
@@ -262,8 +262,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(getElementName(obj, !shortNameOnly));
     }
 
-	private String getElementName(ColumnReference obj, boolean qualify) {
-		String groupName = null;
+    private String getElementName(ColumnReference obj, boolean qualify) {
+        String groupName = null;
         NamedTable group = obj.getTable();
         if (group != null && qualify) {
             if(group.getCorrelationName() != null) {
@@ -278,8 +278,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             }
         }
 
-		String elemShortName = null;
-		AbstractMetadataRecord elementID = obj.getMetadataObject();
+        String elemShortName = null;
+        AbstractMetadataRecord elementID = obj.getMetadataObject();
         if(elementID != null) {
             elemShortName = getName(elementID);
         } else {
@@ -295,8 +295,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         StringBuffer elementName = new StringBuffer(elemShortName.length());
         // If not, do normal logic:  [group + "."] + element
         if(groupName != null) {
-        	elementName.append(groupName);
-        	elementName.append(Tokens.DOT);
+            elementName.append(groupName);
+            elementName.append(Tokens.DOT);
         }
         elementName.append(elemShortName);
         return elementName.toString();
@@ -342,10 +342,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(Tokens.RPAREN);
     }
 
-	protected void appendCallStart(Call call) {
-		buffer.append(EXEC)
+    protected void appendCallStart(Call call) {
+        buffer.append(EXEC)
               .append(Tokens.SPACE);
-	}
+    }
 
     public void visit(Exists obj) {
         buffer.append(EXISTS)
@@ -356,7 +356,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     protected boolean isInfixFunction(String function) {
-    	return infixFunctions.contains(function);
+        return infixFunctions.contains(function);
     }
 
     public void visit(Function obj) {
@@ -405,20 +405,20 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                 buffer.append(((Literal)args.get(0)).getValue());
 
                 for(int i=1; i<args.size(); i++) {
-                	buffer.append(Tokens.COMMA);
+                    buffer.append(Tokens.COMMA);
                     buffer.append(Tokens.SPACE);
-                	append(args.get(i));
+                    append(args.get(i));
                 }
             }
             buffer.append(Tokens.RPAREN);
         } else if (name.equalsIgnoreCase(NonReserved.TRIM)) {
-        	buffer.append(name);
-        	buffer.append(Tokens.LPAREN);
-        	String value = (String)((Literal)args.get(0)).getValue();
-        	if (!value.equalsIgnoreCase(BOTH)) {
+            buffer.append(name);
+            buffer.append(Tokens.LPAREN);
+            String value = (String)((Literal)args.get(0)).getValue();
+            if (!value.equalsIgnoreCase(BOTH)) {
                 buffer.append(value);
                 buffer.append(Tokens.SPACE);
-        	}
+            }
             append(args.get(1));
             buffer.append(" "); //$NON-NLS-1$
             buffer.append(FROM);
@@ -435,25 +435,25 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(NamedTable obj) {
-    	appendBaseName(obj);
+        appendBaseName(obj);
         if (obj.getCorrelationName() != null) {
             buffer.append(Tokens.SPACE);
             if (useAsInGroupAlias()){
                 buffer.append(AS)
                       .append(Tokens.SPACE);
             }
-        	buffer.append(obj.getCorrelationName());
+            buffer.append(obj.getCorrelationName());
         }
     }
 
-	protected void appendBaseName(NamedTable obj) {
-    	Table groupID = obj.getMetadataObject();
+    protected void appendBaseName(NamedTable obj) {
+        Table groupID = obj.getMetadataObject();
         if(groupID != null) {
-    		buffer.append(getName(groupID));
+            buffer.append(getName(groupID));
         } else {
             buffer.append(obj.getName());
         }
-	}
+    }
 
     /**
      * Indicates whether group alias should be of the form
@@ -472,17 +472,17 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
               .append(BY)
               .append(Tokens.SPACE);
         if (obj.isRollup()) {
-        	buffer.append(ROLLUP);
-        	buffer.append(Tokens.LPAREN);
+            buffer.append(ROLLUP);
+            buffer.append(Tokens.LPAREN);
         }
         append(obj.getElements());
         if (obj.isRollup()) {
-        	buffer.append(Tokens.RPAREN);
+            buffer.append(Tokens.RPAREN);
         }
     }
 
     public void visit(In obj) {
-    	appendNested(obj.getLeftExpression());
+        appendNested(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
@@ -496,12 +496,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(DerivedTable obj) {
-    	if (obj.isLateral()) {
-    		appendLateralKeyword();
-    		buffer.append(Tokens.SPACE);
-    	}
+        if (obj.isLateral()) {
+            appendLateralKeyword();
+            buffer.append(Tokens.SPACE);
+        }
         buffer.append(Tokens.LPAREN);
-    	append(obj.getQuery());
+        append(obj.getQuery());
         buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         if(useAsInGroupAlias()) {
@@ -511,17 +511,17 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(obj.getCorrelationName());
     }
 
-	protected void appendLateralKeyword() {
-		buffer.append(LATERAL);
-	}
+    protected void appendLateralKeyword() {
+        buffer.append(LATERAL);
+    }
 
     public void visit(NamedProcedureCall obj) {
-    	if (obj.isLateral()) {
-    		appendLateralKeyword();
-    		buffer.append(Tokens.SPACE);
-    	}
+        if (obj.isLateral()) {
+            appendLateralKeyword();
+            buffer.append(Tokens.SPACE);
+        }
         buffer.append(Tokens.LPAREN);
-    	append(obj.getCall());
+        append(obj.getCall());
         buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         if(useAsInGroupAlias()) {
@@ -537,42 +537,42 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         } else {
             buffer.append(getInsertKeyword()).append(Tokens.SPACE);
         }
-		appendSourceComment(obj);
-		buffer.append(INTO).append(Tokens.SPACE);
-		append(obj.getTable());
-		buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
+        appendSourceComment(obj);
+        buffer.append(INTO).append(Tokens.SPACE);
+        append(obj.getTable());
+        buffer.append(Tokens.SPACE).append(Tokens.LPAREN);
 
-		this.shortNameOnly = true;
-		append(obj.getColumns());
-		this.shortNameOnly = false;
+        this.shortNameOnly = true;
+        append(obj.getColumns());
+        this.shortNameOnly = false;
 
-		buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.RPAREN);
         buffer.append(Tokens.SPACE);
         append(obj.getValueSource());
     }
 
-	protected String getInsertKeyword() {
-		return INSERT;
-	}
+    protected String getInsertKeyword() {
+        return INSERT;
+    }
 
     protected String getUpsertKeyword() {
         return NonReserved.UPSERT;
     }
 
     @Override
-	public void visit(ExpressionValueSource obj) {
-		buffer.append(VALUES).append(Tokens.SPACE).append(Tokens.LPAREN);
-		append(obj.getValues());
-		buffer.append(Tokens.RPAREN);
-	}
+    public void visit(ExpressionValueSource obj) {
+        buffer.append(VALUES).append(Tokens.SPACE).append(Tokens.LPAREN);
+        append(obj.getValues());
+        buffer.append(Tokens.RPAREN);
+    }
 
     @Override
     public void visit(Parameter obj) {
-    	buffer.append('?');
+        buffer.append('?');
     }
 
     public void visit(IsNull obj) {
-    	appendNested(obj.getExpression());
+        appendNested(obj.getExpression());
         buffer.append(Tokens.SPACE)
               .append(IS)
               .append(Tokens.SPACE);
@@ -587,16 +587,16 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * Condition operators have lower precedence than LIKE/SIMILAR/IS
      * @param ex
      */
-	private void appendNested(Expression ex) {
-		boolean useParens = ex instanceof Condition;
-    	if (useParens) {
-    		buffer.append(Tokens.LPAREN);
-    	}
+    private void appendNested(Expression ex) {
+        boolean useParens = ex instanceof Condition;
+        if (useParens) {
+            buffer.append(Tokens.LPAREN);
+        }
         append(ex);
         if (useParens) {
-        	buffer.append(Tokens.RPAREN);
+            buffer.append(Tokens.RPAREN);
         }
-	}
+    }
 
     public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
@@ -660,11 +660,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * @return
      */
     protected boolean useParensForLHSJoins() {
-		return useParensForJoins();
-	}
+        return useParensForJoins();
+    }
 
-	public void visit(Like obj) {
-    	append(obj.getLeftExpression());
+    public void visit(Like obj) {
+        append(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
@@ -675,11 +675,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             buffer.append(LIKE);
             break;
         case SIMILAR:
-        	buffer.append(SIMILAR)
-        		  .append(Tokens.SPACE)
-        		  .append(TO);
+            buffer.append(SIMILAR)
+                  .append(Tokens.SPACE)
+                  .append(TO);
         case REGEX:
-        	buffer.append(getLikeRegexString());
+            buffer.append(getLikeRegexString());
         }
         buffer.append(Tokens.SPACE);
         append(obj.getRightExpression());
@@ -694,10 +694,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     protected String getLikeRegexString() {
-		return LIKE_REGEX;
-	}
+        return LIKE_REGEX;
+    }
 
-	public void visit(Limit obj) {
+    public void visit(Limit obj) {
         buffer.append(LIMIT)
               .append(Tokens.SPACE);
         if (obj.getRowOffset() > 0) {
@@ -709,7 +709,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Literal obj) {
-    	if (obj.getValue() == null) {
+        if (obj.getValue() == null) {
             buffer.append(NULL);
         } else {
             Class<?> type = obj.getType();
@@ -717,34 +717,34 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
     }
 
-	protected void appendLiteral(Literal obj, Class<?> type) {
-		String val = obj.getValue().toString();
-		if(Number.class.isAssignableFrom(type)) {
-		    buffer.append(val);
-		} else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-			buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
-		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-		    buffer.append("{ts '") //$NON-NLS-1$
-		          .append(val)
-		          .append("'}"); //$NON-NLS-1$
-		} else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-		    buffer.append("{t '") //$NON-NLS-1$
-		          .append(val)
-		          .append("'}"); //$NON-NLS-1$
-		} else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-		    buffer.append("{d '") //$NON-NLS-1$
-		          .append(val)
-		          .append("'}"); //$NON-NLS-1$
-		} else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-			buffer.append("X'") //$NON-NLS-1$
-				  .append(val)
-				  .append("'"); //$NON-NLS-1$
-		} else {
-		    buffer.append(Tokens.QUOTE)
-		          .append(escapeString(val, Tokens.QUOTE))
-		          .append(Tokens.QUOTE);
-		}
-	}
+    protected void appendLiteral(Literal obj, Class<?> type) {
+        String val = obj.getValue().toString();
+        if(Number.class.isAssignableFrom(type)) {
+            buffer.append(val);
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+            buffer.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+            buffer.append("{ts '") //$NON-NLS-1$
+                  .append(val)
+                  .append("'}"); //$NON-NLS-1$
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
+            buffer.append("{t '") //$NON-NLS-1$
+                  .append(val)
+                  .append("'}"); //$NON-NLS-1$
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+            buffer.append("{d '") //$NON-NLS-1$
+                  .append(val)
+                  .append("'}"); //$NON-NLS-1$
+        } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+            buffer.append("X'") //$NON-NLS-1$
+                  .append(val)
+                  .append("'"); //$NON-NLS-1$
+        } else {
+            buffer.append(Tokens.QUOTE)
+                  .append(escapeString(val, Tokens.QUOTE))
+                  .append(Tokens.QUOTE);
+        }
+    }
 
     public void visit(Not obj) {
         buffer.append(NOT)
@@ -763,16 +763,16 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(SortSpecification obj) {
-    	append(obj.getExpression());
+        append(obj.getExpression());
         if (obj.getOrdering() == Ordering.DESC) {
             buffer.append(Tokens.SPACE)
                   .append(DESC);
         } // Don't print default "ASC"
         if (obj.getNullOrdering() != null) {
-        	buffer.append(Tokens.SPACE)
-            	.append(NonReserved.NULLS)
-        		.append(Tokens.SPACE)
-        		.append(obj.getNullOrdering().name());
+            buffer.append(Tokens.SPACE)
+                .append(NonReserved.NULLS)
+                .append(Tokens.SPACE)
+                .append(obj.getNullOrdering().name());
         }
     }
 
@@ -781,11 +781,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Select obj) {
-    	if (obj.getWith() != null) {
-    		append(obj.getWith());
-    	}
-		buffer.append(SELECT).append(Tokens.SPACE);
-		appendSourceComment(obj);
+        if (obj.getWith() != null) {
+            append(obj.getWith());
+        }
+        buffer.append(SELECT).append(Tokens.SPACE);
+        appendSourceComment(obj);
         if (obj.isDistinct()) {
             buffer.append(DISTINCT).append(Tokens.SPACE);
         }
@@ -795,7 +795,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         append(obj.getDerivedColumns());
         if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
-        	buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
+            buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
             append(obj.getFrom());
         }
         if (obj.getWhere() != null) {
@@ -827,8 +827,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     public void visit(SearchedCase obj) {
         buffer.append(CASE);
         for (SearchedWhenClause swc : obj.getCases()) {
-			append(swc);
-		}
+            append(swc);
+        }
         if (obj.getElseExpression() != null) {
             buffer.append(Tokens.SPACE)
                   .append(ELSE)
@@ -841,12 +841,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     @Override
     public void visit(SearchedWhenClause obj) {
-		buffer.append(Tokens.SPACE).append(WHEN)
-				.append(Tokens.SPACE);
-		append(obj.getCondition());
-		buffer.append(Tokens.SPACE).append(THEN)
-				.append(Tokens.SPACE);
-		append(obj.getResult());
+        buffer.append(Tokens.SPACE).append(WHEN)
+                .append(Tokens.SPACE);
+        append(obj.getCondition());
+        buffer.append(Tokens.SPACE).append(THEN)
+                .append(Tokens.SPACE);
+        append(obj.getResult());
     }
 
     protected String getSourceComment(Command command) {
@@ -938,9 +938,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(SetQuery obj) {
-    	if (obj.getWith() != null) {
-    		append(obj.getWith());
-    	}
+        if (obj.getWith() != null) {
+            append(obj.getWith());
+        }
         appendSetQuery(obj, obj.getLeftQuery(), false);
 
         buffer.append(Tokens.SPACE);
@@ -973,7 +973,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     protected boolean useParensForSetQueries() {
-    	return false;
+        return false;
     }
 
     protected void appendSetQuery(SetQuery parent, QueryExpression obj, boolean right) {
@@ -982,93 +982,93 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
             append(obj);
             buffer.append(Tokens.RPAREN);
         } else {
-        	if (!parent.isAll() && obj instanceof SetQuery) {
-        		((SetQuery)obj).setAll(false);
-        	}
+            if (!parent.isAll() && obj instanceof SetQuery) {
+                ((SetQuery)obj).setAll(false);
+            }
             append(obj);
         }
     }
 
-	protected boolean shouldNestSetChild(SetQuery parent, QueryExpression obj,
-			boolean right) {
-		return (!(obj instanceof SetQuery) && useParensForSetQueries())
-        		|| obj.getLimit() != null || obj.getOrderBy() != null || (obj instanceof SetQuery
-        				&& ((right && parent.isAll() && !((SetQuery)obj).isAll())
-        						|| ((parent.getOperation() == Operation.INTERSECT || right) && parent.getOperation() != ((SetQuery)obj).getOperation())));
-	}
+    protected boolean shouldNestSetChild(SetQuery parent, QueryExpression obj,
+            boolean right) {
+        return (!(obj instanceof SetQuery) && useParensForSetQueries())
+                || obj.getLimit() != null || obj.getOrderBy() != null || (obj instanceof SetQuery
+                        && ((right && parent.isAll() && !((SetQuery)obj).isAll())
+                                || ((parent.getOperation() == Operation.INTERSECT || right) && parent.getOperation() != ((SetQuery)obj).getOperation())));
+    }
 
     @Override
     public void visit(With obj) {
-    	appendedSourceComment = true;
-    	appendWithKeyword(obj);
-    	buffer.append(Tokens.SPACE);
-    	append(obj.getItems());
-    	buffer.append(Tokens.SPACE);
-    	appendedSourceComment = false;
+        appendedSourceComment = true;
+        appendWithKeyword(obj);
+        buffer.append(Tokens.SPACE);
+        append(obj.getItems());
+        buffer.append(Tokens.SPACE);
+        appendedSourceComment = false;
     }
 
     protected void appendWithKeyword(With obj) {
-    	buffer.append(WITH);
-	}
+        buffer.append(WITH);
+    }
 
-	@Override
+    @Override
     public void visit(WithItem obj) {
-    	append(obj.getTable());
-    	buffer.append(Tokens.SPACE);
-    	if (obj.getColumns() != null) {
-    		buffer.append(Tokens.LPAREN);
-    		shortNameOnly = true;
-    		append(obj.getColumns());
-    		shortNameOnly = false;
-    		buffer.append(Tokens.RPAREN);
-    		buffer.append(Tokens.SPACE);
-    	}
-    	buffer.append(AS);
-    	buffer.append(Tokens.SPACE);
-		buffer.append(Tokens.LPAREN);
-		if (obj.getSubquery() == null) {
-			buffer.append(UNDEFINED_PARAM);
-		} else {
-			append(obj.getSubquery());
-		}
-		buffer.append(Tokens.RPAREN);
+        append(obj.getTable());
+        buffer.append(Tokens.SPACE);
+        if (obj.getColumns() != null) {
+            buffer.append(Tokens.LPAREN);
+            shortNameOnly = true;
+            append(obj.getColumns());
+            shortNameOnly = false;
+            buffer.append(Tokens.RPAREN);
+            buffer.append(Tokens.SPACE);
+        }
+        buffer.append(AS);
+        buffer.append(Tokens.SPACE);
+        buffer.append(Tokens.LPAREN);
+        if (obj.getSubquery() == null) {
+            buffer.append(UNDEFINED_PARAM);
+        } else {
+            append(obj.getSubquery());
+        }
+        buffer.append(Tokens.RPAREN);
     }
 
     @Override
     public void visit(WindowFunction windowFunction) {
-    	append(windowFunction.getFunction());
-    	buffer.append(Tokens.SPACE);
-    	buffer.append(OVER);
-    	buffer.append(Tokens.SPACE);
-    	append(windowFunction.getWindowSpecification());
+        append(windowFunction.getFunction());
+        buffer.append(Tokens.SPACE);
+        buffer.append(OVER);
+        buffer.append(Tokens.SPACE);
+        append(windowFunction.getWindowSpecification());
     }
 
     @Override
     public void visit(WindowSpecification windowSpecification) {
-    	buffer.append(Tokens.LPAREN);
-    	boolean needsSpace = false;
-    	if (windowSpecification.getPartition() != null) {
-    		buffer.append(PARTITION);
-    		buffer.append(Tokens.SPACE);
-    		buffer.append(BY);
-    		buffer.append(Tokens.SPACE);
-    		append(windowSpecification.getPartition());
-    		needsSpace = true;
-    	}
-    	if (windowSpecification.getOrderBy() != null) {
-    		if (needsSpace) {
-    			buffer.append(Tokens.SPACE);
-    		}
-    		append(windowSpecification.getOrderBy());
-    		needsSpace = true;
-    	}
-    	if (windowSpecification.getWindowFrame() != null) {
+        buffer.append(Tokens.LPAREN);
+        boolean needsSpace = false;
+        if (windowSpecification.getPartition() != null) {
+            buffer.append(PARTITION);
+            buffer.append(Tokens.SPACE);
+            buffer.append(BY);
+            buffer.append(Tokens.SPACE);
+            append(windowSpecification.getPartition());
+            needsSpace = true;
+        }
+        if (windowSpecification.getOrderBy() != null) {
+            if (needsSpace) {
+                buffer.append(Tokens.SPACE);
+            }
+            append(windowSpecification.getOrderBy());
+            needsSpace = true;
+        }
+        if (windowSpecification.getWindowFrame() != null) {
             if (needsSpace) {
                 buffer.append(Tokens.SPACE);
             }
             append(windowSpecification.getWindowFrame());
         }
-    	buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.RPAREN);
     }
 
     @Override
@@ -1106,12 +1106,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 
     @Override
     public void visit(Array array) {
-    	buffer.append(Tokens.LPAREN);
-    	append(array.getExpressions());
-    	if (array.getExpressions().size() == 1) {
-    		buffer.append(Tokens.COMMA);
-    	}
-    	buffer.append(Tokens.RPAREN);
+        buffer.append(Tokens.LPAREN);
+        append(array.getExpressions());
+        if (array.getExpressions().size() == 1) {
+            buffer.append(Tokens.COMMA);
+        }
+        buffer.append(Tokens.RPAREN);
     }
 
     /**
@@ -1128,56 +1128,56 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     protected boolean useParensForJoins() {
-    	return false;
+        return false;
     }
 
     protected boolean useSelectLimit() {
-    	return false;
+        return false;
     }
 
     public interface Substitutor {
-    	void substitute(Argument arg, StringBuilder builder, int index);
+        void substitute(Argument arg, StringBuilder builder, int index);
     }
 
-	public static void parseNativeQueryParts(String nativeQuery, List<Argument> list, StringBuilder stringBuilder, Substitutor substitutor) {
-		Matcher m = pattern.matcher(nativeQuery);
-		for (int i = 0; i < nativeQuery.length();) {
-			if (!m.find(i)) {
-				stringBuilder.append(nativeQuery.substring(i));
-				break;
-			}
-			if (m.start() != i) {
-				stringBuilder.append(nativeQuery.substring(i, m.start()));
-			}
-			String match = m.group();
-			int end = match.lastIndexOf('$');
-			if ((end&0x1) == 1) {
-				//escaped
-				stringBuilder.append(match.substring((end+1)/2));
-			} else {
-				if (end != 0) {
-					stringBuilder.append(match.substring(0, end/2));
-				}
-				int index = Integer.parseInt(match.substring(end + 1))-1;
-				if (index < 0 || index >= list.size()) {
-					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
-				}
-				Argument arg = list.get(index);
-				if (arg.getDirection() != Direction.IN) {
-					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
-				}
-				substitutor.substitute(arg, stringBuilder, index);
-			}
-			i = m.end();
-		}
-	}
+    public static void parseNativeQueryParts(String nativeQuery, List<Argument> list, StringBuilder stringBuilder, Substitutor substitutor) {
+        Matcher m = pattern.matcher(nativeQuery);
+        for (int i = 0; i < nativeQuery.length();) {
+            if (!m.find(i)) {
+                stringBuilder.append(nativeQuery.substring(i));
+                break;
+            }
+            if (m.start() != i) {
+                stringBuilder.append(nativeQuery.substring(i, m.start()));
+            }
+            String match = m.group();
+            int end = match.lastIndexOf('$');
+            if ((end&0x1) == 1) {
+                //escaped
+                stringBuilder.append(match.substring((end+1)/2));
+            } else {
+                if (end != 0) {
+                    stringBuilder.append(match.substring(0, end/2));
+                }
+                int index = Integer.parseInt(match.substring(end + 1))-1;
+                if (index < 0 || index >= list.size()) {
+                    throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
+                }
+                Argument arg = list.get(index);
+                if (arg.getDirection() != Direction.IN) {
+                    throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
+                }
+                substitutor.substitute(arg, stringBuilder, index);
+            }
+            i = m.end();
+        }
+    }
 
-	@Override
-	public void visit(IsDistinct isDistinct) {
-	    append(isDistinct.getLeftExpression());
-	    buffer.append(Tokens.SPACE);
-	    buffer.append(IS);
-	    buffer.append(Tokens.SPACE);
+    @Override
+    public void visit(IsDistinct isDistinct) {
+        append(isDistinct.getLeftExpression());
+        buffer.append(Tokens.SPACE);
+        buffer.append(IS);
+        buffer.append(Tokens.SPACE);
         if (isDistinct.isNegated()) {
             buffer.append(NOT);
             buffer.append(Tokens.SPACE);
@@ -1187,5 +1187,5 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(FROM);
         buffer.append(Tokens.SPACE);
         append(isDistinct.getRightExpression());
-	}
+    }
 }

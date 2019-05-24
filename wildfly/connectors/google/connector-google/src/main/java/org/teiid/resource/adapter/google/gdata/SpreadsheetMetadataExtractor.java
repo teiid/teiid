@@ -40,54 +40,54 @@ import com.google.gdata.util.ServiceException;
  *
  */
 public class SpreadsheetMetadataExtractor {
-	private GDataClientLoginAPI gdataAPI = null;
-	private GoogleDataProtocolAPI visualizationAPI= null;
+    private GDataClientLoginAPI gdataAPI = null;
+    private GoogleDataProtocolAPI visualizationAPI= null;
 
-	public GoogleDataProtocolAPI getVisualizationAPI() {
-		return visualizationAPI;
-	}
+    public GoogleDataProtocolAPI getVisualizationAPI() {
+        return visualizationAPI;
+    }
 
-	public void setVisualizationAPI(GoogleDataProtocolAPI visualizationAPI) {
-		this.visualizationAPI = visualizationAPI;
-	}
+    public void setVisualizationAPI(GoogleDataProtocolAPI visualizationAPI) {
+        this.visualizationAPI = visualizationAPI;
+    }
 
-	public GDataClientLoginAPI getGdataAPI() {
-		return gdataAPI;
-	}
+    public GDataClientLoginAPI getGdataAPI() {
+        return gdataAPI;
+    }
 
-	public void setGdataAPI(GDataClientLoginAPI gdataAPI) {
-		this.gdataAPI = gdataAPI;
-	}
+    public void setGdataAPI(GDataClientLoginAPI gdataAPI) {
+        this.gdataAPI = gdataAPI;
+    }
 
 
-	public SpreadsheetInfo extractMetadata(String spreadsheetName, boolean isKey){
-	    SpreadsheetEntry sentry = gdataAPI.getSpreadsheetEntry(spreadsheetName, isKey);
-		SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);
-		metadata.setSpreadsheetKey(sentry.getKey());
-		try {
-			for (WorksheetEntry wentry : sentry.getWorksheets()) {
-				String title = wentry.getTitle().getPlainText();
-				Worksheet worksheet = metadata.createWorksheet(title);
-				worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
-				List<Column> cols = visualizationAPI.getMetadata(sentry.getKey(), title);
-				if(!cols.isEmpty()){
-					if(cols.get(0).getLabel()!=null){
-						worksheet.setHeaderEnabled(true);
-					}
-				}
-				for(Column c: cols){
-					worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
-				}
-			}
-		} catch (IOException ex) {
-			throw new SpreadsheetOperationException(
-					SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
-		} catch (ServiceException ex) {
-			throw new SpreadsheetOperationException(
-					SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
-		}
-		return metadata;
-	}
+    public SpreadsheetInfo extractMetadata(String spreadsheetName, boolean isKey){
+        SpreadsheetEntry sentry = gdataAPI.getSpreadsheetEntry(spreadsheetName, isKey);
+        SpreadsheetInfo metadata = new SpreadsheetInfo(spreadsheetName);
+        metadata.setSpreadsheetKey(sentry.getKey());
+        try {
+            for (WorksheetEntry wentry : sentry.getWorksheets()) {
+                String title = wentry.getTitle().getPlainText();
+                Worksheet worksheet = metadata.createWorksheet(title);
+                worksheet.setId(wentry.getId().substring(wentry.getId().lastIndexOf('/')+1));
+                List<Column> cols = visualizationAPI.getMetadata(sentry.getKey(), title);
+                if(!cols.isEmpty()){
+                    if(cols.get(0).getLabel()!=null){
+                        worksheet.setHeaderEnabled(true);
+                    }
+                }
+                for(Column c: cols){
+                    worksheet.addColumn(c.getLabel()!=null ? c.getLabel(): c.getAlphaName(), c);
+                }
+            }
+        } catch (IOException ex) {
+            throw new SpreadsheetOperationException(
+                    SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
+        } catch (ServiceException ex) {
+            throw new SpreadsheetOperationException(
+                    SpreadsheetManagedConnectionFactory.UTIL.gs("metadata_error"), ex); //$NON-NLS-1$
+        }
+        return metadata;
+    }
 
 }
 

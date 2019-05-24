@@ -46,7 +46,7 @@ public class TestSybaseConvertModifier {
 
     @BeforeClass
     public static void setup() throws TranslatorException {
-    	trans.setDatabaseVersion(Version.DEFAULT_VERSION);
+        trans.setDatabaseVersion(Version.DEFAULT_VERSION);
         trans.start();
     }
 

@@ -63,9 +63,9 @@ public class TempTableResolver implements CommandResolver {
             if(!exitsingGroups.isEmpty()) {
                  throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
             }
-        	if (metadata.getMetadata().hasProcedure(group.getName())) {
-        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
-        	}
+            if (metadata.getMetadata().hasProcedure(group.getName())) {
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
+            }
 
             //now we will be more specific for temp groups
             TempMetadataID id = metadata.getMetadataStore().getTempGroupID(group.getName());
@@ -87,47 +87,47 @@ public class TempTableResolver implements CommandResolver {
             addAdditionalMetadata(create, tempTable);
             tempTable.setOriginalMetadataID(create.getTableMetadata());
             if (create.getOn() != null) {
-	    		Object mid = null;
-				try {
-					mid = metadata.getModelID(create.getOn());
-				} catch (QueryMetadataException e) {
-					throw new QueryResolverException(QueryPlugin.Event.TEIID31134, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31134, create.getOn()));
-				}
-				if (mid != null && (metadata.isVirtualModel(mid) || !(mid instanceof Schema))) {
-					throw new QueryResolverException(QueryPlugin.Event.TEIID31135, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31135, create.getOn()));
-				}
-				create.getTableMetadata().setParent((Schema)mid);
-	            tempTable.getTableData().setModel(mid);
+                Object mid = null;
+                try {
+                    mid = metadata.getModelID(create.getOn());
+                } catch (QueryMetadataException e) {
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID31134, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31134, create.getOn()));
+                }
+                if (mid != null && (metadata.isVirtualModel(mid) || !(mid instanceof Schema))) {
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID31135, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31135, create.getOn()));
+                }
+                create.getTableMetadata().setParent((Schema)mid);
+                tempTable.getTableData().setModel(mid);
             }
         } else if(command.getType() == Command.TYPE_DROP) {
             ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
         }
     }
 
-	public static void addAdditionalMetadata(Create create, TempMetadataID tempTable) {
-		if (!create.getPrimaryKey().isEmpty()) {
-			ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
-			for (ElementSymbol symbol : create.getPrimaryKey()) {
-				Object mid = symbol.getMetadataID();
-				if (mid instanceof TempMetadataID) {
-					primaryKey.add((TempMetadataID)mid);
-				} else if (mid instanceof Column) {
-					//TODO: this breaks our normal metadata usage
-					primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));
-				}
-			}
-			tempTable.setPrimaryKey(primaryKey);
-		}
-		for (int i = 0; i < create.getColumns().size(); i++) {
-			Column column = create.getColumns().get(i);
-			TempMetadataID tid = tempTable.getElements().get(i);
-			if (column.isAutoIncremented()) {
-				tid.setAutoIncrement(true);
-			}
-			if (column.getNullType() == NullType.No_Nulls) {
-				tid.setNotNull(true);
-			}
-		}
-	}
+    public static void addAdditionalMetadata(Create create, TempMetadataID tempTable) {
+        if (!create.getPrimaryKey().isEmpty()) {
+            ArrayList<TempMetadataID> primaryKey = new ArrayList<TempMetadataID>(create.getPrimaryKey().size());
+            for (ElementSymbol symbol : create.getPrimaryKey()) {
+                Object mid = symbol.getMetadataID();
+                if (mid instanceof TempMetadataID) {
+                    primaryKey.add((TempMetadataID)mid);
+                } else if (mid instanceof Column) {
+                    //TODO: this breaks our normal metadata usage
+                    primaryKey.add(tempTable.getElements().get(((Column)mid).getPosition() - 1));
+                }
+            }
+            tempTable.setPrimaryKey(primaryKey);
+        }
+        for (int i = 0; i < create.getColumns().size(); i++) {
+            Column column = create.getColumns().get(i);
+            TempMetadataID tid = tempTable.getElements().get(i);
+            if (column.isAutoIncremented()) {
+                tid.setAutoIncrement(true);
+            }
+            if (column.getNullType() == NullType.No_Nulls) {
+                tid.setNotNull(true);
+            }
+        }
+    }
 
 }

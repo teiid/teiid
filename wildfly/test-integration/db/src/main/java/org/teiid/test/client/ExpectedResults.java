@@ -58,57 +58,57 @@ public interface ExpectedResults {
     String getQuerySetID();
 
 
-	/**
-	 * Returns the <code>File</code> location for the actual results for the specified
-	 * query identifier.
-	 * @param queryidentifier
-	 * @return File location for actual results for the specified query
-	 * @throws QueryTestFailedException
-	 *
-	 * @since
-	 */
-	File getResultsFile(String queryidentifier) throws QueryTestFailedException;
+    /**
+     * Returns the <code>File</code> location for the actual results for the specified
+     * query identifier.
+     * @param queryidentifier
+     * @return File location for actual results for the specified query
+     * @throws QueryTestFailedException
+     *
+     * @since
+     */
+    File getResultsFile(String queryidentifier) throws QueryTestFailedException;
 
 
-	/**
-	 * @see TestProperties#RESULT_MODES
-	 *
-	 * Return true if the expected results file is needed in the test.  Either
-	 * for comparison or generation.   It will return false when
-	 * the option <code>TestProperties.RESULT_MODES.NONE</code>
-	 * @return
-	 */
-	boolean isExpectedResultsNeeded();
+    /**
+     * @see TestProperties#RESULT_MODES
+     *
+     * Return true if the expected results file is needed in the test.  Either
+     * for comparison or generation.   It will return false when
+     * the option <code>TestProperties.RESULT_MODES.NONE</code>
+     * @return
+     */
+    boolean isExpectedResultsNeeded();
 
 
-	/**
-	 * Indicates if a query expects to have an <code>Exception</code> to be thrown when the
-	 * query is executed.
-	 * @param queryidentifier
-	 * @return boolean true if the query expects an exception to be thrown
-	 * @throws QueryTestFailedException
-	 */
-	boolean isExceptionExpected(String queryidentifier) throws QueryTestFailedException;
+    /**
+     * Indicates if a query expects to have an <code>Exception</code> to be thrown when the
+     * query is executed.
+     * @param queryidentifier
+     * @return boolean true if the query expects an exception to be thrown
+     * @throws QueryTestFailedException
+     */
+    boolean isExceptionExpected(String queryidentifier) throws QueryTestFailedException;
 
 
-	Object getMetaData(String queryidentifier);
+    Object getMetaData(String queryidentifier);
 
 
-	/**
-	 * Called to compare the <code>ResultSet</code> from the executed query to the expected results
-	 * and return the errors.
-	 * @param queryIdentifier
-	 * @param sql
-	 * @param resultSet
-	 * @param actualException
-	 * @param testStatus
-	 * @param isOrdered
-	 * @param updateCnt
-	 * @return Object identifying the errors in the comparison
-	 * @throws QueryTestFailedException
-	 */
-	Object compareResults(final String queryIdentifier,
-			   final String sql,
+    /**
+     * Called to compare the <code>ResultSet</code> from the executed query to the expected results
+     * and return the errors.
+     * @param queryIdentifier
+     * @param sql
+     * @param resultSet
+     * @param actualException
+     * @param testStatus
+     * @param isOrdered
+     * @param updateCnt
+     * @return Object identifying the errors in the comparison
+     * @throws QueryTestFailedException
+     */
+    Object compareResults(final String queryIdentifier,
+               final String sql,
                final ResultSet resultSet,
                final Throwable actualException,
                final int testStatus,

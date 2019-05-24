@@ -38,44 +38,44 @@ public class TestLogger {
   private static final Logger LOGGER = Logger.getLogger("org.teiid.test");
 
     static {
-	BasicConfigurator.configure(new ConsoleAppender());
+    BasicConfigurator.configure(new ConsoleAppender());
 
-	LOGGER.setLevel(INFO);
+    LOGGER.setLevel(INFO);
 
     }
 
     public static final void setLogLevel(Level level) {
-	LOGGER.setLevel(level);
+    LOGGER.setLevel(level);
     }
 
     public static final void logDebug(String msg) {
-	log(DEBUG, msg, null);
+    log(DEBUG, msg, null);
     }
 
     public static final void logDebug(String msg, Throwable t) {
-	log(DEBUG, msg, t);
+    log(DEBUG, msg, t);
     }
 
     // info related messages, which
     public static final void logInfo(String msg) {
-	log(INFO, msg, null);
+    log(INFO, msg, null);
     }
 
     // configuration related messages
     public static final void logConfig(String msg) {
-	log(CONFIG, msg, null);
+    log(CONFIG, msg, null);
     }
 
     // most important messages
     public static final void log(String msg) {
-	log(INFO, msg, null);
+    log(INFO, msg, null);
     }
 
     private static final void log(Level javaLevel, Object msg, Throwable t) {
-    	if (LOGGER.isLoggable(javaLevel)) {
+        if (LOGGER.isLoggable(javaLevel)) {
 
-    		LOGGER.log(javaLevel, msg.toString(), t);
-    	}
+            LOGGER.log(javaLevel, msg.toString(), t);
+        }
     }
 
 }

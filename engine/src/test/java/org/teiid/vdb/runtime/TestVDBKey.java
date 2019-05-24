@@ -71,18 +71,18 @@ public class TestVDBKey {
     }
 
     @Test(expected=TeiidRuntimeException.class) public void testInvalid() {
-    	new VDBKey("a", "abc");  //$NON-NLS-1$
+        new VDBKey("a", "abc");  //$NON-NLS-1$
     }
 
     @Test public void testPossiblyInvalid() {
-    	VDBKey key = new VDBKey("a.abc", null);  //$NON-NLS-1$
-    	assertEquals("a.abc", key.getName());
-    	assertTrue(key.isAtMost());
-    	assertEquals("a.abc.latest", key.toString());
+        VDBKey key = new VDBKey("a.abc", null);  //$NON-NLS-1$
+        assertEquals("a.abc", key.getName());
+        assertTrue(key.isAtMost());
+        assertEquals("a.abc.latest", key.toString());
     }
 
     @Test(expected=TeiidRuntimeException.class) public void testInvalidName() {
-    	new VDBKey("a.1", "1");  //$NON-NLS-1$
+        new VDBKey("a.1", "1");  //$NON-NLS-1$
     }
 
     @Test public void testUnicode() {

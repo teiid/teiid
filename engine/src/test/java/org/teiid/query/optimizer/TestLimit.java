@@ -86,7 +86,7 @@ public class TestLimit {
     };
 
     private static TransformationMetadata exampleMetadata() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create models
         Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
         Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
@@ -805,11 +805,11 @@ public class TestLimit {
         FakeDataManager fdm = new FakeDataManager();
         TestProcessor.sampleData1(fdm);
         TestProcessor.helpProcess(plan, fdm, new List[] {
-        		Arrays.asList("a"), //$NON-NLS-1$
-        		Arrays.asList("a"), //$NON-NLS-1$
-        		Arrays.asList("a"), //$NON-NLS-1$
-        		Arrays.asList("a"), //$NON-NLS-1$
-        		Arrays.asList("a"), //$NON-NLS-1$
+                Arrays.asList("a"), //$NON-NLS-1$
+                Arrays.asList("a"), //$NON-NLS-1$
+                Arrays.asList("a"), //$NON-NLS-1$
+                Arrays.asList("a"), //$NON-NLS-1$
+                Arrays.asList("a"), //$NON-NLS-1$
         });
     }
 
@@ -1005,7 +1005,7 @@ public class TestLimit {
      * Note that the limit is not pushed below the select nodes under the join
      */
     @Test public void testEffectivelyCrossJoinLimit() throws Exception {
-    	 BasicSourceCapabilities caps = new BasicSourceCapabilities();
+         BasicSourceCapabilities caps = new BasicSourceCapabilities();
          caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
          DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
 
@@ -1033,7 +1033,7 @@ public class TestLimit {
     }
 
     @Test public void testOuterJoinLimit() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
@@ -1062,7 +1062,7 @@ public class TestLimit {
     }
 
     @Test public void testOrderedOuterJoinLimit() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1094,14 +1094,14 @@ public class TestLimit {
         hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("c", 3));
         hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList("a"), Arrays.asList("a"), Arrays.asList("c"));
         TestProcessor.helpProcess(plan, hdm, new List[] {
-        		Arrays.asList("a", 1), //$NON-NLS-1$
-        		Arrays.asList("a", 1), //$NON-NLS-1$
-        		Arrays.asList("a", 2), //$NON-NLS-1$
+                Arrays.asList("a", 1), //$NON-NLS-1$
+                Arrays.asList("a", 1), //$NON-NLS-1$
+                Arrays.asList("a", 2), //$NON-NLS-1$
         });
     }
 
     @Test public void testOrderedOuterJoinLimit1() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1133,9 +1133,9 @@ public class TestLimit {
         hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 ORDER BY pm1.g1.e1 LIMIT 3", Arrays.asList(null, 1), Arrays.asList("a", 2), Arrays.asList("c", 3));
         hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"));
         TestProcessor.helpProcess(plan, hdm, new List[] {
-        		Arrays.asList(null, null), //$NON-NLS-1$
-        		Arrays.asList(null, 1), //$NON-NLS-1$
-        		Arrays.asList("a", 2), //$NON-NLS-1$
+                Arrays.asList(null, null), //$NON-NLS-1$
+                Arrays.asList(null, 1), //$NON-NLS-1$
+                Arrays.asList("a", 2), //$NON-NLS-1$
         });
     }
 
@@ -1144,7 +1144,7 @@ public class TestLimit {
      * @throws Exception
      */
     @Test public void testOrderedOuterJoinLimit2() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1178,7 +1178,7 @@ public class TestLimit {
      * @throws Exception
      */
     @Test public void testOrderedOuterJoinLimit3() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1211,14 +1211,14 @@ public class TestLimit {
         hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList((String)null), Arrays.asList("a"), Arrays.asList("c"));
         hdm.addData("SELECT pm1.g2.e2, pm1.g2.e3 FROM pm1.g2 ORDER BY pm1.g2.e2", Arrays.asList(1, 1.0), Arrays.asList(2, 2.0));
         TestProcessor.helpProcess(plan, hdm, new List[] {
-        		Arrays.asList(null, 1, 1.0), //$NON-NLS-1$
-        		Arrays.asList("a", 2, 2.0), //$NON-NLS-1$
-        		Arrays.asList("c", 3, null), //$NON-NLS-1$
+                Arrays.asList(null, 1, 1.0), //$NON-NLS-1$
+                Arrays.asList("a", 2, 2.0), //$NON-NLS-1$
+                Arrays.asList("c", 3, null), //$NON-NLS-1$
         });
     }
 
     @Test public void testOrderedOuterJoinLimitInlineView() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1251,15 +1251,15 @@ public class TestLimit {
         hdm.addData("SELECT pm3.g1.e1, pm3.g1.e2 FROM pm3.g1 ORDER BY pm3.g1.e1 LIMIT 3", Arrays.asList(null, 7), Arrays.asList("a", 8), Arrays.asList("c", 9));
         hdm.addData("SELECT pm2.g1.e1 FROM pm2.g1 ORDER BY pm2.g1.e1", Arrays.asList("a"), Arrays.asList("b"), Arrays.asList("c"));
         TestProcessor.helpProcess(plan, hdm, new List[] {
-        		Arrays.asList(null, 4), //$NON-NLS-1$
-        		Arrays.asList(null, 7), //$NON-NLS-1$
-        		Arrays.asList("a", 5), //$NON-NLS-1$
+                Arrays.asList(null, 4), //$NON-NLS-1$
+                Arrays.asList(null, 7), //$NON-NLS-1$
+                Arrays.asList("a", 5), //$NON-NLS-1$
         });
 
     }
 
     @Test public void testOrderedOuterJoinLimitUnionPushdown() throws Exception {
-    	BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -1274,7 +1274,7 @@ public class TestLimit {
         String sql = "select u.e1, u.e2, pm2.g1.e2 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 union all select pm1.g2.e1, pm1.g2.e2 from pm1.g2 )as u left outer join pm2.g1 on u.e1 = pm2.g1.e1 where u.e2 is null order by u.e1 limit 3"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 WHERE pm1.g1.e2 IS NULL UNION ALL SELECT pm1.g2.e1 AS c_0, pm1.g2.e2 AS c_1 FROM pm1.g2 WHERE pm1.g2.e2 IS NULL ORDER BY c_0 LIMIT 3",
-        	"SELECT pm2.g1.e1 AS c_0, pm2.g1.e2 AS c_1 FROM pm2.g1 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            "SELECT pm2.g1.e1 AS c_0, pm2.g1.e2 AS c_1 FROM pm2.g1 ORDER BY c_0"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
@@ -1298,28 +1298,28 @@ public class TestLimit {
         hdm.addData("SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1 FROM pm1.g1 WHERE pm1.g1.e2 IS NULL UNION ALL SELECT pm1.g2.e1 AS c_0, pm1.g2.e2 AS c_1 FROM pm1.g2 WHERE pm1.g2.e2 IS NULL ORDER BY c_0 LIMIT 3", Arrays.asList(null, null), Arrays.asList("a", null), Arrays.asList("c", null));
         hdm.addData("SELECT pm2.g1.e1 AS c_0, pm2.g1.e2 AS c_1 FROM pm2.g1 ORDER BY c_0", Arrays.asList(null, 0), Arrays.asList("a", 1), Arrays.asList("e", 2));
         TestProcessor.helpProcess(plan, hdm, new List[] {
-        		Arrays.asList(null, null, null), //$NON-NLS-1$
-        		Arrays.asList("a", null, 1), //$NON-NLS-1$
-        		Arrays.asList("c", null, null), //$NON-NLS-1$
+                Arrays.asList(null, null, null), //$NON-NLS-1$
+                Arrays.asList("a", null, 1), //$NON-NLS-1$
+                Arrays.asList("c", null, null), //$NON-NLS-1$
         });
 
     }
 
     @Test public void testPushSortOverAliases() throws Exception {
-		String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "
-				+ " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc";
+        String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "
+                + " select sum(column_b) over (partition by key_column) as column_b, key_column from b) b on a.key_column = b.key_column order by column_a desc";
 
 
-		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table a (column_a integer, key_column string primary key);"
-				+ " create foreign table b (column_b integer, key_column string primary key);", "x", "y");
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table a (column_a integer, key_column string primary key);"
+                + " create foreign table b (column_b integer, key_column string primary key);", "x", "y");
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", "SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0"}, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING);
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, new String[] {"SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", "SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0"}, TestOptimizer.getGenericFinder(false), ComparisonMode.EXACT_COMMAND_STRING);
 
-		HardcodedDataManager hdm = new HardcodedDataManager();
-		hdm.addData("SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0", Arrays.asList("a", 1));
-		hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", Arrays.asList("a", 1));
-		TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1L, 1L)});
-	}
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.key_column, g_0.column_a FROM y.a AS g_0", Arrays.asList("a", 1));
+        hdm.addData("SELECT g_0.key_column, g_0.column_b FROM y.b AS g_0", Arrays.asList("a", 1));
+        TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(1L, 1L)});
+    }
 
     @Test public void testPushSortOverAliasesWithLimit() throws Exception {
         String sql = "select column_a, column_b from (select sum(column_a) over (partition by key_column) as column_a, key_column from a ) a left outer join ( "

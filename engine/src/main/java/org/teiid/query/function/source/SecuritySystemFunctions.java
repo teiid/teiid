@@ -23,7 +23,7 @@ import org.teiid.query.util.CommandContext;
 
 public class SecuritySystemFunctions {
 
-	public static final String DATA_ROLE = "data"; //$NON-NLS-1$
+    public static final String DATA_ROLE = "data"; //$NON-NLS-1$
 
     public static boolean hasRole(CommandContext context, String roleName) {
         return hasRole(context, DATA_ROLE, roleName);
@@ -38,9 +38,9 @@ public class SecuritySystemFunctions {
         }
         AuthorizationValidator authorizationValidator = context.getAuthorizationValidator();
         if (authorizationValidator == null) {
-        	return true;
+            return true;
         }
-    	return authorizationValidator.hasRole(roleName, context);
+        return authorizationValidator.hasRole(roleName, context);
     }
 
 }

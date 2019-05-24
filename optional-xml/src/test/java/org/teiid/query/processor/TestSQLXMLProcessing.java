@@ -82,39 +82,39 @@ import org.teiid.util.StAXSQLXML;
 @SuppressWarnings({"nls", "unchecked"})
 public class TestSQLXMLProcessing {
 
-	@Test public void testXmlElementTextContent() throws Exception {
-		String sql = "SELECT xmlelement(foo, '<bar>', convert('<bar1/>', xml))"; //$NON-NLS-1$
+    @Test public void testXmlElementTextContent() throws Exception {
+        String sql = "SELECT xmlelement(foo, '<bar>', convert('<bar1/>', xml))"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<foo>&lt;bar&gt;<bar1/></foo>"),
+                Arrays.asList("<foo>&lt;bar&gt;<bar1/></foo>"),
         };
 
         process(sql, expected);
     }
 
-	/**
-	 * Repeat of the above test, but with a document declaration.  Because of the way we do event filtering, we end
-	 * up with a slightly different, but equivalent answer.
-	 */
-	@Test public void testXmlElementTextContent1() throws Exception {
-		String sql = "SELECT xmlelement(foo, '<bar>', convert('<?xml version=\"1.0\" encoding=\"UTF-8\"?><bar1/>', xml))"; //$NON-NLS-1$
+    /**
+     * Repeat of the above test, but with a document declaration.  Because of the way we do event filtering, we end
+     * up with a slightly different, but equivalent answer.
+     */
+    @Test public void testXmlElementTextContent1() throws Exception {
+        String sql = "SELECT xmlelement(foo, '<bar>', convert('<?xml version=\"1.0\" encoding=\"UTF-8\"?><bar1/>', xml))"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<foo>&lt;bar&gt;<bar1></bar1></foo>"),
+                Arrays.asList("<foo>&lt;bar&gt;<bar1></bar1></foo>"),
         };
 
         process(sql, expected);
-	}
+    }
 
     @Test public void testXmlElement() throws Exception {
         String sql = "SELECT xmlelement(e1, e2) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<e1>1</e1>"),
-        		Arrays.asList("<e1>0</e1>"),
-        		Arrays.asList("<e1>0</e1>"),
-        		Arrays.asList("<e1>3</e1>"),
-        		Arrays.asList("<e1>2</e1>"),
+                Arrays.asList("<e1>1</e1>"),
+                Arrays.asList("<e1>0</e1>"),
+                Arrays.asList("<e1>0</e1>"),
+                Arrays.asList("<e1>3</e1>"),
+                Arrays.asList("<e1>2</e1>"),
                 Arrays.asList("<e1>1</e1>"),
         };
 
@@ -125,11 +125,11 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(e1, e2, xmlconcat(xmlelement(x), xmlelement(y, e3))) from pm1.g1 order by e1, e2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<e1>1<x></x><y>false</y></e1>"),
-        		Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
-        		Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
-        		Arrays.asList("<e1>3<x></x><y>true</y></e1>"),
-        		Arrays.asList("<e1>2<x></x><y>false</y></e1>"),
+                Arrays.asList("<e1>1<x></x><y>false</y></e1>"),
+                Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
+                Arrays.asList("<e1>0<x></x><y>false</y></e1>"),
+                Arrays.asList("<e1>3<x></x><y>true</y></e1>"),
+                Arrays.asList("<e1>2<x></x><y>false</y></e1>"),
                 Arrays.asList("<e1>1<x></x><y>true</y></e1>"),
         };
 
@@ -140,8 +140,8 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(x, xmlforest(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<x><e2>1</e2><val>1</val></x>"), //note e1 is not present, because it's null
-        		Arrays.asList("<x><e1>a</e1><e2>0</e2><val>1</val></x>"),
+                Arrays.asList("<x><e2>1</e2><val>1</val></x>"), //note e1 is not present, because it's null
+                Arrays.asList("<x><e1>a</e1><e2>0</e2><val>1</val></x>"),
         };
 
         process(sql, expected);
@@ -157,7 +157,7 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlforest(X'AB' as val)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<val>qw==</val>"),
+                Arrays.asList("<val>qw==</val>"),
         };
 
         process(sql, expected);
@@ -167,7 +167,7 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlforest(cast(X'AB' as blob) as val)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<val>qw==</val>"),
+                Arrays.asList("<val>qw==</val>"),
         };
 
         process(sql, expected);
@@ -177,8 +177,8 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(x, xmlforest(x, y, '1' as val)) from (select e1 as x, e2 as y from pm1.g1) a order by x, y limit 2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<x><y>1</y><val>1</val></x>"), //note e1 is not present, because it's null
-        		Arrays.asList("<x><x>a</x><y>0</y><val>1</val></x>"),
+                Arrays.asList("<x><y>1</y><val>1</val></x>"), //note e1 is not present, because it's null
+                Arrays.asList("<x><x>a</x><y>0</y><val>1</val></x>"),
         };
 
         process(sql, expected);
@@ -188,8 +188,8 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(x, xmlattributes(e1, e2, '1' as val)) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<x e2=\"1\" val=\"1\"></x>"), //note e1 is not present, because it's null
-        		Arrays.asList("<x e1=\"a\" e2=\"0\" val=\"1\"></x>"),
+                Arrays.asList("<x e2=\"1\" val=\"1\"></x>"), //note e1 is not present, because it's null
+                Arrays.asList("<x e1=\"a\" e2=\"0\" val=\"1\"></x>"),
         };
 
         process(sql, expected);
@@ -199,7 +199,7 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(x, xmlpi(name e1, '  1'))"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<x><?e1 1?></x>"),
+                Arrays.asList("<x><?e1 1?></x>"),
         };
 
         process(sql, expected);
@@ -209,8 +209,8 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(x, xmlnamespaces(no default, 'http://foo' as x, 'http://foo1' as y), xmlattributes(e1), e2) from pm1.g1 order by e1, e2 limit 2"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<x xmlns=\"\" xmlns:x=\"http://foo\" xmlns:y=\"http://foo1\">1</x>"), //note e1 is not present, because it's null
-        		Arrays.asList("<x xmlns=\"\" xmlns:x=\"http://foo\" xmlns:y=\"http://foo1\" e1=\"a\">0</x>"),
+                Arrays.asList("<x xmlns=\"\" xmlns:x=\"http://foo\" xmlns:y=\"http://foo1\">1</x>"), //note e1 is not present, because it's null
+                Arrays.asList("<x xmlns=\"\" xmlns:x=\"http://foo\" xmlns:y=\"http://foo1\" e1=\"a\">0</x>"),
         };
 
         process(sql, expected);
@@ -220,7 +220,7 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(parent, xmlAgg(xmlelement(x, xmlattributes(e1, e2)))) from pm1.g1"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"a\" e2=\"3\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"0\"></x></parent>"),
+                Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"a\" e2=\"3\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"0\"></x></parent>"),
         };
 
         process(sql, expected);
@@ -230,67 +230,67 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT xmlelement(parent, xmlAgg(xmlelement(x, xmlattributes(e1, e2)) order by e2)) from pm1.g1"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"3\"></x></parent>"),
+                Arrays.asList("<parent><x e1=\"a\" e2=\"0\"></x><x e1=\"a\" e2=\"0\"></x><x e2=\"1\"></x><x e1=\"c\" e2=\"1\"></x><x e1=\"b\" e2=\"2\"></x><x e1=\"a\" e2=\"3\"></x></parent>"),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerialize() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlelement(parent) as string)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlelement(parent) as string)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<parent></parent>"),
+                Arrays.asList("<parent></parent>"),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerialize1() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlelement(parent) as string including xmldeclaration)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlelement(parent) as string including xmldeclaration)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<?xml version=\"1.0\" encoding=\"UTF-8\"?><parent></parent>"),
+                Arrays.asList("<?xml version=\"1.0\" encoding=\"UTF-8\"?><parent></parent>"),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerialize2() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlelement(parent) as string version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlelement(parent) as string version '1.2' including xmldeclaration)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>"),
+                Arrays.asList("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>"),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerializeBinary() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary version '1.2' including xmldeclaration)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>".getBytes(Charset.forName("UTF-8")))),
+                Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>".getBytes(Charset.forName("UTF-8")))),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerializeBinary1() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary encoding \"UTF-16\" version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary encoding \"UTF-16\" version '1.2' including xmldeclaration)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><parent></parent>".getBytes(Charset.forName("UTF-16")))),
+                Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><parent></parent>".getBytes(Charset.forName("UTF-16")))),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlSerializeBinary2() throws Exception {
-    	String sql = "SELECT cast(xmlserialize(document xmlelement(other) as blob encoding \"UTF-16\" version '1.2' including xmldeclaration) as varbinary)"; //$NON-NLS-1$
+        String sql = "SELECT cast(xmlserialize(document xmlelement(other) as blob encoding \"UTF-16\" version '1.2' including xmldeclaration) as varbinary)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><other></other>".getBytes(Charset.forName("UTF-16")))),
+                Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><other></other>".getBytes(Charset.forName("UTF-16")))),
         };
 
         process(sql, expected);
@@ -300,10 +300,10 @@ public class TestSQLXMLProcessing {
      * if not specifically excluding, then leave the declaration intact (pre-8.2 behavior)
      */
     @Test public void testXmlSerialize3() throws Exception {
-    	String sql = "SELECT xmlserialize(document xmlparse(document '<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>') as string)"; //$NON-NLS-1$
+        String sql = "SELECT xmlserialize(document xmlparse(document '<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>') as string)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>"),
+                Arrays.asList("<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>"),
         };
 
         process(sql, expected);
@@ -313,8 +313,8 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(null, "first"),
-        		Arrays.asList("attr", "second"),
+                Arrays.asList(null, "first"),
+                Arrays.asList("attr", "second"),
         };
 
         process(sql, expected);
@@ -357,7 +357,7 @@ public class TestSQLXMLProcessing {
 
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new ArrayImpl("first", "second")),
+                Arrays.asList(new ArrayImpl("first", "second")),
         };
         process(sql, expected);
     }
@@ -367,7 +367,7 @@ public class TestSQLXMLProcessing {
 
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new ArrayImpl("first")),
+                Arrays.asList(new ArrayImpl("first")),
         };
         process(sql, expected);
     }
@@ -381,7 +381,7 @@ public class TestSQLXMLProcessing {
 
 
         List<?>[] expected = new List<?>[] {
-        		Collections.singletonList(null)
+                Collections.singletonList(null)
         };
         process(sql, expected);
     }
@@ -390,8 +390,8 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:type=\"xs:hexBinary\">0FAB</b><b>1F1C</b></a>', xml) columns val varbinary path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
-        		Arrays.asList(new BinaryType(new byte[] {0x1F, 0x1C})),
+                Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
+                Arrays.asList(new BinaryType(new byte[] {0x1F, 0x1C})),
         };
 
         process(sql, expected);
@@ -401,7 +401,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a' passing xmlparse(document X'EFBBBF" + PropertiesUtils.toHex("<a/>".getBytes("UTF-8")) + "' wellformed)) as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<a/>"),
+                Arrays.asList("<a/>"),
         };
 
         process(sql, expected);
@@ -411,8 +411,8 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:nil=\"true\" xsi:type=\"xs:int\"/><b>1</b></a>', xml) columns val integer path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Collections.singletonList(null),
-        		Arrays.asList(1),
+                Collections.singletonList(null),
+                Arrays.asList(1),
         };
 
         process(sql, expected);
@@ -428,7 +428,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a' passing convert('<a s=\"1\" d=\"2.0\" l=\"12345678901\"/>', xml) columns x short path '@s', x1 double path '@d', z long path '@l') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList((short)1, 2.0, 12345678901L)
+                Arrays.asList((short)1, 2.0, 12345678901L)
         };
 
         process(sql, expected);
@@ -438,24 +438,24 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a' passing convert('<a dt=\"0001-11-17T07:38:49\" dtz=\"2011-11-17T07:38:49Z\" t=\"13:23:14\" d=\"2010-04-05\" />', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz', y date path '@d', z time path '@t') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(TimestampUtil.createTimestamp(-1899, 10, 19, 7, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 17, 1, 38, 49, 0), TimestampUtil.createDate(110, 3, 5), TimestampUtil.createTime(13, 23, 14))
+                Arrays.asList(TimestampUtil.createTimestamp(-1899, 10, 19, 7, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 17, 1, 38, 49, 0), TimestampUtil.createDate(110, 3, 5), TimestampUtil.createTime(13, 23, 14))
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlTableDateTimeInDST() throws Exception {
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$
-    	try {
-	        String sql = "select * from xmltable('/a' passing convert('<a dt=\"2011-11-01T09:38:49\" dtz=\"2011-11-01T07:38:49Z\"/>', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz') as x"; //$NON-NLS-1$
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$
+        try {
+            String sql = "select * from xmltable('/a' passing convert('<a dt=\"2011-11-01T09:38:49\" dtz=\"2011-11-01T07:38:49Z\"/>', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz') as x"; //$NON-NLS-1$
 
-	        List<?>[] expected = new List<?>[] {
-	        		Arrays.asList(TimestampUtil.createTimestamp(111, 10, 1, 9, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 1, 0, 38, 49, 0))
-	        };
+            List<?>[] expected = new List<?>[] {
+                    Arrays.asList(TimestampUtil.createTimestamp(111, 10, 1, 9, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 1, 0, 38, 49, 0))
+            };
 
-	        process(sql, expected);
-    	} finally {
-    		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+            process(sql, expected);
+        } finally {
+            TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
         }
     }
 
@@ -463,12 +463,12 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("a"),
-        		Arrays.asList(""),
-        		Arrays.asList("a"),
-        		Arrays.asList("c"),
-        		Arrays.asList("b"),
-        		Arrays.asList("a")
+                Arrays.asList("a"),
+                Arrays.asList(""),
+                Arrays.asList("a"),
+                Arrays.asList("c"),
+                Arrays.asList("b"),
+                Arrays.asList("a")
         };
 
         process(sql, expected);
@@ -478,49 +478,49 @@ public class TestSQLXMLProcessing {
         String sql = "select * from g1"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(null, "first"),
-        		Arrays.asList("attr", "second"),
+                Arrays.asList(null, "first"),
+                Arrays.asList("attr", "second"),
         };
 
-		MetadataStore metadataStore = new MetadataStore();
-	    // Create models
-	    Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
+        MetadataStore metadataStore = new MetadataStore();
+        // Create models
+        Schema vm1 = RealMetadataFactory.createVirtualModel("vm1", metadataStore);  //$NON-NLS-1$
 
-	    QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
-	    Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
+        QueryNode vm1g1n1 = new QueryNode("select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"); //$NON-NLS-1$ //$NON-NLS-2$
+        Table vm1g1 = RealMetadataFactory.createVirtualGroup("g1", vm1, vm1g1n1); //$NON-NLS-1$
 
-	    RealMetadataFactory.createElements(vm1g1,
-	                                new String[] { "x", "val" }, //$NON-NLS-1$
-	                                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
-	    // Create the facade from the store
-	    TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+        RealMetadataFactory.createElements(vm1g1,
+                                    new String[] { "x", "val" }, //$NON-NLS-1$
+                                    new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+        // Create the facade from the store
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
 
-	    ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
 
-	    helpProcess(plan, createCommandContext(), dataManager, expected);
+        helpProcess(plan, createCommandContext(), dataManager, expected);
 
-	    plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
+        plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(), createCommandContext());
 
-	    doProcess(plan, dataManager, expected, createCommandContext());
+        doProcess(plan, dataManager, expected, createCommandContext());
     }
 
-	@Test public void testXmlTableDefaultAndParent() throws Exception {
+    @Test public void testXmlTableDefaultAndParent() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a y=\"rev\"><b>first</b><b x=\"1\">second</b></a>', xml) columns x integer default -1 path '@x' , val string path '../@y') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(-1, "rev"),
-        		Arrays.asList(1, "rev"),
+                Arrays.asList(-1, "rev"),
+                Arrays.asList(1, "rev"),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlTableReturnXml() throws Exception {
-    	String sql = "select * from xmltable('/*:a/*:b' passing convert('<a xmlns=\"http:foo\"><b>first</b><b xmlns=\"\" x=\"1\">second</b></a>', xml) columns val xml path '.') as x"; //$NON-NLS-1$
+        String sql = "select * from xmltable('/*:a/*:b' passing convert('<a xmlns=\"http:foo\"><b>first</b><b xmlns=\"\" x=\"1\">second</b></a>', xml) columns val xml path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b xmlns=\"http:foo\">first</b>"),
-        		Arrays.asList("<b x=\"1\">second</b>"),
+                Arrays.asList("<b xmlns=\"http:foo\">first</b>"),
+                Arrays.asList("<b x=\"1\">second</b>"),
         };
 
         process(sql, expected);
@@ -530,7 +530,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml)) as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<a><b>first</b><b x=\"1\">second</b></a>"),
+                Arrays.asList("<a><b>first</b><b x=\"1\">second</b></a>"),
         };
 
         process(sql, expected);
@@ -540,7 +540,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('<root>{for $x in $a/a/b return <c>{$x}</c>}</root>' passing convert('<a><b>first</b><b x=\"1\">second</b></a>', xml) as a columns x xml path 'c[1]/b') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b>first</b>"),
+                Arrays.asList("<b>first</b>"),
         };
 
         process(sql, expected);
@@ -550,10 +550,10 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b><c>1</c></b><b>1</b><b><c>1</c></b><b>1</b></a>', xml) columns x for ordinality, c integer) as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(1, 1),
-        		Arrays.asList(2, null),
-        		Arrays.asList(3, 1),
-        		Arrays.asList(4, null),
+                Arrays.asList(1, 1),
+                Arrays.asList(2, null),
+                Arrays.asList(3, 1),
+                Arrays.asList(4, null),
         };
 
         ProcessorPlan plan = process(sql, expected);
@@ -564,7 +564,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('<a>{for $i in (1 to 5) return $i}</a>' columns x string path '//text()') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("1 2 3 4 5"),
+                Arrays.asList("1 2 3 4 5"),
         };
 
         process(sql, expected, true);
@@ -574,7 +574,7 @@ public class TestSQLXMLProcessing {
         String sql = "select xmlquery('for $i in (1 to 5) return $i')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("1 2 3 4 5"),
+                Arrays.asList("1 2 3 4 5"),
         };
 
         process(sql, expected);
@@ -584,7 +584,7 @@ public class TestSQLXMLProcessing {
         String sql = "select xmlexists('for $i in (1 to 1) return $i'), xmlexists('for $i in (1 to 0) return $i')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(true, false),
+                Arrays.asList(true, false),
         };
 
         process(sql, expected);
@@ -594,63 +594,63 @@ public class TestSQLXMLProcessing {
         String sql = "select xmlquery('/a' passing cast(null as xml))"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Collections.singletonList(null),
+                Collections.singletonList(null),
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlQueryEmptyNull() throws Exception {
-    	String sql = "select xmlquery('/a' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
+        String sql = "select xmlquery('/a' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList((String)null)
+                Arrays.asList((String)null)
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlQueryEmptyNullString() throws Exception {
-    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
+        String sql = "select xmlquery('/a/b' passing xmlparse(document '<x/>') null on empty)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList((String)null)
+                Arrays.asList((String)null)
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlQueryStreaming() throws Exception {
-    	String sql = "select xmlquery('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') null on empty)"; //$NON-NLS-1$
+        String sql = "select xmlquery('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') null on empty)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b x=\"1\"/><b x=\"2\"/>")
+                Arrays.asList("<b x=\"1\"/><b x=\"2\"/>")
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlTableStreamingTiming() throws Throwable {
-    	String sql = "select xmlserialize(x.object_value as string), y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>')) as x, (select 1 as x) as y"; //$NON-NLS-1$
+        String sql = "select xmlserialize(x.object_value as string), y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>')) as x, (select 1 as x) as y"; //$NON-NLS-1$
 
         final List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<b x=\"1\"/>", 1),
-        		Arrays.asList("<b x=\"2\"/>", 1)
+                Arrays.asList("<b x=\"1\"/>", 1),
+                Arrays.asList("<b x=\"2\"/>", 1)
         };
 
         executeStreaming(sql, expected, -1);
     }
 
     @Test public void testXmlTableStreamingMultibatch() throws Throwable {
-    	String sql = "select t.* from (select xmlelement(a, xmlagg(xmlelement(b, e1))) doc from pm1.g1) as x, xmltable('/a/b' passing doc columns x string path '.') as t"; //$NON-NLS-1$
+        String sql = "select t.* from (select xmlelement(a, xmlagg(xmlelement(b, e1))) doc from pm1.g1) as x, xmltable('/a/b' passing doc columns x string path '.') as t"; //$NON-NLS-1$
 
         final List<?>[] expected = new List<?>[] {
-        		Arrays.asList("a"),
-        		Arrays.asList(""),
-        		Arrays.asList("a"),
-        		Arrays.asList("c"),
-        		Arrays.asList("b"),
-        		Arrays.asList("a")
+                Arrays.asList("a"),
+                Arrays.asList(""),
+                Arrays.asList("a"),
+                Arrays.asList("c"),
+                Arrays.asList("b"),
+                Arrays.asList("a")
         };
 
         dataManager.setBlockOnce();
@@ -658,79 +658,79 @@ public class TestSQLXMLProcessing {
     }
 
     @Test(expected=TeiidProcessingException.class) public void testXmlTableStreamingTimingWithError() throws Throwable {
-    	String sql = "select x.x, y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') columns x integer path '1 div (@x - 1)') as x, (select 1 as x) as y"; //$NON-NLS-1$
+        String sql = "select x.x, y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') columns x integer path '1 div (@x - 1)') as x, (select 1 as x) as y"; //$NON-NLS-1$
 
         final List<?>[] expected = new List<?>[] {
-        		Arrays.asList(1, 1),
-        		Arrays.asList(2, 1)
+                Arrays.asList(1, 1),
+                Arrays.asList(2, 1)
         };
 
         executeStreaming(sql, expected, -1);
     }
 
-	private void executeStreaming(String sql, final List<?>[] expected, int batchSize)
-			throws Throwable {
-		final CommandContext cc = createCommandContext();
-		if (batchSize != -1) {
-			cc.setBufferManager(BufferManagerFactory.getTestBufferManager(0, 1));
-		}
+    private void executeStreaming(String sql, final List<?>[] expected, int batchSize)
+            throws Throwable {
+        final CommandContext cc = createCommandContext();
+        if (batchSize != -1) {
+            cc.setBufferManager(BufferManagerFactory.getTestBufferManager(0, 1));
+        }
         final ResultsFuture<Runnable> r = new ResultsFuture<Runnable>();
         Executor ex = new Executor() {
 
-			@Override
-			public void execute(Runnable command) {
-				r.getResultsReceiver().receiveResults(command);
-			}
-		};
+            @Override
+            public void execute(Runnable command) {
+                r.getResultsReceiver().receiveResults(command);
+            }
+        };
         cc.setExecutor(ex);
-		final ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
-		final ResultsFuture<Void> result = new ResultsFuture<Void>();
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				try {
-					doProcess(plan, dataManager, expected, cc);
-					result.getResultsReceiver().receiveResults(null);
-				} catch (Throwable e) {
-					result.getResultsReceiver().exceptionOccurred(e);
-				}
-			}
-		};
-		t.start();
-		Runnable runnable = r.get();
-		runnable.run();
-		try {
-			result.get();
-		} catch (ExecutionException e) {
-			if (e.getCause() != null) {
-				throw e.getCause();
-			}
-			throw e;
-		}
-	}
+        final ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
+        final ResultsFuture<Void> result = new ResultsFuture<Void>();
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    doProcess(plan, dataManager, expected, cc);
+                    result.getResultsReceiver().receiveResults(null);
+                } catch (Throwable e) {
+                    result.getResultsReceiver().exceptionOccurred(e);
+                }
+            }
+        };
+        t.start();
+        Runnable runnable = r.get();
+        runnable.run();
+        try {
+            result.get();
+        } catch (ExecutionException e) {
+            if (e.getCause() != null) {
+                throw e.getCause();
+            }
+            throw e;
+        }
+    }
 
     @Test public void testXmlNameEscaping() throws Exception {
-    	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
+        String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<_x0078_ml>1</_x0078_ml>")
+                Arrays.asList("<_x0078_ml>1</_x0078_ml>")
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlParseDoc() throws Exception {
-    	String sql = "select xmlparse(document '<a/>')"; //$NON-NLS-1$
+        String sql = "select xmlparse(document '<a/>')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<a/>")
+                Arrays.asList("<a/>")
         };
 
         process(sql, expected);
     }
 
     @Test(expected=ExpressionEvaluationException.class) public void testXmlParseDocException() throws Exception {
-    	String sql = "select xmlparse(document 'a<a/>')"; //$NON-NLS-1$
+        String sql = "select xmlparse(document 'a<a/>')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
         };
@@ -739,27 +739,27 @@ public class TestSQLXMLProcessing {
     }
 
     @Test public void testXmlParseContent() throws Exception {
-    	String sql = "select xmlparse(content 'a<a/>')"; //$NON-NLS-1$
+        String sql = "select xmlparse(content 'a<a/>')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("a<a/>")
+                Arrays.asList("a<a/>")
         };
 
         process(sql, expected);
     }
 
     @Test public void testXmlParseBOM() throws Exception {
-    	String sql = "select xmlparse(content X'EFBBBF" + PropertiesUtils.toHex("<a/>".getBytes("UTF-8")) + "')"; //$NON-NLS-1$
+        String sql = "select xmlparse(content X'EFBBBF" + PropertiesUtils.toHex("<a/>".getBytes("UTF-8")) + "')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("﻿<a/>")
+                Arrays.asList("﻿<a/>")
         };
 
         process(sql, expected);
     }
 
     @Test(expected=ExpressionEvaluationException.class) public void testXmlParseContentException() throws Exception {
-    	String sql = "select xmlparse(content 'a<')"; //$NON-NLS-1$
+        String sql = "select xmlparse(content 'a<')"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
         };
@@ -769,40 +769,40 @@ public class TestSQLXMLProcessing {
 
     //by pass the validation
     @Test public void testXmlParseContentWellformed() throws Exception {
-    	String sql = "select xmlparse(content 'a<' WELLFORMED)"; //$NON-NLS-1$
+        String sql = "select xmlparse(content 'a<' WELLFORMED)"; //$NON-NLS-1$
 
-    	List<?>[] expected = new List<?>[] {
-        		Arrays.asList("a<")
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("a<")
         };
 
         process(sql, expected);
     }
 
-	@Test public void testXmlParseClob() throws Exception {
-    	String sql = "select xmlparse(document cast(? as clob)) x"; //$NON-NLS-1$
+    @Test public void testXmlParseClob() throws Exception {
+        String sql = "select xmlparse(document cast(? as clob)) x"; //$NON-NLS-1$
 
         List[] expected = new List[] {
-        		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
+                Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };
 
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(TestTextTable.clobFromFile("udf.xmi")));
     }
 
-	@Test public void testXmlParseBlob() throws Exception {
-    	String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
+    @Test public void testXmlParseBlob() throws Exception {
+        String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
 
         List[] expected = new List[] {
-        		Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
+                Arrays.asList(ObjectConverterUtil.convertToString(new FileInputStream(UnitTestUtil.getTestDataFile("udf.xmi")))),
         };
 
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("udf.xmi")));
     }
 
-	@Test public void testXmlParseBlobWithEncoding() throws Exception {
-    	String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
+    @Test public void testXmlParseBlobWithEncoding() throws Exception {
+        String sql = "select xmlparse(document cast(? as blob)) x"; //$NON-NLS-1$
 
         List[] expected = new List[] {
-        		Arrays.asList(ObjectConverterUtil.convertToString(new InputStreamReader(new FileInputStream(UnitTestUtil.getTestDataFile("encoding.xml")), Charset.forName("ISO-8859-1")))),
+                Arrays.asList(ObjectConverterUtil.convertToString(new InputStreamReader(new FileInputStream(UnitTestUtil.getTestDataFile("encoding.xml")), Charset.forName("ISO-8859-1")))),
         };
 
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(blobFromFile("encoding.xml")));
@@ -812,7 +812,7 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a' passing xmlparse(document '<a>2000-01-01T01:01:00.2-06:00</a>') columns x timestamp path 'xs:dateTime(./text())', y timestamp path '.') as x"; //$NON-NLS-1$
         Timestamp ts = TimestampUtil.createTimestamp(100, 0, 1, 1, 1, 0, 200000000);
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(ts, ts),
+                Arrays.asList(ts, ts),
         };
 
         process(sql, expected);
@@ -821,7 +821,7 @@ public class TestSQLXMLProcessing {
     @Test public void testXmlTableStreamingParentAttributes() throws Exception {
         String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b></a>') columns y string path '.', x integer path '../@x') as x"; //$NON-NLS-1$
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("foo", 1),
+                Arrays.asList("foo", 1),
         };
         process(sql, expected);
     }
@@ -834,16 +834,16 @@ public class TestSQLXMLProcessing {
         String sql = "select * from xmltable('/a/a' passing xmlparse(document '<a><a>2000-01-01T01:01:00.2-06:00<a></a></a></a>') columns x timestamp path 'xs:dateTime(./text())') as x"; //$NON-NLS-1$
         Timestamp ts = TimestampUtil.createTimestamp(100, 0, 1, 1, 1, 0, 200000000);
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(ts),
+                Arrays.asList(ts),
         };
         process(sql, expected);
     }
 
-	@Test public void testXmlTableSubquery() throws Exception {
-		String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">c</b></a>', xml) columns x string path '@x', val string path '.') as x where val = (select max(e1) from pm1.g1 as x)";
+    @Test public void testXmlTableSubquery() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">c</b></a>', xml) columns x string path '@x', val string path '.') as x where val = (select max(e1) from pm1.g1 as x)";
 
         List[] expected = new List[] {
-        		Arrays.asList("attr", "c"),
+                Arrays.asList("attr", "c"),
         };
 
         process(sql, expected);
@@ -852,20 +852,20 @@ public class TestSQLXMLProcessing {
     private static FakeDataManager dataManager = new FakeDataManager();
 
     @BeforeClass public static void oneTimeSetUp() {
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
-    	sampleData1(dataManager);
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+        sampleData1(dataManager);
     }
 
     @AfterClass public static void oneTimeTearDown() {
-    	TimestampWithTimezone.resetCalendar(null); //$NON-NLS-1$
+        TimestampWithTimezone.resetCalendar(null); //$NON-NLS-1$
     }
 
     private ProcessorPlan process(String sql, List<?>[] expected) throws Exception {
         return process(sql, expected, false);
     }
 
-	private ProcessorPlan process(String sql, List<?>[] expected, boolean relativeXPath) throws Exception {
-	    CommandContext cc = createCommandContext();
+    private ProcessorPlan process(String sql, List<?>[] expected, boolean relativeXPath) throws Exception {
+        CommandContext cc = createCommandContext();
         cc.getOptions().relativeXPath(relativeXPath);
         CommandContext.pushThreadLocalContext(cc);
         try {
@@ -875,18 +875,18 @@ public class TestSQLXMLProcessing {
         } finally {
             CommandContext.popThreadLocalContext();
         }
-	}
+    }
 
-	public static BlobType blobFromFile(final String file) {
-		return new BlobType(new BlobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file))));
-	}
+    public static BlobType blobFromFile(final String file) {
+        return new BlobType(new BlobImpl(new InputStreamFactory.FileInputStreamFactory(UnitTestUtil.getTestDataFile(file))));
+    }
 
     @Test public void testXmlTableWithDefault() throws Exception {
         String sql = "select * from xmltable(XMLNAMESPACES(default 'http://x.y.com'), '/a/b' passing convert('<a xmlns=\"http://x.y.com\"><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '.') as x"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList(null, "first"),
-        		Arrays.asList("attr", "second"),
+                Arrays.asList(null, "first"),
+                Arrays.asList("attr", "second"),
         };
 
         process(sql, expected);
@@ -896,25 +896,25 @@ public class TestSQLXMLProcessing {
         String sql = "SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e1 = a.e1)) FROM pm1.g1 AS a where e1 = 'a' GROUP BY e1"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Arrays.asList("<metadata><e1>a</e1><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes></metadata>"),
+                Arrays.asList("<metadata><e1>a</e1><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes></metadata>"),
         };
 
         process(sql, expected);
     }
 
-	@Test public void testJsonStreamingXmlTable() throws Exception {
-		String sql = "select * from xmltable('/Person/phoneNumber' passing jsontoxml('Person', cast(? as blob)) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
+    @Test public void testJsonStreamingXmlTable() throws Exception {
+        String sql = "select * from xmltable('/Person/phoneNumber' passing jsontoxml('Person', cast(? as blob)) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
 
-		List<?>[] expected = new List<?>[] {
-        		Arrays.asList("home", "212 555-1234"),
-        		Arrays.asList("fax", "646 555-4567"),
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("home", "212 555-1234"),
+                Arrays.asList("fax", "646 555-4567"),
         };
 
-		Blob b = BlobType.createBlob(("{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
+        Blob b = BlobType.createBlob(("{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
         "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }").getBytes(Charset.forName("UTF-8")));
 
-		processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
-	}
+        processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
+    }
 
     @Test public void testLargeNumeric() throws Exception {
         String sql = "select * from xmltable('/num' passing jsontoxml('num', '{\"a\":12345678901234567890, \"b\":12345678901234567890.0}') columns x string path 'a', y string path 'b') as x"; //$NON-NLS-1$
@@ -929,54 +929,54 @@ public class TestSQLXMLProcessing {
         processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
     }
 
-	@Test public void testStaxComment() throws Exception {
-		String sql = "select * from xmltable('/*:Person/phoneNumber' passing cast(? as xml) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
+    @Test public void testStaxComment() throws Exception {
+        String sql = "select * from xmltable('/*:Person/phoneNumber' passing cast(? as xml) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
 
-		List<?>[] expected = new List<?>[] {
-        		Arrays.asList(null, "8881112222"),
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList(null, "8881112222"),
         };
 
-		XMLInputFactory factory = XMLInputFactory.newInstance();
-		XMLEventReader reader = factory.createXMLEventReader(new StringReader("<Person><!--hello--><phoneNumber><number>8881112222</number></phoneNumber></Person>"));
-		XMLType value = new XMLType(new StAXSQLXML(new StAXSource(reader)));
-		value.setType(Type.DOCUMENT);
-		Command command = helpParse(sql);
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        XMLEventReader reader = factory.createXMLEventReader(new StringReader("<Person><!--hello--><phoneNumber><number>8881112222</number></phoneNumber></Person>"));
+        XMLType value = new XMLType(new StAXSQLXML(new StAXSource(reader)));
+        value.setType(Type.DOCUMENT);
+        Command command = helpParse(sql);
         CommandContext context = createCommandContext();
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         context.setMetadata(metadata);
         CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder();
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder, context);
         setParameterValues(Arrays.asList(value), command, context);
-		doProcess(plan, dataManager, expected, context);
-	}
+        doProcess(plan, dataManager, expected, context);
+    }
 
-	@Test(expected=ExpressionEvaluationException.class) public void testExternalEntityResolving() throws Exception {
-		String sql = "SELECT xmlelement(foo, '<bar>', convert('<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><bar1>&xxe;</bar1>', xml))"; //$NON-NLS-1$
+    @Test(expected=ExpressionEvaluationException.class) public void testExternalEntityResolving() throws Exception {
+        String sql = "SELECT xmlelement(foo, '<bar>', convert('<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><bar1>&xxe;</bar1>', xml))"; //$NON-NLS-1$
 
         process(sql, null);
-	}
+    }
 
-	@Test public void testXmlText() throws Exception {
-		String sql = "SELECT xmlserialize(xmltext('foo&bar') as string)"; //$NON-NLS-1$
+    @Test public void testXmlText() throws Exception {
+        String sql = "SELECT xmlserialize(xmltext('foo&bar') as string)"; //$NON-NLS-1$
 
-		List<?>[] expected = new List<?>[] {
-        		Arrays.asList("foo&amp;bar"),
+        List<?>[] expected = new List<?>[] {
+                Arrays.asList("foo&amp;bar"),
         };
 
         process(sql, expected);
-	}
+    }
 
-	@Test(expected=TeiidProcessingException.class) public void testInvalidXmlComment() throws Exception {
-		String sql = "SELECT xmlcomment('--')"; //$NON-NLS-1$
+    @Test(expected=TeiidProcessingException.class) public void testInvalidXmlComment() throws Exception {
+        String sql = "SELECT xmlcomment('--')"; //$NON-NLS-1$
 
         process(sql, null);
-	}
+    }
 
     @Test public void testXmlCast() throws Exception {
-    	String sql = "select xmlcast(xmlquery('/a/b' passing convert('<a><b>1</b></a>', xml)) as integer)"; //$NON-NLS-1$
+        String sql = "select xmlcast(xmlquery('/a/b' passing convert('<a><b>1</b></a>', xml)) as integer)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Collections.singletonList(1),
+                Collections.singletonList(1),
         };
 
         assertEquals("SELECT XMLCAST(XMLQUERY('/a/b' PASSING convert('<a><b>1</b></a>', xml)) AS integer)", TestProcessor.helpParse(sql).toString());
@@ -985,10 +985,10 @@ public class TestSQLXMLProcessing {
     }
 
     @Test public void testXmlCast1() throws Exception {
-    	String sql = "select xmlcast(cast('2000-01-01 00:00:00' as timestamp) as xml)"; //$NON-NLS-1$
+        String sql = "select xmlcast(cast('2000-01-01 00:00:00' as timestamp) as xml)"; //$NON-NLS-1$
 
         List<?>[] expected = new List<?>[] {
-        		Collections.singletonList("2000-01-01T06:00:00Z"),
+                Collections.singletonList("2000-01-01T06:00:00Z"),
         };
 
         process(sql, expected);

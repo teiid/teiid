@@ -81,11 +81,11 @@ public class TestMultiSourcePlanToProcessConverter {
         }
 
         public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws org.teiid.core.TeiidComponentException {
-        	assertNotNull(parameterObject.connectorBindingId);
+            assertNotNull(parameterObject.connectorBindingId);
 
-        	Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, true, true);
+            Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(command, true, true);
 
-        	for (ElementSymbol symbol : elements) {
+            for (ElementSymbol symbol : elements) {
                 if (symbol.getMetadataID() instanceof MultiSourceElement) {
                     fail("Query Contains a MultiSourceElement -- MultiSource expansion did not happen"); //$NON-NLS-1$
                 }
@@ -97,7 +97,7 @@ public class TestMultiSourcePlanToProcessConverter {
     private static final boolean DEBUG = false;
 
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb) throws Exception {
-    	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
+        return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
     }
 
 
@@ -119,19 +119,19 @@ public class TestMultiSourcePlanToProcessConverter {
             ModelMetaData m = vdb.getModel(model);
             int x = m.getSourceNames().size();
             for(int i=x; i<sourceCount; i++, sourceID++) {
-            	 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
+                 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
         QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
         wrapper = new TempMetadataAdapter(wrapper, new TempMetadataStore());
-    	DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
 
         AnalysisRecord analysis = new AnalysisRecord(DEBUG, DEBUG);
 
         Command command = TestResolver.helpResolve(userSql, wrapper);
         ValidatorReport report = Validator.validate(command, metadata);
         if (report.hasItems()) {
-        	fail(report.toString());
+            fail(report.toString());
         }
         // Plan
         command = QueryRewriter.rewrite(command, wrapper, null);
@@ -146,13 +146,13 @@ public class TestMultiSourcePlanToProcessConverter {
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
 
         if(DEBUG) {
-        	System.out.println(analysis.getDebugLog());
-        	System.out.println("\nMultiSource Plan:"); //$NON-NLS-1$
+            System.out.println(analysis.getDebugLog());
+            System.out.println("\nMultiSource Plan:"); //$NON-NLS-1$
             System.out.println(plan);
 
         }
         if (params != null) {
-        	TestProcessor.setParameterValues(params, command, context);
+            TestProcessor.setParameterValues(params, command, context);
         }
         TestProcessor.helpProcess(plan, context, dataMgr, expectedResults);
         return plan;
@@ -192,7 +192,7 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.setMustRegisterCommands(false);
         VDBMetaData vdb = RealMetadataFactory.exampleMultiBindingVDB();
         vdb.getModel("MultiModel").addProperty(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME, "foo");
-		helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
     }
 
     @Test public void testPreparedReplacement() throws Exception {
@@ -594,7 +594,7 @@ public class TestMultiSourcePlanToProcessConverter {
     }
 
     @Test public void testProcedure() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec MultiModel.proc('b', 'a')"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
@@ -606,7 +606,7 @@ public class TestMultiSourcePlanToProcessConverter {
     }
 
     @Test public void testProcedureAll() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "exec MultiModel.proc(\"in\"=>'b')"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;
@@ -618,7 +618,7 @@ public class TestMultiSourcePlanToProcessConverter {
     }
 
     @Test public void testTempInsert() throws Exception {
-    	final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         final String userSql = "INSERT INTO #x select * from MultiModel.Phys"; //$NON-NLS-1$
         final String multiModel = "MultiModel"; //$NON-NLS-1$
         final int sources = 3;

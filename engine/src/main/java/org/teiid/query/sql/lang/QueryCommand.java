@@ -29,8 +29,8 @@ import java.util.List;
  */
 public abstract class QueryCommand extends Command {
 
-	/** The order in which to sort the results */
-	private OrderBy orderBy;
+    /** The order in which to sort the results */
+    private OrderBy orderBy;
 
     /** Limit on returned rows */
     private Limit limit;
@@ -62,17 +62,17 @@ public abstract class QueryCommand extends Command {
     }
 
     public List<WithQueryCommand> getWith() {
-		return with;
-	}
+        return with;
+    }
 
     public void setWith(List<WithQueryCommand> with) {
-		this.with = with;
-	}
+        this.with = with;
+    }
 
-	public abstract Query getProjectedQuery();
+    public abstract Query getProjectedQuery();
 
-	@Override
-	public boolean returnsResultSet() {
-		return true;
-	}
+    @Override
+    public boolean returnsResultSet() {
+        return true;
+    }
 }

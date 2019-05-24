@@ -24,8 +24,8 @@ public class LocalTransactionTests extends CommonTransactionTests {
 
     @Override
     protected TransactionContainer getTransactionContainter() {
-	// TODO Auto-generated method stub
-	return new LocalTransaction();
+    // TODO Auto-generated method stub
+    return new LocalTransaction();
     }
 
     /**
@@ -38,7 +38,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
     public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsExplicitRollback") {
             @Override
-	    public void testCase() throws Exception {
+        public void testCase() throws Exception {
                 for (int i = 200; i < 220; i++) {
                     execute("insert into pm1.g1 (e1, e2) values("+i+",'"+i+"')");
                     execute("insert into pm1.g2 (e1, e2) values("+i+",'"+i+"')");
@@ -46,7 +46,7 @@ public class LocalTransactionTests extends CommonTransactionTests {
             }
 
             @Override
-	    public boolean rollbackAllways() {
+        public boolean rollbackAllways() {
                 return true;
             }
         };

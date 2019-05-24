@@ -38,29 +38,29 @@ import org.teiid.query.QueryPlugin;
 
 public class LobWorkItem implements Runnable {
 
-	private RequestWorkItem parent;
-	private int chunkSize;
+    private RequestWorkItem parent;
+    private int chunkSize;
 
-	/* private work item state */
-	private String streamId;
+    /* private work item state */
+    private String streamId;
     private ByteLobChunkStream stream;
     private int streamRequestId;
     private ResultsReceiver<LobChunk> resultsReceiver;
 
-	public LobWorkItem(RequestWorkItem parent, DQPCore dqpCore, String streamId, int streamRequestId) {
-		this.chunkSize = dqpCore.getChunkSize();
-		this.streamId = streamId;
-		this.parent = parent;
-		this.streamRequestId = streamRequestId;
-	}
+    public LobWorkItem(RequestWorkItem parent, DQPCore dqpCore, String streamId, int streamRequestId) {
+        this.chunkSize = dqpCore.getChunkSize();
+        this.streamId = streamId;
+        this.parent = parent;
+        this.streamRequestId = streamRequestId;
+    }
 
-	public void run() {
-		LobChunk chunk = null;
-		Exception ex = null;
-		boolean shouldClose = false;
+    public void run() {
+        LobChunk chunk = null;
+        Exception ex = null;
+        boolean shouldClose = false;
 
-    	try {
-        	// If no previous stream is not found for this request create one and
+        try {
+            // If no previous stream is not found for this request create one and
             // save for future
             if (stream == null) {
                 stream = createLobStream(streamId);
@@ -75,34 +75,34 @@ public class LobWorkItem implements Runnable {
             ex = e;
         } catch (IOException|SQLException e) {
             //treat this as a processing exception
-			ex = new TeiidProcessingException(e);
-		}
+            ex = new TeiidProcessingException(e);
+        }
 
         synchronized (this) {
-	        if (ex != null) {
-	        	resultsReceiver.exceptionOccurred(ex);
-	        	shouldClose = true;
-	        } else {
-	        	resultsReceiver.receiveResults(chunk);
-	        }
-	        resultsReceiver = null;
+            if (ex != null) {
+                resultsReceiver.exceptionOccurred(ex);
+                shouldClose = true;
+            } else {
+                resultsReceiver.receiveResults(chunk);
+            }
+            resultsReceiver = null;
         }
 
         if (shouldClose) {
-        	close();
+            close();
         }
-	}
+    }
 
-	void close() {
-		try {
-			if (stream != null) {
-				stream.close();
-			}
-		} catch (IOException e) {
-			LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
-		}
-		parent.removeLobStream(streamRequestId);
-	}
+    void close() {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException e) {
+            LogManager.logDetail(org.teiid.logging.LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30027));
+        }
+        parent.removeLobStream(streamRequestId);
+    }
 
     /**
      * Create a object which can create a sequence of LobChunk objects on a given
@@ -129,8 +129,8 @@ public class LobWorkItem implements Runnable {
     }
 
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {
-    	Assertion.isNull(this.resultsReceiver, "Cannot request results with a pending request"); //$NON-NLS-1$
-    	this.resultsReceiver = resultsReceiver;
+        Assertion.isNull(this.resultsReceiver, "Cannot request results with a pending request"); //$NON-NLS-1$
+        this.resultsReceiver = resultsReceiver;
     }
 
 }

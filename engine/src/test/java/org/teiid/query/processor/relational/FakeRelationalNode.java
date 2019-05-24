@@ -59,8 +59,8 @@ public class FakeRelationalNode extends RelationalNode {
 
     @Override
     public void reset() {
-    	super.reset();
-    	this.currentRow = 0;
+        super.reset();
+        this.currentRow = 0;
     }
 
     public FakeRelationalNode(int nodeID, List[] data, int batchSize) {
@@ -126,15 +126,15 @@ public class FakeRelationalNode extends RelationalNode {
 
     @Override
     public boolean hasBuffer() {
-    	return useBuffer;
+        return useBuffer;
     }
 
     @Override
     protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
-    		TeiidComponentException, TeiidProcessingException {
-    	TupleBuffer tb = Mockito.mock(TupleBuffer.class);
-    	Mockito.stub(tb.getRowCount()).toReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
-    	return tb;
+            TeiidComponentException, TeiidProcessingException {
+        TupleBuffer tb = Mockito.mock(TupleBuffer.class);
+        Mockito.stub(tb.getRowCount()).toReturn((long)(maxRows != -1 ? Math.min(maxRows, data.length) : data.length));
+        return tb;
     }
 
     /**
@@ -148,11 +148,11 @@ public class FakeRelationalNode extends RelationalNode {
         return super.getBatchSize();
     }
 
-	public Object clone(){
-		throw new UnsupportedOperationException();
-	}
+    public Object clone(){
+        throw new UnsupportedOperationException();
+    }
 
-	public void setUseBuffer(boolean useBuffer) {
-		this.useBuffer = useBuffer;
-	}
+    public void setUseBuffer(boolean useBuffer) {
+        this.useBuffer = useBuffer;
+    }
 }

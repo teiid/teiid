@@ -41,28 +41,28 @@ public final class SessionCheckingProxy
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-    	Throwable exception = null;
-    	try {
-    		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-    		if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
-    			if (method.getName().equals("closeRequest")) { //$NON-NLS-1$
-    				//the client can issue close request effectively concurrently with close session
-    				//there's no need for this to raise an exception
-    				return ResultsFuture.NULL_FUTURE;
-    			}
-    			String sessionID = workContext.getSession().getSessionId();
-    			if (sessionID == null) {
-    				 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
-    			}
-    			workContext.setSession(new SessionMetadata());
-    			throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
-    		}
-    		return super.invoke(proxy, method, args);
-    	} catch (InvocationTargetException e) {
-    		exception = e.getTargetException();
-    	} catch(Throwable t){
-    		exception = t;
-    	}
-    	throw ExceptionUtil.convertException(method, exception);
+        Throwable exception = null;
+        try {
+            DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+            if (workContext.getSession().isClosed() || workContext.getSessionId() == null) {
+                if (method.getName().equals("closeRequest")) { //$NON-NLS-1$
+                    //the client can issue close request effectively concurrently with close session
+                    //there's no need for this to raise an exception
+                    return ResultsFuture.NULL_FUTURE;
+                }
+                String sessionID = workContext.getSession().getSessionId();
+                if (sessionID == null) {
+                     throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
+                }
+                workContext.setSession(new SessionMetadata());
+                throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
+            }
+            return super.invoke(proxy, method, args);
+        } catch (InvocationTargetException e) {
+            exception = e.getTargetException();
+        } catch(Throwable t){
+            exception = t;
+        }
+        throw ExceptionUtil.convertException(method, exception);
     }
 }

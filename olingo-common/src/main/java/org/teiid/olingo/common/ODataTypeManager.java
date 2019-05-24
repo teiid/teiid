@@ -188,7 +188,7 @@ public class ODataTypeManager {
      * @return
      * @throws TeiidException
      */
-	public static Object convertToTeiidRuntimeType(Class<?> type, Object value, String odataType, String srid) throws TeiidException {
+    public static Object convertToTeiidRuntimeType(Class<?> type, Object value, String odataType, String srid) throws TeiidException {
         if (value == null) {
             return null;
         }
@@ -211,19 +211,19 @@ public class ODataTypeManager {
 
         if (odataType != null && value instanceof String) {
             try {
-				value = ODataTypeManager.parseLiteral(odataType, (String)value);
-			} catch (TeiidException e) {
-				throw new TranslatorException(e);
-			}
+                value = ODataTypeManager.parseLiteral(odataType, (String)value);
+            } catch (TeiidException e) {
+                throw new TranslatorException(e);
+            }
         }
 
         if (value instanceof Geospatial) {
-        	final Geospatial val = (Geospatial)value;
+            final Geospatial val = (Geospatial)value;
 
-        	//Due to https://issues.apache.org/jira/browse/OLINGO-1299
-        	//we cannot rely on the dimension of the value, so we
-        	//pass in the type
-        	return Olingo2Teiid.convert(val, type, srid);
+            //Due to https://issues.apache.org/jira/browse/OLINGO-1299
+            //we cannot rely on the dimension of the value, so we
+            //pass in the type
+            return Olingo2Teiid.convert(val, type, srid);
         }
         if (value instanceof Calendar) {
             Calendar calender = (Calendar)value;
@@ -291,9 +291,9 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
 
         try {
-        	if (EdmString.getInstance().equals(edmParameter.getType())) {
-        		value = EdmString.getInstance().fromUriLiteral(value);
-        	}
+            if (EdmString.getInstance().equals(edmParameter.getType())) {
+                value = EdmString.getInstance().fromUriLiteral(value);
+            }
             Object converted =  primitiveType.valueOfString(value,
                     edmParameter.isNullable(),
                     edmParameter.getMaxLength(),
@@ -315,9 +315,9 @@ public class ODataTypeManager {
                         .getFullQualifiedNameAsString().substring(4)));
 
         try {
-        	if (EdmString.getInstance().equals(edmProperty.getType())) {
-        		value = EdmString.getInstance().fromUriLiteral(value);
-        	}
+            if (EdmString.getInstance().equals(edmProperty.getType())) {
+                value = EdmString.getInstance().fromUriLiteral(value);
+            }
             Object converted =  primitiveType.valueOfString(value,
                     edmProperty.isNullable(),
                     edmProperty.getMaxLength(),
@@ -351,9 +351,9 @@ public class ODataTypeManager {
         Class<?> expectedClass = primitiveType.getDefaultType();
 
         try {
-        	if (EdmString.getInstance().equals(primitiveType)) {
-        		value = EdmString.getInstance().fromUriLiteral(value);
-        	}
+            if (EdmString.getInstance().equals(primitiveType)) {
+                value = EdmString.getInstance().fromUriLiteral(value);
+            }
             Object converted =  primitiveType.valueOfString(value,
                     false,
                     maxLength,
@@ -411,13 +411,13 @@ public class ODataTypeManager {
             odataType = odataType.substring(4);
         }
         if (val instanceof AbstractGeospatialType) {
-        	Geometry g;
-			try {
-				g = GeometryUtils.getGeometry((AbstractGeospatialType)val);
-			} catch (FunctionExecutionException e1) {
-				throw new EdmPrimitiveTypeException(e1.getMessage(), e1);
-			}
-        	return geometryToODataValueString(g, val instanceof GeometryType);
+            Geometry g;
+            try {
+                g = GeometryUtils.getGeometry((AbstractGeospatialType)val);
+            } catch (FunctionExecutionException e1) {
+                throw new EdmPrimitiveTypeException(e1.getMessage(), e1);
+            }
+            return geometryToODataValueString(g, val instanceof GeometryType);
         }
         EdmPrimitiveTypeKind kind = EdmPrimitiveTypeKind.valueOf(odataType);
         String value =  EdmPrimitiveTypeFactory.getInstance(kind).valueToString(
@@ -435,9 +435,9 @@ public class ODataTypeManager {
         sw.write(";"); //$NON-NLS-1$
         ODataWKTWriter writer = new ODataWKTWriter();
         try {
-        	writer.write(g, sw);
+            writer.write(g, sw);
         } catch (IOException e) {
-        	throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
         sw.write("'"); //$NON-NLS-1$
         return sw.toString();

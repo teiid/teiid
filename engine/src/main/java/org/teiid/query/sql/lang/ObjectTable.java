@@ -31,72 +31,72 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class ObjectTable extends TableFunctionReference {
 
-	public static final String DEFAULT_LANGUAGE = "teiid_script"; //$NON-NLS-1$
+    public static final String DEFAULT_LANGUAGE = "teiid_script"; //$NON-NLS-1$
 
-	public static class ObjectColumn extends ProjectedColumn {
-		private String path;
-		private Expression defaultExpression;
-		private CompiledScript compiledScript;
+    public static class ObjectColumn extends ProjectedColumn {
+        private String path;
+        private Expression defaultExpression;
+        private CompiledScript compiledScript;
 
-		public ObjectColumn(String name, String type, String path, Expression defaultExpression) {
-			super(name, type);
-			this.path = path;
-			this.defaultExpression = defaultExpression;
-		}
+        public ObjectColumn(String name, String type, String path, Expression defaultExpression) {
+            super(name, type);
+            this.path = path;
+            this.defaultExpression = defaultExpression;
+        }
 
-		protected ObjectColumn() {
+        protected ObjectColumn() {
 
-		}
+        }
 
-		public Expression getDefaultExpression() {
-			return defaultExpression;
-		}
+        public Expression getDefaultExpression() {
+            return defaultExpression;
+        }
 
-		public void setDefaultExpression(Expression defaultExpression) {
-			this.defaultExpression = defaultExpression;
-		}
+        public void setDefaultExpression(Expression defaultExpression) {
+            this.defaultExpression = defaultExpression;
+        }
 
-		public String getPath() {
-			return path;
-		}
+        public String getPath() {
+            return path;
+        }
 
-		public void setPath(String path) {
-			this.path = path;
-		}
+        public void setPath(String path) {
+            this.path = path;
+        }
 
-		public CompiledScript getCompiledScript() {
-			return compiledScript;
-		}
+        public CompiledScript getCompiledScript() {
+            return compiledScript;
+        }
 
-		public void setCompiledScript(CompiledScript compiledScript) {
-			this.compiledScript = compiledScript;
-		}
+        public void setCompiledScript(CompiledScript compiledScript) {
+            this.compiledScript = compiledScript;
+        }
 
-		@Override
-		public boolean equals(Object obj) {
-			if (obj == this) {
-				return true;
-			}
-			if (!super.equals(obj) || !(obj instanceof ObjectColumn)) {
-				return false;
-			}
-			ObjectColumn other = (ObjectColumn)obj;
-			return EquivalenceUtil.areEqual(this.path, other.path)
-				&& EquivalenceUtil.areEqual(this.defaultExpression, other.defaultExpression);
-		}
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!super.equals(obj) || !(obj instanceof ObjectColumn)) {
+                return false;
+            }
+            ObjectColumn other = (ObjectColumn)obj;
+            return EquivalenceUtil.areEqual(this.path, other.path)
+                && EquivalenceUtil.areEqual(this.defaultExpression, other.defaultExpression);
+        }
 
-		@Override
-		public ObjectColumn clone() {
-			ObjectColumn clone = new ObjectColumn();
-			super.copyTo(clone);
-			clone.path = this.path;
-			if (this.defaultExpression != null) {
-				clone.defaultExpression = (Expression)this.defaultExpression.clone();
-			}
-			clone.compiledScript = this.compiledScript;
-			return clone;
-		}
-	}
+        @Override
+        public ObjectColumn clone() {
+            ObjectColumn clone = new ObjectColumn();
+            super.copyTo(clone);
+            clone.path = this.path;
+            if (this.defaultExpression != null) {
+                clone.defaultExpression = (Expression)this.defaultExpression.clone();
+            }
+            clone.compiledScript = this.compiledScript;
+            return clone;
+        }
+    }
 
     private List<ObjectColumn> columns = new ArrayList<ObjectColumn>();
     private String rowScript;
@@ -107,89 +107,89 @@ public class ObjectTable extends TableFunctionReference {
     private ScriptEngine scriptEngine;
 
     public CompiledScript getCompiledScript() {
-		return compiledScript;
-	}
+        return compiledScript;
+    }
 
     public void setCompiledScript(CompiledScript compiledScript) {
-		this.compiledScript = compiledScript;
-	}
+        this.compiledScript = compiledScript;
+    }
 
     public String getScriptingLanguage() {
-		return scriptingLanguage;
-	}
+        return scriptingLanguage;
+    }
 
     public void setScriptingLanguage(String scriptingLanguage) {
-		this.scriptingLanguage = scriptingLanguage;
-	}
+        this.scriptingLanguage = scriptingLanguage;
+    }
 
     public List<DerivedColumn> getPassing() {
-		return passing;
-	}
+        return passing;
+    }
 
     public void setPassing(List<DerivedColumn> passing) {
-		this.passing = passing;
-	}
+        this.passing = passing;
+    }
 
     public String getRowScript() {
-		return rowScript;
-	}
+        return rowScript;
+    }
 
     public void setRowScript(String query) {
-		this.rowScript = query;
-	}
+        this.rowScript = query;
+    }
 
     public List<ObjectColumn> getColumns() {
-		return columns;
-	}
+        return columns;
+    }
 
     public void setColumns(List<ObjectColumn> columns) {
-		this.columns = columns;
-	}
+        this.columns = columns;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	@Override
-	protected ObjectTable cloneDirect() {
-		ObjectTable clone = new ObjectTable();
-		this.copy(clone);
-		for (ObjectColumn column : columns) {
-			clone.getColumns().add(column.clone());
-		}
-		if (this.passing != null) {
-			for (DerivedColumn col : this.passing) {
-				clone.passing.add(col.clone());
-			}
-		}
-		clone.rowScript = this.rowScript;
-		clone.compiledScript = this.compiledScript;
-		clone.scriptingLanguage = this.scriptingLanguage;
-		return clone;
-	}
+    @Override
+    protected ObjectTable cloneDirect() {
+        ObjectTable clone = new ObjectTable();
+        this.copy(clone);
+        for (ObjectColumn column : columns) {
+            clone.getColumns().add(column.clone());
+        }
+        if (this.passing != null) {
+            for (DerivedColumn col : this.passing) {
+                clone.passing.add(col.clone());
+            }
+        }
+        clone.rowScript = this.rowScript;
+        clone.compiledScript = this.compiledScript;
+        clone.scriptingLanguage = this.scriptingLanguage;
+        return clone;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!super.equals(obj) || !(obj instanceof ObjectTable)) {
-			return false;
-		}
-		ObjectTable other = (ObjectTable)obj;
-		return this.columns.equals(other.columns)
-			&& this.rowScript.equals(other.rowScript)
-			&& this.passing.equals(other.passing)
-			&& EquivalenceUtil.areEqual(scriptingLanguage, other.scriptingLanguage);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!super.equals(obj) || !(obj instanceof ObjectTable)) {
+            return false;
+        }
+        ObjectTable other = (ObjectTable)obj;
+        return this.columns.equals(other.columns)
+            && this.rowScript.equals(other.rowScript)
+            && this.passing.equals(other.passing)
+            && EquivalenceUtil.areEqual(scriptingLanguage, other.scriptingLanguage);
+    }
 
-	public ScriptEngine getScriptEngine() {
-		return scriptEngine;
-	}
+    public ScriptEngine getScriptEngine() {
+        return scriptEngine;
+    }
 
-	public void setScriptEngine(ScriptEngine scriptEngine) {
-		this.scriptEngine = scriptEngine;
-	}
+    public void setScriptEngine(ScriptEngine scriptEngine) {
+        this.scriptEngine = scriptEngine;
+    }
 
 }

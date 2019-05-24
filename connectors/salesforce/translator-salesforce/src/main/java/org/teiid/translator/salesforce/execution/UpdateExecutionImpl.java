@@ -38,23 +38,23 @@ import org.teiid.translator.salesforce.execution.visitors.UpdateVisitor;
 
 public class UpdateExecutionImpl extends AbstractUpdateExecution {
 
-	public UpdateExecutionImpl(SalesForceExecutionFactory ef, Command command,
-			SalesforceConnection salesforceConnection,
-			RuntimeMetadata metadata, ExecutionContext context) {
-		super(ef, command, salesforceConnection, metadata, context);
-	}
+    public UpdateExecutionImpl(SalesForceExecutionFactory ef, Command command,
+            SalesforceConnection salesforceConnection,
+            RuntimeMetadata metadata, ExecutionContext context) {
+        super(ef, command, salesforceConnection, metadata, context);
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		UpdateVisitor visitor = new UpdateVisitor(getMetadata());
-		visitor.visit((Update)command);
-		execute(((Update)command).getWhere(), visitor);
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        UpdateVisitor visitor = new UpdateVisitor(getMetadata());
+        visitor.visit((Update)command);
+        execute(((Update)command).getWhere(), visitor);
+    }
 
-	@Override
-	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-	        throws TranslatorException {
-	    List<DataPayload> updateDataList = new ArrayList<DataPayload>();
+    @Override
+    protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
+            throws TranslatorException {
+        List<DataPayload> updateDataList = new ArrayList<DataPayload>();
 
         for (int i = 0; i < ids.length; i++) {
             DataPayload data = new DataPayload();
@@ -72,5 +72,5 @@ public class UpdateExecutionImpl extends AbstractUpdateExecution {
         }
 
         return getConnection().update(updateDataList);
-	}
+    }
 }

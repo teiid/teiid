@@ -32,59 +32,59 @@ import org.teiid.core.types.JDBCSQLTypeInfo;
  */
 public class ParameterMetaDataImpl extends WrapperImpl implements ParameterMetaData {
 
-	private ResultSetMetaDataImpl metadata;
+    private ResultSetMetaDataImpl metadata;
 
-	public ParameterMetaDataImpl(ResultSetMetaDataImpl metadata) {
-		this.metadata = metadata;
-	}
+    public ParameterMetaDataImpl(ResultSetMetaDataImpl metadata) {
+        this.metadata = metadata;
+    }
 
-	@Override
-	public String getParameterClassName(int param) throws SQLException {
-		return JDBCSQLTypeInfo.getJavaClassName(getParameterType(param));
-	}
+    @Override
+    public String getParameterClassName(int param) throws SQLException {
+        return JDBCSQLTypeInfo.getJavaClassName(getParameterType(param));
+    }
 
-	@Override
-	public int getParameterCount() throws SQLException {
-		return metadata.getColumnCount();
-	}
+    @Override
+    public int getParameterCount() throws SQLException {
+        return metadata.getColumnCount();
+    }
 
-	@Override
-	public int getParameterMode(int param) throws SQLException {
-		return parameterModeUnknown;
-	}
+    @Override
+    public int getParameterMode(int param) throws SQLException {
+        return parameterModeUnknown;
+    }
 
-	@Override
-	public int getParameterType(int param) throws SQLException {
-		return metadata.getColumnType(param);
-	}
+    @Override
+    public int getParameterType(int param) throws SQLException {
+        return metadata.getColumnType(param);
+    }
 
-	@Override
-	public String getParameterTypeName(int param) throws SQLException {
-		return metadata.getColumnTypeName(param);
-	}
+    @Override
+    public String getParameterTypeName(int param) throws SQLException {
+        return metadata.getColumnTypeName(param);
+    }
 
-	@Override
-	public int getPrecision(int param) throws SQLException {
-		return metadata.getPrecision(param);
-	}
+    @Override
+    public int getPrecision(int param) throws SQLException {
+        return metadata.getPrecision(param);
+    }
 
-	@Override
-	public int getScale(int param) throws SQLException {
-		return metadata.getScale(param);
-	}
+    @Override
+    public int getScale(int param) throws SQLException {
+        return metadata.getScale(param);
+    }
 
-	@Override
-	public int isNullable(int param) throws SQLException {
-		return metadata.isNullable(param);
-	}
+    @Override
+    public int isNullable(int param) throws SQLException {
+        return metadata.isNullable(param);
+    }
 
-	@Override
-	public boolean isSigned(int param) throws SQLException {
-		return metadata.isSigned(param);
-	}
+    @Override
+    public boolean isSigned(int param) throws SQLException {
+        return metadata.isSigned(param);
+    }
 
-	public String getParameterName(int param) throws SQLException {
-		return metadata.getColumnName(param);
-	}
+    public String getParameterName(int param) throws SQLException {
+        return metadata.getColumnName(param);
+    }
 
 }

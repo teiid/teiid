@@ -27,36 +27,36 @@ import javax.xml.transform.stream.StreamSource;
 
 public class WSUtil {
 
-	public static String appendQueryString(String endpoint, String param) {
-		return endpoint + (endpoint.indexOf('?') >= 0?'&':'?') + param;
-	}
+    public static String appendQueryString(String endpoint, String param) {
+        return endpoint + (endpoint.indexOf('?') >= 0?'&':'?') + param;
+    }
 
     public static String httpURLEncode(String s) {
         try {
             return URLEncoder.encode(s, "UTF-8").replaceAll("\\+", "%20"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         } catch (UnsupportedEncodingException e) {
-        	throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
     }
 
-	public static void closeSource(final Source source) {
-		if (!(source instanceof StreamSource)) {
-			return;
-		}
+    public static void closeSource(final Source source) {
+        if (!(source instanceof StreamSource)) {
+            return;
+        }
 
-		StreamSource stream = (StreamSource)source;
-		try {
-			if (stream.getInputStream() != null) {
-				stream.getInputStream().close();
-			}
-		} catch (IOException e) {
-		}
-		try {
-			if (stream.getReader() != null) {
-				stream.getReader().close();
-			}
-		} catch (IOException e) {
-		}
-	}
+        StreamSource stream = (StreamSource)source;
+        try {
+            if (stream.getInputStream() != null) {
+                stream.getInputStream().close();
+            }
+        } catch (IOException e) {
+        }
+        try {
+            if (stream.getReader() != null) {
+                stream.getReader().close();
+            }
+        } catch (IOException e) {
+        }
+    }
 
 }

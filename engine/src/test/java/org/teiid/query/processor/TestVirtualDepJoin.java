@@ -68,7 +68,7 @@ public class TestVirtualDepJoin {
                                  String[] mins,
                                  String[] maxs) {
         for (int i = 0; i < elementObjects.size(); i++) {
-        	Column obj = elementObjects.get(i);
+            Column obj = elementObjects.get(i);
             if(ndvs != null) {
                 obj.setDistinctValues(ndvs[i]);
             }
@@ -85,7 +85,7 @@ public class TestVirtualDepJoin {
     }
 
     public static TransformationMetadata exampleVirtualDepJoin() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema us = RealMetadataFactory.createPhysicalModel("US", metadataStore); //$NON-NLS-1$
         Table usAccts = RealMetadataFactory.createPhysicalGroup("Accounts", us); //$NON-NLS-1$
         usAccts.setCardinality(1000000);
@@ -138,8 +138,8 @@ public class TestVirtualDepJoin {
 
         Schema vAccts = RealMetadataFactory.createVirtualModel("Accounts", metadataStore); //$NON-NLS-1$
         QueryNode accountsPlan = new QueryNode("SELECT customer as customer_id, convert(account, long) as account_id, convert(txnid, long) as transaction_id, case txn when 'DEP' then 1 when 'TFR' then 2 when 'WD' then 3 else -1 end as txn_type, (pennies + convert('0.00', bigdecimal)) / 100 as amount, 'US' as source FROM US.Accounts where txn != 'X'" +  //$NON-NLS-1$
-		   "UNION ALL " +  //$NON-NLS-1$
-		   "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(\"type\", integer), amount, 'EU' from Europe.CustAccts"); //$NON-NLS-1$
+           "UNION ALL " +  //$NON-NLS-1$
+           "SELECT id, convert(accid / 10000, long), mod(accid, 10000), convert(\"type\", integer), amount, 'EU' from Europe.CustAccts"); //$NON-NLS-1$
         Table accounts = RealMetadataFactory.createVirtualGroup("Accounts", vAccts, accountsPlan); //$NON-NLS-1$
         RealMetadataFactory.createElements(accounts,
                                             new String[] { "customer_id", "account_id", "transaction_id", "txn_type", "amount", "source" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
@@ -359,8 +359,8 @@ public class TestVirtualDepJoin {
 
         List<String> expectedQueries = new ArrayList<String>(6);
         for (int i = 0; i < 3; i++) {
-        	expectedQueries.add("SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0"); //$NON-NLS-1$
-        	expectedQueries.add("SELECT g_0.id, g_0.amount FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100"); //$NON-NLS-1$
+            expectedQueries.add("SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0"); //$NON-NLS-1$
+            expectedQueries.add("SELECT g_0.id, g_0.amount FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100"); //$NON-NLS-1$
         }
 
         assertEquals(expectedQueries, dataManager.getQueries());
@@ -502,41 +502,41 @@ public class TestVirtualDepJoin {
         dataMgr.registerTuples(
             metadata,
             "US.Accounts", new List[] {
-				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "DEP", new Integer(123), new Integer(10000) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "TFR", new Integer(127), new Integer(25000) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "WD", new Integer(128), new Integer(100000) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(134), new Integer(1000) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(201), new Integer(1000) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(207), new Integer(1234) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(299), new Integer(95034) }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "X", new Integer(301), new Integer(5000) }), //$NON-NLS-1$
-				    } );
+                    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "DEP", new Integer(123), new Integer(10000) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "TFR", new Integer(127), new Integer(25000) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(100), new Integer(15000), "WD", new Integer(128), new Integer(100000) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(134), new Integer(1000) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(100), new Integer(15001), "DEP", new Integer(201), new Integer(1000) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(207), new Integer(1234) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "WD", new Integer(299), new Integer(95034) }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(200), new Integer(16000), "X", new Integer(301), new Integer(5000) }), //$NON-NLS-1$
+                    } );
 
         dataMgr.registerTuples(
             metadata,
             "Europe.CustAccts", new List[] {
-				    Arrays.asList(new Object[] { new Long(100), new Long(5401002), new Short((short)1), new BigDecimal("7.20") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(100), new Long(5401003), new Short((short)2), new BigDecimal("1000.00") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(200), new Long(5501004), new Short((short)3), new BigDecimal("542.20") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(200), new Long(5501005), new Short((short)1), new BigDecimal("99.99") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(300), new Long(6201006), new Short((short)1), new BigDecimal("10000.00") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(300), new Long(6201007), new Short((short)2), new BigDecimal("0.75") }), //$NON-NLS-1$
-				    Arrays.asList(new Object[] { new Long(300), new Long(6301008), new Short((short)2), new BigDecimal("62.00") }), //$NON-NLS-1$
-				    } );
+                    Arrays.asList(new Object[] { new Long(100), new Long(5401002), new Short((short)1), new BigDecimal("7.20") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(100), new Long(5401003), new Short((short)2), new BigDecimal("1000.00") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(200), new Long(5501004), new Short((short)3), new BigDecimal("542.20") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(200), new Long(5501005), new Short((short)1), new BigDecimal("99.99") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(300), new Long(6201006), new Short((short)1), new BigDecimal("10000.00") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(300), new Long(6201007), new Short((short)2), new BigDecimal("0.75") }), //$NON-NLS-1$
+                    Arrays.asList(new Object[] { new Long(300), new Long(6301008), new Short((short)2), new BigDecimal("62.00") }), //$NON-NLS-1$
+                    } );
 
         dataMgr.registerTuples(metadata, "CustomerMaster.Customers", new List[] {
-			       Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
-			       Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", TimestampUtil.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
-			       Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", TimestampUtil.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
-			       } );
+                   Arrays.asList(new Object[] { new Long(100), "Miles", "Davis", TimestampUtil.createDate(1926, 4, 25) }), //$NON-NLS-1$ //$NON-NLS-2$
+                   Arrays.asList(new Object[] { new Long(200), "John", "Coltrane", TimestampUtil.createDate(1926, 8, 23) }), //$NON-NLS-1$ //$NON-NLS-2$
+                   Arrays.asList(new Object[] { new Long(300), "Thelonious", "Monk", TimestampUtil.createDate(1917, 9, 10) }), //$NON-NLS-1$ //$NON-NLS-2$
+                   } );
 
         dataMgr.registerTuples(metadata, "CustomerMaster.Locations", new List[] {
-			       Arrays.asList(new Object[] { new Long(100), "US" }), //$NON-NLS-1$
-			       Arrays.asList(new Object[] { new Long(100), "EU" }), //$NON-NLS-1$
-			       Arrays.asList(new Object[] { new Long(200), "US" }), //$NON-NLS-1$
-			       Arrays.asList(new Object[] { new Long(200), "EU" }), //$NON-NLS-1$
-			       Arrays.asList(new Object[] { new Long(300), "EU" }), //$NON-NLS-1$
-			       } );
+                   Arrays.asList(new Object[] { new Long(100), "US" }), //$NON-NLS-1$
+                   Arrays.asList(new Object[] { new Long(100), "EU" }), //$NON-NLS-1$
+                   Arrays.asList(new Object[] { new Long(200), "US" }), //$NON-NLS-1$
+                   Arrays.asList(new Object[] { new Long(200), "EU" }), //$NON-NLS-1$
+                   Arrays.asList(new Object[] { new Long(300), "EU" }), //$NON-NLS-1$
+                   } );
     }
 
     private void overrideVirtualDepJoinData(FakeDataManager dataMgr, QueryMetadataInterface metadata, boolean unique) throws Exception {
@@ -566,7 +566,7 @@ public class TestVirtualDepJoin {
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, finder,
                                                     new String[] {"SELECT g_0.e0 AS c_0, convert(g_0.e0, string) AS c_1 FROM test.\"group\" AS g_0 WHERE (g_0.e1 = '1') AND (convert(g_0.e0, string) IN (<dependent values>)) ORDER BY c_1",
-        	"SELECT g_0.e2 AS c_0 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2') ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            "SELECT g_0.e2 AS c_0 FROM test.\"group\" AS g_0 WHERE (g_0.e0 = 1) AND (g_0.e1 = '2') ORDER BY c_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             1,      // Access

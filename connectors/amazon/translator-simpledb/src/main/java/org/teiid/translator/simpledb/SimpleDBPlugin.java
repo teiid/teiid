@@ -30,12 +30,12 @@ public class SimpleDBPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
     public static enum Event implements BundleUtil.Event{
-    	TEIID24001,
-    	TEIID24002,
-    	TEIID24003,
-    	TEIID24004,
-    	TEIID24005,
-    	TEIID24006,
-    	TEIID24007
+        TEIID24001,
+        TEIID24002,
+        TEIID24003,
+        TEIID24004,
+        TEIID24005,
+        TEIID24006,
+        TEIID24007
     }
 }

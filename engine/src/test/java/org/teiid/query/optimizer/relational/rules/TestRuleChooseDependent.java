@@ -291,7 +291,7 @@ public class TestRuleChooseDependent {
                     selectNode1a.addFirstChild(sourceNode1a);
                     atomicJoinNode1.addLastChild(selectNode1a);
                 } else {
-                	atomicJoinNode1.addLastChild(sourceNode1a);
+                    atomicJoinNode1.addLastChild(sourceNode1a);
                 }
                 accessNode1.addLastChild(atomicJoinNode1);
             } else {
@@ -330,7 +330,7 @@ public class TestRuleChooseDependent {
                     selectNode2a.addFirstChild(sourceNode2a);
                     atomicJoinNode2.addLastChild(selectNode2a);
                 } else {
-                	atomicJoinNode2.addLastChild(sourceNode2a);
+                    atomicJoinNode2.addLastChild(sourceNode2a);
                 }
                 accessNode2.addLastChild(atomicJoinNode2);
             } else {
@@ -383,8 +383,8 @@ public class TestRuleChooseDependent {
         assertNotNull(cost2);
         assertNotNull(cost1);
         if (expectedCost1 != null) {
-        	assertEquals(expectedCost1.longValue(), cost1.longValue());
-        	assertEquals(expectedCost2.longValue(), cost2.longValue());
+            assertEquals(expectedCost1.longValue(), cost1.longValue());
+            assertEquals(expectedCost2.longValue(), cost2.longValue());
         }
     }
 

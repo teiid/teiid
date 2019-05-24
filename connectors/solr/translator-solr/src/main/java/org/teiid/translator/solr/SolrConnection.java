@@ -27,8 +27,8 @@ import org.teiid.resource.api.Connection;
 import org.teiid.translator.TranslatorException;
 
 public interface SolrConnection extends Connection {
-	public QueryResponse query(SolrQuery query) throws TranslatorException;
-	public UpdateResponse update(UpdateRequest request) throws TranslatorException;
-	public LukeResponse metadata(LukeRequest request) throws TranslatorException;
-	public String getCoreName();
+    public QueryResponse query(SolrQuery query) throws TranslatorException;
+    public UpdateResponse update(UpdateRequest request) throws TranslatorException;
+    public LukeResponse metadata(LukeRequest request) throws TranslatorException;
+    public String getCoreName();
 }

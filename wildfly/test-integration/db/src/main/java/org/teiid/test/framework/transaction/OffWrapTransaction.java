@@ -19,11 +19,11 @@ import org.teiid.test.framework.ConfigPropertyNames.TXN_AUTO_WRAP_OPTIONS;
 public class OffWrapTransaction extends TransactionContainer {
 
     public OffWrapTransaction() {
-	super();
+    super();
     }
 
     public void before(TransactionQueryTestCase test) {
-	test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
+    test.getConnectionStrategy().setEnvironmentProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, TXN_AUTO_WRAP_OPTIONS.AUTO_WRAP_OFF);
 
 
     }

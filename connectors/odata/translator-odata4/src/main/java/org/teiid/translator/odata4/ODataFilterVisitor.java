@@ -264,21 +264,21 @@ public class ODataFilterVisitor extends HierarchyVisitor {
                 this.filter.append(type);
             } else {
                 if (args != null && args.size() != 0) {
-                	if (SourceSystemFunctions.ENDSWITH.equalsIgnoreCase(name)) {
-                		append(args.get(1));
-                		this.filter.append(Tokens.COMMA);
-                		append(args.get(0));
-                	} else {
-                	    BaseColumn old = currentExpression;
+                    if (SourceSystemFunctions.ENDSWITH.equalsIgnoreCase(name)) {
+                        append(args.get(1));
+                        this.filter.append(Tokens.COMMA);
+                        append(args.get(0));
+                    } else {
+                        BaseColumn old = currentExpression;
                         for (int i = 0; i < args.size(); i++) {
                             currentExpression = method.getInputParameters().get(Math.min(i, method.getInputParameters().size() -1));
-    	                    append(args.get(i));
-    	                    if (i < args.size()-1) {
-    	                    	this.filter.append(Tokens.COMMA);
-    	                    }
-    	                }
+                            append(args.get(i));
+                            if (i < args.size()-1) {
+                                this.filter.append(Tokens.COMMA);
+                            }
+                        }
                         currentExpression = old;
-                	}
+                    }
                 }
             }
             this.filter.append(Tokens.RPAREN);

@@ -27,7 +27,7 @@ public class In extends BaseInCondition {
     private List<Expression> rightExpressions;
 
     public In(Expression left, List<Expression> right, boolean negated) {
-    	super(left, negated);
+        super(left, negated);
         rightExpressions = right;
     }
 

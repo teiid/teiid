@@ -38,8 +38,8 @@ import org.teiid.query.sql.symbol.Symbol;
  */
 public class TempMetadataStore implements Serializable {
 
-	private static final long serialVersionUID = 4055072385672022478L;
-	// UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
+    private static final long serialVersionUID = 4055072385672022478L;
+    // UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
     private NavigableMap<String, TempMetadataID> tempGroups;
 
     /**
@@ -63,9 +63,9 @@ public class TempMetadataStore implements Serializable {
     }
 
     public TempMetadataStore clone() {
-    	TreeMap<String, TempMetadataID> clone = new TreeMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER);
-    	clone.putAll(tempGroups);
-    	return new TempMetadataStore(clone);
+        TreeMap<String, TempMetadataID> clone = new TreeMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER);
+        clone.putAll(tempGroups);
+        return new TempMetadataStore(clone);
     }
 
     /**
@@ -197,7 +197,7 @@ public class TempMetadataStore implements Serializable {
 
         TempMetadataID groupID = tempGroups.get(groupName);
         if(groupID != null) {
-        	for (TempMetadataID elementID : groupID.getElements()) {
+            for (TempMetadataID elementID : groupID.getElements()) {
                 if(elementID.getID().equalsIgnoreCase(tempElement)) {
                     return elementID;
                 }

@@ -40,21 +40,21 @@ import org.teiid.core.util.ReaderInputStream;
 
 public abstract class InputStreamFactory implements Source {
 
-	public enum StorageMode {
-		MEMORY, //TODO: sources may return Serial values that are much too large and we should convert them to persistent.
-		PERSISTENT,
-		FREE,
-		OTHER
-	}
+    public enum StorageMode {
+        MEMORY, //TODO: sources may return Serial values that are much too large and we should convert them to persistent.
+        PERSISTENT,
+        FREE,
+        OTHER
+    }
 
-	public interface StreamFactoryReference {
+    public interface StreamFactoryReference {
 
-		void setStreamFactory(InputStreamFactory inputStreamFactory);
+        void setStreamFactory(InputStreamFactory inputStreamFactory);
 
-	}
+    }
 
-	private String systemId;
-	protected long length = -1;
+    private String systemId;
+    protected long length = -1;
 
     /**
      * Get a new InputStream
@@ -63,17 +63,17 @@ public abstract class InputStreamFactory implements Source {
 
     @Override
     public String getSystemId() {
-    	return this.systemId;
+        return this.systemId;
     }
 
     @Override
     public void setSystemId(String systemId) {
-    	this.systemId = systemId;
+        this.systemId = systemId;
     }
 
     /**
-	 * @throws IOException
-	 */
+     * @throws IOException
+     */
     public void free() throws IOException {
 
     }
@@ -83,110 +83,110 @@ public abstract class InputStreamFactory implements Source {
      * @return the length or -1 if the length is not known
      */
     public long getLength() {
-		return length;
-	}
+        return length;
+    }
 
     public void setLength(long length) {
-		this.length = length;
-	}
+        this.length = length;
+    }
 
     /**
-	 * @throws IOException
-	 */
+     * @throws IOException
+     */
     public Reader getCharacterStream() throws IOException {
-    	return null;
+        return null;
     }
 
     public StorageMode getStorageMode() {
-    	return StorageMode.OTHER;
+        return StorageMode.OTHER;
     }
 
     public static class FileInputStreamFactory extends InputStreamFactory {
 
-    	private File f;
+        private File f;
 
-    	public FileInputStreamFactory(File f) {
-    		this.f = f;
-    		this.setSystemId(f.toURI().toASCIIString());
-		}
+        public FileInputStreamFactory(File f) {
+            this.f = f;
+            this.setSystemId(f.toURI().toASCIIString());
+        }
 
-    	@Override
-    	public long getLength() {
-    		return f.length();
-    	}
+        @Override
+        public long getLength() {
+            return f.length();
+        }
 
-    	@Override
-    	public InputStream getInputStream() throws IOException {
-    		return new BufferedInputStream(new FileInputStream(f));
-    	}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new BufferedInputStream(new FileInputStream(f));
+        }
 
-    	@Override
-    	public StorageMode getStorageMode() {
-    		return StorageMode.PERSISTENT;
-    	}
+        @Override
+        public StorageMode getStorageMode() {
+            return StorageMode.PERSISTENT;
+        }
 
     }
 
     public static class ClobInputStreamFactory extends InputStreamFactory implements DataSource {
 
-    	private Clob clob;
-    	private Charset charset = Charset.forName(Streamable.ENCODING);
+        private Clob clob;
+        private Charset charset = Charset.forName(Streamable.ENCODING);
 
-    	public ClobInputStreamFactory(Clob clob) {
-    		this.clob = clob;
-    	}
+        public ClobInputStreamFactory(Clob clob) {
+            this.clob = clob;
+        }
 
-    	public Charset getCharset() {
-			return charset;
-		}
+        public Charset getCharset() {
+            return charset;
+        }
 
-    	public void setCharset(Charset charset) {
-			this.charset = charset;
-		}
+        public void setCharset(Charset charset) {
+            this.charset = charset;
+        }
 
-    	@Override
-    	public InputStream getInputStream() throws IOException {
-    		try {
-				return new ReaderInputStream(getReader(clob.getCharacterStream()), charset);
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-    	}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            try {
+                return new ReaderInputStream(getReader(clob.getCharacterStream()), charset);
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
 
-    	@Override
-    	public Reader getCharacterStream() throws IOException {
-    		try {
-				return getReader(clob.getCharacterStream());
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-    	}
+        @Override
+        public Reader getCharacterStream() throws IOException {
+            try {
+                return getReader(clob.getCharacterStream());
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
 
-		@Override
-		public String getContentType() {
-			return "text/plain"; //$NON-NLS-1$
-		}
+        @Override
+        public String getContentType() {
+            return "text/plain"; //$NON-NLS-1$
+        }
 
-		@Override
-		public String getName() {
-			return "clob"; //$NON-NLS-1$
-		}
+        @Override
+        public String getName() {
+            return "clob"; //$NON-NLS-1$
+        }
 
-		@Override
-		public OutputStream getOutputStream() throws IOException {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public StorageMode getStorageMode() {
-			return getStorageMode(clob);
-		}
+        @Override
+        public StorageMode getStorageMode() {
+            return getStorageMode(clob);
+        }
 
-		public Reader getReader(Reader reader) {
-		    return reader;
-		}
+        public Reader getReader(Reader reader) {
+            return reader;
+        }
 
-		@Override
+        @Override
         public void setTemporary(boolean temp) {
             setTemporary(clob, temp);
         }
@@ -195,78 +195,78 @@ public abstract class InputStreamFactory implements Source {
 
     public static class BlobInputStreamFactory extends InputStreamFactory implements DataSource {
 
-    	private Blob blob;
+        private Blob blob;
 
-    	public BlobInputStreamFactory(Blob blob) {
-    		this.blob = blob;
-    	}
+        public BlobInputStreamFactory(Blob blob) {
+            this.blob = blob;
+        }
 
-    	@Override
-    	public InputStream getInputStream() throws IOException {
-    		try {
-				return blob.getBinaryStream();
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-    	}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            try {
+                return blob.getBinaryStream();
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
 
-    	@Override
-    	public long getLength() {
-    		if (length == -1) {
-	    		try {
-					length = blob.length();
-				} catch (SQLException e) {
-				}
-    		}
-    		return length;
-    	}
+        @Override
+        public long getLength() {
+            if (length == -1) {
+                try {
+                    length = blob.length();
+                } catch (SQLException e) {
+                }
+            }
+            return length;
+        }
 
-    	@Override
-		public String getContentType() {
-			return "application/octet-stream"; //$NON-NLS-1$
-		}
+        @Override
+        public String getContentType() {
+            return "application/octet-stream"; //$NON-NLS-1$
+        }
 
-		@Override
-		public String getName() {
-			return "blob"; //$NON-NLS-1$
-		}
+        @Override
+        public String getName() {
+            return "blob"; //$NON-NLS-1$
+        }
 
-		@Override
-		public OutputStream getOutputStream() throws IOException {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public StorageMode getStorageMode() {
-			return getStorageMode(blob);
-		}
+        @Override
+        public StorageMode getStorageMode() {
+            return getStorageMode(blob);
+        }
 
-		@Override
-		public void setTemporary(boolean temp) {
+        @Override
+        public void setTemporary(boolean temp) {
             setTemporary(blob, temp);
         }
 
     }
 
     public static StorageMode getStorageMode(Object lob) {
-    	if (lob instanceof Streamable<?>) {
-    		return getStorageMode(((Streamable<?>)lob).getReference());
-    	}
-    	if (lob instanceof SerialClob) {
-    		return StorageMode.MEMORY;
-    	}
-    	if (lob instanceof SerialBlob) {
-    		return StorageMode.MEMORY;
-    	}
-		if (lob instanceof BaseLob) {
-			BaseLob baseLob = (BaseLob)lob;
-			try {
-				return baseLob.getStreamFactory().getStorageMode();
-			} catch (SQLException e) {
-				return StorageMode.FREE;
-			}
-		}
-		return StorageMode.OTHER;
+        if (lob instanceof Streamable<?>) {
+            return getStorageMode(((Streamable<?>)lob).getReference());
+        }
+        if (lob instanceof SerialClob) {
+            return StorageMode.MEMORY;
+        }
+        if (lob instanceof SerialBlob) {
+            return StorageMode.MEMORY;
+        }
+        if (lob instanceof BaseLob) {
+            BaseLob baseLob = (BaseLob)lob;
+            try {
+                return baseLob.getStreamFactory().getStorageMode();
+            } catch (SQLException e) {
+                return StorageMode.FREE;
+            }
+        }
+        return StorageMode.OTHER;
     }
 
     public static void setTemporary(Object lob, boolean temp) {
@@ -288,49 +288,49 @@ public abstract class InputStreamFactory implements Source {
 
     public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
 
-    	protected SQLXML sqlxml;
+        protected SQLXML sqlxml;
 
-    	public SQLXMLInputStreamFactory(SQLXML sqlxml) {
-    		this.sqlxml = sqlxml;
-    	}
+        public SQLXMLInputStreamFactory(SQLXML sqlxml) {
+            this.sqlxml = sqlxml;
+        }
 
-    	@Override
-    	public InputStream getInputStream() throws IOException {
-    		try {
-				return sqlxml.getBinaryStream();
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-    	}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            try {
+                return sqlxml.getBinaryStream();
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
 
-    	@Override
-    	public Reader getCharacterStream() throws IOException {
-    		try {
-				return sqlxml.getCharacterStream();
-			} catch (SQLException e) {
-				throw new IOException(e);
-			}
-    	}
+        @Override
+        public Reader getCharacterStream() throws IOException {
+            try {
+                return sqlxml.getCharacterStream();
+            } catch (SQLException e) {
+                throw new IOException(e);
+            }
+        }
 
-    	@Override
-		public String getContentType() {
-			return "application/xml"; //$NON-NLS-1$
-		}
+        @Override
+        public String getContentType() {
+            return "application/xml"; //$NON-NLS-1$
+        }
 
-		@Override
-		public String getName() {
-			return "sqlxml"; //$NON-NLS-1$
-		}
+        @Override
+        public String getName() {
+            return "sqlxml"; //$NON-NLS-1$
+        }
 
-		@Override
-		public OutputStream getOutputStream() throws IOException {
-			throw new UnsupportedOperationException();
-		}
+        @Override
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public StorageMode getStorageMode() {
-			return getStorageMode(sqlxml);
-		}
+        @Override
+        public StorageMode getStorageMode() {
+            return getStorageMode(sqlxml);
+        }
 
     }
 

@@ -79,17 +79,17 @@ public class TestDataTypeManager {
     };
 
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
-	@Test public void testTypeMappings() {
-		Set<String> dataTypeNames = DataTypeManager.getAllDataTypeNames();
-		for (String dataTypeName : dataTypeNames) {
-			Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataTypeName);
-			assertNotNull("Data type class was null for type " + dataTypeName, dataTypeClass); //$NON-NLS-1$
-			String dataTypeName2 = DataTypeManager.getDataTypeName(dataTypeClass);
-			assertEquals("Name to class to name not equals: ", dataTypeName, dataTypeName2); //$NON-NLS-1$
-		}
-	}
+    @Test public void testTypeMappings() {
+        Set<String> dataTypeNames = DataTypeManager.getAllDataTypeNames();
+        for (String dataTypeName : dataTypeNames) {
+            Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataTypeName);
+            assertNotNull("Data type class was null for type " + dataTypeName, dataTypeClass); //$NON-NLS-1$
+            String dataTypeName2 = DataTypeManager.getDataTypeName(dataTypeClass);
+            assertEquals("Name to class to name not equals: ", dataTypeName, dataTypeName2); //$NON-NLS-1$
+        }
+    }
 
     @Test public void testCheckConversions() {
         for (int src = 0; src < dataTypes.length; src++) {
@@ -134,7 +134,7 @@ public class TestDataTypeManager {
     @Test public void testCheckAllConversions() {
         Set<String> allTypes = DataTypeManager.getAllDataTypeNames();
         for (String src : allTypes) {
-        	for (String tgt : allTypes) {
+            for (String tgt : allTypes) {
                 boolean isImplicit = DataTypeManager.isImplicitConversion(src, tgt);
                 boolean isExplicit = DataTypeManager.isExplicitConversion(src, tgt);
 
@@ -182,64 +182,64 @@ public class TestDataTypeManager {
     }
 
     @Test public void testRuntimeTypeConversion() throws Exception {
-    	assertNull(DataTypeManager.convertToRuntimeType(null, true));
+        assertNull(DataTypeManager.convertToRuntimeType(null, true));
 
-    	assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0]), true) instanceof BlobType);
+        assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0]), true) instanceof BlobType);
 
-    	//unknown type should return as same
-    	Object foo = new Object();
-    	assertEquals(foo, DataTypeManager.convertToRuntimeType(foo, true));
+        //unknown type should return as same
+        Object foo = new Object();
+        assertEquals(foo, DataTypeManager.convertToRuntimeType(foo, true));
 
-    	//known type should return as same
-    	Integer bar = new Integer(1);
-    	assertEquals(bar, DataTypeManager.convertToRuntimeType(bar, true));
+        //known type should return as same
+        Integer bar = new Integer(1);
+        assertEquals(bar, DataTypeManager.convertToRuntimeType(bar, true));
     }
 
     @Test public void testObjectType() {
-    	assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.getDataTypeClass("foo")); //$NON-NLS-1$
+        assertEquals(DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.getDataTypeClass("foo")); //$NON-NLS-1$
 
-    	assertEquals(DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.getDataTypeName(TestDataTypeManager.class));
+        assertEquals(DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.getDataTypeName(TestDataTypeManager.class));
     }
 
     @Test public void testImplicitConversions() {
-    	List<String> c = new ArrayList<String>();
-    	DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER, c);
-    	assertEquals(Arrays.asList(DataTypeManager.DefaultDataTypes.LONG,
-    			DataTypeManager.DefaultDataTypes.BIG_INTEGER,
-    			DataTypeManager.DefaultDataTypes.DOUBLE,
-    			DataTypeManager.DefaultDataTypes.BIG_DECIMAL,
-    			DataTypeManager.DefaultDataTypes.STRING,
-    			DataTypeManager.DefaultDataTypes.OBJECT), c);
+        List<String> c = new ArrayList<String>();
+        DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER, c);
+        assertEquals(Arrays.asList(DataTypeManager.DefaultDataTypes.LONG,
+                DataTypeManager.DefaultDataTypes.BIG_INTEGER,
+                DataTypeManager.DefaultDataTypes.DOUBLE,
+                DataTypeManager.DefaultDataTypes.BIG_DECIMAL,
+                DataTypeManager.DefaultDataTypes.STRING,
+                DataTypeManager.DefaultDataTypes.OBJECT), c);
     }
 
-	@Test(expected=TransformationException.class) public void testStringToXML() throws Exception {
-    	DataTypeManager.transformValue("hello", DataTypeManager.DefaultDataClasses.XML); //$NON-NLS-1$
+    @Test(expected=TransformationException.class) public void testStringToXML() throws Exception {
+        DataTypeManager.transformValue("hello", DataTypeManager.DefaultDataClasses.XML); //$NON-NLS-1$
     }
 
-	static class Foo {
-		@Override
-		public String toString() {
-			return "hello";
-		}
-	}
-
-	@Test public void testObjectToString() throws Exception {
-    	assertEquals("hello", DataTypeManager.transformValue(new Foo(), DataTypeManager.DefaultDataClasses.STRING)); //$NON-NLS-1$
+    static class Foo {
+        @Override
+        public String toString() {
+            return "hello";
+        }
     }
 
-	@Test public void testObjectArrayToObject() throws Exception {
-    	Object[] value = {1,2};
-    	assertArrayEquals(value, (Object[])DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.OBJECT));
+    @Test public void testObjectToString() throws Exception {
+        assertEquals("hello", DataTypeManager.transformValue(new Foo(), DataTypeManager.DefaultDataClasses.STRING)); //$NON-NLS-1$
     }
 
-	@Test public void testByteArray() throws Exception {
-    	byte[] value = {1,2};
-    	assertArrayEquals(value, (byte[])DataTypeManager.convertToRuntimeType(value, false));
-    	assertEquals(new BinaryType(value), DataTypeManager.convertToRuntimeType(value, true));
+    @Test public void testObjectArrayToObject() throws Exception {
+        Object[] value = {1,2};
+        assertArrayEquals(value, (Object[])DataTypeManager.transformValue(value, value.getClass(), DataTypeManager.DefaultDataClasses.OBJECT));
+    }
+
+    @Test public void testByteArray() throws Exception {
+        byte[] value = {1,2};
+        assertArrayEquals(value, (byte[])DataTypeManager.convertToRuntimeType(value, false));
+        assertEquals(new BinaryType(value), DataTypeManager.convertToRuntimeType(value, true));
     }
 
     @Test public void testObjectTypeArray() throws Exception {
-    	Object value = new Object[] {"a", "b"};
+        Object value = new Object[] {"a", "b"};
         DataTypeManager.transformValue(value, value.getClass(), String[].class);
     }
 

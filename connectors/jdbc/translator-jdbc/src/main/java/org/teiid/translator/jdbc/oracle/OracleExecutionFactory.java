@@ -71,90 +71,90 @@ import org.teiid.util.Version;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 
-	private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
-	private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
-	private static final String TO_NCHAR = "TO_NCHAR"; //$NON-NLS-1$
+    private static final String TRUNC = "TRUNC"; //$NON-NLS-1$
+    private static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
+    private static final String TO_NCHAR = "TO_NCHAR"; //$NON-NLS-1$
     public static final Version NINE_0 = Version.getVersion("9.0"); //$NON-NLS-1$
-	public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
-	public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
-	public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
-	public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
+    public static final Version NINE_2 = Version.getVersion("9.2"); //$NON-NLS-1$
+    public static final Version ELEVEN_2_0_4 = Version.getVersion("11.2.0.4"); //$NON-NLS-1$
+    public static final Version ELEVEN_2 = Version.getVersion("11.2"); //$NON-NLS-1$
+    public static final Version TWELVE = Version.getVersion("12"); //$NON-NLS-1$
 
-	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
-	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
-	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
-	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
+    private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
+    private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
+    private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
+    private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
 
     public final static String HINT_PREFIX = "/*+"; //$NON-NLS-1$
     public static final String HINT_SUFFIX = "*/";  //$NON-NLS-1$
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
-	/*
-	 * Spatial Functions
-	 */
-	public static final String RELATE = "sdo_relate"; //$NON-NLS-1$
-	public static final String NEAREST_NEIGHBOR = "sdo_nn"; //$NON-NLS-1$
-	public static final String FILTER = "sdo_filter"; //$NON-NLS-1$
-	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
-	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
-	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
-	public static final String ORACLE = "Oracle"; //$NON-NLS-1$
+    /*
+     * Spatial Functions
+     */
+    public static final String RELATE = "sdo_relate"; //$NON-NLS-1$
+    public static final String NEAREST_NEIGHBOR = "sdo_nn"; //$NON-NLS-1$
+    public static final String FILTER = "sdo_filter"; //$NON-NLS-1$
+    public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
+    public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
+    public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+    public static final String ORACLE = "Oracle"; //$NON-NLS-1$
 
-	private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
-	static {
-		STRING_BOOLEAN_FUNCTIONS.addAll(
-				Arrays.asList(SourceSystemFunctions.ST_DISJOINT, SourceSystemFunctions.ST_CONTAINS,
-						SourceSystemFunctions.ST_CROSSES, SourceSystemFunctions.ST_INTERSECTS,
-						SourceSystemFunctions.ST_OVERLAPS, SourceSystemFunctions.ST_TOUCHES,
-						SourceSystemFunctions.ST_EQUALS));
-	}
+    private static final Set<String> STRING_BOOLEAN_FUNCTIONS = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+    static {
+        STRING_BOOLEAN_FUNCTIONS.addAll(
+                Arrays.asList(SourceSystemFunctions.ST_DISJOINT, SourceSystemFunctions.ST_CONTAINS,
+                        SourceSystemFunctions.ST_CROSSES, SourceSystemFunctions.ST_INTERSECTS,
+                        SourceSystemFunctions.ST_OVERLAPS, SourceSystemFunctions.ST_TOUCHES,
+                        SourceSystemFunctions.ST_EQUALS));
+    }
 
-	private final class DateAwareExtract extends ExtractFunctionModifier {
-		@Override
-		public List<?> translate(Function function) {
-			Expression ex = function.getParameters().get(0);
-			if (ex.getType() == TypeFacility.RUNTIME_TYPES.DATE || ex.getType() == TypeFacility.RUNTIME_TYPES.TIME
-			        || (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$
-					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
-				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
-				function.getParameters().set(0, ex);
-			}
-			return super.translate(function);
-		}
-	}
+    private final class DateAwareExtract extends ExtractFunctionModifier {
+        @Override
+        public List<?> translate(Function function) {
+            Expression ex = function.getParameters().get(0);
+            if (ex.getType() == TypeFacility.RUNTIME_TYPES.DATE || ex.getType() == TypeFacility.RUNTIME_TYPES.TIME
+                    || (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$
+                    || (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
+                ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
+                function.getParameters().set(0, ex);
+            }
+            return super.translate(function);
+        }
+    }
 
-	/*
-	 * Handling for cursor return values
-	 */
-	static final class RefCursorType {}
-	static int CURSOR_TYPE = -10;
-	static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
+    /*
+     * Handling for cursor return values
+     */
+    static final class RefCursorType {}
+    static int CURSOR_TYPE = -10;
+    static final String REF_CURSOR = "REF CURSOR"; //$NON-NLS-1$
 
-	/*
-	 * handling for char bindings
-	 */
-	static final class FixedCharType {}
-	static int FIXED_CHAR_TYPE = 999;
+    /*
+     * handling for char bindings
+     */
+    static final class FixedCharType {}
+    static int FIXED_CHAR_TYPE = 999;
 
-	/*
+    /*
      * handling for varchar bindings
      */
     static final class VarcharType {}
 
     protected Map<Class<?>, Integer> customTypeCodes = new HashMap<>();
 
-	private boolean oracleSuppliedDriver = true;
+    private boolean oracleSuppliedDriver = true;
 
-	private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
+    private OracleFormatFunctionModifier parseModifier = new OracleFormatFunctionModifier("TO_TIMESTAMP(", true); //$NON-NLS-1$
 
-	private boolean useNBindingType = true;
-	private boolean isExtendedAscii = true;
+    private boolean useNBindingType = true;
+    private boolean isExtendedAscii = true;
 
-	public OracleExecutionFactory() {
-		//older oracle instances seem to have issues with large numbers of bindings
-		setUseBindingsForDependentJoin(false);
-	}
+    public OracleExecutionFactory() {
+        //older oracle instances seem to have issues with large numbers of bindings
+        setUseBindingsForDependentJoin(false);
+    }
 
     @Override
     public void start() throws TranslatorException {
@@ -187,12 +187,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				function.setName(SourceSystemFunctions.TAN);
-				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
-			}
-		});
+            @Override
+            public List<?> translate(Function function) {
+                function.setName(SourceSystemFunctions.TAN);
+                return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.DIVIDE_OP, new Expression[] {new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), function}, TypeFacility.RUNTIME_TYPES.DOUBLE));
+            }
+        });
 
         //spatial functions
         registerFunctionModifier(OracleExecutionFactory.RELATE, new OracleSpatialFunctionModifier());
@@ -216,45 +216,45 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
                 return null;
             }
         });
-    	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
-    		@Override
-    		public List<?> translate(Function function) {
-    			return Arrays.asList("case when ", function.getParameters().get(0), " is null then null else to_date('1970-01-01 ' || to_char(",function.getParameters().get(0),", 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    		}
-    	});
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIME_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				//if column and type is date, just use date format
-				Expression ex = function.getParameters().get(0);
-				String format = TIMESTAMP_FORMAT;
-				if (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
-					format = DATETIME_FORMAT;
-				} else if (!(ex instanceof Literal) && !(ex instanceof Function)) {
-					//this isn't needed in every case, but it's simpler than inspecting the expression more
-					ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
-				}
-				return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-		});
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$
-    	convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
-    	convertModifier.addTypeConversion(new FunctionModifier() {
+        convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("case when ", function.getParameters().get(0), " is null then null else to_date('1970-01-01 ' || to_char(",function.getParameters().get(0),", 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", DATE_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", TIME_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                //if column and type is date, just use date format
+                Expression ex = function.getParameters().get(0);
+                String format = TIMESTAMP_FORMAT;
+                if (ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) { //$NON-NLS-1$
+                    format = DATETIME_FORMAT;
+                } else if (!(ex instanceof Literal) && !(ex instanceof Function)) {
+                    //this isn't needed in every case, but it's simpler than inspecting the expression more
+                    ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
+                }
+                return Arrays.asList("to_char(", ex, ", '", format, "')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            }
+        });
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", DATE_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", TIME_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", TIMESTAMP_FORMAT)); //$NON-NLS-1$
+        convertModifier.addConvert(FunctionModifier.CLOB, FunctionModifier.STRING, new TemplateFunctionModifier("DBMS_LOB.substr(", 0, ", 4000)")); //$NON-NLS-1$ //$NON-NLS-2$
+        convertModifier.addTypeConversion(new FunctionModifier() {
 
-    	    ConvertModifier.FormatModifier toChar = new ConvertModifier.FormatModifier("to_char"); //$NON-NLS-1$
-    	    ConvertModifier.FormatModifier toNChar = new ConvertModifier.FormatModifier(TO_NCHAR);
+            ConvertModifier.FormatModifier toChar = new ConvertModifier.FormatModifier("to_char"); //$NON-NLS-1$
+            ConvertModifier.FormatModifier toNChar = new ConvertModifier.FormatModifier(TO_NCHAR);
 
             @Override
             public List<?> translate(Function function) {
@@ -265,71 +265,71 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             }
         }, FunctionModifier.STRING);
 
-    	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
-    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
-    			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
-    	convertModifier.addTypeConversion(new FunctionModifier() {
-			@Override
-			public List<?> translate(Function function) {
-				if (Number.class.isAssignableFrom(function.getParameters().get(0).getType())) {
-					return Arrays.asList("trunc(", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				return Arrays.asList("trunc(to_number(", function.getParameters().get(0), "))"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-		},
-		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
-    	convertModifier.addNumericBooleanConversions();
-    	convertModifier.setWideningNumericImplicit(true);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+        //NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
+        convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
+                FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
+        convertModifier.addTypeConversion(new FunctionModifier() {
+            @Override
+            public List<?> translate(Function function) {
+                if (Number.class.isAssignableFrom(function.getParameters().get(0).getType())) {
+                    return Arrays.asList("trunc(", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                return Arrays.asList("trunc(to_number(", function.getParameters().get(0), "))"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+        },
+        FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,    FunctionModifier.BIGINTEGER);
+        convertModifier.addNumericBooleanConversions();
+        convertModifier.setWideningNumericImplicit(true);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
 
-    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING);
-    	addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP);
-    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL);
-    	addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL);
+        addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP, STRING);
+        addPushDownFunction(ORACLE, TRUNC, TIMESTAMP, TIMESTAMP);
+        addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL, BIG_DECIMAL);
+        addPushDownFunction(ORACLE, TRUNC, BIG_DECIMAL, BIG_DECIMAL);
 
-    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
-    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);
-    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, OBJECT, STRING);
-    	addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, STRING, STRING);
-    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, STRING, OBJECT, STRING, INTEGER);
-    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, OBJECT, STRING, INTEGER);
-    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, STRING, STRING, INTEGER);
-    	addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR_DISTANCE, INTEGER, INTEGER);
-    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, OBJECT, STRING);
-    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, STRING, OBJECT, STRING);
-    	addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, STRING, STRING);
-    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
-    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
-    	addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, STRING, STRING);
+        addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, RELATE, STRING, STRING, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, RELATE, STRING, OBJECT, STRING, STRING);
+        addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, STRING, OBJECT, STRING, INTEGER);
+        addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, OBJECT, STRING, INTEGER);
+        addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR, STRING, OBJECT, STRING, STRING, INTEGER);
+        addPushDownFunction(ORACLE_SDO, NEAREST_NEIGHBOR_DISTANCE, INTEGER, INTEGER);
+        addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, STRING, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, WITHIN_DISTANCE, STRING, OBJECT, STRING, STRING);
+        addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, STRING, STRING);
+        addPushDownFunction(ORACLE_SDO, FILTER, STRING, OBJECT, OBJECT, STRING);
+        addPushDownFunction(ORACLE_SDO, FILTER, STRING, STRING, OBJECT, STRING);
 
-    	registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
-    	registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
-    	registerFunctionModifier(SourceSystemFunctions.ST_ASGML, new AliasModifier("SDO_UTIL.TO_GMLGEOMETRY")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASBINARY, new AliasModifier("SDO_UTIL.TO_WKBGEOMETRY")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASTEXT, new AliasModifier("SDO_UTIL.TO_WKTGEOMETRY")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.ST_ASGML, new AliasModifier("SDO_UTIL.TO_GMLGEOMETRY")); //$NON-NLS-1$
 
         // Used instead of SDO_UTIL functions because it allows SRID to be specified.
-    	// we need to use to_blob and to_clob to disambiguate
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+        // we need to use to_blob and to_clob to disambiguate
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMWKB, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
 
-			@Override
-			public List<?> translate(Function function) {
-				Expression ex = function.getParameters().get(0);
-				if (ex instanceof Parameter || ex instanceof Literal) {
-					function.getParameters().set(0, new Function("TO_BLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.BLOB)); //$NON-NLS-1$
-				}
-				return super.translate(function);
-			}
-		});
-    	registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
+            @Override
+            public List<?> translate(Function function) {
+                Expression ex = function.getParameters().get(0);
+                if (ex instanceof Parameter || ex instanceof Literal) {
+                    function.getParameters().set(0, new Function("TO_BLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.BLOB)); //$NON-NLS-1$
+                }
+                return super.translate(function);
+            }
+        });
+        registerFunctionModifier(SourceSystemFunctions.ST_GEOMFROMTEXT, new AliasModifier("SDO_GEOMETRY") { //$NON-NLS-1$
 
-    		@Override
-			public List<?> translate(Function function) {
-				Expression ex = function.getParameters().get(0);
-				if (ex instanceof Parameter || ex instanceof Literal) {
-					function.getParameters().set(0, new Function("TO_CLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.CLOB)); //$NON-NLS-1$
-				}
-				return super.translate(function);
-			}
-    	});
+            @Override
+            public List<?> translate(Function function) {
+                Expression ex = function.getParameters().get(0);
+                if (ex instanceof Parameter || ex instanceof Literal) {
+                    function.getParameters().set(0, new Function("TO_CLOB", Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.CLOB)); //$NON-NLS-1$
+                }
+                return super.translate(function);
+            }
+        });
 
         registerFunctionModifier(SourceSystemFunctions.ST_DISTANCE, new TemplateFunctionModifier("SDO_GEOM.SDO_DISTANCE(", 0, ", ", 1, ", 0.005)")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
@@ -385,47 +385,47 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
          * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence
          * then pull the Sequence name out of the name in source of the column.
          */
-    	if (!(insert.getValueSource() instanceof ExpressionValueSource)) {
-    		return;
-    	}
-    	ExpressionValueSource values = (ExpressionValueSource)insert.getValueSource();
-    	if (insert.getTable().getMetadataObject() == null) {
-    		return;
-    	}
-    	List<Column> allElements = insert.getTable().getMetadataObject().getColumns();
-    	if (allElements.size() == values.getValues().size()) {
-    		return;
-    	}
+        if (!(insert.getValueSource() instanceof ExpressionValueSource)) {
+            return;
+        }
+        ExpressionValueSource values = (ExpressionValueSource)insert.getValueSource();
+        if (insert.getTable().getMetadataObject() == null) {
+            return;
+        }
+        List<Column> allElements = insert.getTable().getMetadataObject().getColumns();
+        if (allElements.size() == values.getValues().size()) {
+            return;
+        }
 
-    	int index = 0;
-    	List<ColumnReference> elements = insert.getColumns();
+        int index = 0;
+        List<ColumnReference> elements = insert.getColumns();
 
-    	for (Column element : allElements) {
-    		if (!element.isAutoIncremented()) {
-    			continue;
-    		}
-    		String name = element.getNameInSource();
-    		int seqIndex = name.indexOf(SEQUENCE);
-    		if (seqIndex == -1) {
-    			continue;
-    		}
-    		boolean found = false;
-    		while (index < elements.size()) {
-    			if (element.equals(elements.get(index).getMetadataObject())) {
-    				found = true;
-    				break;
-    			}
-    			index++;
-    		}
-    		if (found) {
-    			continue;
-    		}
+        for (Column element : allElements) {
+            if (!element.isAutoIncremented()) {
+                continue;
+            }
+            String name = element.getNameInSource();
+            int seqIndex = name.indexOf(SEQUENCE);
+            if (seqIndex == -1) {
+                continue;
+            }
+            boolean found = false;
+            while (index < elements.size()) {
+                if (element.equals(elements.get(index).getMetadataObject())) {
+                    found = true;
+                    break;
+                }
+                index++;
+            }
+            if (found) {
+                continue;
+            }
 
             String sequence = name.substring(seqIndex + SEQUENCE.length());
 
             int delimiterIndex = sequence.indexOf(Tokens.DOT);
             if (delimiterIndex == -1) {
-            	 throw new TranslatorException(JDBCPlugin.Event.TEIID11017, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11017, SEQUENCE, name));
+                 throw new TranslatorException(JDBCPlugin.Event.TEIID11017, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11017, SEQUENCE, name));
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);
@@ -434,97 +434,97 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
             ColumnReference sequenceElement = this.getLanguageFactory().createColumnReference(sequenceElementName, sequenceGroup, null, element.getJavaType());
             insert.getColumns().add(index, this.getLanguageFactory().createColumnReference(element.getName(), insert.getTable(), element, element.getJavaType()));
             values.getValues().add(index, sequenceElement);
-		}
+        }
     }
 
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
-    	if (command instanceof Insert) {
-    	    Insert insert = (Insert)command;
-    		try {
-				handleInsertSequences(insert);
-				correctInsertTypes(insert);
-			} catch (TranslatorException e) {
-				throw new RuntimeException(e);
-			}
-    	}
+        if (command instanceof Insert) {
+            Insert insert = (Insert)command;
+            try {
+                handleInsertSequences(insert);
+                correctInsertTypes(insert);
+            } catch (TranslatorException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-    	if (!(command instanceof QueryExpression)) {
-    		return null;
-    	}
-		QueryExpression queryCommand = (QueryExpression)command;
-		if (queryCommand.getLimit() == null) {
-			return null;
-    	}
-		Limit limit = queryCommand.getLimit();
-		queryCommand.setLimit(null);
+        if (!(command instanceof QueryExpression)) {
+            return null;
+        }
+        QueryExpression queryCommand = (QueryExpression)command;
+        if (queryCommand.getLimit() == null) {
+            return null;
+        }
+        Limit limit = queryCommand.getLimit();
+        queryCommand.setLimit(null);
 
-		if (command instanceof Select) {
-			Select select = (Select)command;
+        if (command instanceof Select) {
+            Select select = (Select)command;
 
-			TableReference tr = select.getFrom().get(0);
-			if (tr instanceof NamedTable && isDual((NamedTable)tr)) {
-				if (limit.getRowOffset() > 0 || limit.getRowLimit() == 0) {
-					//no data
-					select.setWhere(new Comparison(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.EQ));
-					return null;
-				}
-				return null; //dual does not allow a limit
-			}
-		}
+            TableReference tr = select.getFrom().get(0);
+            if (tr instanceof NamedTable && isDual((NamedTable)tr)) {
+                if (limit.getRowOffset() > 0 || limit.getRowLimit() == 0) {
+                    //no data
+                    select.setWhere(new Comparison(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.EQ));
+                    return null;
+                }
+                return null; //dual does not allow a limit
+            }
+        }
 
-    	List<Object> parts = new ArrayList<Object>();
+        List<Object> parts = new ArrayList<Object>();
 
-    	if (queryCommand.getWith() != null) {
-			With with = queryCommand.getWith();
-			queryCommand.setWith(null);
-			parts.add(with);
-		}
+        if (queryCommand.getWith() != null) {
+            With with = queryCommand.getWith();
+            queryCommand.setWith(null);
+            parts.add(with);
+        }
 
-    	parts.add("SELECT "); //$NON-NLS-1$
-    	/*
-    	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
-    	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
-    	 * we just use the projected names
-    	 */
-    	boolean allAliased = true;
-    	for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
-			if (selectSymbol.getAlias() == null) {
-				allAliased = false;
-				break;
-			}
-		}
-    	if (allAliased) {
-	    	String[] columnNames = queryCommand.getColumnNames();
-	    	for (int i = 0; i < columnNames.length; i++) {
-	    		if (i > 0) {
-	    			parts.add(", "); //$NON-NLS-1$
-	    		}
-	    		parts.add(columnNames[i]);
-			}
-    	} else {
-        	parts.add("*"); //$NON-NLS-1$
-    	}
-		if (limit.getRowOffset() > 0) {
-			parts.add(" FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
-		} else {
-			parts.add(" FROM ("); //$NON-NLS-1$
-		}
-		parts.add(queryCommand);
-		if (limit.getRowOffset() > 0) {
-			if (limit.getRowLimit() != Integer.MAX_VALUE) {
-				parts.add(") VIEW_FOR_LIMIT WHERE ROWNUM <= "); //$NON-NLS-1$
-				parts.add((long)limit.getRowLimit() + limit.getRowOffset());
-			} else {
-				parts.add(") VIEW_FOR_LIMIT"); //$NON-NLS-1$
-			}
-			parts.add(") WHERE ROWNUM_ > "); //$NON-NLS-1$
-			parts.add(limit.getRowOffset());
-		} else {
-			parts.add(") WHERE ROWNUM <= "); //$NON-NLS-1$
-			parts.add(limit.getRowLimit());
-		}
-		return parts;
+        parts.add("SELECT "); //$NON-NLS-1$
+        /*
+         * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
+         * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
+         * we just use the projected names
+         */
+        boolean allAliased = true;
+        for (DerivedColumn selectSymbol : queryCommand.getProjectedQuery().getDerivedColumns()) {
+            if (selectSymbol.getAlias() == null) {
+                allAliased = false;
+                break;
+            }
+        }
+        if (allAliased) {
+            String[] columnNames = queryCommand.getColumnNames();
+            for (int i = 0; i < columnNames.length; i++) {
+                if (i > 0) {
+                    parts.add(", "); //$NON-NLS-1$
+                }
+                parts.add(columnNames[i]);
+            }
+        } else {
+            parts.add("*"); //$NON-NLS-1$
+        }
+        if (limit.getRowOffset() > 0) {
+            parts.add(" FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
+        } else {
+            parts.add(" FROM ("); //$NON-NLS-1$
+        }
+        parts.add(queryCommand);
+        if (limit.getRowOffset() > 0) {
+            if (limit.getRowLimit() != Integer.MAX_VALUE) {
+                parts.add(") VIEW_FOR_LIMIT WHERE ROWNUM <= "); //$NON-NLS-1$
+                parts.add((long)limit.getRowLimit() + limit.getRowOffset());
+            } else {
+                parts.add(") VIEW_FOR_LIMIT"); //$NON-NLS-1$
+            }
+            parts.add(") WHERE ROWNUM_ > "); //$NON-NLS-1$
+            parts.add(limit.getRowOffset());
+        } else {
+            parts.add(") WHERE ROWNUM <= "); //$NON-NLS-1$
+            parts.add(limit.getRowLimit());
+        }
+        return parts;
     }
 
     private void correctInsertTypes(Insert insert) {
@@ -564,16 +564,16 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         }
     }
 
-	private boolean isDual(NamedTable table) {
-		String groupName = null;
-		AbstractMetadataRecord groupID = table.getMetadataObject();
-		if(groupID != null) {
-		    groupName = SQLStringVisitor.getRecordName(groupID);
-		} else {
-		    groupName = table.getName();
-		}
-		return DUAL.equalsIgnoreCase(groupName);
-	}
+    private boolean isDual(NamedTable table) {
+        String groupName = null;
+        AbstractMetadataRecord groupID = table.getMetadataObject();
+        if(groupID != null) {
+            groupName = SQLStringVisitor.getRecordName(groupID);
+        } else {
+            groupName = table.getName();
+        }
+        return DUAL.equalsIgnoreCase(groupName);
+    }
 
     @Override
     public boolean useAsInGroupAlias(){
@@ -582,73 +582,73 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public String getSetOperationString(Operation operation) {
-    	if (operation == Operation.EXCEPT) {
-    		return "MINUS"; //$NON-NLS-1$
-    	}
-    	return super.getSetOperationString(operation);
+        if (operation == Operation.EXCEPT) {
+            return "MINUS"; //$NON-NLS-1$
+        }
+        return super.getSetOperationString(operation);
     }
 
     @Override
     public String getSourceComment(ExecutionContext context, Command command) {
-    	String comment = super.getSourceComment(context, command);
+        String comment = super.getSourceComment(context, command);
 
-    	boolean usingPayloadComment = false;
-    	if (context != null) {
-	    	// Check for db hints
-		    Object payload = context.getCommandPayload();
-		    if (payload instanceof String) {
-		        String payloadString = (String)payload;
-		        if (payloadString.startsWith(HINT_PREFIX)) {
-		        	int i = payloadString.indexOf(HINT_SUFFIX);
-		        	if (i > 0 && payloadString.substring(i + 2).trim().length() == 0) {
-			            comment += payloadString + " "; //$NON-NLS-1$
-			            usingPayloadComment = true;
-		        	} else {
-		        		String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Execution Payload", payloadString); //$NON-NLS-1$
-		        		context.addWarning(new TranslatorException(msg));
-		        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
-		        	}
-		        }
-		    }
-    	}
+        boolean usingPayloadComment = false;
+        if (context != null) {
+            // Check for db hints
+            Object payload = context.getCommandPayload();
+            if (payload instanceof String) {
+                String payloadString = (String)payload;
+                if (payloadString.startsWith(HINT_PREFIX)) {
+                    int i = payloadString.indexOf(HINT_SUFFIX);
+                    if (i > 0 && payloadString.substring(i + 2).trim().length() == 0) {
+                        comment += payloadString + " "; //$NON-NLS-1$
+                        usingPayloadComment = true;
+                    } else {
+                        String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Execution Payload", payloadString); //$NON-NLS-1$
+                        context.addWarning(new TranslatorException(msg));
+                        LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+                    }
+                }
+            }
+        }
 
-    	if (!usingPayloadComment && context != null) {
-    		String hint = context.getSourceHint();
-    		if (context.getGeneralHint() != null) {
-    			if (hint != null) {
-    				hint += (" " + context.getGeneralHint()); //$NON-NLS-1$
-    			} else {
-    				hint = context.getGeneralHint();
-    			}
-    		}
-    		if (hint != null) {
-    			//append a source hint
-    			if (!hint.contains(HINT_PREFIX)) {
-    				comment += HINT_PREFIX + ' ' + hint + ' ' + HINT_SUFFIX + ' ';
-    			} else {
-    				String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Source Hint", hint); //$NON-NLS-1$
-    				context.addWarning(new TranslatorException(msg));
-	        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
-    			}
-    		}
-    	}
+        if (!usingPayloadComment && context != null) {
+            String hint = context.getSourceHint();
+            if (context.getGeneralHint() != null) {
+                if (hint != null) {
+                    hint += (" " + context.getGeneralHint()); //$NON-NLS-1$
+                } else {
+                    hint = context.getGeneralHint();
+                }
+            }
+            if (hint != null) {
+                //append a source hint
+                if (!hint.contains(HINT_PREFIX)) {
+                    comment += HINT_PREFIX + ' ' + hint + ' ' + HINT_SUFFIX + ' ';
+                } else {
+                    String msg = JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11003, "Source Hint", hint); //$NON-NLS-1$
+                    context.addWarning(new TranslatorException(msg));
+                    LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+                }
+            }
+        }
 
-		if (command instanceof Select) {
-	        //
-	        // This simple algorithm determines the hint which will be added to the
-	        // query.
-	        // Right now, we look through all functions passed in the query
-	        // (returned as a collection)
-	        // Then we check if any of those functions are sdo_relate
-	        // If so, the ORDERED hint is added, if not, it isn't
-	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
-	        for (Function func : col) {
-	            if (func.getName().equalsIgnoreCase(OracleExecutionFactory.RELATE)) {
-	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
-	            }
-	        }
-		}
-    	return comment;
+        if (command instanceof Select) {
+            //
+            // This simple algorithm determines the hint which will be added to the
+            // query.
+            // Right now, we look through all functions passed in the query
+            // (returned as a collection)
+            // Then we check if any of those functions are sdo_relate
+            // If so, the ORDERED hint is added, if not, it isn't
+            Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
+            for (Function func : col) {
+                if (func.getName().equalsIgnoreCase(OracleExecutionFactory.RELATE)) {
+                    return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
+                }
+            }
+        }
+        return comment;
     }
 
     /**
@@ -663,11 +663,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         // Check if the element was modeled as using a Sequence
         int useIndex = element.indexOf(SEQUENCE);
         if (useIndex >= 0) {
-        	String name = element.substring(0, useIndex);
-        	if (group != null) {
-        		return group + Tokens.DOT + name;
-        	}
-        	return name;
+            String name = element.substring(0, useIndex);
+            if (group != null) {
+                return group + Tokens.DOT + name;
+            }
+            return name;
         }
 
         // Check if the group name should be discarded
@@ -681,249 +681,249 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean hasTimeType() {
-    	return false;
+        return false;
     }
 
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
         Integer code = customTypeCodes.get(paramType);
         if (code != null) {
-    		stmt.setObject(i, param, code);
-    		return;
-    	}
-    	super.bindValue(stmt, param, paramType, i);
+            stmt.setObject(i, param, code);
+            return;
+        }
+        super.bindValue(stmt, param, paramType, i);
     }
 
     @Override
     public boolean useStreamsForLobs() {
-    	return true;
+        return true;
     }
 
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.HIGH;
+        return NullOrder.HIGH;
     }
 
     @Override
     public boolean supportsOrderByNullOrdering() {
-    	return true;
+        return true;
     }
 
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	return new SQLConversionVisitor(this) {
+        return new SQLConversionVisitor(this) {
 
-    		@Override
-    		public void visit(Select select) {
-    			if (select.getFrom() == null || select.getFrom().isEmpty()) {
-    				select.setFrom(Arrays.asList((TableReference)new NamedTable(DUAL, null, null)));
-    			}
-    			super.visit(select);
-    		}
+            @Override
+            public void visit(Select select) {
+                if (select.getFrom() == null || select.getFrom().isEmpty()) {
+                    select.setFrom(Arrays.asList((TableReference)new NamedTable(DUAL, null, null)));
+                }
+                super.visit(select);
+            }
 
-    		@Override
-    		public void visit(Comparison obj) {
-    			if (isFixedChar(obj.getLeftExpression())) {
-    				if (obj.getRightExpression() instanceof Literal) {
-	    				Literal l = (Literal)obj.getRightExpression();
-	    				l.setType(FixedCharType.class);
-    				} else if (obj.getRightExpression() instanceof Parameter) {
-    					Parameter p = (Parameter)obj.getRightExpression();
-	    				p.setType(FixedCharType.class);
-    				}
-    			}
-    			if (obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN
-    					&& (obj.getLeftExpression() instanceof Function)
-    					&& obj.getRightExpression() instanceof Literal) {
-    				Function f = (Function)obj.getLeftExpression();
-    				if (STRING_BOOLEAN_FUNCTIONS.contains(f.getName())) {
-	    				Boolean b = (Boolean)((Literal)obj.getRightExpression()).getValue();
-	    				obj.setRightExpression(new Literal(b!=null?(b?"TRUE":"FALSE"):null, TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-    				}
-    			}
-    			super.visit(obj);
-    		}
-
-    		@Override
-    		protected void appendRightComparison(Comparison obj) {
-    			if (obj.getRightExpression() instanceof Array) {
-    				//oracle needs rhs arrays nested in extra parens
-    				buffer.append(SQLConstants.Tokens.LPAREN);
-        			super.appendRightComparison(obj);
-        			buffer.append(SQLConstants.Tokens.RPAREN);
-    			} else {
-    				super.appendRightComparison(obj);
-    			}
-    		}
-
-			private boolean isFixedChar(Expression obj) {
-				if (!isOracleSuppliedDriver() || !(obj instanceof ColumnReference)) {
-					return false;
-				}
-				ColumnReference cr = (ColumnReference)obj;
-				return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)
-						&& cr.getMetadataObject() != null
-						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
-								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
-			}
-
-    		@Override
-            public void visit(In obj) {
-    			if (isFixedChar(obj.getLeftExpression())) {
-    				for (Expression exp : obj.getRightExpressions()) {
-    					if (exp instanceof Literal) {
-    						Literal l = (Literal)exp;
-    	    				l.setType(FixedCharType.class);
-    					} else if (exp instanceof Parameter) {
-    						Parameter p = (Parameter)exp;
-    	    				p.setType(FixedCharType.class);
-    					}
-    				}
-    			}
-    			super.visit(obj);
-    		}
-
-    		@Override
-            public void visit(NamedTable table) {
-    			stripDualAlias(table);
-    			super.visit(table);
-    		}
-
-			private void stripDualAlias(NamedTable table) {
-				if (table.getCorrelationName() != null) {
-                    if (isDual(table)) {
-                    	table.setCorrelationName(null);
+            @Override
+            public void visit(Comparison obj) {
+                if (isFixedChar(obj.getLeftExpression())) {
+                    if (obj.getRightExpression() instanceof Literal) {
+                        Literal l = (Literal)obj.getRightExpression();
+                        l.setType(FixedCharType.class);
+                    } else if (obj.getRightExpression() instanceof Parameter) {
+                        Parameter p = (Parameter)obj.getRightExpression();
+                        p.setType(FixedCharType.class);
                     }
-    			}
-			}
+                }
+                if (obj.getLeftExpression().getType() == TypeFacility.RUNTIME_TYPES.BOOLEAN
+                        && (obj.getLeftExpression() instanceof Function)
+                        && obj.getRightExpression() instanceof Literal) {
+                    Function f = (Function)obj.getLeftExpression();
+                    if (STRING_BOOLEAN_FUNCTIONS.contains(f.getName())) {
+                        Boolean b = (Boolean)((Literal)obj.getRightExpression()).getValue();
+                        obj.setRightExpression(new Literal(b!=null?(b?"TRUE":"FALSE"):null, TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
+                }
+                super.visit(obj);
+            }
 
-    		@Override
-    		public void visit(ColumnReference obj) {
-    			if (obj.getTable() != null) {
-    				stripDualAlias(obj.getTable());
-    			}
-    			super.visit(obj);
-    		}
+            @Override
+            protected void appendRightComparison(Comparison obj) {
+                if (obj.getRightExpression() instanceof Array) {
+                    //oracle needs rhs arrays nested in extra parens
+                    buffer.append(SQLConstants.Tokens.LPAREN);
+                    super.appendRightComparison(obj);
+                    buffer.append(SQLConstants.Tokens.RPAREN);
+                } else {
+                    super.appendRightComparison(obj);
+                }
+            }
 
-    		@Override
-    		public void visit(Call call) {
-        		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
-        			if (call.getReturnType() == null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) {
-	        			//assume stored function handling
-        				if (!setOutCursorType(call)) {
-        					call.setReturnType(RefCursorType.class);
-        				}
-        			} else {
-        				//TODO we only will allow a single out cursor
-        				if (call.getMetadataObject() != null) {
-	        				ProcedureParameter param = call.getReturnParameter();
-	        				if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
-	    	        			call.setReturnType(RefCursorType.class);
-	        				}
-        				}
-        				setOutCursorType(call);
-        			}
-        		}
-        		super.visit(call);
-    		}
+            private boolean isFixedChar(Expression obj) {
+                if (!isOracleSuppliedDriver() || !(obj instanceof ColumnReference)) {
+                    return false;
+                }
+                ColumnReference cr = (ColumnReference)obj;
+                return (cr.getType() == TypeFacility.RUNTIME_TYPES.STRING || cr.getType() == TypeFacility.RUNTIME_TYPES.CHAR)
+                        && cr.getMetadataObject() != null
+                        && ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
+                                || "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
+            }
 
-			private boolean setOutCursorType(Call call) {
-				boolean set = false;
-				for (Argument arg : call.getArguments()) {
-					if (arg.getDirection() == Direction.OUT) {
-						ProcedureParameter param = arg.getMetadataObject();
-						if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
-							arg.setType(RefCursorType.class);
-							set = true;
-						}
-					}
-				}
-				return set;
-			}
+            @Override
+            public void visit(In obj) {
+                if (isFixedChar(obj.getLeftExpression())) {
+                    for (Expression exp : obj.getRightExpressions()) {
+                        if (exp instanceof Literal) {
+                            Literal l = (Literal)exp;
+                            l.setType(FixedCharType.class);
+                        } else if (exp instanceof Parameter) {
+                            Parameter p = (Parameter)exp;
+                            p.setType(FixedCharType.class);
+                        }
+                    }
+                }
+                super.visit(obj);
+            }
 
-    		@Override
-    		public void visit(Like obj) {
-    			if (obj.getMode() == MatchMode.REGEX) {
-    				if (obj.isNegated()) {
-    					buffer.append("NOT("); //$NON-NLS-1$
-    				}
-    				buffer.append("REGEXP_LIKE(");  //$NON-NLS-1$
-    				append(obj.getLeftExpression());
-    				buffer.append(", ");  //$NON-NLS-1$
-    				append(obj.getRightExpression());
-    				buffer.append(")");  //$NON-NLS-1$
-    				if (obj.isNegated()) {
-    					buffer.append(")");  //$NON-NLS-1$
-    				}
-    			} else {
-    				super.visit(obj);
-    			}
-    		}
+            @Override
+            public void visit(NamedTable table) {
+                stripDualAlias(table);
+                super.visit(table);
+            }
 
-    		@Override
-    		public void visit(WithItem obj) {
-    			if (obj.getColumns() != null) {
-    				List<ColumnReference> cols = obj.getColumns();
-    				if(!obj.isRecusive()) {
-    					//oracle 10 does not support recursion nor a column list
-    				    obj.setColumns(null);
-	    				Select select = obj.getSubquery().getProjectedQuery();
-	    				List<DerivedColumn> selectClause = select.getDerivedColumns();
-	    				for (int i = 0; i < cols.size(); i++) {
-	    					selectClause.get(i).setAlias(cols.get(i).getName());
-	    				}
-    				}
-    			}
-    			super.visit(obj);
-    		}
+            private void stripDualAlias(NamedTable table) {
+                if (table.getCorrelationName() != null) {
+                    if (isDual(table)) {
+                        table.setCorrelationName(null);
+                    }
+                }
+            }
 
-    		@Override
-    		public void visit(SearchedCase obj) {
-    		    boolean i18n = false;
-    		    if (OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
-    		        i18n = true;
-    		    }
-    		    for (SearchedWhenClause clause : obj.getCases()) {
-    		        if (OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
-    		            i18n = true;
-    		        }
-    		    }
-    		    if (i18n) {
-    		        if (obj.getElseExpression() != null && !OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
-    		            obj.setElseExpression(toNChar(obj.getElseExpression()));
+            @Override
+            public void visit(ColumnReference obj) {
+                if (obj.getTable() != null) {
+                    stripDualAlias(obj.getTable());
+                }
+                super.visit(obj);
+            }
+
+            @Override
+            public void visit(Call call) {
+                if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
+                    if (call.getReturnType() == null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) {
+                        //assume stored function handling
+                        if (!setOutCursorType(call)) {
+                            call.setReturnType(RefCursorType.class);
+                        }
+                    } else {
+                        //TODO we only will allow a single out cursor
+                        if (call.getMetadataObject() != null) {
+                            ProcedureParameter param = call.getReturnParameter();
+                            if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+                                call.setReturnType(RefCursorType.class);
+                            }
+                        }
+                        setOutCursorType(call);
+                    }
+                }
+                super.visit(call);
+            }
+
+            private boolean setOutCursorType(Call call) {
+                boolean set = false;
+                for (Argument arg : call.getArguments()) {
+                    if (arg.getDirection() == Direction.OUT) {
+                        ProcedureParameter param = arg.getMetadataObject();
+                        if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+                            arg.setType(RefCursorType.class);
+                            set = true;
+                        }
+                    }
+                }
+                return set;
+            }
+
+            @Override
+            public void visit(Like obj) {
+                if (obj.getMode() == MatchMode.REGEX) {
+                    if (obj.isNegated()) {
+                        buffer.append("NOT("); //$NON-NLS-1$
+                    }
+                    buffer.append("REGEXP_LIKE(");  //$NON-NLS-1$
+                    append(obj.getLeftExpression());
+                    buffer.append(", ");  //$NON-NLS-1$
+                    append(obj.getRightExpression());
+                    buffer.append(")");  //$NON-NLS-1$
+                    if (obj.isNegated()) {
+                        buffer.append(")");  //$NON-NLS-1$
+                    }
+                } else {
+                    super.visit(obj);
+                }
+            }
+
+            @Override
+            public void visit(WithItem obj) {
+                if (obj.getColumns() != null) {
+                    List<ColumnReference> cols = obj.getColumns();
+                    if(!obj.isRecusive()) {
+                        //oracle 10 does not support recursion nor a column list
+                        obj.setColumns(null);
+                        Select select = obj.getSubquery().getProjectedQuery();
+                        List<DerivedColumn> selectClause = select.getDerivedColumns();
+                        for (int i = 0; i < cols.size(); i++) {
+                            selectClause.get(i).setAlias(cols.get(i).getName());
+                        }
+                    }
+                }
+                super.visit(obj);
+            }
+
+            @Override
+            public void visit(SearchedCase obj) {
+                boolean i18n = false;
+                if (OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
+                    i18n = true;
+                }
+                for (SearchedWhenClause clause : obj.getCases()) {
+                    if (OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
+                        i18n = true;
+                    }
+                }
+                if (i18n) {
+                    if (obj.getElseExpression() != null && !OracleExecutionFactory.this.isNonAscii(obj.getElseExpression())) {
+                        obj.setElseExpression(toNChar(obj.getElseExpression()));
                     }
                     for (SearchedWhenClause clause : obj.getCases()) {
                         if (!OracleExecutionFactory.this.isNonAscii(clause.getResult())) {
                             clause.setResult(toNChar(clause.getResult()));
                         }
                     }
-    		    }
-    		    super.visit(obj);
-    		}
+                }
+                super.visit(obj);
+            }
 
-    		private Function toNChar(Expression ex) {
-    		    return new Function(TO_NCHAR, Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.STRING);
-    		}
+            private Function toNChar(Expression ex) {
+                return new Function(TO_NCHAR, Arrays.asList(ex), TypeFacility.RUNTIME_TYPES.STRING);
+            }
 
-    		@Override
-    		public void visit(SetQuery obj) {
-    		    for (int i = 0; i < obj.getColumnNames().length; i++) {
-    		        DerivedColumn leftDerivedColumn = obj.getLeftQuery().getProjectedQuery().getDerivedColumns().get(i);
+            @Override
+            public void visit(SetQuery obj) {
+                for (int i = 0; i < obj.getColumnNames().length; i++) {
+                    DerivedColumn leftDerivedColumn = obj.getLeftQuery().getProjectedQuery().getDerivedColumns().get(i);
                     boolean left_i18n = OracleExecutionFactory.this.isNonAscii(leftDerivedColumn.getExpression());
-    		        DerivedColumn rightDerivedColumn = obj.getRightQuery().getProjectedQuery().getDerivedColumns().get(i);
+                    DerivedColumn rightDerivedColumn = obj.getRightQuery().getProjectedQuery().getDerivedColumns().get(i);
                     boolean right_i18n = OracleExecutionFactory.this.isNonAscii(rightDerivedColumn.getExpression());
-    		        if (left_i18n ^ right_i18n) {
-    		            if (!left_i18n) {
-    		                leftDerivedColumn.setExpression(toNChar(leftDerivedColumn.getExpression()));
-    		            } else if (!right_i18n) {
-    		                rightDerivedColumn.setExpression(toNChar(rightDerivedColumn.getExpression()));
-    		            }
-    		        }
-    		    }
-    		    super.visit(obj);
-    		}
+                    if (left_i18n ^ right_i18n) {
+                        if (!left_i18n) {
+                            leftDerivedColumn.setExpression(toNChar(leftDerivedColumn.getExpression()));
+                        } else if (!right_i18n) {
+                            rightDerivedColumn.setExpression(toNChar(rightDerivedColumn.getExpression()));
+                        }
+                    }
+                }
+                super.visit(obj);
+            }
 
-    	};
+        };
     }
 
     @Override
@@ -1020,12 +1020,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-    	if (timestampValue.getNanos() == 0) {
-    		String val = formatDateValue(timestampValue);
-    		val = val.substring(0, val.length() - 2);
-    		return "to_date('" + val + "', '" + DATETIME_FORMAT + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	}
-    	return super.translateLiteralTimestamp(timestampValue);
+        if (timestampValue.getNanos() == 0) {
+            String val = formatDateValue(timestampValue);
+            val = val.substring(0, val.length() - 2);
+            return "to_date('" + val + "', '" + DATETIME_FORMAT + "')"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+        return super.translateLiteralTimestamp(timestampValue);
     }
 
     @Override
@@ -1058,80 +1058,80 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsLikeRegex() {
-    	return true;
+        return true;
     }
 
     public void setOracleSuppliedDriver(boolean oracleNative) {
-		this.oracleSuppliedDriver = oracleNative;
-	}
+        this.oracleSuppliedDriver = oracleNative;
+    }
 
-	@TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+    @TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
     public boolean isOracleSuppliedDriver() {
-		return oracleSuppliedDriver;
-	}
+        return oracleSuppliedDriver;
+    }
 
     @Override
     protected void registerSpecificTypeOfOutParameter(
-    		CallableStatement statement, Class<?> runtimeType, int index)
-    		throws SQLException {
-    	if (oracleSuppliedDriver) {
-    		if (runtimeType == RefCursorType.class) {
-    			statement.registerOutParameter(index, CURSOR_TYPE);
-    			return;
-    		} else if (runtimeType == TypeFacility.RUNTIME_TYPES.OBJECT) {
-    			//TODO: this is not currently handled and oracle will throw an exception.
-    			//we need additional logic to handle sub types (possibly using the nativeType)
-    		}
-    	}
-		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
+            CallableStatement statement, Class<?> runtimeType, int index)
+            throws SQLException {
+        if (oracleSuppliedDriver) {
+            if (runtimeType == RefCursorType.class) {
+                statement.registerOutParameter(index, CURSOR_TYPE);
+                return;
+            } else if (runtimeType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+                //TODO: this is not currently handled and oracle will throw an exception.
+                //we need additional logic to handle sub types (possibly using the nativeType)
+            }
+        }
+        super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
     }
 
     @Override
     public ResultSet executeStoredProcedure(CallableStatement statement,
-    		List<Argument> preparedValues, Class<?> returnType) throws SQLException {
-    	ResultSet rs = super.executeStoredProcedure(statement, preparedValues, returnType);
-    	if (!oracleSuppliedDriver || rs != null) {
-    		return rs;
-    	}
-    	if (returnType == RefCursorType.class) {
-    		return (ResultSet)statement.getObject(1);
-    	}
-    	for (int i = 0; i < preparedValues.size(); i++) {
-    		Argument arg = preparedValues.get(i);
-    		if (arg.getType() == RefCursorType.class) {
-    			return (ResultSet)statement.getObject(i + (returnType == null?1:2));
-    		}
-    	}
-    	return null;
+            List<Argument> preparedValues, Class<?> returnType) throws SQLException {
+        ResultSet rs = super.executeStoredProcedure(statement, preparedValues, returnType);
+        if (!oracleSuppliedDriver || rs != null) {
+            return rs;
+        }
+        if (returnType == RefCursorType.class) {
+            return (ResultSet)statement.getObject(1);
+        }
+        for (int i = 0; i < preparedValues.size(); i++) {
+            Argument arg = preparedValues.get(i);
+            if (arg.getType() == RefCursorType.class) {
+                return (ResultSet)statement.getObject(i + (returnType == null?1:2));
+            }
+        }
+        return null;
     }
 
     @Override
     public boolean supportsOnlyFormatLiterals() {
-    	return true;
+        return true;
     }
 
     @Override
     public boolean supportsFormatLiteral(String literal,
-    		org.teiid.translator.ExecutionFactory.Format format) {
-    	if (format == Format.NUMBER) {
-    		return false;
-    	}
-    	return parseModifier.supportsLiteral(literal);
+            org.teiid.translator.ExecutionFactory.Format format) {
+        if (format == Format.NUMBER) {
+            return false;
+        }
+        return parseModifier.supportsLiteral(literal);
     }
 
     @Override
     public boolean supportsArrayType() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -1142,57 +1142,57 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public MetadataProcessor<Connection> getMetadataProcessor() {
-    	return new OracleMetadataProcessor();
+        return new OracleMetadataProcessor();
     }
 
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return getVersion().compareTo(NINE_2) >= 0;
+        return getVersion().compareTo(NINE_2) >= 0;
     }
 
     @Override
     public boolean supportsRecursiveCommonTableExpressions() {
-    	return getVersion().compareTo(ELEVEN_2_0_4) >= 0;
+        return getVersion().compareTo(ELEVEN_2_0_4) >= 0;
     }
 
     @Override
     protected boolean supportsGeneratedKeys(ExecutionContext context,
-    		Command command) {
-    	if (command instanceof Insert) {
-    		Insert insert = (Insert)command;
-    		if (insert.getParameterValues() != null) {
-    			return false; //bulk inserts result in an exception if keys are flaged for return
-    		}
-    	}
-    	return super.supportsGeneratedKeys(context, command);
+            Command command) {
+        if (command instanceof Insert) {
+            Insert insert = (Insert)command;
+            if (insert.getParameterValues() != null) {
+                return false; //bulk inserts result in an exception if keys are flaged for return
+            }
+        }
+        return super.supportsGeneratedKeys(context, command);
     }
 
-	@Override
-	protected boolean usesDatabaseVersion() {
-		return true;
-	}
+    @Override
+    protected boolean usesDatabaseVersion() {
+        return true;
+    }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 
     @Override
     public String createTempTable(String string, List<ColumnReference> cols,
-    		ExecutionContext context, Connection connection) throws SQLException {
-    	SQLException e1 = null;
-    	for (int i = 0; i < 5; i++) {
-	    	try {
-	    		return super.createTempTable(string, cols, context, connection);
-	    	} catch (SQLException e) {
-	    		if (e.getErrorCode() == 955) {
-	    			e1 = e;
-	    			continue;
-	    		}
-	    		throw e;
-	    	}
-    	}
-    	throw e1;
+            ExecutionContext context, Connection connection) throws SQLException {
+        SQLException e1 = null;
+        for (int i = 0; i < 5; i++) {
+            try {
+                return super.createTempTable(string, cols, context, connection);
+            } catch (SQLException e) {
+                if (e.getErrorCode() == 955) {
+                    e1 = e;
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw e1;
     }
 
     /**
@@ -1201,36 +1201,36 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
      */
     @Override
     public String getTemporaryTableName(String prefix) {
-    	return prefix + (int)(Math.random() * 10000000);
+        return prefix + (int)(Math.random() * 10000000);
     }
 
     @Override
     public String getCreateTemporaryTablePostfix(boolean inTransaction) {
-    	if (!inTransaction) {
-    		return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
-    	}
-    	return super.getCreateTemporaryTablePostfix(inTransaction) + "; END;"; //$NON-NLS-1$
+        if (!inTransaction) {
+            return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
+        }
+        return super.getCreateTemporaryTablePostfix(inTransaction) + "; END;"; //$NON-NLS-1$
     }
 
     @Override
     public String getCreateTemporaryTableString(boolean inTransaction) {
-    	if (!inTransaction) {
-    		return super.getCreateTemporaryTableString(inTransaction);
-    	}
-    	return "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE '" + super.getCreateTemporaryTableString(inTransaction); //$NON-NLS-1$
+        if (!inTransaction) {
+            return super.getCreateTemporaryTableString(inTransaction);
+        }
+        return "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE '" + super.getCreateTemporaryTableString(inTransaction); //$NON-NLS-1$
     }
 
     @Override
     public String getHibernateDialectClassName() {
-    	if (getVersion().getMajorVersion() >= 10) {
-        	return "org.hibernate.dialect.Oracle10gDialect"; //$NON-NLS-1$
-    	}
-    	return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
+        if (getVersion().getMajorVersion() >= 10) {
+            return "org.hibernate.dialect.Oracle10gDialect"; //$NON-NLS-1$
+        }
+        return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
     }
 
     @Override
     public boolean supportsGroupByRollup() {
-    	return true;
+        return true;
     }
 
     @Override
@@ -1242,53 +1242,53 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public Object retrieveGeometryValue(ResultSet results, int paramIndex) throws SQLException {
         final Clob clob = results.getClob(paramIndex);
         if (clob != null) {
-        	return new GeometryInputSource() {
+            return new GeometryInputSource() {
 
-				@Override
-				public Reader getGml() throws SQLException {
-					return clob.getCharacterStream();
-				}
+                @Override
+                public Reader getGml() throws SQLException {
+                    return clob.getCharacterStream();
+                }
 
-			};
+            };
         }
         return null;
     }
 
     @Override
     public void intializeConnectionAfterCancel(Connection c) throws SQLException {
-    	//Oracle JDBC has a timing bug with cancel during result set iteration
-    	//that can cause the next statement on the connection to throw an exception
-    	//doing an isvalid check seems to allow the connection to be safely reused
-    	c.isValid(1);
+        //Oracle JDBC has a timing bug with cancel during result set iteration
+        //that can cause the next statement on the connection to throw an exception
+        //doing an isvalid check seems to allow the connection to be safely reused
+        c.isValid(1);
     }
 
     @Override
     public boolean supportsCorrelatedSubqueryLimit() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean useColumnNamesForGeneratedKeys() {
-    	return true;
+        return true;
     }
 
     @Override
     public String translateLiteralBinaryType(BinaryType obj) {
-    	return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
+        return "HEXTORAW('" + obj + "')"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Override
     public boolean supportsSubqueryInOn() {
-    	return false; //even oracle 12 still has issues if a with clause is also in the source query
+        return false; //even oracle 12 still has issues if a with clause is also in the source query
     }
 
     public boolean supportsConvert(int fromType, int toType) {
-    	//allow conversion from clob to string
-		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
-			return false;
-		}
-		return true;
-	}
+        //allow conversion from clob to string
+        if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
+            return false;
+        }
+        return true;
+    }
 
     @Override
     protected boolean supportsBooleanExpressions() {

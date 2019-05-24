@@ -29,8 +29,8 @@ import org.teiid.core.TeiidProcessingException;
  * XA transaction-related.
  */
 public class XATransactionException extends TeiidProcessingException {
-	private static final long serialVersionUID = 5685144848609237877L;
-	private int errorCode = XAException.XAER_RMERR;
+    private static final long serialVersionUID = 5685144848609237877L;
+    private int errorCode = XAException.XAER_RMERR;
 
     public XATransactionException(Throwable e) {
         super(e);

@@ -58,39 +58,39 @@ import org.teiid.common.buffer.AutoCleanupUtil.Removable;
  */
 public final class PureZipFileSystem implements FileSystem {
 
-	private static AtomicInteger counter = new AtomicInteger();
+    private static AtomicInteger counter = new AtomicInteger();
 
     public static VirtualFile mount(URL url) throws IOException, URISyntaxException {
-		//we treat each zip as unique if it's possible that it
-		String fileName = "teiid-vdb-" + url.toExternalForm(); //$NON-NLS-1$
-		VirtualFile root = VFS.getChild(fileName);
-		File f = new File(url.toURI());
-		if (root.exists()) {
-			long lastModified = f.lastModified();
-			if (root.getLastModified() != lastModified) {
-				fileName += counter.get();
-				//TODO: should check existence
-				root = VFS.getChild(fileName);
-			}
-		}
-		synchronized (PureZipFileSystem.class) {
-	    	if (!root.exists()) {
-				final Closeable c = VFS.mount(root, new PureZipFileSystem(f));
-				//in theory we don't need to track the closable as we're not using any resources
-				AutoCleanupUtil.setCleanupReference(root, new Removable() {
+        //we treat each zip as unique if it's possible that it
+        String fileName = "teiid-vdb-" + url.toExternalForm(); //$NON-NLS-1$
+        VirtualFile root = VFS.getChild(fileName);
+        File f = new File(url.toURI());
+        if (root.exists()) {
+            long lastModified = f.lastModified();
+            if (root.getLastModified() != lastModified) {
+                fileName += counter.get();
+                //TODO: should check existence
+                root = VFS.getChild(fileName);
+            }
+        }
+        synchronized (PureZipFileSystem.class) {
+            if (!root.exists()) {
+                final Closeable c = VFS.mount(root, new PureZipFileSystem(f));
+                //in theory we don't need to track the closable as we're not using any resources
+                AutoCleanupUtil.setCleanupReference(root, new Removable() {
 
-					@Override
-					public void remove() {
-						try {
-							c.close();
-						} catch (IOException e) {
-						}
-					}
-				});
-	    	}
-		}
-    	return root;
-	}
+                    @Override
+                    public void remove() {
+                        try {
+                            c.close();
+                        } catch (IOException e) {
+                        }
+                    }
+                });
+            }
+        }
+        return root;
+    }
 
     private final JarFile zipFile;
     private final File archiveFile;
@@ -149,10 +149,10 @@ public final class PureZipFileSystem implements FileSystem {
         final ZipNode zipNode = getExistingZipNode(mountPoint, target);
         final JarEntry zipEntry = zipNode.entry;
         try {
-			return new File(new URI("jar", archiveFile.toURI().toString() + "!/", zipEntry.getName()));
-		} catch (URISyntaxException e) {
-			throw new IOException(e);
-		}
+            return new File(new URI("jar", archiveFile.toURI().toString() + "!/", zipEntry.getName()));
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -170,7 +170,7 @@ public final class PureZipFileSystem implements FileSystem {
 
     /** {@inheritDoc} */
     public boolean delete(VirtualFile mountPoint, VirtualFile target) {
-    	return false;
+        return false;
     }
 
     /** {@inheritDoc} */

@@ -40,19 +40,19 @@ public class ErrorInstruction extends ProgramInstruction {
     private Expression expression;
     private boolean warning;
 
-	/**
-	 * Constructor for DeclareInstruction.
-	 */
-	public ErrorInstruction() {
-	}
+    /**
+     * Constructor for DeclareInstruction.
+     */
+    public ErrorInstruction() {
+    }
 
-	public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
 
-	public void setWarning(boolean warning) {
-		this.warning = warning;
-	}
+    public void setWarning(boolean warning) {
+        this.warning = warning;
+    }
 
     /**
      * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
@@ -69,22 +69,22 @@ public class ErrorInstruction extends ProgramInstruction {
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode node = new PlanNode("RAISE " + (warning?"WARNING":"ERROR")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	node.addProperty(PROP_EXPRESSION, this.expression.toString());
-    	return node;
+        PlanNode node = new PlanNode("RAISE " + (warning?"WARNING":"ERROR")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        node.addProperty(PROP_EXPRESSION, this.expression.toString());
+        return node;
     }
 
     @Override
     public void process(ProcedurePlan env) throws TeiidComponentException,
-    		TeiidProcessingException, TeiidSQLException {
-    	Object value = env.evaluateExpression(expression);
+            TeiidProcessingException, TeiidSQLException {
+        Object value = env.evaluateExpression(expression);
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Processing RAISE with the value :", value); //$NON-NLS-1$
         if (warning) {
-        	env.getContext().addWarning((Exception)value);
-        	return;
+            env.getContext().addWarning((Exception)value);
+            return;
         }
         if (value == null) {
-        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID31122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31122));
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID31122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31122));
         }
         throw TeiidSQLException.create((Exception)value);
     }

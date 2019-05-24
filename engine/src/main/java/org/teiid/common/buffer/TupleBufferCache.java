@@ -23,9 +23,9 @@ import org.teiid.Replicated.ReplicationMode;
 
 public interface TupleBufferCache {
 
-	@Replicated(replicateState=ReplicationMode.PULL)
-	TupleBuffer getTupleBuffer(String id);
+    @Replicated(replicateState=ReplicationMode.PULL)
+    TupleBuffer getTupleBuffer(String id);
 
-	void distributeTupleBuffer(String uuid, TupleBuffer tb);
+    void distributeTupleBuffer(String uuid, TupleBuffer tb);
 
 }

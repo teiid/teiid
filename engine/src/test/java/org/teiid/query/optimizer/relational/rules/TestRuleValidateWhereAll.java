@@ -54,14 +54,14 @@ public class TestRuleValidateWhereAll extends TestCase {
         assertEquals("Got incorrect answer checking for no criteria", true, RuleValidateWhereAll.hasNoCriteria(new Query())); //$NON-NLS-1$
     }
 
-	private FakeCapabilitiesFinder getWhereAllCapabilities() {
-		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    private FakeCapabilitiesFinder getWhereAllCapabilities() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.REQUIRES_CRITERIA, true);
         capFinder.addCapabilities("pm1", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         capFinder.addCapabilities("pm6", caps); //$NON-NLS-1$
-		return capFinder;
-	}
+        return capFinder;
+    }
 
     public void testDefect21982_3() {
         TestOptimizer.helpPlan(
@@ -73,7 +73,7 @@ public class TestRuleValidateWhereAll extends TestCase {
     }
 
     public void testWhereAll1() {
-    	TestOptimizer.helpPlan(
+        TestOptimizer.helpPlan(
             "SELECT * FROM pm6.g1",   //$NON-NLS-1$
             RealMetadataFactory.example1Cached(),
             null, getWhereAllCapabilities(),
@@ -82,7 +82,7 @@ public class TestRuleValidateWhereAll extends TestCase {
     }
 
     public void testWhereAll2() throws Exception {
-    	TestOptimizer.helpPlan(
+        TestOptimizer.helpPlan(
             "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 OPTION MAKEDEP pm6.g1",   //$NON-NLS-1$
             RealMetadataFactory.example1Cached(),
             null, getWhereAllCapabilities(),

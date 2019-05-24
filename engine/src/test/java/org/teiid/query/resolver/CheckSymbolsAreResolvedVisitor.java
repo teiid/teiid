@@ -40,7 +40,7 @@ public class CheckSymbolsAreResolvedVisitor extends LanguageVisitor {
 
     private Collection<LanguageObject> unresolvedSymbols;
 
-	public CheckSymbolsAreResolvedVisitor() {
+    public CheckSymbolsAreResolvedVisitor() {
         unresolvedSymbols = new ArrayList<LanguageObject>();
     }
 

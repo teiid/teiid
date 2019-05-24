@@ -106,32 +106,32 @@ public class TestConnectorCapabilitiesFinder {
     }
 
     @Test public void testPushdownFunctionSupport() throws Exception {
-    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+        ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
 
-    		@Override
-    		public void start() throws TranslatorException {
-    			super.start();
-    			addPushDownFunction("ns", "func", DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING);
-    		}
-    	};
-    	ef.start();
-    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+            @Override
+            public void start() throws TranslatorException {
+                super.start();
+                addPushDownFunction("ns", "func", DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING);
+            }
+        };
+        ef.start();
+        BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue("Did not get expected capabilities", bsc.supportsFunction("ns.func")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testConverts() throws Exception {
-    	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
-    		@Override
-    		public boolean supportsConvert(int fromType, int toType) {
-    			return false;
-    		}
-    		@Override
-    		public List<String> getSupportedFunctions() {
-    			return Arrays.asList("convert");
-    		}
-    	};
-    	ef.start();
-    	BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
+        ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){
+            @Override
+            public boolean supportsConvert(int fromType, int toType) {
+                return false;
+            }
+            @Override
+            public List<String> getSupportedFunctions() {
+                return Arrays.asList("convert");
+            }
+        };
+        ef.start();
+        BasicSourceCapabilities bsc = CapabilitiesConverter.convertCapabilities(ef, "conn"); //$NON-NLS-1$
         assertTrue(bsc.supportsFunction("convert")); //$NON-NLS-1$
         assertFalse(bsc.supportsConvert(TypeFacility.RUNTIME_CODES.BIG_DECIMAL, TypeFacility.RUNTIME_CODES.BIG_INTEGER));
     }

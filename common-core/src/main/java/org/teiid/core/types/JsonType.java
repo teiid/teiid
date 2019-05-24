@@ -26,13 +26,13 @@ import java.sql.Clob;
  */
 public final class JsonType extends BaseClobType {
 
-	private static final long serialVersionUID = 2753412502127824104L;
+    private static final long serialVersionUID = 2753412502127824104L;
 
     public JsonType() {
     }
 
     public JsonType(Clob clob) {
-    	super(clob);
+        super(clob);
     }
 
 }

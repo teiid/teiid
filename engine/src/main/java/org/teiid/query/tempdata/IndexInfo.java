@@ -36,32 +36,32 @@ import org.teiid.translator.ExecutionFactory.NullOrder;
  */
 class IndexInfo extends BaseIndexInfo<TempTable> {
 
-	TupleSource valueTs;
+    TupleSource valueTs;
 
-	public IndexInfo(TempTable table, final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
-		super(table, projectedCols, condition, orderBy, primary);
-	}
+    public IndexInfo(TempTable table, final List<? extends Expression> projectedCols, final Criteria condition, OrderBy orderBy, boolean primary) {
+        super(table, projectedCols, condition, orderBy, primary);
+    }
 
-	TupleBrowser createTupleBrowser(NullOrder nullOrder, boolean readOnly) throws TeiidComponentException {
-		boolean direction = OrderBy.ASC;
-		if (ordering != null) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for ordering"); //$NON-NLS-1$
-			direction = ordering;
-		}
-		if (valueTs != null) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
-			return new TupleBrowser(this.table.getTree(), valueTs, direction, readOnly);
-		}
-		if (!valueSet.isEmpty()) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
-			sortValueSet(direction, nullOrder);
-			CollectionTupleSource cts = new CollectionTupleSource(valueSet.iterator());
-			return new TupleBrowser(this.table.getTree(), cts, direction, readOnly);
-		}
-		if (lower != null || upper != null) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for range query", lower, upper); //$NON-NLS-1$
-		}
-		return new TupleBrowser(this.table.getTree(), lower, upper, direction, readOnly);
-	}
+    TupleBrowser createTupleBrowser(NullOrder nullOrder, boolean readOnly) throws TeiidComponentException {
+        boolean direction = OrderBy.ASC;
+        if (ordering != null) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "Using index for ordering"); //$NON-NLS-1$
+            direction = ordering;
+        }
+        if (valueTs != null) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
+            return new TupleBrowser(this.table.getTree(), valueTs, direction, readOnly);
+        }
+        if (!valueSet.isEmpty()) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
+            sortValueSet(direction, nullOrder);
+            CollectionTupleSource cts = new CollectionTupleSource(valueSet.iterator());
+            return new TupleBrowser(this.table.getTree(), cts, direction, readOnly);
+        }
+        if (lower != null || upper != null) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "Using index for range query", lower, upper); //$NON-NLS-1$
+        }
+        return new TupleBrowser(this.table.getTree(), lower, upper, direction, readOnly);
+    }
 
 }

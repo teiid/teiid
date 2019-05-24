@@ -65,45 +65,45 @@ public class TestMMDatabaseMetaData {
     private static final int MAX_COL_WIDTH = 65;
 
     public static void compareResultSet(ResultSet... rs) throws IOException, SQLException {
-    	StackTraceElement ste = new Exception().getStackTrace()[1];
-    	String testName = ste.getMethodName();
-    	String className = ste.getClassName();
-    	className = className.substring(className.lastIndexOf('.') + 1);
-    	testName = className + "/" + testName; //$NON-NLS-1$
+        StackTraceElement ste = new Exception().getStackTrace()[1];
+        String testName = ste.getMethodName();
+        String className = ste.getClassName();
+        className = className.substring(className.lastIndexOf('.') + 1);
+        testName = className + "/" + testName; //$NON-NLS-1$
         compareResultSet(testName, rs);
     }
 
-	public static void compareResultSet(String testName, ResultSet... rs)
-			throws FileNotFoundException, SQLException, IOException {
-		FileOutputStream actualOut = null;
+    public static void compareResultSet(String testName, ResultSet... rs)
+            throws FileNotFoundException, SQLException, IOException {
+        FileOutputStream actualOut = null;
         try {
-	        StringWriter ps = new StringWriter();
-	        for (int i = 0; i < rs.length; i++) {
-	        	ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, ps);
-	        }
-	        if (PRINT_RESULTSETS_TO_CONSOLE) {
-	           System.out.println(ps.toString());
-	        }
-	        if (REPLACE_EXPECTED) {
-	            File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
-	            actualOut = new FileOutputStream(actual);
-	            actualOut.write(ps.toString().getBytes("UTF-8"));
-	        } else {
-	            if (WRITE_ACTUAL_RESULTS_TO_FILE) {
-	                File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".actual"); //$NON-NLS-1$ //$NON-NLS-2$
-	                actualOut = new FileOutputStream(actual);
-	            }
-	            InputStreamReader isr = new InputStreamReader(new BufferedInputStream(new FileInputStream(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"))); //$NON-NLS-1$ //$NON-NLS-2$
-		        assertEquals("Actual data did not match expected", //$NON-NLS-1$
-	                    ObjectConverterUtil.convertToString(isr),
-	                    ps.toString());
-	        }
+            StringWriter ps = new StringWriter();
+            for (int i = 0; i < rs.length; i++) {
+                ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, ps);
+            }
+            if (PRINT_RESULTSETS_TO_CONSOLE) {
+               System.out.println(ps.toString());
+            }
+            if (REPLACE_EXPECTED) {
+                File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
+                actualOut = new FileOutputStream(actual);
+                actualOut.write(ps.toString().getBytes("UTF-8"));
+            } else {
+                if (WRITE_ACTUAL_RESULTS_TO_FILE) {
+                    File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".actual"); //$NON-NLS-1$ //$NON-NLS-2$
+                    actualOut = new FileOutputStream(actual);
+                }
+                InputStreamReader isr = new InputStreamReader(new BufferedInputStream(new FileInputStream(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"))); //$NON-NLS-1$ //$NON-NLS-2$
+                assertEquals("Actual data did not match expected", //$NON-NLS-1$
+                        ObjectConverterUtil.convertToString(isr),
+                        ps.toString());
+            }
         } finally {
-	        if (actualOut != null) {
-	            actualOut.close();
-	        }
+            if (actualOut != null) {
+                actualOut.close();
+            }
         }
-	}
+    }
 
     static Connection conn = null;
 
@@ -129,17 +129,17 @@ public class TestMMDatabaseMetaData {
 
     @AfterClass
     public static void oneTimeTearDown() throws Exception {
-    	if (conn != null) {
+        if (conn != null) {
             conn.close();
         }
-    	server.stop();
+        server.stop();
     }
 
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-    	server = new FakeServer(true);
-    	server.setThrowMetadataErrors(false); //there are invalid views due to aggregate datatype changes
-    	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
+        server = new FakeServer(true);
+        server.setThrowMetadataErrors(false); //there are invalid views due to aggregate datatype changes
+        server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
@@ -482,28 +482,28 @@ public class TestMMDatabaseMetaData {
 
     @Test
     public void testGetColumnsSingleMatch() throws Exception {
-    	ResultSet rs = dbmd.getColumns(null, "System", "VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getColumns(null, "System", "VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        compareResultSet(rs);
     }
 
     @Test
     public void testGetCatalogs() throws Exception {
-    	compareResultSet(dbmd.getCatalogs());
+        compareResultSet(dbmd.getCatalogs());
     }
 
     @Test
     public void testGetCrossReference() throws Exception {
-    	ResultSet rs = dbmd.getCrossReference(null, "BQT1", "SmallA", null, "BQT1", "SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    	ResultSet rs1 = dbmd.getCrossReference(null, "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	ResultSet rs2 = dbmd.getCrossReference("foo", "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    	compareResultSet(rs, rs1, rs2);
+        ResultSet rs = dbmd.getCrossReference(null, "BQT1", "SmallA", null, "BQT1", "SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        ResultSet rs1 = dbmd.getCrossReference(null, "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSet rs2 = dbmd.getCrossReference("foo", "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test public void testGetImportedKeys() throws Exception {
         ResultSet rs = dbmd.getImportedKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
-    	ResultSet rs1 = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
-    	ResultSet rs2 = dbmd.getImportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        ResultSet rs1 = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSet rs2 = dbmd.getImportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -511,7 +511,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getExportedKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getExportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -519,7 +519,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getIndexInfo(null, "System", "KeyColumns", true, true); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getIndexInfo("foo", "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -527,7 +527,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getPrimaryKeys(null, "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getPrimaryKeys("foo", "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -535,7 +535,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getProcedureColumns(null, null, null, null);
         ResultSet rs1 = dbmd.getProcedureColumns(null, "Foo%", null, null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getProcedureColumns("foo", "Foo%", null, null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -543,12 +543,12 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getProcedures(null, null, null);
         ResultSet rs1 = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetSchemas() throws Exception {
-    	compareResultSet(dbmd.getSchemas());
+        compareResultSet(dbmd.getSchemas());
     }
 
     @Test
@@ -559,20 +559,20 @@ public class TestMMDatabaseMetaData {
 
     @Test
     public void testGetColumns2() throws Exception {
-    	ResultSet rs = dbmd.getColumns(null, "QT_Ora%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getColumns(null, "QT_Ora%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        compareResultSet(rs);
     }
 
     @Test
     public void testGetColumns3() throws Exception {
-    	ResultSet rs = dbmd.getColumns(null, "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getColumns(null, "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        compareResultSet(rs);
     }
 
     @Test
     public void testGetColumns4() throws Exception {
-    	ResultSet rs = dbmd.getColumns("foo", "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-     	compareResultSet(rs);
+        ResultSet rs = dbmd.getColumns("foo", "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+         compareResultSet(rs);
     }
 
 
@@ -581,7 +581,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSet rs1 = dbmd.getColumnPrivileges(null, "%foo", null, null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getColumnPrivileges("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -633,25 +633,25 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getTables(null, null, null, null);
         ResultSet rs1 = dbmd.getTables(null, "%foo", null, null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getTables("foo", "%foo", null, null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetTables_allTables() throws Exception {
-    	ResultSet rs = dbmd.getTables(null, null, null, null);
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getTables(null, null, null, null);
+        compareResultSet(rs);
     }
 
     @Test
     public void testGetTableTypes() throws Exception {
-    	ResultSet rs = dbmd.getTableTypes();
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getTableTypes();
+        compareResultSet(rs);
     }
 
     @Test
     public void testGetTypeInfo_TotalNumber() throws Exception {
-    	ResultSet rs = dbmd.getTypeInfo();
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getTypeInfo();
+        compareResultSet(rs);
     }
 
     @Test
@@ -659,13 +659,13 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
         ResultSet rs1 = dbmd.getUDTs(null, "%foo", "%blob%", null); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getUDTs("foo", "%foo", "%blob%", null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetUDTs_specificTypeName() throws Exception {
-    	ResultSet rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
-    	compareResultSet(rs);
+        ResultSet rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
+        compareResultSet(rs);
     }
 
     @Test
@@ -673,16 +673,16 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getVersionColumns(null, null, null);
         ResultSet rs1 = dbmd.getVersionColumns(null, "Foo%", null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getVersionColumns("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetBestRowIdentifier() throws Exception {
-    	ResultSet rs = dbmd.getBestRowIdentifier(null, null, "SYS.VIRTUALDATABASES", //$NON-NLS-1$
+        ResultSet rs = dbmd.getBestRowIdentifier(null, null, "SYS.VIRTUALDATABASES", //$NON-NLS-1$
                 DatabaseMetaData.bestRowTemporary, true);
         ResultSet rs1 = dbmd.getBestRowIdentifier(null, "%foo", null, 1,true); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getBestRowIdentifier("foo", "%foo", null, 1,true); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -707,18 +707,18 @@ public class TestMMDatabaseMetaData {
 
     @Test
     public void testGetCrossReferenceWithEscape() throws Exception {
-    	ResultSet rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ResultSet rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSet rs1 = dbmd.getCrossReference(null, "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSet rs2 = dbmd.getCrossReference("foo", "Foo%", "%", null, null, "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetExportedKeysWithEscape() throws Exception {
-    	ResultSet rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
+        ResultSet rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getExportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getExportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -726,7 +726,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getImportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getImportedKeys(null, "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getImportedKeys("foo", "Foo%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -734,7 +734,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getIndexInfo(null, "QT\\_Ora9DS", "SYS.KeyElements", true, true); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs1 = dbmd.getIndexInfo(null, "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getIndexInfo("foo", "Foo%", "%", true, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
@@ -742,29 +742,29 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = dbmd.getPrimaryKeys("QT\\_Ora9DS", "BQT1", "SmallA"); //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$
         ResultSet rs1 = dbmd.getPrimaryKeys(null, "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSet rs2 = dbmd.getPrimaryKeys("foo", "Foo%", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetProceduresWithEscape() throws Exception {
-    	ResultSet rs = dbmd.getProcedures("QT\\_Ora9DS", null, null); //$NON-NLS-1$
+        ResultSet rs = dbmd.getProcedures("QT\\_Ora9DS", null, null); //$NON-NLS-1$
         ResultSet rs1 = dbmd.getProcedures(null, "Foo%", null); //$NON-NLS-1$
         ResultSet rs2 = dbmd.getProcedures("foo", "Foo%", null); //$NON-NLS-1$ //$NON-NLS-2$
-    	compareResultSet(rs, rs1, rs2);
+        compareResultSet(rs, rs1, rs2);
     }
 
     @Test
     public void testGetFunctions() throws Exception {
-    	ResultSet rs = dbmd.getFunctions(null, null, null); //$NON-NLS-1$
-    	ResultSet rs1 = dbmd.getFunctions(null, "pg%", "%pg%"); //$NON-NLS-1$
-    	compareResultSet(rs, rs1);
+        ResultSet rs = dbmd.getFunctions(null, null, null); //$NON-NLS-1$
+        ResultSet rs1 = dbmd.getFunctions(null, "pg%", "%pg%"); //$NON-NLS-1$
+        compareResultSet(rs, rs1);
     }
 
     @Test
     public void testGetFunctionColumns() throws Exception {
-    	ResultSet rs = dbmd.getFunctionColumns(null, null, null, null); //$NON-NLS-1$
-    	ResultSet rs1 = dbmd.getFunctionColumns(null, "pg%", "%pg%", null); //$NON-NLS-1$
-    	compareResultSet(rs, rs1);
+        ResultSet rs = dbmd.getFunctionColumns(null, null, null, null); //$NON-NLS-1$
+        ResultSet rs1 = dbmd.getFunctionColumns(null, "pg%", "%pg%", null); //$NON-NLS-1$
+        compareResultSet(rs, rs1);
     }
     ///////////////////////////Helper Method//////////////////////////////
 

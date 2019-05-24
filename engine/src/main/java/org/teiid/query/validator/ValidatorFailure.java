@@ -27,12 +27,12 @@ import org.teiid.query.sql.LanguageObject;
 
 public class ValidatorFailure extends ReportItem {
 
-	public enum Status {
-		ERROR,
-		WARNING
-	}
+    public enum Status {
+        ERROR,
+        WARNING
+    }
 
-	public static final String VALIDATOR_FAILURE = "ValidatorFailure"; //$NON-NLS-1$
+    public static final String VALIDATOR_FAILURE = "ValidatorFailure"; //$NON-NLS-1$
 
     // Don't want to pass this around, so make it transient
     private transient Collection<LanguageObject> invalidObjects;
@@ -58,12 +58,12 @@ public class ValidatorFailure extends ReportItem {
     }
 
     public void setStatus(Status status) {
-		this.status = status;
-	}
+        this.status = status;
+    }
 
     public Status getStatus() {
-		return status;
-	}
+        return status;
+    }
 
     /**
      * Get count of invalid objects.

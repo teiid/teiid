@@ -37,7 +37,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class FromClause implements LanguageObject {
 
-	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
+    public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 
     private boolean optional;
     private MakeDep makeDep;
@@ -55,52 +55,52 @@ public abstract class FromClause implements LanguageObject {
     }
 
     public MakeDep getMakeInd() {
-		return makeInd;
-	}
+        return makeInd;
+    }
 
     public void setMakeInd(MakeDep makeInd) {
-		this.makeInd = makeInd;
-	}
+        this.makeInd = makeInd;
+    }
 
     public abstract void acceptVisitor(LanguageVisitor visitor);
     public abstract void collectGroups(Collection<GroupSymbol> groups);
     protected abstract FromClause cloneDirect();
 
     public FromClause clone() {
-    	FromClause clone = cloneDirect();
-    	clone.makeDep = makeDep;
-    	clone.makeInd = makeInd;
-    	clone.makeNotDep = makeNotDep;
-    	clone.optional = optional;
-    	clone.noUnnest = noUnnest;
-    	clone.preserve = preserve;
-    	return clone;
+        FromClause clone = cloneDirect();
+        clone.makeDep = makeDep;
+        clone.makeInd = makeInd;
+        clone.makeNotDep = makeNotDep;
+        clone.optional = optional;
+        clone.noUnnest = noUnnest;
+        clone.preserve = preserve;
+        return clone;
     }
 
     public void setNoUnnest(boolean noUnnest) {
-		this.noUnnest = noUnnest;
-	}
+        this.noUnnest = noUnnest;
+    }
 
     public boolean isNoUnnest() {
-		return noUnnest;
-	}
+        return noUnnest;
+    }
 
     public boolean isMakeDep() {
         return this.makeDep != null;
     }
 
     public MakeDep getMakeDep() {
-		return makeDep;
-	}
+        return makeDep;
+    }
 
     public void setMakeDep(boolean makeDep) {
-    	if (makeDep) {
-    		if (this.makeDep == null) {
-    			this.makeDep = new MakeDep();
-    		}
-    	} else {
-    		this.makeDep = null;
-    	}
+        if (makeDep) {
+            if (this.makeDep == null) {
+                this.makeDep = new MakeDep();
+            }
+        } else {
+            this.makeDep = null;
+        }
     }
 
     public boolean isMakeNotDep() {
@@ -112,16 +112,16 @@ public abstract class FromClause implements LanguageObject {
     }
 
     public void setMakeDep(MakeDep makedep) {
-    	this.makeDep = makedep;
+        this.makeDep = makedep;
     }
 
     public boolean isPreserve() {
-		return preserve;
-	}
+        return preserve;
+    }
 
     public void setPreserve(boolean preserve) {
-		this.preserve = preserve;
-	}
+        this.preserve = preserve;
+    }
 
     public boolean hasHint() {
         return optional || makeDep != null || makeNotDep || makeInd != null || noUnnest || preserve;
@@ -141,13 +141,13 @@ public abstract class FromClause implements LanguageObject {
         return other.isOptional() == this.isOptional()
                && EquivalenceUtil.areEqual(this.makeDep, other.makeDep)
                && other.isMakeNotDep() == this.isMakeNotDep()
-        	   && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
-        	   && other.isNoUnnest() == this.isNoUnnest()
-			   && other.isNoUnnest() == this.isNoUnnest();
+               && EquivalenceUtil.areEqual(this.makeInd, other.makeInd)
+               && other.isNoUnnest() == this.isNoUnnest()
+               && other.isNoUnnest() == this.isNoUnnest();
     }
 
     @Override
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 }

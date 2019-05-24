@@ -94,9 +94,9 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 
 public class TeiidServiceHandler implements ServiceHandler {
 
-	static class ExpandNode {
-    	EdmNavigationProperty navigationProperty;
-    	List<ExpandNode> children = new ArrayList<TeiidServiceHandler.ExpandNode>();
+    static class ExpandNode {
+        EdmNavigationProperty navigationProperty;
+        List<ExpandNode> children = new ArrayList<TeiidServiceHandler.ExpandNode>();
     }
 
     private static final String PREFERENCE_APPLIED = "Preference-Applied";
@@ -216,7 +216,7 @@ public class TeiidServiceHandler implements ServiceHandler {
 
             public void visit(StreamResponse response)
                     throws ODataLibraryException, ODataApplicationException {
-            	EntityCollectionResponse entitySet = (EntityCollectionResponse)queryResponse;
+                EntityCollectionResponse entitySet = (EntityCollectionResponse)queryResponse;
 
                 EdmProperty edmProperty = request.getUriResourceProperty().getProperty();
                 Object value = entitySet.getStream(edmProperty.getName());
@@ -390,10 +390,10 @@ public class TeiidServiceHandler implements ServiceHandler {
             EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
             Link navLink = entity.getNavigationLink(navigationName);
             if (navLink != null && navLink.getInlineEntity() != null) {
-            	childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), navLink.getInlineEntity()));
+                childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), navLink.getInlineEntity()));
             } else if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
-            	for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
-            		childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), inlineEntity));
+                for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
+                    childDepth = Math.max(childDepth, insertDepth(navProperty.getType(), inlineEntity));
                 }
             }
         }
@@ -407,16 +407,16 @@ public class TeiidServiceHandler implements ServiceHandler {
             EdmNavigationProperty navProperty = entityType.getNavigationProperty(navigationName);
             Link navLink = entity.getNavigationLink(navigationName);
             if (navLink != null && navLink.getInlineEntity() != null) {
-            	ExpandNode node = new ExpandNode();
-            	node.navigationProperty = navProperty;
-            	expandNodes.add(node);
-            	performDeepInsert(rawURI, uriInfo, navProperty.getType(), navLink.getInlineEntity(), node.children);
+                ExpandNode node = new ExpandNode();
+                node.navigationProperty = navProperty;
+                expandNodes.add(node);
+                performDeepInsert(rawURI, uriInfo, navProperty.getType(), navLink.getInlineEntity(), node.children);
             } else if (navLink != null && navLink.getInlineEntitySet() != null && !navLink.getInlineEntitySet().getEntities().isEmpty()) {
-            	ExpandNode node = new ExpandNode();
-            	node.navigationProperty = navProperty;
-            	expandNodes.add(node);
+                ExpandNode node = new ExpandNode();
+                node.navigationProperty = navProperty;
+                expandNodes.add(node);
                 for (Entity inlineEntity:navLink.getInlineEntitySet().getEntities()) {
-                	performDeepInsert(rawURI, uriInfo, navProperty.getType(), inlineEntity, node.children);
+                    performDeepInsert(rawURI, uriInfo, navProperty.getType(), inlineEntity, node.children);
                 }
             }
         }
@@ -430,20 +430,20 @@ public class TeiidServiceHandler implements ServiceHandler {
 
         EdmEntityType entityType = request.getEntitySet().getEntityType();
 
-    	String txn;
-		try {
-			txn = getClient().startTransaction();
-		} catch (SQLException e) {
-			throw new ODataApplicationException(e.getMessage(),
+        String txn;
+        try {
+            txn = getClient().startTransaction();
+        } catch (SQLException e) {
+            throw new ODataApplicationException(e.getMessage(),
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
-		}
+        }
         boolean success = false;
 
-    	try {
-    		List<ExpandNode> expands = new ArrayList<TeiidServiceHandler.ExpandNode>();
-    		int insertDepth = insertDepth(entityType, entity);
-    		ODataSQLBuilder.checkExpandLevel(insertDepth - 1); //don't count the root
+        try {
+            List<ExpandNode> expands = new ArrayList<TeiidServiceHandler.ExpandNode>();
+            int insertDepth = insertDepth(entityType, entity);
+            ODataSQLBuilder.checkExpandLevel(insertDepth - 1); //don't count the root
             UpdateResponse updateResponse = performDeepInsert(request
                     .getODataRequest().getRawBaseUri(), request.getUriInfo(),
                     entityType, entity, expands);
@@ -483,13 +483,13 @@ public class TeiidServiceHandler implements ServiceHandler {
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
         } finally {
-        	if (!success) {
+            if (!success) {
                 try {
                     getClient().rollback(txn);
                 } catch (SQLException e1) {
                     // ignore
                 }
-        	}
+            }
         }
     }
 
@@ -526,7 +526,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             String txn = startTransaction();
             boolean success = false;
             try {
-            	// build insert first as it could fail to validate
+                // build insert first as it could fail to validate
                 ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
                         getClient().getMetadataStore(), this.prepared, false,
                         request.getODataRequest().getRawBaseUri(),
@@ -559,9 +559,9 @@ public class TeiidServiceHandler implements ServiceHandler {
                         HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                         Locale.getDefault(), e);
             } finally {
-            	if (!success) {
-            		rollback(txn);
-            	}
+                if (!success) {
+                    rollback(txn);
+                }
             }
         }
 
@@ -1011,17 +1011,17 @@ public class TeiidServiceHandler implements ServiceHandler {
         }
 
         if (ex != error.getException() && ex.getMessage() != null) {
-	        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
-	    		LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16050, error.getMessage(), ex.getMessage()));
-	    	} else {
-	    		LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16051, error.getMessage(), ex.getMessage()));
-	    	}
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
+                LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16050, error.getMessage(), ex.getMessage()));
+            } else {
+                LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16051, error.getMessage(), ex.getMessage()));
+            }
         } else {
-        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
-	    		LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16052, error.getMessage()));
-	    	} else {
-	    		LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16053, error.getMessage()));
-	    	}
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL) || logLevel <= MessageLevel.ERROR) {
+                LogManager.log(logLevel, LogConstants.CTX_ODATA, error.getException(), ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16052, error.getMessage()));
+            } else {
+                LogManager.log(logLevel, LogConstants.CTX_DQP, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16053, error.getMessage()));
+            }
         }
         response.writeError(error);
     }

@@ -27,71 +27,71 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 @SuppressWarnings("nls")
 public class TestTransactionMetadata {
 
-	@Test public void testMapping() {
-		TransactionMetadata tm = new TransactionMetadata();
-		tm.setAssociatedSession("x");
-		tm.setCreatedTime(1234);
-		tm.setId("tnx-id");
-		tm.setScope("scope");
+    @Test public void testMapping() {
+        TransactionMetadata tm = new TransactionMetadata();
+        tm.setAssociatedSession("x");
+        tm.setCreatedTime(1234);
+        tm.setId("tnx-id");
+        tm.setScope("scope");
 
-		ModelNode node = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.wrap(tm, new ModelNode());
+        ModelNode node = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.wrap(tm, new ModelNode());
 
-		TransactionMetadata tm1 = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.unwrap(node);
+        TransactionMetadata tm1 = VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.unwrap(node);
 
-		assertEquals(tm.getAssociatedSession(), tm1.getAssociatedSession());
+        assertEquals(tm.getAssociatedSession(), tm1.getAssociatedSession());
 
-		assertEquals(tm.getCreatedTime(), tm1.getCreatedTime());
-		assertEquals(tm.getId(), tm1.getId());
-		assertEquals(tm.getScope(), tm1.getScope());
-	}
+        assertEquals(tm.getCreatedTime(), tm1.getCreatedTime());
+        assertEquals(tm.getId(), tm1.getId());
+        assertEquals(tm.getScope(), tm1.getScope());
+    }
 
-	private static final String describe = "{\"attributes\" : {\n" +
-	        "    \"session-id\" : {\n" +
-	        "        \"type\" : {\n" +
-	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" +
-	        "        },\n" +
-	        "        \"description\" : \"session-id\",\n" +
-	        "        \"expressions-allowed\" : false,\n" +
-	        "        \"required\" : true,\n" +
-	        "        \"nillable\" : false,\n" +
-	        "        \"min-length\" : 1,\n" +
-	        "        \"max-length\" : 2147483647\n" +
-	        "    },\n" +
-	        "    \"txn-created-time\" : {\n" +
-	        "        \"type\" : {\n" +
-	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" +
-	        "        },\n" +
-	        "        \"description\" : \"txn-created-time\",\n" +
-	        "        \"expressions-allowed\" : false,\n" +
-	        "        \"required\" : true,\n" +
-	        "        \"nillable\" : false\n" +
-	        "    },\n" +
-	        "    \"txn-scope\" : {\n" +
-	        "        \"type\" : {\n" +
-	        "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" +
-	        "        },\n" +
-	        "        \"description\" : \"txn-scope\",\n" +
-	        "        \"expressions-allowed\" : false,\n" +
-	        "        \"required\" : true,\n" +
-	        "        \"nillable\" : false\n" +
-	        "    },\n" +
-	        "    \"txn-id\" : {\n" +
-	        "        \"type\" : {\n" +
-	        "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" +
-	        "        },\n" +
-	        "        \"description\" : \"txn-id\",\n" +
-	        "        \"expressions-allowed\" : false,\n" +
-	        "        \"required\" : true,\n" +
-	        "        \"nillable\" : false,\n" +
-	        "        \"min-length\" : 1,\n" +
-	        "        \"max-length\" : 2147483647\n" +
-	        "    }\n" +
-	        "}}";
+    private static final String describe = "{\"attributes\" : {\n" +
+            "    \"session-id\" : {\n" +
+            "        \"type\" : {\n" +
+            "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" +
+            "        },\n" +
+            "        \"description\" : \"session-id\",\n" +
+            "        \"expressions-allowed\" : false,\n" +
+            "        \"required\" : true,\n" +
+            "        \"nillable\" : false,\n" +
+            "        \"min-length\" : 1,\n" +
+            "        \"max-length\" : 2147483647\n" +
+            "    },\n" +
+            "    \"txn-created-time\" : {\n" +
+            "        \"type\" : {\n" +
+            "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" +
+            "        },\n" +
+            "        \"description\" : \"txn-created-time\",\n" +
+            "        \"expressions-allowed\" : false,\n" +
+            "        \"required\" : true,\n" +
+            "        \"nillable\" : false\n" +
+            "    },\n" +
+            "    \"txn-scope\" : {\n" +
+            "        \"type\" : {\n" +
+            "            \"TYPE_MODEL_VALUE\" : \"LONG\"\n" +
+            "        },\n" +
+            "        \"description\" : \"txn-scope\",\n" +
+            "        \"expressions-allowed\" : false,\n" +
+            "        \"required\" : true,\n" +
+            "        \"nillable\" : false\n" +
+            "    },\n" +
+            "    \"txn-id\" : {\n" +
+            "        \"type\" : {\n" +
+            "            \"TYPE_MODEL_VALUE\" : \"STRING\"\n" +
+            "        },\n" +
+            "        \"description\" : \"txn-id\",\n" +
+            "        \"expressions-allowed\" : false,\n" +
+            "        \"required\" : true,\n" +
+            "        \"nillable\" : false,\n" +
+            "        \"min-length\" : 1,\n" +
+            "        \"max-length\" : 2147483647\n" +
+            "    }\n" +
+            "}}";
 
-	@Test
-	public void testDescribe() {
-	    ModelNode n = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.getAttributeDefinitions());
-		//System.out.println(n.toJSONString(false));
-		assertEquals(describe, n.toJSONString(false));
-	}
+    @Test
+    public void testDescribe() {
+        ModelNode n = TestVDBMetaData.describe(new ModelNode(), VDBMetadataMapper.TransactionMetadataMapper.INSTANCE.getAttributeDefinitions());
+        //System.out.println(n.toJSONString(false));
+        assertEquals(describe, n.toJSONString(false));
+    }
 }

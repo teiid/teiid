@@ -554,7 +554,7 @@ public class TestProcedureRelational {
      *  test for defect 22376
      */
     @Test public void testParameterPassing() throws Exception {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
 
         ColumnSet<Procedure> rs1 = RealMetadataFactory.createResultSet("v1.rs1", new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$
@@ -616,12 +616,12 @@ public class TestProcedureRelational {
         TestProcessor.sampleData1(dataManager);
         // Plan query
         try {
-        	ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+            ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
             // Run query
             TestProcessor.doProcess(plan, dataManager, expected, TestProcessor.createCommandContext());
             fail("QueryPlannerException was expected.");  //$NON-NLS-1$
         } catch (QueryValidatorException e) {
-        	assertEquals("TEIID30164 The procedure parameter pm1.vsp26.param2 is not nullable, but is set to null.",e.getMessage());  //$NON-NLS-1$
+            assertEquals("TEIID30164 The procedure parameter pm1.vsp26.param2 is not nullable, but is set to null.",e.getMessage());  //$NON-NLS-1$
         }
     }
 
@@ -723,7 +723,7 @@ public class TestProcedureRelational {
      * are set correctly.
      */
     @Test public void testIssue119() throws Exception {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema v1 = RealMetadataFactory.createVirtualModel("v1", metadataStore); //$NON-NLS-1$
         Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
 
@@ -735,17 +735,17 @@ public class TestProcedureRelational {
         vt1.setResultSet(rs1);
 
         ProcedureParameter in1 = RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-		ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("pm1.sp119.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
-		Procedure sp1 = RealMetadataFactory.createStoredProcedure("sp119", pm1, Arrays.asList(in1));  //$NON-NLS-1$
-		sp1.setResultSet(rs3);
+        ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("pm1.sp119.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
+        Procedure sp1 = RealMetadataFactory.createStoredProcedure("sp119", pm1, Arrays.asList(in1));  //$NON-NLS-1$
+        sp1.setResultSet(rs3);
 
         String sql = "select * from (exec v1.vp1(1)) foo order by e4, e5"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
-        	Arrays.asList(1, 1, 3, 3, 5),
-        	Arrays.asList(1, 1, 3, 3, 8),
-        	Arrays.asList(1, 1, 6, 6, 8),
-        	Arrays.asList(1, 1, 6, 6, 11),
+            Arrays.asList(1, 1, 3, 3, 5),
+            Arrays.asList(1, 1, 3, 3, 8),
+            Arrays.asList(1, 1, 6, 6, 8),
+            Arrays.asList(1, 1, 6, 6, 11),
         };
 
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
@@ -755,23 +755,23 @@ public class TestProcedureRelational {
         ProcessorPlan plan = TestProcedureProcessor.getProcedurePlan(sql, metadata);
         // Run query
         HardcodedDataManager dataManager = new HardcodedDataManager() {
-        	@Override
-        	public TupleSource registerRequest(CommandContext context,
-        			Command command, String modelName,
-        			RegisterRequestParameter parameterObject)
-        			throws TeiidComponentException {
-        		if (command instanceof StoredProcedure) {
-        			StoredProcedure proc = (StoredProcedure)command;
-        			List<SPParameter> params = proc.getInputParameters();
-        			assertEquals(1, params.size());
-        			int value = (Integer)((Constant)params.get(0).getExpression()).getValue();
-        			return new FakeTupleSource(command.getProjectedSymbols(), new List[] {
-        				Arrays.asList(value+2), Arrays.asList(value+5)
-        			});
-        		}
-        		return super.registerRequest(context, command, modelName,
-        				parameterObject);
-        	}
+            @Override
+            public TupleSource registerRequest(CommandContext context,
+                    Command command, String modelName,
+                    RegisterRequestParameter parameterObject)
+                    throws TeiidComponentException {
+                if (command instanceof StoredProcedure) {
+                    StoredProcedure proc = (StoredProcedure)command;
+                    List<SPParameter> params = proc.getInputParameters();
+                    assertEquals(1, params.size());
+                    int value = (Integer)((Constant)params.get(0).getExpression()).getValue();
+                    return new FakeTupleSource(command.getProjectedSymbols(), new List[] {
+                        Arrays.asList(value+2), Arrays.asList(value+5)
+                    });
+                }
+                return super.registerRequest(context, command, modelName,
+                        parameterObject);
+            }
         };
 
         TestProcedureProcessor.helpTestProcess(plan, expected, dataManager, metadata);
@@ -779,11 +779,11 @@ public class TestProcedureRelational {
     }
 
     @Test public void testProcRelationalWithNoInputs() {
-    	String sql = "select e1 from pm1.vsp2 order by e1 desc limit 1"; //$NON-NLS-1$
+        String sql = "select e1 from pm1.vsp2 order by e1 desc limit 1"; //$NON-NLS-1$
 
         // Create expected results
         List<?>[] expected = new List[] {
-        		Arrays.asList("c") //$NON-NLS-1$
+                Arrays.asList("c") //$NON-NLS-1$
         };
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -795,10 +795,10 @@ public class TestProcedureRelational {
     }
 
     @Test public void testProcRelationalWithNoInputs1() {
-    	String sql = "select e1 from pm1.sp1"; //$NON-NLS-1$
+        String sql = "select e1 from pm1.sp1"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
-        		Arrays.asList("c") //$NON-NLS-1$
+                Arrays.asList("c") //$NON-NLS-1$
         };
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("EXEC pm1.sp1()", expected);

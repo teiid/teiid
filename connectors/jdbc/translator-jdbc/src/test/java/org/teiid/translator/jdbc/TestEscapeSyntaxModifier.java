@@ -62,15 +62,15 @@ public class TestEscapeSyntaxModifier extends TestCase {
         helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts '1899-12-31 00:00:00.0'})}");
     }
 
-	private void helpTest(Function func, String expected) {
+    private void helpTest(Function func, String expected) {
         EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
 
         List parts = mod.translate(func);
         StringBuffer sb = new StringBuffer();
         for (Object object : parts) {
-			sb.append(object);
-		}
+            sb.append(object);
+        }
         assertEquals(expected, sb.toString());
-	}
+    }
 
 }

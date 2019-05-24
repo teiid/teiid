@@ -30,13 +30,13 @@ import java.sql.Statement;
  */
 public interface ContinuousStatementCallback extends StatementCallback {
 
-	/**
-	 * Called before the next execution iteration has begun.
-	 * There is no valid row at the time of this call.  Any attempt to access the current row
-	 * will result in an exception.
-	 * @param s
-	 * @throws Exception
-	 */
-	void beforeNextExecution(Statement s) throws Exception;
+    /**
+     * Called before the next execution iteration has begun.
+     * There is no valid row at the time of this call.  Any attempt to access the current row
+     * will result in an exception.
+     * @param s
+     * @throws Exception
+     */
+    void beforeNextExecution(Statement s) throws Exception;
 
 }

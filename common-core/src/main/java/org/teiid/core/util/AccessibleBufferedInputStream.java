@@ -23,24 +23,24 @@ import java.io.InputStream;
 
 public class AccessibleBufferedInputStream extends BufferedInputStream {
 
-	public AccessibleBufferedInputStream(InputStream in, int size) {
-		super(in, size);
-	}
+    public AccessibleBufferedInputStream(InputStream in, int size) {
+        super(in, size);
+    }
 
-	public byte[] getBuffer() {
-		return this.buf;
-	}
+    public byte[] getBuffer() {
+        return this.buf;
+    }
 
-	public int getCount() {
-		return this.count;
-	}
+    public int getCount() {
+        return this.count;
+    }
 
-	public int getPosition() {
-		return this.pos;
-	}
+    public int getPosition() {
+        return this.pos;
+    }
 
-	public void setPosition(int pos) {
-		this.pos = pos;
-	}
+    public void setPosition(int pos) {
+        this.pos = pos;
+    }
 
 }

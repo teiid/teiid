@@ -56,9 +56,9 @@ import org.teiid.query.sql.util.SymbolMap;
 public class AliasGenerator extends PreOrderNavigator {
 
     private static final String table_prefix = "g_"; //$NON-NLS-1$
-	private static final String view_prefix = "v_"; //$NON-NLS-1$
+    private static final String view_prefix = "v_"; //$NON-NLS-1$
 
-	private static class NamingVisitor extends LanguageVisitor {
+    private static class NamingVisitor extends LanguageVisitor {
 
         private class SQLNamingContext {
             SQLNamingContext parent;
@@ -74,34 +74,34 @@ public class AliasGenerator extends PreOrderNavigator {
             }
 
             public String getElementName(Expression symbol) {
-            	if (!(symbol instanceof ElementSymbol)) {
-            		return null;
-            	}
-            	ElementSymbol element = (ElementSymbol)symbol;
-            	String newGroupName = this.groupNames.get(element.getGroupSymbol().getName());
-            	if (newGroupName == null) {
-            		if (parent == null) {
-            			return null;
-            		}
-                	return parent.getElementName(symbol);
-            	}
-            	//check for inline view
-            	Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getName());
-            	if (elements != null) {
-            		String name = elements.get(element.getShortName());
-            		if (name != null) {
-            			renameGroup(element.getGroupSymbol(), newGroupName);
-            			return name;
-            		}
+                if (!(symbol instanceof ElementSymbol)) {
+                    return null;
                 }
-            	if (parent != null) {
-            		String name = parent.getElementName(symbol);
-            		if (name != null) {
-            			return name;
-            		}
-            	}
-            	renameGroup(element.getGroupSymbol(), newGroupName);
-            	return null;
+                ElementSymbol element = (ElementSymbol)symbol;
+                String newGroupName = this.groupNames.get(element.getGroupSymbol().getName());
+                if (newGroupName == null) {
+                    if (parent == null) {
+                        return null;
+                    }
+                    return parent.getElementName(symbol);
+                }
+                //check for inline view
+                Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getName());
+                if (elements != null) {
+                    String name = elements.get(element.getShortName());
+                    if (name != null) {
+                        renameGroup(element.getGroupSymbol(), newGroupName);
+                        return name;
+                    }
+                }
+                if (parent != null) {
+                    String name = parent.getElementName(symbol);
+                    if (name != null) {
+                        return name;
+                    }
+                }
+                renameGroup(element.getGroupSymbol(), newGroupName);
+                return null;
             }
 
             public void renameGroup(GroupSymbol obj, String newAlias) {
@@ -116,8 +116,8 @@ public class AliasGenerator extends PreOrderNavigator {
                     obj.setName(obj.getDefinition());
                     obj.setDefinition(null);
                 } else {
-                	obj.setOutputName(null);
-                	obj.setOutputDefinition(null);
+                    obj.setOutputName(null);
+                    obj.setOutputDefinition(null);
                 }
             }
 
@@ -162,7 +162,7 @@ public class AliasGenerator extends PreOrderNavigator {
          */
         @Override
         public void visit(GroupSymbol obj) {
-        	this.namingContext.renameGroup(obj, this.namingContext.getGroupName(obj.getName()));
+            this.namingContext.renameGroup(obj, this.namingContext.getGroupName(obj.getName()));
         }
 
         public void createChildNamingContext(boolean aliasColumns) {
@@ -180,11 +180,11 @@ public class AliasGenerator extends PreOrderNavigator {
     private int groupIndex;
     private int viewIndex;
     private boolean stripColumnAliases;
-	private Map<String, String> aliasMapping;
-	private Collection<String> correlationGroups;
+    private Map<String, String> aliasMapping;
+    private Collection<String> correlationGroups;
 
     public AliasGenerator(boolean aliasGroups) {
-    	this(aliasGroups, false);
+        this(aliasGroups, false);
     }
 
     public AliasGenerator(boolean aliasGroups, boolean stripColumnAliases) {
@@ -208,7 +208,7 @@ public class AliasGenerator extends PreOrderNavigator {
     }
 
     public void visit(Select obj) {
-    	List<Expression> selectSymbols = obj.getSymbols();
+        List<Expression> selectSymbols = obj.getSymbols();
         LinkedHashMap<Expression, String> symbols = new LinkedHashMap<Expression, String>(selectSymbols.size());
         for (int i = 0; i < selectSymbols.size(); i++) {
             Expression symbol = selectSymbols.get(i);
@@ -220,9 +220,9 @@ public class AliasGenerator extends PreOrderNavigator {
             Expression newSymbol = SymbolMap.getExpression(symbol);
 
             if (newSymbol instanceof ElementSymbol) {
-            	if (!needsAlias) {
-            		newAlias = ((ElementSymbol)newSymbol).getShortName();
-            	} else {
+                if (!needsAlias) {
+                    newAlias = ((ElementSymbol)newSymbol).getShortName();
+                } else {
                     needsAlias &= needsAlias(newAlias, (ElementSymbol)newSymbol);
                 }
             }
@@ -240,19 +240,19 @@ public class AliasGenerator extends PreOrderNavigator {
 
     @Override
     public void visit(StoredProcedure obj) {
-    	if (!obj.isPushedInQuery()) {
-    		return;
-    	}
-    	List<ElementSymbol> selectSymbols = obj.getProjectedSymbols();
+        if (!obj.isPushedInQuery()) {
+            return;
+        }
+        List<ElementSymbol> selectSymbols = obj.getProjectedSymbols();
         LinkedHashMap<Expression, String> symbols = new LinkedHashMap<Expression, String>(selectSymbols.size());
         for (int i = 0; i < selectSymbols.size(); i++) {
-        	ElementSymbol symbol = selectSymbols.get(i);
+            ElementSymbol symbol = selectSymbols.get(i);
             symbols.put(symbol, symbol.getShortName());
         }
         for (SPParameter param : obj.getParameters()) {
             visitNode(param.getExpression());
         }
-    	visitor.namingContext.currentSymbols = symbols;
+        visitor.namingContext.currentSymbols = symbols;
     }
 
     private boolean needsAlias(String newAlias,
@@ -270,12 +270,12 @@ public class AliasGenerator extends PreOrderNavigator {
         }
         visitNode(obj.getFrom());
         if (this.aliasMapping != null) {
-        	HashSet<String> newSymbols = new HashSet<String>();
-        	for (Map.Entry<String, String> entry : this.visitor.namingContext.groupNames.entrySet()) {
-        		if (!newSymbols.add(entry.getValue())) {
-        			throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31126, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31126, entry.getValue())));
-        		}
-        	}
+            HashSet<String> newSymbols = new HashSet<String>();
+            for (Map.Entry<String, String> entry : this.visitor.namingContext.groupNames.entrySet()) {
+                if (!newSymbols.add(entry.getValue())) {
+                    throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31126, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31126, entry.getValue())));
+                }
+            }
         }
         visitNode(obj.getCriteria());
         visitNode(obj.getGroupBy());
@@ -290,14 +290,14 @@ public class AliasGenerator extends PreOrderNavigator {
         List<Expression> exprs = obj.getCommand().getProjectedSymbols();
         List<String> names = new ArrayList<String>(exprs.size());
         for (int i = 0; i < exprs.size(); i++) {
-        	names.add(Symbol.getShortName(exprs.get(i)));
+            names.add(Symbol.getShortName(exprs.get(i)));
         }
         obj.getCommand().acceptVisitor(this);
         Map<String, String> viewGroup = new HashMap<String, String>();
         int i = 0;
         //now map to the new names
         for (Entry<Expression, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
-        	viewGroup.put(names.get(i++), entry.getValue());
+            viewGroup.put(names.get(i++), entry.getValue());
         }
         visitor.namingContext.parent.elementMap.put(obj.getName(), viewGroup);
         visitor.removeChildNamingContext();
@@ -310,7 +310,7 @@ public class AliasGenerator extends PreOrderNavigator {
         if (visitor.aliasGroups) {
             recontextGroup(symbol, false);
         } else {
-        	visitor.namingContext.groupNames.put(symbol.getName(), symbol.getNonCorrelationName());
+            visitor.namingContext.groupNames.put(symbol.getName(), symbol.getNonCorrelationName());
         }
         super.visit(obj);
     }
@@ -321,37 +321,37 @@ public class AliasGenerator extends PreOrderNavigator {
     private String recontextGroup(GroupSymbol symbol, boolean virtual) {
         String newAlias = null;
         while (true) {
-	        if (virtual) {
-	            newAlias = view_prefix + viewIndex++;
-	        } else {
-	            newAlias = table_prefix + groupIndex++;
-	        }
-	        if (correlationGroups == null || !correlationGroups.contains(newAlias)) {
-	        	break;
-	        }
+            if (virtual) {
+                newAlias = view_prefix + viewIndex++;
+            } else {
+                newAlias = table_prefix + groupIndex++;
+            }
+            if (correlationGroups == null || !correlationGroups.contains(newAlias)) {
+                break;
+            }
         }
         if (this.aliasMapping != null && symbol.getDefinition() != null) {
-        	String oldAlias = this.aliasMapping.get(symbol.getName());
-        	if (oldAlias != null) {
-        		newAlias = oldAlias;
-            	if (newAlias.startsWith(table_prefix) || newAlias.startsWith(view_prefix)) {
-            		try {
-            			Integer.parseInt(newAlias.substring(2, newAlias.length()));
-            			throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31127, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31127, newAlias)));
-            		} catch (NumberFormatException e) {
+            String oldAlias = this.aliasMapping.get(symbol.getName());
+            if (oldAlias != null) {
+                newAlias = oldAlias;
+                if (newAlias.startsWith(table_prefix) || newAlias.startsWith(view_prefix)) {
+                    try {
+                        Integer.parseInt(newAlias.substring(2, newAlias.length()));
+                        throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31127, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31127, newAlias)));
+                    } catch (NumberFormatException e) {
 
-            		}
-            	}
-        	}
+                    }
+                }
+            }
         }
         visitor.namingContext.groupNames.put(symbol.getName(), newAlias);
         return newAlias;
     }
 
     public void visit(ScalarSubquery obj) {
-    	if (obj.shouldEvaluate()) {
-    		return;
-    	}
+        if (obj.shouldEvaluate()) {
+            return;
+        }
         visitor.createChildNamingContext(false);
         visitNode(obj.getCommand());
         visitor.removeChildNamingContext();
@@ -372,9 +372,9 @@ public class AliasGenerator extends PreOrderNavigator {
     }
 
     public void visit(ExistsCriteria obj) {
-    	if (obj.shouldEvaluate()) {
-    		return;
-    	}
+        if (obj.shouldEvaluate()) {
+            return;
+        }
         visitor.createChildNamingContext(false);
         visitNode(obj.getCommand());
         visitor.removeChildNamingContext();
@@ -388,7 +388,7 @@ public class AliasGenerator extends PreOrderNavigator {
     }
 
     public void visit(OrderBy obj) {
-    	//add/correct aliases if necessary
+        //add/correct aliases if necessary
         for (int i = 0; i < obj.getVariableCount(); i++) {
             OrderByItem item = obj.getOrderByItems().get(i);
             Expression element = item.getSymbol();
@@ -398,74 +398,74 @@ public class AliasGenerator extends PreOrderNavigator {
 
             if (item.isUnrelated()) {
                 item.setSymbol(expr);
-            	continue;
+                continue;
             }
             String name = null;
             if (visitor.namingContext.currentSymbols != null) {
-        		name = visitor.namingContext.currentSymbols.get(element);
-        	}
+                name = visitor.namingContext.currentSymbols.get(element);
+            }
             if (name == null) {
-            	//this is a bit messy, because we have cloned to do the aliasing, there
-            	//is a chance that a subquery is throwing off the above get
-            	int pos = item.getExpressionPosition();
-            	if (pos < visitor.namingContext.currentSymbols.size()) {
-            		ArrayList<Map.Entry<Expression, String>> list = new ArrayList<Map.Entry<Expression,String>>(visitor.namingContext.currentSymbols.entrySet());
-            		name = list.get(pos).getValue();
-            		expr = SymbolMap.getExpression(list.get(pos).getKey());
-            	} else {
-            		name = Symbol.getShortName(element);
-            	}
+                //this is a bit messy, because we have cloned to do the aliasing, there
+                //is a chance that a subquery is throwing off the above get
+                int pos = item.getExpressionPosition();
+                if (pos < visitor.namingContext.currentSymbols.size()) {
+                    ArrayList<Map.Entry<Expression, String>> list = new ArrayList<Map.Entry<Expression,String>>(visitor.namingContext.currentSymbols.entrySet());
+                    name = list.get(pos).getValue();
+                    expr = SymbolMap.getExpression(list.get(pos).getKey());
+                } else {
+                    name = Symbol.getShortName(element);
+                }
             }
             boolean needsAlias = visitor.namingContext.aliasColumns;
             if (name == null) {
-	            continue;
+                continue;
             }
 
             if (expr instanceof ElementSymbol) {
-            	needsAlias &= needsAlias(name, (ElementSymbol)expr);
+                needsAlias &= needsAlias(name, (ElementSymbol)expr);
             }
 
             if (needsAlias) {
                 element = new AliasSymbol(Symbol.getShortName(element), expr);
             } else {
-            	element = expr;
-            	if (expr instanceof ElementSymbol && visitor.namingContext.aliasColumns) {
-            		((ElementSymbol)expr).setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
-            	}
+                element = expr;
+                if (expr instanceof ElementSymbol && visitor.namingContext.aliasColumns) {
+                    ((ElementSymbol)expr).setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
+                }
             }
             item.setSymbol(element);
             if (element instanceof Symbol) {
-            	((Symbol)element).setShortName(name);
+                ((Symbol)element).setShortName(name);
             }
         }
     }
 
     public void visit(Reference obj) {
-    	if (!obj.isCorrelated()) {
-    		return;
-    	}
-    	//we need to follow references to correct correlated variables
-    	org.teiid.query.optimizer.relational.AliasGenerator.NamingVisitor.SQLNamingContext sqlNamingContext = this.visitor.namingContext.parent;
-    	while (sqlNamingContext != null) {
-	    	if (sqlNamingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
-	            visitNode(obj.getExpression());
-	            return;
-	    	}
-	    	sqlNamingContext = sqlNamingContext.parent;
-    	}
-    	if (!this.visitor.namingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
-    		visitNode(obj.getExpression());
-    	} else {
-        	// else - this is a naming conflict that is not handled gracefully
-    	}
+        if (!obj.isCorrelated()) {
+            return;
+        }
+        //we need to follow references to correct correlated variables
+        org.teiid.query.optimizer.relational.AliasGenerator.NamingVisitor.SQLNamingContext sqlNamingContext = this.visitor.namingContext.parent;
+        while (sqlNamingContext != null) {
+            if (sqlNamingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
+                visitNode(obj.getExpression());
+                return;
+            }
+            sqlNamingContext = sqlNamingContext.parent;
+        }
+        if (!this.visitor.namingContext.groupNames.containsKey(obj.getExpression().getGroupSymbol().getName())) {
+            visitNode(obj.getExpression());
+        } else {
+            // else - this is a naming conflict that is not handled gracefully
+        }
     }
 
-	public void setAliasMapping(Map<String, String> aliasMapping) {
-		this.aliasMapping = aliasMapping;
-	}
+    public void setAliasMapping(Map<String, String> aliasMapping) {
+        this.aliasMapping = aliasMapping;
+    }
 
-	public void setCorrelationGroups(Collection<String> correlationGroups) {
-		this.correlationGroups = correlationGroups;
-	}
+    public void setCorrelationGroups(Collection<String> correlationGroups) {
+        this.correlationGroups = correlationGroups;
+    }
 
 }

@@ -33,42 +33,42 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
     public static final String V_3 = "v3"; //$NON-NLS-1$
     public static final String V_4 = "v4"; //$NON-NLS-1$
 
-	private static final long serialVersionUID = -1832915223199053471L;
-	private Integer batchSize = 4096;
-	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
-	public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
+    private static final long serialVersionUID = -1832915223199053471L;
+    private Integer batchSize = 4096;
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
+    public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
 
-	private String spreadsheetName;
+    private String spreadsheetName;
 
-	private String spreadsheetId;
+    private String spreadsheetId;
 
-	private String apiVersion = V_3;
+    private String apiVersion = V_3;
 
-	private String refreshToken;
+    private String refreshToken;
 
-	private String clientId;
-	private String clientSecret;
+    private String clientId;
+    private String clientSecret;
 
-	@Override
-	@SuppressWarnings("serial")
-	public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
-	    checkConfig();
+    @Override
+    @SuppressWarnings("serial")
+    public BasicConnectionFactory<BasicConnection> createConnectionFactory() throws ResourceException {
+        checkConfig();
 
-		return new BasicConnectionFactory<BasicConnection>() {
+        return new BasicConnectionFactory<BasicConnection>() {
 
-		    //share the spreadsheet info among all connections
-		    private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
-		    private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
+            //share the spreadsheet info among all connections
+            private AtomicReference<SpreadsheetInfo> spreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
+            private AtomicReference<SpreadsheetInfo> v2SpreadsheetInfo = new AtomicReference<SpreadsheetInfo>();
 
-			@Override
-			public BasicConnection getConnection() throws ResourceException {
-			    if (apiVersion.equals(V_3)) {
-			        return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
-			    }
-			    return new SpreadsheetConnectionImpl4(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo, v2SpreadsheetInfo);
-			}
-		};
-	}
+            @Override
+            public BasicConnection getConnection() throws ResourceException {
+                if (apiVersion.equals(V_3)) {
+                    return new SpreadsheetConnectionImpl(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo);
+                }
+                return new SpreadsheetConnectionImpl4(SpreadsheetManagedConnectionFactory.this, spreadsheetInfo, v2SpreadsheetInfo);
+            }
+        };
+    }
 
    private void checkConfig() throws ResourceException {
 
@@ -96,7 +96,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
         }
     }
 
-	@Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -159,28 +159,28 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
     }
 
     public Integer getBatchSize() {
-		return batchSize;
-	}
+        return batchSize;
+    }
 
-	public void setBatchSize(Integer batchSize) {
-		this.batchSize = batchSize;
-	}
+    public void setBatchSize(Integer batchSize) {
+        this.batchSize = batchSize;
+    }
 
-	public String getSpreadsheetName() {
-		return spreadsheetName;
-	}
+    public String getSpreadsheetName() {
+        return spreadsheetName;
+    }
 
-	public void setSpreadsheetName(String spreadsheetName) {
-		this.spreadsheetName = spreadsheetName;
-	}
+    public void setSpreadsheetName(String spreadsheetName) {
+        this.spreadsheetName = spreadsheetName;
+    }
 
-	public String getRefreshToken() {
-		return refreshToken;
-	}
+    public String getRefreshToken() {
+        return refreshToken;
+    }
 
-	public void setRefreshToken(String refreshToken) {
-		this.refreshToken = refreshToken;
-	}
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 
     public String getClientId() {
         return clientId;

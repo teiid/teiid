@@ -63,27 +63,27 @@ public class TestRulePushSelectCriteria {
     }
 
     @Test public void testPushAcrossFrameWithAccessNode() throws Exception {
-    	QueryMetadataInterface metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
-    	Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata); //$NON-NLS-1$
-    	Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata); //$NON-NLS-1$
-    	RelationalPlanner p = new RelationalPlanner();
-    	CommandContext cc = new CommandContext();
-    	p.initialize(command, null, metadata, null, null, cc);
-    	PlanNode root = p.generatePlan(command);
-    	PlanNode child = p.generatePlan(subCommand);
-    	PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
-    	sourceNode.addFirstChild(child);
+        QueryMetadataInterface metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore());
+        Command command = TestOptimizer.helpGetCommand("select * from (select * from pm1.g1 union select * from pm1.g2) x where e1 = 1", metadata); //$NON-NLS-1$
+        Command subCommand = TestOptimizer.helpGetCommand("select * from pm1.g1 union select * from pm1.g2", metadata); //$NON-NLS-1$
+        RelationalPlanner p = new RelationalPlanner();
+        CommandContext cc = new CommandContext();
+        p.initialize(command, null, metadata, null, null, cc);
+        PlanNode root = p.generatePlan(command);
+        PlanNode child = p.generatePlan(subCommand);
+        PlanNode sourceNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.SOURCE);
+        sourceNode.addFirstChild(child);
         sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, SymbolMap.createSymbolMap(sourceNode.getGroups().iterator().next(), (List<Expression>)child.getFirstChild().getProperty(Info.PROJECT_COLS), metadata));
-    	//add a dummy access node
+        //add a dummy access node
         PlanNode accessNode = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
         accessNode.addGroups(child.getFirstChild().getGroups());
-    	child.getFirstChild().addAsParent(accessNode);
+        child.getFirstChild().addAsParent(accessNode);
 
-    	new RulePushSelectCriteria().execute(root, metadata, new DefaultCapabilitiesFinder(), new RuleStack(), AnalysisRecord.createNonRecordingRecord(), cc);
-    	// the select node should still be above the access node
-    	accessNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.ACCESS);
-    	assertEquals(NodeConstants.Types.SELECT, accessNode.getParent().getType());
-    	assertNull(NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SELECT));
+        new RulePushSelectCriteria().execute(root, metadata, new DefaultCapabilitiesFinder(), new RuleStack(), AnalysisRecord.createNonRecordingRecord(), cc);
+        // the select node should still be above the access node
+        accessNode = NodeEditor.findNodePreOrder(root, NodeConstants.Types.ACCESS);
+        assertEquals(NodeConstants.Types.SELECT, accessNode.getParent().getType());
+        assertNull(NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SELECT));
     }
 
 }

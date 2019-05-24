@@ -46,16 +46,16 @@ import org.teiid.query.util.CommandContext;
  */
 public class JoinNode extends SubqueryAwareRelationalNode {
 
-	static class BatchAvailableException extends RuntimeException {}
+    static class BatchAvailableException extends RuntimeException {}
 
-	static BatchAvailableException BATCH_AVILABLE = new BatchAvailableException();
+    static BatchAvailableException BATCH_AVILABLE = new BatchAvailableException();
 
-	public enum JoinStrategyType {
-	    MERGE,
-	    ENHANCED_SORT,
-	    NESTED_LOOP,
-	    NESTED_TABLE
-	}
+    public enum JoinStrategyType {
+        MERGE,
+        ENHANCED_SORT,
+        NESTED_LOOP,
+        NESTED_TABLE
+    }
 
     private enum State { LOAD_LEFT, LOAD_RIGHT, EXECUTE }
     private State state = State.LOAD_LEFT;
@@ -97,20 +97,20 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     }
 
     public boolean isLeftDistinct() {
-		return leftDistinct;
-	}
+        return leftDistinct;
+    }
 
     public void setLeftDistinct(boolean leftDistinct) {
-		this.leftDistinct = leftDistinct;
-	}
+        this.leftDistinct = leftDistinct;
+    }
 
     public boolean isRightDistinct() {
-		return rightDistinct;
-	}
+        return rightDistinct;
+    }
 
     public void setRightDistinct(boolean rightDistinct) {
-		this.rightDistinct = rightDistinct;
-	}
+        this.rightDistinct = rightDistinct;
+    }
 
     public void setJoinCriteria(Criteria joinCriteria) {
         this.joinCriteria = joinCriteria;
@@ -118,16 +118,16 @@ public class JoinNode extends SubqueryAwareRelationalNode {
 
     @Override
     public void initialize(CommandContext context, BufferManager bufferManager,
-    		ProcessorDataManager dataMgr) {
-    	super.initialize(context, bufferManager, dataMgr);
+            ProcessorDataManager dataMgr) {
+        super.initialize(context, bufferManager, dataMgr);
 
-    	if (this.combinedElementMap == null) {
-	        // Create element lookup map for evaluating project expressions
-	        List combinedElements = new ArrayList(getChildren()[0].getElements());
-	        combinedElements.addAll(getChildren()[1].getElements());
-	        this.combinedElementMap = createLookupMap(combinedElements);
-	        this.projectionIndexes = getProjectionIndexes(combinedElementMap, getElements());
-    	}
+        if (this.combinedElementMap == null) {
+            // Create element lookup map for evaluating project expressions
+            List combinedElements = new ArrayList(getChildren()[0].getElements());
+            combinedElements.addAll(getChildren()[1].getElements());
+            this.combinedElementMap = createLookupMap(combinedElements);
+            this.projectionIndexes = getProjectionIndexes(combinedElementMap, getElements());
+        }
     }
 
     public void open()
@@ -151,13 +151,13 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         this.joinStrategy.initialize(this);
 
         if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
-        	joinStrategy.openRight();
+            joinStrategy.openRight();
         } else {
-        	joinStrategy.openLeft();
+            joinStrategy.openLeft();
         }
 
         if(!isDependent()) {
-        	joinStrategy.openRight();
+            joinStrategy.openRight();
         }
 
         this.state = State.LOAD_LEFT;
@@ -207,78 +207,78 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     protected TupleBatch nextBatchDirectInternal() throws BlockedException,
                                           TeiidComponentException,
                                           TeiidProcessingException {
-    	try {
-	    	if (state == State.LOAD_LEFT) {
-	    		boolean rightDep = false;
-	    		//dependent semi joins are processed right first
-	    		if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
-	    			rightDep = true;
-	    			this.joinStrategy.openRight();
-		            this.joinStrategy.loadRight();
-		            TupleBuffer buffer = this.joinStrategy.rightSource.getTupleBuffer();
-	                //the tuplebuffer may be from a lower node, so pass in the schema
-	                dvs = new DependentValueSource(buffer, this.joinStrategy.rightSource.getSource().getElements());
-	                dvs.setDistinct(this.joinStrategy.rightSource.isExpresssionDistinct());
-	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
-	    		}
-	        	if (this.joinType != JoinType.JOIN_FULL_OUTER || this.getJoinCriteria() == null) {
-	            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
-	            }
-	        	this.joinStrategy.openLeft();
-	            this.joinStrategy.loadLeft();
-	            if (isDependent() && !rightDep) {
-	                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
-	                //the tuplebuffer may be from a lower node, so pass in the schema
-	                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
-	                dvs.setDistinct(this.joinStrategy.leftSource.isExpresssionDistinct());
-	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
-	            }
-	            state = State.LOAD_RIGHT;
-	        }
-    	} catch (BlockedException e) {
-    		if (!isDependent()) {
-    		    if (getJoinType() != JoinType.JOIN_FULL_OUTER && this.joinStrategy.leftSource.getSortUtility() == null && this.joinStrategy.leftSource.rowCountLE(0)) {
+        try {
+            if (state == State.LOAD_LEFT) {
+                boolean rightDep = false;
+                //dependent semi joins are processed right first
+                if (isDependent() && (this.joinType == JoinType.JOIN_ANTI_SEMI || this.joinType == JoinType.JOIN_SEMI)) {
+                    rightDep = true;
+                    this.joinStrategy.openRight();
+                    this.joinStrategy.loadRight();
+                    TupleBuffer buffer = this.joinStrategy.rightSource.getTupleBuffer();
+                    //the tuplebuffer may be from a lower node, so pass in the schema
+                    dvs = new DependentValueSource(buffer, this.joinStrategy.rightSource.getSource().getElements());
+                    dvs.setDistinct(this.joinStrategy.rightSource.isExpresssionDistinct());
+                    this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+                }
+                if (this.joinType != JoinType.JOIN_FULL_OUTER || this.getJoinCriteria() == null) {
+                    this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
+                }
+                this.joinStrategy.openLeft();
+                this.joinStrategy.loadLeft();
+                if (isDependent() && !rightDep) {
+                    TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
+                    //the tuplebuffer may be from a lower node, so pass in the schema
+                    dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
+                    dvs.setDistinct(this.joinStrategy.leftSource.isExpresssionDistinct());
+                    this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+                }
+                state = State.LOAD_RIGHT;
+            }
+        } catch (BlockedException e) {
+            if (!isDependent()) {
+                if (getJoinType() != JoinType.JOIN_FULL_OUTER && this.joinStrategy.leftSource.getSortUtility() == null && this.joinStrategy.leftSource.rowCountLE(0)) {
                     this.terminateBatches();
                     return pullBatch();
                 }
-    			this.joinStrategy.openRight();
+                this.joinStrategy.openRight();
                 this.joinStrategy.loadRight();
                 prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
-    		}
-    		throw e;
-    	}
+            }
+            throw e;
+        }
         try {
             if (state == State.LOAD_RIGHT) {
                 if (getJoinType() != JoinType.JOIN_FULL_OUTER && this.joinStrategy.leftSource.getSortUtility() == null && this.joinStrategy.leftSource.rowCountLE(0)) {
                     this.terminateBatches();
                     return pullBatch();
                 }
-	        	this.joinStrategy.openRight();
-	            this.joinStrategy.loadRight();
+                this.joinStrategy.openRight();
+                this.joinStrategy.loadRight();
                 state = State.EXECUTE;
             }
-        	this.joinStrategy.process();
-        	this.terminateBatches();
+            this.joinStrategy.process();
+            this.terminateBatches();
         } catch (BatchAvailableException e) {
-        	//pull the batch
+            //pull the batch
         } catch (BlockedException e) {
-        	//TODO: this leads to duplicate exceptions, we
-        	//could track which side is blocking
-        	try {
-        		prefetch(this.joinStrategy.leftSource, this.joinStrategy.rightSource);
-        	} catch (BlockedException e1) {
+            //TODO: this leads to duplicate exceptions, we
+            //could track which side is blocking
+            try {
+                prefetch(this.joinStrategy.leftSource, this.joinStrategy.rightSource);
+            } catch (BlockedException e1) {
 
-        	}
-        	prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
-        	throw e;
+            }
+            prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
+            throw e;
         }
         return pullBatch();
     }
 
-	private void prefetch(SourceState toFetch, SourceState other) throws TeiidComponentException,
-			TeiidProcessingException {
-		toFetch.prefetch(Math.max(1L, other.getIncrementalRowCount(false)/other.getSource().getBatchSize())*toFetch.getSource().getBatchSize());
-	}
+    private void prefetch(SourceState toFetch, SourceState other) throws TeiidComponentException,
+            TeiidProcessingException {
+        toFetch.prefetch(Math.max(1L, other.getIncrementalRowCount(false)/other.getSource().getBatchSize())*toFetch.getSource().getBatchSize());
+    }
 
     /**
      * @see org.teiid.query.processor.relational.RelationalNode#getDescriptionProperties()
@@ -286,10 +286,10 @@ public class JoinNode extends SubqueryAwareRelationalNode {
      */
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
-    	PlanNode props = super.getDescriptionProperties();
+        PlanNode props = super.getDescriptionProperties();
 
         if(isDependent()) {
-        	props.addProperty(PROP_DEPENDENT, Boolean.TRUE.toString());
+            props.addProperty(PROP_DEPENDENT, Boolean.TRUE.toString());
         }
         props.addProperty(PROP_JOIN_STRATEGY, this.joinStrategy.toString());
         props.addProperty(PROP_JOIN_TYPE, this.joinType.toString());
@@ -298,8 +298,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         return props;
     }
 
-	private List<String> getCriteriaList() {
-		List<String> critList = new ArrayList<String>();
+    private List<String> getCriteriaList() {
+        List<String> critList = new ArrayList<String>();
         if (leftExpressions != null) {
             for(int i=0; i < this.leftExpressions.size(); i++) {
                 critList.add(this.leftExpressions.get(i).toString() + "=" + this.rightExpressions.get(i).toString());  //$NON-NLS-1$
@@ -310,8 +310,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                 critList.add(crit.toString());
             }
         }
-		return critList;
-	}
+        return critList;
+    }
 
     /**
      * @see org.teiid.query.processor.relational.RelationalNode#getNodeString(java.lang.StringBuffer)
@@ -330,7 +330,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         str.append(this.joinType.toString());
         str.append("]"); //$NON-NLS-1$
         if (getJoinType() != JoinType.JOIN_CROSS) {
-        	str.append(" criteria=").append(getCriteriaList()); //$NON-NLS-1$
+            str.append(" criteria=").append(getCriteriaList()); //$NON-NLS-1$
         }
         str.append(" output="); //$NON-NLS-1$
         str.append(getElements());
@@ -351,23 +351,23 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     }
 
     public String getDependentValueSourceName() {
-		return dependentValueSource;
-	}
+        return dependentValueSource;
+    }
 
     public void closeDirect() {
         super.closeDirect();
         joinStrategy.close();
         if (this.getContext() != null && this.dependentValueSource != null) {
-        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
+            this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
         }
         this.dvs = null;
     }
 
     @Override
     public void reset() {
-    	super.reset();
-    	this.joinStrategy = this.joinStrategy.clone();
-    	this.dvs = null;
+        super.reset();
+        this.joinStrategy = this.joinStrategy.clone();
+        this.dvs = null;
     }
 
     public JoinType getJoinType() {
@@ -383,7 +383,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     }
 
     boolean matchesCriteria(List outputTuple) throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
-		return (this.joinCriteria == null || getEvaluator(this.combinedElementMap).evaluate(this.joinCriteria, outputTuple));
+        return (this.joinCriteria == null || getEvaluator(this.combinedElementMap).evaluate(this.joinCriteria, outputTuple));
     }
 
     public List getLeftExpressions() {
@@ -399,25 +399,25 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         List projectTuple = projectTuple(this.projectionIndexes, row);
         super.addBatchRow(projectTuple);
         if (isBatchFull()) {
-        	throw BATCH_AVILABLE;
+            throw BATCH_AVILABLE;
         }
     }
 
     public DependentValueSource getDependentValueSource() {
-		return dvs;
-	}
+        return dvs;
+    }
 
     @Override
     public Collection<? extends LanguageObject> getObjects() {
-    	List<LanguageObject> all = new ArrayList<LanguageObject>();
-    	if (leftExpressions != null) {
-    		all.addAll(leftExpressions);
-    		all.addAll(rightExpressions);
-    	}
-    	if (joinCriteria != null) {
-    		all.add(joinCriteria);
-    	}
-    	return all;
+        List<LanguageObject> all = new ArrayList<LanguageObject>();
+        if (leftExpressions != null) {
+            all.addAll(leftExpressions);
+            all.addAll(rightExpressions);
+        }
+        if (joinCriteria != null) {
+            all.add(joinCriteria);
+        }
+        return all;
     }
 
 }

@@ -51,15 +51,15 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings({"nls"})
 public class TestIQueryToLdapSearchParser {
 
-	/**
+    /**
      * Get Resolved Command using SQL String and metadata.
      */
     public Command getCommand(String sql, QueryMetadataInterface metadata) {
-    	CommandBuilder builder = new CommandBuilder(metadata);
-    	return builder.getCommand(sql);
+        CommandBuilder builder = new CommandBuilder(metadata);
+        return builder.getCommand(sql);
     }
 
-	/**
+    /**
      * Helper method for testing the provided LDAPSearchDetails against expected values
      * @param searchDetails the LDAPSearchDetails object
      * @param expectedContextName the expected context name
@@ -70,36 +70,36 @@ public class TestIQueryToLdapSearchParser {
      * @param expectedSortKeys the expected sortKeys list.
      */
     public void helpTestSearchDetails(final LDAPSearchDetails searchDetails, final String expectedContextName,
-    		final String expectedContextFilter, final List<String> expectedAttrNameList, final long expectedCountLimit,
-    		final int expectedSearchScope, final SortKey[] expectedSortKeys) {
+            final String expectedContextFilter, final List<String> expectedAttrNameList, final long expectedCountLimit,
+            final int expectedSearchScope, final SortKey[] expectedSortKeys) {
 
-    	// Get all of the actual values
+        // Get all of the actual values
         String contextName = searchDetails.getContextName();
         String contextFilter = searchDetails.getContextFilter();
         List<Column> attrList = searchDetails.getElementList();
         long countLimit = searchDetails.getCountLimit();
-    	int searchScope = searchDetails.getSearchScope();
-    	SortKey[] sortKeys = searchDetails.getSortKeys();
+        int searchScope = searchDetails.getSearchScope();
+        SortKey[] sortKeys = searchDetails.getSortKeys();
 
-    	// Compare actual with Expected
-    	assertEquals(expectedContextName, contextName);
-    	assertEquals(expectedContextFilter, contextFilter);
+        // Compare actual with Expected
+        assertEquals(expectedContextName, contextName);
+        assertEquals(expectedContextFilter, contextFilter);
 
-    	assertEquals(attrList.size(),expectedAttrNameList.size());
-    	Iterator<Column> iter = attrList.iterator();
-    	Iterator<String> eIter = expectedAttrNameList.iterator();
-    	while(iter.hasNext()&&eIter.hasNext()) {
-			String actualName = iter.next().getSourceName();
-			String expectedName = eIter.next();
-			assertEquals(actualName, expectedName);
-    	}
+        assertEquals(attrList.size(),expectedAttrNameList.size());
+        Iterator<Column> iter = attrList.iterator();
+        Iterator<String> eIter = expectedAttrNameList.iterator();
+        while(iter.hasNext()&&eIter.hasNext()) {
+            String actualName = iter.next().getSourceName();
+            String expectedName = eIter.next();
+            assertEquals(actualName, expectedName);
+        }
 
-    	assertEquals(expectedCountLimit, countLimit);
-    	assertEquals(expectedSearchScope, searchScope);
-    	assertArrayEquals(expectedSortKeys, sortKeys);
+        assertEquals(expectedCountLimit, countLimit);
+        assertEquals(expectedSearchScope, searchScope);
+        assertArrayEquals(expectedSortKeys, sortKeys);
     }
 
-	/**
+    /**
      * Test a Query without criteria
      */
     @Test public void testSelectFrom1() throws Exception {
@@ -120,7 +120,7 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 
@@ -137,7 +137,7 @@ public class TestIQueryToLdapSearchParser {
 
         Mockito.stub(context.lookup("")).toReturn(context);
 
-		LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
+        LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
 
         lue.execute();
         ArgumentCaptor<ModificationItem[]> captor = ArgumentCaptor.forClass(ModificationItem[].class);
@@ -161,7 +161,7 @@ public class TestIQueryToLdapSearchParser {
 
         Mockito.stub(context.lookup("")).toReturn(context);
 
-		LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
+        LDAPUpdateExecution lue = new LDAPUpdateExecution(query, context);
 
         lue.execute();
         ArgumentCaptor<ModificationItem[]> captor = ArgumentCaptor.forClass(ModificationItem[].class);
@@ -172,11 +172,11 @@ public class TestIQueryToLdapSearchParser {
         assertEquals("vals: a, b", modifications[1].getAttribute().toString());
     }
 
-	/**
+    /**
      * Test a Query with a criteria
      */
     @Test public void testSelectFromWhere1() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R%'"); //$NON-NLS-1$
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R%'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -193,15 +193,15 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 
-	/**
+    /**
      * Test a Query with a criteria
      */
     @Test public void testEscaping() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R*'"); //$NON-NLS-1$
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name = 'R*'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -218,12 +218,12 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 
     @Test public void testNot() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE not (Name like 'R%' or Name like 'S%')"); //$NON-NLS-1$
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE not (Name like 'R%' or Name like 'S%')"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -240,12 +240,12 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 
     @Test public void testGT() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name > 'R'"); //$NON-NLS-1$
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name > 'R'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -262,11 +262,11 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
     }
 
     @Test public void testLT() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name < 'R'"); //$NON-NLS-1$
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name FROM LdapModel.People WHERE Name < 'R'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -283,59 +283,59 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
     }
 
-	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws Exception {
-    	QueryMetadataInterface metadata = exampleLdap();
+    private LDAPSearchDetails helpGetSearchDetails(String queryString) throws Exception {
+        QueryMetadataInterface metadata = exampleLdap();
 
-    	Select query = (Select)getCommand(queryString, metadata);
+        Select query = (Select)getCommand(queryString, metadata);
 
-    	LDAPExecutionFactory config = new LDAPExecutionFactory();
+        LDAPExecutionFactory config = new LDAPExecutionFactory();
 
-    	IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(config);
+        IQueryToLdapSearchParser searchParser = new IQueryToLdapSearchParser(config);
 
         LDAPSearchDetails searchDetails = searchParser.translateSQLQueryToLDAPSearch(query);
-		return searchDetails;
-	}
+        return searchDetails;
+    }
 
     public static QueryMetadataInterface exampleLdap() throws Exception {
-    	String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com');"
-    			+ "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), groupname string options (nameinsource 'memberOf', \"teiid_ldap:dn_prefix\" 'ou=groups,dc=metamatrix,dc=com', \"teiid_ldap:rdn_type\" 'cn')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
-    	return RealMetadataFactory.fromDDL(ddl, "x", "LdapModel");
+        String ddl = "create foreign table People (UserID string options (nameinsource 'uid'), Name string options (nameinsource 'cn'), dn string, vals string[]) options (nameinsource 'ou=people,dc=metamatrix,dc=com');"
+                + "create foreign table People_Groups (user_dn string options (nameinsource 'dn'), groupname string options (nameinsource 'memberOf', \"teiid_ldap:dn_prefix\" 'ou=groups,dc=metamatrix,dc=com', \"teiid_ldap:rdn_type\" 'cn')) options (nameinsource 'ou=people,dc=metamatrix,dc=com')";
+        return RealMetadataFactory.fromDDL(ddl, "x", "LdapModel");
     }
 
     @Test public void testLike() throws Exception {
-    	String query = "Name like 'R*%'";
-    	String expectedContextFilter = "(cn=R\\2a*)"; //$NON-NLS-1$
+        String query = "Name like 'R*%'";
+        String expectedContextFilter = "(cn=R\\2a*)"; //$NON-NLS-1$
 
-    	helpTestLike(query, expectedContextFilter);
+        helpTestLike(query, expectedContextFilter);
     }
 
     @Test public void testLikeEscaped() throws Exception {
-    	String query = "Name like 'R%*\\%\\_' escape '\\'";
-    	String expectedContextFilter = "(cn=R*\\2a%_)"; //$NON-NLS-1$
+        String query = "Name like 'R%*\\%\\_' escape '\\'";
+        String expectedContextFilter = "(cn=R*\\2a%_)"; //$NON-NLS-1$
 
-    	helpTestLike(query, expectedContextFilter);
+        helpTestLike(query, expectedContextFilter);
     }
 
     @Test(expected=TranslatorException.class) public void testLikeUnsupported() throws Exception {
-    	String query = "Name like 'R*_'";
-    	String expectedContextFilter = null;
+        String query = "Name like 'R*_'";
+        String expectedContextFilter = null;
 
-    	helpTestLike(query, expectedContextFilter);
+        helpTestLike(query, expectedContextFilter);
     }
 
     @Test(expected=TranslatorException.class) public void testLikeUnsupported1() throws Exception {
-    	String query = "Name like 'R\\%_' escape '\\'";
-    	String expectedContextFilter = null;
+        String query = "Name like 'R\\%_' escape '\\'";
+        String expectedContextFilter = null;
 
-    	helpTestLike(query, expectedContextFilter);
+        helpTestLike(query, expectedContextFilter);
     }
 
-	private void helpTestLike(String query, String expectedContextFilter)
-			throws Exception {
-		LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID FROM LdapModel.People WHERE " + query); //$NON-NLS-1$
+    private void helpTestLike(String query, String expectedContextFilter)
+            throws Exception {
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID FROM LdapModel.People WHERE " + query); //$NON-NLS-1$
 
         // Set Expected SearchDetails Values
         //-----------------------------------
@@ -350,11 +350,11 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
-	}
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
+    }
 
-	@Test public void testJoin() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name, people_groups.groupname FROM LdapModel.People inner join people_groups on people.dn = people_groups.user_dn where Name = 'R%'"); //$NON-NLS-1$
+    @Test public void testJoin() throws Exception {
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT UserID, Name, people_groups.groupname FROM LdapModel.People inner join people_groups on people.dn = people_groups.user_dn where Name = 'R%'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -372,12 +372,12 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 
-	@Test public void testRdnTypePredicates() throws Exception {
-    	LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT people_groups.groupname FROM people_groups where groupname like 'R%' and groupname < 'q'"); //$NON-NLS-1$
+    @Test public void testRdnTypePredicates() throws Exception {
+        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT people_groups.groupname FROM people_groups where groupname like 'R%' and groupname < 'q'"); //$NON-NLS-1$
 
         //-----------------------------------
         // Set Expected SearchDetails Values
@@ -393,7 +393,7 @@ public class TestIQueryToLdapSearchParser {
         SortKey[] expectedSortKeys = null;
 
         helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
+                expectedCountLimit, expectedSearchScope, expectedSortKeys);
 
     }
 

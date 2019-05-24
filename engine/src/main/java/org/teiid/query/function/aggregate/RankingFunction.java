@@ -32,45 +32,45 @@ import org.teiid.query.util.CommandContext;
  */
 public class RankingFunction extends AggregateFunction {
 
-	private int count = 0;
-	private int lastCount = 0;
-	private Type type;
+    private int count = 0;
+    private int lastCount = 0;
+    private Type type;
 
-	public RankingFunction(Type function) {
-		this.type = function;
-	}
+    public RankingFunction(Type function) {
+        this.type = function;
+    }
 
-	@Override
-	public void reset() {
-		count = 0;
-		lastCount = 0;
-	}
+    @Override
+    public void reset() {
+        count = 0;
+        lastCount = 0;
+    }
 
-	@Override
-	public void addInputDirect(List<?> tuple, CommandContext commandContext)
-			throws FunctionExecutionException, ExpressionEvaluationException,
-			TeiidComponentException {
-		if (type == Type.RANK) {
-			if (count == Integer.MAX_VALUE) {
-				throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174));
-			}
-			count++;
-		}
-	}
+    @Override
+    public void addInputDirect(List<?> tuple, CommandContext commandContext)
+            throws FunctionExecutionException, ExpressionEvaluationException,
+            TeiidComponentException {
+        if (type == Type.RANK) {
+            if (count == Integer.MAX_VALUE) {
+                throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174));
+            }
+            count++;
+        }
+    }
 
-	@Override
-	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
-			ExpressionEvaluationException, TeiidComponentException {
-		if (type == Type.DENSE_RANK) {
-			if (count == Integer.MAX_VALUE) {
-				throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174));
-			}
-			count++;
-			return count;
-		}
-		int result = ++lastCount;
-		lastCount = count;
-		return result;
-	}
+    @Override
+    public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
+            ExpressionEvaluationException, TeiidComponentException {
+        if (type == Type.DENSE_RANK) {
+            if (count == Integer.MAX_VALUE) {
+                throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID31174, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31174));
+            }
+            count++;
+            return count;
+        }
+        int result = ++lastCount;
+        lastCount = count;
+        return result;
+    }
 
 }

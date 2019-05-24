@@ -22,23 +22,23 @@ import org.jboss.as.controller.access.Environment;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
 class JBossLifeCycleListener implements ContainerLifeCycleListener {
-	private Environment environment;
+    private Environment environment;
 
-	public JBossLifeCycleListener(Environment environment) {
-		this.environment = environment;
-	}
+    public JBossLifeCycleListener(Environment environment) {
+        this.environment = environment;
+    }
 
-	@Override
-	public boolean isShutdownInProgress() {
-		return environment.getProcessState() == State.STOPPING;
-	}
+    @Override
+    public boolean isShutdownInProgress() {
+        return environment.getProcessState() == State.STOPPING;
+    }
 
-	@Override
-	public boolean isBootInProgress() {
-		return environment.getProcessState() == State.STARTING;
-	}
+    @Override
+    public boolean isBootInProgress() {
+        return environment.getProcessState() == State.STARTING;
+    }
 
-	@Override
+    @Override
     public boolean isStarted() {
         return environment.getProcessState() == State.RUNNING || environment.getProcessState() == State.RELOAD_REQUIRED
                 || environment.getProcessState() == State.RESTART_REQUIRED;

@@ -15,33 +15,33 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 @SuppressWarnings("nls")
 public class XATransaction extends TransactionContainer {
-	private static Random RANDOM = new Random();
-	private XidImpl xid;
+    private static Random RANDOM = new Random();
+    private XidImpl xid;
 
-	public XATransaction() {
-		super();
-	}
+    public XATransaction() {
+        super();
+    }
 
     protected void before(TransactionQueryTestCase test) {
         try {
-        	xid = createXid();
-        	XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
-        	xaResource.setTransactionTimeout(120);
-        	xaResource.start(xid, XAResource.TMNOFLAGS);
-        	debug("Start transaction using XID: " + xid.toString());
+            xid = createXid();
+            XAResource xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
+            xaResource.setTransactionTimeout(120);
+            xaResource.start(xid, XAResource.TMNOFLAGS);
+            debug("Start transaction using XID: " + xid.toString());
 
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
         }
     }
 
-	public static XidImpl createXid() {
-		byte[] gid = new byte[10];
-		byte[] bid = new byte[10];
-		RANDOM.nextBytes(gid);
-		RANDOM.nextBytes(bid);
-		return new XidImpl(0, gid, bid);
-	}
+    public static XidImpl createXid() {
+        byte[] gid = new byte[10];
+        byte[] bid = new byte[10];
+        RANDOM.nextBytes(gid);
+        RANDOM.nextBytes(bid);
+        return new XidImpl(0, gid, bid);
+    }
 
     protected void after(TransactionQueryTestCase test) {
         boolean delistSuccessful = false;
@@ -50,29 +50,29 @@ public class XATransaction extends TransactionContainer {
         XAResource xaResource = null;
         boolean exception = false;
         try {
-        	xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
+            xaResource = test.getConnectionStrategy().getXAConnection().getXAResource();
 
-		xaResource.end(xid, XAResource.TMSUCCESS);
+        xaResource.end(xid, XAResource.TMSUCCESS);
 
             if (!test.exceptionExpected() && xaResource.prepare(xid) == XAResource.XA_OK) {
-            	commit = true;
+                commit = true;
             }
             delistSuccessful = true;
         } catch (Exception e) {
-        	exception = true;
+            exception = true;
             throw new TransactionRuntimeException(e);
         } finally {
             try {
                 if (!delistSuccessful || test.rollbackAllways()|| test.exceptionOccurred()) {
-                	xaResource.rollback(xid);
+                    xaResource.rollback(xid);
                 }
                 else if (commit) {
-                	xaResource.commit(xid, true);
+                    xaResource.commit(xid, true);
                 }
             } catch (Exception e) {
-            	if (!exception) {
-            		throw new TransactionRuntimeException(e);
-            	}
+                if (!exception) {
+                    throw new TransactionRuntimeException(e);
+                }
             }
         }
     }

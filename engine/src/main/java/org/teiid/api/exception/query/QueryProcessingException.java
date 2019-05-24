@@ -27,9 +27,9 @@ import org.teiid.core.TeiidProcessingException;
  */
 public class QueryProcessingException extends TeiidProcessingException {
 
-	private static final long serialVersionUID = -1976946369356781737L;
+    private static final long serialVersionUID = -1976946369356781737L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryProcessingException() {

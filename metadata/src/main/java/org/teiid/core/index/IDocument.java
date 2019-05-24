@@ -19,17 +19,17 @@ package org.teiid.core.index;
  */
 
 public interface IDocument {
-	/**
-	 * Returns the encoding for this document
-	 */
-	String getEncoding();
-	/**
-	 * returns the name of the document (e.g. its path for a <code>File</code>, or its relative path
-	 * in the workbench for an <code>IFile</code>).
-	 */
-	String getName();
-	/**
-	 * Returns the type of the document.
-	 */
-	String getType();
+    /**
+     * Returns the encoding for this document
+     */
+    String getEncoding();
+    /**
+     * returns the name of the document (e.g. its path for a <code>File</code>, or its relative path
+     * in the workbench for an <code>IFile</code>).
+     */
+    String getName();
+    /**
+     * Returns the type of the document.
+     */
+    String getType();
 }

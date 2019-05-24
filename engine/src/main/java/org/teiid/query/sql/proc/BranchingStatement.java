@@ -30,62 +30,62 @@ import org.teiid.query.sql.LanguageVisitor;
  */
 public class BranchingStatement extends Statement {
 
-	public enum BranchingMode {
-		/**
-		 * Teiid specific - only allowed to target loops
-		 */
-		BREAK,
-		/**
-		 * Teiid specific - only allowed to target loops
-		 */
-		CONTINUE,
-		/**
-		 * ANSI - allowed to leave any block
-		 */
-		LEAVE
-	}
+    public enum BranchingMode {
+        /**
+         * Teiid specific - only allowed to target loops
+         */
+        BREAK,
+        /**
+         * Teiid specific - only allowed to target loops
+         */
+        CONTINUE,
+        /**
+         * ANSI - allowed to leave any block
+         */
+        LEAVE
+    }
 
-	private String label;
-	private BranchingMode mode;
+    private String label;
+    private BranchingMode mode;
 
-	public BranchingStatement() {
-		this(BranchingMode.BREAK);
-	}
+    public BranchingStatement() {
+        this(BranchingMode.BREAK);
+    }
 
-	public BranchingStatement(BranchingMode mode) {
-		this.mode = mode;
-	}
+    public BranchingStatement(BranchingMode mode) {
+        this.mode = mode;
+    }
 
-	public String getLabel() {
-		return label;
-	}
+    public String getLabel() {
+        return label;
+    }
 
-	public void setLabel(String label) {
-		this.label = label;
-	}
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
-	public void setMode(BranchingMode mode) {
-		this.mode = mode;
-	}
+    public void setMode(BranchingMode mode) {
+        this.mode = mode;
+    }
 
-	public BranchingMode getMode() {
-		return mode;
-	}
+    public BranchingMode getMode() {
+        return mode;
+    }
 
     /**
      * Return the type for this statement, this is one of the types
      * defined on the statement object.
      */
     public int getType() {
-    	switch (mode) {
-    	case BREAK:
-    		return Statement.TYPE_BREAK;
-    	case CONTINUE:
-    		return Statement.TYPE_CONTINUE;
-    	case LEAVE:
-    		return Statement.TYPE_LEAVE;
-    	}
-    	throw new AssertionError();
+        switch (mode) {
+        case BREAK:
+            return Statement.TYPE_BREAK;
+        case CONTINUE:
+            return Statement.TYPE_CONTINUE;
+        case LEAVE:
+            return Statement.TYPE_LEAVE;
+        }
+        throw new AssertionError();
     }
 
     // =========================================================================
@@ -118,7 +118,7 @@ public class BranchingStatement extends Statement {
             return true;
         }
         if (!(obj instanceof BranchingStatement)) {
-        	return false;
+            return false;
         }
         BranchingStatement other = (BranchingStatement)obj;
         return StringUtil.equalsIgnoreCase(label, other.label)

@@ -49,12 +49,12 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class CommandBuilder {
 
-	public static LanguageFactory getLanuageFactory() {
-		return LanguageFactory.INSTANCE;
-	}
+    public static LanguageFactory getLanuageFactory() {
+        return LanguageFactory.INSTANCE;
+    }
 
     private QueryMetadataInterface metadata;
-	private LanguageBridgeFactory languageBridgeFactory;
+    private LanguageBridgeFactory languageBridgeFactory;
 
     /**
      * @param metadata The metadata describing the datasource which the query is for.
@@ -65,8 +65,8 @@ public class CommandBuilder {
     }
 
     public LanguageBridgeFactory getLanguageBridgeFactory() {
-		return languageBridgeFactory;
-	}
+        return languageBridgeFactory;
+    }
 
     public org.teiid.language.Command getCommand(String queryString) {
         return getCommand(queryString, false, false);
@@ -80,7 +80,7 @@ public class CommandBuilder {
             command = QueryRewriter.rewrite(command, metadata, null);
             expandAllSymbol(command);
             if (generateAliases) {
-            	command = (Command)command.clone();
+                command = (Command)command.clone();
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
             //the language bridge doesn't expect References
@@ -88,21 +88,21 @@ public class CommandBuilder {
             v.setCollectLateral(true);
             PreOrderNavigator.doVisit(command, v);
             for (SubqueryContainer<?> container : v.getValueIteratorProviders()) {
-        			ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
-        				@Override
-        				public Expression replaceExpression(Expression element) {
-        					if (element instanceof Reference) {
-        						return ((Reference)element).getExpression();
-        					}
-        					return element;
-        				}
-        			};
-        			DeepPostOrderNavigator.doVisit(command, visitor);
-    		}
-			return languageBridgeFactory.translate(command);
+                    ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+                        @Override
+                        public Expression replaceExpression(Expression element) {
+                            if (element instanceof Reference) {
+                                return ((Reference)element).getExpression();
+                            }
+                            return element;
+                        }
+                    };
+                    DeepPostOrderNavigator.doVisit(command, visitor);
+            }
+            return languageBridgeFactory.translate(command);
         } catch (TeiidException e) {
             throw new TeiidRuntimeException(e);
-		}
+        }
     }
 
     /**

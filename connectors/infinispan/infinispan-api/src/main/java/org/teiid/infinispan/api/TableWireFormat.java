@@ -26,8 +26,8 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.Column;
 
 public class TableWireFormat implements Serializable{
-	private static final long serialVersionUID = -9204011747402762948L;
-	private int readTag;
+    private static final long serialVersionUID = -9204011747402762948L;
+    private int readTag;
     private int writeTag;
     private Type type;
     private Column column;

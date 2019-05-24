@@ -28,12 +28,12 @@ import org.teiid.metadata.VDBResource;
  */
 
 public class Index implements IIndex {
-	/**
-	 * Maximum size of the index in memory.
-	 */
-	public static final int MAX_FOOTPRINT= 10000000;
+    /**
+     * Maximum size of the index in memory.
+     */
+    public static final int MAX_FOOTPRINT= 10000000;
 
-	private VDBResource indexFile;
+    private VDBResource indexFile;
 
     /*
      * Caching the index input object so we can keep it open for multiple pass querying rather than
@@ -43,124 +43,124 @@ public class Index implements IIndex {
     protected boolean doCache = false;
     private String resourceFileName;
 
-	/**
-	 * String representation of this index.
-	 */
-	public String toString;
+    /**
+     * String representation of this index.
+     */
+    public String toString;
 
-	public Index(VDBResource f) throws IOException {
-		indexFile = f;
-		initialize();
-	}
+    public Index(VDBResource f) throws IOException {
+        indexFile = f;
+        initialize();
+    }
 
-	/**
-	 * @see IIndex#getNumDocuments
-	 */
-	public int getNumDocuments() throws IOException {
+    /**
+     * @see IIndex#getNumDocuments
+     */
+    public int getNumDocuments() throws IOException {
         BlocksIndexInput input = getBlocksIndexInput();
-		try {
+        try {
             input.open();
-			return input.getNumFiles();
-		} finally {
+            return input.getNumFiles();
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * @see IIndex#getNumWords
-	 */
-	public int getNumWords() throws IOException {
+    /**
+     * @see IIndex#getNumWords
+     */
+    public int getNumWords() throws IOException {
         BlocksIndexInput input = getBlocksIndexInput();
-		try {
+        try {
             input.open();
-			return input.getNumWords();
-		} finally {
+            return input.getNumWords();
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * Initialises the indexGenerator.
-	 */
-	public void initialize() throws IOException {
+    /**
+     * Initialises the indexGenerator.
+     */
+    public void initialize() throws IOException {
 
-		// check whether existing index file can be read
+        // check whether existing index file can be read
         BlocksIndexInput mainIndexInput= getBlocksIndexInput();
-		try {
-			mainIndexInput.open();
-		} catch(IOException e) {
-			BlocksIndexInput input = mainIndexInput;
-			try {
-				input.setOpen(true);
-				input.close();
-			} finally {
+        try {
+            mainIndexInput.open();
+        } catch(IOException e) {
+            BlocksIndexInput input = mainIndexInput;
+            try {
+                input.setOpen(true);
+                input.close();
+            } finally {
                 input.setOpen(false);
-			}
+            }
             //System.out.println(" Index.initialize(): Deleting Index file = " + indexFile.getName());
-			mainIndexInput = null;
-			throw e;
-		}
+            mainIndexInput = null;
+            throw e;
+        }
         if( !doCache ) {
             mainIndexInput.close();
         }
-	}
+    }
 
-	/**
-	 * @see IIndex#query
-	 */
-	public IQueryResult[] query(String word) throws IOException {
+    /**
+     * @see IIndex#query
+     */
+    public IQueryResult[] query(String word) throws IOException {
         BlocksIndexInput input= getBlocksIndexInput();
-		try {
-			return input.query(word);
-		} finally {
+        try {
+            return input.query(word);
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
-	public IEntryResult[] queryEntries(char[] prefix) throws IOException {
+    public IEntryResult[] queryEntries(char[] prefix) throws IOException {
         BlocksIndexInput input= getBlocksIndexInput();
-		try {
-			return input.queryEntriesPrefixedBy(prefix);
-		} finally {
+        try {
+            return input.queryEntriesPrefixedBy(prefix);
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * @see IIndex#queryInDocumentNames
-	 */
-	public IQueryResult[] queryInDocumentNames(String word) throws IOException {
+    /**
+     * @see IIndex#queryInDocumentNames
+     */
+    public IQueryResult[] queryInDocumentNames(String word) throws IOException {
         BlocksIndexInput input= getBlocksIndexInput();
-		try {
-			return input.queryInDocumentNames(word);
-		} finally {
+        try {
+            return input.queryInDocumentNames(word);
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
-	/**
-	 * @see IIndex#queryPrefix
-	 */
-	public IQueryResult[] queryPrefix(char[] prefix) throws IOException {
+    /**
+     * @see IIndex#queryPrefix
+     */
+    public IQueryResult[] queryPrefix(char[] prefix) throws IOException {
         BlocksIndexInput input= getBlocksIndexInput();
-		try {
-			return input.queryFilesReferringToPrefix(prefix);
-		} finally {
+        try {
+            return input.queryFilesReferringToPrefix(prefix);
+        } finally {
             if( !doCache ) {
                 input.close();
             }
-		}
-	}
+        }
+    }
 
     /**
      * Overloaded the method in Index to allow a user to specify if the
@@ -192,7 +192,7 @@ public class Index implements IIndex {
         }
     }
 
-	protected BlocksIndexInput getBlocksIndexInput() {
+    protected BlocksIndexInput getBlocksIndexInput() {
         if( doCache ) {
             if( getCachedInput() == null  ) {
                 boolean wasLoaded = false;
@@ -230,10 +230,10 @@ public class Index implements IIndex {
     }
 
     public String toString() {
-    	String str = this.toString;
-    	if (str == null) str = super.toString();
-		str += "(length: "+ indexFile.getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
-    	return str;
+        String str = this.toString;
+        if (str == null) str = super.toString();
+        str += "(length: "+ indexFile.getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
+        return str;
     }
 
     public void setDoCache(boolean theDoCache) {

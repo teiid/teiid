@@ -47,64 +47,64 @@ import org.teiid.query.util.CommandContext;
 
 public abstract class RelationalNode implements Cloneable, BatchProducer {
 
-	static class NodeData {
-		int nodeID;
-		List<? extends Expression> elements;
-		Number estimateNodeCardinality;
-		Number setSizeEstimate;
-		Number depAccessEstimate;
-		Number estimateDepJoinCost;
-		Number estimateJoinCost;
-	}
+    static class NodeData {
+        int nodeID;
+        List<? extends Expression> elements;
+        Number estimateNodeCardinality;
+        Number setSizeEstimate;
+        Number depAccessEstimate;
+        Number estimateDepJoinCost;
+        Number estimateJoinCost;
+    }
 
-	static class ProcessingState {
-		CommandContext context;
-		BufferManager bufferManager;
-		ProcessorDataManager dataMgr;
-		int batchSize;
-		RelationalNodeStatistics nodeStatistics;
-		int beginBatch = 1;
-		List batchRows;
-		boolean lastBatch;
-		boolean closed;
+    static class ProcessingState {
+        CommandContext context;
+        BufferManager bufferManager;
+        ProcessorDataManager dataMgr;
+        int batchSize;
+        RelationalNodeStatistics nodeStatistics;
+        int beginBatch = 1;
+        List batchRows;
+        boolean lastBatch;
+        boolean closed;
 
-		void reset() {
-			this.beginBatch = 1;
-			this.batchRows = null;
-			this.lastBatch = false;
-			this.closed = false;
-		}
-	}
+        void reset() {
+            this.beginBatch = 1;
+            this.batchRows = null;
+            this.lastBatch = false;
+            this.closed = false;
+        }
+    }
 
     private ProcessingState processingState;
-	private NodeData data;
-	/** The parent of this node, null if root. */
+    private NodeData data;
+    /** The parent of this node, null if root. */
     private RelationalNode parent;
 
-	/** Child nodes, usually just 1 or 2 */
-	private RelationalNode[] children = new RelationalNode[2];
-	protected int childCount;
+    /** Child nodes, usually just 1 or 2 */
+    private RelationalNode[] children = new RelationalNode[2];
+    protected int childCount;
 
-	protected RelationalNode() {
+    protected RelationalNode() {
 
-	}
+    }
 
-	public RelationalNode(int nodeID) {
-		this.data = new NodeData();
-		this.data.nodeID = nodeID;
-	}
+    public RelationalNode(int nodeID) {
+        this.data = new NodeData();
+        this.data.nodeID = nodeID;
+    }
 
-	public int getChildCount() {
-		return childCount;
-	}
+    public int getChildCount() {
+        return childCount;
+    }
 
-	public boolean isLastBatch() {
-		return getProcessingState().lastBatch;
-	}
+    public boolean isLastBatch() {
+        return getProcessingState().lastBatch;
+    }
 
-	public void setContext(CommandContext context) {
-		this.getProcessingState().context = context;
-	}
+    public void setContext(CommandContext context) {
+        this.getProcessingState().context = context;
+    }
 
     public void initialize(CommandContext context, BufferManager bufferManager, ProcessorDataManager dataMgr) {
         this.getProcessingState().context = context;
@@ -116,9 +116,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
 
         if (getOutputElements() != null) {
-        	this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize(getOutputElements());
+            this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize(getOutputElements());
         } else {
-        	this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize();
+            this.getProcessingState().batchSize = bufferManager.getProcessorBatchSize();
         }
     }
 
@@ -126,14 +126,14 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return this.getProcessingState().context;
     }
 
-	public int getID() {
-		return this.data.nodeID;
-	}
+    public int getID() {
+        return this.data.nodeID;
+    }
 
     public void setID(int nodeID) {
-    	NodeData newData = new NodeData();
-    	newData.nodeID = nodeID;
-    	newData.elements = this.data.elements;
+        NodeData newData = new NodeData();
+        newData.nodeID = nodeID;
+        newData.elements = this.data.elements;
         this.data = newData;
     }
 
@@ -162,44 +162,44 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             }
         }
         if (this.getProcessingState() != null) {
-        	this.getProcessingState().reset();
+            this.getProcessingState().reset();
         }
     }
 
-	public void setElements(List<? extends Expression> elements) {
-		this.data.elements = elements;
-	}
+    public void setElements(List<? extends Expression> elements) {
+        this.data.elements = elements;
+    }
 
-	@Override
-	public List<? extends Expression> getOutputElements() {
-		return getElements();
-	}
+    @Override
+    public List<? extends Expression> getOutputElements() {
+        return getElements();
+    }
 
-	public List<? extends Expression> getElements() {
-		return this.data.elements;
-	}
+    public List<? extends Expression> getElements() {
+        return this.data.elements;
+    }
 
     public RelationalNode getParent() {
-		return parent;
-	}
+        return parent;
+    }
 
-	public void setParent(RelationalNode parent) {
-		this.parent = parent;
-	}
+    public void setParent(RelationalNode parent) {
+        this.parent = parent;
+    }
 
-	public RelationalNode[] getChildren() {
-		return this.children;
-	}
+    public RelationalNode[] getChildren() {
+        return this.children;
+    }
 
     public void addChild(RelationalNode child) {
         // Set parent of child to match
         child.setParent(this);
 
         if (this.children.length == this.childCount) {
-	        // No room to add - double size of the array and copy
-	        RelationalNode[] newChildren = new RelationalNode[children.length * 2];
-	        System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
-	        this.children = newChildren;
+            // No room to add - double size of the array and copy
+            RelationalNode[] newChildren = new RelationalNode[children.length * 2];
+            System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
+            this.children = newChildren;
         }
         this.children[childCount++] = child;
     }
@@ -220,7 +220,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     }
 
     protected boolean hasPendingRows() {
-    	return this.getProcessingState().batchRows != null;
+        return this.getProcessingState().batchRows != null;
     }
 
     protected TupleBatch pullBatch() {
@@ -242,8 +242,8 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return batch;
     }
 
-	public void open()
-		throws TeiidComponentException, TeiidProcessingException {
+    public void open()
+        throws TeiidComponentException, TeiidProcessingException {
 
         for(int i=0; i<children.length; i++) {
             if(children[i] != null) {
@@ -263,14 +263,14 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @since 4.2
      */
     public final TupleBatch nextBatch() throws BlockedException,  TeiidComponentException, TeiidProcessingException {
-    	CommandContext context = this.getContext();
-		if (context != null && context.isCancelled()) {
-        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
+        CommandContext context = this.getContext();
+        if (context != null && context.isCancelled()) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
         }
         boolean recordStats = context != null && context.getCollectNodeStatistics();
         try {
             while (true) {
-            	//start timer for this batch
+                //start timer for this batch
                 if(recordStats) {
                     this.getProcessingState().nodeStatistics.startBatchTimer();
                 }
@@ -319,14 +319,14 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      * @throws TeiidProcessingException if exception related to user input occured
      * @since 4.2
      */
-	protected abstract TupleBatch nextBatchDirect()
-		throws BlockedException, TeiidComponentException, TeiidProcessingException;
+    protected abstract TupleBatch nextBatchDirect()
+        throws BlockedException, TeiidComponentException, TeiidProcessingException;
 
-	public final void close()
-		throws TeiidComponentException {
+    public final void close()
+        throws TeiidComponentException {
 
         if (!this.getProcessingState().closed) {
-        	closeDirect();
+            closeDirect();
             for(int i=0; i<children.length; i++) {
                 if(children[i] != null) {
                     children[i].close();
@@ -338,9 +338,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
     }
 
-	public void closeDirect() {
+    public void closeDirect() {
 
-	}
+    }
 
     /**
      * Check if the node has been already closed
@@ -350,40 +350,40 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return this.getProcessingState().closed;
     }
 
-	/**
-	 * Helper method for all the node that will filter the elements needed for the next node.
-	 */
-	public static int[] getProjectionIndexes(Map<? extends Expression, Integer> tupleElements, List<? extends Expression> projectElements) {
-		int[] result = new int[projectElements.size()];
+    /**
+     * Helper method for all the node that will filter the elements needed for the next node.
+     */
+    public static int[] getProjectionIndexes(Map<? extends Expression, Integer> tupleElements, List<? extends Expression> projectElements) {
+        int[] result = new int[projectElements.size()];
 
-		int i = 0;
-		for (Expression symbol : projectElements) {
-			Integer index = tupleElements.get(symbol);
-			if (index == null) {
-			    throw new TeiidRuntimeException("Planning error. Could not find symbol: " + symbol); //$NON-NLS-1$
-			}
-			result[i++] = index;
-		}
+        int i = 0;
+        for (Expression symbol : projectElements) {
+            Integer index = tupleElements.get(symbol);
+            if (index == null) {
+                throw new TeiidRuntimeException("Planning error. Could not find symbol: " + symbol); //$NON-NLS-1$
+            }
+            result[i++] = index;
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues) {
-		return projectTuple(indexes, tupleValues, false);
-	}
+    public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues) {
+        return projectTuple(indexes, tupleValues, false);
+    }
 
-	public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues, boolean omitMissing) {
-		List<T> projectedTuple = new ArrayList<T>(indexes.length);
-		for (int index : indexes) {
-			if (omitMissing && index == -1) {
-				projectedTuple.add(null);
-			} else {
-				projectedTuple.add(tupleValues.get(index));
-			}
-		}
+    public static <T> List<T> projectTuple(int[] indexes, List<T> tupleValues, boolean omitMissing) {
+        List<T> projectedTuple = new ArrayList<T>(indexes.length);
+        for (int index : indexes) {
+            if (omitMissing && index == -1) {
+                projectedTuple.add(null);
+            } else {
+                projectedTuple.add(tupleValues.get(index));
+            }
+        }
 
-		return projectedTuple;
-	}
+        return projectedTuple;
+    }
 
     /**
      * Useful function to build an element lookup map from an element list.
@@ -407,9 +407,9 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      */
     private void recordBatch(TupleBatch batch) {
         if (!LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
-        	return;
+            return;
         }
-    	// Print summary
+        // Print summary
         StringBuffer str = new StringBuffer();
         str.append(getClassName());
         str.append("("); //$NON-NLS-1$
@@ -420,7 +420,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
         // Print batch contents
         for (long row = batch.getBeginRow(); row <= batch.getEndRow(); row++) {
-        	str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            str.append("\t").append(row).append(": ").append(batch.getTuple(row)).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, str.toString());
     }
@@ -429,41 +429,41 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
     //            O V E R R I D D E N    O B J E C T     M E T H O D S
     // =========================================================================
 
-	/**
-	 * Print plantree structure starting at this node
-	 * @return String representing this node and all children under this node
-	 */
-	public String toString() {
-		StringBuffer str = new StringBuffer();
-		getRecursiveString(str, 0);
-		return str.toString();
-	}
+    /**
+     * Print plantree structure starting at this node
+     * @return String representing this node and all children under this node
+     */
+    public String toString() {
+        StringBuffer str = new StringBuffer();
+        getRecursiveString(str, 0);
+        return str.toString();
+    }
 
-	/**
-	 * Just print single node to string instead of node+recursive plan.
-	 * @return String representing just this node
-	 */
-	public String nodeToString() {
-		StringBuffer str = new StringBuffer();
-		getNodeString(str);
-		return str.toString();
-	}
+    /**
+     * Just print single node to string instead of node+recursive plan.
+     * @return String representing just this node
+     */
+    public String nodeToString() {
+        StringBuffer str = new StringBuffer();
+        getNodeString(str);
+        return str.toString();
+    }
 
-	// Define a single tab
-	private static final String TAB = "  "; //$NON-NLS-1$
+    // Define a single tab
+    private static final String TAB = "  "; //$NON-NLS-1$
 
-	private void setTab(StringBuffer str, int tabStop) {
-		for(int i=0; i<tabStop; i++) {
-			str.append(TAB);
-		}
-	}
+    private void setTab(StringBuffer str, int tabStop) {
+        for(int i=0; i<tabStop; i++) {
+            str.append(TAB);
+        }
+    }
 
-	private void getRecursiveString(StringBuffer str, int tabLevel) {
-		setTab(str, tabLevel);
-		getNodeString(str);
-		str.append("\n"); //$NON-NLS-1$
+    private void getRecursiveString(StringBuffer str, int tabLevel) {
+        setTab(str, tabLevel);
+        getNodeString(str);
+        str.append("\n"); //$NON-NLS-1$
 
-		// Recursively add children at one greater tab level
+        // Recursively add children at one greater tab level
         for(int i=0; i<children.length; i++) {
             if(children[i] != null) {
                 children[i].getRecursiveString(str, tabLevel+1);
@@ -471,37 +471,37 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 break;
             }
         }
-	}
+    }
 
-	protected void getNodeString(StringBuffer str) {
-		str.append(getClassName());
-		str.append("("); //$NON-NLS-1$
-		str.append(getID());
-		str.append(") output="); //$NON-NLS-1$
-		str.append(getElements());
-		str.append(" "); //$NON-NLS-1$
-	}
+    protected void getNodeString(StringBuffer str) {
+        str.append(getClassName());
+        str.append("("); //$NON-NLS-1$
+        str.append(getID());
+        str.append(") output="); //$NON-NLS-1$
+        str.append(getElements());
+        str.append(" "); //$NON-NLS-1$
+    }
 
-	/**
-	 * Helper for the toString to get the class name from the full class name.
-	 * @param fullClassName Fully qualified class name
-	 * @return Just the last part which is the class name
-	 */
-	protected String getClassName() {
-		return this.getClass().getSimpleName();
-	}
+    /**
+     * Helper for the toString to get the class name from the full class name.
+     * @param fullClassName Fully qualified class name
+     * @return Just the last part which is the class name
+     */
+    protected String getClassName() {
+        return this.getClass().getSimpleName();
+    }
 
-	/**
-	 * All the implementation of Cloneable interface need to implement clone() method.
-	 * The plan is only clonable in the pre-execution stage, not the execution state
-	 * (things like program state, result sets, etc). It's only safe to call that method in between query processings,
-	 * in other words, it's only safe to call clone() on a plan after nextTuple() returns null,
-	 * meaning the plan has finished processing.
-	 */
-	public abstract Object clone();
+    /**
+     * All the implementation of Cloneable interface need to implement clone() method.
+     * The plan is only clonable in the pre-execution stage, not the execution state
+     * (things like program state, result sets, etc). It's only safe to call that method in between query processings,
+     * in other words, it's only safe to call clone() on a plan after nextTuple() returns null,
+     * meaning the plan has finished processing.
+     */
+    public abstract Object clone();
 
-	protected void copyTo(RelationalNode target){
-		target.data = this.data;
+    protected void copyTo(RelationalNode target){
+        target.data = this.data;
 
         target.children = new RelationalNode[this.children.length];
         for(int i=0; i<this.children.length; i++) {
@@ -513,7 +513,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
             }
         }
         target.childCount = this.childCount;
-	}
+    }
 
     public PlanNode getDescriptionProperties() {
         // Default implementation - should be overridden
@@ -525,7 +525,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         }
         List<String> costEstimates = this.getCostEstimates();
         if(costEstimates != null) {
-        	result.addProperty(PROP_NODE_COST_ESTIMATES, costEstimates);
+            result.addProperty(PROP_NODE_COST_ESTIMATES, costEstimates);
         }
         for(int i=0; i<children.length; i++) {
             if(children[i] != null) {
@@ -593,36 +593,36 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return this.data.estimateNodeCardinality;
     }
 
-	private final ProcessingState getProcessingState() {
-		//construct lazily since not all tests call initialize
-		if (this.processingState == null) {
-			this.processingState = new ProcessingState();
-		}
-		return processingState;
-	}
+    private final ProcessingState getProcessingState() {
+        //construct lazily since not all tests call initialize
+        if (this.processingState == null) {
+            this.processingState = new ProcessingState();
+        }
+        return processingState;
+    }
 
-	/**
-	 * Return true if the node provides a final buffer via getBuffer
-	 */
-	public boolean hasBuffer() {
-		return false;
-	}
+    /**
+     * Return true if the node provides a final buffer via getBuffer
+     */
+    public boolean hasBuffer() {
+        return false;
+    }
 
-	/**
+    /**
      * return the final tuple buffer or null if not available
      * @return
-	 * @throws TeiidProcessingException
-	 * @throws TeiidComponentException
-	 * @throws BlockedException
+     * @throws TeiidProcessingException
+     * @throws TeiidComponentException
+     * @throws BlockedException
      */
-	public final TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		CommandContext context = this.getContext();
-		if (context != null && context.isCancelled()) {
-        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
+    public final TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        CommandContext context = this.getContext();
+        if (context != null && context.isCancelled()) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getContext().getRequestId()));
         }
         boolean recordStats = context != null && context.getCollectNodeStatistics() && !isLastBatch();
         try {
-        	//start timer for this batch
+            //start timer for this batch
             if(recordStats) {
                 this.getProcessingState().nodeStatistics.startBatchTimer();
             }
@@ -634,10 +634,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(buffer.getRowCount(), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                 this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
                 if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE) && !buffer.isForwardOnly()) {
-                	for (long i = 1; i <= buffer.getRowCount(); i+=buffer.getBatchSize()) {
-                		TupleBatch tb = buffer.getBatch(i);
-                		recordBatch(tb);
-                	}
+                    for (long i = 1; i <= buffer.getRowCount(); i+=buffer.getBatchSize()) {
+                        TupleBatch tb = buffer.getBatch(i);
+                        recordBatch(tb);
+                    }
                 }
 
                 recordStats = false;
@@ -656,40 +656,40 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
         }
-	}
+    }
 
-	/**
-	 * For subclasses to override if they wish to return a buffer rather than batches.
-	 * @param maxRows
-	 * @return
-	 * @throws BlockedException
-	 * @throws TeiidComponentException
-	 * @throws TeiidProcessingException
-	 */
-	protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-		return null;
-	}
+    /**
+     * For subclasses to override if they wish to return a buffer rather than batches.
+     * @param maxRows
+     * @return
+     * @throws BlockedException
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    protected TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        return null;
+    }
 
-	public static void unwrapException(TeiidRuntimeException e)
-	throws TeiidComponentException, TeiidProcessingException {
-		if (e == null) {
-			return;
-		}
-		if (e.getCause() instanceof TeiidComponentException) {
-			throw (TeiidComponentException)e.getCause();
-		}
-		if (e.getCause() instanceof TeiidProcessingException) {
-			throw (TeiidProcessingException)e.getCause();
-		}
-		throw e;
-	}
+    public static void unwrapException(TeiidRuntimeException e)
+    throws TeiidComponentException, TeiidProcessingException {
+        if (e == null) {
+            return;
+        }
+        if (e.getCause() instanceof TeiidComponentException) {
+            throw (TeiidComponentException)e.getCause();
+        }
+        if (e.getCause() instanceof TeiidProcessingException) {
+            throw (TeiidProcessingException)e.getCause();
+        }
+        throw e;
+    }
 
-	/**
-	 * @param transactionalReads
-	 * @return true if required, false if not required, and null if a single source command is issued and a transaction may be needed.
-	 */
-	public Boolean requiresTransaction(boolean transactionalReads) {
-		return false;
-	}
+    /**
+     * @param transactionalReads
+     * @return true if required, false if not required, and null if a single source command is issued and a transaction may be needed.
+     */
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        return false;
+    }
 
 }

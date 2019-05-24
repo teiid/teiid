@@ -48,9 +48,9 @@ public class ResultsMessage implements Externalizable {
 
     static final long serialVersionUID = 3546924172976187793L;
 
-	private List<? extends List<?>> results;
-	private String[] columnNames;
-	private String[] dataTypes;
+    private List<? extends List<?>> results;
+    private String[] columnNames;
+    private String[] dataTypes;
 
     /** A description of planning that occurred as requested in the request. */
     private PlanNode planDescription;
@@ -91,7 +91,7 @@ public class ResultsMessage implements Externalizable {
     private boolean delayDeserialization;
     byte[] resultBytes;
 
-	private MultiArrayOutputStream serializationBuffer;
+    private MultiArrayOutputStream serializationBuffer;
 
     public ResultsMessage(){
     }
@@ -105,40 +105,40 @@ public class ResultsMessage implements Externalizable {
         this.dataTypes = dataTypes;
     }
 
-	public List<? extends List<?>> getResultsList() {
-		return results;
-	}
-
-	public void processResults() throws TeiidSQLException {
-		if (results == null && resultBytes != null) {
-			try {
-		        CompactObjectInputStream ois = new CompactObjectInputStream(new ByteArrayInputStream(resultBytes), ResultsMessage.class.getClassLoader());
-		        results = BatchSerializer.readBatch(ois, dataTypes);
-			} catch (IOException e) {
-				throw TeiidSQLException.create(e);
-			} catch (ClassNotFoundException e) {
-				throw TeiidSQLException.create(e);
-			} finally {
-				resultBytes = null;
-			}
-		}
-	}
-
-    public void setResults(List<?>[] results) {
-		this.results = Arrays.asList(results);
-	}
-
-    public void setResults(List<? extends List<?>> results) {
-    	this.results = results;
+    public List<? extends List<?>> getResultsList() {
+        return results;
     }
 
-	public  String[] getColumnNames() {
-        return this.columnNames;
-	}
+    public void processResults() throws TeiidSQLException {
+        if (results == null && resultBytes != null) {
+            try {
+                CompactObjectInputStream ois = new CompactObjectInputStream(new ByteArrayInputStream(resultBytes), ResultsMessage.class.getClassLoader());
+                results = BatchSerializer.readBatch(ois, dataTypes);
+            } catch (IOException e) {
+                throw TeiidSQLException.create(e);
+            } catch (ClassNotFoundException e) {
+                throw TeiidSQLException.create(e);
+            } finally {
+                resultBytes = null;
+            }
+        }
+    }
 
-	public String[] getDataTypes() {
+    public void setResults(List<?>[] results) {
+        this.results = Arrays.asList(results);
+    }
+
+    public void setResults(List<? extends List<?>> results) {
+        this.results = results;
+    }
+
+    public  String[] getColumnNames() {
+        return this.columnNames;
+    }
+
+    public String[] getDataTypes() {
         return this.dataTypes;
-	}
+    }
 
     /**
      * @return
@@ -269,19 +269,19 @@ public class ResultsMessage implements Externalizable {
 
         ExceptionHolder holder = (ExceptionHolder)in.readObject();
         if (holder != null) {
-        	this.exception = (TeiidException)holder.getException();
+            this.exception = (TeiidException)holder.getException();
         }
 
         //delayed deserialization
         if (results == null && this.exception == null) {
-        	int length = in.readInt();
+            int length = in.readInt();
             resultBytes = new byte[length];
             in.readFully(resultBytes);
         }
 
         List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
         if (holderList != null) {
-        	this.warnings = ExceptionHolder.toThrowables(holderList);
+            this.warnings = ExceptionHolder.toThrowables(holderList);
         }
 
         firstRow = in.readInt();
@@ -295,11 +295,11 @@ public class ResultsMessage implements Externalizable {
         annotations = ExternalizeUtil.readList(in, Annotation.class);
         isUpdateResult = in.readBoolean();
         if (isUpdateResult) {
-        	try {
-        		updateCount = in.readInt();
-        	} catch (OptionalDataException e) {
-        	} catch (EOFException e) {
-        	}
+            try {
+                updateCount = in.readInt();
+            } catch (OptionalDataException e) {
+            } catch (EOFException e) {
+            }
         }
     }
 
@@ -310,18 +310,18 @@ public class ResultsMessage implements Externalizable {
 
         // Results data
         if (delayDeserialization) {
-        	BatchSerializer.writeBatch(out, dataTypes, null, clientSerializationVersion);
-    	} else {
-        	BatchSerializer.writeBatch(out, dataTypes, results, clientSerializationVersion);
-    	}
+            BatchSerializer.writeBatch(out, dataTypes, null, clientSerializationVersion);
+        } else {
+            BatchSerializer.writeBatch(out, dataTypes, results, clientSerializationVersion);
+        }
 
         // Plan descriptions
         out.writeObject(this.planDescription);
 
         if (exception != null) {
-        	out.writeObject(new ExceptionHolder(exception));
+            out.writeObject(new ExceptionHolder(exception));
         } else {
-        	out.writeObject(exception);
+            out.writeObject(exception);
         }
 
         if (delayDeserialization && results != null) {
@@ -332,9 +332,9 @@ public class ResultsMessage implements Externalizable {
         }
 
         if (this.warnings != null) {
-        	out.writeObject(ExceptionHolder.toExceptionHolders(this.warnings));
+            out.writeObject(ExceptionHolder.toExceptionHolders(this.warnings));
         } else {
-        	out.writeObject(this.warnings);
+            out.writeObject(this.warnings);
         }
 
         out.writeInt(firstRow);
@@ -348,7 +348,7 @@ public class ResultsMessage implements Externalizable {
         ExternalizeUtil.writeCollection(out, annotations);
         out.writeBoolean(isUpdateResult);
         if (isUpdateResult) {
-        	out.writeInt(updateCount);
+            out.writeInt(updateCount);
         }
     }
 
@@ -357,19 +357,19 @@ public class ResultsMessage implements Externalizable {
      * @return the size of the data bytes
      * @throws IOException
      */
-	public int serialize(boolean keepSerialization) throws IOException {
-		if (serializationBuffer == null) {
-			serializationBuffer = new MultiArrayOutputStream(1 << 13);
-			CompactObjectOutputStream oos = new CompactObjectOutputStream(serializationBuffer);
-			BatchSerializer.writeBatch(oos, dataTypes, results, clientSerializationVersion);
-			oos.close();
-		}
-		int result = serializationBuffer.getCount();
-		if (!keepSerialization) {
-			serializationBuffer = null;
-		}
-		return result;
-	}
+    public int serialize(boolean keepSerialization) throws IOException {
+        if (serializationBuffer == null) {
+            serializationBuffer = new MultiArrayOutputStream(1 << 13);
+            CompactObjectOutputStream oos = new CompactObjectOutputStream(serializationBuffer);
+            BatchSerializer.writeBatch(oos, dataTypes, results, clientSerializationVersion);
+            oos.close();
+        }
+        int result = serializationBuffer.getCount();
+        if (!keepSerialization) {
+            serializationBuffer = null;
+        }
+        return result;
+    }
 
     /**
      * @return
@@ -411,32 +411,32 @@ public class ResultsMessage implements Externalizable {
             .toString();
     }
 
-	public void setUpdateResult(boolean isUpdateResult) {
-		this.isUpdateResult = isUpdateResult;
-	}
+    public void setUpdateResult(boolean isUpdateResult) {
+        this.isUpdateResult = isUpdateResult;
+    }
 
-	public boolean isUpdateResult() {
-		return isUpdateResult;
-	}
+    public boolean isUpdateResult() {
+        return isUpdateResult;
+    }
 
-	public byte getClientSerializationVersion() {
-		return clientSerializationVersion;
-	}
+    public byte getClientSerializationVersion() {
+        return clientSerializationVersion;
+    }
 
-	public void setClientSerializationVersion(byte clientSerializationVersion) {
-		this.clientSerializationVersion = clientSerializationVersion;
-	}
+    public void setClientSerializationVersion(byte clientSerializationVersion) {
+        this.clientSerializationVersion = clientSerializationVersion;
+    }
 
-	public void setUpdateCount(int updateCount) {
-		this.updateCount = updateCount;
-	}
+    public void setUpdateCount(int updateCount) {
+        this.updateCount = updateCount;
+    }
 
-	public int getUpdateCount() {
-		return updateCount;
-	}
+    public int getUpdateCount() {
+        return updateCount;
+    }
 
-	public void setDelayDeserialization(boolean delayDeserialization) {
-		this.delayDeserialization = delayDeserialization;
-	}
+    public void setDelayDeserialization(boolean delayDeserialization) {
+        this.delayDeserialization = delayDeserialization;
+    }
 }
 

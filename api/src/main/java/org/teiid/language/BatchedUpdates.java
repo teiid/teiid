@@ -53,12 +53,12 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
      * @return
      */
     public boolean isSingleResult() {
-		return singleResult;
-	}
+        return singleResult;
+    }
 
     public void setSingleResult(boolean atomic) {
-		this.singleResult = atomic;
-	}
+        this.singleResult = atomic;
+    }
 
     @Override
     public String toString() {
@@ -66,24 +66,24 @@ public class BatchedUpdates extends BaseLanguageObject implements Command {
     }
 
     public String toString(boolean allCommands) {
-    	StringBuffer result = new StringBuffer();
-    	int toDisplay = updateCommands.size();
-    	boolean overMax = false;
-    	if (!allCommands && toDisplay > MAX_COMMANDS_TOSTRING) {
-    	    toDisplay = MAX_COMMANDS_TOSTRING;
-    	    overMax = true;
-    	}
-    	for (int i = 0; i < toDisplay; i++) {
-    	    if (i > 0) {
-    	        result.append("\n"); //$NON-NLS-1$
-    	    }
-    		result.append(updateCommands.get(i).toString());
-    		result.append(";"); //$NON-NLS-1$
-    	}
-    	if (overMax) {
-    	    result.append("\n..."); //$NON-NLS-1$
-    	}
-    	return result.toString();
+        StringBuffer result = new StringBuffer();
+        int toDisplay = updateCommands.size();
+        boolean overMax = false;
+        if (!allCommands && toDisplay > MAX_COMMANDS_TOSTRING) {
+            toDisplay = MAX_COMMANDS_TOSTRING;
+            overMax = true;
+        }
+        for (int i = 0; i < toDisplay; i++) {
+            if (i > 0) {
+                result.append("\n"); //$NON-NLS-1$
+            }
+            result.append(updateCommands.get(i).toString());
+            result.append(";"); //$NON-NLS-1$
+        }
+        if (overMax) {
+            result.append("\n..."); //$NON-NLS-1$
+        }
+        return result.toString();
     }
 
 }

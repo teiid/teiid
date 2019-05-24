@@ -217,8 +217,8 @@ public class TestDDLMetadataStore {
         assertEquals(expected, new String(out.toByteArray()));
 
         String exportedDdl = admin.getSchema("empty", "2", null, null, null);
-		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("first-vdb.ddl")),
-				exportedDdl);
+        Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("first-vdb.ddl")),
+                exportedDdl);
     }
 
     @Test

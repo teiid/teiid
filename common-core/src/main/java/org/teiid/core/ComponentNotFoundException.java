@@ -24,9 +24,9 @@ package org.teiid.core;
  */
 public class ComponentNotFoundException extends TeiidComponentException {
 
-	private static final long serialVersionUID = 8484545412724259223L;
+    private static final long serialVersionUID = 8484545412724259223L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public ComponentNotFoundException(  ) {

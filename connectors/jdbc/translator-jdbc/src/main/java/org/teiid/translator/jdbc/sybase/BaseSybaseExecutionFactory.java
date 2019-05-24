@@ -39,19 +39,19 @@ import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
 
 public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
 
-	@Override
+    @Override
     public boolean useAsInGroupAlias() {
-    	return false;
+        return false;
     }
 
     @Override
     public boolean hasTimeType() {
-    	return false;
+        return false;
     }
 
     @Override
     public int getTimestampNanoPrecision() {
-    	return 3;
+        return 3;
     }
 
     /**
@@ -59,97 +59,97 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
      */
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
-    	if (!(command instanceof SetQuery)) {
-    		return null;
-    	}
-    	SetQuery queryCommand = (SetQuery)command;
-		if (queryCommand.getLimit() == null) {
-			return null;
-    	}
-		Limit limit = queryCommand.getLimit();
-		OrderBy orderBy = queryCommand.getOrderBy();
-		queryCommand.setLimit(null);
-		queryCommand.setOrderBy(null);
-		List<Object> parts = new ArrayList<Object>(6);
-		if (queryCommand.getWith() != null) {
-			With with = queryCommand.getWith();
-			queryCommand.setWith(null);
-			parts.add(with);
-		}
-		parts.add("SELECT "); //$NON-NLS-1$
-		parts.addAll(translateLimit(limit, context));
-		parts.add(" * FROM ("); //$NON-NLS-1$
-		parts.add(queryCommand);
-		parts.add(") AS X"); //$NON-NLS-1$
-		if (orderBy != null) {
-			parts.add(" "); //$NON-NLS-1$
-			parts.add(orderBy);
-		}
-		return parts;
+        if (!(command instanceof SetQuery)) {
+            return null;
+        }
+        SetQuery queryCommand = (SetQuery)command;
+        if (queryCommand.getLimit() == null) {
+            return null;
+        }
+        Limit limit = queryCommand.getLimit();
+        OrderBy orderBy = queryCommand.getOrderBy();
+        queryCommand.setLimit(null);
+        queryCommand.setOrderBy(null);
+        List<Object> parts = new ArrayList<Object>(6);
+        if (queryCommand.getWith() != null) {
+            With with = queryCommand.getWith();
+            queryCommand.setWith(null);
+            parts.add(with);
+        }
+        parts.add("SELECT "); //$NON-NLS-1$
+        parts.addAll(translateLimit(limit, context));
+        parts.add(" * FROM ("); //$NON-NLS-1$
+        parts.add(queryCommand);
+        parts.add(") AS X"); //$NON-NLS-1$
+        if (orderBy != null) {
+            parts.add(" "); //$NON-NLS-1$
+            parts.add(orderBy);
+        }
+        return parts;
     }
 
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (!supportsCrossJoin()) {
-    		DB2ExecutionFactory.convertCrossJoinToInner(obj, getLanguageFactory());
-    	}
-    	return super.translate(obj, context);
+        if (!supportsCrossJoin()) {
+            DB2ExecutionFactory.convertCrossJoinToInner(obj, getLanguageFactory());
+        }
+        return super.translate(obj, context);
     }
 
     protected boolean supportsCrossJoin() {
-    	return false;
+        return false;
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
+        return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
     }
 
     @Override
     public boolean useSelectLimit() {
-    	return true;
+        return true;
     }
 
     @Override
     public Object retrieveValue(ResultSet results, int columnIndex,
-    		Class<?> expectedType) throws SQLException {
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
-    	}
-    	return super.retrieveValue(results, columnIndex, expectedType);
+            Class<?> expectedType) throws SQLException {
+        if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
+            expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
+        }
+        return super.retrieveValue(results, columnIndex, expectedType);
     }
 
     @Override
     public Object retrieveValue(CallableStatement results, int parameterIndex,
-    		Class<?> expectedType) throws SQLException {
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
-    	}
-    	return super.retrieveValue(results, parameterIndex, expectedType);
+            Class<?> expectedType) throws SQLException {
+        if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
+            expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
+        }
+        return super.retrieveValue(results, parameterIndex, expectedType);
     }
 
     @Override
     public void bindValue(PreparedStatement stmt, Object param,
-    		Class<?> paramType, int i) throws SQLException {
-    	if (paramType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		paramType = TypeFacility.RUNTIME_TYPES.SHORT;
-    		param = ((Byte)param).shortValue();
-    	}
-    	super.bindValue(stmt, param, paramType, i);
+            Class<?> paramType, int i) throws SQLException {
+        if (paramType == TypeFacility.RUNTIME_TYPES.BYTE) {
+            paramType = TypeFacility.RUNTIME_TYPES.SHORT;
+            param = ((Byte)param).shortValue();
+        }
+        super.bindValue(stmt, param, paramType, i);
     }
 
     public boolean nullPlusNonNullIsNull() {
-    	return false;
+        return false;
     }
 
     public boolean booleanNullable() {
-    	return false;
+        return false;
     }
 
     @Override
     public String getTemporaryTableName(String prefix) {
-    	return "#" + super.getTemporaryTableName(prefix); //$NON-NLS-1$
+        return "#" + super.getTemporaryTableName(prefix); //$NON-NLS-1$
     }
 
     @Override

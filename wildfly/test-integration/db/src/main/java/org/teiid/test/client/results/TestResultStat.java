@@ -30,10 +30,10 @@ import org.teiid.test.client.TestResult;
 public class TestResultStat implements TestResult, Serializable {
 
     /**
-	 * @since
-	 */
-	private static final long serialVersionUID = 6670189391506288744L;
-	protected int resultStatus = -1;
+     * @since
+     */
+    private static final long serialVersionUID = 6670189391506288744L;
+    protected int resultStatus = -1;
     protected String queryID;
     protected String querySetID;
     protected String errorMsg;
@@ -47,15 +47,15 @@ public class TestResultStat implements TestResult, Serializable {
 
 
     public TestResultStat(final String querySetID, final String queryID, String query) {
-    	this.querySetID = querySetID;
-    	this.queryID = queryID;
+        this.querySetID = querySetID;
+        this.queryID = queryID;
         this.query = query;
 
     }
 
     public TestResultStat(final String querySetID, final String queryID, String query, final int resultStatus, long beginTS, long endTS, final Throwable error) {
-    	this.querySetID = querySetID;
-    	this.queryID = queryID;
+        this.querySetID = querySetID;
+        this.queryID = queryID;
         this.resultStatus = resultStatus;
         this.beginTS = beginTS;
         this.endTS = endTS;
@@ -64,8 +64,8 @@ public class TestResultStat implements TestResult, Serializable {
     }
 
     public TestResultStat(final String querySetID, final String queryID, String query, final int resultStatus, long beginTS, long endTS, final Throwable error, String errorFile) {
-    	this.querySetID = querySetID;
-    	this.queryID = queryID;
+        this.querySetID = querySetID;
+        this.queryID = queryID;
         this.resultStatus = resultStatus;
         this.beginTS = beginTS;
         this.endTS = endTS;
@@ -88,13 +88,13 @@ public class TestResultStat implements TestResult, Serializable {
 
 
 
-	@Override
-	public String getQuerySetID() {
-		// TODO Auto-generated method stub
-		return this.querySetID;
-	}
+    @Override
+    public String getQuerySetID() {
+        // TODO Auto-generated method stub
+        return this.querySetID;
+    }
 
-	public String getQueryID() {
+    public String getQueryID() {
         return queryID;
     }
 
@@ -107,7 +107,7 @@ public class TestResultStat implements TestResult, Serializable {
     }
 
     public void setStatus(int endStatus) {
-	resultStatus = endStatus;
+    resultStatus = endStatus;
     }
 
     public String getExceptionMsg() {
@@ -115,33 +115,33 @@ public class TestResultStat implements TestResult, Serializable {
     }
 
     public void setException(Throwable error){
-	this.error = error;
+    this.error = error;
     }
 
     public  void setExceptionMessage(String errorMsg) {
-	this.errorMsg = errorMsg;
+    this.errorMsg = errorMsg;
 
     }
 
     public Throwable getException() {
-	return this.error;
+    return this.error;
     }
 
     public long getBeginTS() {
-    	return beginTS;
+        return beginTS;
 
     }
 
     public void setBeginTS(long beginTS) {
-	this.beginTS = beginTS;
+    this.beginTS = beginTS;
     }
 
     public long getEndTS() {
-    	return endTS;
+        return endTS;
     }
 
     public void setEndTS(long endts) {
-	this.endTS = endts;
+    this.endTS = endts;
     }
 
     /**
@@ -152,7 +152,7 @@ public class TestResultStat implements TestResult, Serializable {
     }
 
     public void setErrorFile(String errorfile) {
-	this.errorFile = errorfile;
+    this.errorFile = errorfile;
     }
 
 

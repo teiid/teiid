@@ -48,12 +48,12 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
 
     @Override
     public String getLabel() {
-    	return label;
+        return label;
     }
 
     @Override
     public void setLabel(String label) {
-    	this.label = label;
+        this.label = label;
     }
 
     public void process(ProcedurePlan env) throws TeiidComponentException {

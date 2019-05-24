@@ -19,11 +19,11 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="metamatrix", description="A translator for MetaMatrix 5.5 or later")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -140,11 +140,11 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public NullOrder getDefaultNullOrder() {
-    	return NullOrder.UNKNOWN;
+        return NullOrder.UNKNOWN;
     }
 
     @Override
     public boolean supportsSelectWithoutFrom() {
-    	return true;
+        return true;
     }
 }

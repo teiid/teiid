@@ -38,7 +38,7 @@ public class TestSybaseIQTranslator {
 
     @BeforeClass
     public static void setup() throws TranslatorException {
-    	trans.setUseBindVariables(false);
+        trans.setUseBindVariables(false);
         trans.start();
     }
 
@@ -47,17 +47,17 @@ public class TestSybaseIQTranslator {
         Command obj = TranslationHelper.helpTranslate(vdb, input);
 
         TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), trans);
-		try {
-			tc.translateCommand(obj);
-		} catch (TranslatorException e) {
-			throw new RuntimeException(e);
-		}
+        try {
+            tc.translateCommand(obj);
+        } catch (TranslatorException e) {
+            throw new RuntimeException(e);
+        }
 
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
 
     @Test public void testTimestampDiff() {
-    	String input = "SELECT timestampadd(sql_tsi_quarter, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
+        String input = "SELECT timestampadd(sql_tsi_quarter, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT dateadd(QUARTER, 1, SmallA.TimestampValue), dateadd(MILLISECOND, 1000 / 1000000, SmallA.TimestampValue), datediff(MILLISECOND, SmallA.TimestampValue, SmallA.TimestampValue) * 1000000 FROM SmallA";  //$NON-NLS-1$
 
         helpTestVisitor(TranslationHelper.BQT_VDB,

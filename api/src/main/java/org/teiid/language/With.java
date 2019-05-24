@@ -24,19 +24,19 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class With extends BaseLanguageObject {
 
-	private List<WithItem> items;
+    private List<WithItem> items;
 
-	public List<WithItem> getItems() {
-		return items;
-	}
+    public List<WithItem> getItems() {
+        return items;
+    }
 
-	public void setItems(List<WithItem> items) {
-		this.items = items;
-	}
+    public void setItems(List<WithItem> items) {
+        this.items = items;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageObjectVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageObjectVisitor visitor) {
+        visitor.visit(this);
+    }
 
 }

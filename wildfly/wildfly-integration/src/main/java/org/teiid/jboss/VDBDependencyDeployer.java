@@ -47,89 +47,89 @@ import org.jboss.vfs.util.SuffixMatchFilter;
 import org.teiid.adminapi.impl.VDBMetaData;
 
 class VDBDependencyDeployer implements DeploymentUnitProcessor {
-	public static final String LIB = "/lib"; //$NON-NLS-1$
-	private static final VirtualFileFilter DEFAULT_JAR_LIB_FILTER = new SuffixMatchFilter(".jar", VisitorAttributes.DEFAULT); //$NON-NLS-1$
+    public static final String LIB = "/lib"; //$NON-NLS-1$
+    private static final VirtualFileFilter DEFAULT_JAR_LIB_FILTER = new SuffixMatchFilter(".jar", VisitorAttributes.DEFAULT); //$NON-NLS-1$
 
-	@Override
-	public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-		DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
-		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
-			return;
-		}
-
-
-		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		ServiceModuleLoader sml = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
-		deployment.addAttchment(ServiceModuleLoader.class, sml);
-		ArrayList<ModuleDependency> localDependencies = new ArrayList<ModuleDependency>();
-		ArrayList<ModuleDependency> userDependencies = new ArrayList<ModuleDependency>();
-		String moduleNames = deployment.getPropertyValue("lib"); //$NON-NLS-1$
-		ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
-        if (moduleNames != null) {
-        	StringTokenizer modules = new StringTokenizer(moduleNames);
-        	while (modules.hasMoreTokens()) {
-        		String moduleName = modules.nextToken().trim();
-            	try {
-            	    callerModuleLoader.loadModule(moduleName);
-    	        	localDependencies.add(new ModuleDependency(callerModuleLoader, ModuleIdentifier.create(moduleName), false, false, false, false));
-    	        } catch (ModuleLoadException e) {
-    	        	// this is to handle JAR based deployments which take on name like "deployment.<jar-name>"
-    	        	try {
-    	        		sml.loadModule(moduleName);
-    	        		userDependencies.add(new ModuleDependency(sml, ModuleIdentifier.create(moduleName), false, false, false, true));
-    				} catch (ModuleLoadException e1) {
-    		        	throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e1));
-    				}
-    	        }
-        	}
+    @Override
+    public void deploy(DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
+        DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
+        if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
+            return;
         }
 
-		if (!TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
-			try {
-				final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
-				final VirtualFile deploymentRoot = deploymentResourceRoot.getRoot();
-		        if(deploymentRoot == null) {
-		            return;
-		        }
-		        final VirtualFile libDir = deploymentRoot.getChild(LIB);
-				if (libDir.exists()) {
-					final List<VirtualFile> archives = libDir.getChildren(DEFAULT_JAR_LIB_FILTER);
-					for (final VirtualFile archive : archives) {
-						try {
-							final Closeable closable = VFS.mountZip(archive, archive,TempFileProviderService.provider());
-							final ResourceRoot jarArchiveRoot = new ResourceRoot(archive.getName(), archive, new MountHandle(closable));
-							ModuleRootMarker.mark(jarArchiveRoot);
-							deploymentUnit.addToAttachmentList(Attachments.RESOURCE_ROOTS, jarArchiveRoot);
-						} catch (IOException e) {
-							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50018, archive), e);
-						}
-					}
-				}
-			} catch(IOException e) {
-				throw new DeploymentUnitProcessingException(e);
-			}
-		}
+
+        final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+        ServiceModuleLoader sml = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
+        deployment.addAttchment(ServiceModuleLoader.class, sml);
+        ArrayList<ModuleDependency> localDependencies = new ArrayList<ModuleDependency>();
+        ArrayList<ModuleDependency> userDependencies = new ArrayList<ModuleDependency>();
+        String moduleNames = deployment.getPropertyValue("lib"); //$NON-NLS-1$
+        ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
+        if (moduleNames != null) {
+            StringTokenizer modules = new StringTokenizer(moduleNames);
+            while (modules.hasMoreTokens()) {
+                String moduleName = modules.nextToken().trim();
+                try {
+                    callerModuleLoader.loadModule(moduleName);
+                    localDependencies.add(new ModuleDependency(callerModuleLoader, ModuleIdentifier.create(moduleName), false, false, false, false));
+                } catch (ModuleLoadException e) {
+                    // this is to handle JAR based deployments which take on name like "deployment.<jar-name>"
+                    try {
+                        sml.loadModule(moduleName);
+                        userDependencies.add(new ModuleDependency(sml, ModuleIdentifier.create(moduleName), false, false, false, true));
+                    } catch (ModuleLoadException e1) {
+                        throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e1));
+                    }
+                }
+            }
+        }
+
+        if (!TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
+            try {
+                final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
+                final VirtualFile deploymentRoot = deploymentResourceRoot.getRoot();
+                if(deploymentRoot == null) {
+                    return;
+                }
+                final VirtualFile libDir = deploymentRoot.getChild(LIB);
+                if (libDir.exists()) {
+                    final List<VirtualFile> archives = libDir.getChildren(DEFAULT_JAR_LIB_FILTER);
+                    for (final VirtualFile archive : archives) {
+                        try {
+                            final Closeable closable = VFS.mountZip(archive, archive,TempFileProviderService.provider());
+                            final ResourceRoot jarArchiveRoot = new ResourceRoot(archive.getName(), archive, new MountHandle(closable));
+                            ModuleRootMarker.mark(jarArchiveRoot);
+                            deploymentUnit.addToAttachmentList(Attachments.RESOURCE_ROOTS, jarArchiveRoot);
+                        } catch (IOException e) {
+                            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50018, archive), e);
+                        }
+                    }
+                }
+            } catch(IOException e) {
+                throw new DeploymentUnitProcessingException(e);
+            }
+        }
 
 
-		// add translators as dependent modules to this VDB.
+        // add translators as dependent modules to this VDB.
         try {
-			final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
-			final ModuleLoader moduleLoader = Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getModuleLoader(); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.api"), false, false, false, false)); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false, false)); //$NON-NLS-1$
-			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false, false)); //$NON-NLS-1$
-        	if (!localDependencies.isEmpty()) {
-        		moduleSpecification.addLocalDependencies(localDependencies);
-        	}
-        	if (!userDependencies.isEmpty()) {
-        		moduleSpecification.addUserDependencies(userDependencies);
-        	}
-		} catch (ModuleLoadException e) {
-			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name(), e);
-		}
-	}
+            final ModuleSpecification moduleSpecification = deploymentUnit.getAttachment(Attachments.MODULE_SPECIFICATION);
+            final ModuleLoader moduleLoader = Module.getCallerModule().getModule(ModuleIdentifier.create("org.jboss.teiid")).getModuleLoader(); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.api"), false, false, false, false)); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false, false)); //$NON-NLS-1$
+            moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false, false)); //$NON-NLS-1$
+            if (!localDependencies.isEmpty()) {
+                moduleSpecification.addLocalDependencies(localDependencies);
+            }
+            if (!userDependencies.isEmpty()) {
+                moduleSpecification.addUserDependencies(userDependencies);
+            }
+        } catch (ModuleLoadException e) {
+            throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name(), e);
+        }
+    }
 
-	@Override
-	public void undeploy(DeploymentUnit context) {
-	}
+    @Override
+    public void undeploy(DeploymentUnit context) {
+    }
 }

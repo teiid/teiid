@@ -26,23 +26,23 @@ import java.io.InputStream;
  */
 public interface VDBResource {
 
-	/**
-	 * Open an {@link InputStream} to the resource
-	 * @return
-	 * @throws IOException
-	 */
-	InputStream openStream() throws IOException;
+    /**
+     * Open an {@link InputStream} to the resource
+     * @return
+     * @throws IOException
+     */
+    InputStream openStream() throws IOException;
 
-	/**
-	 * Get the size in bytes
-	 * @return
-	 */
-	long getSize();
+    /**
+     * Get the size in bytes
+     * @return
+     */
+    long getSize();
 
-	/**
-	 * Get the resource name.
-	 * @return
-	 */
-	String getName();
+    /**
+     * Get the resource name.
+     * @return
+     */
+    String getName();
 
 }

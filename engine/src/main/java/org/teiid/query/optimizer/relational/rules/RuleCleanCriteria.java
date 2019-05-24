@@ -63,28 +63,28 @@ public final class RuleCleanCriteria implements OptimizerRule {
         return plan;
     }
 
-	private boolean clean(PlanNode plan, boolean removeAllPhantom)
-			throws TeiidComponentException {
-		boolean pushRaiseNull = false;
-		List<? extends Expression> outputCols = (List<? extends Expression>) plan.setProperty(Info.OUTPUT_COLS, null);
-		if (outputCols != null) {
-		    //save the approximate total
-		    plan.setProperty(Info.APPROXIMATE_OUTPUT_COLUMNS, outputCols.size());
-		}
+    private boolean clean(PlanNode plan, boolean removeAllPhantom)
+            throws TeiidComponentException {
+        boolean pushRaiseNull = false;
+        List<? extends Expression> outputCols = (List<? extends Expression>) plan.setProperty(Info.OUTPUT_COLS, null);
+        if (outputCols != null) {
+            //save the approximate total
+            plan.setProperty(Info.APPROXIMATE_OUTPUT_COLUMNS, outputCols.size());
+        }
         for (PlanNode node : plan.getChildren()) {
-        	pushRaiseNull |= clean(node, removeAllPhantom);
+            pushRaiseNull |= clean(node, removeAllPhantom);
         }
         if (plan.getType() == NodeConstants.Types.SELECT) {
-        	pushRaiseNull |= cleanCriteria(plan, removeAllPhantom);
+            pushRaiseNull |= cleanCriteria(plan, removeAllPhantom);
         }
-		return pushRaiseNull;
-	}
+        return pushRaiseNull;
+    }
 
     boolean cleanCriteria(PlanNode critNode, boolean removeAllPhantom) throws TeiidComponentException {
         if (critNode.hasBooleanProperty(NodeConstants.Info.IS_TEMPORARY) || (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)
-        		&& (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED)))) {
-	        NodeEditor.removeChildNode(critNode.getParent(), critNode);
-	        return false;
+                && (removeAllPhantom || critNode.hasBooleanProperty(Info.IS_COPIED)))) {
+            NodeEditor.removeChildNode(critNode.getParent(), critNode);
+            return false;
         }
 
         //TODO: remove dependent set criteria that has not been meaningfully pushed from its parent join

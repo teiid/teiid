@@ -38,7 +38,7 @@ public class ConstantFunction extends SingleArgumentAggregateFunction {
 
     @Override
     public boolean respectsNull() {
-    	return true;
+        return true;
     }
 
     /**

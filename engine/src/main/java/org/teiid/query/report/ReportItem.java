@@ -25,16 +25,16 @@ import java.io.Serializable;
  */
 public class ReportItem implements Serializable {
 
-	private String type;
-	private String message;
+    private String type;
+    private String message;
 
-	public ReportItem(String type) {
-		this.type = type;
-	}
+    public ReportItem(String type) {
+        this.type = type;
+    }
 
-	public String getType() {
-	 	return this.type;
-	}
+    public String getType() {
+         return this.type;
+    }
 
     /**
      * Gets the message.
@@ -53,7 +53,7 @@ public class ReportItem implements Serializable {
     }
 
     public String toString() {
-    	return getType() + ": " + getMessage();     //$NON-NLS-1$
+        return getType() + ": " + getMessage();     //$NON-NLS-1$
     }
 
 }

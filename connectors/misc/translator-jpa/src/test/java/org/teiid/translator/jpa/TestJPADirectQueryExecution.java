@@ -73,11 +73,11 @@ public class TestJPADirectQueryExecution {
         EntityManager connection = Mockito.mock(EntityManager.class);
 
         try {
-        	JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-			execution.execute();
-			fail("the above should have thrown exception");
-		} catch (TranslatorException e) {
-		}
+            JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+            execution.execute();
+            fail("the above should have thrown exception");
+        } catch (TranslatorException e) {
+        }
     }
 
     @Test public void testDelete() throws Exception {
@@ -93,20 +93,20 @@ public class TestJPADirectQueryExecution {
         Mockito.stub(query.executeUpdate()).toReturn(12);
         Mockito.stub(connection.createQuery("delete-query")).toReturn(query);
 
-		ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> argument = ArgumentCaptor.forClass(String.class);
 
-		JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+        execution.execute();
 
-		Mockito.verify(connection, Mockito.times(1)).createQuery(argument.capture());
+        Mockito.verify(connection, Mockito.times(1)).createQuery(argument.capture());
 
-		assertEquals("delete-query", argument.getValue());
+        assertEquals("delete-query", argument.getValue());
 
-		assertArrayEquals(new Object[] {12}, (Object[])execution.next().get(0));
+        assertArrayEquals(new Object[] {12}, (Object[])execution.next().get(0));
     }
 
     @Test public void testCreate() throws Exception {
-    	String input = "exec native('create;', 'one')";
+        String input = "exec native('create;', 'one')";
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -118,10 +118,10 @@ public class TestJPADirectQueryExecution {
         Mockito.stub(connection.merge(argument.capture())).toReturn(new String("one"));
 
         JPQLDirectQueryExecution execution = (JPQLDirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-		execution.execute();
+        execution.execute();
 
-		Mockito.verify(connection).merge(argument.capture());
+        Mockito.verify(connection).merge(argument.capture());
 
-		assertEquals("one", argument.getValue());
+        assertEquals("one", argument.getValue());
     }
 }

@@ -29,13 +29,13 @@ import com.datastax.driver.core.Metadata;
 @SuppressWarnings("nls")
 public class TestCassandraConnectionImpl {
 
-	@Test public void testKeyspaceQuoting() throws Exception {
-		CassandraManagedConnectionFactory config = new CassandraManagedConnectionFactory();
-		config.setKeyspace("\"x\"");
-		Metadata metadata = Mockito.mock(Metadata.class);
-		CassandraConnectionImpl cci = new CassandraConnectionImpl(config, metadata);
-		KeyspaceMetadata key_metadata = Mockito.mock(KeyspaceMetadata.class);
-		Mockito.stub(metadata.getKeyspace("x")).toReturn(key_metadata);
-		assertNotNull(cci.keyspaceInfo());
-	}
+    @Test public void testKeyspaceQuoting() throws Exception {
+        CassandraManagedConnectionFactory config = new CassandraManagedConnectionFactory();
+        config.setKeyspace("\"x\"");
+        Metadata metadata = Mockito.mock(Metadata.class);
+        CassandraConnectionImpl cci = new CassandraConnectionImpl(config, metadata);
+        KeyspaceMetadata key_metadata = Mockito.mock(KeyspaceMetadata.class);
+        Mockito.stub(metadata.getKeyspace("x")).toReturn(key_metadata);
+        assertNotNull(cci.keyspaceInfo());
+    }
 }

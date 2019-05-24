@@ -55,7 +55,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     private String authenticationServerName;
     private String cacheTemplate;
 
-	private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
+    private String trustStoreFileName = System.getProperty("javax.net.ssl.trustStore");
     private String trustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
     private String keyStoreFileName = System.getProperty("javax.net.ssl.keyStore");
     private String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
@@ -93,8 +93,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             buildScriptCacheManager();
         }
 
-		private void buildCacheManager() throws ResourceException {
-			try {
+        private void buildCacheManager() throws ResourceException {
+            try {
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
                 builder.marshaller(new ProtoStreamMarshaller());
@@ -116,10 +116,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
-		}
+        }
 
-		private void buildScriptCacheManager() throws ResourceException {
-			try {
+        private void buildScriptCacheManager() throws ResourceException {
+            try {
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.addServers(remoteServerList);
                 builder.marshaller(new GenericJBossMarshaller());
@@ -132,7 +132,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
-		}
+        }
 
         public void handleSecurity(ConfigurationBuilder builder) throws ResourceException {
             if (saslMechanism != null && supportedSasl(saslMechanism)) {
@@ -211,7 +211,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
                         }
                     }
                 } else {
-                	throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("no_protobuf"));
+                    throw new TranslatorException(InfinispanManagedConnectionFactory.UTIL.getString("no_protobuf"));
                 }
             } catch(Throwable t) {
                 throw new TranslatorException(t);
@@ -229,8 +229,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
         @Override
         public InfinispanConnectionImpl getConnection() throws ResourceException {
-			return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.ctx, this,
-					cacheTemplate);
+            return new InfinispanConnectionImpl(this.cacheManager, this.scriptCacheManager, cacheName, this.ctx, this,
+                    cacheTemplate);
         }
     }
 
@@ -307,12 +307,12 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     }
 
     public String getCacheTemplate() {
-		return cacheTemplate;
-	}
+        return cacheTemplate;
+    }
 
-	public void setCacheTemplate(String cacheTemplate) {
-		this.cacheTemplate = cacheTemplate;
-	}
+    public void setCacheTemplate(String cacheTemplate) {
+        this.cacheTemplate = cacheTemplate;
+    }
 
     @Override
     public int hashCode() {

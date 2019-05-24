@@ -22,16 +22,16 @@ import java.io.Serializable;
 
 public class TableStats implements Serializable {
 
-	private static final long serialVersionUID = 4316568283357485330L;
+    private static final long serialVersionUID = 4316568283357485330L;
 
-	private Number cardinality;
+    private Number cardinality;
 
-	public Number getCardinality() {
-		return cardinality;
-	}
+    public Number getCardinality() {
+        return cardinality;
+    }
 
-	public void setCardinality(Number cardinality) {
-		this.cardinality = cardinality;
-	}
+    public void setCardinality(Number cardinality) {
+        this.cardinality = cardinality;
+    }
 
 }

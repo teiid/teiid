@@ -37,63 +37,63 @@ import org.teiid.query.analysis.AnalysisRecord;
 
 @SuppressWarnings("nls")
 public class TestQueryPlans {
-	static FakeServer server;
-	private static Connection conn;
+    static FakeServer server;
+    private static Connection conn;
 
-	@BeforeClass public static void setUp() throws Exception {
-    	server = new FakeServer(true);
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
-    	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
+    @BeforeClass public static void setUp() throws Exception {
+        server = new FakeServer(true);
+        server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+        conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@AfterClass public static void tearDown() throws Exception {
-		conn.close();
-		server.stop();
-	}
+    @AfterClass public static void tearDown() throws Exception {
+        conn.close();
+        server.stop();
+    }
 
-	@Test public void testNoExec() throws Exception {
-		Statement s = conn.createStatement();
-		s.execute("set noexec on");
-		ResultSet rs = s.executeQuery("select * from all_tables");
-		assertFalse(rs.next());
-		s.execute("SET NOEXEC off");
-		rs = s.executeQuery("select * from all_tables");
-		assertTrue(rs.next());
-	}
+    @Test public void testNoExec() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set noexec on");
+        ResultSet rs = s.executeQuery("select * from all_tables");
+        assertFalse(rs.next());
+        s.execute("SET NOEXEC off");
+        rs = s.executeQuery("select * from all_tables");
+        assertTrue(rs.next());
+    }
 
-	@Test public void testShowPlan() throws Exception {
-		Statement s = conn.createStatement();
-		s.execute("set showplan on");
-		ResultSet rs = s.executeQuery("select * from all_tables");
-		assertNull(s.unwrap(TeiidStatement.class).getDebugLog());
+    @Test public void testShowPlan() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set showplan on");
+        ResultSet rs = s.executeQuery("select * from all_tables");
+        assertNull(s.unwrap(TeiidStatement.class).getDebugLog());
 
-		rs = s.executeQuery("show plan");
-		assertTrue(rs.next());
-		assertEquals(rs.getMetaData().getColumnType(1), Types.CLOB);
-		assertTrue(rs.getString(1).startsWith("ProjectNode"));
-		SQLXML plan = rs.getSQLXML(2);
-		assertTrue(plan.getString().startsWith("<?xml"));
-		assertNull(rs.getObject("DEBUG_LOG"));
-		assertNotNull(rs.getObject("PLAN_TEXT"));
+        rs = s.executeQuery("show plan");
+        assertTrue(rs.next());
+        assertEquals(rs.getMetaData().getColumnType(1), Types.CLOB);
+        assertTrue(rs.getString(1).startsWith("ProjectNode"));
+        SQLXML plan = rs.getSQLXML(2);
+        assertTrue(plan.getString().startsWith("<?xml"));
+        assertNull(rs.getObject("DEBUG_LOG"));
+        assertNotNull(rs.getObject("PLAN_TEXT"));
 
-		s.execute("SET showplan debug");
-		rs = s.executeQuery("select * from all_tables");
-		assertNotNull(s.unwrap(TeiidStatement.class).getDebugLog());
-		PlanNode node = s.unwrap(TeiidStatement.class).getPlanDescription();
-		Property p = node.getProperty(AnalysisRecord.PROP_DATA_BYTES_SENT);
-		assertEquals("20", p.getValues().get(0));
+        s.execute("SET showplan debug");
+        rs = s.executeQuery("select * from all_tables");
+        assertNotNull(s.unwrap(TeiidStatement.class).getDebugLog());
+        PlanNode node = s.unwrap(TeiidStatement.class).getPlanDescription();
+        Property p = node.getProperty(AnalysisRecord.PROP_DATA_BYTES_SENT);
+        assertEquals("20", p.getValues().get(0));
 
-		rs = s.executeQuery("show plan");
-		assertTrue(rs.next());
-		assertNotNull(rs.getObject("DEBUG_LOG"));
+        rs = s.executeQuery("show plan");
+        assertTrue(rs.next());
+        assertNotNull(rs.getObject("DEBUG_LOG"));
 
-		s.execute("SET showplan off");
-		rs = s.executeQuery("select * from all_tables");
-		assertNull(s.unwrap(TeiidStatement.class).getPlanDescription());
-		assertTrue(rs.next());
-	}
+        s.execute("SET showplan off");
+        rs = s.executeQuery("select * from all_tables");
+        assertNull(s.unwrap(TeiidStatement.class).getPlanDescription());
+        assertTrue(rs.next());
+    }
 
-	@Test public void testShowPlanMultibatch() throws Exception {
+    @Test public void testShowPlanMultibatch() throws Exception {
         Statement s = conn.createStatement();
         s.execute("set showplan debug");
         ResultSet rs = s.executeQuery("with x as( select * from sys.columns limit 50) select * from x t1, x t2");
@@ -112,17 +112,17 @@ public class TestQueryPlans {
         assertTrue(p.getValues().contains("Node Output Rows: 2500"));
     }
 
-	@Test public void testShow() throws Exception {
-		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("show all");
-		assertTrue(rs.next());
-		assertNotNull(rs.getString("NAME"));
+    @Test public void testShow() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("show all");
+        assertTrue(rs.next());
+        assertNotNull(rs.getString("NAME"));
 
-		s.execute("set showplan on");
+        s.execute("set showplan on");
 
-		rs = s.executeQuery("show showplan");
-		rs.next();
-		assertEquals("on", rs.getString(1));
-	}
+        rs = s.executeQuery("show showplan");
+        rs.next();
+        assertEquals("on", rs.getString(1));
+    }
 
 }

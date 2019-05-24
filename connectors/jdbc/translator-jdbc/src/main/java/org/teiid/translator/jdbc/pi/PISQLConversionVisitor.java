@@ -33,16 +33,16 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 public class PISQLConversionVisitor extends SQLConversionVisitor {
 
-	private static final String APPLY = "APPLY";
+    private static final String APPLY = "APPLY";
     PIExecutionFactory executionFactory;
 
-	public PISQLConversionVisitor(PIExecutionFactory hef) {
-		super(hef);
-		this.executionFactory = hef;
-	}
+    public PISQLConversionVisitor(PIExecutionFactory hef) {
+        super(hef);
+        this.executionFactory = hef;
+    }
 
-	@Override
-	public void visit(SetQuery obj) {
+    @Override
+    public void visit(SetQuery obj) {
         Limit limit = obj.getLimit();
         if(limit != null) {
             buffer.append(SELECT);
@@ -56,9 +56,9 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
             buffer.append(Tokens.LPAREN);
         }
 
-    	if (obj.getWith() != null) {
-    		append(obj.getWith());
-    	}
+        if (obj.getWith() != null) {
+            append(obj.getWith());
+        }
         appendSetQuery(obj, obj.getLeftQuery(), false);
 
         buffer.append(Tokens.SPACE);
@@ -87,7 +87,7 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
     }
 
     @Override
-	public void visit(Join obj) {
+    public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
         TableReference rightItem = obj.getRightItem();
         JoinType joinType = obj.getJoinType();
@@ -198,18 +198,18 @@ public class PISQLConversionVisitor extends SQLConversionVisitor {
 
     @Override
     public void visit(ColumnReference obj) {
-    	if (obj.getMetadataObject() != null) {
-	        ColumnSet<?> cs = obj.getMetadataObject().getParent();
-	        if (cs.getParent() instanceof Procedure && isTVF((Procedure)cs.getParent())) {
-	            this.shortNameOnly = true;
-	            super.visit(obj);
-	            this.shortNameOnly = false;
-	        } else {
-	            super.visit(obj);
-	        }
-    	} else {
-    		super.visit(obj);
-    	}
+        if (obj.getMetadataObject() != null) {
+            ColumnSet<?> cs = obj.getMetadataObject().getParent();
+            if (cs.getParent() instanceof Procedure && isTVF((Procedure)cs.getParent())) {
+                this.shortNameOnly = true;
+                super.visit(obj);
+                this.shortNameOnly = false;
+            } else {
+                super.visit(obj);
+            }
+        } else {
+            super.visit(obj);
+        }
     }
 
     @Override

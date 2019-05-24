@@ -47,11 +47,11 @@ public class LobChunkInputStream extends InputStream {
             throw new IllegalStateException(CorePlugin.Util.getString("stream_closed")); //$NON-NLS-1$
         }
         while (this.byteData == null || this.byteData.length <= currentCounter) {
-        	if (this.lastChunk) {
-	            // we are done
-	            return -1;
-        	}
-        	LobChunk value = this.reader.getNextChunk();
+            if (this.lastChunk) {
+                // we are done
+                return -1;
+            }
+            LobChunk value = this.reader.getNextChunk();
             this.lastChunk = value.isLast();
             this.byteData = value.getBytes();
             this.currentCounter = 0;

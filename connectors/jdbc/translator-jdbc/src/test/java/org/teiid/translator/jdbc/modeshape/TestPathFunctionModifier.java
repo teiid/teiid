@@ -46,17 +46,17 @@ public class TestPathFunctionModifier extends TestCase {
     }
 
     public void helpTestMod(Expression c, String expectedStr, String target) throws Exception {
-    	Function func = null;
-    	if (c != null) {
-        	func = LANG_FACTORY.createFunction(target,
+        Function func = null;
+        if (c != null) {
+            func = LANG_FACTORY.createFunction(target,
             Arrays.asList(c),
             String.class);
-    	} else {
-        	func = LANG_FACTORY.createFunction(target,
+        } else {
+            func = LANG_FACTORY.createFunction(target,
                     Collections.EMPTY_LIST,
                     String.class);
 
-    	}
+        }
 
         ModeShapeExecutionFactory trans = new ModeShapeExecutionFactory();
         trans.start();

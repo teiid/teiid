@@ -72,14 +72,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         Insert insert = (Insert) command;
 
         if (insert.getValues() != null) {
-        	QueryResolver.resolveSubqueries(command, metadata, null);
-	        //variables and values must be resolved separately to account for implicitly defined temp groups
-	        resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
-    	}
+            QueryResolver.resolveSubqueries(command, metadata, null);
+            //variables and values must be resolved separately to account for implicitly defined temp groups
+            resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
+        }
         boolean usingQuery = insert.getQueryExpression() != null;
         //resolve subquery if there
         if(usingQuery) {
-        	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
+            QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
 
             QueryResolver.resolveCommand(insert.getQueryExpression(), metadata.getMetadata(), false);
         }
@@ -102,13 +102,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                 }
             } else {
                 for (int i = 0; i < values.size(); i++) {
-                	if (usingQuery) {
-                		Expression ses = (Expression)values.get(i);
-                    	ElementSymbol es = new ElementSymbol(Symbol.getShortName(ses));
-                    	es.setType(ses.getType());
-                    	insert.addVariable(es);
+                    if (usingQuery) {
+                        Expression ses = (Expression)values.get(i);
+                        ElementSymbol es = new ElementSymbol(Symbol.getShortName(ses));
+                        es.setType(ses.getType());
+                        insert.addVariable(es);
                     } else {
-                    	insert.addVariable(new ElementSymbol("expr" + i)); //$NON-NLS-1$
+                        insert.addVariable(new ElementSymbol("expr" + i)); //$NON-NLS-1$
                     }
                 }
             }
@@ -172,12 +172,12 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         while(valueIter.hasNext()) {
             // Walk through both elements and expressions, which should match up
-			Expression expression = (Expression) valueIter.next();
-			ElementSymbol element = varIter.next();
+            Expression expression = (Expression) valueIter.next();
+            ElementSymbol element = varIter.next();
 
-			if (expression.getType() == null) {
-				ResolverUtil.setDesiredType(SymbolMap.getExpression(expression), element.getType(), insert);
-			}
+            if (expression.getType() == null) {
+                ResolverUtil.setDesiredType(SymbolMap.getExpression(expression), element.getType(), insert);
+            }
 
             if(element.getType() != null && expression.getType() != null) {
                 String elementTypeName = DataTypeManager.getDataTypeName(element.getType());
@@ -221,13 +221,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     protected void resolveGroup(TempMetadataAdapter metadata,
                                 ProcedureContainer procCommand) throws TeiidComponentException,
                                                               QueryResolverException {
-    	try {
-    		super.resolveGroup(metadata, procCommand);
-    	} catch (QueryResolverException e) {
+        try {
+            super.resolveGroup(metadata, procCommand);
+        } catch (QueryResolverException e) {
             if (!procCommand.getGroup().isImplicitTempGroupSymbol() || metadata.getMetadataStore().getTempGroupID(procCommand.getGroup().getName()) != null) {
                 throw e;
             }
-    	}
+        }
     }
 
     /**
@@ -247,20 +247,20 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         Iterator<ElementSymbol> varIter = insert.getVariables().iterator();
         Iterator valIter = null;
         if (insert.getQueryExpression() != null) {
-        	valIter = insert.getQueryExpression().getProjectedSymbols().iterator();
+            valIter = insert.getQueryExpression().getProjectedSymbols().iterator();
         } else {
             valIter = insert.getValues().iterator();
         }
         while (varIter.hasNext()) {
             ElementSymbol next = varIter.next();
-			ElementSymbol varSymbol = next.clone();
+            ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	varSymbol = next.clone();
-            	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-            	result.put(varSymbol, SymbolMap.getExpression((Expression)valIter.next()));
+                varSymbol = next.clone();
+                varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
+                result.put(varSymbol, SymbolMap.getExpression((Expression)valIter.next()));
             }
         }
 
@@ -276,23 +276,23 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
         Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-        	ElementSymbol next = defaultIter.next();
- 			ElementSymbol varSymbol = next.clone();
+            ElementSymbol next = defaultIter.next();
+             ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
             if (!changingOnly) {
-            	varSymbol = next.clone();
-            	if (pkCols != null && pkCols.contains(varSymbol)) {
-            	    varSymbol.getGroupSymbol().setName(SQLConstants.NonReserved.KEY);
+                varSymbol = next.clone();
+                if (pkCols != null && pkCols.contains(varSymbol)) {
+                    varSymbol.getGroupSymbol().setName(SQLConstants.NonReserved.KEY);
                     result.put(varSymbol, new Constant(null, varSymbol.getType()));
                     if (!metadata.elementSupports(varSymbol.getMetadataID(), SupportConstants.Element.NULL)) {
                         continue;
                     }
                 }
-            	Expression value = ResolverUtil.getDefault(varSymbol, metadata);
-            	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
-            	result.put(varSymbol, value);
+                Expression value = ResolverUtil.getDefault(varSymbol, metadata);
+                varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
+                result.put(varSymbol, value);
             }
         }
 

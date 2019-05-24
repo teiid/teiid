@@ -28,15 +28,15 @@ import java.io.ObjectOutput;
  */
 public class Annotation implements Externalizable {
 
-	public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
-	public static final String CACHED_PROCEDURE = "Cached Procedure"; //$NON-NLS-1$
+    public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
+    public static final String CACHED_PROCEDURE = "Cached Procedure"; //$NON-NLS-1$
     public static final String HINTS = "Hints"; //$NON-NLS-1$
     public static final String RELATIONAL_PLANNER = "Relational Planner"; //$NON-NLS-1$
 
     public enum Priority {
-		LOW,
-		MEDIUM,
-		HIGH
+        LOW,
+        MEDIUM,
+        HIGH
     }
 
     private String category;
@@ -77,18 +77,18 @@ public class Annotation implements Externalizable {
 
     @Override
     public void readExternal(ObjectInput in) throws IOException,
-    		ClassNotFoundException {
-    	annotation = (String)in.readObject();
-    	category = (String)in.readObject();
-    	resolution = (String)in.readObject();
-    	priority = Priority.values()[in.readByte()];
+            ClassNotFoundException {
+        annotation = (String)in.readObject();
+        category = (String)in.readObject();
+        resolution = (String)in.readObject();
+        priority = Priority.values()[in.readByte()];
     }
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-    	out.writeObject(annotation);
-    	out.writeObject(category);
-    	out.writeObject(resolution);
-    	out.writeByte(priority.ordinal());
+        out.writeObject(annotation);
+        out.writeObject(category);
+        out.writeObject(resolution);
+        out.writeByte(priority.ordinal());
     }
 }

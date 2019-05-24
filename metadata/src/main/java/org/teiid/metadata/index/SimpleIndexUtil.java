@@ -78,12 +78,12 @@ public class SimpleIndexUtil {
                 // only the subset entries that match both criteria
                 if (partialResults != null) {
                     for (int j = 0; j < partialResults.length; j++) {
-                    	// filter out any continuation records, they should already appended
-                    	// to index record thet is continued
-						IEntryResult result = partialResults[j];
-						if(result != null && result.getWord()[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
-	                        queryResult.add(partialResults[j]);
-						}
+                        // filter out any continuation records, they should already appended
+                        // to index record thet is continued
+                        IEntryResult result = partialResults[j];
+                        if(result != null && result.getWord()[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
+                            queryResult.add(partialResults[j]);
+                        }
                     }
                 }
 

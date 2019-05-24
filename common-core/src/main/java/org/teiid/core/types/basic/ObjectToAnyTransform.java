@@ -30,7 +30,7 @@ import org.teiid.core.types.TransformationException;
 
 public class ObjectToAnyTransform extends Transform {
 
-	public static final ObjectToAnyTransform INSTANCE = new ObjectToAnyTransform(Object.class);
+    public static final ObjectToAnyTransform INSTANCE = new ObjectToAnyTransform(Object.class);
 
     private Class targetClass;
 
@@ -52,10 +52,10 @@ public class ObjectToAnyTransform extends Transform {
 
     @Override
     public Object transform(Object value, Class<?> targetType)
-    		throws TransformationException {
-    	if (value == null) {
-    		return null;
-    	}
+            throws TransformationException {
+        if (value == null) {
+            return null;
+        }
         if(targetType.isAssignableFrom(value.getClass())) {
             return value;
         }
@@ -63,62 +63,62 @@ public class ObjectToAnyTransform extends Transform {
         Transform transform = DataTypeManager.getTransform(value.getClass(), targetType);
         boolean valid = true;
         if (transform instanceof ObjectToAnyTransform) {
-        	Object v1 = DataTypeManager.convertToRuntimeType(value, true);
-        	if (v1 != value) {
-				try {
-					return transform(v1, targetType);
-				} catch (TransformationException e) {
-					throw new TransformationException(
-							CorePlugin.Event.TEIID10076, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, getSourceType(),
-									targetClass, value));
-				}
-        	}
-        	if (targetType.isArray()) {
-        		if (value instanceof Array) {
-	    			try {
-	    				//TODO: need to use the base type information for non-ArrayImpl values
-						Object array = ((Array)value).getArray();
-						if (targetType.isAssignableFrom(array.getClass())) {
-							if (!(value instanceof ArrayImpl)) {
-								return new ArrayImpl((Object[])array);
-							}
-							return value;
-						}
-						value = array;
-					} catch (SQLException e) {
-						throw new TransformationException(e);
-					}
-        		}
-        		if (value.getClass().isArray()) {
-        		    if (value.getClass().getComponentType().isPrimitive()
+            Object v1 = DataTypeManager.convertToRuntimeType(value, true);
+            if (v1 != value) {
+                try {
+                    return transform(v1, targetType);
+                } catch (TransformationException e) {
+                    throw new TransformationException(
+                            CorePlugin.Event.TEIID10076, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, getSourceType(),
+                                    targetClass, value));
+                }
+            }
+            if (targetType.isArray()) {
+                if (value instanceof Array) {
+                    try {
+                        //TODO: need to use the base type information for non-ArrayImpl values
+                        Object array = ((Array)value).getArray();
+                        if (targetType.isAssignableFrom(array.getClass())) {
+                            if (!(value instanceof ArrayImpl)) {
+                                return new ArrayImpl((Object[])array);
+                            }
+                            return value;
+                        }
+                        value = array;
+                    } catch (SQLException e) {
+                        throw new TransformationException(e);
+                    }
+                }
+                if (value.getClass().isArray()) {
+                    if (value.getClass().getComponentType().isPrimitive()
                             && targetType.getComponentType().isAssignableFrom(convertPrimitiveToObject(value.getClass().getComponentType()))) {
                         Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetType.getComponentType(), java.lang.reflect.Array.getLength(value));
                         for (int i = 0; i < result.length; i++) {
                             result[i] = java.lang.reflect.Array.get(value, i);
                         }
                         return new ArrayImpl(result);
-        		    }
-        		    Class<?> targetComponentType = targetType.getComponentType();
-                    Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetComponentType, java.lang.reflect.Array.getLength(value));
-    		        for (int i = 0; i < result.length; i++) {
-    		            Object v = java.lang.reflect.Array.get(value, i);
-    		            if (v.getClass() == targetComponentType || DefaultDataClasses.OBJECT == targetComponentType) {
-    		                result[i] = v;
-    		            } else {
-    		                Transform subTransform = DataTypeManager.getTransform(v.getClass(), targetComponentType);
-    		                if (subTransform == null) {
-    		                    valid = false;
-    		                    break;
-    		                }
-                            result[i] = subTransform.transform(v, targetComponentType);
-    		            }
                     }
-    		        if (valid) {
-    		            return new ArrayImpl(result);
-    		        }
-        		}
-        	}
-        	valid = false;
+                    Class<?> targetComponentType = targetType.getComponentType();
+                    Object[] result = (Object[]) java.lang.reflect.Array.newInstance(targetComponentType, java.lang.reflect.Array.getLength(value));
+                    for (int i = 0; i < result.length; i++) {
+                        Object v = java.lang.reflect.Array.get(value, i);
+                        if (v.getClass() == targetComponentType || DefaultDataClasses.OBJECT == targetComponentType) {
+                            result[i] = v;
+                        } else {
+                            Transform subTransform = DataTypeManager.getTransform(v.getClass(), targetComponentType);
+                            if (subTransform == null) {
+                                valid = false;
+                                break;
+                            }
+                            result[i] = subTransform.transform(v, targetComponentType);
+                        }
+                    }
+                    if (valid) {
+                        return new ArrayImpl(result);
+                    }
+                }
+            }
+            valid = false;
         }
 
         if (transform == null || !valid) {
@@ -136,8 +136,8 @@ public class ObjectToAnyTransform extends Transform {
 
     @Override
     protected Object transformDirect(Object value)
-    		throws TransformationException {
-    	return value;
+            throws TransformationException {
+        return value;
     }
 
     /**
@@ -147,22 +147,22 @@ public class ObjectToAnyTransform extends Transform {
         return true;
     }
 
-	/**
-	 * Convert a primitive class to the corresponding object class
-	 * @param clazz
-	 */
-	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
-		if (!clazz.isPrimitive()) {
-			return clazz;
-		}
-		if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
-		else if ( clazz == Character.TYPE ) clazz = Character.class;
-		else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
-		else if ( clazz == Short.TYPE     ) clazz = Short.class;
-		else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
-		else if ( clazz == Long.TYPE      ) clazz = Long.class;
-		else if ( clazz == Float.TYPE     ) clazz = Float.class;
-		else if ( clazz == Double.TYPE    ) clazz = Double.class;
-		return clazz;
-	}
+    /**
+     * Convert a primitive class to the corresponding object class
+     * @param clazz
+     */
+    public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
+        if (!clazz.isPrimitive()) {
+            return clazz;
+        }
+        if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
+        else if ( clazz == Character.TYPE ) clazz = Character.class;
+        else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
+        else if ( clazz == Short.TYPE     ) clazz = Short.class;
+        else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
+        else if ( clazz == Long.TYPE      ) clazz = Long.class;
+        else if ( clazz == Float.TYPE     ) clazz = Float.class;
+        else if ( clazz == Double.TYPE    ) clazz = Double.class;
+        return clazz;
+    }
 }

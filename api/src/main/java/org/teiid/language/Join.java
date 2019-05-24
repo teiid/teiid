@@ -22,13 +22,13 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 
 public class Join extends BaseLanguageObject implements TableReference {
 
-	public enum JoinType {
-		INNER_JOIN,
-		CROSS_JOIN,
-		LEFT_OUTER_JOIN,
-		RIGHT_OUTER_JOIN,
-		FULL_OUTER_JOIN
-	}
+    public enum JoinType {
+        INNER_JOIN,
+        CROSS_JOIN,
+        LEFT_OUTER_JOIN,
+        RIGHT_OUTER_JOIN,
+        FULL_OUTER_JOIN
+    }
 
     private TableReference leftItem;
     private TableReference rightItem;

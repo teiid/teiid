@@ -27,9 +27,9 @@ import org.teiid.core.TeiidException;
  * connection parameters.
  */
 public class ConnectionException extends TeiidException {
-	private static final long serialVersionUID = -5647655775983865084L;
+    private static final long serialVersionUID = -5647655775983865084L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public ConnectionException(  ) {

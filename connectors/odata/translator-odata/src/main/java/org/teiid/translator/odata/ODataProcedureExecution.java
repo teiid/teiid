@@ -44,88 +44,88 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 import org.teiid.translator.ws.WSConnection;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
-	private ODataProcedureVisitor visitor;
-	private Object returnValue;
-	private ODataEntitiesResponse response;
-	private Class<?>[] expectedColumnTypes;
+    private ODataProcedureVisitor visitor;
+    private Object returnValue;
+    private ODataEntitiesResponse response;
+    private Class<?>[] expectedColumnTypes;
 
-	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		super(translator, executionContext, metadata, connection);
+    public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
+        super(translator, executionContext, metadata, connection);
 
-		this.visitor = new ODataProcedureVisitor(translator, metadata);
-		this.visitor.visitNode(command);
+        this.visitor = new ODataProcedureVisitor(translator, metadata);
+        this.visitor.visitNode(command);
 
-		if (!this.visitor.exceptions.isEmpty()) {
-			throw this.visitor.exceptions.get(0);
-		}
+        if (!this.visitor.exceptions.isEmpty()) {
+            throw this.visitor.exceptions.get(0);
+        }
 
-		this.expectedColumnTypes = command.getResultSetColumnTypes();
-	}
+        this.expectedColumnTypes = command.getResultSetColumnTypes();
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		String URI = this.visitor.buildURL();
-		Schema schema = visitor.getProcedure().getParent();
-		EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata(schema));
-		if (this.visitor.hasCollectionReturn()) {
-			if (this.visitor.isReturnComplexType()) {
-				// complex return
-				this.response = executeWithComplexReturn(this.visitor.getMethod(), URI, null, this.visitor.getReturnEntityTypeName(), edm, null, Status.OK, Status.NO_CONTENT);
-			}
-			else {
-				// entity type return
-				this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getTable().getName(), edm, null, Status.OK, Status.NO_CONTENT);
-			}
-			if (this.response != null && this.response.hasError()) {
-				throw this.response.getError();
-			}
-		}
-		else {
-			try {
-				BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), URI, null, getDefaultHeaders());
-				if (execution.getResponseCode() != Status.OK.getStatusCode()) {
-					throw buildError(execution);
-				}
+    @Override
+    public void execute() throws TranslatorException {
+        String URI = this.visitor.buildURL();
+        Schema schema = visitor.getProcedure().getParent();
+        EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata(schema));
+        if (this.visitor.hasCollectionReturn()) {
+            if (this.visitor.isReturnComplexType()) {
+                // complex return
+                this.response = executeWithComplexReturn(this.visitor.getMethod(), URI, null, this.visitor.getReturnEntityTypeName(), edm, null, Status.OK, Status.NO_CONTENT);
+            }
+            else {
+                // entity type return
+                this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getTable().getName(), edm, null, Status.OK, Status.NO_CONTENT);
+            }
+            if (this.response != null && this.response.hasError()) {
+                throw this.response.getError();
+            }
+        }
+        else {
+            try {
+                BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), URI, null, getDefaultHeaders());
+                if (execution.getResponseCode() != Status.OK.getStatusCode()) {
+                    throw buildError(execution);
+                }
 
-				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-				ODataVersion version = getODataVersion(execution);
+                Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+                ODataVersion version = getODataVersion(execution);
 
-				// if the procedure is not void
-				if (this.visitor.getReturnType() != null) {
-					FormatParser<? extends OObject> parser = FormatParserFactory.getParser(OSimpleObject.class,
-							FormatType.ATOM, new Settings(version, edm, this.visitor.getProcedure().getName(),
-					            null, // entitykey
-					            true, // isResponse
-					            ODataTypeManager.odataType(this.visitor.getReturnType())));
+                // if the procedure is not void
+                if (this.visitor.getReturnType() != null) {
+                    FormatParser<? extends OObject> parser = FormatParserFactory.getParser(OSimpleObject.class,
+                            FormatType.ATOM, new Settings(version, edm, this.visitor.getProcedure().getName(),
+                                null, // entitykey
+                                true, // isResponse
+                                ODataTypeManager.odataType(this.visitor.getReturnType())));
 
-					OSimpleObject object = (OSimpleObject)parser.parse(new InputStreamReader(blob.getBinaryStream()));
-					this.returnValue = this.translator.retrieveValue(object.getValue(), this.visitor.getReturnTypeClass());
-				}
-			} catch (SQLException e) {
-				throw new TranslatorException(e);
-			}
-		}
-	}
+                    OSimpleObject object = (OSimpleObject)parser.parse(new InputStreamReader(blob.getBinaryStream()));
+                    this.returnValue = this.translator.retrieveValue(object.getValue(), this.visitor.getReturnTypeClass());
+                }
+            } catch (SQLException e) {
+                throw new TranslatorException(e);
+            }
+        }
+    }
 
-	@Override
-	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		// Feed based response
-		if (this.visitor.hasCollectionReturn() && this.response != null ) {
-			return this.response.getNextRow(this.visitor.getReturnColumns(), this.expectedColumnTypes);
-		}
-		return null;
-	}
+    @Override
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        // Feed based response
+        if (this.visitor.hasCollectionReturn() && this.response != null ) {
+            return this.response.getNextRow(this.visitor.getReturnColumns(), this.expectedColumnTypes);
+        }
+        return null;
+    }
 
-	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return Arrays.asList(this.returnValue);
-	}
+    @Override
+    public List<?> getOutputParameterValues() throws TranslatorException {
+        return Arrays.asList(this.returnValue);
+    }
 
-	@Override
-	public void close() {
-	}
+    @Override
+    public void close() {
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+    }
 }

@@ -95,158 +95,158 @@ public class TestExternalMatViews {
 
     private static boolean DEBUG = false;
 
-	private Connection conn;
-	private FakeServer server;
-	private static DataSource h2DataSource;
+    private Connection conn;
+    private FakeServer server;
+    private static DataSource h2DataSource;
 
-	private static final String statusTable = "CREATE TABLE status\n" +
-			"(\n" +
-			"  VDBName varchar(50) not null,\n" +
-			"  VDBVersion varchar(50) not null,\n" +
-			"  SchemaName varchar(50) not null,\n" +
-			"  Name varchar(256) not null,\n" +
-			"  TargetSchemaName varchar(50),\n" +
-			"  TargetName varchar(256) not null,\n" +
-			"  Valid boolean not null,\n" +
-			"  LoadState varchar(25) not null,\n" +
-			"  Cardinality long,\n" +
-			"  Updated timestamp not null,\n" +
-			"  LoadNumber long not null,\n" +
-			"  NodeName varchar(25) not null,\n" +
-			"  StaleCount long default 0,\n" +
-			"  PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)\n" +
-			")";
+    private static final String statusTable = "CREATE TABLE status\n" +
+            "(\n" +
+            "  VDBName varchar(50) not null,\n" +
+            "  VDBVersion varchar(50) not null,\n" +
+            "  SchemaName varchar(50) not null,\n" +
+            "  Name varchar(256) not null,\n" +
+            "  TargetSchemaName varchar(50),\n" +
+            "  TargetName varchar(256) not null,\n" +
+            "  Valid boolean not null,\n" +
+            "  LoadState varchar(25) not null,\n" +
+            "  Cardinality long,\n" +
+            "  Updated timestamp not null,\n" +
+            "  LoadNumber long not null,\n" +
+            "  NodeName varchar(25) not null,\n" +
+            "  StaleCount long default 0,\n" +
+            "  PRIMARY KEY (VDBName, VDBVersion, SchemaName, Name)\n" +
+            ")";
 
-	@BeforeClass
-	public static void beforeClass() throws Exception {
-		h2DataSource = getDatasource();
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        h2DataSource = getDatasource();
 
-		Connection c = h2DataSource.getConnection();
-		assertNotNull(c);
-		c.createStatement().execute(statusTable);
+        Connection c = h2DataSource.getConnection();
+        assertNotNull(c);
+        c.createStatement().execute(statusTable);
 
-		String matView = "CREATE table mat_v1 (col int primary key, col1 varchar(50))";
-		String matView2 = "CREATE table mat_v2 (col int primary key, col1 varchar(50), loadnum long)";
-		String matView3 = "CREATE table mat_v3 (col int primary key, col1 varchar(50), loadnum long)";
-		String matView1a = "CREATE table mat_v1a (col int primary key, col1 varchar(50), loadnum long)";
-		String matViewStage = "CREATE table mat_v1_stage (col int primary key, col1 varchar(50))";
-		c.createStatement().execute(matView);
-		c.createStatement().execute(matViewStage);
-		c.createStatement().execute(matView2);
-		c.createStatement().execute(matView3);
-		c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
-		c.createStatement().execute(matView1a);
-		c.close();
+        String matView = "CREATE table mat_v1 (col int primary key, col1 varchar(50))";
+        String matView2 = "CREATE table mat_v2 (col int primary key, col1 varchar(50), loadnum long)";
+        String matView3 = "CREATE table mat_v3 (col int primary key, col1 varchar(50), loadnum long)";
+        String matView1a = "CREATE table mat_v1a (col int primary key, col1 varchar(50), loadnum long)";
+        String matViewStage = "CREATE table mat_v1_stage (col int primary key, col1 varchar(50))";
+        c.createStatement().execute(matView);
+        c.createStatement().execute(matViewStage);
+        c.createStatement().execute(matView2);
+        c.createStatement().execute(matView3);
+        c.createStatement().execute("CREATE table G1 (e1 int primary key, e2 varchar(50), LoadNumber long)");
+        c.createStatement().execute(matView1a);
+        c.close();
 
-		if (DEBUG) {
+        if (DEBUG) {
             UnitTestUtil.enableTraceLogging("org.teiid");
         }
-	}
-
-	@AfterClass
-	public static void afterClass() throws SQLException {
-	    Connection c = h2DataSource.getConnection();
-        c.createStatement().execute("DROP ALL OBJECTS");
-        c.close();
-	}
-
-	@Before
-	public void setUp() throws Exception {
-    	server = new FakeServer(true);
-
-    	if (DEBUG)
-		LogManager.setLogListener(new org.teiid.logging.Logger() {
-			@Override
-			public void shutdown() {
-			}
-			@Override
-			public void removeMdc(String key) {
-			}
-			@Override
-			public void putMdc(String key, String val) {
-			}
-
-			@Override
-			public void log(int level, String context, Throwable t, Object... msg) {
-				StringBuilder sb = new StringBuilder();
-				for (Object str:msg) {
-					sb.append(str.toString());
-				}
-				System.out.println(sb.toString());
-			}
-
-			@Override
-			public void log(int level, String context, Object... msg) {
-				StringBuilder sb = new StringBuilder();
-				for (Object str:msg) {
-					sb.append(str.toString());
-				}
-				System.out.println(sb.toString());
-			}
-
-			@Override
-			public boolean isEnabled(String context, int msgLevel) {
-				return msgLevel <= 4;
-			}
-		});
-    	Connection c = h2DataSource.getConnection();
-    	c.createStatement().execute("delete from status");
-    	c.createStatement().execute("delete from mat_v1");
-    	c.createStatement().execute("delete from mat_v1_stage");
-    	c.createStatement().execute("delete from mat_v2");
-    	c.close();
     }
 
-	@After
-	public void tearDown() throws Exception {
-		if (conn != null) {
-			conn.close();
-		}
-		if (server != null) {
-			server.stop();
-		}
-	}
+    @AfterClass
+    public static void afterClass() throws SQLException {
+        Connection c = h2DataSource.getConnection();
+        c.createStatement().execute("DROP ALL OBJECTS");
+        c.close();
+    }
 
-	@Test
-	public void testSwapScriptWithEagerUpdate() throws Exception {
-		withSwapScripts(true);
-	}
+    @Before
+    public void setUp() throws Exception {
+        server = new FakeServer(true);
 
-	@Test
-	public void testSwapScriptWithFullRefresh() throws Exception {
-		withSwapScripts(false);
-	}
+        if (DEBUG)
+        LogManager.setLogListener(new org.teiid.logging.Logger() {
+            @Override
+            public void shutdown() {
+            }
+            @Override
+            public void removeMdc(String key) {
+            }
+            @Override
+            public void putMdc(String key, String val) {
+            }
 
-	private void withSwapScripts(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData(server);
-		ModelMetaData sourceModel = setupSourceModel();
-		ModelMetaData matViewModel = setupMatViewModel();
+            @Override
+            public void log(int level, String context, Throwable t, Object... msg) {
+                StringBuilder sb = new StringBuilder();
+                for (Object str:msg) {
+                    sb.append(str.toString());
+                }
+                System.out.println(sb.toString());
+            }
 
-		ModelMetaData viewModel = new ModelMetaData();
-		viewModel.setName("view1");
-		viewModel.setModelType(Type.VIRTUAL);
-		viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
-				+ "OPTIONS (MATERIALIZED true, "
-				+ "MATERIALIZED_TABLE 'matview.MAT_V1', "
+            @Override
+            public void log(int level, String context, Object... msg) {
+                StringBuilder sb = new StringBuilder();
+                for (Object str:msg) {
+                    sb.append(str.toString());
+                }
+                System.out.println(sb.toString());
+            }
+
+            @Override
+            public boolean isEnabled(String context, int msgLevel) {
+                return msgLevel <= 4;
+            }
+        });
+        Connection c = h2DataSource.getConnection();
+        c.createStatement().execute("delete from status");
+        c.createStatement().execute("delete from mat_v1");
+        c.createStatement().execute("delete from mat_v1_stage");
+        c.createStatement().execute("delete from mat_v2");
+        c.close();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (conn != null) {
+            conn.close();
+        }
+        if (server != null) {
+            server.stop();
+        }
+    }
+
+    @Test
+    public void testSwapScriptWithEagerUpdate() throws Exception {
+        withSwapScripts(true);
+    }
+
+    @Test
+    public void testSwapScriptWithFullRefresh() throws Exception {
+        withSwapScripts(false);
+    }
+
+    private void withSwapScripts(boolean useUpdateScript) throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
+
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V1', "
                 + "\"teiid_rel:MATVIEW_TTL\" 3000, "
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, "
                 + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
                 + "\"teiid_rel:MATERIALIZED_STAGE_TABLE\" 'matview.MAT_V1_STAGE', "
                 + "\"teiid_rel:MATVIEW_BEFORE_LOAD_SCRIPT\" 'execute matview.native(''truncate table MAT_V1_STAGE'')', "
                 + "\"teiid_rel:MATVIEW_AFTER_LOAD_SCRIPT\"  "
-                			+ "'begin "
-                				+ "execute matview.native(''ALTER TABLE MAT_V1 RENAME TO MAT_V1_TEMP'');"
-                				+ "execute matview.native(''ALTER TABLE MAT_V1_STAGE RENAME TO MAT_V1'');"
-                				+ "execute matview.native(''ALTER TABLE MAT_V1_TEMP RENAME TO MAT_V1_STAGE''); "
-                			+ "end', "
+                            + "'begin "
+                                + "execute matview.native(''ALTER TABLE MAT_V1 RENAME TO MAT_V1_TEMP'');"
+                                + "execute matview.native(''ALTER TABLE MAT_V1_STAGE RENAME TO MAT_V1'');"
+                                + "execute matview.native(''ALTER TABLE MAT_V1_TEMP RENAME TO MAT_V1_STAGE''); "
+                            + "end', "
                 + "\"teiid_rel:MATVIEW_ONERROR_ACTION\" 'THROW_EXCEPTION') "
-				+ "AS select col, col1 from source.physicalTbl");
-		server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
 
-		Thread.sleep(1000);
+        Thread.sleep(1000);
 
-		assertTest(useUpdateScript, hcef);
-	}
+        assertTest(useUpdateScript, hcef);
+    }
 
     @Test
     public void testViewChaining() throws Exception {
@@ -357,54 +357,54 @@ public class TestExternalMatViews {
         }
     }
 
-	@Test
-	public void testMergeDeleteWithFullRefresh() throws Exception {
-		withMergeDelete(false);
-	}
+    @Test
+    public void testMergeDeleteWithFullRefresh() throws Exception {
+        withMergeDelete(false);
+    }
 
-	@Test
-	public void testMergeDeleteWithEagarUpdates() throws Exception {
-		withMergeDelete(true);
-	}
+    @Test
+    public void testMergeDeleteWithEagarUpdates() throws Exception {
+        withMergeDelete(true);
+    }
 
-	private void withMergeDelete(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData(server);
-		ModelMetaData sourceModel = setupSourceModel();
-		ModelMetaData matViewModel = setupMatViewModel();
+    private void withMergeDelete(boolean useUpdateScript) throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
 
-		ModelMetaData viewModel = new ModelMetaData();
-		viewModel.setName("view1");
-		viewModel.setModelType(Type.VIRTUAL);
-		viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
-				+ "OPTIONS (MATERIALIZED true, "
-				+ "MATERIALIZED_TABLE 'matview.MAT_V2', "
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
                 + "\"teiid_rel:MATVIEW_TTL\" 3000, "
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, "
                 + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
                 + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
-				+ "AS select col, col1 from source.physicalTbl");
-		server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
 
-		Thread.sleep(1000);
+        Thread.sleep(1000);
 
-		assertTest(useUpdateScript, hcef);
-	}
+        assertTest(useUpdateScript, hcef);
+    }
 
-	@Test
-	public void testVDBImportScopeWarning() throws Exception {
+    @Test
+    public void testVDBImportScopeWarning() throws Exception {
         H2ExecutionFactory executionFactory = new H2ExecutionFactory();
         executionFactory.setSupportsDirectQueryProcedure(true);
         executionFactory.start();
         server.addTranslator("h2", executionFactory);
         server.addConnectionFactory("java:/matview-ds", h2DataSource);
-	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("child-vdb.xml")));
-	    server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("parent-vdb.xml")));
+        server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("child-vdb.xml")));
+        server.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("parent-vdb.xml")));
 
-	    Thread.sleep(1000);
+        Thread.sleep(1000);
 
-	    String uidQuery = "SELECT UID FROM Sys.Tables WHERE VDBName = 'parent' AND SchemaName = 'VM1' AND Name = 'G1'";
+        String uidQuery = "SELECT UID FROM Sys.Tables WHERE VDBName = 'parent' AND SchemaName = 'VM1' AND Name = 'G1'";
 
-	    conn = server.createConnection("jdbc:teiid:parent");
+        conn = server.createConnection("jdbc:teiid:parent");
         Statement s = conn.createStatement();
         ResultSet rs = s.executeQuery(uidQuery);
         rs.next();
@@ -439,39 +439,39 @@ public class TestExternalMatViews {
 
         conn.close();
         c.close();
-	}
+    }
 
-	@Test
-	public void testInternalFullRefresh() throws Exception {
-		internalWithSameExternalProcedures(false);
-	}
+    @Test
+    public void testInternalFullRefresh() throws Exception {
+        internalWithSameExternalProcedures(false);
+    }
 
-	@Test
-	public void testInternalWithEargerUpdates() throws Exception {
-		internalWithSameExternalProcedures(true);
-	}
+    @Test
+    public void testInternalWithEargerUpdates() throws Exception {
+        internalWithSameExternalProcedures(true);
+    }
 
-	private void internalWithSameExternalProcedures(boolean useUpdateScript) throws Exception {
-		HardCodedExecutionFactory hcef = setupData(server);
-		ModelMetaData sourceModel = setupSourceModel();
-		ModelMetaData matViewModel = setupMatViewModel();
+    private void internalWithSameExternalProcedures(boolean useUpdateScript) throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
 
-		ModelMetaData viewModel = new ModelMetaData();
-		viewModel.setName("view1");
-		viewModel.setModelType(Type.VIRTUAL);
-		viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
-				+ "OPTIONS (MATERIALIZED true, "
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
                 + "\"teiid_rel:MATVIEW_TTL\" 3000, "
-				+ "\"teiid_rel:MATVIEW_UPDATABLE\" true, "
-				+ "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
+                + "\"teiid_rel:MATVIEW_UPDATABLE\" true, "
+                + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true) "
-				+ "AS select col, col1 from source.physicalTbl");
-		server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
 
-		Thread.sleep(1000);
+        Thread.sleep(1000);
 
-		assertTest(useUpdateScript, hcef);
-	}
+        assertTest(useUpdateScript, hcef);
+    }
 
     @Test
     public void testRestartServerInMiddleOfLoading() throws Exception {
@@ -533,147 +533,147 @@ public class TestExternalMatViews {
         assertEquals("localhost", rs.getString(2));
     }
 
-	private void assertTest(boolean useUpdateScript, HardCodedExecutionFactory hcef)
-			throws Exception, SQLException, InterruptedException {
+    private void assertTest(boolean useUpdateScript, HardCodedExecutionFactory hcef)
+            throws Exception, SQLException, InterruptedException {
 
-		conn = server.createConnection("jdbc:teiid:comp");
+        conn = server.createConnection("jdbc:teiid:comp");
 
-		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("select * from view1.v1 order by col");
-		rs.next();
-		assertEquals(1, rs.getInt(1));
-		assertEquals("town", rs.getString(2));
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select * from view1.v1 order by col");
+        rs.next();
+        assertEquals(1, rs.getInt(1));
+        assertEquals("town", rs.getString(2));
 
-		rs.next();
-		assertEquals(2, rs.getInt(1));
-		assertEquals("state", rs.getString(2));
+        rs.next();
+        assertEquals(2, rs.getInt(1));
+        assertEquals("state", rs.getString(2));
 
-		rs.next();
-		assertEquals(3, rs.getInt(1));
-		assertEquals("country", rs.getString(2));
+        rs.next();
+        assertEquals(3, rs.getInt(1));
+        assertEquals("country", rs.getString(2));
 
-		rs.close();
-		s.close();
+        rs.close();
+        s.close();
 
-		// data changes. explicit update to matview using updateMatview, this should reset TTL
-		hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
-			Arrays.asList(
-					Arrays.asList(1, "city"), // update
-					Arrays.asList(2, "state"),
-					// delete
-					Arrays.asList(4, "USA"))); // insert
+        // data changes. explicit update to matview using updateMatview, this should reset TTL
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
+            Arrays.asList(
+                    Arrays.asList(1, "city"), // update
+                    Arrays.asList(2, "state"),
+                    // delete
+                    Arrays.asList(4, "USA"))); // insert
 
-		hcef.addData("SELECT physicalTbl.col FROM physicalTbl",
-				Arrays.asList(
-						Arrays.asList(1),
-						Arrays.asList(2),
-						Arrays.asList(4)));
+        hcef.addData("SELECT physicalTbl.col FROM physicalTbl",
+                Arrays.asList(
+                        Arrays.asList(1),
+                        Arrays.asList(2),
+                        Arrays.asList(4)));
 
-		if (useUpdateScript) {
-			Connection admin = server.createConnection("jdbc:teiid:comp");
-			CallableStatement stmt = admin.prepareCall("{? = call SYSADMIN.updateMatView(schemaName=>'view1', viewName=>'v1', refreshCriteria=>'v1.col in(1,3,4)')}");
-			stmt.registerOutParameter(1, Types.INTEGER);
-			stmt.execute();
-			assertTrue(stmt.getInt(1) <= 4);
-			admin.close();
-		} else {
-			Thread.sleep(3000);
-		}
+        if (useUpdateScript) {
+            Connection admin = server.createConnection("jdbc:teiid:comp");
+            CallableStatement stmt = admin.prepareCall("{? = call SYSADMIN.updateMatView(schemaName=>'view1', viewName=>'v1', refreshCriteria=>'v1.col in(1,3,4)')}");
+            stmt.registerOutParameter(1, Types.INTEGER);
+            stmt.execute();
+            assertTrue(stmt.getInt(1) <= 4);
+            admin.close();
+        } else {
+            Thread.sleep(3000);
+        }
 
-		Statement s1;
-		ResultSet rs1;
-		s1 = conn.createStatement();
-		rs1 = s1.executeQuery("select * from view1.v1 order by col");
-		rs1.next();
-		assertEquals(1, rs1.getInt(1));
-		assertEquals("city", rs1.getString(2));
+        Statement s1;
+        ResultSet rs1;
+        s1 = conn.createStatement();
+        rs1 = s1.executeQuery("select * from view1.v1 order by col");
+        rs1.next();
+        assertEquals(1, rs1.getInt(1));
+        assertEquals("city", rs1.getString(2));
 
-		rs1.next();
-		assertEquals(2, rs1.getInt(1));
-		assertEquals("state", rs1.getString(2));
+        rs1.next();
+        assertEquals(2, rs1.getInt(1));
+        assertEquals("state", rs1.getString(2));
 
-		rs1.next();
-		assertEquals(4, rs1.getInt(1));
-		assertEquals("USA", rs1.getString(2));
+        rs1.next();
+        assertEquals(4, rs1.getInt(1));
+        assertEquals("USA", rs1.getString(2));
 
-		rs1.close();
-		s1.close();
-	}
+        rs1.close();
+        s1.close();
+    }
 
-	private DelayableHardCodedExectionFactory setupData(EmbeddedServer server) throws TranslatorException {
-	    return setupData(false, server);
-	}
+    private DelayableHardCodedExectionFactory setupData(EmbeddedServer server) throws TranslatorException {
+        return setupData(false, server);
+    }
 
-	private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ, EmbeddedServer server) throws TranslatorException {
-		H2ExecutionFactory executionFactory = new H2ExecutionFactory();
-		executionFactory.setSupportsDirectQueryProcedure(true);
-		executionFactory.start();
-		server.addTranslator("translator-h2", executionFactory);
-		server.addConnectionFactory("java:/matview-ds", h2DataSource);
+    private DelayableHardCodedExectionFactory setupData(final boolean supportsEQ, EmbeddedServer server) throws TranslatorException {
+        H2ExecutionFactory executionFactory = new H2ExecutionFactory();
+        executionFactory.setSupportsDirectQueryProcedure(true);
+        executionFactory.start();
+        server.addTranslator("translator-h2", executionFactory);
+        server.addConnectionFactory("java:/matview-ds", h2DataSource);
 
-		DelayableHardCodedExectionFactory hcef = new DelayableHardCodedExectionFactory(supportsEQ);
-		hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
-				Arrays.asList(
-						Arrays.asList(1, "town"),
-						Arrays.asList(2, "state"),
-						Arrays.asList(3, "country")));
-		hcef.addData("SELECT physicalTbl.col FROM physicalTbl",
-				Arrays.asList(
-						Arrays.asList(1),
-						Arrays.asList(2),
-						Arrays.asList(3)));
+        DelayableHardCodedExectionFactory hcef = new DelayableHardCodedExectionFactory(supportsEQ);
+        hcef.addData("SELECT physicalTbl.col, physicalTbl.col1 FROM physicalTbl",
+                Arrays.asList(
+                        Arrays.asList(1, "town"),
+                        Arrays.asList(2, "state"),
+                        Arrays.asList(3, "country")));
+        hcef.addData("SELECT physicalTbl.col FROM physicalTbl",
+                Arrays.asList(
+                        Arrays.asList(1),
+                        Arrays.asList(2),
+                        Arrays.asList(3)));
 
-		server.addTranslator("fixed", hcef);
-		return hcef;
-	}
+        server.addTranslator("fixed", hcef);
+        return hcef;
+    }
 
-	private ModelMetaData setupMatViewModel() {
-		ModelMetaData matViewModel = new ModelMetaData();
-		matViewModel.setName("matview");
-		matViewModel.setModelType(Type.PHYSICAL);
-		matViewModel.addSourceMapping("s2", "translator-h2", "java:/matview-ds");
-		matViewModel.addProperty("importer.schemaPattern", "PUBLIC");
-		matViewModel.addProperty("importer.tableTypes", "TABLE");
-		matViewModel.addProperty("importer.useFullSchemaName", "false");
-		return matViewModel;
-	}
+    private ModelMetaData setupMatViewModel() {
+        ModelMetaData matViewModel = new ModelMetaData();
+        matViewModel.setName("matview");
+        matViewModel.setModelType(Type.PHYSICAL);
+        matViewModel.addSourceMapping("s2", "translator-h2", "java:/matview-ds");
+        matViewModel.addProperty("importer.schemaPattern", "PUBLIC");
+        matViewModel.addProperty("importer.tableTypes", "TABLE");
+        matViewModel.addProperty("importer.useFullSchemaName", "false");
+        return matViewModel;
+    }
 
-	private ModelMetaData setupSourceModel() {
-		ModelMetaData sourceModel = new ModelMetaData();
-		sourceModel.setName("source");
-		sourceModel.setModelType(Type.PHYSICAL);
-		sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string, col2 timestamp) options (updatable true);");
-		sourceModel.addSourceMapping("s1", "fixed", null);
-		return sourceModel;
-	}
+    private ModelMetaData setupSourceModel() {
+        ModelMetaData sourceModel = new ModelMetaData();
+        sourceModel.setName("source");
+        sourceModel.setModelType(Type.PHYSICAL);
+        sourceModel.addSourceMetadata("DDL", "create foreign table physicalTbl (col integer, col1 string, col2 timestamp) options (updatable true);");
+        sourceModel.addSourceMapping("s1", "fixed", null);
+        return sourceModel;
+    }
 
-	private static DataSource getDatasource() {
-		return JdbcConnectionPool.create("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "sa");
-	}
+    private static DataSource getDatasource() {
+        return JdbcConnectionPool.create("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "sa");
+    }
 
-	@Test
-	public void test() throws Exception {
-		HardCodedExecutionFactory hcef = setupData(server);
-		ModelMetaData sourceModel = setupSourceModel();
-		ModelMetaData matViewModel = setupMatViewModel();
+    @Test
+    public void test() throws Exception {
+        HardCodedExecutionFactory hcef = setupData(server);
+        ModelMetaData sourceModel = setupSourceModel();
+        ModelMetaData matViewModel = setupMatViewModel();
 
-		ModelMetaData viewModel = new ModelMetaData();
-		viewModel.setName("view1");
-		viewModel.setModelType(Type.VIRTUAL);
-		viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
-				+ "OPTIONS (MATERIALIZED true, "
-				+ "MATERIALIZED_TABLE 'matview.MAT_V2', "
+        ModelMetaData viewModel = new ModelMetaData();
+        viewModel.setName("view1");
+        viewModel.setModelType(Type.VIRTUAL);
+        viewModel.addSourceMetadata("DDL", "CREATE VIEW v1 (col integer primary key, col1 string) "
+                + "OPTIONS (MATERIALIZED true, "
+                + "MATERIALIZED_TABLE 'matview.MAT_V2', "
                 + "\"teiid_rel:MATVIEW_TTL\" 3000, "
                 + "\"teiid_rel:ALLOW_MATVIEW_MANAGEMENT\" true, "
                 + "\"teiid_rel:MATVIEW_STATUS_TABLE\" 'matview.STATUS', "
                 + "\"teiid_rel:MATVIEW_LOADNUMBER_COLUMN\" 'loadnum') "
-				+ "AS select col, col1 from source.physicalTbl");
-		server.deployVDB("comp", sourceModel, viewModel, matViewModel);
+                + "AS select col, col1 from source.physicalTbl");
+        server.deployVDB("comp", sourceModel, viewModel, matViewModel);
 
-		Connection admin = server.createConnection("jdbc:teiid:comp");
-		execute(admin, "select * from SYSADMIN.Usage where Name = 'mat_v1'");
-		admin.close();
-	}
+        Connection admin = server.createConnection("jdbc:teiid:comp");
+        execute(admin, "select * from SYSADMIN.Usage where Name = 'mat_v1'");
+        admin.close();
+    }
 
     @Test
     public void testQueryTruncation() throws Exception {

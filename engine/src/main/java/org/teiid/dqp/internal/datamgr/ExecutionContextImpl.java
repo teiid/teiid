@@ -56,29 +56,29 @@ public class ExecutionContextImpl implements ExecutionContext {
     private boolean isTransactional;
 
     private int batchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
-	private List<Exception> warnings = new LinkedList<Exception>();
-	private Session session;
-	private boolean dataAvailable;
-	private Collection<String> generalHint;
-	private Collection<String> hint;
-	private CommandContext commandContext;
-	private CacheDirective cacheDirective;
-	private RuntimeMetadata runtimeMetadata;
-	private ConnectorWorkItem workItem;
-	private Scope scope;
+    private List<Exception> warnings = new LinkedList<Exception>();
+    private Session session;
+    private boolean dataAvailable;
+    private Collection<String> generalHint;
+    private Collection<String> hint;
+    private CommandContext commandContext;
+    private CacheDirective cacheDirective;
+    private RuntimeMetadata runtimeMetadata;
+    private ConnectorWorkItem workItem;
+    private Scope scope;
 
-	public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload,
+    public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload,
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
-		commandContext = new CommandContext();
-		commandContext.setVdbName(vdbName);
-		commandContext.setVdbVersion(vdbVersion.toString());
-		commandContext.setCommandPayload(executionPayload);
-		commandContext.setConnectionID(originalConnectionID);
-		commandContext.setRequestId(new RequestID(originalConnectionID, requestId));
-		this.connectorName = connectorName;
+        commandContext = new CommandContext();
+        commandContext.setVdbName(vdbName);
+        commandContext.setVdbVersion(vdbVersion.toString());
+        commandContext.setCommandPayload(executionPayload);
+        commandContext.setConnectionID(originalConnectionID);
+        commandContext.setRequestId(new RequestID(originalConnectionID, requestId));
+        this.connectorName = connectorName;
         this.partID = partId;
         this.executeCount = execCount;
-	}
+    }
 
     public ExecutionContextImpl(CommandContext commandContext, String connectorName, String partId, String execCount, ConnectorWorkItem workItem) {
         this.connectorName = connectorName;
@@ -90,7 +90,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     @Override
     public org.teiid.CommandContext getCommandContext() {
-    	return this.commandContext;
+        return this.commandContext;
     }
 
     public String getConnectorIdentifier() {
@@ -130,9 +130,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     @Override
-	public String getConnectionId() {
-		return this.commandContext.getConnectionId();
-	}
+    public String getConnectionId() {
+        return this.commandContext.getConnectionId();
+    }
     @Override
     public void keepExecutionAlive(boolean alive) {
         this.keepAlive = alive;
@@ -159,150 +159,150 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
 
     public String toString() {
-    	String userName = null;
-    	if (this.getSubject() != null) {
-	    	for(Principal p:this.getSubject().getPrincipals()) {
-	    		userName = p.getName();
-	    	}
-    	}
+        String userName = null;
+        if (this.getSubject() != null) {
+            for(Principal p:this.getSubject().getPrincipals()) {
+                userName = p.getName();
+            }
+        }
         return "ExecutionContext<vdb=" + this.getVdbName() + ", version=" + this.getVdbVersion() + ", user=" + userName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Override
-	public boolean isTransactional() {
-		return isTransactional;
-	}
+    public boolean isTransactional() {
+        return isTransactional;
+    }
 
-	void setTransactional(boolean isTransactional) {
-		this.isTransactional = isTransactional;
-	}
+    void setTransactional(boolean isTransactional) {
+        this.isTransactional = isTransactional;
+    }
 
-	@Override
-	public int getBatchSize() {
-		return batchSize;
-	}
+    @Override
+    public int getBatchSize() {
+        return batchSize;
+    }
 
-	public void setBatchSize(int batchSize) {
-		this.batchSize = batchSize;
-	}
+    public void setBatchSize(int batchSize) {
+        this.batchSize = batchSize;
+    }
 
-	/**
-	 * Add an exception as a warning to this Execution.
-	 */
-	@Override
-	public void addWarning(Exception ex) {
-		if (ex == null) {
-			return;
-		}
-		this.warnings.add(ex);
-	}
+    /**
+     * Add an exception as a warning to this Execution.
+     */
+    @Override
+    public void addWarning(Exception ex) {
+        if (ex == null) {
+            return;
+        }
+        this.warnings.add(ex);
+    }
 
-	public List<Exception> getWarnings() {
-		List<Exception> result = new ArrayList<Exception>(warnings);
-		warnings.clear();
-		return result;
-	}
+    public List<Exception> getWarnings() {
+        List<Exception> result = new ArrayList<Exception>(warnings);
+        warnings.clear();
+        return result;
+    }
 
-	@Override
-	public Session getSession() {
-		return this.session;
-	}
+    @Override
+    public Session getSession() {
+        return this.session;
+    }
 
-	public void setSession(Session session) {
-		this.session = session;
-	}
+    public void setSession(Session session) {
+        this.session = session;
+    }
 
-	@Override
-	public synchronized void dataAvailable() {
-		RequestWorkItem requestWorkItem = this.commandContext.getWorkItem();
-		dataAvailable = true;
-		if (requestWorkItem != null) {
-			requestWorkItem.moreWork();
-		}
-	}
+    @Override
+    public synchronized void dataAvailable() {
+        RequestWorkItem requestWorkItem = this.commandContext.getWorkItem();
+        dataAvailable = true;
+        if (requestWorkItem != null) {
+            requestWorkItem.moreWork();
+        }
+    }
 
-	public synchronized boolean isDataAvailable() {
-		boolean result = dataAvailable;
-		dataAvailable = false;
-		return result;
-	}
+    public synchronized boolean isDataAvailable() {
+        boolean result = dataAvailable;
+        dataAvailable = false;
+        return result;
+    }
 
-	@Override
-	public String getGeneralHint() {
-		return StringUtil.join(generalHint, " "); //$NON-NLS-1$
-	}
+    @Override
+    public String getGeneralHint() {
+        return StringUtil.join(generalHint, " "); //$NON-NLS-1$
+    }
 
-	@Override
-	public String getSourceHint() {
-		return StringUtil.join(hint, " "); //$NON-NLS-1$
-	}
+    @Override
+    public String getSourceHint() {
+        return StringUtil.join(hint, " "); //$NON-NLS-1$
+    }
 
-	@Override
-	public Collection<String> getGeneralHints() {
-		return generalHint;
-	}
+    @Override
+    public Collection<String> getGeneralHints() {
+        return generalHint;
+    }
 
-	@Override
-	public Collection<String> getSourceHints() {
-		return hint;
-	}
+    @Override
+    public Collection<String> getSourceHints() {
+        return hint;
+    }
 
-	public void setGeneralHints(Collection<String> generalHint) {
-		this.generalHint = generalHint;
-	}
+    public void setGeneralHints(Collection<String> generalHint) {
+        this.generalHint = generalHint;
+    }
 
-	public void setHints(Collection<String> hint) {
-		this.hint = hint;
-	}
+    public void setHints(Collection<String> hint) {
+        this.hint = hint;
+    }
 
-	@Override
-	public String getConnectionID() {
-		return getConnectionId();
-	}
+    @Override
+    public String getConnectionID() {
+        return getConnectionId();
+    }
 
-	@Override
-	public Serializable getExecutionPayload() {
-		return getCommandPayload();
-	}
+    @Override
+    public Serializable getExecutionPayload() {
+        return getCommandPayload();
+    }
 
-	@Override
-	public String getRequestID() {
-		return getRequestId();
-	}
+    @Override
+    public String getRequestID() {
+        return getRequestId();
+    }
 
-	@Override
-	public CacheDirective getCacheDirective() {
-		return cacheDirective;
-	}
+    @Override
+    public CacheDirective getCacheDirective() {
+        return cacheDirective;
+    }
 
-	public void setCacheDirective(CacheDirective directive) {
-		this.cacheDirective = directive;
-	}
+    public void setCacheDirective(CacheDirective directive) {
+        this.cacheDirective = directive;
+    }
 
-	public void setRuntimeMetadata(RuntimeMetadataImpl queryMetadata) {
-		this.runtimeMetadata = queryMetadata;
-	}
+    public void setRuntimeMetadata(RuntimeMetadataImpl queryMetadata) {
+        this.runtimeMetadata = queryMetadata;
+    }
 
-	@Override
-	public RuntimeMetadata getRuntimeMetadata() {
-		return this.runtimeMetadata;
-	}
+    @Override
+    public RuntimeMetadata getRuntimeMetadata() {
+        return this.runtimeMetadata;
+    }
 
-	@Override
-	public void logCommand(Object... command) {
-		if (this.workItem != null) {
-			this.workItem.logCommand(command);
-		}
-	}
+    @Override
+    public void logCommand(Object... command) {
+        if (this.workItem != null) {
+            this.workItem.logCommand(command);
+        }
+    }
 
-	@Override
-	public Scope getScope() {
-		return scope;
-	}
+    @Override
+    public Scope getScope() {
+        return scope;
+    }
 
-	@Override
-	public void setScope(Scope scope) {
-		this.scope = scope;
-	}
+    @Override
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
 
 }

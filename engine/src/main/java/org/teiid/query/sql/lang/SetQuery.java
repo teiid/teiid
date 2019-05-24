@@ -54,7 +54,7 @@ public class SetQuery extends QueryCommand {
         EXCEPT
     }
 
-	private boolean all = true;
+    private boolean all = true;
     private Operation operation;
     private QueryCommand leftQuery;
     private QueryCommand rightQuery;
@@ -84,13 +84,13 @@ public class SetQuery extends QueryCommand {
         return (Query)leftQuery;
     }
 
-   	/**
-	 * Return type of command.
-	 * @return TYPE_QUERY
-	 */
-	public int getType() {
-		return Command.TYPE_QUERY;
-	}
+       /**
+     * Return type of command.
+     * @return TYPE_QUERY
+     */
+    public int getType() {
+        return Command.TYPE_QUERY;
+    }
 
     /**
      * Set type of operation
@@ -112,15 +112,15 @@ public class SetQuery extends QueryCommand {
         visitor.visit(this);
     }
 
-   	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public List getProjectedSymbols() {
-	    Query query = getProjectedQuery();
-	    List projectedSymbols = query.getProjectedSymbols();
+       /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public List getProjectedSymbols() {
+        Query query = getProjectedQuery();
+        List projectedSymbols = query.getProjectedSymbols();
         if (projectedTypes != null) {
             return getTypedProjectedSymbols(projectedSymbols, projectedTypes, metadata);
         }
@@ -134,7 +134,7 @@ public class SetQuery extends QueryCommand {
             Expression symbol = originalSymbol;
             Class<?> type = projectedTypes.get(i);
             if (symbol.getType() != type) {
-            	symbol = SymbolMap.getExpression(originalSymbol);
+                symbol = SymbolMap.getExpression(originalSymbol);
                 try {
                     symbol = ResolverUtil.convertExpression(symbol, DataTypeManager.getDataTypeName(type), metadata);
                 } catch (QueryResolverException err) {
@@ -150,11 +150,11 @@ public class SetQuery extends QueryCommand {
         return newProject;
     }
 
-	/**
-	 * Deep clone this object to produce a new identical query.
-	 * @return Deep clone
-	 */
-	public Object clone() {
+    /**
+     * Deep clone this object to produce a new identical query.
+     * @return Deep clone
+     */
+    public Object clone() {
         SetQuery copy = new SetQuery(this.operation);
 
         this.copyMetadataState(copy);
@@ -175,11 +175,11 @@ public class SetQuery extends QueryCommand {
         copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
 
         if (this.projectedTypes != null) {
-        	copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes), this.metadata);
+            copy.setProjectedTypes(new ArrayList<Class<?>>(projectedTypes), this.metadata);
         }
 
         return copy;
-	}
+    }
 
     /**
      * Compare two queries for equality.
@@ -187,17 +187,17 @@ public class SetQuery extends QueryCommand {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof SetQuery)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof SetQuery)) {
+            return false;
+        }
 
-		SetQuery other = (SetQuery) obj;
+        SetQuery other = (SetQuery) obj;
 
         return getOperation() == other.getOperation() &&
         EquivalenceUtil.areEqual(this.isAll(), other.isAll()) &&
@@ -217,20 +217,20 @@ public class SetQuery extends QueryCommand {
      * @return Hash code
      */
     public int hashCode() {
-    	// For speed, this hash code relies only on the hash codes of its select
-    	// and criteria clauses, not on the from, order by, or option clauses
-    	int myHash = 0;
-    	myHash = HashCodeUtil.hashCode(myHash, this.operation);
-		myHash = HashCodeUtil.hashCode(myHash, getProjectedQuery());
-		return myHash;
-	}
+        // For speed, this hash code relies only on the hash codes of its select
+        // and criteria clauses, not on the from, order by, or option clauses
+        int myHash = 0;
+        myHash = HashCodeUtil.hashCode(myHash, this.operation);
+        myHash = HashCodeUtil.hashCode(myHash, getProjectedQuery());
+        return myHash;
+    }
 
-	/**
-	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-	 */
-	public boolean areResultsCachable() {
-		return leftQuery.areResultsCachable() && rightQuery.areResultsCachable();
-	}
+    /**
+     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
+     */
+    public boolean areResultsCachable() {
+        return leftQuery.areResultsCachable() && rightQuery.areResultsCachable();
+    }
 
     /**
      * @return the left and right queries as a list.  This list cannot be modified.

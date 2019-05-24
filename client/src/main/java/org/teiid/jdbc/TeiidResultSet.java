@@ -31,6 +31,6 @@ public interface TeiidResultSet extends ResultSet {
      *             without blocking or the end of the ResultSet is reached.
      * @exception  SQLException if the statement is closed or another error condition occurs.
      */
-	int available() throws SQLException;
+    int available() throws SQLException;
 
 }

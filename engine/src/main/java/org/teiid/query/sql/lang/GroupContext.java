@@ -78,7 +78,7 @@ public class GroupContext implements Cloneable {
     }
 
     public GroupContext clone() {
-    	return new GroupContext(parent, new LinkedList<GroupSymbol>(groups));
+        return new GroupContext(parent, new LinkedList<GroupSymbol>(groups));
     }
 
     /**

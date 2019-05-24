@@ -30,33 +30,33 @@ import org.teiid.metadata.RuntimeMetadata;
 
 public class TestBaseDelegatingExecutionFactory {
 
-	@Test public void testMethodOverrides() {
-		Method[] methods = ExecutionFactory.class.getDeclaredMethods();
-		Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
-		//excluding the setter methods the counts should be equal
-		assertEquals(methods.length+101, proxyMethods.length);
-	}
+    @Test public void testMethodOverrides() {
+        Method[] methods = ExecutionFactory.class.getDeclaredMethods();
+        Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
+        //excluding the setter methods the counts should be equal
+        assertEquals(methods.length+101, proxyMethods.length);
+    }
 
-	@Test public void testExecution() throws TranslatorException {
-		BaseDelegatingExecutionFactory<Void, Void> ef = new BaseDelegatingExecutionFactory<Void, Void>() {
-			@Override
-			public ResultSetExecution createResultSetExecution(
-					QueryExpression command, ExecutionContext executionContext,
-					RuntimeMetadata metadata, Void connection)
-					throws TranslatorException {
-				return null;
-			}
-		};
-		ef.setDelegate(new ExecutionFactory<Void, Void>() {
-			@Override
-			public Execution createExecution(Command command,
-					ExecutionContext executionContext,
-					RuntimeMetadata metadata, Void connection)
-					throws TranslatorException {
-				throw new AssertionError();
-			}
-		});
-		ef.createExecution(new Select(null, false, null, null, null, null, null), null, null, null);
-	}
+    @Test public void testExecution() throws TranslatorException {
+        BaseDelegatingExecutionFactory<Void, Void> ef = new BaseDelegatingExecutionFactory<Void, Void>() {
+            @Override
+            public ResultSetExecution createResultSetExecution(
+                    QueryExpression command, ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Void connection)
+                    throws TranslatorException {
+                return null;
+            }
+        };
+        ef.setDelegate(new ExecutionFactory<Void, Void>() {
+            @Override
+            public Execution createExecution(Command command,
+                    ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Void connection)
+                    throws TranslatorException {
+                throw new AssertionError();
+            }
+        });
+        ef.createExecution(new Select(null, false, null, null, null, null, null), null, null, null);
+    }
 
 }

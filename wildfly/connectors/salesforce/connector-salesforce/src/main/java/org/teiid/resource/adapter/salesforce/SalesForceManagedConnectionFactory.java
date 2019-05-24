@@ -32,106 +32,106 @@ import com.sforce.soap.partner.Connector;
 
 
 public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFactory {
-	private static final long serialVersionUID = 5298591275313314698L;
+    private static final long serialVersionUID = 5298591275313314698L;
 
-	private String username;
-	private String password;
-	private String url; //sf url
-	private Long requestTimeout;
-	private Long connectTimeout;
+    private String username;
+    private String password;
+    private String url; //sf url
+    private Long requestTimeout;
+    private Long connectTimeout;
 
-	private String proxyUsername;
-	private String proxyPassword;
-	private String proxyUrl;
+    private String proxyUsername;
+    private String proxyPassword;
+    private String proxyUrl;
 
-	private String configProperties;
-	private String configFile; // path to the "jbossws-cxf.xml" file
+    private String configProperties;
+    private String configFile; // path to the "jbossws-cxf.xml" file
 
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		if (username.trim().length() == 0) {
-			throw new TeiidRuntimeException("Name can not be null"); //$NON-NLS-1$
-		}
-		this.username = username;
-	}
+    public String getUsername() {
+        return username;
+    }
+    public void setUsername(String username) {
+        if (username.trim().length() == 0) {
+            throw new TeiidRuntimeException("Name can not be null"); //$NON-NLS-1$
+        }
+        this.username = username;
+    }
 
-	public String getPassword() {
-		return this.password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public String getPassword() {
+        return this.password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public String getURL() {
-		return this.url;
-	}
+    public String getURL() {
+        return this.url;
+    }
 
-	public void setURL(String uRL) {
-		this.url = uRL;
-	}
+    public void setURL(String uRL) {
+        this.url = uRL;
+    }
 
-	public Long getConnectTimeout() {
-		return connectTimeout;
-	}
+    public Long getConnectTimeout() {
+        return connectTimeout;
+    }
 
-	public void setConnectTimeout(Long connectTimeout) {
-		this.connectTimeout = connectTimeout;
-	}
+    public void setConnectTimeout(Long connectTimeout) {
+        this.connectTimeout = connectTimeout;
+    }
 
-	public Long getRequestTimeout() {
-		return requestTimeout;
-	}
+    public Long getRequestTimeout() {
+        return requestTimeout;
+    }
 
-	public void setRequestTimeout(Long requestTimeout) {
-		this.requestTimeout = requestTimeout;
-	}
+    public void setRequestTimeout(Long requestTimeout) {
+        this.requestTimeout = requestTimeout;
+    }
 
-	@Override
-	public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
-		checkVersion();
-		return new BasicConnectionFactory<SalesforceConnectionImpl>() {
-			private static final long serialVersionUID = 5028356110047329135L;
+    @Override
+    public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
+        checkVersion();
+        return new BasicConnectionFactory<SalesforceConnectionImpl>() {
+            private static final long serialVersionUID = 5028356110047329135L;
 
-			@Override
-			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
-			}
-		};
-	}
+            @Override
+            public SalesforceConnectionImpl getConnection() throws ResourceException {
+                return new SalesforceConnectionImpl(SalesForceManagedConnectionFactory.this);
+            }
+        };
+    }
 
-	public String getProxyUsername() {
-		return proxyUsername;
-	}
+    public String getProxyUsername() {
+        return proxyUsername;
+    }
 
-	public void setProxyUsername(String proxyUsername) {
-		this.proxyUsername = proxyUsername;
-	}
+    public void setProxyUsername(String proxyUsername) {
+        this.proxyUsername = proxyUsername;
+    }
 
-	public String getProxyPassword() {
-		return proxyPassword;
-	}
+    public String getProxyPassword() {
+        return proxyPassword;
+    }
 
-	public void setProxyPassword(String proxyPassword) {
-		this.proxyPassword = proxyPassword;
-	}
+    public void setProxyPassword(String proxyPassword) {
+        this.proxyPassword = proxyPassword;
+    }
 
-	public String getProxyURL() {
-		return proxyUrl;
-	}
+    public String getProxyURL() {
+        return proxyUrl;
+    }
 
-	public void setProxyURL(String proxyUrl) {
-		this.proxyUrl = proxyUrl;
-	}
+    public void setProxyURL(String proxyUrl) {
+        this.proxyUrl = proxyUrl;
+    }
 
-	public String getConfigProperties() {
-		return configProperties;
-	}
+    public String getConfigProperties() {
+        return configProperties;
+    }
 
-	public void setConfigProperties(String configProperties) {
-		this.configProperties = configProperties;
-	}
+    public void setConfigProperties(String configProperties) {
+        this.configProperties = configProperties;
+    }
 
     public String getConfigFile() {
         return this.configFile;

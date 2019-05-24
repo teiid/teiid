@@ -61,7 +61,7 @@ import org.teiid.translator.ws.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
 public class TestODataMetadataProcessor {
-	private ODataExecutionFactory translator;
+    private ODataExecutionFactory translator;
 
     public static TransformationMetadata getTransformationMetadata(MetadataFactory mf, ODataExecutionFactory ef) throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "trippin", new FunctionTree("foo", new UDFSource(ef.getPushDownFunctions())));
@@ -114,34 +114,34 @@ public class TestODataMetadataProcessor {
         getTransformationMetadata(mf, this.translator);
     }
 
-	@Test
-	public void testSchema() throws Exception {
-    	translator = new ODataExecutionFactory();
-    	translator.start();
+    @Test
+    public void testSchema() throws Exception {
+        translator = new ODataExecutionFactory();
+        translator.start();
 
-    	MetadataFactory mf = tripPinMetadata();
-    	TransformationMetadata metadata = getTransformationMetadata(mf, this.translator);
+        MetadataFactory mf = tripPinMetadata();
+        TransformationMetadata metadata = getTransformationMetadata(mf, this.translator);
 
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         //System.out.println(ddl);
 
-		MetadataFactory mf2 = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		QueryParser.getQueryParser().parseDDL(mf2, ddl);
+        MetadataFactory mf2 = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        QueryParser.getQueryParser().parseDDL(mf2, ddl);
 
-		Procedure p = mf.getSchema().getProcedure("ResetDataSource");
-		assertNotNull(p);
-		assertEquals(0, p.getParameters().size());
-	}
+        Procedure p = mf.getSchema().getProcedure("ResetDataSource");
+        assertNotNull(p);
+        assertEquals(0, p.getParameters().size());
+    }
 
-	static CsdlProperty createProperty(String name, EdmPrimitiveTypeKind type) {
-	    return new CsdlProperty().setName(name).setType(type.getFullQualifiedName());
-	}
+    static CsdlProperty createProperty(String name, EdmPrimitiveTypeKind type) {
+        return new CsdlProperty().setName(name).setType(type.getFullQualifiedName());
+    }
 
     static CsdlParameter createParameter(String name, EdmPrimitiveTypeKind type) {
         return new CsdlParameter().setName(name).setType(type.getFullQualifiedName());
     }
 
-	static XMLMetadata buildXmlMetadata(Object... schemaElements) {
+    static XMLMetadata buildXmlMetadata(Object... schemaElements) {
         final CsdlSchema schema = new CsdlSchema();
         schema.setNamespace("namespace");
         schema.setEntityContainer(new CsdlEntityContainer());
@@ -182,9 +182,9 @@ public class TestODataMetadataProcessor {
         schema.getEntityContainer().setFunctionImports(functionImports);
         schema.getEntityContainer().setActionImports(actionImports);
 
-	    ClientCsdlEdmx edmx = new ClientCsdlEdmx();
-	    edmx.setVersion("1.0");
-	    edmx.setDataServices(new DataServices() {
+        ClientCsdlEdmx edmx = new ClientCsdlEdmx();
+        edmx.setVersion("1.0");
+        edmx.setDataServices(new DataServices() {
             @Override
             public List<CsdlSchema> getSchemas() {
                 return Arrays.asList(schema);
@@ -198,90 +198,90 @@ public class TestODataMetadataProcessor {
                 return "4.0";
             }
         });
-	    return new ClientCsdlXMLMetadata(edmx);
-	}
+        return new ClientCsdlXMLMetadata(edmx);
+    }
 
-	static CsdlEntitySet createES(String name, String entityType) {
+    static CsdlEntitySet createES(String name, String entityType) {
         CsdlEntitySet es = new CsdlEntitySet();
         es.setName(name);
         es.setType(new FullQualifiedName(entityType));
         return es;
-	}
+    }
 
-	@Test
-	public void testEnititySet() throws Exception {
-		ODataMetadataProcessor processor = new ODataMetadataProcessor();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+    @Test
+    public void testEnititySet() throws Exception {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "trippin", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 
-		ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
-		properties.add(createProperty("name", EdmPrimitiveTypeKind.String).setMaxLength(25).setNullable(false));
-		properties.add(createProperty("dob", EdmPrimitiveTypeKind.DateTimeOffset).setNullable(true));
-		properties.add(createProperty("ssn", EdmPrimitiveTypeKind.Int64).setNullable(false));
+        ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
+        properties.add(createProperty("name", EdmPrimitiveTypeKind.String).setMaxLength(25).setNullable(false));
+        properties.add(createProperty("dob", EdmPrimitiveTypeKind.DateTimeOffset).setNullable(true));
+        properties.add(createProperty("ssn", EdmPrimitiveTypeKind.Int64).setNullable(false));
 
-		CsdlEntityType entityType = new CsdlEntityType();
-		entityType.setName("Person");
-		entityType.setProperties(properties);
-		entityType.setKey(Arrays.asList(new CsdlPropertyRef().setName("ssn")));
+        CsdlEntityType entityType = new CsdlEntityType();
+        entityType.setName("Person");
+        entityType.setProperties(properties);
+        entityType.setKey(Arrays.asList(new CsdlPropertyRef().setName("ssn")));
 
-		CsdlEntitySet es = createES("Persons", "namespace.Person");
+        CsdlEntitySet es = createES("Persons", "namespace.Person");
 
-		XMLMetadata metadata = buildXmlMetadata(es, entityType);
+        XMLMetadata metadata = buildXmlMetadata(es, entityType);
 
-		processor.getMetadata(mf, metadata);
+        processor.getMetadata(mf, metadata);
 
-		assertNotNull(mf.getSchema().getTable("Persons"));
+        assertNotNull(mf.getSchema().getTable("Persons"));
 
-		Table person = mf.getSchema().getTable("Persons");
-		assertEquals(3, person.getColumns().size());
+        Table person = mf.getSchema().getTable("Persons");
+        assertEquals(3, person.getColumns().size());
 
-		assertNotNull(person.getColumnByName("name"));
-		assertNotNull(person.getColumnByName("dob"));
-		assertNotNull(person.getColumnByName("ssn"));
+        assertNotNull(person.getColumnByName("name"));
+        assertNotNull(person.getColumnByName("dob"));
+        assertNotNull(person.getColumnByName("ssn"));
 
-		Column name = person.getColumnByName("name");
-		Column dob = person.getColumnByName("dob");
-		Column ssn = person.getColumnByName("ssn");
+        Column name = person.getColumnByName("name");
+        Column dob = person.getColumnByName("dob");
+        Column ssn = person.getColumnByName("ssn");
 
-		assertEquals("string", name.getDatatype().getRuntimeTypeName());
-		assertEquals("timestamp", dob.getDatatype().getRuntimeTypeName());
-		assertEquals("long", ssn.getDatatype().getRuntimeTypeName());
+        assertEquals("string", name.getDatatype().getRuntimeTypeName());
+        assertEquals("timestamp", dob.getDatatype().getRuntimeTypeName());
+        assertEquals("long", ssn.getDatatype().getRuntimeTypeName());
 
-		assertTrue(name.getNullType() == NullType.No_Nulls);
-		assertTrue(dob.getNullType() == NullType.Nullable);
-		assertTrue(ssn.getNullType() == NullType.No_Nulls);
+        assertTrue(name.getNullType() == NullType.No_Nulls);
+        assertTrue(dob.getNullType() == NullType.Nullable);
+        assertTrue(ssn.getNullType() == NullType.No_Nulls);
 
-		assertEquals(25, name.getLength());
+        assertEquals(25, name.getLength());
 
-		assertNotNull(person.getPrimaryKey());
+        assertNotNull(person.getPrimaryKey());
 
-		assertEquals(1, person.getPrimaryKey().getColumns().size());
-		assertEquals("ssn", person.getPrimaryKey().getColumns().get(0).getName());
+        assertEquals(1, person.getPrimaryKey().getColumns().size());
+        assertEquals("ssn", person.getPrimaryKey().getColumns().get(0).getName());
 
-		assertTrue(person.getForeignKeys().isEmpty());
-	}
+        assertTrue(person.getForeignKeys().isEmpty());
+    }
 
-	@Test
-	public void testEnititySetWithComplexType() throws Exception {
-		MetadataFactory mf = getEntityWithComplexProperty();
+    @Test
+    public void testEnititySetWithComplexType() throws Exception {
+        MetadataFactory mf = getEntityWithComplexProperty();
 
-		assertEquals(3, mf.getSchema().getTables().size());
-		assertNotNull(mf.getSchema().getTable("Persons"));
-		assertNotNull(mf.getSchema().getTable("Persons_address"));
-		assertNotNull(mf.getSchema().getTable("Persons_secondaddress"));
+        assertEquals(3, mf.getSchema().getTables().size());
+        assertNotNull(mf.getSchema().getTable("Persons"));
+        assertNotNull(mf.getSchema().getTable("Persons_address"));
+        assertNotNull(mf.getSchema().getTable("Persons_secondaddress"));
 
-		Table personTable = mf.getSchema().getTable("Persons");
-		assertEquals(2, personTable.getColumns().size());
-		assertNotNull(personTable.getPrimaryKey());
+        Table personTable = mf.getSchema().getTable("Persons");
+        assertEquals(2, personTable.getColumns().size());
+        assertNotNull(personTable.getPrimaryKey());
 
         Table addressTable = mf.getSchema().getTable("Persons_address");
         assertEquals(4, addressTable.getColumns().size());
 
-		assertNotNull(addressTable.getColumnByName("Persons_ssn"));
+        assertNotNull(addressTable.getColumnByName("Persons_ssn"));
         assertTrue(ODataMetadataProcessor.isPseudo(addressTable.getColumnByName("Persons_ssn")));
-		assertTrue(addressTable.getColumnByName("Persons_ssn").isSelectable());
+        assertTrue(addressTable.getColumnByName("Persons_ssn").isSelectable());
         assertEquals(1, addressTable.getForeignKeys().size());
         assertEquals("northwind.Persons", addressTable.getForeignKeys().get(0).getReferenceTableName());
-	}
+    }
 
     static MetadataFactory getEntityWithComplexProperty()
             throws TranslatorException {
@@ -290,7 +290,7 @@ public class TestODataMetadataProcessor {
                 SystemMetadata.getInstance().getRuntimeTypeMap(),
                 new Properties(), null);
 
-		CsdlComplexType address = complexType("Address");
+        CsdlComplexType address = complexType("Address");
         XMLMetadata metadata = buildXmlMetadata(createES("Persons", "namespace.Person"),
                 buildPersonEntity(address), address);
         processor.getMetadata(mf, metadata);
@@ -299,9 +299,9 @@ public class TestODataMetadataProcessor {
     }
 
 
-	@Test
-	public void testMultipleEnititySetWithSameComplexType() throws Exception {
-		ODataMetadataProcessor processor = new ODataMetadataProcessor();
+    @Test
+    public void testMultipleEnititySetWithSameComplexType() throws Exception {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
         MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
                 SystemMetadata.getInstance().getRuntimeTypeMap(),
                 new Properties(), null);
@@ -314,41 +314,41 @@ public class TestODataMetadataProcessor {
                 buildBusinessEntity(address));
         processor.getMetadata(mf, metadata);
 
-		assertEquals(5, mf.getSchema().getTables().size());
-		assertNotNull(mf.getSchema().getTable("Persons"));
-		assertNotNull(mf.getSchema().getTable("Corporate"));
-		assertNotNull(mf.getSchema().getTable("Persons_address"));
-		assertNotNull(mf.getSchema().getTable("Corporate_address"));
+        assertEquals(5, mf.getSchema().getTables().size());
+        assertNotNull(mf.getSchema().getTable("Persons"));
+        assertNotNull(mf.getSchema().getTable("Corporate"));
+        assertNotNull(mf.getSchema().getTable("Persons_address"));
+        assertNotNull(mf.getSchema().getTable("Corporate_address"));
 
-		Table personTable = mf.getSchema().getTable("Persons");
-		assertEquals(2, personTable.getColumns().size());
+        Table personTable = mf.getSchema().getTable("Persons");
+        assertEquals(2, personTable.getColumns().size());
 
-		Table personAddress= mf.getSchema().getTable("Persons_address");
-		assertEquals(4, personAddress.getColumns().size());
-		ForeignKey fk = personAddress.getForeignKeys().get(0);
-		assertNotNull(fk.getColumnByName("Persons_ssn"));
+        Table personAddress= mf.getSchema().getTable("Persons_address");
+        assertEquals(4, personAddress.getColumns().size());
+        ForeignKey fk = personAddress.getForeignKeys().get(0);
+        assertNotNull(fk.getColumnByName("Persons_ssn"));
 
-		Table businessTable = mf.getSchema().getTable("Corporate");
-		assertEquals(1, businessTable.getColumns().size());
+        Table businessTable = mf.getSchema().getTable("Corporate");
+        assertEquals(1, businessTable.getColumns().size());
         Table corporateAddress= mf.getSchema().getTable("Corporate_address");
         assertEquals(4, corporateAddress.getColumns().size());
         fk = corporateAddress.getForeignKeys().get(0);
         assertNotNull(fk.getColumnByName("Corporate_name"));
 
-	}
+    }
 
-	@Test
-	public void testOneToOneAssosiation() throws Exception {
-		MetadataFactory mf = oneToOneRelationMetadata(true);
+    @Test
+    public void testOneToOneAssosiation() throws Exception {
+        MetadataFactory mf = oneToOneRelationMetadata(true);
 
-		Table g1 = mf.getSchema().getTable("G1");
-		Table g2 = mf.getSchema().getTable("G2");
+        Table g1 = mf.getSchema().getTable("G1");
+        Table g2 = mf.getSchema().getTable("G2");
 
-		ForeignKey fk = g1.getForeignKeys().get(0);
-		assertEquals("G2_one_2_one", fk.getName());
-		assertNotNull(fk.getColumnByName("e1"));
+        ForeignKey fk = g1.getForeignKeys().get(0);
+        assertEquals("G2_one_2_one", fk.getName());
+        assertNotNull(fk.getColumnByName("e1"));
 
-		fk = g2.getForeignKeys().get(0);
+        fk = g2.getForeignKeys().get(0);
         assertEquals("G1_one_2_one", fk.getName());
         assertNotNull(fk.getColumnByName("e1"));
 
@@ -363,24 +363,24 @@ public class TestODataMetadataProcessor {
 
         //TODO: could infer this, but for now it's not in the metadata
         assertTrue(g2.getForeignKeys().isEmpty());
-	}
+    }
 
-	@Test
-	public void testFunction() throws Exception {
+    @Test
+    public void testFunction() throws Exception {
         CsdlReturnType returnType = new CsdlReturnType();
         returnType.setType("Edm.String");
 
         MetadataFactory mf = functionMetadata("invoke", returnType, null);
-	    Procedure p = mf.getSchema().getProcedure("invoke");
-	    assertNotNull(p);
-	    assertEquals(3, p.getParameters().size());
-	    assertNull(p.getResultSet());
-	    assertNotNull(getReturnParameter(p));
-	    ProcedureParameter pp = getReturnParameter(p);
-	    assertEquals("string", pp.getRuntimeType());
-	    ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
-	    assertEquals(ODataType.FUNCTION, type);
-	}
+        Procedure p = mf.getSchema().getProcedure("invoke");
+        assertNotNull(p);
+        assertEquals(3, p.getParameters().size());
+        assertNull(p.getResultSet());
+        assertNotNull(getReturnParameter(p));
+        ProcedureParameter pp = getReturnParameter(p);
+        assertEquals("string", pp.getRuntimeType());
+        ODataType type = ODataType.valueOf(p.getProperty(ODataMetadataProcessor.ODATA_TYPE, false));
+        assertEquals(ODataType.FUNCTION, type);
+    }
 
     @Test
     public void testAction() throws Exception {
@@ -494,44 +494,44 @@ public class TestODataMetadataProcessor {
                 SystemMetadata.getInstance().getRuntimeTypeMap(),
                 new Properties(), null);
 
-		CsdlEntityType g1Entity = entityType("g1");
-		CsdlEntityType g2Entity = entityType("g2");
+        CsdlEntityType g1Entity = entityType("g1");
+        CsdlEntityType g2Entity = entityType("g2");
 
-		CsdlNavigationProperty navProperty = new CsdlNavigationProperty();
-		navProperty.setName("one_2_one");
-		navProperty.setType("namespace.g2");
-		navProperty.setNullable(false);
-		navProperty.setPartner("PartnerPath");
+        CsdlNavigationProperty navProperty = new CsdlNavigationProperty();
+        navProperty.setName("one_2_one");
+        navProperty.setType("namespace.g2");
+        navProperty.setNullable(false);
+        navProperty.setPartner("PartnerPath");
 
-		g1Entity.setNavigationProperties(Arrays.asList(navProperty));
+        g1Entity.setNavigationProperties(Arrays.asList(navProperty));
 
-		if (bothDirections) {
-    		CsdlNavigationProperty nav2Property = new CsdlNavigationProperty();
+        if (bothDirections) {
+            CsdlNavigationProperty nav2Property = new CsdlNavigationProperty();
             nav2Property.setName("one_2_one");
             nav2Property.setType("namespace.g1");
             nav2Property.setNullable(false);
             nav2Property.setPartner("PartnerPath");
 
             g2Entity.setNavigationProperties(Arrays.asList(nav2Property));
-		}
+        }
 
-		CsdlEntitySet g1Set = createES("G1", "namespace.g1");
-		CsdlEntitySet g2Set = createES("G2", "namespace.g2");
+        CsdlEntitySet g1Set = createES("G1", "namespace.g1");
+        CsdlEntitySet g2Set = createES("G2", "namespace.g2");
 
-		CsdlNavigationPropertyBinding navBinding = new CsdlNavigationPropertyBinding();
-		navBinding.setPath("one_2_one");
-		navBinding.setTarget("G2");
-		g1Set.setNavigationPropertyBindings(Arrays.asList(navBinding));
+        CsdlNavigationPropertyBinding navBinding = new CsdlNavigationPropertyBinding();
+        navBinding.setPath("one_2_one");
+        navBinding.setTarget("G2");
+        g1Set.setNavigationPropertyBindings(Arrays.asList(navBinding));
 
-		if (bothDirections) {
-    		CsdlNavigationPropertyBinding nav2Binding = new CsdlNavigationPropertyBinding();
+        if (bothDirections) {
+            CsdlNavigationPropertyBinding nav2Binding = new CsdlNavigationPropertyBinding();
             nav2Binding.setPath("one_2_one");
             nav2Binding.setTarget("G1");
             g2Set.setNavigationPropertyBindings(Arrays.asList(nav2Binding));
-		}
+        }
 
-		XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
-		processor.getMetadata(mf, metadata);
+        XMLMetadata metadata = buildXmlMetadata(g1Entity, g1Set, g2Entity, g2Set);
+        processor.getMetadata(mf, metadata);
         return mf;
     }
 
@@ -743,9 +743,9 @@ public class TestODataMetadataProcessor {
 
     }
 
-	@Test
-	public void testAssosiationWithReferentialContriant() throws Exception {
-		ODataMetadataProcessor processor = new ODataMetadataProcessor();
+    @Test
+    public void testAssosiationWithReferentialContriant() throws Exception {
+        ODataMetadataProcessor processor = new ODataMetadataProcessor();
         MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind",
                 SystemMetadata.getInstance().getRuntimeTypeMap(),
                 new Properties(), null);
@@ -778,20 +778,20 @@ public class TestODataMetadataProcessor {
         processor.getMetadata(mf, metadata);
 
 
-		Table g1 = mf.getSchema().getTable("G1");
-		Table g2 = mf.getSchema().getTable("G2");
+        Table g1 = mf.getSchema().getTable("G1");
+        Table g2 = mf.getSchema().getTable("G2");
 
-		assertNotNull(g1);
-		assertNotNull(g2);
+        assertNotNull(g1);
+        assertNotNull(g2);
 
-		ForeignKey fk = g1.getForeignKeys().get(0);
-		assertEquals("G1_one_2_one", fk.getName());
-		assertNotNull(fk.getColumnByName("g2e2"));
-		assertEquals("e2", fk.getReferenceColumns().get(0));
-	}
+        ForeignKey fk = g1.getForeignKeys().get(0);
+        assertEquals("G1_one_2_one", fk.getName());
+        assertNotNull(fk.getColumnByName("g2e2"));
+        assertEquals("e2", fk.getReferenceColumns().get(0));
+    }
 
-	static CsdlEntityType entityType(String name) {
-	    ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
+    static CsdlEntityType entityType(String name) {
+        ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
         properties.add(createProperty("e1", EdmPrimitiveTypeKind.Int32));
         properties.add(createProperty("e2", EdmPrimitiveTypeKind.String).setNullable(false));
 
@@ -800,7 +800,7 @@ public class TestODataMetadataProcessor {
         entityType.setProperties(properties);
         entityType.setKey(Arrays.asList(new CsdlPropertyRef().setName("e1")));
         return entityType;
-	}
+    }
 
     static CsdlFunction function(String name, CsdlReturnType returnType) {
         ArrayList<CsdlParameter> parameters = new ArrayList<CsdlParameter>();
@@ -838,7 +838,7 @@ public class TestODataMetadataProcessor {
         return entityType;
     }
 
-	static CsdlEntityType buildPersonEntity(CsdlComplexType address) {
+    static CsdlEntityType buildPersonEntity(CsdlComplexType address) {
         ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
         properties.add(createProperty("name", EdmPrimitiveTypeKind.String).setMaxLength(25));
         properties.add(createProperty("ssn", EdmPrimitiveTypeKind.Int64).setNullable(false));
@@ -849,18 +849,18 @@ public class TestODataMetadataProcessor {
         entityType.setName("Person");
         entityType.setProperties(properties);
         entityType.setKey(Arrays.asList(new CsdlPropertyRef().setName("ssn")));
-		return entityType;
-	}
+        return entityType;
+    }
 
-	static CsdlComplexType complexType(String name) {
+    static CsdlComplexType complexType(String name) {
         ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
         properties.add(createProperty("street", EdmPrimitiveTypeKind.String));
         properties.add(createProperty("city", EdmPrimitiveTypeKind.String));
         properties.add(createProperty("state", EdmPrimitiveTypeKind.String));
 
-	    CsdlComplexType type = new CsdlComplexType();
-	    type.setName(name).setProperties(properties);
+        CsdlComplexType type = new CsdlComplexType();
+        type.setName(name).setProperties(properties);
 
-	    return type;
-	}
+        return type;
+    }
 }

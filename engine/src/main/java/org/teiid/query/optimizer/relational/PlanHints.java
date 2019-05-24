@@ -40,13 +40,13 @@ public final class PlanHints {
 
     public boolean hasRelationalProc = false;
 
-	public boolean hasFunctionBasedColumns;
+    public boolean hasFunctionBasedColumns;
 
-	public boolean hasRowBasedSecurity;
+    public boolean hasRowBasedSecurity;
 
     public PlanHints() { }
 
     public String toString(){
-    	return "PlanHints"; //$NON-NLS-1$
+        return "PlanHints"; //$NON-NLS-1$
     }
 }

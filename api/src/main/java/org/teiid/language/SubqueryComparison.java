@@ -28,10 +28,10 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  */
 public class SubqueryComparison extends Condition implements Predicate, SubqueryContainer {
 
-	public enum Quantifier {
-		SOME,
-		ALL
-	}
+    public enum Quantifier {
+        SOME,
+        ALL
+    }
 
     private Expression leftExpr;
     private Operator operator;

@@ -23,22 +23,22 @@ import java.util.List;
 
 public class UpdatedResult {
 
-	private Calendar latestDateCovered;
-	private List<String> IDs;
+    private Calendar latestDateCovered;
+    private List<String> IDs;
 
-	public Calendar getLatestDateCovered() {
-		return latestDateCovered;
-	}
+    public Calendar getLatestDateCovered() {
+        return latestDateCovered;
+    }
 
-	public void setLatestDateCovered(Calendar latestDateCovered) {
-		this.latestDateCovered = latestDateCovered;
-	}
+    public void setLatestDateCovered(Calendar latestDateCovered) {
+        this.latestDateCovered = latestDateCovered;
+    }
 
-	public List<String> getIDs() {
-		return IDs;
-	}
+    public List<String> getIDs() {
+        return IDs;
+    }
 
-	public void setIDs(List<String> list) {
-		this.IDs = list;
-	}
+    public void setIDs(List<String> list) {
+        this.IDs = list;
+    }
 }

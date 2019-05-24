@@ -35,31 +35,31 @@ import org.teiid.core.util.TimestampWithTimezone;
  */
 public class TypeFacility {
 
-	public static final class RUNTIME_CODES {
-		public static final int STRING = DataTypeManager.DefaultTypeCodes.STRING;
-		public static final int CHAR = DataTypeManager.DefaultTypeCodes.CHAR;
-		public static final int BOOLEAN = DataTypeManager.DefaultTypeCodes.BOOLEAN;
-		public static final int BYTE = DataTypeManager.DefaultTypeCodes.BYTE;
-		public static final int SHORT = DataTypeManager.DefaultTypeCodes.SHORT;
-		public static final int INTEGER = DataTypeManager.DefaultTypeCodes.INTEGER;
-		public static final int LONG = DataTypeManager.DefaultTypeCodes.LONG;
-		public static final int BIG_INTEGER = DataTypeManager.DefaultTypeCodes.BIGINTEGER;
-		public static final int FLOAT = DataTypeManager.DefaultTypeCodes.FLOAT;
-		public static final int DOUBLE = DataTypeManager.DefaultTypeCodes.DOUBLE;
-		public static final int BIG_DECIMAL = DataTypeManager.DefaultTypeCodes.BIGDECIMAL;
-		public static final int DATE = DataTypeManager.DefaultTypeCodes.DATE;
-		public static final int TIME = DataTypeManager.DefaultTypeCodes.TIME;
-		public static final int TIMESTAMP = DataTypeManager.DefaultTypeCodes.TIMESTAMP;
-		public static final int OBJECT = DataTypeManager.DefaultTypeCodes.OBJECT;
-		public static final int BLOB = DataTypeManager.DefaultTypeCodes.BLOB;
-		public static final int CLOB = DataTypeManager.DefaultTypeCodes.CLOB;
-		public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
-		public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
-		public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
-		public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
-		public static final int GEOGRAPHY = DataTypeManager.DefaultTypeCodes.GEOGRAPHY;
-		public static final int JSON = DataTypeManager.DefaultTypeCodes.JSON;
-	}
+    public static final class RUNTIME_CODES {
+        public static final int STRING = DataTypeManager.DefaultTypeCodes.STRING;
+        public static final int CHAR = DataTypeManager.DefaultTypeCodes.CHAR;
+        public static final int BOOLEAN = DataTypeManager.DefaultTypeCodes.BOOLEAN;
+        public static final int BYTE = DataTypeManager.DefaultTypeCodes.BYTE;
+        public static final int SHORT = DataTypeManager.DefaultTypeCodes.SHORT;
+        public static final int INTEGER = DataTypeManager.DefaultTypeCodes.INTEGER;
+        public static final int LONG = DataTypeManager.DefaultTypeCodes.LONG;
+        public static final int BIG_INTEGER = DataTypeManager.DefaultTypeCodes.BIGINTEGER;
+        public static final int FLOAT = DataTypeManager.DefaultTypeCodes.FLOAT;
+        public static final int DOUBLE = DataTypeManager.DefaultTypeCodes.DOUBLE;
+        public static final int BIG_DECIMAL = DataTypeManager.DefaultTypeCodes.BIGDECIMAL;
+        public static final int DATE = DataTypeManager.DefaultTypeCodes.DATE;
+        public static final int TIME = DataTypeManager.DefaultTypeCodes.TIME;
+        public static final int TIMESTAMP = DataTypeManager.DefaultTypeCodes.TIMESTAMP;
+        public static final int OBJECT = DataTypeManager.DefaultTypeCodes.OBJECT;
+        public static final int BLOB = DataTypeManager.DefaultTypeCodes.BLOB;
+        public static final int CLOB = DataTypeManager.DefaultTypeCodes.CLOB;
+        public static final int XML = DataTypeManager.DefaultTypeCodes.XML;
+        public static final int NULL = DataTypeManager.DefaultTypeCodes.NULL;
+        public static final int VARBINARY = DataTypeManager.DefaultTypeCodes.VARBINARY;
+        public static final int GEOMETRY = DataTypeManager.DefaultTypeCodes.GEOMETRY;
+        public static final int GEOGRAPHY = DataTypeManager.DefaultTypeCodes.GEOGRAPHY;
+        public static final int JSON = DataTypeManager.DefaultTypeCodes.JSON;
+    }
 
     public interface RUNTIME_TYPES {
         public static final Class<String> STRING        = DataTypeManager.DefaultDataClasses.STRING;
@@ -106,7 +106,7 @@ public class TypeFacility {
         public static final String NULL         = DataTypeManager.DefaultDataTypes.NULL;
         public static final String BLOB         = DataTypeManager.DefaultDataTypes.BLOB;
         public static final String CLOB         = DataTypeManager.DefaultDataTypes.CLOB;
-        public static final String XML         	= DataTypeManager.DefaultDataTypes.XML;
+        public static final String XML          = DataTypeManager.DefaultDataTypes.XML;
         public static final String VARBINARY    = DataTypeManager.DefaultDataTypes.VARBINARY;
         public static final String GEOMETRY     = DataTypeManager.DefaultDataTypes.GEOMETRY;
         public static final String GEOGRAPHY     = DataTypeManager.DefaultDataTypes.GEOGRAPHY;
@@ -118,24 +118,24 @@ public class TypeFacility {
      * <br>IMPORTANT: only considered the default runtime types
      */
     public static Class<?> getDataTypeClass(String type) {
-    	return DataTypeManager.getDataTypeClass(type);
+        return DataTypeManager.getDataTypeClass(type);
     }
 
     /**
      * Get the String constant for the given runtime type class
      */
     public static String getDataTypeName(Class<?> type) {
-    	return DataTypeManager.getDataTypeName(type);
+        return DataTypeManager.getDataTypeName(type);
     }
 
     /**
      * Get the closest runtime type for the given class
      */
     public static Class<?> getRuntimeType(Class<?> type) {
-    	if (type.isPrimitive()) {
-    		return convertPrimitiveToObject(type);
-    	}
-    	return DataTypeManager.getRuntimeType(type);
+        if (type.isPrimitive()) {
+            return convertPrimitiveToObject(type);
+        }
+        return DataTypeManager.getRuntimeType(type);
     }
 
     /**
@@ -153,10 +153,10 @@ public class TypeFacility {
      * @return
      */
     public static final String getDataTypeNameFromSQLType(int sqlType) {
-    	if (sqlType == Types.ARRAY) {
-    		return RUNTIME_NAMES.OBJECT;
-    	}
-    	return JDBCSQLTypeInfo.getTypeName(sqlType);
+        if (sqlType == Types.ARRAY) {
+            return RUNTIME_NAMES.OBJECT;
+        }
+        return JDBCSQLTypeInfo.getTypeName(sqlType);
     }
 
     /**
@@ -164,9 +164,9 @@ public class TypeFacility {
      * @param value
      * @return
      */
-	public Object convertToRuntimeType(Object value) {
-		return DataTypeManager.convertToRuntimeType(value, true);
-	}
+    public Object convertToRuntimeType(Object value) {
+        return DataTypeManager.convertToRuntimeType(value, true);
+    }
 
     /**
      * Convert the given date to a target type, optionally adjusting its display
@@ -177,18 +177,18 @@ public class TypeFacility {
      * @param targetType
      * @return
      */
-	public Object convertDate(Date date, TimeZone initial, Calendar target,
-			Class<?> targetType) {
-		return TimestampWithTimezone.create(date, initial, target, targetType);
-	}
+    public Object convertDate(Date date, TimeZone initial, Calendar target,
+            Class<?> targetType) {
+        return TimestampWithTimezone.create(date, initial, target, targetType);
+    }
 
-	/**
-	 * Convert a primitive class to the corresponding object class
-	 * @param clazz
-	 * @return
-	 */
-	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
-		return ObjectToAnyTransform.convertPrimitiveToObject(clazz);
-	}
+    /**
+     * Convert a primitive class to the corresponding object class
+     * @param clazz
+     * @return
+     */
+    public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
+        return ObjectToAnyTransform.convertPrimitiveToObject(clazz);
+    }
 
 }

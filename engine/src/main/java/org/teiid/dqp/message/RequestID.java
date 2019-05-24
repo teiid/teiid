@@ -133,16 +133,16 @@ public class RequestID implements Externalizable {
         }
         RequestID other = (RequestID)obj;
         return this.executionID == other.executionID
-        	&& EquivalenceUtil.areEqual(this.connectionID, other.connectionID);
+            && EquivalenceUtil.areEqual(this.connectionID, other.connectionID);
     }
 
     /**
      * Return a combined string for the ID.
      */
     public String toString() {
-    	if (combinedID == null) {
-    		createCombinedID();
-    	}
+        if (combinedID == null) {
+            createCombinedID();
+        }
         return this.combinedID;
     }
 

@@ -45,25 +45,25 @@ import org.teiid.metadata.TableStats;
 @SuppressWarnings("nls")
 public class TestMetadataUpdates {
 
-	Connection connection;
+    Connection connection;
 
     static final String VDB = "metadata";
 
-	private static FakeServer server;
+    private static FakeServer server;
 
-	@BeforeClass public static void oneTimeSetUp() throws Exception {
-    	server = new FakeServer(true);
+    @BeforeClass public static void oneTimeSetUp() throws Exception {
+        server = new FakeServer(true);
     }
 
-	@AfterClass public static void oneTimeTearDown() throws Exception {
-		server.stop();
-	}
+    @AfterClass public static void oneTimeTearDown() throws Exception {
+        server.stop();
+    }
 
-	@Before public void setup() throws Exception {
-		server.undeployVDB(VDB);
-		server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
-		connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Before public void setup() throws Exception {
+        server.undeployVDB(VDB);
+        server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
+        connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
     @After public void tearDown() throws SQLException {
         if (connection != null) {
@@ -72,220 +72,220 @@ public class TestMetadataUpdates {
         }
     }
 
-	private static DefaultMetadataRepository getMetadataRepo() {
-		DefaultMetadataRepository repo = new DefaultMetadataRepository() {
+    private static DefaultMetadataRepository getMetadataRepo() {
+        DefaultMetadataRepository repo = new DefaultMetadataRepository() {
 
-			@Override
-			public void setColumnStats(String vdbName, String vdbVersion,
-					Column column, ColumnStats columnStats) {
+            @Override
+            public void setColumnStats(String vdbName, String vdbVersion,
+                    Column column, ColumnStats columnStats) {
 
-			}
+            }
 
-			@Override
-			public void setInsteadOfTriggerDefinition(String vdbName,
-					String vdbVersion, Table table, TriggerEvent triggerOperation,
-					String triggerDefinition) {
+            @Override
+            public void setInsteadOfTriggerDefinition(String vdbName,
+                    String vdbVersion, Table table, TriggerEvent triggerOperation,
+                    String triggerDefinition) {
 
-			}
+            }
 
-			@Override
-			public void setInsteadOfTriggerEnabled(String vdbName,
-					String vdbVersion, Table table, TriggerEvent triggerOperation,
-					boolean enabled) {
+            @Override
+            public void setInsteadOfTriggerEnabled(String vdbName,
+                    String vdbVersion, Table table, TriggerEvent triggerOperation,
+                    boolean enabled) {
 
-			}
+            }
 
-			@Override
-			public void setProcedureDefinition(String vdbName, String vdbVersion,
-					Procedure procedure, String procedureDefinition) {
+            @Override
+            public void setProcedureDefinition(String vdbName, String vdbVersion,
+                    Procedure procedure, String procedureDefinition) {
 
-			}
+            }
 
-			@Override
-			public void setProperty(String vdbName, String vdbVersion,
-					AbstractMetadataRecord record, String name, String value) {
+            @Override
+            public void setProperty(String vdbName, String vdbVersion,
+                    AbstractMetadataRecord record, String name, String value) {
 
-			}
+            }
 
-			@Override
-			public void setTableStats(String vdbName, String vdbVersion,
-					Table table, TableStats tableStats) {
+            @Override
+            public void setTableStats(String vdbName, String vdbVersion,
+                    Table table, TableStats tableStats) {
 
-			}
+            }
 
-			@Override
-			public void setViewDefinition(String vdbName, String vdbVersion,
-					Table table, String viewDefinition) {
+            @Override
+            public void setViewDefinition(String vdbName, String vdbVersion,
+                    Table table, String viewDefinition) {
 
-			}
+            }
 
-			@Override
-			public String getViewDefinition(String vdbName, String vdbVersion,
-					Table table) {
-				if (table.getName().equals("vw")) {
-    				return "select '2011'";
-    			}
-    			return null;
-			}
+            @Override
+            public String getViewDefinition(String vdbName, String vdbVersion,
+                    Table table) {
+                if (table.getName().equals("vw")) {
+                    return "select '2011'";
+                }
+                return null;
+            }
 
-			@Override
-			public String getProcedureDefinition(String vdbName,
-					String vdbVersion, Procedure procedure) {
-    			if (procedure.getName().equals("proc")) {
-    				return "create virtual procedure begin select '2011'; if ((call isLoggable())) call logMsg(msg=>'hello'); end";
-    			}
-    			return null;
-			}
+            @Override
+            public String getProcedureDefinition(String vdbName,
+                    String vdbVersion, Procedure procedure) {
+                if (procedure.getName().equals("proc")) {
+                    return "create virtual procedure begin select '2011'; if ((call isLoggable())) call logMsg(msg=>'hello'); end";
+                }
+                return null;
+            }
 
-			@Override
-			public String getInsteadOfTriggerDefinition(String vdbName,
-					String vdbVersion, Table table, TriggerEvent triggerOperation) {
-				return "for each row select 1/0;";
-			}
+            @Override
+            public String getInsteadOfTriggerDefinition(String vdbName,
+                    String vdbVersion, Table table, TriggerEvent triggerOperation) {
+                return "for each row select 1/0;";
+            }
 
-			@Override
-			public Boolean isInsteadOfTriggerEnabled(String vdbName,
-					String vdbVersion, Table table, TriggerEvent triggerOperation) {
-				return Boolean.TRUE;
-			}
-		};
-    	return repo;
-	}
+            @Override
+            public Boolean isInsteadOfTriggerEnabled(String vdbName,
+                    String vdbVersion, Table table, TriggerEvent triggerOperation) {
+                return Boolean.TRUE;
+            }
+        };
+        return repo;
+    }
 
     @Test public void testViewMetadataRepositoryMerge() throws Exception {
-    	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("select * from vw");
-    	rs.next();
-    	assertEquals(2011, rs.getInt(1));
+        Statement s = connection.createStatement();
+        ResultSet rs = s.executeQuery("select * from vw");
+        rs.next();
+        assertEquals(2011, rs.getInt(1));
     }
 
     @Test(expected=SQLException.class) public void testViewUpdateMetadataRepositoryMerge() throws Exception {
-    	Statement s = connection.createStatement();
-    	s.execute("delete from vw");
+        Statement s = connection.createStatement();
+        s.execute("delete from vw");
     }
 
     @Test public void testProcMetadataRepositoryMerge() throws Exception {
-    	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("call proc(1)");
-    	rs.next();
-    	assertEquals(2011, rs.getInt(1));
+        Statement s = connection.createStatement();
+        ResultSet rs = s.executeQuery("call proc(1)");
+        rs.next();
+        assertEquals(2011, rs.getInt(1));
     }
 
     @Test public void testSetProperty() throws Exception {
-    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'foo', 'bar')}");
-    	assertFalse(s.execute());
-    	assertNull(s.getClob(1));
+        CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'foo', 'bar')}");
+        assertFalse(s.execute());
+        assertNull(s.getClob(1));
 
-    	Statement stmt = connection.createStatement();
-    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = 'foo'");
-    	rs.next();
-    	assertEquals("foo", rs.getString(1));
-    	assertEquals("bar", rs.getString(2));
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = 'foo'");
+        rs.next();
+        assertEquals("foo", rs.getString(1));
+        assertEquals("bar", rs.getString(2));
     }
 
     @Test public void testSetPropertyNamespace() throws Exception {
-    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'teiid_rel:foo', 'bar')}");
-    	assertFalse(s.execute());
-    	assertNull(s.getClob(1));
+        CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty((select uid from sys.tables where name='vw'), 'teiid_rel:foo', 'bar')}");
+        assertFalse(s.execute());
+        assertNull(s.getClob(1));
 
-    	Statement stmt = connection.createStatement();
-    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = '{http://www.teiid.org/ext/relational/2012}foo'");
-    	rs.next();
-    	assertEquals("{http://www.teiid.org/ext/relational/2012}foo", rs.getString(1));
-    	assertEquals("bar", rs.getString(2));
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from sys.tables where name='vw') and name = '{http://www.teiid.org/ext/relational/2012}foo'");
+        rs.next();
+        assertEquals("{http://www.teiid.org/ext/relational/2012}foo", rs.getString(1));
+        assertEquals("bar", rs.getString(2));
     }
 
     @Test(expected=SQLException.class) public void testSetProperty_Invalid() throws Exception {
-    	CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty('ah', 'foo', 'bar')}");
-    	s.execute();
+        CallableStatement s = connection.prepareCall("{? = call sysadmin.setProperty('ah', 'foo', 'bar')}");
+        s.execute();
     }
 
     @Test public void testAlterView() throws Exception {
-    	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("select * from vw");
-    	rs.next();
-    	assertEquals(2011, rs.getInt(1));
+        Statement s = connection.createStatement();
+        ResultSet rs = s.executeQuery("select * from vw");
+        rs.next();
+        assertEquals(2011, rs.getInt(1));
 
-    	assertFalse(s.execute("alter view vw as select '2012'"));
+        assertFalse(s.execute("alter view vw as select '2012'"));
 
-    	rs = s.executeQuery("select * from vw");
-    	rs.next();
-    	assertEquals(2012, rs.getInt(1));
+        rs = s.executeQuery("select * from vw");
+        rs.next();
+        assertEquals(2012, rs.getInt(1));
     }
 
     @Test public void testAlterProcedure() throws Exception {
-    	Statement s = connection.createStatement();
-    	ResultSet rs = s.executeQuery("call proc(1)");
-    	rs.next();
-    	assertEquals(2011, rs.getInt(1));
+        Statement s = connection.createStatement();
+        ResultSet rs = s.executeQuery("call proc(1)");
+        rs.next();
+        assertEquals(2011, rs.getInt(1));
 
-    	assertFalse(s.execute("alter procedure proc as begin select '2012'; end"));
-    	//the sleep is needed to ensure that the plan is invalidated
-    	Thread.sleep(100);
+        assertFalse(s.execute("alter procedure proc as begin select '2012'; end"));
+        //the sleep is needed to ensure that the plan is invalidated
+        Thread.sleep(100);
 
-    	rs = s.executeQuery("call proc(1)");
-    	rs.next();
-    	assertEquals(2012, rs.getInt(1));
+        rs = s.executeQuery("call proc(1)");
+        rs.next();
+        assertEquals(2012, rs.getInt(1));
     }
 
     @Test public void testAlterTriggerActionUpdate() throws Exception {
-    	Statement s = connection.createStatement();
-    	try {
-    		s.execute("update vw set x = 1");
-    		fail();
-    	} catch (SQLException e) {
-    	}
+        Statement s = connection.createStatement();
+        try {
+            s.execute("update vw set x = 1");
+            fail();
+        } catch (SQLException e) {
+        }
 
-    	assertFalse(s.execute("alter trigger on vw instead of update as for each row select 1;"));
+        assertFalse(s.execute("alter trigger on vw instead of update as for each row select 1;"));
 
-    	s.execute("update vw set x = 1");
-    	assertEquals(1, s.getUpdateCount());
+        s.execute("update vw set x = 1");
+        assertEquals(1, s.getUpdateCount());
     }
 
     @Test public void testAlterTriggerActionInsert() throws Exception {
-    	Statement s = connection.createStatement();
-    	try {
-    		s.execute("insert into vw (x) values ('a')");
-    		fail();
-    	} catch (SQLException e) {
-    	}
+        Statement s = connection.createStatement();
+        try {
+            s.execute("insert into vw (x) values ('a')");
+            fail();
+        } catch (SQLException e) {
+        }
 
-    	assertFalse(s.execute("alter trigger on vw instead of insert as for each row select 1;"));
+        assertFalse(s.execute("alter trigger on vw instead of insert as for each row select 1;"));
 
-    	s.execute("insert into vw (x) values ('a')");
-    	assertEquals(1, s.getUpdateCount());
+        s.execute("insert into vw (x) values ('a')");
+        assertEquals(1, s.getUpdateCount());
     }
 
     @Test public void testAlterTriggerActionDelete() throws Exception {
-    	Statement s = connection.createStatement();
-    	try {
-    		s.execute("delete from vw");
-    		fail();
-    	} catch (SQLException e) {
-    	}
+        Statement s = connection.createStatement();
+        try {
+            s.execute("delete from vw");
+            fail();
+        } catch (SQLException e) {
+        }
 
-    	assertFalse(s.execute("alter trigger on vw instead of delete as for each row select 1;"));
+        assertFalse(s.execute("alter trigger on vw instead of delete as for each row select 1;"));
 
-    	s.execute("delete from vw");
-    	assertEquals(1, s.getUpdateCount());
+        s.execute("delete from vw");
+        assertEquals(1, s.getUpdateCount());
 
-    	assertFalse(s.execute("alter trigger on vw instead of delete disabled"));
+        assertFalse(s.execute("alter trigger on vw instead of delete disabled"));
 
-    	try {
-    		s.execute("delete from vw");
-    		fail();
-    	} catch (SQLException e) {
-    	}
+        try {
+            s.execute("delete from vw");
+            fail();
+        } catch (SQLException e) {
+        }
 
-    	assertFalse(s.execute("alter trigger on vw instead of delete enabled"));
+        assertFalse(s.execute("alter trigger on vw instead of delete enabled"));
 
-    	s.execute("delete from vw");
-    	assertEquals(1, s.getUpdateCount());
+        s.execute("delete from vw");
+        assertEquals(1, s.getUpdateCount());
     }
 
     @Test(expected=SQLException.class) public void testCreateTriggerActionUpdate() throws Exception {
-    	Statement s = connection.createStatement();
-    	s.execute("create trigger on vw instead of update as for each row select 1;");
+        Statement s = connection.createStatement();
+        s.execute("create trigger on vw instead of update as for each row select 1;");
     }
 
 }

@@ -39,121 +39,121 @@ import org.teiid.security.SecurityHelper;
 @SuppressWarnings("nls")
 public class TestDQPWorkContext {
 
-	public static DQPWorkContext example() {
-		DQPWorkContext message = new DQPWorkContext();
-		message.getSession().setVDBName("vdbName"); //$NON-NLS-1$
-		message.getSession().setVDBVersion(1);
-		message.getSession().setApplicationName("querybuilder"); //$NON-NLS-1$
-		message.getSession().setSessionId(String.valueOf(5));
-		message.getSession().setUserName("userName"); //$NON-NLS-1$
-		return message;
-	}
+    public static DQPWorkContext example() {
+        DQPWorkContext message = new DQPWorkContext();
+        message.getSession().setVDBName("vdbName"); //$NON-NLS-1$
+        message.getSession().setVDBVersion(1);
+        message.getSession().setApplicationName("querybuilder"); //$NON-NLS-1$
+        message.getSession().setSessionId(String.valueOf(5));
+        message.getSession().setUserName("userName"); //$NON-NLS-1$
+        return message;
+    }
 
-	@Test public void testSerialize() throws Exception {
-		DQPWorkContext copy = UnitTestUtil.helpSerialize(example());
+    @Test public void testSerialize() throws Exception {
+        DQPWorkContext copy = UnitTestUtil.helpSerialize(example());
 
-		assertEquals("5", copy.getSessionId()); //$NON-NLS-1$
-		assertEquals("userName", copy.getUserName()); //$NON-NLS-1$
-		assertEquals("vdbName", copy.getVdbName()); //$NON-NLS-1$
-		assertEquals("1", copy.getVdbVersion()); //$NON-NLS-1$
-		assertEquals("querybuilder", copy.getAppName()); //$NON-NLS-1$
-	}
+        assertEquals("5", copy.getSessionId()); //$NON-NLS-1$
+        assertEquals("userName", copy.getUserName()); //$NON-NLS-1$
+        assertEquals("vdbName", copy.getVdbName()); //$NON-NLS-1$
+        assertEquals("1", copy.getVdbVersion()); //$NON-NLS-1$
+        assertEquals("querybuilder", copy.getAppName()); //$NON-NLS-1$
+    }
 
-	@Test public void testClearPolicies() {
-		DQPWorkContext message = new DQPWorkContext();
-		message.setSession(Mockito.mock(SessionMetadata.class));
-		Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
-		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
-		map.put("role", Mockito.mock(DataPolicy.class)); //$NON-NLS-1$
-		assertFalse(map.isEmpty());
+    @Test public void testClearPolicies() {
+        DQPWorkContext message = new DQPWorkContext();
+        message.setSession(Mockito.mock(SessionMetadata.class));
+        Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
+        Map<String, DataPolicy> map = message.getAllowedDataPolicies();
+        map.put("role", Mockito.mock(DataPolicy.class)); //$NON-NLS-1$
+        assertFalse(map.isEmpty());
 
-		message.setSession(Mockito.mock(SessionMetadata.class));
-		Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
-		map = message.getAllowedDataPolicies();
-		assertTrue(map.isEmpty());
-	}
+        message.setSession(Mockito.mock(SessionMetadata.class));
+        Mockito.stub(message.getSession().getVdb()).toReturn(new VDBMetaData());
+        map = message.getAllowedDataPolicies();
+        assertTrue(map.isEmpty());
+    }
 
-	@Test public void testAnyAuthenticated() {
-		DQPWorkContext message = new DQPWorkContext();
-		SessionMetadata mock = Mockito.mock(SessionMetadata.class);
-		message.setSession(mock);
-		VDBMetaData vdb = new VDBMetaData();
-		DataPolicyMetadata dpm = new DataPolicyMetadata();
-		dpm.setAnyAuthenticated(true);
-		vdb.addDataPolicy(dpm);
-		Mockito.stub(mock.getVdb()).toReturn(vdb);
+    @Test public void testAnyAuthenticated() {
+        DQPWorkContext message = new DQPWorkContext();
+        SessionMetadata mock = Mockito.mock(SessionMetadata.class);
+        message.setSession(mock);
+        VDBMetaData vdb = new VDBMetaData();
+        DataPolicyMetadata dpm = new DataPolicyMetadata();
+        dpm.setAnyAuthenticated(true);
+        vdb.addDataPolicy(dpm);
+        Mockito.stub(mock.getVdb()).toReturn(vdb);
 
-		//unauthenticated
-		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
-		assertEquals(0, map.size());
+        //unauthenticated
+        Map<String, DataPolicy> map = message.getAllowedDataPolicies();
+        assertEquals(0, map.size());
 
-		//authenticated
-		message = new DQPWorkContext();
-		Mockito.stub(mock.getSubject()).toReturn(new Subject());
-		message.setSession(mock);
-		map = message.getAllowedDataPolicies();
-		assertEquals(1, map.size());
-	}
+        //authenticated
+        message = new DQPWorkContext();
+        Mockito.stub(mock.getSubject()).toReturn(new Subject());
+        message.setSession(mock);
+        map = message.getAllowedDataPolicies();
+        assertEquals(1, map.size());
+    }
 
-	@Test public void testRestoreSecurityContext() {
-		final SecurityHelper sc = new SecurityHelper() {
-			Object mycontext = null;
+    @Test public void testRestoreSecurityContext() {
+        final SecurityHelper sc = new SecurityHelper() {
+            Object mycontext = null;
 
-			@Override
-			public Object getSecurityContext(String securityDomain) {
-				return this.mycontext;
-			}
-			@Override
-			public void clearSecurityContext() {
-				this.mycontext = null;
-			}
-			@Override
-			public Object associateSecurityContext(Object context) {
-				Object old = mycontext;
-				this.mycontext = context;
-				return old;
-			}
-			@Override
-			public Subject getSubjectInContext(Object context) {
-				return null;
-			}
+            @Override
+            public Object getSecurityContext(String securityDomain) {
+                return this.mycontext;
+            }
+            @Override
+            public void clearSecurityContext() {
+                this.mycontext = null;
+            }
+            @Override
+            public Object associateSecurityContext(Object context) {
+                Object old = mycontext;
+                this.mycontext = context;
+                return old;
+            }
+            @Override
+            public Subject getSubjectInContext(Object context) {
+                return null;
+            }
             @Override
             public Object authenticate(String securityDomain, String baseUserName,
-            		Credentials credentials, String applicationName) throws LoginException {
+                    Credentials credentials, String applicationName) throws LoginException {
                 return null;
             }
             @Override
             public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
                 return null;
             }
-		};
-		Object previousSC = "testSC";
-		sc.associateSecurityContext(previousSC);
+        };
+        Object previousSC = "testSC";
+        sc.associateSecurityContext(previousSC);
 
-		DQPWorkContext message = new DQPWorkContext() {
-		    @Override
+        DQPWorkContext message = new DQPWorkContext() {
+            @Override
             public Subject getSubject() {
-		    	return new Subject();
-		    }
-		};
-		message.setSecurityHelper(sc);
-		message.setSession(Mockito.mock(SessionMetadata.class));
-		final String currentSC = "teiid-security-context"; //$NON-NLS-1$
-		Mockito.stub(message.getSession().getSecurityContext()).toReturn(currentSC);
+                return new Subject();
+            }
+        };
+        message.setSecurityHelper(sc);
+        message.setSession(Mockito.mock(SessionMetadata.class));
+        final String currentSC = "teiid-security-context"; //$NON-NLS-1$
+        Mockito.stub(message.getSession().getSecurityContext()).toReturn(currentSC);
 
-		Runnable r = new Runnable() {
-			@Override
-			public void run() {
-				assertEquals(currentSC, sc.getSecurityContext(null));
-			}
-		};
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(currentSC, sc.getSecurityContext(null));
+            }
+        };
 
-		message.runInContext(r);
+        message.runInContext(r);
 
-		assertEquals(previousSC, sc.getSecurityContext(null));
-	}
+        assertEquals(previousSC, sc.getSecurityContext(null));
+    }
 
-	@Test public void testVersion() {
+    @Test public void testVersion() {
         assertEquals(4, DQPWorkContext.Version.getVersion("11.0").getClientSerializationVersion());
         assertEquals(5, DQPWorkContext.Version.getVersion("11.2").getClientSerializationVersion());
     }

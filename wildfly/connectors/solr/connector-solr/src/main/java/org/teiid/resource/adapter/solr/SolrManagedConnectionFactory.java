@@ -23,96 +23,96 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class SolrManagedConnectionFactory extends BasicManagedConnectionFactory {
 
-	private static final long serialVersionUID = -2751565394772750705L;
-	private String url;
-	private Integer soTimeout;
-	private Boolean allowCompression;
-	private Integer connTimeout; // min 5 seconds to establish TCP
-	private Integer maxConns;
-	private Integer maxRetries;
-	private String coreName;
-	private String authPassword; // httpbasic - password
+    private static final long serialVersionUID = -2751565394772750705L;
+    private String url;
+    private Integer soTimeout;
+    private Boolean allowCompression;
+    private Integer connTimeout; // min 5 seconds to establish TCP
+    private Integer maxConns;
+    private Integer maxRetries;
+    private String coreName;
+    private String authPassword; // httpbasic - password
     private String authUserName; // httpbasic - username
 
-	@Override
-	public SolrConnectionFactory createConnectionFactory()
-			throws ResourceException {
-		return new SolrConnectionFactory(SolrManagedConnectionFactory.this);
-	}
+    @Override
+    public SolrConnectionFactory createConnectionFactory()
+            throws ResourceException {
+        return new SolrConnectionFactory(SolrManagedConnectionFactory.this);
+    }
 
-	public String getUrl() {
-		return url;
-	}
+    public String getUrl() {
+        return url;
+    }
 
-	public void setUrl(String url) {
-		this.url = url;
-	}
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
-	public Integer getSoTimeout() {
-		return soTimeout;
-	}
+    public Integer getSoTimeout() {
+        return soTimeout;
+    }
 
-	public void setSoTimeout(Integer soTimeout) {
-		this.soTimeout = soTimeout;
-	}
+    public void setSoTimeout(Integer soTimeout) {
+        this.soTimeout = soTimeout;
+    }
 
-	public Boolean getAllowCompression() {
-		return allowCompression;
-	}
+    public Boolean getAllowCompression() {
+        return allowCompression;
+    }
 
-	public void setAllowCompression(Boolean allowCompression) {
-		this.allowCompression = allowCompression;
-	}
+    public void setAllowCompression(Boolean allowCompression) {
+        this.allowCompression = allowCompression;
+    }
 
-	public Integer getConnTimeout() {
-		return connTimeout;
-	}
+    public Integer getConnTimeout() {
+        return connTimeout;
+    }
 
-	public void setConnTimeout(Integer connTimeout) {
-		this.connTimeout = connTimeout;
-	}
+    public void setConnTimeout(Integer connTimeout) {
+        this.connTimeout = connTimeout;
+    }
 
-	public Integer getMaxConns() {
-		return maxConns;
-	}
+    public Integer getMaxConns() {
+        return maxConns;
+    }
 
-	public void setMaxConns(Integer maxConns) {
-		this.maxConns = maxConns;
-	}
+    public void setMaxConns(Integer maxConns) {
+        this.maxConns = maxConns;
+    }
 
-	public Integer getMaxRetries() {
-		return maxRetries;
-	}
+    public Integer getMaxRetries() {
+        return maxRetries;
+    }
 
-	public void setMaxRetries(Integer maxRetries) {
-		this.maxRetries = maxRetries;
-	}
+    public void setMaxRetries(Integer maxRetries) {
+        this.maxRetries = maxRetries;
+    }
 
-	public String getCoreName() {
-		return coreName;
-	}
+    public String getCoreName() {
+        return coreName;
+    }
 
-	public void setCoreName(String coreName) {
-		this.coreName = coreName;
-	}
+    public void setCoreName(String coreName) {
+        this.coreName = coreName;
+    }
 
-	public String getAuthPassword() {
+    public String getAuthPassword() {
         return authPassword;
     }
 
-	public String getAuthUserName() {
+    public String getAuthUserName() {
         return authUserName;
     }
 
-	public void setAuthPassword(String authPassword) {
+    public void setAuthPassword(String authPassword) {
         this.authPassword = authPassword;
     }
 
-	public void setAuthUserName(String authUserName) {
+    public void setAuthUserName(String authUserName) {
         this.authUserName = authUserName;
     }
 
-	@Override
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;

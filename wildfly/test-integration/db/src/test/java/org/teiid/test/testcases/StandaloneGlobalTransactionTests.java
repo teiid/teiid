@@ -26,22 +26,22 @@ public class StandaloneGlobalTransactionTests extends LocalTransactionTests {
 
     @BeforeClass
     public static void beforeAll() throws Exception {
-	SYS_PROPS = (Properties) System.getProperties().clone();
+    SYS_PROPS = (Properties) System.getProperties().clone();
 
-	System.setProperty(ConfigPropertyNames.CONFIG_FILE, "xa-config.properties");
+    System.setProperty(ConfigPropertyNames.CONFIG_FILE, "xa-config.properties");
 
     }
 
     @Override
     @Before
     public void beforeEach() throws Exception {
-	super.beforeEach();
+    super.beforeEach();
     }
 
     @Override
     @After
     public void afterEach() throws Exception {
-	super.afterEach();
+    super.afterEach();
 
     }
 
@@ -49,14 +49,14 @@ public class StandaloneGlobalTransactionTests extends LocalTransactionTests {
     @Override
     protected TransactionContainer getTransactionContainter() {
 
-	return new StandaloneGlobalTransaction();
+    return new StandaloneGlobalTransaction();
     }
 
 
     @AfterClass
     public static void afterAll() {
 
-	System.setProperties(SYS_PROPS);
+    System.setProperties(SYS_PROPS);
 
     }
 

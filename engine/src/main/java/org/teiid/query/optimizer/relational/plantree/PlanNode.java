@@ -91,11 +91,11 @@ public class PlanNode {
     }
 
     private void setParent(PlanNode parent) {
-    	if (this.parent != null) {
-    		this.parent.children.remove(this);
-    	}
-    	this.modified = true;
-    	this.parent = parent;
+        if (this.parent != null) {
+            this.parent.children.remove(this);
+        }
+        this.modified = true;
+        this.parent = parent;
     }
 
     public List<PlanNode> getChildren() {
@@ -103,14 +103,14 @@ public class PlanNode {
     }
 
     public List<PlanNode> removeAllChildren() {
-    	ArrayList<PlanNode> childrenCopy = new ArrayList<PlanNode>(children);
-    	for (Iterator<PlanNode> childIter = this.children.iterator(); childIter.hasNext();) {
-    		PlanNode child = childIter.next();
-    		childIter.remove();
-    		child.parent = null;
-    	}
-    	this.modified = true;
-    	return childrenCopy;
+        ArrayList<PlanNode> childrenCopy = new ArrayList<PlanNode>(children);
+        for (Iterator<PlanNode> childIter = this.children.iterator(); childIter.hasNext();) {
+            PlanNode child = childIter.next();
+            childIter.remove();
+            child.parent = null;
+        }
+        this.modified = true;
+        return childrenCopy;
     }
 
     public int getChildCount() {
@@ -132,37 +132,37 @@ public class PlanNode {
     }
 
     public void addFirstChild(PlanNode child) {
-    	this.modified = true;
+        this.modified = true;
         this.children.addFirst(child);
         child.setParent(this);
     }
 
     public void addLastChild(PlanNode child) {
-    	this.modified = true;
+        this.modified = true;
         this.children.addLast(child);
         child.setParent(this);
     }
 
     public void addChildren(Collection<PlanNode> otherChildren) {
         for (PlanNode planNode : otherChildren) {
-			this.addLastChild(planNode);
-		}
+            this.addLastChild(planNode);
+        }
     }
 
     public PlanNode removeFromParent() {
-    	this.modified = true;
-    	PlanNode result = this.parent;
-    	if (result != null) {
-    		result.removeChild(this);
-    	}
-    	return result;
+        this.modified = true;
+        PlanNode result = this.parent;
+        if (result != null) {
+            result.removeChild(this);
+        }
+        return result;
     }
 
     public boolean removeChild(PlanNode child) {
         boolean result = this.children.remove(child);
         if (result) {
-        	child.parent = null;
-        	modified = true;
+            child.parent = null;
+            modified = true;
         }
         return result;
     }
@@ -173,7 +173,7 @@ public class PlanNode {
         }
         Object result = nodeProperties.get(propertyID);
         if (result != null) {
-        	modified = true; //we may modify this object
+            modified = true; //we may modify this object
         }
         return result;
     }
@@ -218,12 +218,12 @@ public class PlanNode {
     }
 
     public void addGroup(GroupSymbol groupID) {
-    	modified = true;
+        modified = true;
         groups.add(groupID);
     }
 
     public void addGroups(Collection<GroupSymbol> newGroups) {
-    	modified = true;
+        modified = true;
         this.groups.addAll(newGroups);
     }
 
@@ -250,12 +250,12 @@ public class PlanNode {
      * @return String representing just this node
      */
     public String nodeToString(boolean recusive) {
-    	StringBuilder str = new StringBuilder();
-    	if (!recusive) {
-    		getNodeString(str, null);
-    	} else {
-    		getRecursiveString(str, 0, this.modified);
-    	}
+        StringBuilder str = new StringBuilder();
+        if (!recusive) {
+            getNodeString(str, null);
+        } else {
+            getRecursiveString(str, 0, this.modified);
+        }
         return str.toString();
     }
 
@@ -284,17 +284,17 @@ public class PlanNode {
         str.append("(groups="); //$NON-NLS-1$
         str.append(this.groups);
         if (!Boolean.FALSE.equals(mod)) {
-	        if(nodeProperties != null) {
-	            str.append(", props="); //$NON-NLS-1$
-	            String props = nodeProperties.toString();
-	            if (props.length() > 100000) {
-	            	props = props.substring(0, 100000) + "..."; //$NON-NLS-1$
-	            }
-	            str.append(props);
-	        }
-	        if (Boolean.TRUE.equals(mod)) {
-	        	modified = false;
-	        }
+            if(nodeProperties != null) {
+                str.append(", props="); //$NON-NLS-1$
+                String props = nodeProperties.toString();
+                if (props.length() > 100000) {
+                    props = props.substring(0, 100000) + "..."; //$NON-NLS-1$
+                }
+                str.append(props);
+            }
+            if (Boolean.TRUE.equals(mod)) {
+                modified = false;
+            }
         }
     }
 
@@ -303,11 +303,11 @@ public class PlanNode {
     }
 
     public void replaceChild(PlanNode child, PlanNode replacement) {
-    	modified = true;
-    	int i = this.children.indexOf(child);
-    	this.children.set(i, replacement);
-    	child.setParent(null);
-    	replacement.setParent(this);
+        modified = true;
+        int i = this.children.indexOf(child);
+        this.children.set(i, replacement);
+        child.setParent(null);
+        replacement.setParent(this);
     }
 
     /**
@@ -315,57 +315,57 @@ public class PlanNode {
      * @param node
      */
     public void addAsParent(PlanNode node) {
-    	modified = true;
-    	if (this.parent != null) {
-        	this.parent.replaceChild(this, node);
-    	}
-    	assert node.getChildCount() == 0;
-		node.addLastChild(this);
+        modified = true;
+        if (this.parent != null) {
+            this.parent.replaceChild(this, node);
+        }
+        assert node.getChildCount() == 0;
+        node.addLastChild(this);
     }
 
     public List<SymbolMap> getCorrelatedReferences() {
-    	List<SubqueryContainer<?>> containers = getSubqueryContainers();
-    	if (containers.isEmpty()) {
-    		return Collections.emptyList();
-    	}
-    	ArrayList<SymbolMap> result = new ArrayList<SymbolMap>(containers.size());
-    	for (SubqueryContainer<?> container : containers) {
-    		SymbolMap map = container.getCommand().getCorrelatedReferences();
-			if (map != null) {
-				result.add(map);
-			}
-		}
-    	return result;
+        List<SubqueryContainer<?>> containers = getSubqueryContainers();
+        if (containers.isEmpty()) {
+            return Collections.emptyList();
+        }
+        ArrayList<SymbolMap> result = new ArrayList<SymbolMap>(containers.size());
+        for (SubqueryContainer<?> container : containers) {
+            SymbolMap map = container.getCommand().getCorrelatedReferences();
+            if (map != null) {
+                result.add(map);
+            }
+        }
+        return result;
     }
 
     public List<SymbolMap> getAllReferences() {
-    	List<SymbolMap> refMaps = new ArrayList<SymbolMap>(getCorrelatedReferences());
+        List<SymbolMap> refMaps = new ArrayList<SymbolMap>(getCorrelatedReferences());
         refMaps.addAll(getExportedCorrelatedReferences());
         return refMaps;
     }
 
     public List<SymbolMap> getExportedCorrelatedReferences() {
-    	if (type != NodeConstants.Types.JOIN) {
-    		return Collections.emptyList();
-    	}
-    	LinkedList<SymbolMap> result = new LinkedList<SymbolMap>();
-		for (PlanNode child : NodeEditor.findAllNodes(this, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
-			SymbolMap references = (SymbolMap)child.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-	        if (references == null) {
-	        	continue;
-	        }
-        	Set<GroupSymbol> correlationGroups = GroupsUsedByElementsVisitor.getGroups(references.getValues());
-        	PlanNode joinNode = NodeEditor.findParent(child, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
-        	while (joinNode != null) {
-        		if (joinNode.getGroups().containsAll(correlationGroups)) {
-        			if (joinNode == this) {
-        				result.add(references);
-        			}
-        			break;
-        		}
-        		joinNode = NodeEditor.findParent(joinNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
-        	}
-		}
+        if (type != NodeConstants.Types.JOIN) {
+            return Collections.emptyList();
+        }
+        LinkedList<SymbolMap> result = new LinkedList<SymbolMap>();
+        for (PlanNode child : NodeEditor.findAllNodes(this, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
+            SymbolMap references = (SymbolMap)child.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            if (references == null) {
+                continue;
+            }
+            Set<GroupSymbol> correlationGroups = GroupsUsedByElementsVisitor.getGroups(references.getValues());
+            PlanNode joinNode = NodeEditor.findParent(child, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+            while (joinNode != null) {
+                if (joinNode.getGroups().containsAll(correlationGroups)) {
+                    if (joinNode == this) {
+                        result.add(references);
+                    }
+                    break;
+                }
+                joinNode = NodeEditor.findParent(joinNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+            }
+        }
         return result;
     }
 
@@ -377,83 +377,83 @@ public class PlanNode {
         }
         HashSet<ElementSymbol> result = new HashSet<ElementSymbol>();
         for (SymbolMap symbolMap : maps) {
-	        List<Expression> values = symbolMap.getValues();
-	        for (Expression expr : values) {
-	            ElementCollectorVisitor.getElements(expr, result);
-	        }
+            List<Expression> values = symbolMap.getValues();
+            for (Expression expr : values) {
+                ElementCollectorVisitor.getElements(expr, result);
+            }
         }
         return result;
     }
 
-	public List<SubqueryContainer<?>> getSubqueryContainers() {
-		Collection<? extends LanguageObject> toSearch = Collections.emptyList();
-		switch (this.getType()) {
-			case NodeConstants.Types.SELECT: {
-				Criteria criteria = (Criteria) this.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-				toSearch = Arrays.asList(criteria);
-				break;
-			}
-			case NodeConstants.Types.PROJECT: {
-				toSearch = (Collection) this.getProperty(NodeConstants.Info.PROJECT_COLS);
-				break;
-			}
-			case NodeConstants.Types.JOIN: {
-				toSearch = (List<Criteria>) this.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-				break;
-			}
-			case NodeConstants.Types.SOURCE: {
-				TableFunctionReference tfr = (TableFunctionReference)this.getProperty(NodeConstants.Info.TABLE_FUNCTION);
-				if (tfr != null) {
-					toSearch = Arrays.asList(tfr);
-				} else {
-				    Command cmd = (Command) this.getProperty(Info.VIRTUAL_COMMAND);
-	                if (cmd != null) {
-	                    toSearch = Arrays.asList(cmd);
-	                }
-				}
-				break;
-			}
-			case NodeConstants.Types.GROUP: {
-				SymbolMap groupMap = (SymbolMap)this.getProperty(Info.SYMBOL_MAP);
-				toSearch = groupMap.getValues();
-				break;
-			}
-			case NodeConstants.Types.SORT: {
-				OrderBy orderBy = (OrderBy) this.getProperty(NodeConstants.Info.SORT_ORDER);
-				if (orderBy != null) {
-					toSearch = orderBy.getOrderByItems();
-				}
-			}
-		}
-		return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
-	}
+    public List<SubqueryContainer<?>> getSubqueryContainers() {
+        Collection<? extends LanguageObject> toSearch = Collections.emptyList();
+        switch (this.getType()) {
+            case NodeConstants.Types.SELECT: {
+                Criteria criteria = (Criteria) this.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+                toSearch = Arrays.asList(criteria);
+                break;
+            }
+            case NodeConstants.Types.PROJECT: {
+                toSearch = (Collection) this.getProperty(NodeConstants.Info.PROJECT_COLS);
+                break;
+            }
+            case NodeConstants.Types.JOIN: {
+                toSearch = (List<Criteria>) this.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+                break;
+            }
+            case NodeConstants.Types.SOURCE: {
+                TableFunctionReference tfr = (TableFunctionReference)this.getProperty(NodeConstants.Info.TABLE_FUNCTION);
+                if (tfr != null) {
+                    toSearch = Arrays.asList(tfr);
+                } else {
+                    Command cmd = (Command) this.getProperty(Info.VIRTUAL_COMMAND);
+                    if (cmd != null) {
+                        toSearch = Arrays.asList(cmd);
+                    }
+                }
+                break;
+            }
+            case NodeConstants.Types.GROUP: {
+                SymbolMap groupMap = (SymbolMap)this.getProperty(Info.SYMBOL_MAP);
+                toSearch = groupMap.getValues();
+                break;
+            }
+            case NodeConstants.Types.SORT: {
+                OrderBy orderBy = (OrderBy) this.getProperty(NodeConstants.Info.SORT_ORDER);
+                if (orderBy != null) {
+                    toSearch = orderBy.getOrderByItems();
+                }
+            }
+        }
+        return ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
+    }
 
-	public float getCardinality() {
-		Float cardinality = (Float) this.getProperty(NodeConstants.Info.EST_CARDINALITY);
-		if (cardinality == null) {
-			return -1f;
-		}
-		return cardinality;
-	}
+    public float getCardinality() {
+        Float cardinality = (Float) this.getProperty(NodeConstants.Info.EST_CARDINALITY);
+        if (cardinality == null) {
+            return -1f;
+        }
+        return cardinality;
+    }
 
-	public void recordDebugAnnotation(String annotation, Object modelID, String resolution, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
-		if (record != null && record.recordAnnotations()) {
-			boolean current = this.modified;
-			this.modified = true;
-			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + (metadata!=null?metadata.getName(modelID):modelID):""), resolution + " " + this.nodeToString(false), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			this.modified = current;
-		}
-	}
+    public void recordDebugAnnotation(String annotation, Object modelID, String resolution, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        if (record != null && record.recordAnnotations()) {
+            boolean current = this.modified;
+            this.modified = true;
+            record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + (metadata!=null?metadata.getName(modelID):modelID):""), resolution + " " + this.nodeToString(false), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            this.modified = current;
+        }
+    }
 
-	@Override
-	public PlanNode clone() {
-		PlanNode node = new PlanNode();
-		node.type = this.type;
-		node.groups = new HashSet<GroupSymbol>(this.groups);
-		if (this.nodeProperties != null) {
-			node.nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>(this.nodeProperties);
-		}
-		return node;
-	}
+    @Override
+    public PlanNode clone() {
+        PlanNode node = new PlanNode();
+        node.type = this.type;
+        node.groups = new HashSet<GroupSymbol>(this.groups);
+        if (this.nodeProperties != null) {
+            node.nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>(this.nodeProperties);
+        }
+        return node;
+    }
 
 }

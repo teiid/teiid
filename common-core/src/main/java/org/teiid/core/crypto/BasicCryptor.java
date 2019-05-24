@@ -54,17 +54,17 @@ public class BasicCryptor implements Cryptor {
     protected Cipher encryptCipher;
     protected String cipherAlgorithm;
     public static final String OLD_ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
-	public static final String ENCRYPT_PREFIX = "{teiid-encrypt}"; //$NON-NLS-1$
+    public static final String ENCRYPT_PREFIX = "{teiid-encrypt}"; //$NON-NLS-1$
 
-	private static final SecureRandom random = new SecureRandom();
+    private static final SecureRandom random = new SecureRandom();
 
-	private ClassLoader classLoader = BasicCryptor.class.getClassLoader();
-	private boolean useSealedObject = true;
-	private IvParameterSpec iv;
-	private byte[] randBuffer;
+    private ClassLoader classLoader = BasicCryptor.class.getClassLoader();
+    private boolean useSealedObject = true;
+    private IvParameterSpec iv;
+    private byte[] randBuffer;
 
     public BasicCryptor( Key encryptKey, Key decryptKey, String algorithm, IvParameterSpec iv) throws CryptoException {
-    	this.encryptKey = encryptKey;
+        this.encryptKey = encryptKey;
         this.cipherAlgorithm = algorithm;
         this.decryptKey = decryptKey;
         this.iv = iv;
@@ -77,12 +77,12 @@ public class BasicCryptor implements Cryptor {
     }
 
     public synchronized void setUseSealedObject(boolean useSealedObject) {
-		this.useSealedObject = useSealedObject;
-	}
+        this.useSealedObject = useSealedObject;
+    }
 
     public synchronized void setClassLoader(ClassLoader classLoader) {
-		this.classLoader = classLoader;
-	}
+        this.classLoader = classLoader;
+    }
 
     /**
      * Decrypt the ciphertext to yield the original cleartext.
@@ -131,39 +131,39 @@ public class BasicCryptor implements Cryptor {
 
     public synchronized Object unsealObject(Object object) throws CryptoException {
         if (useSealedObject) {
-	        if (!(object instanceof SealedObject)) {
-	            return object;
-	        }
+            if (!(object instanceof SealedObject)) {
+                return object;
+            }
 
-	        SealedObject so = (SealedObject)object;
+            SealedObject so = (SealedObject)object;
 
-	    	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	        try {
-	        	if (cl != classLoader) {
-	        		Thread.currentThread().setContextClassLoader(BasicCryptor.class.getClassLoader());
-	        	}
-	            return so.getObject(decryptCipher);
-	        } catch ( Exception e ) {
-	            try {
-	                initDecryptCipher();
-	            } catch (CryptoException err) {
-	                //shouldn't happen
-	            }
-	              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
-	        } finally {
-	        	Thread.currentThread().setContextClassLoader(cl);
-	        }
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            try {
+                if (cl != classLoader) {
+                    Thread.currentThread().setContextClassLoader(BasicCryptor.class.getClassLoader());
+                }
+                return so.getObject(decryptCipher);
+            } catch ( Exception e ) {
+                try {
+                    initDecryptCipher();
+                } catch (CryptoException err) {
+                    //shouldn't happen
+                }
+                  throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
+            } finally {
+                Thread.currentThread().setContextClassLoader(cl);
+            }
         }
         if (!(object instanceof byte[])) {
-        	return object;
+            return object;
         }
         byte[] bytes = (byte[])object;
         bytes = decrypt(bytes);
         try {
-	    	ObjectInputStream ois = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(bytes), classLoader);
-	    	return ois.readObject();
+            ObjectInputStream ois = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(bytes), classLoader);
+            return ois.readObject();
         } catch (Exception e) {
-        	throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
+            throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
         }
     }
 
@@ -177,13 +177,13 @@ public class BasicCryptor implements Cryptor {
     }
 
     public synchronized byte[] encrypt(byte[] buffer, int offset, int length)
-    		throws CryptoException {
-    	try {
-    	    byte[] initBlock = null;
-    	    if (iv != null) {
-    	        random.nextBytes(randBuffer);
-    	        initBlock = encryptCipher.update(randBuffer);
-    	    }
+            throws CryptoException {
+        try {
+            byte[] initBlock = null;
+            if (iv != null) {
+                random.nextBytes(randBuffer);
+                initBlock = encryptCipher.update(randBuffer);
+            }
             byte[] result = encryptCipher.doFinal(buffer, offset, length);
             if (initBlock != null) {
                 byte[] newResult = Arrays.copyOf(initBlock, initBlock.length + result.length);
@@ -225,15 +225,15 @@ public class BasicCryptor implements Cryptor {
 
     public synchronized Object sealObject(Object object) throws CryptoException {
         try {
-        	if (useSealedObject) {
-        		return new SealedObject((Serializable)object, encryptCipher);
-        	}
-        	AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(1 << 13);
-        	ObjectOutputStream oos = new ObjectOutputStream(baos);
-        	oos.writeObject(object);
-        	oos.flush();
-        	oos.close();
-        	return encrypt(baos.getBuffer(), 0, baos.getCount());
+            if (useSealedObject) {
+                return new SealedObject((Serializable)object, encryptCipher);
+            }
+            AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(1 << 13);
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            oos.flush();
+            oos.close();
+            return encrypt(baos.getBuffer(), 0, baos.getCount());
         } catch ( Exception e ) {
             try {
                 initEncryptCipher();

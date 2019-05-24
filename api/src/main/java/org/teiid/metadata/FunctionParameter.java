@@ -27,9 +27,9 @@ package org.teiid.metadata;
  * {@link org.teiid.core.types.DataTypeManager.DefaultDataTypes}.
  */
 public class FunctionParameter extends BaseColumn {
-	private static final long serialVersionUID = -4696050948395485266L;
+    private static final long serialVersionUID = -4696050948395485266L;
 
-	public static final String OUTPUT_PARAMETER_NAME = "result"; //$NON-NLS-1$
+    public static final String OUTPUT_PARAMETER_NAME = "result"; //$NON-NLS-1$
 
     private boolean isVarArg;
     private FunctionMethod parent;
@@ -126,7 +126,7 @@ public class FunctionParameter extends BaseColumn {
             return true;
         }
         if(!(obj instanceof FunctionParameter)) {
-        	return false;
+            return false;
         }
         FunctionParameter other = (FunctionParameter) obj;
         if(other.getType() == null) {
@@ -143,13 +143,13 @@ public class FunctionParameter extends BaseColumn {
         return getRuntimeType() + (isVarArg?"... ":" ") + super.toString(); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	public void setVarArg(boolean isVarArg) {
-		this.isVarArg = isVarArg;
-	}
+    public void setVarArg(boolean isVarArg) {
+        this.isVarArg = isVarArg;
+    }
 
-	public boolean isVarArg() {
-		return isVarArg;
-	}
+    public boolean isVarArg() {
+        return isVarArg;
+    }
 
     public void setParent(FunctionMethod functionMethod) {
         this.parent = functionMethod;

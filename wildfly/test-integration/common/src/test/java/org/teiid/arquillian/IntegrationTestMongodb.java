@@ -46,34 +46,34 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestMongodb extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+    private Admin admin;
 
-	@Before
-	public void setup() throws Exception {
-		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
-	}
+    @Before
+    public void setup() throws Exception {
+        admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
+    }
 
-	@After
-	public void teardown() throws AdminException {
-		AdminUtil.cleanUp(admin);
-		admin.close();
-	}
-	@Test
-	public void testOdata() throws Exception {
-	    Properties props = new Properties();
-	    props.setProperty("SecurityType", "NONE");
-	    props.setProperty("Database", "myproject");
-	    props.setProperty("RemoteServerList", "localhost:27017");
+    @After
+    public void teardown() throws AdminException {
+        AdminUtil.cleanUp(admin);
+        admin.close();
+    }
+    @Test
+    public void testOdata() throws Exception {
+        Properties props = new Properties();
+        props.setProperty("SecurityType", "NONE");
+        props.setProperty("Database", "myproject");
+        props.setProperty("RemoteServerList", "localhost:27017");
         props.setProperty("min-pool-size", "1");
         props.setProperty("transaction-support", "LocalTransaction");
         props.setProperty("class-name", "org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory");
 
         AdminUtil.createDataSource(admin, "mongodbDS", "mongodb", props);
 
-		String vdb = "<vdb name=\"mongodb\" version=\"1\">"
-		        + "<model name=\"mongodb\" type=\"PHYSICAL\">"
-		        + "<source name=\"mongodb\" translator-name=\"mongodb\" connection-jndi-name=\"java:/mongodbDS\"/>"
-		        + "         <metadata type=\"DDL\"><![CDATA[\n" +
+        String vdb = "<vdb name=\"mongodb\" version=\"1\">"
+                + "<model name=\"mongodb\" type=\"PHYSICAL\">"
+                + "<source name=\"mongodb\" translator-name=\"mongodb\" connection-jndi-name=\"java:/mongodbDS\"/>"
+                + "         <metadata type=\"DDL\"><![CDATA[\n" +
                 "                CREATE FOREIGN TABLE G1 (\n" +
                 "    e1 integer NOT NULL,\n" +
                 "    e2 integer NOT NULL,\n" +
@@ -81,18 +81,18 @@ public class IntegrationTestMongodb extends AbstractMMQueryTestCase {
                 "    PRIMARY KEY (e1)\n" +
                 ") OPTIONS(UPDATABLE 'TRUE');" +
                 "        ]]> </metadata>\n"
-		        + "</model></vdb>";
+                + "</model></vdb>";
 
-		admin.deploy("mongodb-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
+        admin.deploy("mongodb-vdb.xml", new ReaderInputStream(new StringReader(vdb), Charset.forName("UTF-8")));
 
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "mongodb", 1));
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "mongodb", 1));
 
-		this.internalConnection = TeiidDriver.getInstance()
+        this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:mongodb@mm://localhost:31000;user=user;password=user", null);
 
-		this.internalConnection.setAutoCommit(false);
+        this.internalConnection.setAutoCommit(false);
 
-		execute("delete from G1");
+        execute("delete from G1");
         execute("insert into G1 (e1, e2, e3) values (1, 1, 1)");
         execute("insert into G1 (e1, e2, e3) values (2, 2, 2)");
         execute("insert into G1 (e1, e2, e3) values (3, 3, 3)");
@@ -100,20 +100,20 @@ public class IntegrationTestMongodb extends AbstractMMQueryTestCase {
         execute("select * from G1");
         assertRowCount(3);
 
-		this.internalConnection.commit();
+        this.internalConnection.commit();
 
-		execute("select * from G1");
-		assertRowCount(3);
+        execute("select * from G1");
+        assertRowCount(3);
 
-		execute("insert into G1 (e1, e2, e3) values (4, 4, 4)");
-		execute("insert into G1 (e1, e2, e3) values (5, 5, 5)");
+        execute("insert into G1 (e1, e2, e3) values (4, 4, 4)");
+        execute("insert into G1 (e1, e2, e3) values (5, 5, 5)");
 
-		execute("select * from G1");
-		assertRowCount(5);
+        execute("select * from G1");
+        assertRowCount(5);
 
-		this.internalConnection.rollback();
+        this.internalConnection.rollback();
 
-	    execute("select * from G1");
-	    assertRowCount(3);
-	}
+        execute("select * from G1");
+        assertRowCount(3);
+    }
 }

@@ -49,130 +49,130 @@ import org.teiid.transport.WireProtocol;
 @SuppressWarnings("nls")
 public class TestInternalConnection {
 
-	public static class ThreadLocalSecurityHelper implements SecurityHelper {
+    public static class ThreadLocalSecurityHelper implements SecurityHelper {
 
-		private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
+        private static ThreadLocal<Subject> threadLocalContext = new ThreadLocal<Subject>();
 
-		@Override
-		public Object associateSecurityContext(Object context) {
-			Object previous = threadLocalContext.get();
-			threadLocalContext.set((Subject)context);
-			return previous;
-		}
+        @Override
+        public Object associateSecurityContext(Object context) {
+            Object previous = threadLocalContext.get();
+            threadLocalContext.set((Subject)context);
+            return previous;
+        }
 
-		@Override
-		public Object getSecurityContext(String securityDomain) {
-			return threadLocalContext.get();
-		}
+        @Override
+        public Object getSecurityContext(String securityDomain) {
+            return threadLocalContext.get();
+        }
 
-		@Override
-		public void clearSecurityContext() {
-			threadLocalContext.remove();
-		}
+        @Override
+        public void clearSecurityContext() {
+            threadLocalContext.remove();
+        }
 
-		@Override
-		public Object authenticate(String securityDomain,
-				String baseUserName, Credentials credentials,
-				String applicationName) throws LoginException {
-			return new Subject();
-		}
+        @Override
+        public Object authenticate(String securityDomain,
+                String baseUserName, Credentials credentials,
+                String applicationName) throws LoginException {
+            return new Subject();
+        }
 
-		@Override
-		public Subject getSubjectInContext(Object context) {
-			return (Subject)context;
-		}
+        @Override
+        public Subject getSubjectInContext(Object context) {
+            return (Subject)context;
+        }
 
-		@Override
-		public GSSResult negotiateGssLogin(String securityDomain,
-				byte[] serviceTicket) throws LoginException {
-			return null;
-		}
+        @Override
+        public GSSResult negotiateGssLogin(String securityDomain,
+                byte[] serviceTicket) throws LoginException {
+            return null;
+        }
 
-	}
+    }
 
-	private static final String vdb = "<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA["
-			+ "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
-			+ "CREATE function func (val integer) returns string options (JAVA_CLASS '"+TestInternalConnection.class.getName()+"',  JAVA_METHOD 'doSomething');]]> </metadata></model></vdb>";
-	EmbeddedServer es;
-	static boolean useTxn = false;
+    private static final String vdb = "<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA["
+            + "CREATE VIEW helloworld as SELECT 'HELLO WORLD';"
+            + "CREATE function func (val integer) returns string options (JAVA_CLASS '"+TestInternalConnection.class.getName()+"',  JAVA_METHOD 'doSomething');]]> </metadata></model></vdb>";
+    EmbeddedServer es;
+    static boolean useTxn = false;
 
-	@Before public void setup() {
-		es = new EmbeddedServer();
-	}
+    @Before public void setup() {
+        es = new EmbeddedServer();
+    }
 
-	@After public void teardown() {
-		es.stop();
-		useTxn = false;
-	}
+    @After public void teardown() {
+        es.stop();
+        useTxn = false;
+    }
 
-	public static String doSomething(CommandContext cc, Integer val) throws SQLException {
-		TeiidConnection tc = cc.getConnection();
-		try {
-			Statement s = tc.createStatement();
-			if (useTxn) {
-			    s.execute("set autoCommitTxn on");
-			}
-			ResultSet rs = s.executeQuery("select user(), expr1 from helloworld");
-			rs.next();
-			return rs.getString(1) + rs.getString(2) + val;
-		} finally {
-			tc.close();
-		}
-	}
+    public static String doSomething(CommandContext cc, Integer val) throws SQLException {
+        TeiidConnection tc = cc.getConnection();
+        try {
+            Statement s = tc.createStatement();
+            if (useTxn) {
+                s.execute("set autoCommitTxn on");
+            }
+            ResultSet rs = s.executeQuery("select user(), expr1 from helloworld");
+            rs.next();
+            return rs.getString(1) + rs.getString(2) + val;
+        } finally {
+            tc.close();
+        }
+    }
 
-	@Test public void testInternalRemote() throws Exception {
-		SocketConfiguration s = new SocketConfiguration();
-		InetSocketAddress addr = new InetSocketAddress(0);
-		s.setBindAddress(addr.getHostName());
-		s.setPortNumber(addr.getPort());
-		s.setProtocol(WireProtocol.teiid);
-		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.addTransport(s);
-		config.setSecurityHelper(new ThreadLocalSecurityHelper());
-		es.start(config);
-		es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
-		Connection conn = null;
-		try {
-			TeiidDriver driver = new TeiidDriver();
-			Properties p = new Properties();
-			p.setProperty("user", "me");
-			conn = driver.connect("jdbc:teiid:test@mm://"+addr.getHostName()+":"+es.getPort(0), p);
-			ResultSet rs = conn.createStatement().executeQuery("select func(1)");
-			rs.next();
-			assertEquals("me@teiid-securityHELLO WORLD1", rs.getString(1));
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
-	}
+    @Test public void testInternalRemote() throws Exception {
+        SocketConfiguration s = new SocketConfiguration();
+        InetSocketAddress addr = new InetSocketAddress(0);
+        s.setBindAddress(addr.getHostName());
+        s.setPortNumber(addr.getPort());
+        s.setProtocol(WireProtocol.teiid);
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.addTransport(s);
+        config.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.start(config);
+        es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
+        Connection conn = null;
+        try {
+            TeiidDriver driver = new TeiidDriver();
+            Properties p = new Properties();
+            p.setProperty("user", "me");
+            conn = driver.connect("jdbc:teiid:test@mm://"+addr.getHostName()+":"+es.getPort(0), p);
+            ResultSet rs = conn.createStatement().executeQuery("select func(1)");
+            rs.next();
+            assertEquals("me@teiid-securityHELLO WORLD1", rs.getString(1));
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
 
-	@Test public void testInternalLocal() throws Exception {
-		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.setSecurityHelper(new ThreadLocalSecurityHelper());
-		es.start(config);
-		es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
-		Connection conn = null;
-		try {
-			TeiidDriver driver = es.getDriver();
-			conn = driver.connect("jdbc:teiid:test", null);
-			//execute multiple to check for an id conflict
-			ResultSet rs = conn.createStatement().executeQuery("select func(2) union all select func(3)");
-			rs.next();
-			assertEquals("anonymous@teiid-securityHELLO WORLD2", rs.getString(1));
-			rs.next();
-	        assertEquals("anonymous@teiid-securityHELLO WORLD3", rs.getString(1));
-	        ResultSetMetaData metadata = rs.getMetaData();
-	        assertNotNull(metadata.getColumnName(1));
-		} finally {
-			if (conn != null) {
-				conn.close();
-			}
-		}
-	}
+    @Test public void testInternalLocal() throws Exception {
+        EmbeddedConfiguration config = new EmbeddedConfiguration();
+        config.setSecurityHelper(new ThreadLocalSecurityHelper());
+        es.start(config);
+        es.deployVDB(new ByteArrayInputStream(vdb.getBytes()));
+        Connection conn = null;
+        try {
+            TeiidDriver driver = es.getDriver();
+            conn = driver.connect("jdbc:teiid:test", null);
+            //execute multiple to check for an id conflict
+            ResultSet rs = conn.createStatement().executeQuery("select func(2) union all select func(3)");
+            rs.next();
+            assertEquals("anonymous@teiid-securityHELLO WORLD2", rs.getString(1));
+            rs.next();
+            assertEquals("anonymous@teiid-securityHELLO WORLD3", rs.getString(1));
+            ResultSetMetaData metadata = rs.getMetaData();
+            assertNotNull(metadata.getColumnName(1));
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+    }
 
-	@Test public void testInternalLocalNestedTransactions() throws Exception {
-	    useTxn = true;
+    @Test public void testInternalLocalNestedTransactions() throws Exception {
+        useTxn = true;
         EmbeddedConfiguration config = new EmbeddedConfiguration();
         config.setSecurityHelper(new ThreadLocalSecurityHelper());
         config.setTransactionManager(new DummyTransactionManager());

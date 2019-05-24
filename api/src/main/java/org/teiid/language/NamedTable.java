@@ -51,12 +51,12 @@ public class NamedTable extends BaseLanguageObject implements MetadataReference<
 
     @Override
     public Table getMetadataObject() {
-    	return this.metadataObject;
+        return this.metadataObject;
     }
 
     public void setMetadataObject(Table metadataObject) {
-		this.metadataObject = metadataObject;
-	}
+        this.metadataObject = metadataObject;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

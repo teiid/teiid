@@ -53,12 +53,12 @@ public class BlockingFakeRelationalNode extends FakeRelationalNode {
     }
 
     public void setReturnPeriod(int returnPeriod) {
-		this.returnPeriod = returnPeriod;
-	}
+        this.returnPeriod = returnPeriod;
+    }
 
     public TupleBatch nextBatchDirect() throws BlockedException, TeiidComponentException, TeiidProcessingException {
         if (count++%returnPeriod != 0) {
-        	throw BlockedException.INSTANCE;
+            throw BlockedException.INSTANCE;
         }
         return super.nextBatchDirect();
     }

@@ -27,59 +27,59 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 
 public abstract class Alter<T extends Command> extends Command {
 
-	private GroupSymbol target;
-	private T definition;
+    private GroupSymbol target;
+    private T definition;
 
-	public GroupSymbol getTarget() {
-		return target;
-	}
+    public GroupSymbol getTarget() {
+        return target;
+    }
 
-	public void setTarget(GroupSymbol target) {
-		this.target = target;
-	}
+    public void setTarget(GroupSymbol target) {
+        this.target = target;
+    }
 
-	public T getDefinition() {
-		return definition;
-	}
+    public T getDefinition() {
+        return definition;
+    }
 
-	public void setDefinition(T definition) {
-		this.definition = definition;
-	}
+    public void setDefinition(T definition) {
+        this.definition = definition;
+    }
 
-	@Override
-	public boolean areResultsCachable() {
-		return false;
-	}
+    @Override
+    public boolean areResultsCachable() {
+        return false;
+    }
 
-	@Override
-	public List<Expression> getProjectedSymbols() {
-		return Command.getUpdateCommandSymbol();
-	}
+    @Override
+    public List<Expression> getProjectedSymbols() {
+        return Command.getUpdateCommandSymbol();
+    }
 
-	public void cloneOnTo(Alter<T> clone) {
-		copyMetadataState(clone);
-		if (this.definition != null) {
-			clone.setDefinition((T)this.definition.clone());
-		}
-		clone.setTarget(getTarget().clone());
-	}
+    public void cloneOnTo(Alter<T> clone) {
+        copyMetadataState(clone);
+        if (this.definition != null) {
+            clone.setDefinition((T)this.definition.clone());
+        }
+        clone.setTarget(getTarget().clone());
+    }
 
-	@Override
-	public int hashCode() {
-		return HashCodeUtil.hashCode(this.target.hashCode(), this.definition);
-	}
+    @Override
+    public int hashCode() {
+        return HashCodeUtil.hashCode(this.target.hashCode(), this.definition);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (obj.getClass() != this.getClass()) {
-			return false;
-		}
-		Alter<?> other = (Alter<?>)obj;
-		return EquivalenceUtil.areEqual(this.target, other.target)
-		&& EquivalenceUtil.areEqual(this.definition, other.definition);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj.getClass() != this.getClass()) {
+            return false;
+        }
+        Alter<?> other = (Alter<?>)obj;
+        return EquivalenceUtil.areEqual(this.target, other.target)
+        && EquivalenceUtil.areEqual(this.definition, other.definition);
+    }
 
 }

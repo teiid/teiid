@@ -26,19 +26,19 @@ import java.nio.ByteBuffer;
  */
 public interface BlockManager {
 
-	int getInode();
+    int getInode();
 
-	ByteBuffer allocateBlock(int index);
+    ByteBuffer allocateBlock(int index);
 
-	/**
-	 * Get the block for a given index.  Returns null if the block does not exist.
-	 * @param index
-	 * @return
-	 */
-	ByteBuffer getBlock(int index);
+    /**
+     * Get the block for a given index.  Returns null if the block does not exist.
+     * @param index
+     * @return
+     */
+    ByteBuffer getBlock(int index);
 
-	void freeBlock(int index);
+    void freeBlock(int index);
 
-	int free(boolean acquireDataBlock);
+    int free(boolean acquireDataBlock);
 
 }

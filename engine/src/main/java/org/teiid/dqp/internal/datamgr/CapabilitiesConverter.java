@@ -141,17 +141,17 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ONLY_TIMESTAMPADD_LITERAL, srcCaps.supportsOnlyTimestampAddLiteral());
         tgtCaps.setCapabilitySupport(Capability.GEOGRAPHY_TYPE, srcCaps.supportsGeographyType());
         if (srcCaps.supportsPartialFiltering()) {
-        	//disable supports that could end up being not filterable
-        	tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
-        	Assertion.assertTrue(!srcCaps.supportsOuterJoins());
-        	Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
-        	Assertion.assertTrue(!srcCaps.supportsInlineViews());
-        	Assertion.assertTrue(!srcCaps.supportsIntersect());
-        	Assertion.assertTrue(!srcCaps.supportsExcept());
-        	Assertion.assertTrue(!srcCaps.supportsSelectExpression());
-        	Assertion.assertTrue(!srcCaps.supportsUnions());
-        	Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
-        	Assertion.assertTrue(!srcCaps.supportsGroupBy());
+            //disable supports that could end up being not filterable
+            tgtCaps.setCapabilitySupport(Capability.PARTIAL_FILTERS, true);
+            Assertion.assertTrue(!srcCaps.supportsOuterJoins());
+            Assertion.assertTrue(!srcCaps.supportsFullOuterJoins());
+            Assertion.assertTrue(!srcCaps.supportsInlineViews());
+            Assertion.assertTrue(!srcCaps.supportsIntersect());
+            Assertion.assertTrue(!srcCaps.supportsExcept());
+            Assertion.assertTrue(!srcCaps.supportsSelectExpression());
+            Assertion.assertTrue(!srcCaps.supportsUnions());
+            Assertion.assertTrue(!srcCaps.supportsSelectDistinct());
+            Assertion.assertTrue(!srcCaps.supportsGroupBy());
         }
 
         List<String> functions = srcCaps.getSupportedFunctions();
@@ -184,17 +184,17 @@ public class CapabilitiesConverter {
         return tgtCaps;
     }
 
-	private static void setSupports(Object connectorID, BasicSourceCapabilities tgtCaps, Capability cap, boolean supports, Capability... required) {
-		if (!supports) {
-			return;
-		}
-		for (Capability capability : required) {
-			if (!tgtCaps.supportsCapability(capability)) {
-				LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30003, cap, capability, connectorID));
-				supports = false;
-			}
-		}
-		tgtCaps.setCapabilitySupport(cap, supports);
-	}
+    private static void setSupports(Object connectorID, BasicSourceCapabilities tgtCaps, Capability cap, boolean supports, Capability... required) {
+        if (!supports) {
+            return;
+        }
+        for (Capability capability : required) {
+            if (!tgtCaps.supportsCapability(capability)) {
+                LogManager.logWarning(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30003, cap, capability, connectorID));
+                supports = false;
+            }
+        }
+        tgtCaps.setCapabilitySupport(cap, supports);
+    }
 
 }

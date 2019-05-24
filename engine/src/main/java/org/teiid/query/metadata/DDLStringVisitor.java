@@ -49,31 +49,31 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class DDLStringVisitor {
-	private static final String TAB = "\t"; //$NON-NLS-1$
-	private static final String NEWLINE = "\n";//$NON-NLS-1$
+    private static final String TAB = "\t"; //$NON-NLS-1$
+    private static final String NEWLINE = "\n";//$NON-NLS-1$
     public static final String GENERATED = "TEIID_GENERATED"; //$NON-NLS-1$
 
-	private static final HashSet<String> PRECISION_DATATYPES = new HashSet<String>(
-			Arrays.asList(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
+    private static final HashSet<String> PRECISION_DATATYPES = new HashSet<String>(
+            Arrays.asList(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
 
-	protected StringBuilder buffer = new StringBuilder();
-	private boolean includeTables = true;
-	private boolean includeProcedures = true;
-	private boolean includeFunctions = true;
-	private Pattern filter;
-	private Map<String, String> prefixMap;
-	protected boolean usePrefixes = true;
-	private boolean namespaceAdded = false;
+    protected StringBuilder buffer = new StringBuilder();
+    private boolean includeTables = true;
+    private boolean includeProcedures = true;
+    private boolean includeFunctions = true;
+    private Pattern filter;
+    private Map<String, String> prefixMap;
+    protected boolean usePrefixes = true;
+    private boolean namespaceAdded = false;
 
-	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
-	static {
-		for (Map.Entry<String, String> entry : MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
-			BUILTIN_PREFIXES.put(entry.getValue(), entry.getKey());
-		}
-	}
+    private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
+    static {
+        for (Map.Entry<String, String> entry : MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
+            BUILTIN_PREFIXES.put(entry.getValue(), entry.getKey());
+        }
+    }
 
     public static String getDDLString(Schema schema, EnumSet<SchemaObjectType> types, String regexPattern) {
-    	DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
+        DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
         visitor.visit(schema);
         return visitor.toString();
     }
@@ -85,14 +85,14 @@ public class DDLStringVisitor {
     }
 
     public DDLStringVisitor(EnumSet<SchemaObjectType> types, String regexPattern) {
-    	if (types != null) {
-    		this.includeTables = types.contains(SchemaObjectType.TABLES);
-    		this.includeProcedures = types.contains(SchemaObjectType.PROCEDURES);
-    		this.includeFunctions = types.contains(SchemaObjectType.FUNCTIONS);
-    	}
-    	if (regexPattern != null) {
-    		this.filter = Pattern.compile(regexPattern);
-    	}
+        if (types != null) {
+            this.includeTables = types.contains(SchemaObjectType.TABLES);
+            this.includeProcedures = types.contains(SchemaObjectType.PROCEDURES);
+            this.includeFunctions = types.contains(SchemaObjectType.FUNCTIONS);
+        }
+        if (regexPattern != null) {
+            this.filter = Pattern.compile(regexPattern);
+        }
     }
 
     public void visit(Database database) {
@@ -116,8 +116,8 @@ public class DDLStringVisitor {
         append(NEWLINE);
 
         if (!this.namespaceAdded) {
-        	append("${NAMESPACE}");
-        	this.namespaceAdded = true;
+            append("${NAMESPACE}");
+            this.namespaceAdded = true;
         }
 
         boolean outputDt = false;
@@ -144,9 +144,9 @@ public class DDLStringVisitor {
         }
 
         if (!database.getDataWrappers().isEmpty()){
-        	append(NEWLINE);
-        	append("--############ Translators ############");
-        	append(NEWLINE);
+            append(NEWLINE);
+            append("--############ Translators ############");
+            append(NEWLINE);
             for (DataWrapper dw : database.getDataWrappers()) {
                 visit(dw);
                 append(NEWLINE);
@@ -155,9 +155,9 @@ public class DDLStringVisitor {
         }
 
         if (!database.getServers().isEmpty()){
-        	append(NEWLINE);
-        	append("--############ Servers ############");
-        	append(NEWLINE);
+            append(NEWLINE);
+            append("--############ Servers ############");
+            append(NEWLINE);
             for (Server server : database.getServers()) {
                 visit(server);
                 append(NEWLINE);
@@ -220,9 +220,9 @@ public class DDLStringVisitor {
         }
 
         if (!database.getRoles().isEmpty()){
-        	append(NEWLINE);
-        	append("--############ Grants ############");
-        	append(NEWLINE);
+            append(NEWLINE);
+            append("--############ Grants ############");
+            append(NEWLINE);
             for (Grant grant:database.getGrants()) {
                 visit(grant);
                 append(NEWLINE);
@@ -372,12 +372,12 @@ public class DDLStringVisitor {
     }
 
     protected void visit(Schema schema) {
-		boolean first = true;
+        boolean first = true;
         if (!this.namespaceAdded) {
-        	append("${NAMESPACE}");
-        	this.namespaceAdded = true;
+            append("${NAMESPACE}");
+            this.namespaceAdded = true;
         }
-		for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
+        for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
             String generated = record.getProperty(GENERATED, false);
             if (generated != null && Boolean.valueOf(generated)) {
                 continue;
@@ -413,648 +413,648 @@ public class DDLStringVisitor {
             } else if (record instanceof FunctionMethod) {
                 visit((FunctionMethod)record);
             }
-		}
-	}
+        }
+    }
 
-	private void visit(Table table) {
-		append(CREATE).append(SPACE);
-		if (table.isPhysical()) {
-			append(FOREIGN_TABLE);
-		}
-		else {
-			if (table.getTableType() == Table.Type.TemporaryTable) {
-				append(GLOBAL).append(SPACE).append(TEMPORARY).append(SPACE).append(TABLE);
-			} else {
-				append(VIEW);
-			}
-		}
-		append(SPACE);
-		String name = addTableBody(table);
+    private void visit(Table table) {
+        append(CREATE).append(SPACE);
+        if (table.isPhysical()) {
+            append(FOREIGN_TABLE);
+        }
+        else {
+            if (table.getTableType() == Table.Type.TemporaryTable) {
+                append(GLOBAL).append(SPACE).append(TEMPORARY).append(SPACE).append(TABLE);
+            } else {
+                append(VIEW);
+            }
+        }
+        append(SPACE);
+        String name = addTableBody(table);
 
-		if (table.getTableType() != Table.Type.TemporaryTable) {
-			if (table.isVirtual()) {
-				append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
-			}
-			append(SQLConstants.Tokens.SEMICOLON);
+        if (table.getTableType() != Table.Type.TemporaryTable) {
+            if (table.isVirtual()) {
+                append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
+            }
+            append(SQLConstants.Tokens.SEMICOLON);
 
-			if (table.isInsertPlanEnabled()) {
-				buildTrigger(name, null, INSERT, table.getInsertPlan(), false);
-			}
+            if (table.isInsertPlanEnabled()) {
+                buildTrigger(name, null, INSERT, table.getInsertPlan(), false);
+            }
 
-			if (table.isUpdatePlanEnabled()) {
-				buildTrigger(name, null, UPDATE, table.getUpdatePlan(), false);
-			}
+            if (table.isUpdatePlanEnabled()) {
+                buildTrigger(name, null, UPDATE, table.getUpdatePlan(), false);
+            }
 
-			if (table.isDeletePlanEnabled()) {
-				buildTrigger(name, null, DELETE, table.getDeletePlan(), false);
-			}
+            if (table.isDeletePlanEnabled()) {
+                buildTrigger(name, null, DELETE, table.getDeletePlan(), false);
+            }
 
-			for (Trigger tr : table.getTriggers().values()) {
-			    String generated = tr.getProperty(GENERATED, false);
-			    if (generated == null || !Boolean.valueOf(generated)) {
-			        buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan(), tr.isAfter());
-			    }
-			}
-		} else {
-		    append(SQLConstants.Tokens.SEMICOLON);
-		}
-	}
+            for (Trigger tr : table.getTriggers().values()) {
+                String generated = tr.getProperty(GENERATED, false);
+                if (generated == null || !Boolean.valueOf(generated)) {
+                    buildTrigger(name, tr.getName(), tr.getEvent().name(), tr.getPlan(), tr.isAfter());
+                }
+            }
+        } else {
+            append(SQLConstants.Tokens.SEMICOLON);
+        }
+    }
 
-	public String addTableBody(Table table) {
-		String name = SQLStringVisitor.escapeSinglePart(table.getName());
-		append(name);
+    public String addTableBody(Table table) {
+        String name = SQLStringVisitor.escapeSinglePart(table.getName());
+        append(name);
 
-		if (table.getColumns() != null) {
-			append(SPACE);
-			append(LPAREN);
-			boolean first = true;
-			for (Column c:table.getColumns()) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(COMMA);
-				}
-				visit(table, c);
-			}
-			buildContraints(table);
-			append(NEWLINE);
-			append(RPAREN);
-		}
+        if (table.getColumns() != null) {
+            append(SPACE);
+            append(LPAREN);
+            boolean first = true;
+            for (Column c:table.getColumns()) {
+                if (first) {
+                    first = false;
+                }
+                else {
+                    append(COMMA);
+                }
+                visit(table, c);
+            }
+            buildContraints(table);
+            append(NEWLINE);
+            append(RPAREN);
+        }
 
-		// options
-		String options = buildTableOptions(table);
-		if (!options.isEmpty()) {
-			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}
-		return name;
-	}
+        // options
+        String options = buildTableOptions(table);
+        if (!options.isEmpty()) {
+            append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+        }
+        return name;
+    }
 
-	protected DDLStringVisitor append(Object o) {
-		buffer.append(o);
-		return this;
-	}
+    protected DDLStringVisitor append(Object o) {
+        buffer.append(o);
+        return this;
+    }
 
-	private void buildTrigger(String name, String trigger_name, String type, String plan, boolean isAfter) {
-		append(NEWLINE);
-		append(NEWLINE);
-		append(SQLConstants.Reserved.CREATE).append(SPACE).append(TRIGGER).append(SPACE);
-		if (trigger_name != null) {
-		    append(SQLStringVisitor.escapeSinglePart(trigger_name)).append(SPACE);
-		}
-		append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE);
-		if (isAfter) {
-		    append(AFTER);
-		} else {
-		    append(INSTEAD_OF);
-		}
-		append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
-		append(plan);
-		append(SQLConstants.Tokens.SEMICOLON);
-	}
+    private void buildTrigger(String name, String trigger_name, String type, String plan, boolean isAfter) {
+        append(NEWLINE);
+        append(NEWLINE);
+        append(SQLConstants.Reserved.CREATE).append(SPACE).append(TRIGGER).append(SPACE);
+        if (trigger_name != null) {
+            append(SQLStringVisitor.escapeSinglePart(trigger_name)).append(SPACE);
+        }
+        append(SQLConstants.Reserved.ON).append(SPACE).append(name).append(SPACE);
+        if (isAfter) {
+            append(AFTER);
+        } else {
+            append(INSTEAD_OF);
+        }
+        append(SPACE).append(type).append(SPACE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+        append(plan);
+        append(SQLConstants.Tokens.SEMICOLON);
+    }
 
-	private String buildTableOptions(Table table) {
-		StringBuilder options = new StringBuilder();
-		addCommonOptions(options, table);
+    private String buildTableOptions(Table table) {
+        StringBuilder options = new StringBuilder();
+        addCommonOptions(options, table);
 
-		if (table.isMaterialized()) {
-			addOption(options, MATERIALIZED, table.isMaterialized());
-			if (table.getMaterializedTable() != null) {
-				addOption(options, MATERIALIZED_TABLE, table.getMaterializedTable().getName());
-			}
-		}
-		if (table.supportsUpdate()) {
-			addOption(options, UPDATABLE, table.supportsUpdate());
-		}
-		if (table.getCardinality() != -1) {
-			if (table.getCardinality() != table.getCardinalityAsFloat()) {
-				addOption(options, CARDINALITY, (long)table.getCardinalityAsFloat());
-			} else {
-				addOption(options, CARDINALITY, table.getCardinality());
-			}
-		}
-		if (!table.getProperties().isEmpty()) {
-			for (String key:table.getProperties().keySet()) {
-				addOption(options, key, table.getProperty(key, false));
-			}
-		}
-		return options.toString();
-	}
+        if (table.isMaterialized()) {
+            addOption(options, MATERIALIZED, table.isMaterialized());
+            if (table.getMaterializedTable() != null) {
+                addOption(options, MATERIALIZED_TABLE, table.getMaterializedTable().getName());
+            }
+        }
+        if (table.supportsUpdate()) {
+            addOption(options, UPDATABLE, table.supportsUpdate());
+        }
+        if (table.getCardinality() != -1) {
+            if (table.getCardinality() != table.getCardinalityAsFloat()) {
+                addOption(options, CARDINALITY, (long)table.getCardinalityAsFloat());
+            } else {
+                addOption(options, CARDINALITY, table.getCardinality());
+            }
+        }
+        if (!table.getProperties().isEmpty()) {
+            for (String key:table.getProperties().keySet()) {
+                addOption(options, key, table.getProperty(key, false));
+            }
+        }
+        return options.toString();
+    }
 
-	private void addCommonOptions(StringBuilder sb, AbstractMetadataRecord record) {
-		if (record.isUUIDSet() && record.getUUID() != null && !record.getUUID().startsWith("tid:")) { //$NON-NLS-1$
-			addOption(sb, UUID, record.getUUID());
-		}
-		if (record.getAnnotation() != null) {
-			addOption(sb, ANNOTATION, record.getAnnotation());
-		}
-		if (record.getNameInSource() != null) {
-			addOption(sb, NAMEINSOURCE, record.getNameInSource());
-		}
-	}
+    private void addCommonOptions(StringBuilder sb, AbstractMetadataRecord record) {
+        if (record.isUUIDSet() && record.getUUID() != null && !record.getUUID().startsWith("tid:")) { //$NON-NLS-1$
+            addOption(sb, UUID, record.getUUID());
+        }
+        if (record.getAnnotation() != null) {
+            addOption(sb, ANNOTATION, record.getAnnotation());
+        }
+        if (record.getNameInSource() != null) {
+            addOption(sb, NAMEINSOURCE, record.getNameInSource());
+        }
+    }
 
-	private void buildContraints(Table table) {
-		addConstraints(table.getAccessPatterns(), "AP", ACCESSPATTERN); //$NON-NLS-1$
+    private void buildContraints(Table table) {
+        addConstraints(table.getAccessPatterns(), "AP", ACCESSPATTERN); //$NON-NLS-1$
 
-		KeyRecord pk = table.getPrimaryKey();
-		if (pk != null) {
-			addConstraint("PK", PRIMARY_KEY, pk, true); //$NON-NLS-1$
-		}
+        KeyRecord pk = table.getPrimaryKey();
+        if (pk != null) {
+            addConstraint("PK", PRIMARY_KEY, pk, true); //$NON-NLS-1$
+        }
 
-		addConstraints(table.getUniqueKeys(), UNIQUE, UNIQUE);
-		addConstraints(table.getIndexes(), INDEX, INDEX);
-		addConstraints(table.getFunctionBasedIndexes(), INDEX, INDEX);
+        addConstraints(table.getUniqueKeys(), UNIQUE, UNIQUE);
+        addConstraints(table.getIndexes(), INDEX, INDEX);
+        addConstraints(table.getFunctionBasedIndexes(), INDEX, INDEX);
 
-		for (int i = 0; i < table.getForeignKeys().size(); i++) {
-			ForeignKey key = table.getForeignKeys().get(i);
-			addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
-			append(SPACE).append(REFERENCES);
-			if (key.getReferenceKey() != null) {
-				if (key.getReferenceKey().getParent().getParent().equals(key.getParent().getParent())) {
-					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getName()));
-				} else {
-					append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getFullName()));
-				}
-			} else if (key.getReferenceTableName() != null) {
-				append(SPACE).append(new GroupSymbol(key.getReferenceTableName()));
-			}
-			append(SPACE);
-			addNames(key.getReferenceColumns());
-			appendOptions(key);
-		}
-	}
+        for (int i = 0; i < table.getForeignKeys().size(); i++) {
+            ForeignKey key = table.getForeignKeys().get(i);
+            addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
+            append(SPACE).append(REFERENCES);
+            if (key.getReferenceKey() != null) {
+                if (key.getReferenceKey().getParent().getParent().equals(key.getParent().getParent())) {
+                    append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getName()));
+                } else {
+                    append(SPACE).append(new GroupSymbol(key.getReferenceKey().getParent().getFullName()));
+                }
+            } else if (key.getReferenceTableName() != null) {
+                append(SPACE).append(new GroupSymbol(key.getReferenceTableName()));
+            }
+            append(SPACE);
+            addNames(key.getReferenceColumns());
+            appendOptions(key);
+        }
+    }
 
-	private void addConstraints(List<KeyRecord> constraints, String defaultName, String type) {
-		for (int i = 0; i < constraints.size(); i++) {
-			KeyRecord constraint = constraints.get(i);
-			addConstraint(defaultName + i, type, constraint, true);
-		}
-	}
+    private void addConstraints(List<KeyRecord> constraints, String defaultName, String type) {
+        for (int i = 0; i < constraints.size(); i++) {
+            KeyRecord constraint = constraints.get(i);
+            addConstraint(defaultName + i, type, constraint, true);
+        }
+    }
 
-	private void addConstraint(String defaultName, String type,
-			KeyRecord constraint, boolean addOptions) {
-		append(COMMA).append(NEWLINE).append(TAB);
-		boolean nameMatches = defaultName.equals(constraint.getName());
-		if (!nameMatches) {
-			append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);
-		}
-		append(type);
-		addColumns(constraint.getColumns(), false);
-		if (addOptions) {
-			appendOptions(constraint);
-		}
-	}
+    private void addConstraint(String defaultName, String type,
+            KeyRecord constraint, boolean addOptions) {
+        append(COMMA).append(NEWLINE).append(TAB);
+        boolean nameMatches = defaultName.equals(constraint.getName());
+        if (!nameMatches) {
+            append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);
+        }
+        append(type);
+        addColumns(constraint.getColumns(), false);
+        if (addOptions) {
+            appendOptions(constraint);
+        }
+    }
 
-	private void addColumns(List<Column> columns, boolean includeType) {
-		append(LPAREN);
-		boolean first = true;
-		for (Column c:columns) {
-			if (first) {
-				first = false;
-			}
-			else {
-				append(COMMA).append(SPACE);
-			}
-			if (includeType) {
-				appendColumn(c, true, includeType);
-				appendColumnOptions(c);
-			} else if (c.getParent() instanceof KeyRecord) {
-				//function based column
-				append(c.getNameInSource());
-			} else {
-				append(SQLStringVisitor.escapeSinglePart(c.getName()));
-			}
-		}
-		append(RPAREN);
-	}
+    private void addColumns(List<Column> columns, boolean includeType) {
+        append(LPAREN);
+        boolean first = true;
+        for (Column c:columns) {
+            if (first) {
+                first = false;
+            }
+            else {
+                append(COMMA).append(SPACE);
+            }
+            if (includeType) {
+                appendColumn(c, true, includeType);
+                appendColumnOptions(c);
+            } else if (c.getParent() instanceof KeyRecord) {
+                //function based column
+                append(c.getNameInSource());
+            } else {
+                append(SQLStringVisitor.escapeSinglePart(c.getName()));
+            }
+        }
+        append(RPAREN);
+    }
 
-	private void addNames(List<String> columns) {
-		if (columns != null) {
-			append(LPAREN);
-			boolean first = true;
-			for (String c:columns) {
-				if (first) {
-					first = false;
-				}
-				else {
-					append(COMMA).append(SPACE);
-				}
-				append(SQLStringVisitor.escapeSinglePart(c));
-			}
-			append(RPAREN);
-		}
-	}
+    private void addNames(List<String> columns) {
+        if (columns != null) {
+            append(LPAREN);
+            boolean first = true;
+            for (String c:columns) {
+                if (first) {
+                    first = false;
+                }
+                else {
+                    append(COMMA).append(SPACE);
+                }
+                append(SQLStringVisitor.escapeSinglePart(c));
+            }
+            append(RPAREN);
+        }
+    }
 
-	private void visit(Table table, Column column) {
-		append(NEWLINE).append(TAB);
-		if (table.getTableType() == Table.Type.TemporaryTable && column.isAutoIncremented() && column.getNullType() == NullType.No_Nulls && column.getJavaType() == DataTypeManager.DefaultDataClasses.INTEGER) {
-			append(SQLStringVisitor.escapeSinglePart(column.getName()));
-			append(SPACE);
-			append(SERIAL);
-		} else {
-			appendColumn(column, true, !table.isVirtual() || !Boolean.valueOf(column.getProperty(MetadataValidator.UNTYPED, false)));
+    private void visit(Table table, Column column) {
+        append(NEWLINE).append(TAB);
+        if (table.getTableType() == Table.Type.TemporaryTable && column.isAutoIncremented() && column.getNullType() == NullType.No_Nulls && column.getJavaType() == DataTypeManager.DefaultDataClasses.INTEGER) {
+            append(SQLStringVisitor.escapeSinglePart(column.getName()));
+            append(SPACE);
+            append(SERIAL);
+        } else {
+            appendColumn(column, true, !table.isVirtual() || !Boolean.valueOf(column.getProperty(MetadataValidator.UNTYPED, false)));
 
-			if (column.isAutoIncremented()) {
-				append(SPACE).append(AUTO_INCREMENT);
-			}
-		}
+            if (column.isAutoIncremented()) {
+                append(SPACE).append(AUTO_INCREMENT);
+            }
+        }
 
-		appendDefault(column);
+        appendDefault(column);
 
-		// options
-		appendColumnOptions(column);
-	}
+        // options
+        appendColumnOptions(column);
+    }
 
-	private void appendDefault(BaseColumn column) {
-		if (column.getDefaultValue() != null) {
-			append(SPACE).append(DEFAULT).append(SPACE);
-			if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(column.getProperty(BaseColumn.DEFAULT_HANDLING, false))) {
-				append(column.getDefaultValue());
-			} else {
-				append(new Constant(column.getDefaultValue()));
-			}
-		}
-	}
+    private void appendDefault(BaseColumn column) {
+        if (column.getDefaultValue() != null) {
+            append(SPACE).append(DEFAULT).append(SPACE);
+            if (BaseColumn.EXPRESSION_DEFAULT.equalsIgnoreCase(column.getProperty(BaseColumn.DEFAULT_HANDLING, false))) {
+                append(column.getDefaultValue());
+            } else {
+                append(new Constant(column.getDefaultValue()));
+            }
+        }
+    }
 
-	private void appendColumn(BaseColumn column, boolean includeName, boolean includeType) {
-		if (includeName) {
-			append(SQLStringVisitor.escapeSinglePart(column.getName()));
-		}
-		if (includeType) {
-			Datatype datatype = column.getDatatype();
-			String runtimeTypeName = column.getRuntimeType();
-			boolean domain = false;
-			if (datatype != null) {
-			    runtimeTypeName = datatype.getRuntimeTypeName();
-			    domain = datatype.getType() == Datatype.Type.Domain;
-			}
-			if (includeName) {
-				append(SPACE);
-			}
-			if (domain) {
-	            append(datatype.getName());
-			} else {
-    			append(runtimeTypeName);
-    			if (DataTypeManager.hasLength(runtimeTypeName)) {
-    				if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
-    					append(LPAREN).append(column.getLength()).append(RPAREN);
-    				}
-    			} else if (PRECISION_DATATYPES.contains(runtimeTypeName)
-    					&& !column.isDefaultPrecisionScale()) {
-    				append(LPAREN).append(column.getPrecision());
-    				if (column.getScale() != 0) {
-    					append(COMMA).append(column.getScale());
-    				}
-    				append(RPAREN);
-    			}
-			}
-			if (datatype != null) {
-				for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
-					append(Tokens.LSBRACE).append(Tokens.RSBRACE);
-				}
-			}
-			if (column.getNullType() == NullType.No_Nulls && (!domain || datatype.getNullType() != NullType.No_Nulls)) {
-				append(SPACE).append(NOT_NULL);
-			}
-		}
-	}
+    private void appendColumn(BaseColumn column, boolean includeName, boolean includeType) {
+        if (includeName) {
+            append(SQLStringVisitor.escapeSinglePart(column.getName()));
+        }
+        if (includeType) {
+            Datatype datatype = column.getDatatype();
+            String runtimeTypeName = column.getRuntimeType();
+            boolean domain = false;
+            if (datatype != null) {
+                runtimeTypeName = datatype.getRuntimeTypeName();
+                domain = datatype.getType() == Datatype.Type.Domain;
+            }
+            if (includeName) {
+                append(SPACE);
+            }
+            if (domain) {
+                append(datatype.getName());
+            } else {
+                append(runtimeTypeName);
+                if (DataTypeManager.hasLength(runtimeTypeName)) {
+                    if (column.getLength() != 0 && (datatype == null || column.getLength() != datatype.getLength())) {
+                        append(LPAREN).append(column.getLength()).append(RPAREN);
+                    }
+                } else if (PRECISION_DATATYPES.contains(runtimeTypeName)
+                        && !column.isDefaultPrecisionScale()) {
+                    append(LPAREN).append(column.getPrecision());
+                    if (column.getScale() != 0) {
+                        append(COMMA).append(column.getScale());
+                    }
+                    append(RPAREN);
+                }
+            }
+            if (datatype != null) {
+                for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
+                    append(Tokens.LSBRACE).append(Tokens.RSBRACE);
+                }
+            }
+            if (column.getNullType() == NullType.No_Nulls && (!domain || datatype.getNullType() != NullType.No_Nulls)) {
+                append(SPACE).append(NOT_NULL);
+            }
+        }
+    }
 
-	private void appendColumnOptions(BaseColumn column) {
-		StringBuilder options = new StringBuilder();
-		addCommonOptions(options, column);
+    private void appendColumnOptions(BaseColumn column) {
+        StringBuilder options = new StringBuilder();
+        addCommonOptions(options, column);
 
-		if (!column.getDatatype().isBuiltin() && column.getDatatype().getType() != Datatype.Type.Domain) {
-		    //an enterprise type
-			addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-		}
+        if (!column.getDatatype().isBuiltin() && column.getDatatype().getType() != Datatype.Type.Domain) {
+            //an enterprise type
+            addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        }
 
-		if (column.getDatatype().getRadix() != 0 && column.getRadix() != column.getDatatype().getRadix()) {
-			addOption(options, RADIX, column.getRadix());
-		}
+        if (column.getDatatype().getRadix() != 0 && column.getRadix() != column.getDatatype().getRadix()) {
+            addOption(options, RADIX, column.getRadix());
+        }
 
-		buildColumnOptions(column, options);
+        buildColumnOptions(column, options);
 
-		if (options.length() != 0) {
-			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}
-	}
+        if (options.length() != 0) {
+            append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+        }
+    }
 
-	private void buildColumnOptions(BaseColumn baseColumn,
-			StringBuilder options) {
-		if (baseColumn instanceof Column) {
-			Column column = (Column)baseColumn;
-			if (!column.isSelectable()) {
-				addOption(options, SELECTABLE, column.isSelectable());
-			}
+    private void buildColumnOptions(BaseColumn baseColumn,
+            StringBuilder options) {
+        if (baseColumn instanceof Column) {
+            Column column = (Column)baseColumn;
+            if (!column.isSelectable()) {
+                addOption(options, SELECTABLE, column.isSelectable());
+            }
 
-			// if table is already updatable, then columns are implicitly updatable.
-			if (!column.isUpdatable() && column.getParent() instanceof Table && ((Table)column.getParent()).supportsUpdate()) {
-				addOption(options, UPDATABLE, column.isUpdatable());
-			}
+            // if table is already updatable, then columns are implicitly updatable.
+            if (!column.isUpdatable() && column.getParent() instanceof Table && ((Table)column.getParent()).supportsUpdate()) {
+                addOption(options, UPDATABLE, column.isUpdatable());
+            }
 
-			if (column.isCurrency()) {
-				addOption(options, CURRENCY, column.isCurrency());
-			}
+            if (column.isCurrency()) {
+                addOption(options, CURRENCY, column.isCurrency());
+            }
 
-			// only record if not default
-			if (!column.isCaseSensitive() && column.getDatatype().isCaseSensitive()) {
-				addOption(options, CASE_SENSITIVE, column.isCaseSensitive());
-			}
+            // only record if not default
+            if (!column.isCaseSensitive() && column.getDatatype().isCaseSensitive()) {
+                addOption(options, CASE_SENSITIVE, column.isCaseSensitive());
+            }
 
-			if (!column.isSigned() && column.getDatatype().isSigned()) {
-				addOption(options, SIGNED, column.isSigned());
-			}
-			if (column.isFixedLength()) {
-				addOption(options, FIXED_LENGTH, column.isFixedLength());
-			}
-			// length and octet length should be same. so this should be never be true.
-			//TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
-			if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
-				addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
-			}
+            if (!column.isSigned() && column.getDatatype().isSigned()) {
+                addOption(options, SIGNED, column.isSigned());
+            }
+            if (column.isFixedLength()) {
+                addOption(options, FIXED_LENGTH, column.isFixedLength());
+            }
+            // length and octet length should be same. so this should be never be true.
+            //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
+            if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
+                addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
+            }
 
-			// by default the search type is default data type search, so avoid it.
-			if (column.getSearchType() != null && (!column.getSearchType().equals(column.getDatatype().getSearchType()) || column.isSearchTypeSet())) {
-				addOption(options, SEARCHABLE, column.getSearchType().name());
-			}
+            // by default the search type is default data type search, so avoid it.
+            if (column.getSearchType() != null && (!column.getSearchType().equals(column.getDatatype().getSearchType()) || column.isSearchTypeSet())) {
+                addOption(options, SEARCHABLE, column.getSearchType().name());
+            }
 
-			if (column.getMinimumValue() != null) {
-				addOption(options, MIN_VALUE, column.getMinimumValue());
-			}
+            if (column.getMinimumValue() != null) {
+                addOption(options, MIN_VALUE, column.getMinimumValue());
+            }
 
-			if (column.getMaximumValue() != null) {
-				addOption(options, MAX_VALUE, column.getMaximumValue());
-			}
+            if (column.getMaximumValue() != null) {
+                addOption(options, MAX_VALUE, column.getMaximumValue());
+            }
 
-			if (column.getNullValues() != -1) {
-				addOption(options, NULL_VALUE_COUNT, column.getNullValues());
-			}
+            if (column.getNullValues() != -1) {
+                addOption(options, NULL_VALUE_COUNT, column.getNullValues());
+            }
 
-			if (column.getDistinctValues() != -1) {
-				addOption(options, DISTINCT_VALUES, column.getDistinctValues());
-			}
-		}
+            if (column.getDistinctValues() != -1) {
+                addOption(options, DISTINCT_VALUES, column.getDistinctValues());
+            }
+        }
 
-		if (baseColumn.getNativeType() != null) {
-			addOption(options, NATIVE_TYPE, baseColumn.getNativeType());
-		}
+        if (baseColumn.getNativeType() != null) {
+            addOption(options, NATIVE_TYPE, baseColumn.getNativeType());
+        }
 
-		buildOptions(baseColumn, options);
-	}
+        buildOptions(baseColumn, options);
+    }
 
-	private void appendOptions(AbstractMetadataRecord record) {
-		StringBuilder options = new StringBuilder();
-		addCommonOptions(options, record);
-		buildOptions(record, options);
-		if (options.length() != 0) {
-			append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}
-	}
+    private void appendOptions(AbstractMetadataRecord record) {
+        StringBuilder options = new StringBuilder();
+        addCommonOptions(options, record);
+        buildOptions(record, options);
+        if (options.length() != 0) {
+            append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+        }
+    }
 
-	private void buildOptions(AbstractMetadataRecord record, StringBuilder options) {
-		if (!record.getProperties().isEmpty()) {
-			for (Map.Entry<String, String> entry:record.getProperties().entrySet()) {
-				if (record instanceof Database && entry.getKey().equals("full-ddl")) {
-					continue;
-				}
-				if (entry.getKey().equals(MetadataValidator.UNTYPED)) {
+    private void buildOptions(AbstractMetadataRecord record, StringBuilder options) {
+        if (!record.getProperties().isEmpty()) {
+            for (Map.Entry<String, String> entry:record.getProperties().entrySet()) {
+                if (record instanceof Database && entry.getKey().equals("full-ddl")) {
                     continue;
                 }
-				addOption(options, entry.getKey(), entry.getValue());
-			}
-		}
-	}
+                if (entry.getKey().equals(MetadataValidator.UNTYPED)) {
+                    continue;
+                }
+                addOption(options, entry.getKey(), entry.getValue());
+            }
+        }
+    }
 
-	private void addOption(StringBuilder sb, String key, Object value) {
-		if (sb.length() != 0) {
-			sb.append(COMMA).append(SPACE);
-		}
-		if (value != null) {
-			value = new Constant(value);
-		} else {
-			value = Constant.NULL_CONSTANT;
-		}
-		if (key != null && key.length() > 2 && key.charAt(0) == '{') {
-			String origKey = key;
-			int index = key.indexOf('}');
-			if (index > 1) {
-				String uri = key.substring(1, index);
-				key = key.substring(index + 1, key.length());
-				String prefix = BUILTIN_PREFIXES.get(uri);
-				if (usePrefixes) {
-				    if (prefixMap == null) {
+    private void addOption(StringBuilder sb, String key, Object value) {
+        if (sb.length() != 0) {
+            sb.append(COMMA).append(SPACE);
+        }
+        if (value != null) {
+            value = new Constant(value);
+        } else {
+            value = Constant.NULL_CONSTANT;
+        }
+        if (key != null && key.length() > 2 && key.charAt(0) == '{') {
+            String origKey = key;
+            int index = key.indexOf('}');
+            if (index > 1) {
+                String uri = key.substring(1, index);
+                key = key.substring(index + 1, key.length());
+                String prefix = BUILTIN_PREFIXES.get(uri);
+                if (usePrefixes) {
+                    if (prefixMap == null) {
                         prefixMap = new LinkedHashMap<String, String>();
                     }
-    				if (prefix == null) {
-					    prefix = this.prefixMap.get(uri);
-    					if (prefix == null) {
-    						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
-    					}
-    				}
+                    if (prefix == null) {
+                        prefix = this.prefixMap.get(uri);
+                        if (prefix == null) {
+                            prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
+                        }
+                    }
                     this.prefixMap.put(uri, prefix);
-				}
-				if (prefix != null) {
-					key = prefix + ":" + key; //$NON-NLS-1$
-				} else {
-					key = origKey;
-				}
-			}
-		}
-		sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
-	}
+                }
+                if (prefix != null) {
+                    key = prefix + ":" + key; //$NON-NLS-1$
+                } else {
+                    key = origKey;
+                }
+            }
+        }
+        sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
+    }
 
-	private void visit(Procedure procedure) {
-		append(CREATE).append(SPACE);
-		if (procedure.isVirtual()) {
-			append(VIRTUAL);
-		}
-		else {
-			append(FOREIGN);
-		}
-		append(SPACE).append(procedure.isFunction()?FUNCTION:PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
-		append(LPAREN);
+    private void visit(Procedure procedure) {
+        append(CREATE).append(SPACE);
+        if (procedure.isVirtual()) {
+            append(VIRTUAL);
+        }
+        else {
+            append(FOREIGN);
+        }
+        append(SPACE).append(procedure.isFunction()?FUNCTION:PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
+        append(LPAREN);
 
-		boolean first = true;
-		for (ProcedureParameter pp:procedure.getParameters()) {
-			if (first) {
-				first = false;
-			}
-			else {
-				append(COMMA).append(SPACE);
-			}
-			visit(pp);
-		}
-		append(RPAREN);
+        boolean first = true;
+        for (ProcedureParameter pp:procedure.getParameters()) {
+            if (first) {
+                first = false;
+            }
+            else {
+                append(COMMA).append(SPACE);
+            }
+            visit(pp);
+        }
+        append(RPAREN);
 
-		if (procedure.getResultSet() != null) {
-			append(SPACE).append(RETURNS);
-			appendOptions(procedure.getResultSet());
-			append(SPACE).append(TABLE).append(SPACE);
-			addColumns(procedure.getResultSet().getColumns(), true);
-		}
-		/* The parser treats the RETURN clause as optional for a procedure if using the RESULT param
-		  for (ProcedureParameter pp: procedure.getParameters()) {
-			if (pp.getType().equals(Type.ReturnValue)) {
-				append(SPACE).append(RETURNS).append(SPACE);
-				appendColumn(buffer, pp, false, true);
-				break;
-			}
-		}*/
+        if (procedure.getResultSet() != null) {
+            append(SPACE).append(RETURNS);
+            appendOptions(procedure.getResultSet());
+            append(SPACE).append(TABLE).append(SPACE);
+            addColumns(procedure.getResultSet().getColumns(), true);
+        }
+        /* The parser treats the RETURN clause as optional for a procedure if using the RESULT param
+          for (ProcedureParameter pp: procedure.getParameters()) {
+            if (pp.getType().equals(Type.ReturnValue)) {
+                append(SPACE).append(RETURNS).append(SPACE);
+                appendColumn(buffer, pp, false, true);
+                break;
+            }
+        }*/
 
-		//options
-		String options = buildProcedureOptions(procedure);
-		if (!options.isEmpty()) {
-			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}
-		//block
-		if (procedure.isVirtual()) {
-			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
-			String plan = procedure.getQueryPlan();
-			append(plan);
-		}
+        //options
+        String options = buildProcedureOptions(procedure);
+        if (!options.isEmpty()) {
+            append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+        }
+        //block
+        if (procedure.isVirtual()) {
+            append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+            String plan = procedure.getQueryPlan();
+            append(plan);
+        }
 
-		append(SEMICOLON);
-	}
+        append(SEMICOLON);
+    }
 
-	private String buildProcedureOptions(Procedure procedure) {
-		StringBuilder options = new StringBuilder();
-		addCommonOptions(options, procedure);
+    private String buildProcedureOptions(Procedure procedure) {
+        StringBuilder options = new StringBuilder();
+        addCommonOptions(options, procedure);
 
-		if (procedure.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
-			addOption(options, UPDATECOUNT, procedure.getUpdateCount());
-		}
+        if (procedure.getUpdateCount() != Procedure.AUTO_UPDATECOUNT) {
+            addOption(options, UPDATECOUNT, procedure.getUpdateCount());
+        }
 
-		if (!procedure.getProperties().isEmpty()) {
-			for (String key:procedure.getProperties().keySet()) {
-				addOption(options, key, procedure.getProperty(key, false));
-			}
-		}
+        if (!procedure.getProperties().isEmpty()) {
+            for (String key:procedure.getProperties().keySet()) {
+                addOption(options, key, procedure.getProperty(key, false));
+            }
+        }
 
-		return options.toString();
-	}
+        return options.toString();
+    }
 
-	private void visit(ProcedureParameter param) {
-		Type type = param.getType();
-		String typeStr = null;
-		switch (type) {
-		case InOut:
-			typeStr = INOUT;
-			break;
-		case ReturnValue:
-		case Out:
-			typeStr = OUT;
-			break;
-		case In:
-			if (param.isVarArg()) {
-				typeStr = NonReserved.VARIADIC;
-			} else {
-				typeStr = IN;
-			}
-			break;
-		}
-		append(typeStr).append(SPACE);
-		appendColumn(param, true, true);
-		if (type == Type.ReturnValue) {
-			append(SPACE).append(NonReserved.RESULT);
-		}
-		appendDefault(param);
-		appendColumnOptions(param);
-	}
+    private void visit(ProcedureParameter param) {
+        Type type = param.getType();
+        String typeStr = null;
+        switch (type) {
+        case InOut:
+            typeStr = INOUT;
+            break;
+        case ReturnValue:
+        case Out:
+            typeStr = OUT;
+            break;
+        case In:
+            if (param.isVarArg()) {
+                typeStr = NonReserved.VARIADIC;
+            } else {
+                typeStr = IN;
+            }
+            break;
+        }
+        append(typeStr).append(SPACE);
+        appendColumn(param, true, true);
+        if (type == Type.ReturnValue) {
+            append(SPACE).append(NonReserved.RESULT);
+        }
+        appendDefault(param);
+        appendColumnOptions(param);
+    }
 
-	private void visit(FunctionMethod function) {
-		append(CREATE).append(SPACE);
-		if (function.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN)) {
-			append(FOREIGN);
-		}
-		else {
-			append(VIRTUAL);
-		}
-		append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
-		append(LPAREN);
+    private void visit(FunctionMethod function) {
+        append(CREATE).append(SPACE);
+        if (function.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN)) {
+            append(FOREIGN);
+        }
+        else {
+            append(VIRTUAL);
+        }
+        append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
+        append(LPAREN);
 
-		boolean first = true;
-		for (FunctionParameter fp:function.getInputParameters()) {
-			if (first) {
-				first = false;
-			}
-			else {
-				append(COMMA).append(SPACE);
-			}
-			visit(fp);
-		}
-		append(RPAREN);
+        boolean first = true;
+        for (FunctionParameter fp:function.getInputParameters()) {
+            if (first) {
+                first = false;
+            }
+            else {
+                append(COMMA).append(SPACE);
+            }
+            visit(fp);
+        }
+        append(RPAREN);
 
-		append(SPACE).append(RETURNS);
-		appendOptions(function.getOutputParameter());
-		append(SPACE);
-		append(function.getOutputParameter().getType());
+        append(SPACE).append(RETURNS);
+        appendOptions(function.getOutputParameter());
+        append(SPACE);
+        append(function.getOutputParameter().getType());
 
-		//options
-		String options = buildFunctionOptions(function);
-		if (!options.isEmpty()) {
-			append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
-		}
+        //options
+        String options = buildFunctionOptions(function);
+        if (!options.isEmpty()) {
+            append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+        }
 
-		/*if (function.getDefinition() != null) {
-			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
-			append(function.getDefinition());
-		}*/
+        /*if (function.getDefinition() != null) {
+            append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
+            append(function.getDefinition());
+        }*/
 
-		append(SQLConstants.Tokens.SEMICOLON);
-	}
+        append(SQLConstants.Tokens.SEMICOLON);
+    }
 
-	private String buildFunctionOptions(FunctionMethod function) {
-		StringBuilder options = new StringBuilder();
-		addCommonOptions(options, function);
+    private String buildFunctionOptions(FunctionMethod function) {
+        StringBuilder options = new StringBuilder();
+        addCommonOptions(options, function);
 
-		if (function.getCategory() != null) {
-			addOption(options, CATEGORY, function.getCategory());
-		}
+        if (function.getCategory() != null) {
+            addOption(options, CATEGORY, function.getCategory());
+        }
 
-		if (!function.getDeterminism().equals(Determinism.DETERMINISTIC)) {
-			addOption(options, DETERMINISM, function.getDeterminism().name());
-		}
+        if (!function.getDeterminism().equals(Determinism.DETERMINISTIC)) {
+            addOption(options, DETERMINISM, function.getDeterminism().name());
+        }
 
-		if (function.getInvocationClass() != null) {
-			addOption(options, JAVA_CLASS, function.getInvocationClass());
-		}
+        if (function.getInvocationClass() != null) {
+            addOption(options, JAVA_CLASS, function.getInvocationClass());
+        }
 
-		if (function.getInvocationMethod() != null) {
-			addOption(options, JAVA_METHOD, function.getInvocationMethod());
-		}
+        if (function.getInvocationMethod() != null) {
+            addOption(options, JAVA_METHOD, function.getInvocationMethod());
+        }
 
-		if (!function.getProperties().isEmpty()) {
-			for (String key:function.getProperties().keySet()) {
-				addOption(options, key, function.getProperty(key, false));
-			}
-		}
+        if (!function.getProperties().isEmpty()) {
+            for (String key:function.getProperties().keySet()) {
+                addOption(options, key, function.getProperty(key, false));
+            }
+        }
 
-		return options.toString();
-	}
+        return options.toString();
+    }
 
-	private void visit(FunctionParameter param) {
-		if (param.isVarArg()) {
-			append(NonReserved.VARIADIC).append(SPACE);
-		}
-		appendColumn(param, true, true);
-	}
+    private void visit(FunctionParameter param) {
+        if (param.isVarArg()) {
+            append(NonReserved.VARIADIC).append(SPACE);
+        }
+        appendColumn(param, true, true);
+    }
 
     @Override
     public String toString() {
         return StringUtil.replace(buffer.toString(), "${NAMESPACE}", getNamespaces());
     }
 
-	private String getNamespaces() {
-		if (this.prefixMap != null) {
-			StringBuilder sb = new StringBuilder();
-			for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
-				sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				.append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
-			}
-			return sb.append("\n").toString(); //$NON-NLS-1$
-		}
-		return "";
-	}
+    private String getNamespaces() {
+        if (this.prefixMap != null) {
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
+                sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                .append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
+            }
+            return sb.append("\n").toString(); //$NON-NLS-1$
+        }
+        return "";
+    }
 
     public static String getDomainDDLString(Database database) {
         DDLStringVisitor visitor = new DDLStringVisitor(null, null);

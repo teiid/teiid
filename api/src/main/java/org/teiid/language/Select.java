@@ -149,10 +149,10 @@ public class Select extends QueryExpression {
      * @return the map of dependent values or null if this is not a dependent join pushdown
      */
     public Map<String, List<? extends List<?>>> getDependentValues() {
-		return dependentValues;
-	}
+        return dependentValues;
+    }
 
     public void setDependentValues(Map<String, List<? extends List<?>>> dependentValues) {
-		this.dependentValues = dependentValues;
-	}
+        this.dependentValues = dependentValues;
+    }
 }

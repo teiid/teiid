@@ -27,9 +27,9 @@ import org.teiid.core.BundleUtil;
  */
 public class QueryPlannerException extends QueryProcessingException {
 
-	private static final long serialVersionUID = -4209763837004780184L;
+    private static final long serialVersionUID = -4209763837004780184L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryPlannerException() {

@@ -81,87 +81,87 @@ public class TestODataUpdateExecution {
         ODataExecutionFactory translator = new ODataExecutionFactory();
         translator.start();
         TranslationUtility utility = new TranslationUtility(metadata);
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		WSConnection connection = Mockito.mock(WSConnection.class);
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
 
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode[0]));
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode[0]));
 
-		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
 
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING),
-		        Mockito.anyString(), Mockito.eq(DataSource.class),
-		        Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING),
+                Mockito.anyString(), Mockito.eq(DataSource.class),
+                Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
 
-		DataSource ds = new DataSource() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return new ByteArrayOutputStream();
-			}
-			@Override
-			public String getName() {
-				return "result";
-			}
-			@Override
-			public InputStream getInputStream() throws IOException {
-				ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
-				return in;
-			}
-			@Override
-			public String getContentType() {
-				return "application/xml";
-			}
-		};
-		ArgumentCaptor<DataSource> payload = ArgumentCaptor.forClass(DataSource.class);
-		Mockito.stub(dispatch.invoke(payload.capture())).toReturn(ds);
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/xml";
+            }
+        };
+        ArgumentCaptor<DataSource> payload = ArgumentCaptor.forClass(DataSource.class);
+        Mockito.stub(dispatch.invoke(payload.capture())).toReturn(ds);
 
         UpdateExecution execution = translator.createUpdateExecution(cmd,
                 context, utility.createRuntimeMetadata(), connection);
-		execution.execute();
+        execution.execute();
 
-		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
 
         Mockito.verify(connection, Mockito.times(times)).createDispatch(binding.capture(),
                 endpoint.capture(), Mockito.eq(DataSource.class),
                 Mockito.eq(Mode.MESSAGE));
         Mockito.verify(dispatch, Mockito.times(times)).invoke(payload.capture());
-		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
-		if (payload.getAllValues() != null) {
-		    List<DataSource> listDS = payload.getAllValues();
-		    InputStream in = null;
-		    if (times > 1) {
-		        in = listDS.get(1).getInputStream();
-		    } else {
-		        in = listDS.get(0).getInputStream();
-		    }
-		    return new String(ObjectConverterUtil.convertToByteArray(in));
-		}
-		return "";
-	}
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        if (payload.getAllValues() != null) {
+            List<DataSource> listDS = payload.getAllValues();
+            InputStream in = null;
+            if (times > 1) {
+                in = listDS.get(1).getInputStream();
+            } else {
+                in = listDS.get(0).getInputStream();
+            }
+            return new String(ObjectConverterUtil.convertToByteArray(in));
+        }
+        return "";
+    }
 
-	@Test
-	public void testSimpleInsert() throws Exception {
-		String query = "INSERT INTO Categories(CategoryID, CategoryName, Description) values(1, 'catname', 'desc')";
-		String expectedURL = "Categories";
+    @Test
+    public void testSimpleInsert() throws Exception {
+        String query = "INSERT INTO Categories(CategoryID, CategoryName, Description) values(1, 'catname', 'desc')";
+        String expectedURL = "Categories";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		String payload = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, new int[] {201, 201}, 1);
-		reader.close();
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        String payload = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, new int[] {201, 201}, 1);
+        reader.close();
 
-		String expected =  "<category term=\"NorthwindModel.Category\" "
-		        + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"></category>"
-		        + "<content type=\"application/xml\">"
-		        + "<m:properties><d:CategoryID m:type=\"Edm.Int32\">1</d:CategoryID>"
-		        + "<d:CategoryName>catname</d:CategoryName><d:Description>desc</d:Description>"
-		        + "</m:properties></content>"
-		        + "</entry>";
-		assertTrue(expected, payload.endsWith(expected));
-	}
+        String expected =  "<category term=\"NorthwindModel.Category\" "
+                + "scheme=\"http://schemas.microsoft.com/ado/2007/08/dataservices/scheme\"></category>"
+                + "<content type=\"application/xml\">"
+                + "<m:properties><d:CategoryID m:type=\"Edm.Int32\">1</d:CategoryID>"
+                + "<d:CategoryName>catname</d:CategoryName><d:Description>desc</d:Description>"
+                + "</m:properties></content>"
+                + "</entry>";
+        assertTrue(expected, payload.endsWith(expected));
+    }
 
     @Test
     public void testSimpleUpdate() throws Exception {

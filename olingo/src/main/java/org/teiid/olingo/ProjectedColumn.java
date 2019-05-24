@@ -56,21 +56,21 @@ public class ProjectedColumn {
     }
 
     public EdmProperty getProperty() {
-		return property;
-	}
+        return property;
+    }
 
     public Integer getPrecision() {
-    	if (property == null) {
-    		return null;
-    	}
-    	return property.getPrecision();
+        if (property == null) {
+            return null;
+        }
+        return property.getPrecision();
     }
 
     public Integer getScale() {
-    	if (property == null) {
-    		return null;
-    	}
-    	return property.getScale();
+        if (property == null) {
+            return null;
+        }
+        return property.getScale();
     }
 
 }

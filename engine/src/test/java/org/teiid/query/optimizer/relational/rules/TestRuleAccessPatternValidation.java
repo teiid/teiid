@@ -49,69 +49,69 @@ public class TestRuleAccessPatternValidation {
 
     private static final boolean DEBUG = false;
 
-	private static CapabilitiesFinder FINDER = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());
+    private static CapabilitiesFinder FINDER = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());
 
-	/**
-	 * @param command the query to be turned into a test query plan
-	 * @param expectedChosenPredicates expected criteria predicates that should
-	 * be below the access node after the rule is run
-	 */
-	private void helpTestAccessPatternValidation(String command) throws Exception {
-		PlanNode node = this.helpPlan(command);
+    /**
+     * @param command the query to be turned into a test query plan
+     * @param expectedChosenPredicates expected criteria predicates that should
+     * be below the access node after the rule is run
+     */
+    private void helpTestAccessPatternValidation(String command) throws Exception {
+        PlanNode node = this.helpPlan(command);
 
         if(DEBUG) {
             System.out.println("\nfinal plan node:\n"+node); //$NON-NLS-1$
         }
-	}
+    }
 
 
-	/**
-	 * Parses and resolves the command, creates a canonical relational plan,
-	 * and runs some of the optimizer rules, ending with the
-	 * RuleChooseAccessPattern.
-	 * @param command String command to parse, resolve and use for planning
-	 * @param rules empty RuleStack
-	 * @param groups Collection to add parsed and resolved GroupSymbols to
-	 * @return the root PlanNode of the query plan
-	 */
-	private PlanNode helpPlan(String command) throws Exception {
-		Command query = QueryParser.getQueryParser().parseCommand(command);
-		QueryResolver.resolveCommand(query, METADATA);
+    /**
+     * Parses and resolves the command, creates a canonical relational plan,
+     * and runs some of the optimizer rules, ending with the
+     * RuleChooseAccessPattern.
+     * @param command String command to parse, resolve and use for planning
+     * @param rules empty RuleStack
+     * @param groups Collection to add parsed and resolved GroupSymbols to
+     * @return the root PlanNode of the query plan
+     */
+    private PlanNode helpPlan(String command) throws Exception {
+        Command query = QueryParser.getQueryParser().parseCommand(command);
+        QueryResolver.resolveCommand(query, METADATA);
 
-		//Generate canonical plan
-    	RelationalPlanner p = new RelationalPlanner();
-    	p.initialize(query, null, METADATA, FINDER, null, new CommandContext());
-    	PlanNode planNode = p.generatePlan(query);
-    	RelationalPlanner planner = new RelationalPlanner();
-		final RuleStack rules = planner.buildRules();
+        //Generate canonical plan
+        RelationalPlanner p = new RelationalPlanner();
+        p.initialize(query, null, METADATA, FINDER, null, new CommandContext());
+        PlanNode planNode = p.generatePlan(query);
+        RelationalPlanner planner = new RelationalPlanner();
+        final RuleStack rules = planner.buildRules();
 
-		PlanNode testPlan = helpExecuteRules(rules, planNode, METADATA, DEBUG);
+        PlanNode testPlan = helpExecuteRules(rules, planNode, METADATA, DEBUG);
 
-		return testPlan;
-	}
+        return testPlan;
+    }
 
-	/**
-	 * Simulate execution of the QueryOptimizer rules stack
-	 */
-	private static PlanNode helpExecuteRules(RuleStack rules, PlanNode plan, QueryMetadataInterface metadata, boolean debug)
-		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
-		CommandContext context = new CommandContext();
-		while(! rules.isEmpty()) {
-			if(debug) {
-				System.out.println("\n============================================================================"); //$NON-NLS-1$
-			}
-			OptimizerRule rule = rules.pop();
-			if(debug) {
-				System.out.println("EXECUTING " + rule); //$NON-NLS-1$
-			}
+    /**
+     * Simulate execution of the QueryOptimizer rules stack
+     */
+    private static PlanNode helpExecuteRules(RuleStack rules, PlanNode plan, QueryMetadataInterface metadata, boolean debug)
+        throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+        CommandContext context = new CommandContext();
+        while(! rules.isEmpty()) {
+            if(debug) {
+                System.out.println("\n============================================================================"); //$NON-NLS-1$
+            }
+            OptimizerRule rule = rules.pop();
+            if(debug) {
+                System.out.println("EXECUTING " + rule); //$NON-NLS-1$
+            }
 
             plan = rule.execute(plan, metadata, FINDER, rules, new AnalysisRecord(false, debug), context);
-			if(debug) {
-				System.out.println("\nAFTER: \n" + plan); //$NON-NLS-1$
-			}
-		}
-		return plan;
-	}
+            if(debug) {
+                System.out.println("\nAFTER: \n" + plan); //$NON-NLS-1$
+            }
+        }
+        return plan;
+    }
 
 
     // ################################## ACTUAL TESTS ################################

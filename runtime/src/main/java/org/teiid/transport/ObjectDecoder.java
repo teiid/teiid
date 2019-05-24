@@ -69,7 +69,7 @@ import org.teiid.runtime.RuntimePlugin;
  */
 public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 
-	public static final long MAX_LOB_SIZE = 1L << 32;
+    public static final long MAX_LOB_SIZE = 1L << 32;
 
     private final ClassLoader classLoader;
 
@@ -83,7 +83,7 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 
     private int streamDataToRead = -1;
 
-	private long maxLobSize = MAX_LOB_SIZE;
+    private long maxLobSize = MAX_LOB_SIZE;
 
     /**
      * Creates a new decoder with the specified maximum object size.
@@ -96,7 +96,7 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
      *                       of the serialized object
      */
     public ObjectDecoder(int maxObjectSize, long maxLobSize, ClassLoader classLoader, StorageManager storageManager) {
-    	super(maxObjectSize, 0, 4, 0, 4);
+        super(maxObjectSize, 0, 4, 0, 4);
         this.classLoader = classLoader;
         this.storageManager = storageManager;
         this.maxLobSize = maxLobSize;
@@ -104,81 +104,81 @@ public class ObjectDecoder extends LengthFieldBasedFrameDecoder {
 
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
-    	if (result == null) {
-    	    ByteBuf frame = null;
-    	    try {
-    	        frame = (ByteBuf) super.decode(ctx, buffer);
-    	    } catch (TooLongFrameException e) {
-    	        throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40166), e);
-    	    }
+        if (result == null) {
+            ByteBuf frame = null;
+            try {
+                frame = (ByteBuf) super.decode(ctx, buffer);
+            } catch (TooLongFrameException e) {
+                throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40166), e);
+            }
             if (frame == null) {
                 return null;
             }
-	        CompactObjectInputStream cois = new CompactObjectInputStream(
-	                new ByteBufInputStream(frame), classLoader);
-	        result = cois.readObject();
-	        streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
-	        streamIndex = 0;
-    	}
-    	while (streamIndex < streams.size()) {
-    		//read the new chunk size
-	    	if (streamDataToRead == -1) {
-	    		if (buffer.readableBytes() < 2) {
-		            return null;
-		        }
-		        streamDataToRead = buffer.readUnsignedShort();
-	    	}
-	        if (stream == null) {
-	        	store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
-		        StreamFactoryReference sfr = streams.get(streamIndex);
-		        sfr.setStreamFactory(new FileStoreInputStreamFactory(store, Streamable.ENCODING));
-		        this.stream = new BufferedOutputStream(store.createOutputStream());
-	        }
-	        //end of stream
-	        if (streamDataToRead == 0) {
-	        	stream.close();
-	        	stream = null;
-	        	streamIndex++;
-	        	streamDataToRead = -1;
-		        continue;
-	        }
-	        if (store.getLength() + streamDataToRead > maxLobSize) {
-	        	if (error == null) {
-		        	error = new StreamCorruptedException(
-		                    "lob too big: " + (store.getLength() + streamDataToRead) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
-	        	}
-	        }
-	        int toRead = Math.min(buffer.readableBytes(), streamDataToRead);
-        	if (toRead == 0) {
-        		return null;
-        	}
-	        if (error == null) {
-	        	buffer.readBytes(this.stream, toRead);
-	        } else {
-	        	buffer.skipBytes(toRead);
-	        }
-        	streamDataToRead -= toRead;
-        	if (streamDataToRead == 0) {
-        		//get the next chunk
-        		streamDataToRead = -1;
-        	}
-    	}
+            CompactObjectInputStream cois = new CompactObjectInputStream(
+                    new ByteBufInputStream(frame), classLoader);
+            result = cois.readObject();
+            streams = ExternalizeUtil.readList(cois, StreamFactoryReference.class);
+            streamIndex = 0;
+        }
+        while (streamIndex < streams.size()) {
+            //read the new chunk size
+            if (streamDataToRead == -1) {
+                if (buffer.readableBytes() < 2) {
+                    return null;
+                }
+                streamDataToRead = buffer.readUnsignedShort();
+            }
+            if (stream == null) {
+                store = storageManager.createFileStore("temp-stream"); //$NON-NLS-1$
+                StreamFactoryReference sfr = streams.get(streamIndex);
+                sfr.setStreamFactory(new FileStoreInputStreamFactory(store, Streamable.ENCODING));
+                this.stream = new BufferedOutputStream(store.createOutputStream());
+            }
+            //end of stream
+            if (streamDataToRead == 0) {
+                stream.close();
+                stream = null;
+                streamIndex++;
+                streamDataToRead = -1;
+                continue;
+            }
+            if (store.getLength() + streamDataToRead > maxLobSize) {
+                if (error == null) {
+                    error = new StreamCorruptedException(
+                            "lob too big: " + (store.getLength() + streamDataToRead) + " (max: " + maxLobSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+            }
+            int toRead = Math.min(buffer.readableBytes(), streamDataToRead);
+            if (toRead == 0) {
+                return null;
+            }
+            if (error == null) {
+                buffer.readBytes(this.stream, toRead);
+            } else {
+                buffer.skipBytes(toRead);
+            }
+            streamDataToRead -= toRead;
+            if (streamDataToRead == 0) {
+                //get the next chunk
+                streamDataToRead = -1;
+            }
+        }
         Object toReturn = result;
         result = null;
         streams = null;
         stream = null;
         store = null;
         if (error != null) {
-        	StreamCorruptedException sce = error;
-        	error = null;
-        	throw sce;
+            StreamCorruptedException sce = error;
+            error = null;
+            throw sce;
         }
         return toReturn;
     }
 
     @Override
     protected ByteBuf extractFrame(ChannelHandlerContext ctx, ByteBuf buffer, int index, int length) {
-    	return buffer.slice(index, length);
+        return buffer.slice(index, length);
     }
 
 }

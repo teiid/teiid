@@ -67,59 +67,59 @@ import org.teiid.query.sql.lang.SPParameter;
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 
-	public static final String ALLOWED_LANGUAGES = "allowed-languages"; //$NON-NLS-1$
+    public static final String ALLOWED_LANGUAGES = "allowed-languages"; //$NON-NLS-1$
 
-	private static final class LiveQueryNode extends QueryNode {
-		Procedure p;
-		private LiveQueryNode(Procedure p) {
-			super(null);
-			this.p = p;
-		}
+    private static final class LiveQueryNode extends QueryNode {
+        Procedure p;
+        private LiveQueryNode(Procedure p) {
+            super(null);
+            this.p = p;
+        }
 
-		public String getQuery() {
-			return p.getQueryPlan();
-		}
-	}
+        public String getQuery() {
+            return p.getQueryPlan();
+        }
+    }
 
-	private static final class LiveTableQueryNode extends QueryNode {
-		Table t;
-		private LiveTableQueryNode(Table t) {
-			super(null);
-			this.t = t;
-		}
+    private static final class LiveTableQueryNode extends QueryNode {
+        Table t;
+        private LiveTableQueryNode(Table t) {
+            super(null);
+            this.t = t;
+        }
 
-		public String getQuery() {
-			return t.getSelectTransformation();
-		}
-	}
+        public String getQuery() {
+            return t.getSelectTransformation();
+        }
+    }
 
-	private final class VirtualFileInputStreamFactory extends
-			InputStreamFactory {
-		private final VDBResources.Resource r;
+    private final class VirtualFileInputStreamFactory extends
+            InputStreamFactory {
+        private final VDBResources.Resource r;
 
-		private VirtualFileInputStreamFactory(VDBResources.Resource r) {
-			this.r = r;
-		}
+        private VirtualFileInputStreamFactory(VDBResources.Resource r) {
+            this.r = r;
+        }
 
-		@Override
-		public InputStream getInputStream() throws IOException {
-			return r.openStream();
-		}
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return r.openStream();
+        }
 
-		@Override
-		public long getLength() {
-			return r.getSize();
-		}
+        @Override
+        public long getLength() {
+            return r.getSize();
+        }
 
-		@Override
-		public StorageMode getStorageMode() {
-			return StorageMode.PERSISTENT;
-		}
-	}
+        @Override
+        public StorageMode getStorageMode() {
+            return StorageMode.PERSISTENT;
+        }
+    }
 
-	private static final long serialVersionUID = 1058627332954475287L;
+    private static final long serialVersionUID = 1058627332954475287L;
 
-	/** Delimiter character used when specifying fully qualified entity names */
+    /** Delimiter character used when specifying fully qualified entity names */
     public static final char DELIMITER_CHAR = '.';
     public static final String DELIMITER_STRING = String.valueOf(DELIMITER_CHAR);
 
@@ -150,41 +150,41 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, Collection<Table>> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, Collection<Table>>(1000));
     private Map<String, Collection<StoredProcedureInfo>> procedureCache = Collections.synchronizedMap(new LRUCache<String, Collection<StoredProcedureInfo>>(200));
 
-	private boolean widenComparisonToString = true;
+    private boolean widenComparisonToString = true;
     private boolean allowEnv = true;
     private boolean longRanks;
     /**
      * TransformationMetadata constructor
      */
     public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, VDBResources.Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
-    	ArgCheck.isNotNull(store);
-    	this.vdbMetaData = vdbMetadata;
-    	if (this.vdbMetaData !=null) {
-    		this.scriptEngineManager = vdbMetadata.getAttachment(ScriptEngineManager.class);
-    		this.importedModels = this.vdbMetaData.getImportedModels();
-    		this.allowedLanguages = StringUtil.valueOf(vdbMetadata.getPropertyValue(ALLOWED_LANGUAGES), Set.class);
-    		if (this.allowedLanguages == null) {
-    			this.allowedLanguages = Collections.emptySet();
-    		}
-    		for (DataPolicyMetadata policy : vdbMetadata.getDataPolicyMap().values()) {
-    			policy = policy.clone();
-    			policies.put(policy.getName(), policy);
-    		}
-    		processGrants(store, policies);
-    	} else {
-    		this.importedModels = Collections.emptySet();
-    	}
-    	if (store.getDatatypes().isEmpty()) {
-    	    store.addDataTypes(SystemMetadata.getInstance().getRuntimeTypeMap());
-    	}
+        ArgCheck.isNotNull(store);
+        this.vdbMetaData = vdbMetadata;
+        if (this.vdbMetaData !=null) {
+            this.scriptEngineManager = vdbMetadata.getAttachment(ScriptEngineManager.class);
+            this.importedModels = this.vdbMetaData.getImportedModels();
+            this.allowedLanguages = StringUtil.valueOf(vdbMetadata.getPropertyValue(ALLOWED_LANGUAGES), Set.class);
+            if (this.allowedLanguages == null) {
+                this.allowedLanguages = Collections.emptySet();
+            }
+            for (DataPolicyMetadata policy : vdbMetadata.getDataPolicyMap().values()) {
+                policy = policy.clone();
+                policies.put(policy.getName(), policy);
+            }
+            processGrants(store, policies);
+        } else {
+            this.importedModels = Collections.emptySet();
+        }
+        if (store.getDatatypes().isEmpty()) {
+            store.addDataTypes(SystemMetadata.getInstance().getRuntimeTypeMap());
+        }
         this.store = store;
         if (vdbEntries == null) {
-        	this.vdbEntries = Collections.emptyMap();
+            this.vdbEntries = Collections.emptyMap();
         } else {
-        	this.vdbEntries = vdbEntries;
+            this.vdbEntries = vdbEntries;
         }
         if (functionTrees == null) {
-        	this.functionLibrary = new FunctionLibrary(systemFunctions);
+            this.functionLibrary = new FunctionLibrary(systemFunctions);
         } else {
             this.functionLibrary = new FunctionLibrary(systemFunctions, functionTrees.toArray(new FunctionTree[functionTrees.size()]));
         }
@@ -211,7 +211,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     private TransformationMetadata(final CompositeMetadataStore store, FunctionLibrary functionLibrary) {
         this.store = store;
-    	this.vdbEntries = Collections.emptyMap();
+        this.vdbEntries = Collections.emptyMap();
         this.functionLibrary = functionLibrary;
     }
 
@@ -220,23 +220,23 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     //==================================================================================
 
     public Column getElementID(final String elementName) throws TeiidComponentException, QueryMetadataException {
-    	int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
-		if (columnIndex == -1) {
-			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30355, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
-		String shortElementName = elementName.substring(columnIndex + 1);
-		return getColumn(elementName, table, shortElementName);
+        int columnIndex = elementName.lastIndexOf(TransformationMetadata.DELIMITER_STRING);
+        if (columnIndex == -1) {
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30355, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+        }
+        Table table = this.store.findGroup(elementName.substring(0, columnIndex));
+        String shortElementName = elementName.substring(columnIndex + 1);
+        return getColumn(elementName, table, shortElementName);
     }
 
-	public static Column getColumn(final String elementName, Table table,
-			String shortElementName) throws QueryMetadataException {
-		Column c = table.getColumnByName(shortElementName);
-		if (c != null) {
-			return c;
-		}
+    public static Column getColumn(final String elementName, Table table,
+            String shortElementName) throws QueryMetadataException {
+        Column c = table.getColumnByName(shortElementName);
+        if (c != null) {
+            return c;
+        }
          throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-	}
+    }
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
         Table t = getMetadataStore().findGroup(groupName);
@@ -248,69 +248,69 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Collection<String> getGroupsForPartialName(final String partialGroupName)
         throws TeiidComponentException, QueryMetadataException {
-		ArgCheck.isNotEmpty(partialGroupName);
+        ArgCheck.isNotEmpty(partialGroupName);
 
-		Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
+        Collection<Table> matches = this.partialNameToFullNameCache.get(partialGroupName);
 
-		if (matches == null) {
-	        matches = getMetadataStore().getGroupsForPartialName(partialGroupName);
+        if (matches == null) {
+            matches = getMetadataStore().getGroupsForPartialName(partialGroupName);
 
-        	this.partialNameToFullNameCache.put(partialGroupName, matches);
-		}
+            this.partialNameToFullNameCache.put(partialGroupName, matches);
+        }
 
-		if (matches.isEmpty()) {
-			return Collections.emptyList();
-		}
+        if (matches.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-		Collection<String> filteredResult = new ArrayList<String>(matches.size());
-		for (Table table : matches) {
-			if (designTime || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
-	        	filteredResult.add(table.getFullName());
-	        }
-		}
-		return filteredResult;
+        Collection<String> filteredResult = new ArrayList<String>(matches.size());
+        for (Table table : matches) {
+            if (designTime || vdbMetaData == null || vdbMetaData.isVisible(table.getParent().getName())) {
+                filteredResult.add(table.getFullName());
+            }
+        }
+        return filteredResult;
     }
 
     public Object getModelID(final Object groupOrElementID) throws TeiidComponentException, QueryMetadataException {
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) groupOrElementID;
         AbstractMetadataRecord parent = metadataRecord.getParent();
         if (parent instanceof Schema) {
-        	return parent;
+            return parent;
         }
         if (parent == null) {
-        	throw createInvalidRecordTypeException(groupOrElementID);
+            throw createInvalidRecordTypeException(groupOrElementID);
         }
         parent = parent.getParent();
         if (parent instanceof Schema) {
-        	return parent;
+            return parent;
         }
-    	throw createInvalidRecordTypeException(groupOrElementID);
+        throw createInvalidRecordTypeException(groupOrElementID);
     }
 
     public String getFullName(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         if (metadataRecord instanceof Column) {
-        	Column c = (Column)metadataRecord;
-        	if (c.getParent() != null && c.getParent().getParent() instanceof Procedure) {
-        		return c.getParent().getParent().getFullName() + '.' + c.getName();
-        	}
+            Column c = (Column)metadataRecord;
+            if (c.getParent() != null && c.getParent().getParent() instanceof Procedure) {
+                return c.getParent().getParent().getFullName() + '.' + c.getName();
+            }
         }
         return metadataRecord.getFullName();
     }
 
     @Override
     public String getName(Object metadataID) throws TeiidComponentException,
-    		QueryMetadataException {
+            QueryMetadataException {
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         return metadataRecord.getName();
     }
 
     public List<Column> getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-    	List<Column> columns = ((Table)groupID).getColumns();
-    	if (columns == null || columns.isEmpty()) {
-    		throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, ((Table)groupID).getName()));
-    	}
-    	return columns;
+        List<Column> columns = ((Table)groupID).getColumns();
+        if (columns == null || columns.isEmpty()) {
+            throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, ((Table)groupID).getName()));
+        }
+        return columns;
     }
 
     public Object getGroupIDForElementID(final Object elementID) throws TeiidComponentException, QueryMetadataException {
@@ -318,55 +318,55 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             Column columnRecord = (Column) elementID;
             AbstractMetadataRecord parent = columnRecord.getParent();
             if (parent instanceof Table) {
-            	return parent;
+                return parent;
             }
             if (parent instanceof ColumnSet) {
-            	parent = ((ColumnSet<?>)parent).getParent();
-            	if (parent instanceof Procedure) {
-            		return parent;
-            	}
+                parent = ((ColumnSet<?>)parent).getParent();
+                if (parent instanceof Procedure) {
+                    return parent;
+                }
             }
         }
         if(elementID instanceof ProcedureParameter) {
-        	ProcedureParameter columnRecord = (ProcedureParameter) elementID;
+            ProcedureParameter columnRecord = (ProcedureParameter) elementID;
             return columnRecord.getParent();
         }
         throw createInvalidRecordTypeException(elementID);
     }
 
     public boolean hasProcedure(String name) throws TeiidComponentException {
-    	try {
-    		return getStoredProcInfoDirect(name) != null;
-    	} catch (QueryMetadataException e) {
-    		return true;
-    	}
+        try {
+            return getStoredProcInfoDirect(name) != null;
+        } catch (QueryMetadataException e) {
+            return true;
+        }
     }
 
     public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String name)
         throws TeiidComponentException, QueryMetadataException {
         StoredProcedureInfo result = getStoredProcInfoDirect(name);
 
-		if (result == null || !isResolvable((Schema) result.getModelID())) {
-			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30357, name+NOT_EXISTS_MESSAGE);
-		}
+        if (result == null || !isResolvable((Schema) result.getModelID())) {
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30357, name+NOT_EXISTS_MESSAGE);
+        }
 
         return result;
     }
 
-	private StoredProcedureInfo getStoredProcInfoDirect(
-			final String name)
-			throws TeiidComponentException, QueryMetadataException {
-		ArgCheck.isNotEmpty(name);
+    private StoredProcedureInfo getStoredProcInfoDirect(
+            final String name)
+            throws TeiidComponentException, QueryMetadataException {
+        ArgCheck.isNotEmpty(name);
         String canonicalName = name.toUpperCase();
         Collection<StoredProcedureInfo> results = this.procedureCache.get(canonicalName);
 
         if (results == null) {
-        	Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName);
-        	if (procRecords.isEmpty()) {
-        		return null;
-        	}
-        	results = new ArrayList<StoredProcedureInfo>(procRecords.size());
-        	for (Procedure procRecord : procRecords) {
+            Collection<Procedure> procRecords = getMetadataStore().getStoredProcedure(canonicalName);
+            if (procRecords.isEmpty()) {
+                return null;
+            }
+            results = new ArrayList<StoredProcedureInfo>(procRecords.size());
+            for (Procedure procRecord : procRecords) {
                 String procedureFullName = procRecord.getFullName();
 
                 // create the storedProcedure info object that would hold procedure's metadata
@@ -386,8 +386,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     spParam.setMetadataID(paramRecord);
                     spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
                     if (paramRecord.isVarArg()) {
-                    	spParam.setVarArg(true);
-                    	spParam.setClassType(DataTypeManager.getArrayType(spParam.getClassType()));
+                        spParam.setVarArg(true);
+                        spParam.setClassType(DataTypeManager.getArrayType(spParam.getClassType()));
                     }
                     procInfo.addParameter(spParam);
                 }
@@ -416,24 +416,24 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 }
 
                 procInfo.setUpdateCount(procRecord.getUpdateCount());
-				results.add(procInfo);
-			}
-        	this.procedureCache.put(canonicalName, results);
+                results.add(procInfo);
+            }
+            this.procedureCache.put(canonicalName, results);
         }
 
         StoredProcedureInfo result = null;
 
         for (StoredProcedureInfo storedProcedureInfo : results) {
-        	Schema schema = (Schema)storedProcedureInfo.getModelID();
-	        if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || designTime || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
-	        	if (result != null) {
-	    			 throw new QueryMetadataException(QueryPlugin.Event.TEIID30358, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30358, name));
-	    		}
-	        	result = storedProcedureInfo;
-	        }
-		}
-		return result;
-	}
+            Schema schema = (Schema)storedProcedureInfo.getModelID();
+            if(name.equalsIgnoreCase(storedProcedureInfo.getProcedureCallableName()) || designTime || vdbMetaData == null || vdbMetaData.isVisible(schema.getName())){
+                if (result != null) {
+                     throw new QueryMetadataException(QueryPlugin.Event.TEIID30358, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30358, name));
+                }
+                result = storedProcedureInfo;
+            }
+        }
+        return result;
+    }
 
     /**
      * Method to convert the parameter type returned from a ProcedureParameterRecord
@@ -493,23 +493,23 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public boolean isVirtualGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-    	if (groupID instanceof Table) {
-    		return ((Table) groupID).isVirtual();
-    	}
-    	if (groupID instanceof Procedure) {
-    		return ((Procedure) groupID).isVirtual();
-    	}
-    	throw createInvalidRecordTypeException(groupID);
+        if (groupID instanceof Table) {
+            return ((Table) groupID).isVirtual();
+        }
+        if (groupID instanceof Procedure) {
+            return ((Procedure) groupID).isVirtual();
+        }
+        throw createInvalidRecordTypeException(groupID);
     }
 
     public boolean isProcedure(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-    	if(groupID instanceof Procedure) {
+        if(groupID instanceof Procedure) {
             return true;
         }
-    	if(groupID instanceof Table){
+        if(groupID instanceof Table){
             return false;
         }
-    	throw createInvalidRecordTypeException(groupID);
+        throw createInvalidRecordTypeException(groupID);
     }
 
     public boolean isVirtualModel(final Object modelID) throws TeiidComponentException, QueryMetadataException {
@@ -538,7 +538,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public String getUpdatePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-        	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Update")); //$NON-NLS-1$
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Update")); //$NON-NLS-1$
         }
         return tableRecordImpl.isUpdatePlanEnabled()?tableRecordImpl.getUpdatePlan():null;
     }
@@ -546,7 +546,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public String getDeletePlan(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-        	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Delete")); //$NON-NLS-1$
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Delete")); //$NON-NLS-1$
         }
         return tableRecordImpl.isDeletePlanEnabled()?tableRecordImpl.getDeletePlan():null;
     }
@@ -584,7 +584,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                 case SupportConstants.Element.SEARCHABLE_COMPARE:
                     return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SEARCHABLE_LIKE:
-                	return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.Like_Only);
+                    return (columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.Like_Only);
                 case SupportConstants.Element.SEARCHABLE_EQUALITY:
                     return (columnRecord.getSearchType() == SearchType.Equality_Only || columnRecord.getSearchType() == SearchType.Searchable || columnRecord.getSearchType() == SearchType.All_Except_Like);
                 case SupportConstants.Element.SELECT:
@@ -610,9 +610,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             ProcedureParameter columnRecord = (ProcedureParameter) elementID;
             switch(elementConstant) {
                 case SupportConstants.Element.NULL:
-                	return columnRecord.getNullType() == NullType.Nullable;
+                    return columnRecord.getNullType() == NullType.Nullable;
                 case SupportConstants.Element.NULL_UNKNOWN:
-                	return columnRecord.getNullType() == NullType.Unknown;
+                    return columnRecord.getNullType() == NullType.Unknown;
                 case SupportConstants.Element.SEARCHABLE_COMPARE:
                 case SupportConstants.Element.SEARCHABLE_LIKE:
                     return false;
@@ -655,22 +655,22 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Collection<KeyRecord> getUniqueKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	Table tableRecordImpl = (Table)groupID;
-    	ArrayList<KeyRecord> result = new ArrayList<KeyRecord>(tableRecordImpl.getUniqueKeys());
-    	if (tableRecordImpl.getPrimaryKey() != null) {
-	    	result.add(tableRecordImpl.getPrimaryKey());
-    	}
-    	for (KeyRecord key : tableRecordImpl.getIndexes()) {
-			if (key.getType() == KeyRecord.Type.Unique) {
-				result.add(key);
-			}
-		}
-    	return result;
+        Table tableRecordImpl = (Table)groupID;
+        ArrayList<KeyRecord> result = new ArrayList<KeyRecord>(tableRecordImpl.getUniqueKeys());
+        if (tableRecordImpl.getPrimaryKey() != null) {
+            result.add(tableRecordImpl.getPrimaryKey());
+        }
+        for (KeyRecord key : tableRecordImpl.getIndexes()) {
+            if (key.getType() == KeyRecord.Type.Unique) {
+                result.add(key);
+            }
+        }
+        return result;
     }
 
     public Collection<ForeignKey> getForeignKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	return ((Table)groupID).getForeignKeys();
+        return ((Table)groupID).getForeignKeys();
     }
 
     public Object getPrimaryKeyIDForForeignKeyID(final Object foreignKeyID)
@@ -681,11 +681,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public Collection<KeyRecord> getAccessPatternsInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
-    	return ((Table)groupID).getAccessPatterns();
+        return ((Table)groupID).getAccessPatterns();
     }
 
     public List<Column> getElementIDsInIndex(final Object index) throws TeiidComponentException, QueryMetadataException {
-    	return ((ColumnSet<?>)index).getColumns();
+        return ((ColumnSet<?>)index).getColumns();
     }
 
     public List<Column> getElementIDsInKey(final Object key) throws TeiidComponentException, QueryMetadataException {
@@ -715,7 +715,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                                                     QueryMetadataException {
         Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
-	        return tableRecord.getMaterializedTable();
+            return tableRecord.getMaterializedTable();
         }
         return null;
     }
@@ -728,7 +728,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                                                          QueryMetadataException {
         Table tableRecord = (Table) groupID;
         if(tableRecord.isMaterialized()) {
-	        return tableRecord.getMaterializedStageTable();
+            return tableRecord.getMaterializedStageTable();
         }
         return null;
     }
@@ -737,15 +737,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @see org.teiid.query.metadata.QueryMetadataInterface#getVirtualDatabaseName()
      */
     public String getVirtualDatabaseName() throws TeiidComponentException, QueryMetadataException {
-    	if (vdbMetaData == null) {
-    		return null;
-    	}
-    	return vdbMetaData.getName();
+        if (vdbMetaData == null) {
+            return null;
+        }
+        return vdbMetaData.getName();
     }
 
     public VDBMetaData getVdbMetaData() {
-		return vdbMetaData;
-	}
+        return vdbMetaData;
+    }
 
     @Override
     public float getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -796,12 +796,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-	public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public String getFormat(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
             return ((Column) elementID).getFormat();
         }
         throw createInvalidRecordTypeException(elementID);
-	}
+    }
 
     public int getScale(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
@@ -849,7 +849,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
         Map<String, String> result = metadataRecord.getProperties();
         if (result == null) {
-        	return EMPTY_PROPS;
+            return EMPTY_PROPS;
         }
         Properties p = new Properties();
         p.putAll(result);
@@ -866,46 +866,46 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
-    	final VDBResources.Resource f = getFile(resourcePath);
-    	if (f == null) {
-    		return null;
-    	}
-		try {
-			return ObjectConverterUtil.convertToByteArray(f.openStream());
-		} catch (IOException e) {
-			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30365, e);
-		}
+        final VDBResources.Resource f = getFile(resourcePath);
+        if (f == null) {
+            return null;
+        }
+        try {
+            return ObjectConverterUtil.convertToByteArray(f.openStream());
+        } catch (IOException e) {
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30365, e);
+        }
     }
 
     public ClobImpl getVDBResourceAsClob(String resourcePath) {
-    	final VDBResources.Resource f = getFile(resourcePath);
-    	if (f == null) {
-    		return null;
-    	}
-		return new ClobImpl(new VirtualFileInputStreamFactory(f), -1);
+        final VDBResources.Resource f = getFile(resourcePath);
+        if (f == null) {
+            return null;
+        }
+        return new ClobImpl(new VirtualFileInputStreamFactory(f), -1);
     }
 
     public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
-    	final VDBResources.Resource f = getFile(resourcePath);
-    	if (f == null) {
-    		return null;
-    	}
-		return new SQLXMLImpl(new VirtualFileInputStreamFactory(f));
+        final VDBResources.Resource f = getFile(resourcePath);
+        if (f == null) {
+            return null;
+        }
+        return new SQLXMLImpl(new VirtualFileInputStreamFactory(f));
     }
 
     public BlobImpl getVDBResourceAsBlob(String resourcePath) {
-    	final VDBResources.Resource f = getFile(resourcePath);
-    	if (f == null) {
-    		return null;
-    	}
-    	return new BlobImpl(new VirtualFileInputStreamFactory(f));
+        final VDBResources.Resource f = getFile(resourcePath);
+        if (f == null) {
+            return null;
+        }
+        return new BlobImpl(new VirtualFileInputStreamFactory(f));
     }
 
     private VDBResources.Resource getFile(String resourcePath) {
-    	if (resourcePath == null) {
-    		return null;
-    	}
-    	return this.vdbEntries.get(resourcePath);
+        if (resourcePath == null) {
+            return null;
+        }
+        return this.vdbEntries.get(resourcePath);
     }
 
     /**
@@ -913,19 +913,19 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public String getCharacterVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
-    	try {
-    		byte[] bytes = getBinaryVDBResource(resourcePath);
-    		if (bytes == null) {
-    			return null;
-    		}
-			return ObjectConverterUtil.convertToString(new ByteArrayInputStream(bytes));
-		} catch (IOException e) {
-			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30366, e);
-		}
+        try {
+            byte[] bytes = getBinaryVDBResource(resourcePath);
+            if (bytes == null) {
+                return null;
+            }
+            return ObjectConverterUtil.convertToString(new ByteArrayInputStream(bytes));
+        } catch (IOException e) {
+             throw new TeiidComponentException(QueryPlugin.Event.TEIID30366, e);
+        }
     }
 
     public CompositeMetadataStore getMetadataStore() {
-    	return this.store;
+        return this.store;
     }
 
     /**
@@ -933,201 +933,201 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
-    	LinkedList<String> paths = new LinkedList<String>();
-    	for (Map.Entry<String, VDBResources.Resource> entry : this.vdbEntries.entrySet()) {
-			paths.add(entry.getKey());
-    	}
-    	return paths.toArray(new String[paths.size()]);
+        LinkedList<String> paths = new LinkedList<String>();
+        for (Map.Entry<String, VDBResources.Resource> entry : this.vdbEntries.entrySet()) {
+            paths.add(entry.getKey());
+        }
+        return paths.toArray(new String[paths.size()]);
     }
 
-	@Override
-	public Object addToMetadataCache(Object metadataID, String key, Object value) {
+    @Override
+    public Object addToMetadataCache(Object metadataID, String key, Object value) {
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
-        	return this.groupInfoCache.put(key, value);
+            return this.groupInfoCache.put(key, value);
         }
-    	return this.metadataCache.put(key, value);
-	}
+        return this.metadataCache.put(key, value);
+    }
 
-	@Override
-	public Object getFromMetadataCache(Object metadataID, String key)
-			throws TeiidComponentException, QueryMetadataException {
+    @Override
+    public Object getFromMetadataCache(Object metadataID, String key)
+            throws TeiidComponentException, QueryMetadataException {
         boolean groupInfo = key.startsWith(GroupInfo.CACHE_PREFIX);
         key = getCacheKey(key, (AbstractMetadataRecord)metadataID);
         if (groupInfo) {
-        	return this.groupInfoCache.get(key);
+            return this.groupInfoCache.get(key);
         }
-    	return this.metadataCache.get(key);
-	}
+        return this.metadataCache.get(key);
+    }
 
-	private String getCacheKey(String key, AbstractMetadataRecord record) {
-		return record.getUUID() + "/" + key; //$NON-NLS-1$
-	}
+    private String getCacheKey(String key, AbstractMetadataRecord record) {
+        return record.getUUID() + "/" + key; //$NON-NLS-1$
+    }
 
-	@Override
-	public FunctionLibrary getFunctionLibrary() {
-	    if (!hiddenResolvable) {
-	        if (visibleFunctionLibrary == null && functionLibrary != null && vdbMetaData != null) {
-	            FunctionTree[] userFuncts = functionLibrary.getUserFunctions();
-	            List<FunctionTree> filtered = new ArrayList<>();
-	            if (userFuncts != null) {
-	                for (FunctionTree tree : userFuncts) {
-	                    if (vdbMetaData.isVisible(tree.getSchemaName())) {
-	                        filtered.add(tree);
-	                    }
-	                }
-	            }
+    @Override
+    public FunctionLibrary getFunctionLibrary() {
+        if (!hiddenResolvable) {
+            if (visibleFunctionLibrary == null && functionLibrary != null && vdbMetaData != null) {
+                FunctionTree[] userFuncts = functionLibrary.getUserFunctions();
+                List<FunctionTree> filtered = new ArrayList<>();
+                if (userFuncts != null) {
+                    for (FunctionTree tree : userFuncts) {
+                        if (vdbMetaData.isVisible(tree.getSchemaName())) {
+                            filtered.add(tree);
+                        }
+                    }
+                }
                 visibleFunctionLibrary = new FunctionLibrary(
                         functionLibrary.getSystemFunctions(),
                         filtered.toArray(new FunctionTree[filtered.size()]));
-	        }
-	        return visibleFunctionLibrary;
-	    }
-		return this.functionLibrary;
-	}
+            }
+            return visibleFunctionLibrary;
+        }
+        return this.functionLibrary;
+    }
 
-	@Override
-	public Object getPrimaryKey(Object metadataID) {
-		Table table = (Table)metadataID;
-		return table.getPrimaryKey();
-	}
+    @Override
+    public Object getPrimaryKey(Object metadataID) {
+        Table table = (Table)metadataID;
+        return table.getPrimaryKey();
+    }
 
-	@Override
-	public TransformationMetadata getDesignTimeMetadata() {
-	    if (this.designTime) {
-	        return this;
-	    }
-		TransformationMetadata tm = new TransformationMetadata(store, functionLibrary);
-		tm.groupInfoCache = this.groupInfoCache;
-		tm.metadataCache = this.metadataCache;
-		tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
-		tm.procedureCache = this.procedureCache;
-		tm.scriptEngineManager = this.scriptEngineManager;
-		tm.importedModels = this.importedModels;
-		tm.allowedLanguages = this.allowedLanguages;
-		tm.widenComparisonToString = this.widenComparisonToString;
-		tm.longRanks = this.longRanks;
-		tm.hiddenResolvable = true;
-		tm.vdbEntries = this.vdbEntries;
-		tm.vdbMetaData = this.vdbMetaData;
-		tm.designTime = true;
-		return tm;
-	}
+    @Override
+    public TransformationMetadata getDesignTimeMetadata() {
+        if (this.designTime) {
+            return this;
+        }
+        TransformationMetadata tm = new TransformationMetadata(store, functionLibrary);
+        tm.groupInfoCache = this.groupInfoCache;
+        tm.metadataCache = this.metadataCache;
+        tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
+        tm.procedureCache = this.procedureCache;
+        tm.scriptEngineManager = this.scriptEngineManager;
+        tm.importedModels = this.importedModels;
+        tm.allowedLanguages = this.allowedLanguages;
+        tm.widenComparisonToString = this.widenComparisonToString;
+        tm.longRanks = this.longRanks;
+        tm.hiddenResolvable = true;
+        tm.vdbEntries = this.vdbEntries;
+        tm.vdbMetaData = this.vdbMetaData;
+        tm.designTime = true;
+        return tm;
+    }
 
-	@Override
-	public Set<String> getImportedModels() {
-		return this.importedModels;
-	}
+    @Override
+    public Set<String> getImportedModels() {
+        return this.importedModels;
+    }
 
-	@Override
-	public ScriptEngine getScriptEngineDirect(String language)
-			throws TeiidProcessingException {
-		if (this.scriptEngineManager == null) {
-			this.scriptEngineManager = new ScriptEngineManager();
-		}
-		ScriptEngine engine = null;
-		if (allowedLanguages == null || allowedLanguages.contains(language)) {
-			/*
-			 * because of state caching in the engine, we'll return a new instance for each
-			 * usage.  we can pool if needed and add a returnEngine method
-			 */
-			ScriptEngineFactory sef = this.scriptEngineFactories.get(language);
-			if (sef != null) {
-				try {
-					engine = sef.getScriptEngine();
-					engine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE);
-				} catch (Exception e) {
-					//just swallow the exception to mimic the jsr behavior
-				}
-			}
-			engine = this.scriptEngineManager.getEngineByName(language);
-		}
-		if (engine == null) {
-			Set<String> names = new LinkedHashSet<String>();
-			for (ScriptEngineFactory factory : this.scriptEngineManager.getEngineFactories()) {
-				names.addAll(factory.getNames());
-			}
-			if (allowedLanguages != null) {
-				names.retainAll(allowedLanguages);
-			}
-			names.add(ObjectTable.DEFAULT_LANGUAGE);
-			throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31109, language, names));
-		}
-		this.scriptEngineFactories.put(language, engine.getFactory());
-		return engine;
-	}
+    @Override
+    public ScriptEngine getScriptEngineDirect(String language)
+            throws TeiidProcessingException {
+        if (this.scriptEngineManager == null) {
+            this.scriptEngineManager = new ScriptEngineManager();
+        }
+        ScriptEngine engine = null;
+        if (allowedLanguages == null || allowedLanguages.contains(language)) {
+            /*
+             * because of state caching in the engine, we'll return a new instance for each
+             * usage.  we can pool if needed and add a returnEngine method
+             */
+            ScriptEngineFactory sef = this.scriptEngineFactories.get(language);
+            if (sef != null) {
+                try {
+                    engine = sef.getScriptEngine();
+                    engine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE);
+                } catch (Exception e) {
+                    //just swallow the exception to mimic the jsr behavior
+                }
+            }
+            engine = this.scriptEngineManager.getEngineByName(language);
+        }
+        if (engine == null) {
+            Set<String> names = new LinkedHashSet<String>();
+            for (ScriptEngineFactory factory : this.scriptEngineManager.getEngineFactories()) {
+                names.addAll(factory.getNames());
+            }
+            if (allowedLanguages != null) {
+                names.retainAll(allowedLanguages);
+            }
+            names.add(ObjectTable.DEFAULT_LANGUAGE);
+            throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31109, language, names));
+        }
+        this.scriptEngineFactories.put(language, engine.getFactory());
+        return engine;
+    }
 
-	@Override
-	public boolean isVariadic(Object metadataID) {
-		if (metadataID instanceof ProcedureParameter) {
-			return ((ProcedureParameter)metadataID).isVarArg();
-		}
-		if (metadataID instanceof FunctionParameter) {
-			return ((FunctionParameter)metadataID).isVarArg();
-		}
-		return false;
-	}
+    @Override
+    public boolean isVariadic(Object metadataID) {
+        if (metadataID instanceof ProcedureParameter) {
+            return ((ProcedureParameter)metadataID).isVarArg();
+        }
+        if (metadataID instanceof FunctionParameter) {
+            return ((FunctionParameter)metadataID).isVarArg();
+        }
+        return false;
+    }
 
-	@Override
-	public Schema getModelID(String modelName) throws TeiidComponentException,
-			QueryMetadataException {
-		Schema s = this.getMetadataStore().getSchema(modelName);
-		if (s == null || !isResolvable(s)) {
-			throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		return s;
-	}
+    @Override
+    public Schema getModelID(String modelName) throws TeiidComponentException,
+            QueryMetadataException {
+        Schema s = this.getMetadataStore().getSchema(modelName);
+        if (s == null || !isResolvable(s)) {
+            throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+        }
+        return s;
+    }
 
     private final boolean isResolvable(Schema s) {
         return hiddenResolvable || vdbMetaData == null || vdbMetaData.isVisible(s.getName());
     }
 
-	@Override
-	public List<Schema> getModelIDs() {
-	    if (!hiddenResolvable && vdbMetaData != null) {
-	        //filter list
+    @Override
+    public List<Schema> getModelIDs() {
+        if (!hiddenResolvable && vdbMetaData != null) {
+            //filter list
             return this.getMetadataStore().getSchemaList().stream()
                     .filter(s -> vdbMetaData.isVisible(s.getName()))
                     .collect(Collectors.toList());
-	    }
+        }
         return this.getMetadataStore().getSchemaList();
-	}
+    }
 
-	public Map<String, DataPolicyMetadata> getPolicies() {
-		return policies;
-	}
+    public Map<String, DataPolicyMetadata> getPolicies() {
+        return policies;
+    }
 
-	@Override
-	public boolean useOutputName() {
-		return useOutputNames;
-	}
+    @Override
+    public boolean useOutputName() {
+        return useOutputNames;
+    }
 
-	public void setUseOutputNames(boolean useOutputNames) {
-		this.useOutputNames = useOutputNames;
-	}
+    public void setUseOutputNames(boolean useOutputNames) {
+        this.useOutputNames = useOutputNames;
+    }
 
-	@Override
-	public boolean widenComparisonToString() {
-		return widenComparisonToString;
-	}
+    @Override
+    public boolean widenComparisonToString() {
+        return widenComparisonToString;
+    }
 
-	public void setWidenComparisonToString(boolean widenComparisonToString) {
-		this.widenComparisonToString = widenComparisonToString;
-	}
+    public void setWidenComparisonToString(boolean widenComparisonToString) {
+        this.widenComparisonToString = widenComparisonToString;
+    }
 
-	public boolean isHiddenResolvable() {
+    public boolean isHiddenResolvable() {
         return hiddenResolvable;
     }
 
-	public void setHiddenResolvable(boolean hiddenResolvable) {
+    public void setHiddenResolvable(boolean hiddenResolvable) {
         this.hiddenResolvable = hiddenResolvable;
     }
 
-	@Override
-	public Class<?> getDataTypeClass(String typeOrDomainName)
-	        throws QueryMetadataException {
-	    if (typeOrDomainName == null) {
+    @Override
+    public Class<?> getDataTypeClass(String typeOrDomainName)
+            throws QueryMetadataException {
+        if (typeOrDomainName == null) {
             return DefaultDataClasses.NULL;
         }
 
@@ -1140,12 +1140,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             return DataTypeManager.getArrayType(getDataTypeClass(typeOrDomainName.substring(0, typeOrDomainName.length() - 2)));
         }
         throw new QueryMetadataException(QueryPlugin.Event.TEIID31254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31254, typeOrDomainName));
-	}
+    }
 
-	@Override
-	public boolean isEnvAllowed() {
-	    return this.allowEnv;
-	}
+    @Override
+    public boolean isEnvAllowed() {
+        return this.allowEnv;
+    }
 
     public void setAllowENV(boolean b) {
         this.allowEnv = b;

@@ -73,31 +73,31 @@ public class TestSQLXMLImpl {
     }
 
     @Test public void testGetString1() throws Exception {
-    	SQLXMLImpl clob = new SQLXMLImpl() {
-    		public java.io.Reader getCharacterStream() throws java.sql.SQLException {
-    			return new Reader() {
+        SQLXMLImpl clob = new SQLXMLImpl() {
+            public java.io.Reader getCharacterStream() throws java.sql.SQLException {
+                return new Reader() {
 
-    				int pos = 0;
+                    int pos = 0;
 
-					@Override
-					public void close() throws IOException {
+                    @Override
+                    public void close() throws IOException {
 
-					}
+                    }
 
-					@Override
-					public int read(char[] cbuf, int off, int len)
-							throws IOException {
-						if (pos < 5) {
-							cbuf[off] = 'a';
-							pos++;
-							return 1;
-						}
-						return -1;
-					}
-    			};
-    		}
-    	};
-    	assertEquals("aaaaa", clob.getString());
+                    @Override
+                    public int read(char[] cbuf, int off, int len)
+                            throws IOException {
+                        if (pos < 5) {
+                            cbuf[off] = 'a';
+                            pos++;
+                            return 1;
+                        }
+                        return -1;
+                    }
+                };
+            }
+        };
+        assertEquals("aaaaa", clob.getString());
     }
 
 }

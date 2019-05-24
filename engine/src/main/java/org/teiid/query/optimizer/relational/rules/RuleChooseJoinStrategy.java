@@ -97,9 +97,9 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         filterOptionalCriteria(crits, true);
 
         if (crits.isEmpty() && jtype == JoinType.JOIN_INNER) {
-    		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
-    		return;
-    	}
+            joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+            return;
+        }
 
         List<Criteria> nonEquiJoinCriteria = new ArrayList<Criteria>();
 
@@ -112,19 +112,19 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
             joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
             joinNode.setProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA, nonEquiJoinCriteria);
         } else if (nonEquiJoinCriteria.isEmpty()) {
-        	joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, nonEquiJoinCriteria);
-        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
-        		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
-        	}
+            joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, nonEquiJoinCriteria);
+            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
+                joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+            }
         }
     }
 
-	public static void separateCriteria(Collection<GroupSymbol> leftGroups,
-			Collection<GroupSymbol> rightGroups,
-			List<Expression> leftExpressions,
-			List<Expression> rightExpressions, List<Criteria> crits,
-			Collection<Criteria> nonEquiJoinCriteria) {
-		for (Criteria theCrit : crits) {
+    public static void separateCriteria(Collection<GroupSymbol> leftGroups,
+            Collection<GroupSymbol> rightGroups,
+            List<Expression> leftExpressions,
+            List<Expression> rightExpressions, List<Criteria> crits,
+            Collection<Criteria> nonEquiJoinCriteria) {
+        for (Criteria theCrit : crits) {
             Set<GroupSymbol> critGroups =GroupsUsedByElementsVisitor.getGroups(theCrit);
 
             if (leftGroups.containsAll(critGroups) || rightGroups.containsAll(critGroups)) {
@@ -161,7 +161,7 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
                 nonEquiJoinCriteria.add(theCrit);
             }
         }
-	}
+    }
 
     public static List<Expression> createExpressionSymbols(List<? extends Expression> expressions) {
         List<Expression> result = new ArrayList<Expression>();
@@ -175,17 +175,17 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         return result;
     }
 
-	static void filterOptionalCriteria(List<Criteria> crits, boolean all) {
-		for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
-			Criteria crit = iter.next();
-			if (crit instanceof CompareCriteria) {
-				CompareCriteria cc = (CompareCriteria) crit;
-				if (Boolean.TRUE.equals(cc.getIsOptional()) || (all && cc.isOptional())) {
-					iter.remove();
-				}
-			}
-		}
-	}
+    static void filterOptionalCriteria(List<Criteria> crits, boolean all) {
+        for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
+            Criteria crit = iter.next();
+            if (crit instanceof CompareCriteria) {
+                CompareCriteria cc = (CompareCriteria) crit;
+                if (Boolean.TRUE.equals(cc.getIsOptional()) || (all && cc.isOptional())) {
+                    iter.remove();
+                }
+            }
+        }
+    }
 
     public String toString() {
         return "ChooseJoinStrategy"; //$NON-NLS-1$

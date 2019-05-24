@@ -44,93 +44,93 @@ public class ResteasyEnabler implements VDBLifeCycleListener, Service<Void> {
 
     private static String VERSION_DELIM = PropertiesUtils.getHierarchicalProperty("org.teiid.rest.versionDelim", "_"); //$NON-NLS-1$ //$NON-NLS-2$
 
-	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
-	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-	final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
+    protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
+    protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+    final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
 
-	final private RestWarGenerator generator;
+    final private RestWarGenerator generator;
 
-	public ResteasyEnabler(RestWarGenerator generator) {
-		this.generator = generator;
-	}
+    public ResteasyEnabler(RestWarGenerator generator) {
+        this.generator = generator;
+    }
 
-	@Override
-	public void added(String name, CompositeVDB vdb) {
-	}
+    @Override
+    public void added(String name, CompositeVDB vdb) {
+    }
 
-	@Override
-	public void beforeRemove(String name, CompositeVDB cvdb) {
-		if (cvdb != null) {
-			//TODO: remove the war
-		}
-	}
+    @Override
+    public void beforeRemove(String name, CompositeVDB cvdb) {
+        if (cvdb != null) {
+            //TODO: remove the war
+        }
+    }
 
-	@Override
-	public void finishedDeployment(String name, CompositeVDB cvdb) {
-		final VDBMetaData vdb = cvdb.getVDB();
+    @Override
+    public void finishedDeployment(String name, CompositeVDB cvdb) {
+        final VDBMetaData vdb = cvdb.getVDB();
 
-		if (!vdb.getStatus().equals(Status.ACTIVE)) {
-			return;
-		}
+        if (!vdb.getStatus().equals(Status.ACTIVE)) {
+            return;
+        }
 
-		final String warName = buildName(name, cvdb.getVDB().getVersion());
-		if (generator.hasRestMetadata(vdb)) {
-			final Runnable job = new Runnable() {
-				@Override
-				public void run() {
-					try {
-						byte[] warContents = generator.getContent(vdb, warName);
-						if (!vdb.getStatus().equals(Status.ACTIVE)) {
-							return;
-						}
-						if (warContents != null) {
-							//make it a non-persistent deployment
-							getAdmin().deploy(warName, new ByteArrayInputStream(warContents), false);
-						}
-					} catch (IOException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
-								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
-					} catch (AdminException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
-								IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
-					}
-				}
-			};
-			getExecutor().execute(job);
-		}
-	}
+        final String warName = buildName(name, cvdb.getVDB().getVersion());
+        if (generator.hasRestMetadata(vdb)) {
+            final Runnable job = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        byte[] warContents = generator.getContent(vdb, warName);
+                        if (!vdb.getStatus().equals(Status.ACTIVE)) {
+                            return;
+                        }
+                        if (warContents != null) {
+                            //make it a non-persistent deployment
+                            getAdmin().deploy(warName, new ByteArrayInputStream(warContents), false);
+                        }
+                    } catch (IOException e) {
+                        LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
+                                IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
+                    } catch (AdminException e) {
+                        LogManager.logWarning(LogConstants.CTX_RUNTIME, e,
+                                IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50109, warName));
+                    }
+                }
+            };
+            getExecutor().execute(job);
+        }
+    }
 
-	@Override
-	public void removed(String name, CompositeVDB cvdb) {
+    @Override
+    public void removed(String name, CompositeVDB cvdb) {
 
-	}
+    }
 
-	private String buildName(String name, String version) {
+    private String buildName(String name, String version) {
 
 
-		return name+VERSION_DELIM+version +".war"; //$NON-NLS-1$
-	}
+        return name+VERSION_DELIM+version +".war"; //$NON-NLS-1$
+    }
 
-	@Override
-	public Void getValue() throws IllegalStateException, IllegalArgumentException {
-		return null;
-	}
+    @Override
+    public Void getValue() throws IllegalStateException, IllegalArgumentException {
+        return null;
+    }
 
-	@Override
-	public void start(StartContext arg0) throws StartException {
-		this.vdbRepoInjector.getValue().addListener(this);
-	}
+    @Override
+    public void start(StartContext arg0) throws StartException {
+        this.vdbRepoInjector.getValue().addListener(this);
+    }
 
-	@Override
-	public void stop(StopContext arg0) {
-	}
+    @Override
+    public void stop(StopContext arg0) {
+    }
 
-	Admin getAdmin() {
-		return AdminFactory.getInstance()
-		.createAdmin(controllerValue.getValue().createClient(executorInjector.getValue()));
-	}
+    Admin getAdmin() {
+        return AdminFactory.getInstance()
+        .createAdmin(controllerValue.getValue().createClient(executorInjector.getValue()));
+    }
 
-	Executor getExecutor() {
-		return executorInjector.getValue();
-	}
+    Executor getExecutor() {
+        return executorInjector.getValue();
+    }
 }

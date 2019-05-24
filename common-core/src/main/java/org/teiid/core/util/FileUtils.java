@@ -27,7 +27,7 @@ public final class FileUtils {
     private FileUtils() {}
 
     public static String getBaseFileNameWithoutExtension(String path) {
-    	return StringUtil.getFirstToken(StringUtil.getLastToken(path, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
+        return StringUtil.getFirstToken(StringUtil.getLastToken(path, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public static void removeDirectoryAndChildren(File directory) {

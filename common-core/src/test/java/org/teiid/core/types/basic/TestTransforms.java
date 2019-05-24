@@ -52,9 +52,9 @@ public class TestTransforms {
         try {
             Transform transform = DataTypeManager.getTransform(DataTypeManager.getDataTypeClass(src), expectedValue.getClass());
             Object result = transform.transform(value, expectedValue.getClass());
-        	assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
+            assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
             assertFalse("Expected exception for " +src+ " to " + target, //$NON-NLS-1$ //$NON-NLS-2$
-            		isException(DataTypeManager.getDataTypeName(value.getClass()), target,value));
+                    isException(DataTypeManager.getDataTypeName(value.getClass()), target,value));
         } catch (TransformationException e) {
             if (!isException(DataTypeManager.getDataTypeName(value.getClass()), target,value)) {
                 throw e;
@@ -68,9 +68,9 @@ public class TestTransforms {
             transform.transform(value, target);
             fail("Expected to get an exception during the transformation"); //$NON-NLS-1$
         } catch (TransformationException e) {
-        	if (msg != null) {
-        		assertEquals(msg, e.getMessage());
-        	}
+            if (msg != null) {
+                assertEquals(msg, e.getMessage());
+            }
         }
     }
 
@@ -217,47 +217,47 @@ public class TestTransforms {
     }
 
     @Test public void testStringToTimestampOutOfRange() throws Exception {
-    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, null); //$NON-NLS-1$
+        helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, null); //$NON-NLS-1$
     }
 
     @Test public void testStringToTimeTimestampWithWS() throws Exception {
-    	helpTestTransform(" 2005-12-01 11:13:01 ", TimestampUtil.createTimestamp(105, 11, 1, 11, 13, 1, 0)); //$NON-NLS-1$
+        helpTestTransform(" 2005-12-01 11:13:01 ", TimestampUtil.createTimestamp(105, 11, 1, 11, 13, 1, 0)); //$NON-NLS-1$
     }
 
     @Test public void testStringToTimestampFails() throws Exception {
-    	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTransformException("2005-12-01 11:88:60", Timestamp.class, "TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testStringToTimestampDSTTransition() throws Exception {
-    	//use a DST time zone
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
-    	try {
-    		helpTestTransform("2016-03-13 02:00:00", TimestampUtil.createTimestamp(116, 2, 13, 3, 0, 0, 0)); //$NON-NLS-1$
-    	} finally {
-        	TimestampWithTimezone.resetCalendar(null);
-    	}
+        //use a DST time zone
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New_York")); //$NON-NLS-1$
+        try {
+            helpTestTransform("2016-03-13 02:00:00", TimestampUtil.createTimestamp(116, 2, 13, 3, 0, 0, 0)); //$NON-NLS-1$
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
     }
 
     @Test public void testStringToLongWithWS() throws Exception {
-    	helpTestTransform(" 1 ", Long.valueOf(1)); //$NON-NLS-1$
+        helpTestTransform(" 1 ", Long.valueOf(1)); //$NON-NLS-1$
     }
 
     @Test public void testEngineeringNotationFloatToBigInteger() throws Exception {
-    	helpTestTransform(Float.MIN_VALUE, new BigDecimal(Float.MIN_VALUE).toBigInteger());
+        helpTestTransform(Float.MIN_VALUE, new BigDecimal(Float.MIN_VALUE).toBigInteger());
     }
 
     @Test public void testRangeCheck() throws Exception {
-    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "TEIID10058 The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
+        helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "TEIID10058 The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
     }
 
     @Test public void testRangeCheck1() throws Exception {
-    	Double value = new Double("1E11");//$NON-NLS-1$
-		helpTransformException(value, DataTypeManager.DefaultDataClasses.INTEGER, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, Double.class.getSimpleName(), Integer.class.getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
+        Double value = new Double("1E11");//$NON-NLS-1$
+        helpTransformException(value, DataTypeManager.DefaultDataClasses.INTEGER, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, Double.class.getSimpleName(), Integer.class.getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testPrimitiveArrayConversion() throws Exception {
-    	Object val = DataTypeManager.transformValue(new long[] {1}, DataTypeManager.DefaultDataClasses.OBJECT, Long[].class);
-    	assertEquals(new ArrayImpl(new Long[]{Long.valueOf(1)}), val);
+        Object val = DataTypeManager.transformValue(new long[] {1}, DataTypeManager.DefaultDataClasses.OBJECT, Long[].class);
+        assertEquals(new ArrayImpl(new Long[]{Long.valueOf(1)}), val);
     }
 
 }

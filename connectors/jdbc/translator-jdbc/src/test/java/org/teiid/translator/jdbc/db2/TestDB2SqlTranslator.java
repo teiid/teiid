@@ -240,7 +240,7 @@ public class TestDB2SqlTranslator {
     }
 
     @Test public void testBooleanToString() throws Exception {
-    	String input = "SELECT convert(convert(INTKEY, boolean), string) FROM BQT1.SmallA"; //$NON-NLS-1$
+        String input = "SELECT convert(convert(INTKEY, boolean), string) FROM BQT1.SmallA"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END = 0 THEN 'false' WHEN CASE WHEN SmallA.IntKey = 0 THEN 0 WHEN SmallA.IntKey IS NOT NULL THEN 1 END IS NOT NULL THEN 'true' END FROM SmallA"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
@@ -285,17 +285,17 @@ public class TestDB2SqlTranslator {
     }
 
     @Test public void testDB2ForI() throws Exception {
-    	DB2ExecutionFactory db2 = new DB2ExecutionFactory();
-    	db2.setdB2ForI(true);
-    	db2.setDatabaseVersion(Version.DEFAULT_VERSION);
-    	assertFalse(db2.supportsFunctionsInGroupBy());
-    	assertFalse(db2.supportsElementaryOlapOperations());
-    	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1.toString());
-    	assertTrue(db2.supportsElementaryOlapOperations());
+        DB2ExecutionFactory db2 = new DB2ExecutionFactory();
+        db2.setdB2ForI(true);
+        db2.setDatabaseVersion(Version.DEFAULT_VERSION);
+        assertFalse(db2.supportsFunctionsInGroupBy());
+        assertFalse(db2.supportsElementaryOlapOperations());
+        db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1.toString());
+        assertTrue(db2.supportsElementaryOlapOperations());
     }
 
     @Test public void testTempTable() throws Exception {
-    	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+        assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
 
     @Test public void testRight() throws Exception {

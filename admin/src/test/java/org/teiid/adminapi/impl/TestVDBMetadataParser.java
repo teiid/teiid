@@ -31,29 +31,29 @@ import org.xml.sax.SAXException;
 @SuppressWarnings("nls")
 public class TestVDBMetadataParser {
 
-	@Test
-	public void testParseVDB() throws Exception {
-		FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
-		VDBMetadataParser.validate(in);
-		in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
-		VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
-		TestVDBUtility.validateVDB(vdb);
-	}
+    @Test
+    public void testParseVDB() throws Exception {
+        FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
+        VDBMetadataParser.validate(in);
+        in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
+        VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
+        TestVDBUtility.validateVDB(vdb);
+    }
 
-	@Test public void testExcludeImported() throws Exception {
-		VDBMetaData metadata = TestVDBUtility.buildVDB();
-		assertNotNull(metadata.getModel("model-one"));
-		metadata.setImportedModels(Collections.singleton("model-one"));
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		VDBMetadataParser.marshell(metadata, baos);
-		baos.close();
-		VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
-		assertNull(parsed.getModel("model-one"));
-	}
+    @Test public void testExcludeImported() throws Exception {
+        VDBMetaData metadata = TestVDBUtility.buildVDB();
+        assertNotNull(metadata.getModel("model-one"));
+        metadata.setImportedModels(Collections.singleton("model-one"));
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        VDBMetadataParser.marshell(metadata, baos);
+        baos.close();
+        VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
+        assertNull(parsed.getModel("model-one"));
+    }
 
-	@Test(expected=SAXException.class) public void testModelNameUniqueness() throws Exception {
-		FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/model-not-unique-vdb.xml");
-		VDBMetadataParser.validate(in);
-	}
+    @Test(expected=SAXException.class) public void testModelNameUniqueness() throws Exception {
+        FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/model-not-unique-vdb.xml");
+        VDBMetadataParser.validate(in);
+    }
 
 }

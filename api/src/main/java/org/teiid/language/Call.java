@@ -49,12 +49,12 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
      * @return the return parameter type or null if not expecting a return value
      */
     public Class<?> getReturnType() {
-		return returnType;
-	}
+        return returnType;
+    }
 
     public void setReturnType(Class<?> returnType) {
-		this.returnType = returnType;
-	}
+        this.returnType = returnType;
+    }
 
     public String getProcedureName() {
         return this.name;
@@ -78,26 +78,26 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
 
     @Override
     public Procedure getMetadataObject() {
-    	return this.metadataObject;
+        return this.metadataObject;
     }
 
     public ProcedureParameter getReturnParameter() {
-    	for (ProcedureParameter param : this.metadataObject.getParameters()) {
-    		if (param.getType() == Type.ReturnValue) {
-    			return param;
-    		}
-    	}
-    	return null;
+        for (ProcedureParameter param : this.metadataObject.getParameters()) {
+            if (param.getType() == Type.ReturnValue) {
+                return param;
+            }
+        }
+        return null;
     }
 
     /**
      * @return the result set types or a zero length array if no result set is returned
      */
     public Class<?>[] getResultSetColumnTypes() {
-    	ColumnSet<Procedure> resultSet = this.metadataObject.getResultSet();
-    	if (resultSet == null) {
-    		return new Class[0];
-    	}
+        ColumnSet<Procedure> resultSet = this.metadataObject.getResultSet();
+        if (resultSet == null) {
+            return new Class[0];
+        }
         List<Column> columnMetadata = resultSet.getColumns();
         int size = columnMetadata.size();
         Class<?>[] coulmnDTs = new Class[size];
@@ -108,11 +108,11 @@ public class Call extends BaseLanguageObject implements Command, MetadataReferen
     }
 
     public boolean isTableReference() {
-		return tableReference;
-	}
+        return tableReference;
+    }
 
     public void setTableReference(boolean tableReference) {
-		this.tableReference = tableReference;
-	}
+        this.tableReference = tableReference;
+    }
 
 }

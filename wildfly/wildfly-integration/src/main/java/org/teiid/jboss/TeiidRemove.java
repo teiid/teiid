@@ -23,28 +23,28 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 
 class TeiidRemove extends AbstractRemoveStepHandler {
-	public static TeiidRemove INSTANCE = new TeiidRemove();
+    public static TeiidRemove INSTANCE = new TeiidRemove();
 
     @Override
     protected void performRuntime(OperationContext context,
             final ModelNode operation, final ModelNode model)
             throws OperationFailedException {
 
-		context.removeService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY);
-		context.removeService(TeiidServiceNames.RESULTSET_CACHE_FACTORY);
-		context.removeService(TeiidServiceNames.AUTHORIZATION_VALIDATOR);
-		context.removeService(TeiidServiceNames.PREPARSER);
-		context.removeService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY);
+        context.removeService(TeiidServiceNames.PREPAREDPLAN_CACHE_FACTORY);
+        context.removeService(TeiidServiceNames.RESULTSET_CACHE_FACTORY);
+        context.removeService(TeiidServiceNames.AUTHORIZATION_VALIDATOR);
+        context.removeService(TeiidServiceNames.PREPARSER);
+        context.removeService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY);
 
-		context.removeService(TeiidServiceNames.ENGINE);
-		context.removeService(TeiidServiceNames.CACHE_PREPAREDPLAN);
-		context.removeService(TeiidServiceNames.CACHE_RESULTSET);
-		context.removeService(TeiidServiceNames.TUPLE_BUFFER);
-		context.removeService(TeiidServiceNames.BUFFER_MGR);
-		context.removeService(TeiidServiceNames.BUFFER_DIR);
-		context.removeService(TeiidServiceNames.OBJECT_SERIALIZER);
-		context.removeService(TeiidServiceNames.VDB_STATUS_CHECKER);
-		context.removeService(TeiidServiceNames.VDB_REPO);
-		context.removeService(TeiidServiceNames.TRANSLATOR_REPO);
+        context.removeService(TeiidServiceNames.ENGINE);
+        context.removeService(TeiidServiceNames.CACHE_PREPAREDPLAN);
+        context.removeService(TeiidServiceNames.CACHE_RESULTSET);
+        context.removeService(TeiidServiceNames.TUPLE_BUFFER);
+        context.removeService(TeiidServiceNames.BUFFER_MGR);
+        context.removeService(TeiidServiceNames.BUFFER_DIR);
+        context.removeService(TeiidServiceNames.OBJECT_SERIALIZER);
+        context.removeService(TeiidServiceNames.VDB_STATUS_CHECKER);
+        context.removeService(TeiidServiceNames.VDB_REPO);
+        context.removeService(TeiidServiceNames.TRANSLATOR_REPO);
     }
 }

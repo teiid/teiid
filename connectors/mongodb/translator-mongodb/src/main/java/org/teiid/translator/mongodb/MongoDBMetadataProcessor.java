@@ -195,7 +195,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
             }
             else {
                 column = table.getColumnByName(columnKey);
-            	String dataType = getDataType(((BasicDBList)value).get(0))+"[]"; //$NON-NLS-1$
+                String dataType = getDataType(((BasicDBList)value).get(0))+"[]"; //$NON-NLS-1$
                 if (column == null) {
                     column = metadataFactory.addColumn(columnKey, dataType, table);
                     setNativeType(column, null);
@@ -248,7 +248,7 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         return column;
     }
 
-	private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
+    private void addForeignKey(MetadataFactory metadataFactory, Table childTable, Table table) {
         MergeDetails.Association association = MergeDetails.Association.valueOf(childTable.getProperty(ASSOSIATION, false));
         childTable.setProperty(ASSOSIATION, null);
         if (association == MergeDetails.Association.ONE) {
@@ -314,13 +314,13 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
 
     private void setNativeType(Column column, Object value) {
         if (value instanceof Binary ) {
-        	column.setNativeType(Binary.class.getName());
+            column.setNativeType(Binary.class.getName());
         }
         else if (column.getName().equals("_id") && value instanceof org.bson.types.ObjectId ) { //$NON-NLS-1$
-        	column.setNativeType(org.bson.types.ObjectId.class.getName());
-        	column.setAutoIncremented(true);
+            column.setNativeType(org.bson.types.ObjectId.class.getName());
+            column.setAutoIncremented(true);
         }
-	}
+    }
 
     @TranslatorProperty(display="Exclude Tables", category=PropertyType.IMPORT, description="A case-insensitive regular expression that when matched against a fully qualified Teiid table name will exclude it from import.  Applied after table names are retrieved.  Use a negative look-ahead (?!<inclusion pattern>).* to act as an inclusion filter.")
     public String getExcludeTables() {

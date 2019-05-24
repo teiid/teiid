@@ -74,9 +74,9 @@ public class ByteLobChunkStream implements LobChunkProducer {
         }
         int next = this.stream.read();
         if (next == -1) {
-        	isLast = true;
+            isLast = true;
         } else {
-        	this.stream.unread(next);
+            this.stream.unread(next);
         }
         return new LobChunk(cbuf, isLast);
     }

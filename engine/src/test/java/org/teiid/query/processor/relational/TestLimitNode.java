@@ -258,16 +258,16 @@ public class TestLimitNode {
     }
 
     @Test public void testClone() {
-    	LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), null);
+        LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), null);
 
-    	LimitNode clone = (LimitNode)node.clone();
+        LimitNode clone = (LimitNode)node.clone();
 
-    	assertEquals(node.getLimitExpr(), clone.getLimitExpr());
-    	assertNull(clone.getOffsetExpr());
+        assertEquals(node.getLimitExpr(), clone.getLimitExpr());
+        assertNull(clone.getOffsetExpr());
 
-    	node = new LimitNode(1, null, new Constant(new Integer(-1)));
-    	clone = (LimitNode)node.clone();
+        node = new LimitNode(1, null, new Constant(new Integer(-1)));
+        clone = (LimitNode)node.clone();
 
-    	assertNull(clone.getLimitExpr());
+        assertNull(clone.getLimitExpr());
     }
 }

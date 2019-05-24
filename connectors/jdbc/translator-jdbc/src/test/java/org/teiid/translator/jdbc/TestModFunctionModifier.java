@@ -59,7 +59,7 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
-    	this.helpTestMod("MOD", args, expectedStr); //$NON-NLS-1$
+        this.helpTestMod("MOD", args, expectedStr); //$NON-NLS-1$
     }
 
     /**
@@ -77,19 +77,19 @@ public class TestModFunctionModifier extends TestCase {
      * @throws Exception
      */
     public void helpTestMod(final String modFunctionName, Expression[] args, String expectedStr) throws Exception {
-    	Expression param1 = args[0];
-    	Expression param2 = args[1];
+        Expression param1 = args[0];
+        Expression param2 = args[1];
 
-    	Function func = LANG_FACTORY.createFunction(modFunctionName,
+        Function func = LANG_FACTORY.createFunction(modFunctionName,
             Arrays.asList(param1, param2), param1.getType());
 
-    	JDBCExecutionFactory trans = new JDBCExecutionFactory() {
-			@Override
-			public void start() throws TranslatorException {
-				super.start();
-				registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(modFunctionName, getLanguageFactory()));
-			}
-    	};
+        JDBCExecutionFactory trans = new JDBCExecutionFactory() {
+            @Override
+            public void start() throws TranslatorException {
+                super.start();
+                registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(modFunctionName, getLanguageFactory()));
+            }
+        };
 
         trans.start();
 
@@ -143,7 +143,7 @@ public class TestModFunctionModifier extends TestCase {
      */
     public void testTwoIntConst5() throws Exception {
         Expression[] args = new Expression[] {
-        		LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
+                LANG_FACTORY.createLiteral(new Integer(10), Integer.class),
                 LANG_FACTORY.createLiteral(new Integer(6), Integer.class)
         };
         helpTestMod("%", args, "(10 % 6)"); //$NON-NLS-1$ //$NON-NLS-2$

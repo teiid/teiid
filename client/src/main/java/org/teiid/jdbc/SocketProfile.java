@@ -45,25 +45,25 @@ final class SocketProfile implements ConnectionProfile {
      * @throws TeiidSQLException if it is unable to establish a connection to the server.
      */
     public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
-    	int loginTimeoutSeconds = 0;
+        int loginTimeoutSeconds = 0;
         SocketServerConnection serverConn;
-		try {
-			String timeout = info.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT);
-			if (timeout != null) {
-				loginTimeoutSeconds = Integer.parseInt(timeout);
-			}
+        try {
+            String timeout = info.getProperty(TeiidURL.CONNECTION.LOGIN_TIMEOUT);
+            if (timeout != null) {
+                loginTimeoutSeconds = Integer.parseInt(timeout);
+            }
 
-			if (loginTimeoutSeconds > 0) {
-				OioOjbectChannelFactory.TIMEOUTS.set(System.currentTimeMillis() + loginTimeoutSeconds * 1000);
-			}
-			serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
-		} catch (TeiidException e) {
-			throw TeiidSQLException.create(e);
-		} finally {
-			if (loginTimeoutSeconds > 0) {
-				OioOjbectChannelFactory.TIMEOUTS.set(null);
-			}
-		}
+            if (loginTimeoutSeconds > 0) {
+                OioOjbectChannelFactory.TIMEOUTS.set(System.currentTimeMillis() + loginTimeoutSeconds * 1000);
+            }
+            serverConn = SocketServerConnectionFactory.getInstance().getConnection(info);
+        } catch (TeiidException e) {
+            throw TeiidSQLException.create(e);
+        } finally {
+            if (loginTimeoutSeconds > 0) {
+                OioOjbectChannelFactory.TIMEOUTS.set(null);
+            }
+        }
 
         // construct a MMConnection object.
         ConnectionImpl connection = new ConnectionImpl(serverConn, info, url);

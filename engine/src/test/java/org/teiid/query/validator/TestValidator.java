@@ -66,7 +66,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 public class TestValidator {
 
     public static TransformationMetadata exampleMetadata() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
         Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
         Schema vModelObj2 = RealMetadataFactory.createVirtualModel("vTest", metadataStore);  //$NON-NLS-1$
@@ -110,11 +110,11 @@ public class TestValidator {
         vGroupE2.get(2).setSearchType(SearchType.Like_Only);
         vGroupE2.get(3).setSearchType(SearchType.All_Except_Like);
 
-    	return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example");
     }
 
     public TransformationMetadata exampleMetadata1() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
         Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
         Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj);         //$NON-NLS-1$
@@ -132,7 +132,7 @@ public class TestValidator {
         elemObj2.setNullType(NullType.Nullable);
         elemObj2.setDefaultValue(Boolean.FALSE.toString());
 
-		return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
+        return RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
     }
 
     /**
@@ -140,7 +140,7 @@ public class TestValidator {
      * @return QueryMetadataInterface
      */
     public static TransformationMetadata exampleMetadata2() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
         Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
         Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj); //$NON-NLS-1$
@@ -160,7 +160,7 @@ public class TestValidator {
     }
 
     public static TransformationMetadata exampleMetadata3() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
         Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore); //$NON-NLS-1$
         Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj);         //$NON-NLS-1$
@@ -177,9 +177,9 @@ public class TestValidator {
     }
 
     public static TransformationMetadata exampleMetadata4() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         // Create metadata objects
-    	Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore);  //$NON-NLS-1$
+        Schema modelObj = RealMetadataFactory.createPhysicalModel("test", metadataStore);  //$NON-NLS-1$
         Table groupObj = RealMetadataFactory.createPhysicalGroup("group", modelObj); //$NON-NLS-1$
         RealMetadataFactory.createElement("e0", groupObj, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
         RealMetadataFactory.createElement("e1", groupObj, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
@@ -208,28 +208,28 @@ public class TestValidator {
         return RealMetadataFactory.createTransformationMetadata(metadataStore, "example4");
     }
 
-	// ################################## TEST HELPERS ################################
+    // ################################## TEST HELPERS ################################
 
     static Command helpResolve(String sql, QueryMetadataInterface metadata) {
-    	Command command = null;
+        Command command = null;
 
-		try {
-			command = QueryParser.getQueryParser().parseCommand(sql);
-			QueryResolver.resolveCommand(command, metadata);
-		} catch(Exception e) {
+        try {
+            command = QueryParser.getQueryParser().parseCommand(sql);
+            QueryResolver.resolveCommand(command, metadata);
+        } catch(Exception e) {
             throw new TeiidRuntimeException(e);
-		}
+        }
 
-		return command;
+        return command;
     }
 
     static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
-    	Command command = QueryParser.getQueryParser().parseCommand(sql);
-		QueryResolver.resolveCommand(command, container, type, metadata, false);
-		return command;
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+        QueryResolver.resolveCommand(command, container, type, metadata, false);
+        return command;
     }
 
-	public static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
+    public static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
         Command command = helpResolve(sql, metadata);
 
         return helpRunValidator(command, expectedStringArray, metadata);
@@ -242,93 +242,93 @@ public class TestValidator {
             examineReport(command, expectedStringArray, report);
             return report;
         } catch(TeiidException e) {
-			throw new TeiidRuntimeException(e);
+            throw new TeiidRuntimeException(e);
         }
-	}
+    }
 
-	private static void examineReport(Object command,
-			String[] expectedStringArray, ValidatorReport report) {
-		// Get invalid objects from report
-		Collection<LanguageObject> actualObjs = new ArrayList<LanguageObject>();
-		report.collectInvalidObjects(actualObjs);
+    private static void examineReport(Object command,
+            String[] expectedStringArray, ValidatorReport report) {
+        // Get invalid objects from report
+        Collection<LanguageObject> actualObjs = new ArrayList<LanguageObject>();
+        report.collectInvalidObjects(actualObjs);
 
-		// Compare expected and actual objects
-		Set<String> expectedStrings = new HashSet<String>(Arrays.asList(expectedStringArray));
-		Set<String> actualStrings = new HashSet<String>();
-		for (LanguageObject obj : actualObjs) {
-		    actualStrings.add(SQLStringVisitor.getSQLString(obj));
-		}
+        // Compare expected and actual objects
+        Set<String> expectedStrings = new HashSet<String>(Arrays.asList(expectedStringArray));
+        Set<String> actualStrings = new HashSet<String>();
+        for (LanguageObject obj : actualObjs) {
+            actualStrings.add(SQLStringVisitor.getSQLString(obj));
+        }
 
-		if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
-		    fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$
-		} else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
-		    fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
-		} else {
-		    assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
-		}
-	}
+        if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
+            fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$
+        } else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
+            fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
+        } else {
+            assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
+        }
+    }
 
-	private void helpValidateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
+    private void helpValidateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
 
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	validateProcedure(userUpdateStr, metadata);
+            validateProcedure(userUpdateStr, metadata);
         } catch(TeiidException e) {
             throw new TeiidRuntimeException(e);
         }
-	}
+    }
 
-	private void validateProcedure(String userUpdateStr,
-			QueryMetadataInterface metadata) throws QueryResolverException,
-			QueryMetadataException, TeiidComponentException,
-			QueryValidatorException {
-		ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
+    private void validateProcedure(String userUpdateStr,
+            QueryMetadataInterface metadata) throws QueryResolverException,
+            QueryMetadataException, TeiidComponentException,
+            QueryValidatorException {
+        ProcedureContainer command = (ProcedureContainer)helpResolve(userUpdateStr, metadata);
 
-		Command proc = QueryResolver.expandCommand(command, metadata, AnalysisRecord.createNonRecordingRecord());
+        Command proc = QueryResolver.expandCommand(command, metadata, AnalysisRecord.createNonRecordingRecord());
 
-		ValidatorReport report = Validator.validate(proc, metadata);
-		if(report.hasItems()) {
-		    throw new QueryValidatorException(report.getFailureMessage());
-		}
+        ValidatorReport report = Validator.validate(proc, metadata);
+        if(report.hasItems()) {
+            throw new QueryValidatorException(report.getFailureMessage());
+        }
 
-		report = Validator.validate(command, metadata);
-		if(report.hasItems()) {
-		    throw new QueryValidatorException(report.getFailureMessage());
-		}
-	}
+        report = Validator.validate(command, metadata);
+        if(report.hasItems()) {
+            throw new QueryValidatorException(report.getFailureMessage());
+        }
+    }
 
-	private void helpFailProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
+    private void helpFailProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) {
 
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
         try {
-        	validateProcedure(userUpdateStr, metadata);
-        	fail("Expected failures for " + procedure);
+            validateProcedure(userUpdateStr, metadata);
+            fail("Expected failures for " + procedure);
         } catch (QueryValidatorException e) {
         } catch(TeiidException e) {
-			throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
-	}
+    }
 
-	// ################################## ACTUAL TESTS ################################
+    // ################################## ACTUAL TESTS ################################
 
 
     @Test public void testSelectStarWhereNoElementsAreNotSelectable() {
         helpValidate("SELECT * FROM pm1.g5", new String[] {"SELECT * FROM pm1.g5"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Test public void testValidateSelect1() {
+    @Test public void testValidateSelect1() {
         helpValidate("SELECT e1, e2 FROM test.group", new String[] {"e1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testValidateSelect2() {
+    @Test public void testValidateSelect2() {
         helpValidate("SELECT e2 FROM test.group", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testValidateCompare1() {
+    @Test public void testValidateCompare1() {
         helpValidate("SELECT e2 FROM vTest.vMap WHERE e2 = 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-	}
+    }
 
     @Test public void testValidateCompare4() {
         helpValidate("SELECT e3 FROM vTest.vMap WHERE e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$
@@ -338,13 +338,13 @@ public class TestValidator {
         helpValidate("SELECT e0 FROM vTest.vMap WHERE e0 BETWEEN 1000 AND 2000", new String[] {}, exampleMetadata()); //$NON-NLS-1$
     }
 
-	@Test public void testValidateCompareInHaving2() {
+    @Test public void testValidateCompareInHaving2() {
         helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IS NULL", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testValidateCompareInHaving3() {
+    @Test public void testValidateCompareInHaving3() {
         helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IN ('a')", new String[] {}, exampleMetadata()); //$NON-NLS-1$
-	}
+    }
 
     @Test public void testValidateCompareInHaving4() {
         helpValidate("SELECT e3 FROM vTest.vMap GROUP BY e3 HAVING e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$
@@ -354,21 +354,21 @@ public class TestValidator {
         helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 BETWEEN 1000 AND 2000", new String[] {}, exampleMetadata()); //$NON-NLS-1$
     }
 
-	@Test public void testInvalidAggregate1() {
+    @Test public void testInvalidAggregate1() {
         helpValidate("SELECT SUM(e3) FROM test.group GROUP BY e2", new String[] {"SUM(e3)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testInvalidAggregate2() {
+    @Test public void testInvalidAggregate2() {
         helpValidate("SELECT e3 FROM test.group GROUP BY e2", new String[] {"e3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testInvalidAggregate3() {
+    @Test public void testInvalidAggregate3() {
         helpValidate("SELECT SUM(e2) FROM test.group GROUP BY e2", new String[] {"SUM(e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testInvalidAggregate4() {
+    @Test public void testInvalidAggregate4() {
         helpValidate("SELECT AVG(e2) FROM test.group GROUP BY e2", new String[] {"AVG(e2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testInvalidAggregate5() {
         helpValidate("SELECT e1 || 'x' frOM pm1.g1 GROUP BY e2 + 1", new String[] {"e1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -423,17 +423,17 @@ public class TestValidator {
         helpValidate("SELECT max(e1), e2 is null from pm1.g1 GROUP BY e2 is null", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-	@Test public void testInvalidHaving1() {
+    @Test public void testInvalidHaving1() {
         helpValidate("SELECT e3 FROM test.group HAVING e3 > 0", new String[] {"e3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testInvalidHaving2() {
+    @Test public void testInvalidHaving2() {
         helpValidate("SELECT e3 FROM test.group HAVING concat(e3,'a') > 0", new String[] {"e3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testNestedAggregateInHaving() {
+    @Test public void testNestedAggregateInHaving() {
         helpValidate("SELECT e0 FROM test.group GROUP BY e0 HAVING SUM(COUNT(e0)) > 0", new String[] {"COUNT(e0)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testNestedAggregateInSelect() {
         helpValidate("SELECT SUM(COUNT(e0)) FROM test.group GROUP BY e0", new String[] {"COUNT(e0)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
@@ -503,7 +503,7 @@ public class TestValidator {
         helpValidate("INSERT INTO test.group (e0) VALUES (null)", new String[] {"e0"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	// non-null, no-default elements not left
+    // non-null, no-default elements not left
     @Test public void testInsert4() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata1();
 
@@ -514,7 +514,7 @@ public class TestValidator {
         helpRunValidator(command, new String[] {}, metadata);
     }
 
-	// non-null, no-default elements left
+    // non-null, no-default elements left
     @Test public void testInsert5() throws Exception {
         QueryMetadataInterface metadata = exampleMetadata1();
 
@@ -544,7 +544,7 @@ public class TestValidator {
     }
 
     @Test public void testValidateInsertElements3_autoIncNotRequired() throws Exception {
-    	helpValidate("INSERT INTO test.group (e0) VALUES (1)", new String[] {}, exampleMetadata3()); //$NON-NLS-1$
+        helpValidate("INSERT INTO test.group (e0) VALUES (1)", new String[] {}, exampleMetadata3()); //$NON-NLS-1$
     }
 
     @Test public void testUpdate1() {
@@ -574,15 +574,15 @@ public class TestValidator {
     }
 
     @Test public void testXMLSerializeEncoding() {
-    	helpValidate("SELECT xmlserialize(? AS CLOB ENCODING \"UTF-8\")", new String[] {"XMLSERIALIZE(? AS CLOB ENCODING \"UTF-8\")"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT xmlserialize(? AS CLOB ENCODING \"UTF-8\")", new String[] {"XMLSERIALIZE(? AS CLOB ENCODING \"UTF-8\")"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     @Test public void testXMLSerializeEncoding1() {
-    	helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-8\" INCLUDING XMLDECLARATION)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-8\" INCLUDING XMLDECLARATION)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     @Test public void testXMLSerializeEncoding2() {
-    	helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)", new String[] {"XMLSERIALIZE(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)", new String[] {"XMLSERIALIZE(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     @Test public void testValidateSubquery1() {
@@ -641,7 +641,7 @@ public class TestValidator {
         helpValidate("EXEC pm1.sq1()", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-	// valid variable declared
+    // valid variable declared
     @Test public void testCreateUpdateProcedure4() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -650,12 +650,12 @@ public class TestValidator {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpValidateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpValidateProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// validating AssignmentStatement, more than one project symbol on the
-	// command
+    // validating AssignmentStatement, more than one project symbol on the
+    // command
     @Test public void testCreateUpdateProcedure11() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -665,12 +665,12 @@ public class TestValidator {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
-	// validating AssignmentStatement, more than one project symbol on the
-	// command
+    // validating AssignmentStatement, more than one project symbol on the
+    // command
     @Test public void testCreateUpdateProcedure12() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -680,8 +680,8 @@ public class TestValidator {
 
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-		helpFailProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE);
+        helpFailProcedure(procedure, userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
     }
 
     // using aggregate function within a procedure - defect #8394
@@ -698,19 +698,19 @@ public class TestValidator {
                 Table.TriggerEvent.UPDATE);
     }
 
-	// assigning null values to known datatype variable
-	@Test public void testCreateUpdateProcedure32() {
-		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
-		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-		procedure = procedure + "DECLARE string var;\n"; //$NON-NLS-1$
-		procedure = procedure + "var = null;\n";         //$NON-NLS-1$
-		procedure = procedure + "END\n"; //$NON-NLS-1$
+    // assigning null values to known datatype variable
+    @Test public void testCreateUpdateProcedure32() {
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE string var;\n"; //$NON-NLS-1$
+        procedure = procedure + "var = null;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
 
-		String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
+        String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
-		helpValidateProcedure(procedure, userQuery,
-				Table.TriggerEvent.UPDATE);
-	}
+        helpValidateProcedure(procedure, userQuery,
+                Table.TriggerEvent.UPDATE);
+    }
 
     @Test public void testDefect13643() {
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
@@ -815,11 +815,11 @@ public class TestValidator {
     }
 
     @Test public void testSelectIntoElementsNotUpdateable() {
-    	helpValidate("SELECT e0, e1, e2 INTO test.group2 FROM test.group3", new String[] {"test.group2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e0, e1, e2 INTO test.group2 FROM test.group3", new String[] {"test.group2"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidSelectIntoTooManyElements() {
-    	helpValidate("SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
 
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -833,7 +833,7 @@ public class TestValidator {
     }
 
     @Test public void testInvalidSelectIntoTooFewElements() {
-    	helpValidate("SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
 
         String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -924,38 +924,38 @@ public class TestValidator {
     }
 
     @Test public void testDefect9917() throws Exception{
-    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         String sql = "SELECT lookup('pm1.g1', 'e1a', 'e2', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
         Command command = new QueryParser().parseCommand(sql);
         try{
-        	QueryResolver.resolveCommand(command, metadata);
-        	fail("Did not get exception"); //$NON-NLS-1$
+            QueryResolver.resolveCommand(command, metadata);
+            fail("Did not get exception"); //$NON-NLS-1$
         }catch(QueryResolverException e){
-        	//expected
+            //expected
         }
 
         sql = "SELECT lookup('pm1.g1a', 'e1', 'e2', e2) AS x, lookup('pm1.g1', 'e4', 'e3', e3) AS y FROM pm1.g1"; //$NON-NLS-1$
         command = new QueryParser().parseCommand(sql);
         try{
-        	QueryResolver.resolveCommand(command, metadata);
-        	fail("Did not get exception"); //$NON-NLS-1$
+            QueryResolver.resolveCommand(command, metadata);
+            fail("Did not get exception"); //$NON-NLS-1$
         }catch(QueryResolverException e){
-        	//expected
+            //expected
         }
     }
 
     @Test public void testLookupKeyElementComparable() throws Exception {
-    	QueryMetadataInterface metadata = exampleMetadata2();
+        QueryMetadataInterface metadata = exampleMetadata2();
         String sql = "SELECT lookup('test.group', 'e2', 'e3', convert(e2, blob)) AS x FROM test.group"; //$NON-NLS-1$
         Command command = QueryParser.getQueryParser().parseCommand(sql);
-    	QueryResolver.resolveCommand(command, metadata);
+        QueryResolver.resolveCommand(command, metadata);
 
         ValidatorReport report = Validator.validate(command, metadata);
         assertEquals("Non-comparable expression of type blob cannot be used as LOOKUP key columns: test.\"group\".e3.", report.toString()); //$NON-NLS-1$
     }
 
     @Test public void testDefect12107() throws Exception{
-    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         String sql = "SELECT SUM(DISTINCT lookup('pm1.g1', 'e2', 'e2', e2)) FROM pm1.g1"; //$NON-NLS-1$
         Command command = helpResolve(sql, metadata);
         sql = "SELECT SUM(DISTINCT lookup('pm1.g1', 'e3', 'e2', e2)) FROM pm1.g1"; //$NON-NLS-1$
@@ -1076,7 +1076,7 @@ public class TestValidator {
         examineReport(sql, new String[] {"MAX(pm1.vsp42.param1)"}, report);
     }
 
-	@Test public void testDefect14886() throws Exception{
+    @Test public void testDefect14886() throws Exception{
         String sql = "CREATE VIRTUAL PROCEDURE BEGIN END";  //$NON-NLS-1$
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
@@ -1108,7 +1108,7 @@ public class TestValidator {
         helpValidate("select group2.e1, group3.e2 from group2, group3 WHERE group2.e0 = group3.e0 OPTION MAKENOTDEP group2, group3", new String[0], exampleMetadata()); //$NON-NLS-1$
     }
     @Test public void testInvalidMakeNotDep() {
-    	helpValidate("select group2.e1, group3.e2 from group2, group3 WHERE group2.e0 = group3.e0 OPTION MAKEDEP group2 MAKENOTDEP group2, group3", new String[] {"OPTION MAKEDEP group2 MAKENOTDEP group2, group3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("select group2.e1, group3.e2 from group2, group3 WHERE group2.e0 = group3.e0 OPTION MAKEDEP group2 MAKENOTDEP group2, group3", new String[] {"OPTION MAKEDEP group2 MAKENOTDEP group2, group3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -1147,7 +1147,7 @@ public class TestValidator {
      * @return
      */
     private TransformationMetadata helpCreateCase4237VirtualProcedureMetadata() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema physicalModel = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
         ColumnSet<Procedure> resultSet = RealMetadataFactory.createResultSet("pm1.rs", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcedureParameter inParam = RealMetadataFactory.createParameter("in", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING);  //$NON-NLS-1$
@@ -1230,105 +1230,105 @@ public class TestValidator {
         TestValidator.helpValidate("SELECT * FROM test.group where e3 < ?", new String[] {"e3 < ?"}, TestValidator.exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Test public void testValidateCompare2() {
+    @Test public void testValidateCompare2() {
         helpValidate("SELECT e2 FROM test.group WHERE e4 IS NULL", new String[] {}, exampleMetadata2()); //$NON-NLS-1$
-	}
+    }
 
-	@Test public void testValidateCompare3() {
+    @Test public void testValidateCompare3() {
         helpValidate("SELECT e2 FROM test.group WHERE e4 IN ('a')", new String[] {"e4 IN ('a')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testValidateCompare5() {
         helpValidate("SELECT e2 FROM test.group WHERE e4 BETWEEN '1' AND '2'", new String[] {"e4 BETWEEN '1' AND '2'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	@Test public void testValidateCompareInHaving1() {
+    @Test public void testValidateCompareInHaving1() {
         helpValidate("SELECT e1 FROM test.group GROUP BY e1 HAVING convert(e1, clob) = 'a'", new String[] {"convert(e1, clob) = 'a'"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
-	@Test public void testValidateNoExpressionName1() {
+    @Test public void testValidateNoExpressionName1() {
         helpValidate("SELECT xmlforest('1')", new String[] {"XMLFOREST('1')"}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testTextTableNoWidth() {
         helpValidate("SELECT * from texttable(null columns x string width 1, y integer) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1, y integer) AS x"}, RealMetadataFactory.exampleBQTCached());
-	}
+    }
 
     @Test public void testTextTableInvalidDelimiter() {
         helpValidate("SELECT * from texttable(null columns x string width 1 DELIMITER 'z') as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1 DELIMITER 'z') AS x"}, RealMetadataFactory.exampleBQTCached());
-	}
+    }
 
     @Test public void testTextTableNoRowDelimiter() {
         helpValidate("SELECT * from texttable(null columns x string NO ROW DELIMITER) as x", new String[] {"TEXTTABLE(null COLUMNS x string NO ROW DELIMITER) AS x"}, RealMetadataFactory.exampleBQTCached());
-	}
+    }
 
     @Test public void testTextTableFixedSelector() {
         helpValidate("SELECT * from texttable(null SELECTOR 'a' columns x string width 1) as x", new String[] {}, RealMetadataFactory.exampleBQTCached());
-	}
+    }
 
     @Ignore("this is actually handled by saxon and will show up during resolving")
     @Test public void testXMLTablePassingSameName() {
-    	helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, RealMetadataFactory.example1Cached());
+        helpValidate("select * from pm1.g1, xmltable('/' passing {x '<a/>'} as a, {x '<b/>'} as a) as x", new String[] {"xmltable('/' passing e1, e1 || 'x') as x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testObjectTablePassing() {
-    	helpValidate("select * from objecttable('x' passing 'a' columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+        helpValidate("select * from objecttable('x' passing 'a' columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testObjectTablePassingSameName() {
-    	helpValidate("select * from objecttable('x' passing 'a' AS X, 'b' AS x columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' AS X, 'b' AS x COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+        helpValidate("select * from objecttable('x' passing 'a' AS X, 'b' AS x columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' AS X, 'b' AS x COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testObjectTableLanguage() {
-    	helpValidate("select * from objecttable(language 'foo!' 'x' columns c integer 'row') as x", new String[] {"OBJECTTABLE(LANGUAGE 'foo!' 'x' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+        helpValidate("select * from objecttable(language 'foo!' 'x' columns c integer 'row') as x", new String[] {"OBJECTTABLE(LANGUAGE 'foo!' 'x' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testObjectTableScript() {
-    	helpValidate("select * from objecttable('this. is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this. is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+        helpValidate("select * from objecttable('this. is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this. is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testQueryString() {
-    	helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, RealMetadataFactory.example1Cached());
+        helpValidate("select querystring('/', '1')", new String[] {"QUERYSTRING('/', '1')"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXmlParse() throws Exception {
-    	helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, RealMetadataFactory.example1Cached());
+        helpValidate("select xmlparse(content e2) from pm1.g1", new String[] {"XMLPARSE(CONTENT e2)"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testDecode() throws Exception {
-    	helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, RealMetadataFactory.example1Cached());
+        helpValidate("select to_bytes(e1, '?') from pm1.g1", new String[] {"to_bytes(e1, '?')"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testValidateXMLAGG() {
         helpValidate("SELECT XMLAGG(e1) from pm1.g1", new String[] {"XMLAGG(e1)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testValidateBooleanAgg() {
         helpValidate("SELECT EVERY(e1) from pm1.g1", new String[] {"EVERY(e1)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testValidateStatAgg() {
         helpValidate("SELECT stddev_pop(distinct e2) from pm1.g1", new String[] {"STDDEV_POP(DISTINCT e2)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    }
 
     @Test public void testValidateScalarSubqueryTooManyColumns() {
         helpValidate("SELECT e2, (SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery() {
-    	helpValidate("SELECT e2, (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2, (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') FROM pm1.g2", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery1() {
-    	helpValidate("SELECT e2 FROM pm1.g2 WHERE EXISTS (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM pm1.g2 WHERE EXISTS (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery2() {
-    	helpValidate("SELECT * FROM (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') x", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT * FROM (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3') x", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery3() {
-    	helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM pm1.g2 WHERE e2 in (SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3')", new String[] {"SELECT e1, e2 INTO #x FROM pm1.g1 WHERE e2 = '3'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testInvalidIntoSubquery4() throws Exception {
@@ -1345,15 +1345,15 @@ public class TestValidator {
     }
 
     @Test public void testDisallowUpdateOnMultisourceElement() throws Exception {
-    	Set<String> models = new HashSet<String>();
-    	models.add("pm1");
+        Set<String> models = new HashSet<String>();
+        models.add("pm1");
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", "UPDATE PM1.G1 set SOURCE_NAME='blah'", new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
         assertEquals(report.toString(), 1, report.getItems().size());
     }
 
     @Test public void testMultiSourceInsert() throws Exception {
-    	Set<String> models = new HashSet<String>();
-    	models.add("pm1");
+        Set<String> models = new HashSet<String>();
+        models.add("pm1");
         helpValidate("insert into pm1.g1 (e1) values (1)", new String[] {"pm1.g1", "pm1.g1.SOURCE_NAME"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
 
@@ -1361,48 +1361,48 @@ public class TestValidator {
      * TODO: this should be allowable
      */
     @Test public void testDisallowProjectIntoMultiSource() throws Exception {
-    	Set<String> models = new HashSet<String>();
-    	models.add("pm1");
+        Set<String> models = new HashSet<String>();
+        models.add("pm1");
         helpValidate("insert into pm1.g1 select pm1.g1.*, 1 from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
 
     @Test public void testTextAggEncoding() throws Exception {
-    	helpValidate("select textagg(for e1 encoding abc) from pm1.g1", new String[] {"TEXTAGG(FOR e1 ENCODING abc)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
+        helpValidate("select textagg(for e1 encoding abc) from pm1.g1", new String[] {"TEXTAGG(FOR e1 ENCODING abc)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
 
     @Test public void testTextAggHeader() throws Exception {
-    	helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
+        helpValidate("select textagg(for e1 || 1 HEADER) from pm1.g1", new String[] {"TEXTAGG(FOR (e1 || 1) HEADER)"}, RealMetadataFactory.example1Cached());  //$NON-NLS-1$
     }
 
     @Test public void testMultiSourceProcValue() throws Exception {
-    	Set<String> models = new HashSet<String>();
-    	models.add("MultiModel");
+        Set<String> models = new HashSet<String>();
+        models.add("MultiModel");
         helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
     }
 
-	@Test public void testFailAggregateInGroupBy() {
-		helpValidate("SELECT max(e1) FROM pm1.g1 GROUP BY count(e2)", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testFailAggregateInGroupBy() {
+        helpValidate("SELECT max(e1) FROM pm1.g1 GROUP BY count(e2)", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testFailAggregateInWhere() {
-		helpValidate("SELECT e1 FROM pm1.g1 where count(e2) = 1", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testFailAggregateInWhere() {
+        helpValidate("SELECT e1 FROM pm1.g1 where count(e2) = 1", new String[] {"COUNT(e2)"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testFailAggregateInFrom() {
-		helpValidate("SELECT g2.e1 FROM pm1.g1 inner join pm1.g2 on (avg(g1.e2) = g2.e2)", new String[] {"AVG(g1.e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testFailAggregateInFrom() {
+        helpValidate("SELECT g2.e1 FROM pm1.g1 inner join pm1.g2 on (avg(g1.e2) = g2.e2)", new String[] {"AVG(g1.e2)"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testFailAggregateFilterSubquery() {
-		helpValidate("SELECT min(g1.e1) filter (where (select 1) = 1) from pm1.g1", new String[] {"(SELECT 1) = 1"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testFailAggregateFilterSubquery() {
+        helpValidate("SELECT min(g1.e1) filter (where (select 1) = 1) from pm1.g1", new String[] {"(SELECT 1) = 1"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testNestedAgg() {
-		helpValidate("SELECT min(g1.e1) filter (where max(e2) = 1) from pm1.g1", new String[] {"MAX(e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testNestedAgg() {
+        helpValidate("SELECT min(g1.e1) filter (where max(e2) = 1) from pm1.g1", new String[] {"MAX(e2)"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunction() {
-		helpValidate("SELECT e1 from pm1.g1 where row_number() over (order by e2) = 1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunction() {
+        helpValidate("SELECT e1 from pm1.g1 where row_number() over (order by e2) = 1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
+    }
 
     @Test public void testWindowFunctionFrameOtherAnalytical() {
         helpValidate("SELECT row_number() over (order by e2 RANGE 1 FOLLOWING) from pm1.g1", new String[] {"ROW_NUMBER() OVER (ORDER BY e2 RANGE 1 FOLLOWING)"}, RealMetadataFactory.example1Cached());
@@ -1440,29 +1440,29 @@ public class TestValidator {
         helpValidate("SELECT row_number() FILTER (WHERE e2 is not null) over (order by e2) = 1 from pm1.g1", new String[] {"ROW_NUMBER() FILTER(WHERE e2 IS NOT NULL) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
     }
 
-	@Test public void testWindowFunction1() {
-		helpValidate("SELECT 1 from pm1.g1 having row_number() over (order by e2) = 1", new String[] {"e2", "ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunction1() {
+        helpValidate("SELECT 1 from pm1.g1 having row_number() over (order by e2) = 1", new String[] {"e2", "ROW_NUMBER() OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunctionWithoutOrdering() {
-		helpValidate("SELECT row_number() over () from pm1.g1", new String[] {"ROW_NUMBER() OVER ()"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunctionWithoutOrdering() {
+        helpValidate("SELECT row_number() over () from pm1.g1", new String[] {"ROW_NUMBER() OVER ()"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunctionWithNestedaggAllowed() {
-		helpValidate("SELECT max(e1) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunctionWithNestedaggAllowed() {
+        helpValidate("SELECT max(e1) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunctionWithNestedaggAllowed1() {
-		helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunctionWithNestedaggAllowed1() {
+        helpValidate("SELECT max(min(e1)) over (order by max(e2)) from pm1.g1 group by e1", new String[] {}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunctionWithoutFrom() {
-		helpValidate("select count(*) over () as y", new String[] {"COUNT(*) OVER ()"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunctionWithoutFrom() {
+        helpValidate("select count(*) over () as y", new String[] {"COUNT(*) OVER ()"}, RealMetadataFactory.example1Cached());
+    }
 
-	@Test public void testWindowFunctionOrderedDistinct() {
-		helpValidate("select count(distinct e1) over (order by e2) as y from pm1.g1", new String[] {"COUNT(DISTINCT e1) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
-	}
+    @Test public void testWindowFunctionOrderedDistinct() {
+        helpValidate("select count(distinct e1) over (order by e2) as y from pm1.g1", new String[] {"COUNT(DISTINCT e1) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
+    }
 
     @Test public void testUpdateError() {
         String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$

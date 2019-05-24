@@ -31,6 +31,6 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Secure {
 
-	boolean optional() default false;
+    boolean optional() default false;
 
 }

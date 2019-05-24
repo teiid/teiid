@@ -45,7 +45,7 @@ public class DeferredMetadataProvider extends MetadataProvider {
     }
 
     static Map<Integer, String>[] loadPartialMetadata(String[] columnNames, String[] columnTypes) {
-    	if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
+        if(columnNames == null || columnTypes == null || columnNames.length != columnTypes.length) {
             Object[] params = new Object[] {
                 StringUtil.toString(columnNames), StringUtil.toString(columnTypes)
             };
@@ -61,14 +61,14 @@ public class DeferredMetadataProvider extends MetadataProvider {
     }
 
     private void loadFullMetadata() throws SQLException {
-    	MetadataResult results;
-		try {
-			results = this.statement.getDQP().getMetadata(this.requestID);
-		} catch (TeiidComponentException e) {
-			throw TeiidSQLException.create(e);
-		} catch (TeiidProcessingException e) {
-			throw TeiidSQLException.create(e);
-		}
+        MetadataResult results;
+        try {
+            results = this.statement.getDQP().getMetadata(this.requestID);
+        } catch (TeiidComponentException e) {
+            throw TeiidSQLException.create(e);
+        } catch (TeiidProcessingException e) {
+            throw TeiidSQLException.create(e);
+        }
         this.metadata = results.getColumnMetadata();
     }
 

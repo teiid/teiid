@@ -58,25 +58,25 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
     private int maxBulkInsertSize = 100;
     private boolean useDouble;
 
-	public CouchbaseExecutionFactory() {
-	    setSupportsSelectDistinct(true);
-		setSourceRequiredForMetadata(false);
-		setTransactionSupport(TransactionSupport.NONE);
-		setSourceRequiredForMetadata(true);
-		// Couchbase subquery returns an array every time, Join relate with use-keys-clause
-	}
+    public CouchbaseExecutionFactory() {
+        setSupportsSelectDistinct(true);
+        setSourceRequiredForMetadata(false);
+        setTransactionSupport(TransactionSupport.NONE);
+        setSourceRequiredForMetadata(true);
+        // Couchbase subquery returns an array every time, Join relate with use-keys-clause
+    }
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
-		registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
+        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new SubstringFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("CEIL"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("LOG"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("RANDOM"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER"));//$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new FunctionModifier(){
             @Override
             public List<?> translate(Function function) {
                 Expression param = function.getParameters().get(0);
@@ -95,72 +95,72 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
                 }
             }});
 
-		addPushDownFunction(COUCHBASE, "CONTAINS", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "TITLE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "LTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "CONTAINS", TypeFacility.RUNTIME_NAMES.BOOLEAN, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "TITLE", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "LTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "TRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "RTRIM", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "POSITION", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
 
-		addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_ADD_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_ADD_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_DIFF_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_DIFF_STR", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_PART_MILLIS", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "DATE_PART_STR", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "NOW_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
-		addPushDownFunction(COUCHBASE, "NOW_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
-	}
+        addPushDownFunction(COUCHBASE, "CLOCK_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "CLOCK_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_ADD_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_ADD_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_DIFF_MILLIS", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_DIFF_STR", TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_PART_MILLIS", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.LONG, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "DATE_PART_STR", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "NOW_MILLIS", TypeFacility.RUNTIME_NAMES.DOUBLE); //$NON-NLS-1$
+        addPushDownFunction(COUCHBASE, "NOW_STR", TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.STRING); //$NON-NLS-1$
+    }
 
-	@Override
+    @Override
     public List<String> getSupportedFunctions() {
 
-	    List<String> supportedFunctions = new ArrayList<String>();
+        List<String> supportedFunctions = new ArrayList<String>();
 
-	    // Numeric
-	    supportedFunctions.addAll(getDefaultSupportedFunctions());
-	    supportedFunctions.add(SourceSystemFunctions.ABS);
-	    supportedFunctions.add(SourceSystemFunctions.ACOS);
-	    supportedFunctions.add(SourceSystemFunctions.ASIN);
-	    supportedFunctions.add(SourceSystemFunctions.ATAN);
-	    supportedFunctions.add(SourceSystemFunctions.ATAN2);
-	    supportedFunctions.add(SourceSystemFunctions.CEILING);
-	    supportedFunctions.add(SourceSystemFunctions.COS);
-	    supportedFunctions.add(SourceSystemFunctions.DEGREES);
-	    supportedFunctions.add(SourceSystemFunctions.EXP);
-	    supportedFunctions.add(SourceSystemFunctions.FLOOR);
-	    supportedFunctions.add(SourceSystemFunctions.LOG);
-	    supportedFunctions.add(SourceSystemFunctions.LOG10);
-	    supportedFunctions.add(SourceSystemFunctions.PI);
-	    supportedFunctions.add(SourceSystemFunctions.POWER);
-	    supportedFunctions.add(SourceSystemFunctions.RADIANS);
-	    supportedFunctions.add(SourceSystemFunctions.RAND);
-	    supportedFunctions.add(SourceSystemFunctions.ROUND);
-	    supportedFunctions.add(SourceSystemFunctions.SIGN);
-	    supportedFunctions.add(SourceSystemFunctions.SIN);
-	    supportedFunctions.add(SourceSystemFunctions.SQRT);
-	    supportedFunctions.add(SourceSystemFunctions.TAN);
+        // Numeric
+        supportedFunctions.addAll(getDefaultSupportedFunctions());
+        supportedFunctions.add(SourceSystemFunctions.ABS);
+        supportedFunctions.add(SourceSystemFunctions.ACOS);
+        supportedFunctions.add(SourceSystemFunctions.ASIN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN2);
+        supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.COS);
+        supportedFunctions.add(SourceSystemFunctions.DEGREES);
+        supportedFunctions.add(SourceSystemFunctions.EXP);
+        supportedFunctions.add(SourceSystemFunctions.FLOOR);
+        supportedFunctions.add(SourceSystemFunctions.LOG);
+        supportedFunctions.add(SourceSystemFunctions.LOG10);
+        supportedFunctions.add(SourceSystemFunctions.PI);
+        supportedFunctions.add(SourceSystemFunctions.POWER);
+        supportedFunctions.add(SourceSystemFunctions.RADIANS);
+        supportedFunctions.add(SourceSystemFunctions.RAND);
+        supportedFunctions.add(SourceSystemFunctions.ROUND);
+        supportedFunctions.add(SourceSystemFunctions.SIGN);
+        supportedFunctions.add(SourceSystemFunctions.SIN);
+        supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.TAN);
 
-	    //String
-	    supportedFunctions.add(SourceSystemFunctions.TAN);
-	    supportedFunctions.add(SourceSystemFunctions.INITCAP);
-	    supportedFunctions.add(SourceSystemFunctions.LENGTH);
-	    supportedFunctions.add(SourceSystemFunctions.LCASE);
-	    supportedFunctions.add(SourceSystemFunctions.REPEAT);
-	    supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
-	    supportedFunctions.add(SourceSystemFunctions.UCASE);
-	    supportedFunctions.add(SourceSystemFunctions.REPLACE);
+        //String
+        supportedFunctions.add(SourceSystemFunctions.TAN);
+        supportedFunctions.add(SourceSystemFunctions.INITCAP);
+        supportedFunctions.add(SourceSystemFunctions.LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
+        supportedFunctions.add(SourceSystemFunctions.REPEAT);
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
+        supportedFunctions.add(SourceSystemFunctions.REPLACE);
 
-	    //conversion
-	    supportedFunctions.add(SourceSystemFunctions.CONVERT);
+        //conversion
+        supportedFunctions.add(SourceSystemFunctions.CONVERT);
 
         return supportedFunctions;
     }
 
-	public void registerFunctionModifier(String name, FunctionModifier modifier) {
+    public void registerFunctionModifier(String name, FunctionModifier modifier) {
         this.functionModifiers.put(name, modifier);
     }
 
@@ -168,14 +168,14 @@ public class CouchbaseExecutionFactory extends ExecutionFactory<ConnectionFactor
         return this.functionModifiers;
     }
 
-	public List<String> getDefaultSupportedFunctions(){
+    public List<String> getDefaultSupportedFunctions(){
         return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     @Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
-		return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
-	}
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {
+        return new CouchbaseQueryExecution(this, command, executionContext, metadata, connection);
+    }
 
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, CouchbaseConnection connection) throws TranslatorException {

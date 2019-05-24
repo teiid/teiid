@@ -85,44 +85,44 @@ public class TestOracleTranslator {
         TRANSLATOR.start();
     }
 
-	private void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
-		helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, expectedOutput);
+    private void helpTestVisitor(String input, String expectedOutput) throws TranslatorException {
+        helpTestVisitor(getOracleSpecificMetadata(), input, EMPTY_CONTEXT, null, expectedOutput);
     }
 
-	@Test public void testSourceHint() throws Exception {
-		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHints(Arrays.asList("hello world"));
-		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world */ g_0.PART_NAME FROM PARTS g_0", true);
-	}
+    @Test public void testSourceHint() throws Exception {
+        ExecutionContextImpl impl = new FakeExecutionContextImpl();
+        impl.setHints(Arrays.asList("hello world"));
+        helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world */ g_0.PART_NAME FROM PARTS g_0", true);
+    }
 
-	@Test public void testSourceHint1() throws Exception {
-		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHints(Arrays.asList("hello world"));
-		helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
-	}
+    @Test public void testSourceHint1() throws Exception {
+        ExecutionContextImpl impl = new FakeExecutionContextImpl();
+        impl.setHints(Arrays.asList("hello world"));
+        helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
+    }
 
-	@Test public void testSourceHint2() throws Exception {
-		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHints(Arrays.asList("hello world"));
-		helpTestVisitor(getTestVDB(), "with x (y) as /*+ no_inline */ (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT g_0.PART_NAME AS y FROM PARTS g_0) SELECT /*+ hello world */ g_1.y FROM x g_1", true);
-	}
+    @Test public void testSourceHint2() throws Exception {
+        ExecutionContextImpl impl = new FakeExecutionContextImpl();
+        impl.setHints(Arrays.asList("hello world"));
+        helpTestVisitor(getTestVDB(), "with x (y) as /*+ no_inline */ (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT g_0.PART_NAME AS y FROM PARTS g_0) SELECT /*+ hello world */ g_1.y FROM x g_1", true);
+    }
 
-	@Test public void testSourceHint3() throws Exception {
-		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHints(Arrays.asList("hello world"));
-		impl.setGeneralHints(Arrays.asList("other"));
-		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
-	}
+    @Test public void testSourceHint3() throws Exception {
+        ExecutionContextImpl impl = new FakeExecutionContextImpl();
+        impl.setHints(Arrays.asList("hello world"));
+        impl.setGeneralHints(Arrays.asList("other"));
+        helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
+    }
 
-	@Test public void testInsertWithSequnce() throws Exception {
-		helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Test public void testInsertWithSequnce() throws Exception {
+        helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	@Test public void testInsertWithSequnce1() throws Exception {
-		helpTestVisitor("insert into smalla (doublenum, id) values (1, 1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    @Test public void testInsertWithSequnce1() throws Exception {
+        helpTestVisitor("insert into smalla (doublenum, id) values (1, 1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	@Test public void testJoins() throws Exception {
+    @Test public void testJoins() throws Exception {
         String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey CROSS JOIN MediumA"; //$NON-NLS-1$
 
@@ -131,7 +131,7 @@ public class TestOracleTranslator {
             TRANSLATOR);
     }
 
-	@Test public void testJoins2() throws Exception {
+    @Test public void testJoins2() throws Exception {
         String input = "select smalla.intkey from bqt1.smalla cross join (bqt1.smallb cross join bqt1.mediuma)"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA CROSS JOIN (SmallB CROSS JOIN MediumA)"; //$NON-NLS-1$
 
@@ -140,7 +140,7 @@ public class TestOracleTranslator {
             TRANSLATOR);
     }
 
-	@Test public void testConversion1() throws Exception {
+    @Test public void testConversion1() throws Exception {
         String input = "SELECT char(convert(STRINGNUM, integer) + 100) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT chr((trunc(to_number(SmallA.StringNum)) + 100)) FROM SmallA";  //$NON-NLS-1$
 
@@ -549,7 +549,7 @@ public class TestOracleTranslator {
         // Convert from sql to objects
         TranslationUtility util = new TranslationUtility(vdb);
         Command obj =  util.parseCommand(input, correctNaming, true);
-		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+        this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
     }
 
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename
@@ -559,14 +559,14 @@ public class TestOracleTranslator {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         Command obj = commandBuilder.getCommand(input);
-		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
-		return obj;
+        this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+        return obj;
     }
 
     private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         OracleExecutionFactory translator = new OracleExecutionFactory();
         if (dbmsTimeZone != null) {
-        	translator.setDatabaseTimeZone(dbmsTimeZone);
+            translator.setDatabaseTimeZone(dbmsTimeZone);
         }
         translator.setUseBindVariables(false);
         translator.start();
@@ -811,8 +811,8 @@ public class TestOracleTranslator {
 
     /** create fake BQT metadata to test this case, name in source is important */
     private QueryMetadataInterface getOracleSpecificMetadata() {
-    	MetadataStore metadataStore = new MetadataStore();
-    	Schema foo = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
+        MetadataStore metadataStore = new MetadataStore();
+        Schema foo = RealMetadataFactory.createPhysicalModel("BQT1", metadataStore); //$NON-NLS-1$
         Table table = RealMetadataFactory.createPhysicalGroup("SmallA", foo); //$NON-NLS-1$
         Table x = RealMetadataFactory.createPhysicalGroup("x", foo); //$NON-NLS-1$
         x.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select c from d");
@@ -844,7 +844,7 @@ public class TestOracleTranslator {
         dualCols.get(0).setNameInSource("seq.nextval");
 
         ProcedureParameter in1 = RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
-		ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("proc.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
+        ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("proc.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$
         Procedure p = RealMetadataFactory.createStoredProcedure("proc", foo, Arrays.asList(in1));
         p.setResultSet(rs3);
         p.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select x from y where z = $1");
@@ -858,9 +858,9 @@ public class TestOracleTranslator {
         return new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }
 
-	public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
-		helpTestVisitor(vdb, input, null, expectedOutput);
-	}
+    public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
+        helpTestVisitor(vdb, input, null, expectedOutput);
+    }
 
     @Test public void testLimitWithNestedInlineView() throws Exception {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
@@ -914,13 +914,13 @@ public class TestOracleTranslator {
         String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
         String output = "(SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50) UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
-		this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
+        this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
     }
 
     @Test public void testCot() throws Exception {
-    	String sql = "select cot(doublenum) from BQT1.Smalla"; //$NON-NLS-1$
+        String sql = "select cot(doublenum) from BQT1.Smalla"; //$NON-NLS-1$
         String expected = "SELECT (1 / tan(SmallA.DoubleNum)) FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(RealMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
@@ -952,101 +952,101 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
 
-	@Test public void testProcedureExecution() throws Exception {
-		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "call spTest8(1)"); //$NON-NLS-1$
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		ResultSet rs = Mockito.mock(ResultSet.class);
-		Mockito.stub(cs.getObject(1)).toReturn(rs);
-		Mockito.stub(cs.getInt(3)).toReturn(4);
-		Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
-		OracleExecutionFactory ef = new OracleExecutionFactory();
+    @Test public void testProcedureExecution() throws Exception {
+        Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "call spTest8(1)"); //$NON-NLS-1$
+        Connection connection = Mockito.mock(Connection.class);
+        CallableStatement cs = Mockito.mock(CallableStatement.class);
+        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(cs.getObject(1)).toReturn(rs);
+        Mockito.stub(cs.getInt(3)).toReturn(4);
+        Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+        OracleExecutionFactory ef = new OracleExecutionFactory();
 
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
-		procedureExecution.execute();
-		assertEquals(Arrays.asList(4), procedureExecution.getOutputParameterValues());
-		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
-		Mockito.verify(cs, Mockito.times(1)).getObject(1);
-	}
+        JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+        procedureExecution.execute();
+        assertEquals(Arrays.asList(4), procedureExecution.getOutputParameterValues());
+        Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
+        Mockito.verify(cs, Mockito.times(1)).getObject(1);
+    }
 
-	@Test (expected=IllegalArgumentException.class)public void testNativeQueryWithNoCorrelationName() throws Exception {
-		String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
+    @Test (expected=IllegalArgumentException.class)public void testNativeQueryWithNoCorrelationName() throws Exception {
+        String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
         String output = "SELECT (x.DoubleNum * 1.0) FROM (select c from d) x"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
-	}
+    }
 
-	@Test public void testNativeQuery() throws Exception {
-		String input = "SELECT (DoubleNum * 1.0) FROM x as y"; //$NON-NLS-1$
+    @Test public void testNativeQuery() throws Exception {
+        String input = "SELECT (DoubleNum * 1.0) FROM x as y"; //$NON-NLS-1$
         String output = "SELECT (y.DoubleNum * 1.0) FROM (select c from d) y"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
-	}
+    }
 
-	@Test public void testNativeQueryProc() throws Exception {
-		String input = "call proc(2)"; //$NON-NLS-1$
+    @Test public void testNativeQueryProc() throws Exception {
+        String input = "call proc(2)"; //$NON-NLS-1$
         String output = "select x from y where z = ?"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
-	}
+    }
 
-	@Test public void testNativeQueryProcNonPrepared() throws Exception {
-		String input = "call proc1('col')"; //$NON-NLS-1$
+    @Test public void testNativeQueryProcNonPrepared() throws Exception {
+        String input = "call proc1('col')"; //$NON-NLS-1$
         String output = "select 'col' from y"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
-	}
+    }
 
-	@Test public void testNativeQueryProcPreparedExecution() throws Exception {
-		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+    @Test public void testNativeQueryProcPreparedExecution() throws Exception {
+        CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
         Command command = commandBuilder.getCommand("call proc(2)");
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		ResultSet rs = Mockito.mock(ResultSet.class);
-		Mockito.stub(cs.getObject(1)).toReturn(rs);
-		Mockito.stub(cs.getInt(3)).toReturn(4);
-		Mockito.stub(connection.prepareCall("select x from y where z = ?")).toReturn(cs); //$NON-NLS-1$
-		OracleExecutionFactory ef = new OracleExecutionFactory();
+        Connection connection = Mockito.mock(Connection.class);
+        CallableStatement cs = Mockito.mock(CallableStatement.class);
+        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(cs.getObject(1)).toReturn(rs);
+        Mockito.stub(cs.getInt(3)).toReturn(4);
+        Mockito.stub(connection.prepareCall("select x from y where z = ?")).toReturn(cs); //$NON-NLS-1$
+        OracleExecutionFactory ef = new OracleExecutionFactory();
 
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
-		procedureExecution.execute();
-		Mockito.verify(cs, Mockito.never()).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
-		Mockito.verify(cs, Mockito.never()).getObject(1);
-		Mockito.verify(cs, Mockito.times(1)).setObject(1, 2, Types.INTEGER);
-	}
+        JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+        procedureExecution.execute();
+        Mockito.verify(cs, Mockito.never()).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
+        Mockito.verify(cs, Mockito.never()).getObject(1);
+        Mockito.verify(cs, Mockito.times(1)).setObject(1, 2, Types.INTEGER);
+    }
 
-	@Test public void testCharType() throws Exception {
-		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+    @Test public void testCharType() throws Exception {
+        CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
         Command command = commandBuilder.getCommand("select id from smalla where description = 'a' and ndescription in ('b', 'c')");
         for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
-        	l.setBindEligible(true);
+            l.setBindEligible(true);
         }
-		Connection connection = Mockito.mock(Connection.class);
-		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
-		OracleExecutionFactory ef = new OracleExecutionFactory();
-		ef.start();
-		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
-		e.execute();
-		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", OracleExecutionFactory.FIXED_CHAR_TYPE);
-		Mockito.verify(ps, Mockito.times(1)).setObject(2, "b", OracleExecutionFactory.FIXED_CHAR_TYPE);
-	}
+        Connection connection = Mockito.mock(Connection.class);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
+        OracleExecutionFactory ef = new OracleExecutionFactory();
+        ef.start();
+        JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
+        e.execute();
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", OracleExecutionFactory.FIXED_CHAR_TYPE);
+        Mockito.verify(ps, Mockito.times(1)).setObject(2, "b", OracleExecutionFactory.FIXED_CHAR_TYPE);
+    }
 
     @Test public void testParseFormat() throws Exception {
         String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT TO_TIMESTAMP(to_char(cast(g_0.TimestampValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF'), 'YYYY.MM.DD'), TO_CHAR(g_0.TimestampValue, 'YY.MM.DD') FROM SmallA g_0"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
@@ -1055,7 +1055,7 @@ public class TestOracleTranslator {
         String input = "select intkey from bqt1.smalla where intkey = 5"; //$NON-NLS-1$
         String output = "SELECT g_0.IntKey FROM SmallA g_0 WHERE (g_0.IntKey, g_0.IntKey) = ((5, 2))"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Select obj = (Select)commandBuilder.getCommand(input, true, true);
         Comparison comp = (Comparison)obj.getWhere();
         //modify to an array comparison, since there is not yet parsing support
@@ -1088,20 +1088,20 @@ public class TestOracleTranslator {
                 output, TRANSLATOR);
     }
     @Test public void testVersionedCapabilities() throws Exception {
-    	OracleExecutionFactory oef = new OracleExecutionFactory();
-    	oef.setDatabaseVersion("10.0");
-    	oef.start();
-    	assertTrue(oef.supportsCommonTableExpressions());
+        OracleExecutionFactory oef = new OracleExecutionFactory();
+        oef.setDatabaseVersion("10.0");
+        oef.start();
+        assertTrue(oef.supportsCommonTableExpressions());
     }
 
-	@Test public void testSelectWithoutFrom() throws Exception {
-		String input = "SELECT 1"; //$NON-NLS-1$
+    @Test public void testSelectWithoutFrom() throws Exception {
+        String input = "SELECT 1"; //$NON-NLS-1$
         String output = "SELECT 1 FROM DUAL"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
-	}
+    }
 
     @Test public void testSequenceFunction() throws Exception {
         String input = "SELECT seq.nextval()"; //$NON-NLS-1$
@@ -1128,23 +1128,23 @@ public class TestOracleTranslator {
             null,
             output);
 
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		ResultSet rs = Mockito.mock(ResultSet.class);
-		Mockito.stub(cs.getObject(2)).toReturn(rs);
-		Mockito.stub(connection.prepareCall(output)).toReturn(cs); //$NON-NLS-1$
-		OracleExecutionFactory ef = new OracleExecutionFactory();
+        Connection connection = Mockito.mock(Connection.class);
+        CallableStatement cs = Mockito.mock(CallableStatement.class);
+        Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Mockito.stub(cs.getObject(2)).toReturn(rs);
+        Mockito.stub(connection.prepareCall(output)).toReturn(cs); //$NON-NLS-1$
+        OracleExecutionFactory ef = new OracleExecutionFactory();
 
-		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
-		procedureExecution.execute();
-		//TODO we may not want to actually return the resultset, but this ensures full compatibility
-		assertEquals(Arrays.asList(rs), procedureExecution.getOutputParameterValues());
-		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, OracleExecutionFactory.CURSOR_TYPE);
+        JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+        procedureExecution.execute();
+        //TODO we may not want to actually return the resultset, but this ensures full compatibility
+        assertEquals(Arrays.asList(rs), procedureExecution.getOutputParameterValues());
+        Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, OracleExecutionFactory.CURSOR_TYPE);
     }
 
-	@Test public void testDependentJoin() throws Exception {
-		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+    @Test public void testDependentJoin() throws Exception {
+        CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
         Select command = (Select) commandBuilder.getCommand("select id from smalla where description = 'a'");
         Parameter param = new Parameter();
         param.setType(TypeFacility.RUNTIME_TYPES.STRING);
@@ -1154,37 +1154,37 @@ public class TestOracleTranslator {
         dependentValues.put("x", Arrays.asList(Arrays.asList("a"), Arrays.asList("b")));
         command.setDependentValues(dependentValues);
         ((Comparison)command.getWhere()).setRightExpression(param);
-		Connection connection = Mockito.mock(Connection.class);
-		Statement statement = Mockito.mock(Statement.class);
-		Mockito.stub(connection.createStatement()).toReturn(statement);
-		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-		Mockito.stub(ps.executeBatch()).toReturn(new int[] {-2, -2});
-		Mockito.stub(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+        Connection connection = Mockito.mock(Connection.class);
+        Statement statement = Mockito.mock(Statement.class);
+        Mockito.stub(connection.createStatement()).toReturn(statement);
+        PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(ps.executeBatch()).toReturn(new int[] {-2, -2});
+        Mockito.stub(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
 
-		//we won't bother to retrieve the results, but we expect the following join query
-		PreparedStatement ps1 = Mockito.mock(PreparedStatement.class);
-		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).toReturn(ps1); //$NON-NLS-1$
+        //we won't bother to retrieve the results, but we expect the following join query
+        PreparedStatement ps1 = Mockito.mock(PreparedStatement.class);
+        Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).toReturn(ps1); //$NON-NLS-1$
 
-		OracleExecutionFactory ef = new OracleExecutionFactory() {
-			public String getTemporaryTableName(String prefix) {
-				return prefix; //don't use random for testing
-			}
-		};
-		ef.setDatabaseVersion(Version.DEFAULT_VERSION);
-		ef.start();
-		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
-		e.execute();
-		Mockito.verify(statement, Mockito.times(1)).execute("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table TEIID_DKJ1 (COL1 varchar2(100 char)) on commit delete rows; END;");
+        OracleExecutionFactory ef = new OracleExecutionFactory() {
+            public String getTemporaryTableName(String prefix) {
+                return prefix; //don't use random for testing
+            }
+        };
+        ef.setDatabaseVersion(Version.DEFAULT_VERSION);
+        ef.start();
+        JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
+        e.execute();
+        Mockito.verify(statement, Mockito.times(1)).execute("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table TEIID_DKJ1 (COL1 varchar2(100 char)) on commit delete rows; END;");
 
-		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", Types.VARCHAR);
-		Mockito.verify(ps, Mockito.times(1)).setObject(1, "b", Types.VARCHAR);
-		Mockito.verify(ps, Mockito.times(2)).addBatch();
-		Mockito.verify(ps, Mockito.times(1)).executeBatch();
-	}
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", Types.VARCHAR);
+        Mockito.verify(ps, Mockito.times(1)).setObject(1, "b", Types.VARCHAR);
+        Mockito.verify(ps, Mockito.times(2)).addBatch();
+        Mockito.verify(ps, Mockito.times(1)).executeBatch();
+    }
 
     @Test public void testTempTable() throws Exception {
-    	assertEquals("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) on commit delete rows; END;", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
-    	assertEquals("create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
+        assertEquals("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) on commit delete rows; END;", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+        assertEquals("create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
 
     @Test
@@ -1263,17 +1263,17 @@ public class TestOracleTranslator {
     }
 
     @Test public void testPackageQualified() throws Exception {
-    	OracleMetadataProcessor omp = new OracleMetadataProcessor();
-    	omp.setQuoteString("\"");
-    	String val = omp.getFullyQualifiedName("package", "schema", "proc", true);
-    	assertEquals("\"schema\".\"package\".\"proc\"", val);
+        OracleMetadataProcessor omp = new OracleMetadataProcessor();
+        omp.setQuoteString("\"");
+        String val = omp.getFullyQualifiedName("package", "schema", "proc", true);
+        assertEquals("\"schema\".\"package\".\"proc\"", val);
 
-    	val = omp.getFullyQualifiedName("", "schema", "proc", true);
+        val = omp.getFullyQualifiedName("", "schema", "proc", true);
         assertEquals("\"schema\".\"proc\"", val);
 
-    	omp.setUseQualifiedName(false);
-    	val = omp.getFullyQualifiedName("package", "schema", "proc", true);
-    	assertEquals("\"package\".\"proc\"", val);
+        omp.setUseQualifiedName(false);
+        val = omp.getFullyQualifiedName("package", "schema", "proc", true);
+        assertEquals("\"package\".\"proc\"", val);
     }
 
     @Test public void testBooleanInGroupByAndHaving() throws Exception {

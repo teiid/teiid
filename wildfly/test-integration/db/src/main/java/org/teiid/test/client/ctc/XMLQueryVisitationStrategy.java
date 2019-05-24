@@ -74,7 +74,7 @@ public class XMLQueryVisitationStrategy {
      */
     public List parseXMLQueryFile(String queryScenarioID, File queryFile, String querySetID) throws IOException, JDOMException {
 
-	List<QueryTest> queries = new LinkedList();
+    List<QueryTest> queries = new LinkedList();
 //        HashMap queryMap = new HashMap();
         SAXBuilder builder = SAXBuilderHelper.createSAXBuilder(false);
         Document queryDocument = builder.build(queryFile);
@@ -84,34 +84,34 @@ public class XMLQueryVisitationStrategy {
             Element queryElement = (Element) iter.next();
             String queryName = queryElement.getAttributeValue(TagNames.Attributes.NAME);
             if ( queryElement.getChild(TagNames.Elements.EXCEPTION) == null ) {
-        	String uniqueID = querySetID + "_" + queryName;
+            String uniqueID = querySetID + "_" + queryName;
 
-		List<Element> parmChildren = queryElement.getChildren(TagNames.Elements.SQL);
+        List<Element> parmChildren = queryElement.getChildren(TagNames.Elements.SQL);
 
-		if (parmChildren == null || parmChildren.isEmpty()) {
-        	    TestLogger.logDebug("=======  Single QueryTest ");
-        	    QuerySQL sql = createQuerySQL(queryElement);
+        if (parmChildren == null || parmChildren.isEmpty()) {
+                TestLogger.logDebug("=======  Single QueryTest ");
+                QuerySQL sql = createQuerySQL(queryElement);
 
-        	    QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, false);
-        	    queries.add(q);
-        	} else {
-        	    TestLogger.logDebug("=======  QueryTest has multiple sql statements");
-         		QuerySQL[] querysql = new QuerySQL[parmChildren.size()];
-        		int c = 0;
+                QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, new QuerySQL[] {sql}, false);
+                queries.add(q);
+            } else {
+                TestLogger.logDebug("=======  QueryTest has multiple sql statements");
+                 QuerySQL[] querysql = new QuerySQL[parmChildren.size()];
+                int c = 0;
 
-        		final Iterator<Element> sqliter = parmChildren.iterator();
-        		while ( sqliter.hasNext() ) {
-        			final Element sqlElement = (Element) sqliter.next();
-        			QuerySQL sql = createQuerySQL(sqlElement);
-        			querysql[c] = sql;
-        			c++;
-        		}
-        		QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, querysql, false);
-        		queries.add(q);
+                final Iterator<Element> sqliter = parmChildren.iterator();
+                while ( sqliter.hasNext() ) {
+                    final Element sqlElement = (Element) sqliter.next();
+                    QuerySQL sql = createQuerySQL(sqlElement);
+                    querysql[c] = sql;
+                    c++;
+                }
+                QueryTest q = new QueryTest(queryScenarioID, uniqueID, querySetID, querysql, false);
+                queries.add(q);
 
 
 
-        	}
+            }
  //               queryMap.put(queryName, query);
             } else {
                 Element exceptionElement = queryElement.getChild(TagNames.Elements.EXCEPTION);
@@ -131,50 +131,50 @@ public class XMLQueryVisitationStrategy {
     }
 
     private QuerySQL createQuerySQL(Element queryElement) {
- 	    String query = queryElement.getTextTrim();
+         String query = queryElement.getTextTrim();
 
-	    Object[] parms = getParms(queryElement);
+        Object[] parms = getParms(queryElement);
 
-	    QuerySQL sql = new QuerySQL(query, parms);
+        QuerySQL sql = new QuerySQL(query, parms);
 
- 	    String updateCnt = queryElement.getAttributeValue(TagNames.Attributes.UPDATE_CNT);
- 	    if (updateCnt != null && updateCnt.trim().length() > 0) {
- 		int cnt = Integer.parseInt(updateCnt);
- 		sql.setUpdateCnt(cnt);
- 	    }
+         String updateCnt = queryElement.getAttributeValue(TagNames.Attributes.UPDATE_CNT);
+         if (updateCnt != null && updateCnt.trim().length() > 0) {
+         int cnt = Integer.parseInt(updateCnt);
+         sql.setUpdateCnt(cnt);
+         }
 
- 	    String rowCnt = queryElement.getAttributeValue(TagNames.Attributes.TABLE_ROW_COUNT);
- 	    if (rowCnt != null && rowCnt.trim().length() > 0) {
- 		int cnt = Integer.parseInt(rowCnt);
- 		sql.setRowCnt(cnt);
- 	    }
+         String rowCnt = queryElement.getAttributeValue(TagNames.Attributes.TABLE_ROW_COUNT);
+         if (rowCnt != null && rowCnt.trim().length() > 0) {
+         int cnt = Integer.parseInt(rowCnt);
+         sql.setRowCnt(cnt);
+         }
 
-	    return sql;
+        return sql;
     }
 
     private Object[] getParms(Element parent) {
-	List<Element> parmChildren = parent.getChildren(TagNames.Elements.PARM);
-	if (parmChildren == null) {
-	    return null;
-	}
+    List<Element> parmChildren = parent.getChildren(TagNames.Elements.PARM);
+    if (parmChildren == null) {
+        return null;
+    }
 
-	Object[] parms = new Object[parmChildren.size()];
-	int i = 0;
-	final Iterator<Element> iter = parmChildren.iterator();
-	while ( iter.hasNext() ) {
-		final Element parmElement = (Element) iter.next();
-		try {
-		    Object parm = createParmType(parmElement);
-		    parms[i] = parm;
-		    i++;
-		} catch (JDOMException e) {
-		    throw new TransactionRuntimeException(e);
-		}
-	}
+    Object[] parms = new Object[parmChildren.size()];
+    int i = 0;
+    final Iterator<Element> iter = parmChildren.iterator();
+    while ( iter.hasNext() ) {
+        final Element parmElement = (Element) iter.next();
+        try {
+            Object parm = createParmType(parmElement);
+            parms[i] = parm;
+            i++;
+        } catch (JDOMException e) {
+            throw new TransactionRuntimeException(e);
+        }
+    }
 
 
 
-	return parms;
+    return parms;
     }
 
     private Object createParmType(Element cellElement) throws JDOMException {
@@ -552,7 +552,7 @@ public class XMLQueryVisitationStrategy {
         } else if ( cellName.equalsIgnoreCase(TagNames.Elements.OBJECT) ) {
             cellObject = consumeMsg((String) cellObject, cellElement);
         } else {
-        	cellObject = consumeMsg(cellObject, cellElement);
+            cellObject = consumeMsg(cellObject, cellElement);
         }
 
         return cellObject;
@@ -888,7 +888,7 @@ public class XMLQueryVisitationStrategy {
      * @exception JDOMException if there is an error consuming the message.
      */
     @SuppressWarnings("unused")
-	private Object consumeMsg(Object object, Element cellElement) throws JDOMException {
+    private Object consumeMsg(Object object, Element cellElement) throws JDOMException {
 
 //        // -----------------------
 //        // Process the element ...
@@ -902,7 +902,7 @@ public class XMLQueryVisitationStrategy {
 //        }
 //        return result;
 
-    	return cellElement.getText();
+        return cellElement.getText();
         // ----------------------
         // Create the Object element ...
         // ----------------------
@@ -911,42 +911,42 @@ public class XMLQueryVisitationStrategy {
 //        String result = null;
 //        if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
 //
-//        	if (object instanceof Clob){
-//        		Clob c = (Clob)object;
-//        		try {
-//        			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
+//            if (object instanceof Clob){
+//                Clob c = (Clob)object;
+//                try {
+//                    result = ObjectConverterUtil.convertToString(c.getAsciiStream());
 //
-//				} catch (Throwable e) {
-//					// TODO Auto-generated catch block
-//					throw new SQLException(e);
-//				}
-//        	} else if (object instanceof Blob){
-//            		Blob b = (Blob)object;
-//            		try {
-//            			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
+//                } catch (Throwable e) {
+//                    // TODO Auto-generated catch block
+//                    throw new SQLException(e);
+//                }
+//            } else if (object instanceof Blob){
+//                    Blob b = (Blob)object;
+//                    try {
+//                        result = ObjectConverterUtil.convertToString(b.getBinaryStream());
 //
-//					} catch (Throwable e) {
-//						// TODO Auto-generated catch block
-//						throw new SQLException(e);
-//					}
+//                    } catch (Throwable e) {
+//                        // TODO Auto-generated catch block
+//                        throw new SQLException(e);
+//                    }
 //            } else if (object instanceof SQLXML){
-//            	SQLXML s = (SQLXML)object;
-//        		try {
-//        			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
+//                SQLXML s = (SQLXML)object;
+//                try {
+//                    result = ObjectConverterUtil.convertToString(s.getBinaryStream());
 //
-//				} catch (Throwable e) {
-//					// TODO Auto-generated catch block
-//					throw new SQLException(e);
-//				}
+//                } catch (Throwable e) {
+//                    // TODO Auto-generated catch block
+//                    throw new SQLException(e);
+//                }
 //            }
 //        } else {
-//        	result = object.toString();
+//            result = object.toString();
 //        }
 //
 // //       System.out.println("ProductObject (before encoding): " + object.toString() );
 // //       try {
 //            objectElement.setText(result);
-//            	//	URLEncoder.encode(object.toString(), "UTF-8"));
+//                //    URLEncoder.encode(object.toString(), "UTF-8"));
 // //       } catch (UnsupportedEncodingException e) {
 //            // UTF-8 is supported natively by all jvms
 // //       }
@@ -1018,11 +1018,11 @@ public class XMLQueryVisitationStrategy {
     private Element produceResults(ResultSet object, int beginRow, int endRow)
             throws JDOMException, SQLException {
 
-    	if (object.isClosed()) {
+        if (object.isClosed()) {
             throw new SQLException(
             "ResultSet is closed at this point, unable to product results"); //$NON-NLS-1$
 
-    	}
+        }
 
         if ( beginRow < START_ROW ) {
             throw new IllegalArgumentException(
@@ -1319,36 +1319,36 @@ public class XMLQueryVisitationStrategy {
         String result = null;
         if (object instanceof Blob || object instanceof Clob || object instanceof SQLXML) {
 
-        	if (object instanceof Clob){
-        		Clob c = (Clob)object;
-        		try {
-        			result = ObjectConverterUtil.convertToString(c.getAsciiStream());
+            if (object instanceof Clob){
+                Clob c = (Clob)object;
+                try {
+                    result = ObjectConverterUtil.convertToString(c.getAsciiStream());
 
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					throw new SQLException(e);
-				}
-        	} else if (object instanceof Blob){
-            		Blob b = (Blob)object;
-            		try {
-            			result = ObjectConverterUtil.convertToString(b.getBinaryStream());
+                } catch (Throwable e) {
+                    // TODO Auto-generated catch block
+                    throw new SQLException(e);
+                }
+            } else if (object instanceof Blob){
+                    Blob b = (Blob)object;
+                    try {
+                        result = ObjectConverterUtil.convertToString(b.getBinaryStream());
 
-					} catch (Throwable e) {
-						// TODO Auto-generated catch block
-						throw new SQLException(e);
-					}
+                    } catch (Throwable e) {
+                        // TODO Auto-generated catch block
+                        throw new SQLException(e);
+                    }
             } else if (object instanceof SQLXML){
-            	SQLXML s = (SQLXML)object;
-        		try {
-        			result = ObjectConverterUtil.convertToString(s.getBinaryStream());
+                SQLXML s = (SQLXML)object;
+                try {
+                    result = ObjectConverterUtil.convertToString(s.getBinaryStream());
 
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					throw new SQLException(e);
-				}
+                } catch (Throwable e) {
+                    // TODO Auto-generated catch block
+                    throw new SQLException(e);
+                }
             }
         } else {
-        	result = object.toString();
+            result = object.toString();
         }
 
          objectElement.setText(result);
@@ -1401,9 +1401,9 @@ public class XMLQueryVisitationStrategy {
         String v = object.toString();
         if (v != null && v.length() != 0) {
 
-	    String toReplace = new String( new Character( (char)0x0).toString() );
-	    v.replaceAll(toReplace," ");
-	    charElement.setText(v.trim());
+        String toReplace = new String( new Character( (char)0x0).toString() );
+        v.replaceAll(toReplace," ");
+        charElement.setText(v.trim());
 
         }
         if ( parent != null ) {

@@ -41,129 +41,129 @@ import org.teiid.translator.google.api.metadata.Worksheet;
  */
 public class SpreadsheetSQLVisitor extends SpreadsheetCriteriaVisitor {
 
-	private Integer limitValue = null;
-	private Integer offsetValue = null;
+    private Integer limitValue = null;
+    private Integer offsetValue = null;
 
-	public SpreadsheetSQLVisitor(SpreadsheetInfo spreadsheetInfo) {
-		super(spreadsheetInfo);
-	}
+    public SpreadsheetSQLVisitor(SpreadsheetInfo spreadsheetInfo) {
+        super(spreadsheetInfo);
+    }
 
-	public String getWorksheetTitle() {
-		return worksheetTitle;
-	}
+    public String getWorksheetTitle() {
+        return worksheetTitle;
+    }
 
-	/**
-	 * Return only col name e.g. "A"
-	 */
-	@Override
-	protected String replaceElementName(String group, String element) {
-		Worksheet worksheetSourceName=info.getWorksheetByName(worksheetTitle);
-		if(worksheetSourceName==null){
-			throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
-		}
-		String columnId=worksheetSourceName.getColumnID(element);
- 	    if(columnId==null){
- 	    	throw new SpreadsheetOperationException("Column "+element +" doesn't exist in the worksheet "+worksheetTitle);
- 	    }
-		return columnId;
-	}
+    /**
+     * Return only col name e.g. "A"
+     */
+    @Override
+    protected String replaceElementName(String group, String element) {
+        Worksheet worksheetSourceName=info.getWorksheetByName(worksheetTitle);
+        if(worksheetSourceName==null){
+            throw new SpreadsheetOperationException(SpreadsheetExecutionFactory.UTIL.gs("missing_worksheet", worksheetTitle)); //$NON-NLS-1$
+        }
+        String columnId=worksheetSourceName.getColumnID(element);
+         if(columnId==null){
+             throw new SpreadsheetOperationException("Column "+element +" doesn't exist in the worksheet "+worksheetTitle);
+         }
+        return columnId;
+    }
 
-	public String getTranslatedSQL() {
-		return buffer.toString();
-	}
+    public String getTranslatedSQL() {
+        return buffer.toString();
+    }
 
-	public void translateSQL(LanguageObject obj) {
-		append(obj);
-	}
+    public void translateSQL(LanguageObject obj) {
+        append(obj);
+    }
 
-	public void visit(Select obj) {
-		buffer.append(SELECT).append(Tokens.SPACE);
+    public void visit(Select obj) {
+        buffer.append(SELECT).append(Tokens.SPACE);
 
-		if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
-			NamedTable table = ((NamedTable)obj.getFrom().get(0));
-			this.worksheetTitle = table.getName();
-			if (table.getMetadataObject().getNameInSource() != null) {
-				this.worksheetTitle = table.getMetadataObject().getNameInSource();
-			}
-		}
-		append(obj.getDerivedColumns());
-		if (obj.getWhere() != null) {
-			buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
-			append(obj.getWhere());
-		}
-		if (obj.getGroupBy() != null) {
-			buffer.append(Tokens.SPACE);
-			append(obj.getGroupBy());
-		}
-		if (obj.getOrderBy() != null) {
-			buffer.append(Tokens.SPACE);
-			append(obj.getOrderBy());
-		}
-		if (obj.getLimit() != null) {
-			if (obj.getLimit().getRowOffset() > 0) {
-				offsetValue = obj.getLimit().getRowOffset();
-			}
-			limitValue = obj.getLimit().getRowLimit();
-		}
-	}
+        if (obj.getFrom() != null && !obj.getFrom().isEmpty()) {
+            NamedTable table = ((NamedTable)obj.getFrom().get(0));
+            this.worksheetTitle = table.getName();
+            if (table.getMetadataObject().getNameInSource() != null) {
+                this.worksheetTitle = table.getMetadataObject().getNameInSource();
+            }
+        }
+        append(obj.getDerivedColumns());
+        if (obj.getWhere() != null) {
+            buffer.append(Tokens.SPACE).append(WHERE).append(Tokens.SPACE);
+            append(obj.getWhere());
+        }
+        if (obj.getGroupBy() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getGroupBy());
+        }
+        if (obj.getOrderBy() != null) {
+            buffer.append(Tokens.SPACE);
+            append(obj.getOrderBy());
+        }
+        if (obj.getLimit() != null) {
+            if (obj.getLimit().getRowOffset() > 0) {
+                offsetValue = obj.getLimit().getRowOffset();
+            }
+            limitValue = obj.getLimit().getRowLimit();
+        }
+    }
 
-	public Integer getLimitValue() {
-		return limitValue;
-	}
+    public Integer getLimitValue() {
+        return limitValue;
+    }
 
-	public Integer getOffsetValue() {
-		return offsetValue;
-	}
+    public Integer getOffsetValue() {
+        return offsetValue;
+    }
 
-	@Override
-	public void visit(Function function) {
-		if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFMONTH)) {
-			function.setName("day"); //$NON-NLS-1$
-		} else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.UCASE)) {
-			function.setName("upper"); //$NON-NLS-1$
-		} else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.LCASE)) {
-			function.setName("lower"); //$NON-NLS-1$
-		} else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFWEEK)) {
-			function.setName("weekday"); //$NON-NLS-1$
-		}
-		super.visit(function);
-	}
+    @Override
+    public void visit(Function function) {
+        if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFMONTH)) {
+            function.setName("day"); //$NON-NLS-1$
+        } else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.UCASE)) {
+            function.setName("upper"); //$NON-NLS-1$
+        } else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.LCASE)) {
+            function.setName("lower"); //$NON-NLS-1$
+        } else if (function.getName().equalsIgnoreCase(SourceSystemFunctions.DAYOFWEEK)) {
+            function.setName("weekday"); //$NON-NLS-1$
+        }
+        super.visit(function);
+    }
 
-	@Override
-	public void visit(Literal obj) {
-		if (obj.getValue() == null) {
-			super.visit(obj);
-		} else if (obj.getType() == TypeFacility.RUNTIME_TYPES.DATE) {
-			buffer.append("date ").append('\"').append(obj.getValue()).append('\"'); //$NON-NLS-1$
-		} else if (obj.getType() == TypeFacility.RUNTIME_TYPES.TIME) {
-			buffer.append("timeofday ").append('\"').append(obj.getValue()).append('\"'); //$NON-NLS-1$
-		} else if (obj.getType() == TypeFacility.RUNTIME_TYPES.TIMESTAMP) {
-			String val = obj.getValue().toString();
-			int i = val.lastIndexOf('.');
-			//truncate to mills
-			if (i != -1 && i < val.length() - 4) {
-				val = val.substring(0, i + 4);
-			}
-			buffer.append("datetime ").append('\"').append(val).append('\"'); //$NON-NLS-1$
-		} else {
-			super.visit(obj);
-		}
-	}
+    @Override
+    public void visit(Literal obj) {
+        if (obj.getValue() == null) {
+            super.visit(obj);
+        } else if (obj.getType() == TypeFacility.RUNTIME_TYPES.DATE) {
+            buffer.append("date ").append('\"').append(obj.getValue()).append('\"'); //$NON-NLS-1$
+        } else if (obj.getType() == TypeFacility.RUNTIME_TYPES.TIME) {
+            buffer.append("timeofday ").append('\"').append(obj.getValue()).append('\"'); //$NON-NLS-1$
+        } else if (obj.getType() == TypeFacility.RUNTIME_TYPES.TIMESTAMP) {
+            String val = obj.getValue().toString();
+            int i = val.lastIndexOf('.');
+            //truncate to mills
+            if (i != -1 && i < val.length() - 4) {
+                val = val.substring(0, i + 4);
+            }
+            buffer.append("datetime ").append('\"').append(val).append('\"'); //$NON-NLS-1$
+        } else {
+            super.visit(obj);
+        }
+    }
 
-	@Override
-	public void visit(Like obj) {
-	    if (obj.isNegated()) {
-	        buffer.append("("); //$NON-NLS-1$
-	    }
-	    super.visit(obj);
-	    if (obj.isNegated()) {
-	        buffer.append(" AND "); //$NON-NLS-1$
+    @Override
+    public void visit(Like obj) {
+        if (obj.isNegated()) {
+            buffer.append("("); //$NON-NLS-1$
+        }
+        super.visit(obj);
+        if (obj.isNegated()) {
+            buffer.append(" AND "); //$NON-NLS-1$
             visitNode(obj.getLeftExpression());
             buffer.append(" IS NOT NULL)"); //$NON-NLS-1$
-	    }
-	}
+        }
+    }
 
-	@Override
+    @Override
     protected boolean isUpdate() {
         return false;
     }

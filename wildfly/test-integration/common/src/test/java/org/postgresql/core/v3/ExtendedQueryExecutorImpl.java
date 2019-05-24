@@ -38,54 +38,54 @@ import org.postgresql.core.ResultHandler;
 @SuppressWarnings({"rawtypes", "nls"})
 public class ExtendedQueryExecutorImpl extends QueryExecutorImpl {
 
-	public static String simplePortal;
+    public static String simplePortal;
 
-	public PGStream stream;
-	public Deque<ExecuteRequest> pendingExecute;
-	public Deque<SimpleQuery> pendingDescribe;
+    public PGStream stream;
+    public Deque<ExecuteRequest> pendingExecute;
+    public Deque<SimpleQuery> pendingDescribe;
 
-	public ExtendedQueryExecutorImpl(PGStream pgStream, String user, String database, int cancelSignalTimeout, Properties info) throws SQLException, IOException {
-		super(pgStream, user, database, cancelSignalTimeout, info);
-		this.stream = pgStream;
-		try {
-			Field f = QueryExecutorImpl.class.getDeclaredField("pendingExecuteQueue");
-			f.setAccessible(true);
-			pendingExecute = (Deque<ExecuteRequest>) f.get(this);
-			f = QueryExecutorImpl.class.getDeclaredField("pendingDescribePortalQueue");
-			f.setAccessible(true);
-			pendingDescribe = (Deque<SimpleQuery>) f.get(this);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    public ExtendedQueryExecutorImpl(PGStream pgStream, String user, String database, int cancelSignalTimeout, Properties info) throws SQLException, IOException {
+        super(pgStream, user, database, cancelSignalTimeout, info);
+        this.stream = pgStream;
+        try {
+            Field f = QueryExecutorImpl.class.getDeclaredField("pendingExecuteQueue");
+            f.setAccessible(true);
+            pendingExecute = (Deque<ExecuteRequest>) f.get(this);
+            f = QueryExecutorImpl.class.getDeclaredField("pendingDescribePortalQueue");
+            f.setAccessible(true);
+            pendingDescribe = (Deque<SimpleQuery>) f.get(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Override
-	public synchronized void execute(Query query, ParameterList parameters,
-			ResultHandler handler, int maxRows, int fetchSize, int flags)
-			throws SQLException {
-		if (simplePortal != null) {
-			try {
-				byte[] bytes = query.toString().getBytes("UTF-8");
+    @Override
+    public synchronized void execute(Query query, ParameterList parameters,
+            ResultHandler handler, int maxRows, int fetchSize, int flags)
+            throws SQLException {
+        if (simplePortal != null) {
+            try {
+                byte[] bytes = query.toString().getBytes("UTF-8");
 
-				stream.sendChar('Q');
-				stream.sendInteger4(bytes.length + 6);
-				stream.send(bytes);
-				stream.sendInteger2(0);
-				stream.flush();
-				if (pendingExecute.isEmpty()) {
-					pendingExecute.add(new ExecuteRequest((SimpleQuery)query, new Portal((SimpleQuery)query, simplePortal), true));
-				}
-				if (pendingDescribe.isEmpty()) {
-					pendingDescribe.add((SimpleQuery)query);
-				}
-				processResults(handler, flags);
-				handler.handleCompletion();
-				return;
-			} catch (Exception e) {
-				throw new SQLException(e);
-			}
-		}
-		super.execute(query, parameters, handler, maxRows, fetchSize, flags);
-	}
+                stream.sendChar('Q');
+                stream.sendInteger4(bytes.length + 6);
+                stream.send(bytes);
+                stream.sendInteger2(0);
+                stream.flush();
+                if (pendingExecute.isEmpty()) {
+                    pendingExecute.add(new ExecuteRequest((SimpleQuery)query, new Portal((SimpleQuery)query, simplePortal), true));
+                }
+                if (pendingDescribe.isEmpty()) {
+                    pendingDescribe.add((SimpleQuery)query);
+                }
+                processResults(handler, flags);
+                handler.handleCompletion();
+                return;
+            } catch (Exception e) {
+                throw new SQLException(e);
+            }
+        }
+        super.execute(query, parameters, handler, maxRows, fetchSize, flags);
+    }
 
 }

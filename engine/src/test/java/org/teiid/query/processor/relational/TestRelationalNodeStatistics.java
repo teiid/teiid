@@ -87,22 +87,22 @@ public class TestRelationalNodeStatistics {
     }
 
     @Test public void testCumulativeCalculation() {
-    	RelationalNode[] children = new RelationalNode[2];
-    	children[0] = createFakeNode(createData(1));
-    	children[1] = createFakeNode(createData(1));
-    	children[0].getNodeStatistics().setBatchEndTime(100);
-    	children[0].getNodeStatistics().collectCumulativeNodeStats(0L, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
-    	children[0].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
-    	children[1].getNodeStatistics().setBatchEndTime(200);
-    	children[1].getNodeStatistics().collectCumulativeNodeStats(0L, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
-    	children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
-    	RelationalNodeStatistics stats = new RelationalNodeStatistics();
-    	stats.setBatchEndTime(1000);
-    	stats.setBatchStartTime(0);
-    	stats.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
-    	stats.collectNodeStats(children);
-    	assertEquals(1000, stats.getNodeCumulativeProcessingTime());
-    	assertEquals(700, stats.getNodeNextBatchProcessingTime());
+        RelationalNode[] children = new RelationalNode[2];
+        children[0] = createFakeNode(createData(1));
+        children[1] = createFakeNode(createData(1));
+        children[0].getNodeStatistics().setBatchEndTime(100);
+        children[0].getNodeStatistics().collectCumulativeNodeStats(0L, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+        children[0].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
+        children[1].getNodeStatistics().setBatchEndTime(200);
+        children[1].getNodeStatistics().collectCumulativeNodeStats(0L, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
+        children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
+        RelationalNodeStatistics stats = new RelationalNodeStatistics();
+        stats.setBatchEndTime(1000);
+        stats.setBatchStartTime(0);
+        stats.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+        stats.collectNodeStats(children);
+        assertEquals(1000, stats.getNodeCumulativeProcessingTime());
+        assertEquals(700, stats.getNodeNextBatchProcessingTime());
     }
 
     @Test public void testDescriptionProperties() throws Exception {

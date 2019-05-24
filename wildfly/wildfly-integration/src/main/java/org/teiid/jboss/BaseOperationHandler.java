@@ -35,34 +35,34 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
     public static final SensitiveTargetAccessConstraintDefinition ACCESS_CONTROL_DEF = new SensitiveTargetAccessConstraintDefinition(ACCESS_CONTROL);
     */
 
-	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
-	protected static final String MISSING = ".missing"; //$NON-NLS-1$
-	protected static final String REPLY = ".reply"; //$NON-NLS-1$
+    private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
+    protected static final String MISSING = ".missing"; //$NON-NLS-1$
+    protected static final String REPLY = ".reply"; //$NON-NLS-1$
 
-	private String operationName;
-	// this is flaf indicates that changes the runtime state of a service
-	private boolean changesRuntime = false;
+    private String operationName;
+    // this is flaf indicates that changes the runtime state of a service
+    private boolean changesRuntime = false;
 
-	protected BaseOperationHandler(String operationName){
-		this.operationName = operationName;
-	}
+    protected BaseOperationHandler(String operationName){
+        this.operationName = operationName;
+    }
 
     protected BaseOperationHandler(String operationName, boolean changesRuntime){
         this.operationName = operationName;
         this.changesRuntime = changesRuntime;
     }
 
-	public void register(ManagementResourceRegistration subsystem) {
-		subsystem.registerOperationHandler(getOperationDefinition(), this);
-	}
+    public void register(ManagementResourceRegistration subsystem) {
+        subsystem.registerOperationHandler(getOperationDefinition(), this);
+    }
 
-	public String name() {
-		return this.operationName;
-	}
+    public String name() {
+        return this.operationName;
+    }
 
-	public boolean isChangesRuntimes() {
-	    return this.changesRuntime;
-	}
+    public boolean isChangesRuntimes() {
+        return this.changesRuntime;
+    }
 
     public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
         if (context.isNormalServer()) {
@@ -74,7 +74,7 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 
                     executeOperation(context, getService(context, pathAddress, operation), operation);
 
-                	context.stepCompleted();
+                    context.stepCompleted();
                 }
 
             }, OperationContext.Stage.RUNTIME);
@@ -83,8 +83,8 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
     }
 
     @SuppressWarnings("unused")
-	protected T getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException{
-    	return null;
+    protected T getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException{
+        return null;
     }
 
     public OperationDefinition getOperationDefinition() {
@@ -111,7 +111,7 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 
         @Override
         public String getResourceAttributeDescription(String attributeName, Locale locale, ResourceBundle bundle) {
-        	return bundle.getString(attributeName);
+            return bundle.getString(attributeName);
         }
 
 
@@ -131,7 +131,7 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
         @Override
         public String getOperationParameterDescription(final String operationName, final String paramName, final Locale locale, final ResourceBundle bundle) {
             if (this.operationName.equals(operationName)) {
-           		return bundle.getString(this.operationName+"."+paramName+DESCRIBE); //$NON-NLS-1$
+                   return bundle.getString(this.operationName+"."+paramName+DESCRIBE); //$NON-NLS-1$
             }
             return super.getOperationParameterDescription(operationName, paramName, locale, bundle);
         }
@@ -145,9 +145,9 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
         }
     }
 
-	abstract protected void executeOperation(OperationContext context, T service, ModelNode operation) throws OperationFailedException;
+    abstract protected void executeOperation(OperationContext context, T service, ModelNode operation) throws OperationFailedException;
 
-	protected void describeParameters(@SuppressWarnings("unused") SimpleOperationDefinitionBuilder builder) {
-	}
+    protected void describeParameters(@SuppressWarnings("unused") SimpleOperationDefinitionBuilder builder) {
+    }
 
 }

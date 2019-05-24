@@ -23,39 +23,39 @@ import java.util.Date;
 
 public class Util {
 
-	public static String stripQutes(String id) {
-		if((id.startsWith("'") && id.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
-			id = id.substring(1,id.length()-1);
-		} else if ((id.startsWith("\"") && id.endsWith("\""))) { //$NON-NLS-1$ //$NON-NLS-2$
-			id = id.substring(1,id.length()-1);
-		}
-		return id;
-	}
+    public static String stripQutes(String id) {
+        if((id.startsWith("'") && id.endsWith("'"))) { //$NON-NLS-1$ //$NON-NLS-2$
+            id = id.substring(1,id.length()-1);
+        } else if ((id.startsWith("\"") && id.endsWith("\""))) { //$NON-NLS-1$ //$NON-NLS-2$
+            id = id.substring(1,id.length()-1);
+        }
+        return id;
+    }
 
-	public static String addSingleQuotes(String text) {
-		StringBuffer result = new StringBuffer();
-		if(!text.startsWith("'")) { //$NON-NLS-1$
-			result.append('\'');
-		}
-		result.append(text);
-		if(!text.endsWith("'")) { //$NON-NLS-1$
-			result.append('\'');
-		}
-		return result.toString();
-	}
+    public static String addSingleQuotes(String text) {
+        StringBuffer result = new StringBuffer();
+        if(!text.startsWith("'")) { //$NON-NLS-1$
+            result.append('\'');
+        }
+        result.append(text);
+        if(!text.endsWith("'")) { //$NON-NLS-1$
+            result.append('\'');
+        }
+        return result.toString();
+    }
 
-	private static String timeZone;
+    private static String timeZone;
 
-	public static void resetTimeZone() {
-	    timeZone = null;
-	}
+    public static void resetTimeZone() {
+        timeZone = null;
+    }
 
-	public static String getDefaultTimeZoneString() {
-		if (timeZone == null) {
-			String s = new SimpleDateFormat("Z").format(new Date(0)); //$NON-NLS-1$
-			timeZone = s.substring(0, 3) + ':'  + s.substring(3, 5);
-		}
-		return timeZone;
-	}
+    public static String getDefaultTimeZoneString() {
+        if (timeZone == null) {
+            String s = new SimpleDateFormat("Z").format(new Date(0)); //$NON-NLS-1$
+            timeZone = s.substring(0, 3) + ':'  + s.substring(3, 5);
+        }
+        return timeZone;
+    }
 
 }

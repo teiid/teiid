@@ -44,73 +44,73 @@ import org.teiid.translator.TranslatorException;
 
 public class GetDeletedExecutionImpl implements SalesforceProcedureExecution {
 
-	private ProcedureExecutionParent parent;
+    private ProcedureExecutionParent parent;
 
-	private DeletedResult deletedResult;
-	private int resultIndex = 0;
-	DatatypeFactory factory;
+    private DeletedResult deletedResult;
+    private int resultIndex = 0;
+    DatatypeFactory factory;
 
-	public GetDeletedExecutionImpl(
-			ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
-		this.parent = procedureExecutionParent;
-		try {
-			factory = DatatypeFactory.newInstance();
-		} catch (DatatypeConfigurationException e) {
-			throw new TranslatorException(e.getMessage());
-		}
-	}
+    public GetDeletedExecutionImpl(
+            ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
+        this.parent = procedureExecutionParent;
+        try {
+            factory = DatatypeFactory.newInstance();
+        } catch (DatatypeConfigurationException e) {
+            throw new TranslatorException(e.getMessage());
+        }
+    }
 
-	@Override
-	public void cancel() {
-		// nothing to do here
+    @Override
+    public void cancel() {
+        // nothing to do here
 
-	}
+    }
 
-	@Override
-	public void close() {
-		// nothing to do here
+    @Override
+    public void close() {
+        // nothing to do here
 
-	}
+    }
 
-	@Override
-	public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
-		Call command = parent.getCommand();
-		List<Argument> params = command.getArguments();
+    @Override
+    public void execute(ProcedureExecutionParent procedureExecutionParent) throws TranslatorException {
+        Call command = parent.getCommand();
+        List<Argument> params = command.getArguments();
 
-		Argument object = params.get(OBJECT);
-		String objectName = (String) object.getArgumentValue().getValue();
+        Argument object = params.get(OBJECT);
+        String objectName = (String) object.getArgumentValue().getValue();
 
-		Argument start = params.get(STARTDATE);
-		Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
-		GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-		startCalendar.setTime(startTime);
+        Argument start = params.get(STARTDATE);
+        Timestamp startTime = (Timestamp) start.getArgumentValue().getValue();
+        GregorianCalendar startCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+        startCalendar.setTime(startTime);
 
-		Argument end = params.get(ENDDATE);
-		Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
-		GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-		endCalendar.setTime(endTime);
+        Argument end = params.get(ENDDATE);
+        Timestamp endTime = (Timestamp) end.getArgumentValue().getValue();
+        GregorianCalendar endCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
+        endCalendar.setTime(endTime);
 
-		deletedResult = parent.getConnection().getDeleted(objectName, startCalendar, endCalendar);
-	}
+        deletedResult = parent.getConnection().getDeleted(objectName, startCalendar, endCalendar);
+    }
 
-	@Override
-	public List<?> getOutputParameterValues() {
-		List<Timestamp> result = new ArrayList<Timestamp>();
-		result.add(new Timestamp(deletedResult.getLatestDateCovered().getTimeInMillis()));
-		result.add(new Timestamp(deletedResult.getEarliestDateAvailable().getTimeInMillis()));
-		return result;
-	}
+    @Override
+    public List<?> getOutputParameterValues() {
+        List<Timestamp> result = new ArrayList<Timestamp>();
+        result.add(new Timestamp(deletedResult.getLatestDateCovered().getTimeInMillis()));
+        result.add(new Timestamp(deletedResult.getEarliestDateAvailable().getTimeInMillis()));
+        return result;
+    }
 
-	@Override
-	public List<?> next() {
-		List<Object> result = null;
-		if(deletedResult.getResultRecords() != null && resultIndex < deletedResult.getResultRecords().size()){
-			result = new ArrayList<Object>(2);
-			result.add(deletedResult.getResultRecords().get(resultIndex).getID());
-			result.add(new Timestamp(deletedResult.getResultRecords().get(resultIndex).getDeletedDate().getTimeInMillis()));
-			resultIndex++;
-		}
-		return result;
-	}
+    @Override
+    public List<?> next() {
+        List<Object> result = null;
+        if(deletedResult.getResultRecords() != null && resultIndex < deletedResult.getResultRecords().size()){
+            result = new ArrayList<Object>(2);
+            result.add(deletedResult.getResultRecords().get(resultIndex).getID());
+            result.add(new Timestamp(deletedResult.getResultRecords().get(resultIndex).getDeletedDate().getTimeInMillis()));
+            resultIndex++;
+        }
+        return result;
+    }
 
 }

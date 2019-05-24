@@ -27,9 +27,9 @@ import org.teiid.core.TeiidException;
  */
 public class TranslatorException extends TeiidException{
 
-	private static final long serialVersionUID = -5980862789340592219L;
+    private static final long serialVersionUID = -5980862789340592219L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public TranslatorException() {

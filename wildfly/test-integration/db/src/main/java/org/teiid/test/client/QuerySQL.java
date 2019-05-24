@@ -48,8 +48,8 @@ public class QuerySQL {
     }
 
     public QuerySQL(String sql, Object[] parms) {
-	this.sql = sql;
-	this.parms = parms;
+    this.sql = sql;
+    this.parms = parms;
     }
 
     public String getSql() {

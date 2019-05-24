@@ -33,26 +33,26 @@ import org.mockito.Mockito;
 @SuppressWarnings("nls")
 public class TestLDAPConnection {
 
-	public static class FakeFactory implements InitialContextFactory {
-		@Override
-		public Context getInitialContext(Hashtable<?, ?> environment)
-				throws NamingException {
-		    assertEquals(environment.get(LdapContext.SECURITY_AUTHENTICATION), "other");
-		    assertEquals(environment.get(LdapContext.SECURITY_PRINCIPAL), "admin");
-			return Mockito.mock(Context.class);
-		}
-	}
+    public static class FakeFactory implements InitialContextFactory {
+        @Override
+        public Context getInitialContext(Hashtable<?, ?> environment)
+                throws NamingException {
+            assertEquals(environment.get(LdapContext.SECURITY_AUTHENTICATION), "other");
+            assertEquals(environment.get(LdapContext.SECURITY_PRINCIPAL), "admin");
+            return Mockito.mock(Context.class);
+        }
+    }
 
-	@Test public void testInitialization() throws Exception {
+    @Test public void testInitialization() throws Exception {
 
-		LDAPManagedConnectionFactory config = new LDAPManagedConnectionFactory();
-		config.setLdapUrl("ldap://foo");
-		config.setLdapAdminUserDN("admin");
-		config.setLdapAdminUserPassword("password");
-		config.setLdapContextFactory(FakeFactory.class.getName());
-		config.setLdapAuthType("other");
+        LDAPManagedConnectionFactory config = new LDAPManagedConnectionFactory();
+        config.setLdapUrl("ldap://foo");
+        config.setLdapAdminUserDN("admin");
+        config.setLdapAdminUserPassword("password");
+        config.setLdapContextFactory(FakeFactory.class.getName());
+        config.setLdapAuthType("other");
 
-		new LDAPConnectionImpl(config);
-	}
+        new LDAPConnectionImpl(config);
+    }
 
 }

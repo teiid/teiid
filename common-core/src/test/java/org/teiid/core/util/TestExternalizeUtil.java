@@ -48,8 +48,8 @@ public class TestExternalizeUtil extends TestCase {
     }
 
     public void testEmptyCollection() throws Exception {
-    	ExternalizeUtil.writeCollection(oout, Arrays.asList(new Object[0]));
-    	oout.flush();
+        ExternalizeUtil.writeCollection(oout, Arrays.asList(new Object[0]));
+        oout.flush();
         ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
         ObjectInputStream oin = new ObjectInputStream(bin);
 

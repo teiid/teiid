@@ -29,9 +29,9 @@ import org.teiid.core.TeiidComponentException;
  */
 public class QueryMetadataException extends TeiidComponentException {
 
-	private static final long serialVersionUID = -2109331443434830452L;
+    private static final long serialVersionUID = -2109331443434830452L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public QueryMetadataException() {

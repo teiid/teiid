@@ -37,32 +37,32 @@ public final class StringUtil {
     }
 
     /**
-	 * Join string pieces and separate with a delimiter.  Similar to the perl function of
-	 * the same name.  If strings or delimiter are null, null is returned.  Otherwise, at
-	 * least an empty string will be returned.
-	 * @see #split
-	 *
-	 * @param strings String pieces to join
-	 * @param delimiter Delimiter to put between string pieces
-	 * @return One merged string
-	 */
-	public static String join(Collection<String> strings, String delimiter) {
-		if(strings == null || delimiter == null) {
-			return null;
-		}
+     * Join string pieces and separate with a delimiter.  Similar to the perl function of
+     * the same name.  If strings or delimiter are null, null is returned.  Otherwise, at
+     * least an empty string will be returned.
+     * @see #split
+     *
+     * @param strings String pieces to join
+     * @param delimiter Delimiter to put between string pieces
+     * @return One merged string
+     */
+    public static String join(Collection<String> strings, String delimiter) {
+        if(strings == null || delimiter == null) {
+            return null;
+        }
 
-		StringBuffer str = new StringBuffer();
+        StringBuffer str = new StringBuffer();
 
-		Iterator<String> iter = strings.iterator();
-		while (iter.hasNext()) {
-			str.append(iter.next());
-			if (iter.hasNext()) {
-				str.append(delimiter);
-			}
-		}
+        Iterator<String> iter = strings.iterator();
+        while (iter.hasNext()) {
+            str.append(iter.next());
+            if (iter.hasNext()) {
+                str.append(delimiter);
+            }
+        }
 
-		return str.toString();
-	}
+        return str.toString();
+    }
 
     /**
      * Return a stringified version of the array.
@@ -71,7 +71,7 @@ public final class StringUtil {
      * @return the string form of the array
      */
     public static String toString( final Object[] array, final String delim ) {
-    	return toString(array, delim, true);
+        return toString(array, delim, true);
     }
 
     /**
@@ -86,7 +86,7 @@ public final class StringUtil {
         }
         final StringBuffer sb = new StringBuffer();
         if (includeBrackets) {
-        	sb.append('[');
+            sb.append('[');
         }
         for (int i = 0; i < array.length; ++i) {
             if ( i != 0 ) {
@@ -95,7 +95,7 @@ public final class StringUtil {
             sb.append(array[i]);
         }
         if (includeBrackets) {
-        	sb.append(']');
+            sb.append(']');
         }
         return sb.toString();
     }
@@ -111,15 +111,15 @@ public final class StringUtil {
         return toString(array, ",", true); //$NON-NLS-1$
     }
 
-	/**
-	 * Split a string into pieces based on delimiters.  Similar to the perl function of
-	 * the same name.  The delimiters are not included in the returned strings.
-	 * @see #join
-	 *
-	 * @param str Full string
-	 * @param splitter Characters to split on
-	 * @return List of String pieces from full string
-	 */
+    /**
+     * Split a string into pieces based on delimiters.  Similar to the perl function of
+     * the same name.  The delimiters are not included in the returned strings.
+     * @see #join
+     *
+     * @param str Full string
+     * @param splitter Characters to split on
+     * @return List of String pieces from full string
+     */
     public static List<String> split(String str, String splitter) {
         StringTokenizer tokens = new StringTokenizer(str, splitter);
         ArrayList<String> l = new ArrayList<String>(tokens.countTokens());
@@ -129,79 +129,79 @@ public final class StringUtil {
         return l;
     }
 
-	/**
-	 * Replace a single occurrence of the search string with the replace string
-	 * in the source string. If any of the strings is null or the search string
-	 * is zero length, the source string is returned.
-	 * @param source the source string whose contents will be altered
-	 * @param search the string to search for in source
-	 * @param replace the string to substitute for search if present
-	 * @return source string with the *first* occurrence of the search string
-	 * replaced with the replace string
-	 */
-	public static String replace(String source, String search, String replace) {
-	    if (source != null && search != null && search.length() > 0 && replace != null) {
-	        int start = source.indexOf(search);
+    /**
+     * Replace a single occurrence of the search string with the replace string
+     * in the source string. If any of the strings is null or the search string
+     * is zero length, the source string is returned.
+     * @param source the source string whose contents will be altered
+     * @param search the string to search for in source
+     * @param replace the string to substitute for search if present
+     * @return source string with the *first* occurrence of the search string
+     * replaced with the replace string
+     */
+    public static String replace(String source, String search, String replace) {
+        if (source != null && search != null && search.length() > 0 && replace != null) {
+            int start = source.indexOf(search);
             if (start > -1) {
                 return new StringBuffer(source).replace(start, start + search.length(), replace).toString();
-	        }
-	    }
-	    return source;
-	}
-
-	/**
-	 * Replace all occurrences of the search string with the replace string
-	 * in the source string. If any of the strings is null or the search string
-	 * is zero length, the source string is returned.
-	 * @param source the source string whose contents will be altered
-	 * @param search the string to search for in source
-	 * @param replace the string to substitute for search if present
-	 * @return source string with *all* occurrences of the search string
-	 * replaced with the replace string
-	 */
-	public static String replaceAll(String source, String search, String replace) {
-	    if (source == null || search == null || search.length() == 0 || replace == null) {
-	    	return source;
-	    }
-        int start = source.indexOf(search);
-        if (start > -1) {
-	        StringBuffer newString = new StringBuffer(source);
-	        while (start > -1) {
-	            int end = start + search.length();
-	            newString.replace(start, end, replace);
-	            start = newString.indexOf(search, start + replace.length());
-	        }
-	        return newString.toString();
+            }
         }
-	    return source;
-	}
-
-    /**
-	 * Return the tokens in a string in a list. This is particularly
-	 * helpful if the tokens need to be processed in reverse order. In that case,
-	 * a list iterator can be acquired from the list for reverse order traversal.
-	 *
-	 * @param str String to be tokenized
-	 * @param delimiter Characters which are delimit tokens
-	 * @return List of string tokens contained in the tokenized string
-	 */
-	public static List<String> getTokens(String str, String delimiter) {
-		ArrayList<String> l = new ArrayList<String>();
-		StringTokenizer tokens = new StringTokenizer(str, delimiter);
-		while(tokens.hasMoreTokens()) {
-			l.add(tokens.nextToken());
-		}
-		return l;
+        return source;
     }
 
-	/**
-	 * Return the last token in the string.
-	 *
-	 * @param str String to be tokenized
-	 * @param delimiter Characters which are delimit tokens
-	 * @return the last token contained in the tokenized string
-	 */
-	public static String getLastToken(String str, String delimiter) {
+    /**
+     * Replace all occurrences of the search string with the replace string
+     * in the source string. If any of the strings is null or the search string
+     * is zero length, the source string is returned.
+     * @param source the source string whose contents will be altered
+     * @param search the string to search for in source
+     * @param replace the string to substitute for search if present
+     * @return source string with *all* occurrences of the search string
+     * replaced with the replace string
+     */
+    public static String replaceAll(String source, String search, String replace) {
+        if (source == null || search == null || search.length() == 0 || replace == null) {
+            return source;
+        }
+        int start = source.indexOf(search);
+        if (start > -1) {
+            StringBuffer newString = new StringBuffer(source);
+            while (start > -1) {
+                int end = start + search.length();
+                newString.replace(start, end, replace);
+                start = newString.indexOf(search, start + replace.length());
+            }
+            return newString.toString();
+        }
+        return source;
+    }
+
+    /**
+     * Return the tokens in a string in a list. This is particularly
+     * helpful if the tokens need to be processed in reverse order. In that case,
+     * a list iterator can be acquired from the list for reverse order traversal.
+     *
+     * @param str String to be tokenized
+     * @param delimiter Characters which are delimit tokens
+     * @return List of string tokens contained in the tokenized string
+     */
+    public static List<String> getTokens(String str, String delimiter) {
+        ArrayList<String> l = new ArrayList<String>();
+        StringTokenizer tokens = new StringTokenizer(str, delimiter);
+        while(tokens.hasMoreTokens()) {
+            l.add(tokens.nextToken());
+        }
+        return l;
+    }
+
+    /**
+     * Return the last token in the string.
+     *
+     * @param str String to be tokenized
+     * @param delimiter Characters which are delimit tokens
+     * @return the last token contained in the tokenized string
+     */
+    public static String getLastToken(String str, String delimiter) {
         if (str == null) {
             return Constants.EMPTY_STRING;
         }
@@ -213,25 +213,25 @@ public final class StringUtil {
     }
 
 
-	/**
-	 * Return the first token in the string.
-	 *
-	 * @param str String to be tokenized
-	 * @param delimiter Characters which are delimit tokens
-	 * @return the first token contained in the tokenized string
-	 */
-	public static String getFirstToken(String str, String delimiter) {
+    /**
+     * Return the first token in the string.
+     *
+     * @param str String to be tokenized
+     * @param delimiter Characters which are delimit tokens
+     * @return the first token contained in the tokenized string
+     */
+    public static String getFirstToken(String str, String delimiter) {
         if (str == null) {
             return Constants.EMPTY_STRING;
         }
         int endIndex = str.indexOf(delimiter);
         if (endIndex < 0) {
-        	endIndex = str.length();
+            endIndex = str.length();
         }
         return str.substring(0,endIndex);
     }
 
-	public static String getStackTrace( final Throwable t ) {
+    public static String getStackTrace( final Throwable t ) {
         final ByteArrayOutputStream bas = new ByteArrayOutputStream();
         final PrintWriter pw = new PrintWriter(bas);
         t.printStackTrace(pw);
@@ -241,14 +241,14 @@ public final class StringUtil {
 
     /**<p>
      * Returns whether the specified text is either empty or null.
-	 * </p>
+     * </p>
      * @param text The text to check; may be null;
      * @return True if the specified text is either empty or null.
-	 * @since 4.0
-	 */
-	public static boolean isEmpty(final String text) {
+     * @since 4.0
+     */
+    public static boolean isEmpty(final String text) {
         return (text == null  ||  text.length() == 0);
-	}
+    }
 
     /**
      * Returns the index within this string of the first occurrence of the
@@ -309,7 +309,7 @@ public final class StringUtil {
      * Tests if the string ends with the specified suffix.
      */
     public static boolean endsWithIgnoreCase(final String text, final String suffix) {
-    	if (text == null || suffix == null) {
+        if (text == null || suffix == null) {
             return false;
         }
         return text.regionMatches(true, text.length() - suffix.length(), suffix, 0, suffix.length());
@@ -346,206 +346,206 @@ public final class StringUtil {
      * @return
      */
     @SuppressWarnings("unchecked")
-	public static <T> T valueOf(String value, Class type){
-    	if (value == null) {
-    		return null;
-    	}
-    	if(type == String.class) {
-    		return (T) value;
-    	}
-    	else if(type == Boolean.class || type == Boolean.TYPE) {
-    		return (T) Boolean.valueOf(value);
-    	}
-    	else if (type == Integer.class || type == Integer.TYPE) {
-    		return (T) Integer.decode(value);
-    	}
-    	else if (type == Float.class || type == Float.TYPE) {
-    		return (T) Float.valueOf(value);
-    	}
-    	else if (type == Double.class || type == Double.TYPE) {
-    		return (T) Double.valueOf(value);
-    	}
-    	else if (type == Long.class || type == Long.TYPE) {
-    		return (T) Long.decode(value);
-    	}
-    	else if (type == Short.class || type == Short.TYPE) {
-    		return (T) Short.decode(value);
-    	}
-    	else if (type.isAssignableFrom(List.class)) {
-    		return (T)new ArrayList<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
-    	}
-    	else if (type.isAssignableFrom(Set.class)) {
-    		return (T)new HashSet<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
-    	}
-    	else if (type.isArray()) {
-    		String[] values = value.split(","); //$NON-NLS-1$
-    		Object array = Array.newInstance(type.getComponentType(), values.length);
-    		for (int i = 0; i < values.length; i++) {
-				Array.set(array, i, valueOf(values[i], type.getComponentType()));
-			}
-    		return (T)array;
-    	}
-    	else if (type == Void.class) {
-    		return null;
-    	}
-    	else if (type.isEnum()) {
-    		return (T)Enum.valueOf(type, value);
-    	}
-    	else if (type == URL.class) {
-    		try {
-				return (T)new URL(value);
-			} catch (MalformedURLException e) {
-				// fall through and end up in error
-			}
-    	}
-    	else if (type.isAssignableFrom(Map.class)) {
-    		List<String> l = Arrays.asList(value.split(",")); //$NON-NLS-1$
-    		Map m = new HashMap<String, String>();
-    		for(String key: l) {
-    			int index = key.indexOf('=');
-    			if (index != -1) {
-    				m.put(key.substring(0, index), key.substring(index+1));
-    			}
-    		}
-    		return (T)m;
-    	}
+    public static <T> T valueOf(String value, Class type){
+        if (value == null) {
+            return null;
+        }
+        if(type == String.class) {
+            return (T) value;
+        }
+        else if(type == Boolean.class || type == Boolean.TYPE) {
+            return (T) Boolean.valueOf(value);
+        }
+        else if (type == Integer.class || type == Integer.TYPE) {
+            return (T) Integer.decode(value);
+        }
+        else if (type == Float.class || type == Float.TYPE) {
+            return (T) Float.valueOf(value);
+        }
+        else if (type == Double.class || type == Double.TYPE) {
+            return (T) Double.valueOf(value);
+        }
+        else if (type == Long.class || type == Long.TYPE) {
+            return (T) Long.decode(value);
+        }
+        else if (type == Short.class || type == Short.TYPE) {
+            return (T) Short.decode(value);
+        }
+        else if (type.isAssignableFrom(List.class)) {
+            return (T)new ArrayList<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
+        }
+        else if (type.isAssignableFrom(Set.class)) {
+            return (T)new HashSet<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
+        }
+        else if (type.isArray()) {
+            String[] values = value.split(","); //$NON-NLS-1$
+            Object array = Array.newInstance(type.getComponentType(), values.length);
+            for (int i = 0; i < values.length; i++) {
+                Array.set(array, i, valueOf(values[i], type.getComponentType()));
+            }
+            return (T)array;
+        }
+        else if (type == Void.class) {
+            return null;
+        }
+        else if (type.isEnum()) {
+            return (T)Enum.valueOf(type, value);
+        }
+        else if (type == URL.class) {
+            try {
+                return (T)new URL(value);
+            } catch (MalformedURLException e) {
+                // fall through and end up in error
+            }
+        }
+        else if (type.isAssignableFrom(Map.class)) {
+            List<String> l = Arrays.asList(value.split(",")); //$NON-NLS-1$
+            Map m = new HashMap<String, String>();
+            for(String key: l) {
+                int index = key.indexOf('=');
+                if (index != -1) {
+                    m.put(key.substring(0, index), key.substring(index+1));
+                }
+            }
+            return (T)m;
+        }
 
-    	throw new IllegalArgumentException("Conversion from String to "+ type.getName() + " is not supported"); //$NON-NLS-1$ //$NON-NLS-2$
+        throw new IllegalArgumentException("Conversion from String to "+ type.getName() + " is not supported"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	public static boolean equalsIgnoreCase(String s1, String s2) {
-		if (s1 != null) {
-			return s1.equalsIgnoreCase(s2);
-		} else if (s2 != null) {
-			return false;
-		}
-		return true;
-	}
+    public static boolean equalsIgnoreCase(String s1, String s2) {
+        if (s1 != null) {
+            return s1.equalsIgnoreCase(s2);
+        } else if (s2 != null) {
+            return false;
+        }
+        return true;
+    }
 
-	public static <T extends Enum<T>> T caseInsensitiveValueOf(Class<T> enumType, String name) {
-		try {
-			return Enum.valueOf(enumType, name);
-		} catch (IllegalArgumentException e) {
-			T[] vals = enumType.getEnumConstants();
-			for (T t : vals) {
-				if (name.equalsIgnoreCase(t.name())) {
-					return t;
-				}
-			}
-			throw e;
-		}
-	}
+    public static <T extends Enum<T>> T caseInsensitiveValueOf(Class<T> enumType, String name) {
+        try {
+            return Enum.valueOf(enumType, name);
+        } catch (IllegalArgumentException e) {
+            T[] vals = enumType.getEnumConstants();
+            for (T t : vals) {
+                if (name.equalsIgnoreCase(t.name())) {
+                    return t;
+                }
+            }
+            throw e;
+        }
+    }
 
-	public static List<String> tokenize(String str, char delim) {
-		ArrayList<String> result = new ArrayList<String>();
-		StringBuilder current = new StringBuilder();
-		boolean escaped = false;
-		for (int i = 0; i < str.length(); i++) {
-			char c = str.charAt(i);
-			if (c == delim) {
-				if (escaped) {
-					current.append(c);
-					escaped = false;
-				} else {
-					escaped = true;
-				}
-			} else {
-				if (escaped && current.length() > 0) {
-					result.add(current.toString());
-					current.setLength(0);
-					escaped = false;
-				}
-				current.append(c);
-			}
-		}
-		if (current.length()>0) {
-			result.add(current.toString());
-		}
-		return result;
-	}
+    public static List<String> tokenize(String str, char delim) {
+        ArrayList<String> result = new ArrayList<String>();
+        StringBuilder current = new StringBuilder();
+        boolean escaped = false;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (c == delim) {
+                if (escaped) {
+                    current.append(c);
+                    escaped = false;
+                } else {
+                    escaped = true;
+                }
+            } else {
+                if (escaped && current.length() > 0) {
+                    result.add(current.toString());
+                    current.setLength(0);
+                    escaped = false;
+                }
+                current.append(c);
+            }
+        }
+        if (current.length()>0) {
+            result.add(current.toString());
+        }
+        return result;
+    }
 
-	/**
-	 * Unescape the given string
-	 * @param string
-	 * @param quoteChar
-	 * @param useAsciiEscapes
-	 * @param sb a scratch buffer to use
-	 * @return
-	 */
+    /**
+     * Unescape the given string
+     * @param string
+     * @param quoteChar
+     * @param useAsciiEscapes
+     * @param sb a scratch buffer to use
+     * @return
+     */
     public static String unescape(CharSequence string, int quoteChar, boolean useAsciiEscapes, StringBuilder sb) {
-    	boolean escaped = false;
+        boolean escaped = false;
 
-    	for (int i = 0; i < string.length(); i++) {
-    		char c = string.charAt(i);
-    		if (escaped) {
-	    		switch (c) {
-	    		case 'b':
-	    			sb.append('\b');
-	    			break;
-	    		case 't':
-	    			sb.append('\t');
-	    			break;
-	    		case 'n':
-	    			sb.append('\n');
-	    			break;
-	    		case 'f':
-	    			sb.append('\f');
-	    			break;
-	    		case 'r':
-	    			sb.append('\r');
-	    			break;
-	    		case 'u':
-					i = parseNumericValue(string, sb, i, 0, 4, 4);
-					//TODO: this should probably be strict about needing 4 digits
-	    			break;
-    			default:
-    				if (c == quoteChar) {
-    					sb.append(quoteChar);
-    				} else if (useAsciiEscapes) {
-	    				int value = Character.digit(c, 8);
-						if (value == -1) {
-							sb.append(c);
-						} else {
-							int possibleDigits = value < 3 ? 2:1;
-							int radixExp = 3;
-	    					i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
-	    				}
-    				}
-	    		}
-	    		escaped = false;
-    		} else {
-    			if (c == '\\') {
-    				escaped = true;
-    			} else if (c == quoteChar) {
-    				break;
-    			} else {
-					sb.append(c);
-    			}
-    		}
-    	}
-    	//TODO: should this be strict?
-    	//if (escaped) {
-    		//throw new FunctionExecutionException();
-    	//}
-    	return sb.toString();
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (escaped) {
+                switch (c) {
+                case 'b':
+                    sb.append('\b');
+                    break;
+                case 't':
+                    sb.append('\t');
+                    break;
+                case 'n':
+                    sb.append('\n');
+                    break;
+                case 'f':
+                    sb.append('\f');
+                    break;
+                case 'r':
+                    sb.append('\r');
+                    break;
+                case 'u':
+                    i = parseNumericValue(string, sb, i, 0, 4, 4);
+                    //TODO: this should probably be strict about needing 4 digits
+                    break;
+                default:
+                    if (c == quoteChar) {
+                        sb.append(quoteChar);
+                    } else if (useAsciiEscapes) {
+                        int value = Character.digit(c, 8);
+                        if (value == -1) {
+                            sb.append(c);
+                        } else {
+                            int possibleDigits = value < 3 ? 2:1;
+                            int radixExp = 3;
+                            i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
+                        }
+                    }
+                }
+                escaped = false;
+            } else {
+                if (c == '\\') {
+                    escaped = true;
+                } else if (c == quoteChar) {
+                    break;
+                } else {
+                    sb.append(c);
+                }
+            }
+        }
+        //TODO: should this be strict?
+        //if (escaped) {
+            //throw new FunctionExecutionException();
+        //}
+        return sb.toString();
     }
 
-	private static int parseNumericValue(CharSequence string, StringBuilder sb,
-			int i, int value, int possibleDigits, int radixExp) {
-		for (int j = 0; j < possibleDigits; j++) {
-			if (i + 1 == string.length()) {
-				break;
-			}
-			char digit = string.charAt(i + 1);
-			int val = Character.digit(digit, 1 << radixExp);
-			if (val == -1) {
-				break;
-			}
-			i++;
-			value = (value << radixExp) + val;
-		}
-		sb.append((char)value);
-		return i;
-	}
+    private static int parseNumericValue(CharSequence string, StringBuilder sb,
+            int i, int value, int possibleDigits, int radixExp) {
+        for (int j = 0; j < possibleDigits; j++) {
+            if (i + 1 == string.length()) {
+                break;
+            }
+            char digit = string.charAt(i + 1);
+            int val = Character.digit(digit, 1 << radixExp);
+            if (val == -1) {
+                break;
+            }
+            i++;
+            value = (value << radixExp) + val;
+        }
+        sb.append((char)value);
+        return i;
+    }
 
 }

@@ -96,11 +96,11 @@ public class TestNetezzaTranslatorDatetimeConversion {
      }
 
      @Test public void testTimestampToString() throws Exception {
-		  String input = "SELECT convert(timestampvalue, string) FROM BQT1.SMALLA";
-		  String output = "SELECT to_char(SmallA.TimestampValue, 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";
+          String input = "SELECT convert(timestampvalue, string) FROM BQT1.SMALLA";
+          String output = "SELECT to_char(SmallA.TimestampValue, 'YYYY-MM-DD HH24:MI:SS.MS') FROM SmallA";
 
-	      TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
-	  }
+          TranslationHelper.helpTestVisitor(getTestBQTVDB(), input, output, TRANSLATOR);
+      }
      ///END--FROM TIMESTAMP->DATE, TIME, STRING////////
 
      ///BEGIN--FROM DATE->TIMESTAMP////////
@@ -124,7 +124,7 @@ public class TestNetezzaTranslatorDatetimeConversion {
 
 
 //     @Test public void testTimestampToTime() throws Exception {
-//      	helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "TIME", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
+//          helpTest(LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(111, 4, 5, 9, 16, 34, 220000000), Timestamp.class), "TIME", "cast(cast('2011-05-05 09:16:34.22' AS TIMESTAMP(6)) AS TIME)");
 //      }
 
 

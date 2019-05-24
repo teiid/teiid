@@ -47,8 +47,8 @@ public interface ValueIteratorSource {
 
     Set<Object> getCachedSet(Expression valueExpression) throws TeiidComponentException, TeiidProcessingException;
 
-	void setUnused(boolean unused);
+    void setUnused(boolean unused);
 
-	boolean isUnused();
+    boolean isUnused();
 
 }

@@ -134,8 +134,8 @@ public class TestQueryProcessor {
 
         CommandContext context = new CommandContext("pid", "group", null, null, 1); //$NON-NLS-1$ //$NON-NLS-2$
 
-    	QueryProcessor processor = new QueryProcessor(null, context, bufferMgr, dataManager);
-    	processor.closeProcessing();
+        QueryProcessor processor = new QueryProcessor(null, context, bufferMgr, dataManager);
+        processor.closeProcessing();
     }
 
 

@@ -56,27 +56,27 @@ public class TranslationUtility {
         initWrapper(VDBMetadataFactory.getVDBMetadata(vdbFile));
     }
 
-	private void initWrapper(QueryMetadataInterface acutalMetadata) {
-		functionLibrary = acutalMetadata.getFunctionLibrary();
-		this.functions.addAll(Arrays.asList(this.functionLibrary.getUserFunctions()));
-		metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
-        	@Override
-        	public FunctionLibrary getFunctionLibrary() {
-        		return functionLibrary;
-        	}
+    private void initWrapper(QueryMetadataInterface acutalMetadata) {
+        functionLibrary = acutalMetadata.getFunctionLibrary();
+        this.functions.addAll(Arrays.asList(this.functionLibrary.getUserFunctions()));
+        metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
+            @Override
+            public FunctionLibrary getFunctionLibrary() {
+                return functionLibrary;
+            }
         };
-	}
+    }
 
     public TranslationUtility(String vdbName, URL url) {
         try {
-    		initWrapper(VDBMetadataFactory.getVDBMetadata(vdbName, url));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+            initWrapper(VDBMetadataFactory.getVDBMetadata(vdbName, url));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public TranslationUtility(QueryMetadataInterface metadata) {
-    	initWrapper(metadata);
+        initWrapper(metadata);
     }
 
     public Command parseCommand(String sql, boolean generateAliases, boolean supportsGroupAliases) {
@@ -107,12 +107,12 @@ public class TranslationUtility {
     private List<FunctionTree> functions = new ArrayList<FunctionTree>();
 
     public void addUDF(String schema, Collection<FunctionMethod> methods) {
-    	if (methods == null || methods.isEmpty()) {
-    		return;
-    	}
-    	this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
-		SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
-		functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
+        if (methods == null || methods.isEmpty()) {
+            return;
+        }
+        this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
+        SystemFunctionManager sfm = SystemMetadata.getInstance().getSystemFunctionManager();
+        functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));
     }
 
 }

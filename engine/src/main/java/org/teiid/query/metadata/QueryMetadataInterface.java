@@ -42,10 +42,10 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public interface QueryMetadataInterface {
 
-	/**
-	 * Unknown cardinality.
-	 */
-	int UNKNOWN_CARDINALITY = -1;
+    /**
+     * Unknown cardinality.
+     */
+    int UNKNOWN_CARDINALITY = -1;
 
     /**
      * Get the metadata-implementation identifier object for the given element name.
@@ -112,23 +112,23 @@ public interface QueryMetadataInterface {
      */
     String getName(Object metadataID) throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get list of metadata element IDs for a group ID
-	 * @param groupID Group ID
-	 * @return List of Object, where each object is a metadata elementID for element within group
+    /**
+     * Get list of metadata element IDs for a group ID
+     * @param groupID Group ID
+     * @return List of Object, where each object is a metadata elementID for element within group
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     List getElementIDsInGroupID(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get containg group ID given element ID
-	 * @param elementID Element ID
-	 * @return Group ID containing elementID
+    /**
+     * Get containg group ID given element ID
+     * @param elementID Element ID
+     * @return Group ID containing elementID
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     Object getGroupIDForElementID(Object elementID)
         throws TeiidComponentException, QueryMetadataException;
 
@@ -150,8 +150,8 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-	String getElementRuntimeTypeName(Object elementID)
-		throws TeiidComponentException, QueryMetadataException;
+    String getElementRuntimeTypeName(Object elementID)
+        throws TeiidComponentException, QueryMetadataException;
 
     /**
      * Get the element's default value for an element symbol
@@ -255,13 +255,13 @@ public interface QueryMetadataInterface {
     float getNullValues(Object elementID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Determine whether a group is virtual or not.
-	 * @param symbol Group symbol
-	 * @return True if virtual
+    /**
+     * Determine whether a group is virtual or not.
+     * @param symbol Group symbol
+     * @return True if virtual
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     boolean isVirtualGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
@@ -275,68 +275,68 @@ public interface QueryMetadataInterface {
     boolean isVirtualModel(Object modelID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get virtual plan for a group symbol.
-	 * @param symbol Group
-	 * @return Root of tree of QueryNode objects
-	 */
+    /**
+     * Get virtual plan for a group symbol.
+     * @param symbol Group
+     * @return Root of tree of QueryNode objects
+     */
     QueryNode getVirtualPlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get procedure defining the insert plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the insert plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     String getInsertPlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get procedure defining the update plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the update plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     String getUpdatePlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get procedure defining the delete plan for this group.
-	 * @param symbol Group
-	 * @return A string giving the procedure for inserts.
-	 */
+    /**
+     * Get procedure defining the delete plan for this group.
+     * @param symbol Group
+     * @return A string giving the procedure for inserts.
+     */
     String getDeletePlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Determine whether the specified model supports some feature.
-	 * @param modelID Metadata identifier specifying the model
-	 * @param modelConstant Constant from {@link SupportConstants.Model}
-	 * @return True if model supports feature
+    /**
+     * Determine whether the specified model supports some feature.
+     * @param modelID Metadata identifier specifying the model
+     * @param modelConstant Constant from {@link SupportConstants.Model}
+     * @return True if model supports feature
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     boolean modelSupports(Object modelID, int modelConstant)
         throws TeiidComponentException,QueryMetadataException;
 
-	/**
-	 * Determine whether the specified group supports some feature.
-	 * @param groupID Group metadata ID
-	 * @param groupConstant Constant from {@link SupportConstants.Group}
-	 * @return True if group supports feature
+    /**
+     * Determine whether the specified group supports some feature.
+     * @param groupID Group metadata ID
+     * @param groupConstant Constant from {@link SupportConstants.Group}
+     * @return True if group supports feature
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     boolean groupSupports(Object groupID, int groupConstant)
         throws TeiidComponentException,QueryMetadataException;
 
-	/**
-	 * Determine whether the specified element supports some feature.
-	 * @param elementID Element metadata ID
-	 * @param elementConstant Constant from {@link SupportConstants.Element}
-	 * @return True if element supports feature
+    /**
+     * Determine whether the specified element supports some feature.
+     * @param elementID Element metadata ID
+     * @param elementConstant Constant from {@link SupportConstants.Element}
+     * @return True if element supports feature
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     boolean elementSupports(Object elementID, int elementConstant)
         throws TeiidComponentException,QueryMetadataException;
 
@@ -350,13 +350,13 @@ public interface QueryMetadataInterface {
     Properties getExtensionProperties(Object metadataID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get the max set size for the specified model.
-	 * @param modelID Metadata identifier specifying model
-	 * @return Maximum set size
+    /**
+     * Get the max set size for the specified model.
+     * @param modelID Metadata identifier specifying model
+     * @return Maximum set size
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     int getMaxSetSize(Object modelID)
         throws TeiidComponentException, QueryMetadataException;
 
@@ -370,14 +370,14 @@ public interface QueryMetadataInterface {
     Collection getIndexesInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get the unique keys for the specified group (primary and unique keys)
-	 * The primary key if present will be first in the collection
-	 * @param groupID Metadata identifier specifying group
-	 * @return Collection of Object (never null), each object representing a unique key
+    /**
+     * Get the unique keys for the specified group (primary and unique keys)
+     * The primary key if present will be first in the collection
+     * @param groupID Metadata identifier specifying group
+     * @return Collection of Object (never null), each object representing a unique key
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     Collection getUniqueKeysInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException;
 
@@ -422,13 +422,13 @@ public interface QueryMetadataInterface {
     List getElementIDsInIndex(Object index)
         throws TeiidComponentException, QueryMetadataException;
 
-	/**
-	 * Get the elements in the key
-	 * @param key Key identifier, as returned by {@link #getUniqueKeysInGroup}
-	 * @return List of Object, where each object is a metadata element identifier
+    /**
+     * Get the elements in the key
+     * @param key Key identifier, as returned by {@link #getUniqueKeysInGroup}
+     * @return List of Object, where each object is a metadata element identifier
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
-	 */
+     */
     List getElementIDsInKey(Object key)
         throws TeiidComponentException, QueryMetadataException;
 
@@ -458,7 +458,7 @@ public interface QueryMetadataInterface {
     * @return cardinality for the given group. If unknown, return UNKNOWN_CARDINALITY.
     */
    float getCardinality(Object groupID)
-    	throws TeiidComponentException, QueryMetadataException;
+        throws TeiidComponentException, QueryMetadataException;
 
     /**
      * Get the name in source of the metadata identifier specified. This metadata
@@ -540,7 +540,7 @@ public interface QueryMetadataInterface {
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
     boolean isProcedure(Object groupID)
-    	throws TeiidComponentException, QueryMetadataException;
+        throws TeiidComponentException, QueryMetadataException;
 
     /**
      * Gets the resource paths of all the resources in the VDB.
@@ -583,13 +583,13 @@ public interface QueryMetadataInterface {
         throws TeiidComponentException, QueryMetadataException;
 
     Object addToMetadataCache(Object metadataID, String key, Object value)
-    	throws TeiidComponentException, QueryMetadataException;
+        throws TeiidComponentException, QueryMetadataException;
 
     Object getFromMetadataCache(Object metadataID, String key)
-    	throws TeiidComponentException, QueryMetadataException;
+        throws TeiidComponentException, QueryMetadataException;
 
     boolean isScalarGroup(Object groupID)
-    	throws TeiidComponentException, QueryMetadataException;
+        throws TeiidComponentException, QueryMetadataException;
 
     FunctionLibrary getFunctionLibrary();
 
@@ -611,41 +611,41 @@ public interface QueryMetadataInterface {
      * Get the metadata without visibility and session tables
      * @return
      */
-	QueryMetadataInterface getDesignTimeMetadata();
+    QueryMetadataInterface getDesignTimeMetadata();
 
-	/**
-	 * Return true if a procedure exists with the given name (partial or fqn)
-	 * @param name
-	 * @return
-	 * @throws TeiidComponentException
-	 */
-	boolean hasProcedure(String name) throws TeiidComponentException;
+    /**
+     * Return true if a procedure exists with the given name (partial or fqn)
+     * @param name
+     * @return
+     * @throws TeiidComponentException
+     */
+    boolean hasProcedure(String name) throws TeiidComponentException;
 
-	QueryMetadataInterface getSessionMetadata();
+    QueryMetadataInterface getSessionMetadata();
 
-	Set<String> getImportedModels();
+    Set<String> getImportedModels();
 
-	boolean isVariadic(Object metadataID);
+    boolean isVariadic(Object metadataID);
 
-	Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID);
+    Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID);
 
-	boolean isPseudo(Object elementId);
+    boolean isPseudo(Object elementId);
 
-	String getExtensionProperty(Object metadataID, String key,
-			boolean checkUnqualified);
+    String getExtensionProperty(Object metadataID, String key,
+            boolean checkUnqualified);
 
-	boolean useOutputName();
+    boolean useOutputName();
 
-	boolean findShortName();
+    boolean findShortName();
 
-	boolean widenComparisonToString();
+    boolean widenComparisonToString();
 
-	/**
-	 * Get the runtime type class for the given type name, which may include domains
-	 * @param typeName
-	 * @return
-	 * @throws QueryMetadataException
-	 */
+    /**
+     * Get the runtime type class for the given type name, which may include domains
+     * @param typeName
+     * @return
+     * @throws QueryMetadataException
+     */
     Class<?> getDataTypeClass(String typeOrDomainName) throws QueryMetadataException;
 
     boolean isEnvAllowed();

@@ -30,13 +30,13 @@ public class JPAPlugin {
     public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
 
     public static enum Event implements BundleUtil.Event{
-    	TEIID14001,
-    	TEIID14002,
-    	TEIID14003,
-    	TEIID14004,
-    	TEIID14005,
-    	TEIID14006,
-    	TEIID14007,
-    	TEIID14008
+        TEIID14001,
+        TEIID14002,
+        TEIID14003,
+        TEIID14004,
+        TEIID14005,
+        TEIID14006,
+        TEIID14007,
+        TEIID14008
     }
 }

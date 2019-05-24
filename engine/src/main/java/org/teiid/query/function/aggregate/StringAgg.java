@@ -53,96 +53,96 @@ public class StringAgg extends AggregateFunction {
     private boolean binary;
 
     public StringAgg(boolean binary) {
-    	this.binary = binary;
-	}
+        this.binary = binary;
+    }
 
-	private FileStoreInputStreamFactory buildResult(CommandContext context) {
-		FileStore fs = context.getBufferManager().createFileStore("string_agg"); //$NON-NLS-1$
-		FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-		return fisf;
-	}
+    private FileStoreInputStreamFactory buildResult(CommandContext context) {
+        FileStore fs = context.getBufferManager().createFileStore("string_agg"); //$NON-NLS-1$
+        FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+        return fisf;
+    }
 
     public void reset() {
-    	this.result = null;
+        this.result = null;
     }
 
     @Override
     public void addInputDirect(List<?> tuple, CommandContext commandContext)
-    		throws TeiidComponentException, TeiidProcessingException {
-    	boolean first = false;
-    	if (result == null) {
-    		first = true;
-    		result = buildResult(commandContext);
-    	}
-    	if (!first) {
-    		Object delim = tuple.get(argIndexes[1]);
-    		writeValue(delim);
-    	}
-    	Object val = tuple.get(argIndexes[0]);
-    	writeValue(val);
+            throws TeiidComponentException, TeiidProcessingException {
+        boolean first = false;
+        if (result == null) {
+            first = true;
+            result = buildResult(commandContext);
+        }
+        if (!first) {
+            Object delim = tuple.get(argIndexes[1]);
+            writeValue(delim);
+        }
+        Object val = tuple.get(argIndexes[0]);
+        writeValue(val);
     }
 
-	private void writeValue(Object val) throws TeiidProcessingException {
-		try {
-			if (binary) {
-				if (val instanceof BinaryType) {
-					result.getOuputStream().write(((BinaryType)val).getBytesDirect());
-					return;
-				}
-				Blob b = (Blob)val;
-				InputStream binaryStream = b.getBinaryStream();
-				try {
-					ObjectConverterUtil.write(result.getOuputStream(), binaryStream, -1, false);
-				} finally {
-					binaryStream.close();
-				}
-			} else {
-				if (val instanceof String) {
-					result.getWriter().write((String)val);
-					return;
-				}
-				Clob c = (Clob)val;
-				Reader characterStream = c.getCharacterStream();
-				try {
-					ObjectConverterUtil.write(result.getWriter(), characterStream, -1, false);
-				} finally {
-					characterStream.close();
-				}
-			}
-		} catch (IOException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
-		} catch (SQLException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
-		}
-	}
+    private void writeValue(Object val) throws TeiidProcessingException {
+        try {
+            if (binary) {
+                if (val instanceof BinaryType) {
+                    result.getOuputStream().write(((BinaryType)val).getBytesDirect());
+                    return;
+                }
+                Blob b = (Blob)val;
+                InputStream binaryStream = b.getBinaryStream();
+                try {
+                    ObjectConverterUtil.write(result.getOuputStream(), binaryStream, -1, false);
+                } finally {
+                    binaryStream.close();
+                }
+            } else {
+                if (val instanceof String) {
+                    result.getWriter().write((String)val);
+                    return;
+                }
+                Clob c = (Clob)val;
+                Reader characterStream = c.getCharacterStream();
+                try {
+                    ObjectConverterUtil.write(result.getWriter(), characterStream, -1, false);
+                } finally {
+                    characterStream.close();
+                }
+            }
+        } catch (IOException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
+        } catch (SQLException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
+        }
+    }
 
     /**
      * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
     public Object getResult(CommandContext commandContext) throws TeiidProcessingException{
-    	if (this.result == null) {
-    		return null;
-    	}
+        if (this.result == null) {
+            return null;
+        }
 
-    	try {
-    		this.result.getWriter().close();
-    		FileStoreOutputStream fs = this.result.getOuputStream();
-			fs.close();
+        try {
+            this.result.getWriter().close();
+            FileStoreOutputStream fs = this.result.getOuputStream();
+            fs.close();
 
-			if (binary) {
-				if (fs.bytesWritten()) {
-					return new BlobType(new BlobImpl(result));
-				}
-				return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
-			}
-			if (fs.bytesWritten()) {
-				return new ClobType(new ClobImpl(result, -1));
-			}
-			return new ClobType(new ClobImpl(new String(Arrays.copyOf(fs.getBuffer(), fs.getCount()), Streamable.ENCODING)));
-		} catch (IOException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
-		}  catch (SQLException e) {
-			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
-		}
+            if (binary) {
+                if (fs.bytesWritten()) {
+                    return new BlobType(new BlobImpl(result));
+                }
+                return new BlobType(new SerialBlob(Arrays.copyOf(fs.getBuffer(), fs.getCount())));
+            }
+            if (fs.bytesWritten()) {
+                return new ClobType(new ClobImpl(result, -1));
+            }
+            return new ClobType(new ClobImpl(new String(Arrays.copyOf(fs.getBuffer(), fs.getCount()), Streamable.ENCODING)));
+        } catch (IOException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30422, e);
+        }  catch (SQLException e) {
+            throw new TeiidProcessingException(QueryPlugin.Event.TEIID30423, e);
+        }
     }
 }

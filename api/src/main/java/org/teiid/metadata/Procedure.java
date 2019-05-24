@@ -33,16 +33,16 @@ import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
  */
 public class Procedure extends AbstractMetadataRecord implements Modifiable {
 
-	private static final long serialVersionUID = 7714869437683360834L;
+    private static final long serialVersionUID = 7714869437683360834L;
 
-	public enum Type {
-		Function,
-		UDF,
-		StoredProc,
-		StoredQuery
-	}
+    public enum Type {
+        Function,
+        UDF,
+        StoredProc,
+        StoredQuery
+    }
 
-	public static final int AUTO_UPDATECOUNT = -1;
+    public static final int AUTO_UPDATECOUNT = -1;
 
     private boolean isFunction;
     private boolean isVirtual;
@@ -55,8 +55,8 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     private volatile transient long lastModified;
 
     public void setParent(Schema parent) {
-		this.parent = parent;
-	}
+        this.parent = parent;
+    }
 
     public boolean isFunction() {
         return isFunction;
@@ -67,11 +67,11 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     }
 
     public Type getType() {
-    	if (isFunction()) {
-        	if (isVirtual()) {
-        		return Type.UDF;
-        	}
-        	return Type.Function;
+        if (isFunction()) {
+            if (isVirtual()) {
+                return Type.UDF;
+            }
+            return Type.Function;
         }
         if (isVirtual()) {
             return Type.StoredQuery;
@@ -83,9 +83,9 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
         return this.updateCount;
     }
 
-	public List<ProcedureParameter> getParameters() {
-		return parameters;
-	}
+    public List<ProcedureParameter> getParameters() {
+        return parameters;
+    }
 
     public ProcedureParameter getParameterByName(String param) {
         for(ProcedureParameter p: this.parameters) {
@@ -96,17 +96,17 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
         return null;
     }
 
-	public void setParameters(List<ProcedureParameter> parameters) {
-		this.parameters = parameters;
-	}
+    public void setParameters(List<ProcedureParameter> parameters) {
+        this.parameters = parameters;
+    }
 
-	public String getQueryPlan() {
-		return queryPlan;
-	}
+    public String getQueryPlan() {
+        return queryPlan;
+    }
 
-	public void setQueryPlan(String queryPlan) {
-		this.queryPlan = queryPlan;
-	}
+    public void setQueryPlan(String queryPlan) {
+        this.queryPlan = queryPlan;
+    }
 
     /**
      * @param b
@@ -123,31 +123,31 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     }
 
     public void setUpdateCount(int count) {
-    	this.updateCount = count;
+        this.updateCount = count;
     }
 
-	public void setResultSet(ColumnSet<Procedure> resultSet) {
-		this.resultSet = resultSet;
-		if (resultSet != null) {
-			resultSet.setParent(this);
-		}
-	}
+    public void setResultSet(ColumnSet<Procedure> resultSet) {
+        this.resultSet = resultSet;
+        if (resultSet != null) {
+            resultSet.setParent(this);
+        }
+    }
 
-	public ColumnSet<Procedure> getResultSet() {
-		return resultSet;
-	}
+    public ColumnSet<Procedure> getResultSet() {
+        return resultSet;
+    }
 
-	@Override
-	public Schema getParent() {
-		return parent;
-	}
+    @Override
+    public Schema getParent() {
+        return parent;
+    }
 
-	public long getLastModified() {
-		return lastModified;
-	}
+    public long getLastModified() {
+        return lastModified;
+    }
 
-	public void setLastModified(long lastModified) {
-		this.lastModified = lastModified;
-	}
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
+    }
 
 }

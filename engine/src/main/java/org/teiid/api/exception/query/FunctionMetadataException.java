@@ -25,9 +25,9 @@ import org.teiid.core.BundleUtil;
  */
 public class FunctionMetadataException extends QueryProcessingException {
 
-	private static final long serialVersionUID = -3315048240596850619L;
+    private static final long serialVersionUID = -3315048240596850619L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public FunctionMetadataException() {

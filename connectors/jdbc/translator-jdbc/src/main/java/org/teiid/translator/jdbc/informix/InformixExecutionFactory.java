@@ -48,11 +48,11 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="informix", description="A translator for Informix Database")
 public class InformixExecutionFactory extends JDBCExecutionFactory {
 
-	private ConvertModifier convertModifier;
+    private ConvertModifier convertModifier;
 
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
+    @Override
+    public void start() throws TranslatorException {
+        super.start();
 
         convertModifier = new ConvertModifier();
         convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
@@ -64,19 +64,19 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         convertModifier.addTypeMapping("smallfloat", FunctionModifier.FLOAT); //$NON-NLS-1$
         convertModifier.addTypeMapping("float", FunctionModifier.DOUBLE); //$NON-NLS-1$
         convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime year to fraction(5)", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("datetime hour to second", FunctionModifier.TIME); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(255)", FunctionModifier.STRING); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("varchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("byte", FunctionModifier.VARBINARY); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
-    	convertModifier.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
+        convertModifier.addTypeMapping("datetime year to fraction(5)", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+        convertModifier.addTypeMapping("datetime hour to second", FunctionModifier.TIME); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varchar(255)", FunctionModifier.STRING); //$NON-NLS-1$
+        convertModifier.addTypeMapping("varchar(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+        convertModifier.addTypeMapping("byte", FunctionModifier.VARBINARY); //$NON-NLS-1$
+        convertModifier.addTypeMapping("blob", FunctionModifier.BLOB); //$NON-NLS-1$
+        convertModifier.addTypeMapping("clob", FunctionModifier.CLOB); //$NON-NLS-1$
 
-    	convertModifier.setWideningNumericImplicit(true);
-    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+        convertModifier.setWideningNumericImplicit(true);
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
 
-	@Override
+    @Override
     public List getSupportedFunctions() {
         List supportedFunctons = new ArrayList();
         supportedFunctons.addAll(super.getSupportedFunctions());
@@ -84,31 +84,31 @@ public class InformixExecutionFactory extends JDBCExecutionFactory {
         return supportedFunctons;
     }
 
-	@Override
-	public boolean supportsConvert(int fromType, int toType) {
-		if (!super.supportsConvert(fromType, toType)) {
-    		return false;
-    	}
-    	if (convertModifier.hasTypeMapping(toType)) {
-    		return true;
-    	}
-    	return false;
-	}
+    @Override
+    public boolean supportsConvert(int fromType, int toType) {
+        if (!super.supportsConvert(fromType, toType)) {
+            return false;
+        }
+        if (convertModifier.hasTypeMapping(toType)) {
+            return true;
+        }
+        return false;
+    }
 
-	/**
+    /**
      * Informix doesn't provide min/max(boolean)
      */
     @Override
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (obj instanceof AggregateFunction) {
-    		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getParameters().size() == 1
-    				&& (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX))
-    				&& TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
-        		return Arrays.asList("cast(", agg.getName(), "(cast(", agg.getParameters().get(0), " as char)) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if (obj instanceof AggregateFunction) {
+            AggregateFunction agg = (AggregateFunction)obj;
+            if (agg.getParameters().size() == 1
+                    && (agg.getName().equalsIgnoreCase(NonReserved.MIN) || agg.getName().equalsIgnoreCase(NonReserved.MAX))
+                    && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
+                return Arrays.asList("cast(", agg.getName(), "(cast(", agg.getParameters().get(0), " as char)) as boolean)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
-    	}
-    	return super.translate(obj, context);
+        }
+        return super.translate(obj, context);
     }
 
     @Override

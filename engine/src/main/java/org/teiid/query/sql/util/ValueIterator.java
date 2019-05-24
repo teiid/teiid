@@ -33,38 +33,38 @@ import org.teiid.core.TeiidComponentException;
  */
 public interface ValueIterator{
 
-	/**
-	 * Returns <tt>true</tt> if the iteration has more values. (In other
-	 * words, returns <tt>true</tt> if <tt>next</tt> would return a value
-	 * rather than throwing an exception.)
-	 * @return <tt>true</tt> if this ValueIterator has more values.
-	 * @throws TeiidComponentException indicating a non business-
-	 * related Exception such as a service or bean being unavailable, or
-	 * a communication failure.
-	 */
-	boolean hasNext()
-	throws TeiidComponentException;
+    /**
+     * Returns <tt>true</tt> if the iteration has more values. (In other
+     * words, returns <tt>true</tt> if <tt>next</tt> would return a value
+     * rather than throwing an exception.)
+     * @return <tt>true</tt> if this ValueIterator has more values.
+     * @throws TeiidComponentException indicating a non business-
+     * related Exception such as a service or bean being unavailable, or
+     * a communication failure.
+     */
+    boolean hasNext()
+    throws TeiidComponentException;
 
-	/**
-	 * Returns the next Expression or Object value in the interation.
-	 * @return the next Expression or Object value in the iteration.
-	 * @throws TeiidComponentException indicating a non business-
-	 * related Exception such as a service or bean being unavailable, or
-	 * a communication failure.
-	 * @throws NoSuchElementException if iteration has no more elements.
-	 */
-	Object next()
-	throws TeiidComponentException;
+    /**
+     * Returns the next Expression or Object value in the interation.
+     * @return the next Expression or Object value in the iteration.
+     * @throws TeiidComponentException indicating a non business-
+     * related Exception such as a service or bean being unavailable, or
+     * a communication failure.
+     * @throws NoSuchElementException if iteration has no more elements.
+     */
+    Object next()
+    throws TeiidComponentException;
 
-	/**
-	 * Optional reset method - allows a single instance of a
-	 * ValueIterator implementation to be resettable, such that the
-	 * next call to {@link #next next} returns the first element in
-	 * the iteration (if any).  This method should be able to be
-	 * called at any point during the lifecycle of a ValueIterator
-	 * instance.
-	 * @throws UnsupportedOperationException if this method is not
-	 * implemented
-	 */
-	void reset();
+    /**
+     * Optional reset method - allows a single instance of a
+     * ValueIterator implementation to be resettable, such that the
+     * next call to {@link #next next} returns the first element in
+     * the iteration (if any).  This method should be able to be
+     * called at any point during the lifecycle of a ValueIterator
+     * instance.
+     * @throws UnsupportedOperationException if this method is not
+     * implemented
+     */
+    void reset();
 }

@@ -141,7 +141,7 @@ public class PassthroughIdentityLoginModule extends AbstractPasswordCredentialLo
               this.storedCredential = wrapGssCredential ? wrapCredential(rawCredential) : rawCredential;
               this.intermediateSubject = GSSUtil.createGssSubject(rawCredential, storedCredential);
               if (this.intermediateSubject == null){
-            	  throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50108));
+                  throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50108));
               }
               log.tracef("created a subject from deletegate credential");
               makeCopy(intermediateSubject, this.subject);

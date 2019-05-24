@@ -132,26 +132,26 @@ public abstract class LanguageVisitor {
     public void visit(TriggerAction obj) {}
     public void visit(ArrayTable obj) {}
 
-	public void visit(AlterView obj) {}
-	public void visit(AlterProcedure obj) {}
+    public void visit(AlterView obj) {}
+    public void visit(AlterProcedure obj) {}
     public void visit(AlterTrigger obj) {}
 
-	public void visit(WindowFunction windowFunction) {}
-	public void visit(WindowSpecification windowSpecification) {}
-	public void visit(WindowFrame windowFrame) {}
+    public void visit(WindowFunction windowFunction) {}
+    public void visit(WindowSpecification windowSpecification) {}
+    public void visit(WindowFrame windowFrame) {}
 
-	public void visit(Array array) {}
-	public void visit(ObjectTable objectTable) {}
+    public void visit(Array array) {}
+    public void visit(ObjectTable objectTable) {}
 
-	public void visit(ExceptionExpression obj) {}
+    public void visit(ExceptionExpression obj) {}
 
-	public void visit(ReturnStatement obj) {}
+    public void visit(ReturnStatement obj) {}
 
-	public void visit(JSONObject obj) {}
+    public void visit(JSONObject obj) {}
 
-	public void visit(XMLExists xmlExists) {}
+    public void visit(XMLExists xmlExists) {}
 
-	public void visit(XMLCast xmlCast) {}
+    public void visit(XMLCast xmlCast) {}
 
-	public void visit(IsDistinctCriteria isDistinctCriteria) {}
+    public void visit(IsDistinctCriteria isDistinctCriteria) {}
 }

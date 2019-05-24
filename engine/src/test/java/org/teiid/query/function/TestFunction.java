@@ -41,19 +41,19 @@ import org.teiid.query.util.CommandContext;
 
 public class TestFunction {
 
-	@Before
-	public void setUp() {
-		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5")); //$NON-NLS-1$
-	}
+    @Before
+    public void setUp() {
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-5")); //$NON-NLS-1$
+    }
 
-	@After
-	public void tearDown() {
-		TimestampWithTimezone.resetCalendar(null);
-	}
+    @After
+    public void tearDown() {
+        TimestampWithTimezone.resetCalendar(null);
+    }
 
     private void helpConcat(String s1, String s2, Object expected) {
         Object actual = FunctionMethods.concat(s1, s2);
-        assertEquals("concat(" + s1 + ", " + s2 + ") failed.", expected, actual);	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("concat(" + s1 + ", " + s2 + ") failed.", expected, actual);     //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public static void helpTrim(String str, boolean left, Object expected) {
@@ -426,7 +426,7 @@ public class TestFunction {
     }
 
     @Test public void testConvertStringChar2() throws Exception {
-    	helpConvert("xx", "char", new Character('x')); //$NON-NLS-1$ //$NON-NLS-2$
+        helpConvert("xx", "char", new Character('x')); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testConvertStringByte1() throws Exception {
@@ -502,7 +502,7 @@ public class TestFunction {
     }
 
     @Test public void testAscii4() throws Exception {
-    	assertNull(FunctionMethods.ascii("")); //$NON-NLS-1$
+        assertNull(FunctionMethods.ascii("")); //$NON-NLS-1$
     }
 
     @Test public void testAscii5() throws Exception {
@@ -571,7 +571,7 @@ public class TestFunction {
     }
 
     @Test public void testLpad7() throws Exception {
-    	helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTestLpad("x", 4, "yq", "qyqx" ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Test public void testRpad1() throws Exception {
@@ -655,7 +655,7 @@ public class TestFunction {
     }
 
     @Test public void testEndsWith2() throws Exception {
-    	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testBitand() throws Exception {
@@ -879,7 +879,7 @@ public class TestFunction {
     }
 
     @Test public void testTimestampAdd2() throws Exception {
-    	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
+        assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(NonReserved.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
     }
 
     @Test public void testTimestampAdd3() throws Exception {
@@ -994,20 +994,20 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Hour_1() throws Exception {
-    	helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                 TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
                 TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                 new Long(0));
-    	//ensure that we get the same answer in a tz with an non-hour aligned offset and no dst
-    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$
-    	try {
-    		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+        //ensure that we get the same answer in a tz with an non-hour aligned offset and no dst
+        TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$
+        try {
+            helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                               new Long(0));
-    	} finally {
-    		TimestampWithTimezone.resetCalendar(null);
-    	}
+        } finally {
+            TimestampWithTimezone.resetCalendar(null);
+        }
     }
 
     @Test public void testTimestampDiffTimeStamp_Week_1() throws Exception {
@@ -1060,7 +1060,7 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Day_1() throws Exception {
-    	// Moving to June, March fails because of DST
+        // Moving to June, March fails because of DST
         helpTestTimestampDiff(NonReserved.SQL_TSI_DAY,
                               TimestampUtil.createTimestamp((2004-1900), 4, 1, 0, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 5, 1, 0, 0, 0, 0),
@@ -1075,17 +1075,17 @@ public class TestFunction {
                               new Long(29));
     }
 
-	@Test public void testTimestampDiffTime_Hour_1() throws Exception {
-		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
-				TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(
-				TimestampUtil.createTime(5, 5, 36).getTime()), new Long(2));
-	}
+    @Test public void testTimestampDiffTime_Hour_1() throws Exception {
+        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
+                TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(
+                TimestampUtil.createTime(5, 5, 36).getTime()), new Long(2));
+    }
 
-	@Test public void testTimestampDiffTime_Hour_2() throws Exception {
-		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
-				TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
-				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-2));
-	}
+    @Test public void testTimestampDiffTime_Hour_2() throws Exception {
+        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR, new Timestamp(
+                TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
+                TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-2));
+    }
 
     @Test public void testParseTimestamp1() throws Exception {
         helpTestParseTimestamp("1993-04-24 3:59:59 PM", "yyyy-MM-dd hh:mm:ss aa", "{ts'1993-04-24 15:59:59.0'}"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1196,15 +1196,15 @@ public class TestFunction {
     }
 
     @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {
-    	FunctionMethods.parseBigDecimal(new CommandContext(), "a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
+        FunctionMethods.parseBigDecimal(new CommandContext(), "a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testParseDateStrictness() throws Exception {
-    	assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testParseTimeWhitespace() throws Exception {
-    	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(new CommandContext(), " 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testMod() {

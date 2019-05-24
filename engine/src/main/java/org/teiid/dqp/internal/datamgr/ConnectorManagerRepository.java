@@ -35,84 +35,84 @@ import org.teiid.translator.ExecutionFactory;
 
 public class ConnectorManagerRepository implements Serializable{
 
-	@SuppressWarnings("serial")
-	public static class ConnectorManagerException extends TeiidException {
-		public ConnectorManagerException(String msg) {
-			super(msg);
-		}
-		public ConnectorManagerException(Throwable t) {
-			super(t);
-		}
-	}
+    @SuppressWarnings("serial")
+    public static class ConnectorManagerException extends TeiidException {
+        public ConnectorManagerException(String msg) {
+            super(msg);
+        }
+        public ConnectorManagerException(Throwable t) {
+            super(t);
+        }
+    }
 
-	/**
-	 * Provides {@link ExecutionFactory}s to the {@link ConnectorManagerRepository}
-	 */
-	public interface ExecutionFactoryProvider {
-		/**
-		 *
-		 * @param name
-		 * @return the named {@link ExecutionFactory} or throw a {@link ConnectorManagerException} if it does not exist
-		 * @throws ConnectorManagerException
-		 */
-		ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException;
-	}
+    /**
+     * Provides {@link ExecutionFactory}s to the {@link ConnectorManagerRepository}
+     */
+    public interface ExecutionFactoryProvider {
+        /**
+         *
+         * @param name
+         * @return the named {@link ExecutionFactory} or throw a {@link ConnectorManagerException} if it does not exist
+         * @throws ConnectorManagerException
+         */
+        ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException;
+    }
 
-	private static final long serialVersionUID = -1611063218178314458L;
+    private static final long serialVersionUID = -1611063218178314458L;
 
-	private Map<String, ConnectorManager> repo = new ConcurrentHashMap<String, ConnectorManager>();
-	private boolean shared;
-	private ExecutionFactoryProvider provider;
+    private Map<String, ConnectorManager> repo = new ConcurrentHashMap<String, ConnectorManager>();
+    private boolean shared;
+    private ExecutionFactoryProvider provider;
 
-	public ConnectorManagerRepository() {
-	}
+    public ConnectorManagerRepository() {
+    }
 
-	protected ConnectorManagerRepository(boolean b) {
-		this.shared = b;
-	}
+    protected ConnectorManagerRepository(boolean b) {
+        this.shared = b;
+    }
 
-	public boolean isShared() {
-		return shared;
-	}
+    public boolean isShared() {
+        return shared;
+    }
 
-	public void addConnectorManager(String connectorName, ConnectorManager mgr) {
-		this.repo.put(connectorName, mgr);
-	}
+    public void addConnectorManager(String connectorName, ConnectorManager mgr) {
+        this.repo.put(connectorName, mgr);
+    }
 
-	public ConnectorManager getConnectorManager(String connectorName) {
-		return this.repo.get(connectorName);
-	}
+    public ConnectorManager getConnectorManager(String connectorName) {
+        return this.repo.get(connectorName);
+    }
 
-	public Map<String, ConnectorManager> getConnectorManagers() {
-		return repo;
-	}
+    public Map<String, ConnectorManager> getConnectorManagers() {
+        return repo;
+    }
 
-	public ConnectorManager removeConnectorManager(String connectorName) {
-		return this.repo.remove(connectorName);
-	}
+    public ConnectorManager removeConnectorManager(String connectorName) {
+        return this.repo.remove(connectorName);
+    }
 
-	public void createConnectorManagers(VDBMetaData deployment, ExecutionFactoryProvider provider) throws ConnectorManagerException {
-		for (ModelMetaData model : deployment.getModelMetaDatas().values()) {
-			List<String> sourceNames = model.getSourceNames();
-			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
-				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31101, model.getName(), deployment.getName(), deployment.getVersion()));
-			}
-			if (sourceNames.size() > 1 && !model.isSupportsMultiSourceBindings()) {
-				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31102, model.getName(), deployment.getName(), deployment.getVersion()));
-			}
-			for (SourceMappingMetadata source : model.getSourceMappings()) {
-				createConnectorManager(deployment, provider, source, false);
-			}
-		}
-	}
+    public void createConnectorManagers(VDBMetaData deployment, ExecutionFactoryProvider provider) throws ConnectorManagerException {
+        for (ModelMetaData model : deployment.getModelMetaDatas().values()) {
+            List<String> sourceNames = model.getSourceNames();
+            if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
+                throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31101, model.getName(), deployment.getName(), deployment.getVersion()));
+            }
+            if (sourceNames.size() > 1 && !model.isSupportsMultiSourceBindings()) {
+                throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31102, model.getName(), deployment.getName(), deployment.getVersion()));
+            }
+            for (SourceMappingMetadata source : model.getSourceMappings()) {
+                createConnectorManager(deployment, provider, source, false);
+            }
+        }
+    }
 
-	public void createConnectorManager(
-			VDBMetaData deployment, ExecutionFactoryProvider provider,
-			SourceMappingMetadata source, boolean replace) throws ConnectorManagerException {
-		String name = source.getTranslatorName();
-		String connection = source.getConnectionJndiName();
-		createConnectorManager(source.getName(), name, connection, provider, replace);
-	}
+    public void createConnectorManager(
+            VDBMetaData deployment, ExecutionFactoryProvider provider,
+            SourceMappingMetadata source, boolean replace) throws ConnectorManagerException {
+        String name = source.getTranslatorName();
+        String connection = source.getConnectionJndiName();
+        createConnectorManager(source.getName(), name, connection, provider, replace);
+    }
 
     public void createConnectorManager(String sourceName, String translatorName, String jndiName,
             ExecutionFactoryProvider provider, boolean replace) throws ConnectorManagerException {
@@ -141,16 +141,16 @@ public class ConnectorManagerRepository implements Serializable{
         addConnectorManager(sourceName, cm);
     }
 
-	protected ConnectorManager createConnectorManager(String name,
-			String connection, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
-		return new ConnectorManager(name, connection, ef);
-	}
+    protected ConnectorManager createConnectorManager(String name,
+            String connection, ExecutionFactory<Object, Object> ef) throws ConnectorManagerException {
+        return new ConnectorManager(name, connection, ef);
+    }
 
-	public void setProvider(ExecutionFactoryProvider provider) {
-		this.provider = provider;
-	}
+    public void setProvider(ExecutionFactoryProvider provider) {
+        this.provider = provider;
+    }
 
-	public ExecutionFactoryProvider getProvider() {
-		return provider;
-	}
+    public ExecutionFactoryProvider getProvider() {
+        return provider;
+    }
 }

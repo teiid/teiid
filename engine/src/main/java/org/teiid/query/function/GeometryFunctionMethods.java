@@ -74,13 +74,13 @@ public class GeometryFunctionMethods {
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static BlobType asEwkb(final GeometryType geometry) {
-    	return GeometryUtils.geometryToEwkb(geometry);
-	}
+    public static BlobType asEwkb(final GeometryType geometry) {
+        return GeometryUtils.geometryToEwkb(geometry);
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ASGML,
                    category=FunctionCategoryConstants.GEOMETRY,
-        		   pushdown=PushDown.CAN_PUSHDOWN,
+                   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static ClobType asGml(CommandContext context, GeometryType geometry)
             throws FunctionExecutionException {
@@ -101,7 +101,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true)
     public static GeometryType geomFromText(ClobType wkt)
             throws FunctionExecutionException {
-    	return GeometryUtils.geometryFromClob(wkt);
+        return GeometryUtils.geometryFromClob(wkt);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMTEXT,
@@ -110,7 +110,7 @@ public class GeometryFunctionMethods {
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType geomFromText(ClobType wkt, int srid)
             throws FunctionExecutionException {
-    	return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(wkt, srid, false));
+        return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(wkt, srid, false));
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
@@ -119,17 +119,17 @@ public class GeometryFunctionMethods {
                    alias="ST_GEOMFROMBINARY")
     public static GeometryType geoFromBlob(BlobType wkb)
             throws FunctionExecutionException {
-    	return GeometryUtils.geometryFromBlob(wkb);
+        return GeometryUtils.geometryFromBlob(wkb);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMWKB,
                    category=FunctionCategoryConstants.GEOMETRY,
                    pushdown=PushDown.CAN_PUSHDOWN,
-        		   nullOnNull=true,
+                   nullOnNull=true,
                    alias="ST_GEOMFROMBINARY")
     public static GeometryType geoFromBlob(BlobType wkb, int srid)
             throws FunctionExecutionException {
-    	return GeometryUtils.geometryFromBlob(wkb, srid);
+        return GeometryUtils.geometryFromBlob(wkb, srid);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
@@ -142,7 +142,7 @@ public class GeometryFunctionMethods {
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMGML,
                    category=FunctionCategoryConstants.GEOMETRY,
-        		   pushdown=PushDown.CAN_PUSHDOWN,
+                   pushdown=PushDown.CAN_PUSHDOWN,
                    nullOnNull=true)
     public static GeometryType geomFromGml(ClobType gml, int srid)
             throws FunctionExecutionException {
@@ -154,7 +154,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean intersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.intersects(geom1, geom2);
+        return GeometryUtils.intersects(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_CONTAINS,
@@ -162,7 +162,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean contains(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.contains(geom1, geom2);
+        return GeometryUtils.contains(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_CROSSES,
@@ -170,7 +170,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean crosses(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.crosses(geom1, geom2);
+        return GeometryUtils.crosses(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_DISJOINT,
@@ -178,7 +178,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean disjoint(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.disjoint(geom1, geom2);
+        return GeometryUtils.disjoint(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_DISTANCE,
@@ -186,7 +186,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Double distance(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.distance(geom1, geom2);
+        return GeometryUtils.distance(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_OVERLAPS,
@@ -194,7 +194,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean overlaps(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.overlaps(geom1, geom2);
+        return GeometryUtils.overlaps(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_TOUCHES,
@@ -202,42 +202,42 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean touches(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.touches(geom1, geom2);
+        return GeometryUtils.touches(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_SRID,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static int getSrid(GeometryType geom1) {
+    public static int getSrid(GeometryType geom1) {
         return geom1.getSrid();
-	}
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_SETSRID,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static GeometryType setSrid(GeometryType geom1, int srid) {
-    	GeometryType gt = new GeometryType();
-    	gt.setReference(geom1.getReference());
-    	gt.setSrid(srid);
+    public static GeometryType setSrid(GeometryType geom1, int srid) {
+        GeometryType gt = new GeometryType();
+        gt.setReference(geom1.getReference());
+        gt.setSrid(srid);
         return gt;
-	}
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_EQUALS,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+    public static Boolean equals(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
         return GeometryUtils.equals(geom1, geom2);
-	}
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ENVELOPE,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType envelope(GeometryType geom) throws FunctionExecutionException {
-    	return GeometryUtils.envelope(geom);
+        return GeometryUtils.envelope(geom);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_WITHIN,
@@ -245,7 +245,7 @@ public class GeometryFunctionMethods {
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean within(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.within(geom1, geom2);
+        return GeometryUtils.within(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_DWITHIN,
@@ -253,7 +253,7 @@ public class GeometryFunctionMethods {
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
     public static Boolean dwithin(GeometryType geom1, GeometryType geom2, double distance) throws FunctionExecutionException {
-    	return GeometryUtils.dwithin(geom1, geom2, distance);
+        return GeometryUtils.dwithin(geom1, geom2, distance);
     }
 
     /*
@@ -264,11 +264,11 @@ public class GeometryFunctionMethods {
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static GeometryType simplify(GeometryType geom,
-	                                  double tolerance)
-	                                		  throws FunctionExecutionException {
-    	return GeometryUtils.simplify(geom, tolerance);
-	}
+    public static GeometryType simplify(GeometryType geom,
+                                      double tolerance)
+                                              throws FunctionExecutionException {
+        return GeometryUtils.simplify(geom, tolerance);
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_SIMPLIFYPRESERVETOPOLOGY,
             category=FunctionCategoryConstants.GEOMETRY,
@@ -284,43 +284,43 @@ public class GeometryFunctionMethods {
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static GeometryType force2D(GeometryType geom) {
-    	return geom; //higher dimensions not supported
-	}
+    public static GeometryType force2D(GeometryType geom) {
+        return geom; //higher dimensions not supported
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_HASARC,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static boolean hasArc(@SuppressWarnings("unused") GeometryType geom) {
-		return false; //curved not supported
-	}
+    public static boolean hasArc(@SuppressWarnings("unused") GeometryType geom) {
+        return false; //curved not supported
+    }
 
     @TeiidFunction(name=SQLConstants.Tokens.DOUBLE_AMP,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static boolean boundingBoxIntersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-		return GeometryUtils.boundingBoxIntersects(geom1, geom2);
-	}
+    public static boolean boundingBoxIntersects(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
+        return GeometryUtils.boundingBoxIntersects(geom1, geom2);
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMEWKT,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static GeometryType geomFromEwkt(ClobType ewkt)
-	     throws FunctionExecutionException {
-		return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(ewkt, null, true));
-	}
+    public static GeometryType geomFromEwkt(ClobType ewkt)
+         throws FunctionExecutionException {
+        return GeometryUtils.getGeometryType(GeometryUtils.geometryFromClob(ewkt, null, true));
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_GEOMFROMEWKB,
             category=FunctionCategoryConstants.GEOMETRY,
             nullOnNull=true,
             pushdown=PushDown.CAN_PUSHDOWN)
-	public static GeometryType geomFromEwkb(BlobType ewkb)
-	     throws FunctionExecutionException, SQLException {
-		return GeometryUtils.geometryFromEwkb(ewkb.getBinaryStream(), null);
-	}
+    public static GeometryType geomFromEwkb(BlobType ewkb)
+         throws FunctionExecutionException, SQLException {
+        return GeometryUtils.geometryFromEwkb(ewkb.getBinaryStream(), null);
+    }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_AREA,
             category=FunctionCategoryConstants.GEOMETRY,
@@ -453,7 +453,7 @@ public class GeometryFunctionMethods {
                    nullOnNull=true,
                    pushdown=PushDown.CAN_PUSHDOWN)
     public static GeometryType intersection(GeometryType geom1, GeometryType geom2) throws FunctionExecutionException {
-    	return GeometryUtils.intersection(geom1, geom2);
+        return GeometryUtils.intersection(geom1, geom2);
     }
 
     @TeiidFunction(name=SourceSystemFunctions.ST_ISCLOSED,

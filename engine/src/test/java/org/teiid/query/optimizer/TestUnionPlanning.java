@@ -168,7 +168,7 @@ public class TestUnionPlanning {
     @Test public void testUnionPushDownWithJoin() {
         ProcessorPlan plan = TestOptimizer.helpPlan("select b.*,a.* from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_1.intkey, g_0.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (3, 4)) AND (g_1.intkey IN (3, 4))",
-        	"SELECT g_1.intkey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED);
+            "SELECT g_1.intkey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED);
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -191,7 +191,7 @@ public class TestUnionPlanning {
     @Test public void testUnionPushDownWithJoinNonAnsi() {
         ProcessorPlan plan = TestOptimizer.helpPlan("select * from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A, (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B where a.intkey = b.intkey", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_0.intkey, g_1.intkey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (g_0.intkey IN (3, 4)) AND (g_1.intkey IN (3, 4))",
-        	"SELECT g_0.intkey, g_1.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED);
+            "SELECT g_0.intkey, g_1.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.intkey) AND (g_0.intkey IN (1, 2)) AND (g_1.intkey IN (1, 2))" }, TestOptimizer.SHOULD_SUCCEED);
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -252,7 +252,7 @@ public class TestUnionPlanning {
     @Test public void testUnionPushDownWithJoin1() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select b.*,a.* from (SELECT IntKey FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallA where intkey in (3, 4)) A inner join (SELECT intkey FROM BQT1.SmallB where intkey in (1, 2) UNION ALL SELECT intkey FROM BQT2.SmallB where intkey in (3, 4)) B on a.intkey = b.intkey where a.intkey in (1, 4)", RealMetadataFactory.exampleBQTCached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_1.IntKey, g_0.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey IN (1)) AND (g_0.IntKey = 1) AND (g_1.IntKey = 1)"
-        	, "SELECT g_1.IntKey, g_0.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey IN (4)) AND (g_0.IntKey = 4) AND (g_1.IntKey = 4)" }, ComparisonMode.EXACT_COMMAND_STRING);
+            , "SELECT g_1.IntKey, g_0.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallB AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey IN (4)) AND (g_0.IntKey = 4) AND (g_1.IntKey = 4)" }, ComparisonMode.EXACT_COMMAND_STRING);
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -317,9 +317,9 @@ public class TestUnionPlanning {
     }
 
     @Test public void testUnionWithUnnecessaryGroupByPartitionedConstant() throws Exception {
-    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         ProcessorPlan plan = TestOptimizer.helpPlan("select intkey from (SELECT 1 as IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT 2 as intkey, intnum FROM BQT2.SmallA) A group by intkey", RealMetadataFactory.exampleBQTCached(), null, capFinder,//$NON-NLS-1$
             new String[] { "SELECT 1 AS c_0 FROM BQT2.SmallA AS g_0 LIMIT 1", "SELECT 1 AS c_0 FROM BQT1.SmallA AS g_0 LIMIT 1" }, ComparisonMode.EXACT_COMMAND_STRING);
 
@@ -342,12 +342,12 @@ public class TestUnionPlanning {
     }
 
     @Test public void testUnionPartitionedWithMerge() throws Exception {
-    	//"select max(intnum) from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (3, 4)) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in 6) B group by intkey"
+        //"select max(intnum) from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (3, 4)) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in 6) B group by intkey"
         ProcessorPlan plan = TestOptimizer.helpPlan("select c.*,b.* from (select * from (SELECT IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT intkey, intnum FROM BQT2.SmallA) A where intkey in (1, 2, 3, 4) UNION ALL select intkey, intnum from bqt2.smallb where intkey in (6)) B inner join (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (5, 6)) C on b.intkey = c.intkey", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
             new String[] { "SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2) ORDER BY c_0",
-        	"SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",
-        	"SELECT g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",
-        	"SELECT g_1.IntKey, g_1.IntNum, g_0.IntKey, g_0.IntNum FROM BQT2.SmallB AS g_0, BQT2.SmallA AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey = 6) AND (g_1.IntKey = 6)" }, ComparisonMode.EXACT_COMMAND_STRING);
+            "SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",
+            "SELECT g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",
+            "SELECT g_1.IntKey, g_1.IntNum, g_0.IntKey, g_0.IntNum FROM BQT2.SmallB AS g_0, BQT2.SmallA AS g_1 WHERE (g_0.IntKey = g_1.IntKey) AND (g_0.IntKey = 6) AND (g_1.IntKey = 6)" }, ComparisonMode.EXACT_COMMAND_STRING);
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             4,      // Access
@@ -368,14 +368,14 @@ public class TestUnionPlanning {
     }
 
     @Test public void testUnionCosting() throws Exception {
-    	TransformationMetadata metadata = RealMetadataFactory.example1();
-    	RealMetadataFactory.setCardinality("pm1.g1", 100, metadata);
-    	RealMetadataFactory.setCardinality("pm1.g2", 100, metadata);
-    	RealMetadataFactory.setCardinality("pm1.g3", 100, metadata);
-    	RealMetadataFactory.setCardinality("pm1.g4", 100, metadata);
-    	BasicSourceCapabilities bac = new BasicSourceCapabilities();
-    	bac.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
-    	bac.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", 100, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", 100, metadata);
+        RealMetadataFactory.setCardinality("pm1.g3", 100, metadata);
+        RealMetadataFactory.setCardinality("pm1.g4", 100, metadata);
+        BasicSourceCapabilities bac = new BasicSourceCapabilities();
+        bac.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        bac.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT T.e1 AS e1, T.e2 AS e2, T.e3 AS e3 FROM (SELECT e1, 'a' AS e2, e3 FROM pm1.g1 UNION SELECT e1, 'b' AS e2, e3 FROM pm1.g2 UNION SELECT e1, 'c' AS e2, e3 FROM pm1.g3) AS T, vm1.g1 AS L WHERE (T.e1 = L.e1) AND (T.e3 = TRUE)", metadata, null, new DefaultCapabilitiesFinder(bac),//$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e3 = TRUE", "SELECT pm1.g3.e1, pm1.g3.e3 FROM pm1.g3 WHERE pm1.g3.e3 = TRUE", "SELECT pm1.g2.e1, pm1.g2.e3 FROM pm1.g2 WHERE pm1.g2.e3 = TRUE" }, ComparisonMode.EXACT_COMMAND_STRING);
 
@@ -420,14 +420,14 @@ public class TestUnionPlanning {
     }
 
     @Test public void testUnionPartitioningWithOrderedLimits() throws Exception {
-    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
-    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)) x"
-    			+ " where source in ('b') order by e2 desc limit 0, 500";
+        String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+                + " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)) x"
+                + " where source in ('b') order by e2 desc limit 0, 500";
 
-    	ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 1,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -447,20 +447,20 @@ public class TestUnionPlanning {
     }
 
     @Test public void testUnionWithOrderedLimits1() throws Exception {
-    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
-    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)"
-    			+ " union all (select e1, e2, 'c' source from pm1.g3 order by e2 desc limit 5000)) x"
-    			+ " order by e2 desc limit 0, 500";
+        String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+                + " union all (select e1, e2, 'b' source from pm2.g2 order by e2 desc limit 5000)"
+                + " union all (select e1, e2, 'c' source from pm1.g3 order by e2 desc limit 5000)) x"
+                + " order by e2 desc limit 0, 500";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500",
-                		 "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC LIMIT 500",
-                		 "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_1 DESC LIMIT 500" }, ComparisonMode.EXACT_COMMAND_STRING);
+                         "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC LIMIT 500",
+                         "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g3 AS g_0 ORDER BY c_1 DESC LIMIT 500" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 3,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -478,23 +478,23 @@ public class TestUnionPlanning {
             });
 
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+        TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
     }
 
     //here the second branch does not match the top level ordering, so the limit is not combined
     @Test public void testUnionWithOrderedLimits2() throws Exception {
-    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
-    			+ " union all (select e1, e2, 'b' source from pm2.g2 order by e1 desc limit 5000)) x"
-    			+ " order by e2 desc limit 0, 500";
+        String sql = "select * from ((select e1, e2, 'a' source from pm1.g1 order by e2 desc limit 5000)"
+                + " union all (select e1, e2, 'b' source from pm2.g2 order by e1 desc limit 5000)) x"
+                + " order by e2 desc limit 0, 500";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500"
-			, "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0 DESC LIMIT 5000" }, ComparisonMode.EXACT_COMMAND_STRING);
+            , "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0 DESC LIMIT 5000" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -511,21 +511,21 @@ public class TestUnionPlanning {
                 1       // UnionAll
             });
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+        TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
     }
 
     @Test public void testUnionWithOrderedLimits3() throws Exception {
-    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
-    			+ " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
-    			+ " order by e2 desc limit 0, 500";
+        String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
+                + " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
+                + " order by e2 desc limit 0, 500";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_1 DESC LIMIT 500", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_1 DESC LIMIT 500" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -542,22 +542,22 @@ public class TestUnionPlanning {
                 1       // UnionAll
             });
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
+        TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class<?>[] {LimitNode.class});
     }
 
     @Test public void testUnionWithOrderedLimits4() throws Exception {
-    	String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
-    			+ " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
-    			+ " order by e2 desc limit 0, 500";
+        String sql = "select * from ((select e1, e2, 'a' source from pm1.g1)"
+                + " union all (select e1, e2, 'b' source from pm2.g2 limit 5000)) x"
+                + " order by e2 desc limit 0, 500";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 LIMIT 5000", "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -577,16 +577,16 @@ public class TestUnionPlanning {
     }
 
     @Test public void testCriteriaRewrite() throws Exception {
-    	String sql = "select * from (select e1, e2 from pm1.g1 union all select convert(e2, string), e2 from pm1.g2) x where e1 in ('1', '2')";
+        String sql = "select * from (select e1, e2 from pm1.g1 union all select convert(e2, string), e2 from pm1.g2) x where e1 in ('1', '2')";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e2 FROM pm1.g2 AS g_0 WHERE g_0.e2 IN (1, 2)", "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 IN ('1', '2')" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestOptimizer.checkNodeTypes(plan, new int[] {
+        TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
@@ -606,36 +606,36 @@ public class TestUnionPlanning {
     }
 
     @Test public void testCostingWithGroupingAndOrder() throws Exception {
-    	String sql = "select e1 as admissionid,e2 as patgroup,e3 as ward,e4 as admtime, 'wh' as origin from pm1.g1 gd "
-    			+ " group by e1,e2,e3,e4 UNION ALL select e1,e2,e3,e4, 'prod' from pm1.g2 gd"
-    			+ " group by e1,e2,e3,e4 order by admtime limit 1";
+        String sql = "select e1 as admissionid,e2 as patgroup,e3 as ward,e4 as admtime, 'wh' as origin from pm1.g1 gd "
+                + " group by e1,e2,e3,e4 UNION ALL select e1,e2,e3,e4, 'prod' from pm1.g2 gd"
+                + " group by e1,e2,e3,e4 order by admtime limit 1";
 
-    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-    	caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-    	caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 
-    	TransformationMetadata tm = RealMetadataFactory.example1();
-    	RealMetadataFactory.setCardinality("pm1.g1", 1000, tm);
-    	RealMetadataFactory.setCardinality("pm1.g2", 1000, tm);
+        TransformationMetadata tm = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", 1000, tm);
+        RealMetadataFactory.setCardinality("pm1.g2", 1000, tm);
 
-		ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(caps),//$NON-NLS-1$
                 new String[] { "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING);
 
-		FakeDataManager dataManager = new FakeDataManager();
-		FakeDataStore.sampleData2(dataManager);
-		TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("b",1,true,null,"wh")} );
+        FakeDataManager dataManager = new FakeDataManager();
+        FakeDataStore.sampleData2(dataManager);
+        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("b",1,true,null,"wh")} );
     }
 
     //TODO: enhancement for ordering over a partition
 
     @Test public void testPreserveGroupingOverUnion() throws TeiidComponentException, TeiidProcessingException {
-    	String sql = "select y.col2 from ( select x.col2, min(x.col1) as col1 from ( select 1 as col2, col1 from "
-    			+ "(select 'a' as col1 UNION SELECT '' as col1) v1 union select 1 as col2, col1 from (select 'b' as col1 UNION SELECT '' as col1) v2) x group by x.col2 ) y";
-    	TransformationMetadata tm = RealMetadataFactory.example1Cached();
-    	ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(),//$NON-NLS-1$
+        String sql = "select y.col2 from ( select x.col2, min(x.col1) as col1 from ( select 1 as col2, col1 from "
+                + "(select 'a' as col1 UNION SELECT '' as col1) v1 union select 1 as col2, col1 from (select 'b' as col1 UNION SELECT '' as col1) v2) x group by x.col2 ) y";
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, tm, null, new DefaultCapabilitiesFinder(),//$NON-NLS-1$
                 new String[] {}, ComparisonMode.EXACT_COMMAND_STRING);
 
-    	TestProcessor.helpProcess(plan, new HardcodedDataManager(), new List[] {Arrays.asList(1)} );
+        TestProcessor.helpProcess(plan, new HardcodedDataManager(), new List[] {Arrays.asList(1)} );
     }
 
     @Test public void testImplictPartitionwiseStarJoin() throws Exception {

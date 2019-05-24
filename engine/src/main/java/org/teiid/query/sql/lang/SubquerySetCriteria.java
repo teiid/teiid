@@ -35,7 +35,7 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class SubquerySetCriteria extends AbstractSetCriteria implements SubqueryContainer<QueryCommand>, ContextReference {
 
-	private static AtomicInteger ID = new AtomicInteger();
+    private static AtomicInteger ID = new AtomicInteger();
 
     private QueryCommand command;
     private SubqueryHint subqueryHint = new SubqueryHint();
@@ -54,16 +54,16 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
     }
 
     public SubqueryHint getSubqueryHint() {
-		return subqueryHint;
-	}
+        return subqueryHint;
+    }
 
     public void setSubqueryHint(SubqueryHint subqueryHint) {
-		this.subqueryHint = subqueryHint;
-	}
+        this.subqueryHint = subqueryHint;
+    }
 
     @Override
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
 
     /**
@@ -117,7 +117,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
         SubquerySetCriteria sc = (SubquerySetCriteria)obj;
 
         return this.isNegated() == sc.isNegated() &&
-         	   EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
+                EquivalenceUtil.areEqual(getExpression(), sc.getExpression()) &&
                EquivalenceUtil.areEqual(getCommand(), sc.getCommand()) &&
                this.subqueryHint.equals(sc.getSubqueryHint());
     }
@@ -136,7 +136,7 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
 
         QueryCommand copyCommand = null;
         if(getCommand() != null) {
-        	copyCommand = (QueryCommand) getCommand().clone();
+            copyCommand = (QueryCommand) getCommand().clone();
         }
 
         SubquerySetCriteria criteriaCopy = new SubquerySetCriteria(copy, copyCommand);

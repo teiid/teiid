@@ -26,92 +26,92 @@ import org.teiid.odbc.PGUtil.PgColInfo;
 
 public interface ODBCClientRemote {
 
-	enum CursorDirection {
-		FORWARD,
-		FIRST,
-		ABSOLUTE,
-		RELATIVE,
-		LAST
-	}
+    enum CursorDirection {
+        FORWARD,
+        FIRST,
+        ABSOLUTE,
+        RELATIVE,
+        LAST
+    }
 
-	void initialized(Properties props);
+    void initialized(Properties props);
 
-	void setEncoding(String value, boolean init);
+    void setEncoding(String value, boolean init);
 
-	//	AuthenticationCleartextPassword (B)
-	void useClearTextAuthentication();
+    //    AuthenticationCleartextPassword (B)
+    void useClearTextAuthentication();
 
-	// AuthenticationGSS (B)
-	void useAuthenticationGSS();
+    // AuthenticationGSS (B)
+    void useAuthenticationGSS();
 
-	// AuthenticationGSSContinue (B)
-	void authenticationGSSContinue(byte[] serviceToken);
+    // AuthenticationGSSContinue (B)
+    void authenticationGSSContinue(byte[] serviceToken);
 
-	//	AuthenticationOk (B)
-	//	BackendKeyData (B)
-	//	ParameterStatus (B)
-	void authenticationSucess(int processId, int screctKey);
+    //    AuthenticationOk (B)
+    //    BackendKeyData (B)
+    //    ParameterStatus (B)
+    void authenticationSucess(int processId, int screctKey);
 
-	//	ParseComplete (B)
-	void prepareCompleted(String preparedName);
+    //    ParseComplete (B)
+    void prepareCompleted(String preparedName);
 
-	//	ErrorResponse (B)
-	void errorOccurred(String msg);
+    //    ErrorResponse (B)
+    void errorOccurred(String msg);
 
-	//	ErrorResponse (B)
-	void errorOccurred(Throwable e);
+    //    ErrorResponse (B)
+    void errorOccurred(Throwable e);
 
-	void terminated();
+    void terminated();
 
-	//	ParameterDescription (B)
-	void sendParameterDescription(int[] paramType);
+    //    ParameterDescription (B)
+    void sendParameterDescription(int[] paramType);
 
-	//	BindComplete (B)
-	void bindComplete();
+    //    BindComplete (B)
+    void bindComplete();
 
-	//	RowDescription (B)
-	//	NoData (B)
-	void sendResultSetDescription(List<PgColInfo> cols, short[] resultColumnFormat);
+    //    RowDescription (B)
+    //    NoData (B)
+    void sendResultSetDescription(List<PgColInfo> cols, short[] resultColumnFormat);
 
-	//	DataRow (B)
-	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows, short[] resultColumnFormat);
+    //    DataRow (B)
+    //    CommandComplete (B)
+    void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, CursorDirection direction, int rowCount, boolean describeRows, short[] resultColumnFormat);
 
-	void sendCommandComplete(String sql, Integer... count);
+    void sendCommandComplete(String sql, Integer... count);
 
-	//	ReadyForQuery (B)
-	void ready(boolean inTransaction, boolean failedTransaction);
+    //    ReadyForQuery (B)
+    void ready(boolean inTransaction, boolean failedTransaction);
 
-	void statementClosed();
+    void statementClosed();
 
-	//	EmptyQueryResponse (B)
-	void emptyQueryReceived();
+    //    EmptyQueryResponse (B)
+    void emptyQueryReceived();
 
-	void flush();
+    void flush();
 
-	// FunctionCallResponse (B)
-	void functionCallResponse(Object data, boolean binary);
+    // FunctionCallResponse (B)
+    void functionCallResponse(Object data, boolean binary);
 
-	void sendSslResponse();
+    void sendSslResponse();
 
-	// unimplemented backend messages
+    // unimplemented backend messages
 
-	//	AuthenticationKerberosV5 (B)
-	//	AuthenticationMD5Password (B)
-	//	AuthenticationSCMCredential (B)
-	//	AuthenticationSSPI (B)
+    //    AuthenticationKerberosV5 (B)
+    //    AuthenticationMD5Password (B)
+    //    AuthenticationSCMCredential (B)
+    //    AuthenticationSSPI (B)
 
-	//	CloseComplete (B)
+    //    CloseComplete (B)
 
-	//	CopyData (F & B)
-	//	CopyDone (F & B)
-	//	CopyInResponse (B)
-	//	CopyOutResponse (B)
+    //    CopyData (F & B)
+    //    CopyDone (F & B)
+    //    CopyInResponse (B)
+    //    CopyOutResponse (B)
 
-	//	NoticeResponse (B)
-	//	NotificationResponse (B)
+    //    NoticeResponse (B)
+    //    NotificationResponse (B)
 
-	void sendPortalSuspended();
+    void sendPortalSuspended();
 
     void sendParameterStatus(String param, String value);
 }

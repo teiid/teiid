@@ -73,9 +73,9 @@ import org.teiid.query.sql.symbol.Symbol;
 
 public class EntityCollectionResponse extends EntityCollection implements QueryResponse {
 
-	interface Row {
-    	Object getObject(int column) throws SQLException;
-		Object[] getArray(int columnIndex) throws SQLException;
+    interface Row {
+        Object getObject(int column) throws SQLException;
+        Object[] getArray(int columnIndex) throws SQLException;
     }
 
     private String nextToken;
@@ -95,23 +95,23 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     public void addRow(ResultSet rs) throws SQLException {
         Entity entity = createEntity(rs, this.documentNode, this.baseURL, this);
 
-    	processExpands(asRow(rs), entity, this.documentNode);
+        processExpands(asRow(rs), entity, this.documentNode);
         getEntities().add(entity);
     }
 
-	private void processExpands(Row vals, Entity entity, DocumentNode node)
-			throws SQLException {
-		if (node.getExpands() == null || node.getExpands().isEmpty()) {
-			return;
-		}
+    private void processExpands(Row vals, Entity entity, DocumentNode node)
+            throws SQLException {
+        if (node.getExpands() == null || node.getExpands().isEmpty()) {
+            return;
+        }
         for (ExpandDocumentNode expandNode : node.getExpands()) {
             Object[] expandedVals = vals.getArray(expandNode.getColumnIndex());
             if (expandedVals == null) {
-            	continue;
+                continue;
             }
             for (Object o : expandedVals) {
-            	Object[] expandedVal = (Object[])o;
-    			Entity expandEntity = createEntity(expandedVal, expandNode, this.baseURL, this);
+                Object[] expandedVal = (Object[])o;
+                Entity expandEntity = createEntity(expandedVal, expandNode, this.baseURL, this);
 
                 Link link = entity.getNavigationLink(expandNode.getNavigationName());
                 if (expandNode.isCollection()) {
@@ -133,16 +133,16 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 processExpands(asRow(expandedVal), expandEntity, expandNode);
             }
         }
-	}
+    }
 
     static Entity createEntity(final Object[] vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
-    	return createEntity(asRow(vals), node, baseURL, response);
+        return createEntity(asRow(vals), node, baseURL, response);
     }
 
     static Entity createEntity(final ResultSet vals, DocumentNode node, String baseURL, EntityCollectionResponse response)
             throws SQLException {
-    	return createEntity(asRow(vals), node, baseURL, response);
+        return createEntity(asRow(vals), node, baseURL, response);
     }
 
     static Entity createEntity(Row row, DocumentNode node, String baseURL, EntityCollectionResponse response)
@@ -173,8 +173,8 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 if (type instanceof EdmStream) {
                     buildStreamLink(streamProperties, value, propertyName);
                     if (response != null) {
-                    	//this will only be used for a stream response off of the first entity. In all other scenarios it will be ignored.
-                    	response.setStream(propertyName, value);
+                        //this will only be used for a stream response off of the first entity. In all other scenarios it will be ignored.
+                        response.setStream(propertyName, value);
                     }
                 }
                 else {
@@ -227,48 +227,48 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         return entity;
     }
 
-	private static Row asRow(final ResultSet vals) {
-		return new Row() {
-			@Override
-			public Object getObject(int column) throws SQLException {
-				return vals.getObject(column);
-			}
-			@Override
-			public Object[] getArray(int columnIndex) throws SQLException {
-				Array array = vals.getArray(columnIndex);
-				if (array == null) {
-					return null;
-				}
-				return (Object[]) array.getArray();
-			}
-		};
-	}
+    private static Row asRow(final ResultSet vals) {
+        return new Row() {
+            @Override
+            public Object getObject(int column) throws SQLException {
+                return vals.getObject(column);
+            }
+            @Override
+            public Object[] getArray(int columnIndex) throws SQLException {
+                Array array = vals.getArray(columnIndex);
+                if (array == null) {
+                    return null;
+                }
+                return (Object[]) array.getArray();
+            }
+        };
+    }
 
-	private static Row asRow(final Object[] vals) {
-    	return new Row() {
-			@Override
-			public Object getObject(int column) throws SQLException {
-				return vals[column - 1];
-			}
-			@Override
-			public Object[] getArray(int columnIndex) {
-				return (Object[]) vals[columnIndex - 1];
-			}
-		};
-	}
+    private static Row asRow(final Object[] vals) {
+        return new Row() {
+            @Override
+            public Object getObject(int column) throws SQLException {
+                return vals[column - 1];
+            }
+            @Override
+            public Object[] getArray(int columnIndex) {
+                return (Object[]) vals[columnIndex - 1];
+            }
+        };
+    }
 
     void setStream(String propertyName, Object value) {
-    	if (this.streams == null) {
-    		this.streams = new HashMap<String, Object>();
-    	}
-    	streams.put(propertyName, value);
-	}
+        if (this.streams == null) {
+            this.streams = new HashMap<String, Object>();
+        }
+        streams.put(propertyName, value);
+    }
 
     public Object getStream(String propertyName) {
-    	if (this.streams == null) {
-    		return null;
-    	}
-    	return streams.get(propertyName);
+        if (this.streams == null) {
+            return null;
+        }
+        return streams.get(propertyName);
     }
 
     private static void buildStreamLink(LinkedHashMap<String, Link> streamProperties,
@@ -336,12 +336,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
     static Object getPropertyValue(SingletonPrimitiveType expectedType, Integer precision, Integer scale, boolean isArray,
             Object value)
             throws TransformationException, SQLException, IOException, FunctionExecutionException {
-    	if (value == null) {
-    		return null;
-    	}
-    	value = getPropertyValueInternal(expectedType, isArray, value);
-		value = ODataTypeManager.rationalizePrecision(precision, scale, value);
-    	return value;
+        if (value == null) {
+            return null;
+        }
+        value = getPropertyValueInternal(expectedType, isArray, value);
+        value = ODataTypeManager.rationalizePrecision(precision, scale, value);
+        return value;
     }
 
     /**

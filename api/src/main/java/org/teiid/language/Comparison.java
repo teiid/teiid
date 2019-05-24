@@ -27,23 +27,23 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
  */
 public class Comparison extends Condition implements Predicate {
 
-	public enum Operator {
-		EQ(Tokens.EQ),
-		NE(Tokens.NE),
-		LT(Tokens.LT),
-		LE(Tokens.LE),
-		GT(Tokens.GT),
-		GE(Tokens.GE);
+    public enum Operator {
+        EQ(Tokens.EQ),
+        NE(Tokens.NE),
+        LT(Tokens.LT),
+        LE(Tokens.LE),
+        GT(Tokens.GT),
+        GE(Tokens.GE);
 
-		private String toString;
-		Operator(String toString) {
-			this.toString = toString;
-		}
-		@Override
-		public String toString() {
-			return toString;
-		}
-	}
+        private String toString;
+        Operator(String toString) {
+            this.toString = toString;
+        }
+        @Override
+        public String toString() {
+            return toString;
+        }
+    }
 
     private Expression leftExpression;
     private Expression rightExpression;

@@ -45,88 +45,88 @@ import org.teiid.query.sql.symbol.Symbol;
  */
 public class TempMetadataID implements Serializable, Modifiable, DataModifiable {
 
-	private static final long serialVersionUID = -1879211827339120135L;
-	private static final int LOCAL_CACHE_SIZE = 8;
+    private static final long serialVersionUID = -1879211827339120135L;
+    private static final int LOCAL_CACHE_SIZE = 8;
 
-	private static final int MOD_COUNT_FOR_COST_UPDATE = 8;
+    private static final int MOD_COUNT_FOR_COST_UPDATE = 8;
 
-	public static class TableData {
-		Collection<TempMetadataID> accessPatterns;
-		List<TempMetadataID> elements;
-		long cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
-		List<TempMetadataID> primaryKey;
-		QueryNode queryNode;
-		Map<Object, Object> localCache;
-		volatile CacheHint cacheHint;
-		long cacheHintUpdated;
-		List<List<TempMetadataID>> keys;
-		List<TempMetadataID> indexes;
-		volatile long lastDataModification;
-		volatile long lastModified = System.currentTimeMillis();
-		int modCount;
-		private LinkedHashMap<Expression, Integer> functionBasedExpressions;
-		private Object model;
+    public static class TableData {
+        Collection<TempMetadataID> accessPatterns;
+        List<TempMetadataID> elements;
+        long cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
+        List<TempMetadataID> primaryKey;
+        QueryNode queryNode;
+        Map<Object, Object> localCache;
+        volatile CacheHint cacheHint;
+        long cacheHintUpdated;
+        List<List<TempMetadataID>> keys;
+        List<TempMetadataID> indexes;
+        volatile long lastDataModification;
+        volatile long lastModified = System.currentTimeMillis();
+        int modCount;
+        private LinkedHashMap<Expression, Integer> functionBasedExpressions;
+        private Object model;
 
-		public long getLastDataModification() {
-			return lastDataModification;
-		}
+        public long getLastDataModification() {
+            return lastDataModification;
+        }
 
-		public void removed() {
-			this.lastModified = -1;
-		}
+        public void removed() {
+            this.lastModified = -1;
+        }
 
-		public void dataModified(long updateCount) {
-			if (updateCount == 0) {
-				return;
-			}
-			long ts = System.currentTimeMillis();
-			modCount += updateCount;
-			if (modCount > MOD_COUNT_FOR_COST_UPDATE) {
-				this.lastModified = ts;
-				modCount = 0;
-			}
-			this.lastDataModification = ts;
-		}
+        public void dataModified(long updateCount) {
+            if (updateCount == 0) {
+                return;
+            }
+            long ts = System.currentTimeMillis();
+            modCount += updateCount;
+            if (modCount > MOD_COUNT_FOR_COST_UPDATE) {
+                this.lastModified = ts;
+                modCount = 0;
+            }
+            this.lastDataModification = ts;
+        }
 
-		public long getLastModified() {
-			return lastModified;
-		}
+        public long getLastModified() {
+            return lastModified;
+        }
 
-		public void setFunctionBasedExpressions(
-				LinkedHashMap<Expression, Integer> newExprs) {
-			this.functionBasedExpressions = newExprs;
-		}
+        public void setFunctionBasedExpressions(
+                LinkedHashMap<Expression, Integer> newExprs) {
+            this.functionBasedExpressions = newExprs;
+        }
 
-		public LinkedHashMap<Expression, Integer> getFunctionBasedExpressions() {
-			return functionBasedExpressions;
-		}
+        public LinkedHashMap<Expression, Integer> getFunctionBasedExpressions() {
+            return functionBasedExpressions;
+        }
 
-		public void setModel(Object mid) {
-			this.model = mid;
-		}
+        public void setModel(Object mid) {
+            this.model = mid;
+        }
 
-		public Object getModel() {
-			return model;
-		}
+        public Object getModel() {
+            return model;
+        }
 
-		public synchronized boolean updateCacheHint(long time) {
-			if (time >= cacheHintUpdated) {
-				cacheHintUpdated = time;
-				return true;
-			}
-			return false;
-		}
+        public synchronized boolean updateCacheHint(long time) {
+            if (time >= cacheHintUpdated) {
+                cacheHintUpdated = time;
+                return true;
+            }
+            return false;
+        }
 
-	}
+    }
 
-	private static TableData DUMMY_DATA = new TableData();
+    private static TableData DUMMY_DATA = new TableData();
 
-	public enum Type {
-		VIRTUAL,
-		TEMP,
-		SCALAR,
-		INDEX
-	}
+    public enum Type {
+        VIRTUAL,
+        TEMP,
+        SCALAR,
+        INDEX
+    }
 
     private String ID;      // never null, upper cased fully-qualified string
     private String name;
@@ -135,7 +135,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 
     private TableData data;
 
-	//Column metadata
+    //Column metadata
     private int position;
     private Class<?> type;     // type of this element, only for element
     private boolean autoIncrement;
@@ -163,8 +163,8 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         this.data.elements = elements;
         int pos = 1;
         for (TempMetadataID tempMetadataID : elements) {
-			tempMetadataID.setPosition(pos++);
-		}
+            tempMetadataID.setPosition(pos++);
+        }
         this.name = ID;
         this.metadataType = type;
     }
@@ -193,12 +193,12 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 
     @Override
     public long getLastDataModification() {
-    	return getTableData().getLastDataModification();
+        return getTableData().getLastDataModification();
     }
 
     @Override
     public long getLastModified() {
-    	return getTableData().getLastModified();
+        return getTableData().getLastModified();
     }
 
     /**
@@ -235,7 +235,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
             elem.setPosition(this.getTableData().elements.size());
         }
         if (this.getTableData().localCache != null) {
-        	this.getTableData().localCache.clear();
+            this.getTableData().localCache.clear();
         }
     }
 
@@ -287,7 +287,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
         return this.ID.hashCode();
     }
 
-	public void setOriginalMetadataID(Object metadataId) {
+    public void setOriginalMetadataID(Object metadataId) {
         this.originalMetadataID = metadataId;
     }
 
@@ -320,131 +320,131 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 
     public void setTempTable(boolean isTempTable) {
         if (isTempTable) {
-        	this.metadataType = Type.TEMP;
+            this.metadataType = Type.TEMP;
         } else {
-        	this.metadataType = Type.VIRTUAL;
+            this.metadataType = Type.VIRTUAL;
         }
     }
 
     Object getProperty(Object key) {
-    	if (this.getTableData().localCache != null) {
-    		return this.getTableData().localCache.get(key);
-    	}
-    	return null;
+        if (this.getTableData().localCache != null) {
+            return this.getTableData().localCache.get(key);
+        }
+        return null;
     }
 
     Object setProperty(Object key, Object value) {
-		if (this.getTableData().localCache == null) {
-			this.getTableData().localCache = Collections.synchronizedMap(new LRUCache<Object, Object>(LOCAL_CACHE_SIZE));
-    	}
-		return this.getTableData().localCache.put(key, value);
+        if (this.getTableData().localCache == null) {
+            this.getTableData().localCache = Collections.synchronizedMap(new LRUCache<Object, Object>(LOCAL_CACHE_SIZE));
+        }
+        return this.getTableData().localCache.put(key, value);
     }
 
-	public boolean isScalarGroup() {
-		return this.metadataType == Type.SCALAR;
-	}
+    public boolean isScalarGroup() {
+        return this.metadataType == Type.SCALAR;
+    }
 
-	public void setMetadataType(Type metadataType) {
-		this.metadataType = metadataType;
-	}
+    public void setMetadataType(Type metadataType) {
+        this.metadataType = metadataType;
+    }
 
-	public Type getMetadataType() {
-		return metadataType;
-	}
+    public Type getMetadataType() {
+        return metadataType;
+    }
 
-	public List<TempMetadataID> getPrimaryKey() {
-		return getTableData().primaryKey;
-	}
+    public List<TempMetadataID> getPrimaryKey() {
+        return getTableData().primaryKey;
+    }
 
-	public void setPrimaryKey(List<TempMetadataID> primaryKey) {
-		this.getTableData().primaryKey = primaryKey;
-	}
+    public void setPrimaryKey(List<TempMetadataID> primaryKey) {
+        this.getTableData().primaryKey = primaryKey;
+    }
 
-	public int getPosition() {
-		return position;
-	}
+    public int getPosition() {
+        return position;
+    }
 
-	public void setPosition(int position) {
-		this.position = position;
-	}
+    public void setPosition(int position) {
+        this.position = position;
+    }
 
-	public QueryNode getQueryNode() {
-		return getTableData().queryNode;
-	}
+    public QueryNode getQueryNode() {
+        return getTableData().queryNode;
+    }
 
-	public void setQueryNode(QueryNode queryNode) {
-		this.getTableData().queryNode = queryNode;
-	}
+    public void setQueryNode(QueryNode queryNode) {
+        this.getTableData().queryNode = queryNode;
+    }
 
-	public CacheHint getCacheHint() {
-		return getTableData().cacheHint;
-	}
+    public CacheHint getCacheHint() {
+        return getTableData().cacheHint;
+    }
 
-	public void setCacheHint(CacheHint cacheHint) {
-		this.getTableData().cacheHint = cacheHint;
-	}
+    public void setCacheHint(CacheHint cacheHint) {
+        this.getTableData().cacheHint = cacheHint;
+    }
 
-	public List<TempMetadataID> getIndexes() {
-		return getTableData().indexes;
-	}
+    public List<TempMetadataID> getIndexes() {
+        return getTableData().indexes;
+    }
 
-	public void addIndex(Object originalMetadataId, List<TempMetadataID> index) {
-		if (this.getTableData().indexes == null) {
-			this.getTableData().indexes = new LinkedList<TempMetadataID>();
-		}
-		TempMetadataID id = new TempMetadataID(ID, Collections.EMPTY_LIST, Type.INDEX);
-		id.getTableData().elements = index;
-		id.setOriginalMetadataID(originalMetadataId);
-		this.getTableData().indexes.add(id);
-	}
+    public void addIndex(Object originalMetadataId, List<TempMetadataID> index) {
+        if (this.getTableData().indexes == null) {
+            this.getTableData().indexes = new LinkedList<TempMetadataID>();
+        }
+        TempMetadataID id = new TempMetadataID(ID, Collections.EMPTY_LIST, Type.INDEX);
+        id.getTableData().elements = index;
+        id.setOriginalMetadataID(originalMetadataId);
+        this.getTableData().indexes.add(id);
+    }
 
-	public List<List<TempMetadataID>> getUniqueKeys() {
-		return getTableData().keys;
-	}
+    public List<List<TempMetadataID>> getUniqueKeys() {
+        return getTableData().keys;
+    }
 
-	public void addUniqueKey(List<TempMetadataID> key) {
-		if (this.getTableData().keys == null) {
-			this.getTableData().keys = new LinkedList<List<TempMetadataID>>();
-		}
-		this.getTableData().keys.add(key);
-	}
+    public void addUniqueKey(List<TempMetadataID> key) {
+        if (this.getTableData().keys == null) {
+            this.getTableData().keys = new LinkedList<List<TempMetadataID>>();
+        }
+        this.getTableData().keys.add(key);
+    }
 
-	public TableData getTableData() {
-		if (data == null) {
-			return DUMMY_DATA;
-		}
-		return data;
-	}
+    public TableData getTableData() {
+        if (data == null) {
+            return DUMMY_DATA;
+        }
+        return data;
+    }
 
-	public boolean isAutoIncrement() {
-		return autoIncrement;
-	}
+    public boolean isAutoIncrement() {
+        return autoIncrement;
+    }
 
-	public void setAutoIncrement(boolean autoIncrement) {
-		this.autoIncrement = autoIncrement;
-	}
+    public void setAutoIncrement(boolean autoIncrement) {
+        this.autoIncrement = autoIncrement;
+    }
 
-	public boolean isNotNull() {
-		return notNull;
-	}
+    public boolean isNotNull() {
+        return notNull;
+    }
 
-	public void setNotNull(boolean notNull) {
-		this.notNull = notNull;
-	}
+    public void setNotNull(boolean notNull) {
+        this.notNull = notNull;
+    }
 
-	public void setUpdatable(boolean updatable) {
-		this.updatable = updatable;
-	}
+    public void setUpdatable(boolean updatable) {
+        this.updatable = updatable;
+    }
 
-	public boolean isUpdatable() {
-		return updatable;
-	}
+    public boolean isUpdatable() {
+        return updatable;
+    }
 
-	public String getName() {
-		if (this.name == null) {
-			this.name = Symbol.getShortName(this.ID);
-		}
-		return this.name;
-	}
+    public String getName() {
+        if (this.name == null) {
+            this.name = Symbol.getShortName(this.ID);
+        }
+        return this.name;
+    }
 
 }

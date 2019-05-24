@@ -39,14 +39,14 @@ import org.teiid.core.TeiidRuntimeException;
  */
 public final class PropertiesUtils {
 
-	public static class InvalidPropertyException extends TeiidRuntimeException {
-		private static final long serialVersionUID = 1586068295007497776L;
+    public static class InvalidPropertyException extends TeiidRuntimeException {
+        private static final long serialVersionUID = 1586068295007497776L;
 
-		public InvalidPropertyException(BundleUtil.Event event, String propertyName, Object value, Class<?> expectedType, Throwable cause) {
-			super(event, cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
-		}
+        public InvalidPropertyException(BundleUtil.Event event, String propertyName, Object value, Class<?> expectedType, Throwable cause) {
+            super(event, cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
+        }
 
-	}
+    }
 
     /**
      * Performs a correct deep clone of the properties object by capturing
@@ -138,12 +138,12 @@ public final class PropertiesUtils {
     public static int getIntProperty(Properties props, String propName, int defaultValue) throws InvalidPropertyException {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
-        	return defaultValue;
+            return defaultValue;
         }
-    	stringVal = stringVal.trim();
-    	if (stringVal.length() == 0) {
-    		return defaultValue;
-    	}
+        stringVal = stringVal.trim();
+        if (stringVal.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Integer.parseInt(stringVal);
         } catch(NumberFormatException e) {
@@ -154,60 +154,60 @@ public final class PropertiesUtils {
     public static long getLongProperty(Properties props, String propName, long defaultValue) {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
-        	return defaultValue;
+            return defaultValue;
         }
-    	stringVal = stringVal.trim();
-    	if (stringVal.length() == 0) {
-    		return defaultValue;
-    	}
+        stringVal = stringVal.trim();
+        if (stringVal.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Long.parseLong(stringVal);
         } catch(NumberFormatException e) {
-        	  throw new InvalidPropertyException( CorePlugin.Event.TEIID10038, propName, stringVal, Long.class, e);
+              throw new InvalidPropertyException( CorePlugin.Event.TEIID10038, propName, stringVal, Long.class, e);
         }
     }
 
     public static float getFloatProperty(Properties props, String propName, float defaultValue) {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
-        	return defaultValue;
+            return defaultValue;
         }
-    	stringVal = stringVal.trim();
-    	if (stringVal.length() == 0) {
-    		return defaultValue;
-    	}
+        stringVal = stringVal.trim();
+        if (stringVal.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Float.parseFloat(stringVal);
         } catch(NumberFormatException e) {
-        	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10039, propName, stringVal, Float.class, e);
+              throw new InvalidPropertyException(CorePlugin.Event.TEIID10039, propName, stringVal, Float.class, e);
         }
     }
 
     public static double getDoubleProperty(Properties props, String propName, double defaultValue) {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
-        	return defaultValue;
+            return defaultValue;
         }
-    	stringVal = stringVal.trim();
-    	if (stringVal.length() == 0) {
-    		return defaultValue;
-    	}
+        stringVal = stringVal.trim();
+        if (stringVal.length() == 0) {
+            return defaultValue;
+        }
         try {
             return Double.parseDouble(stringVal);
         } catch(NumberFormatException e) {
-        	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10040, propName, stringVal, Double.class, e);
+              throw new InvalidPropertyException(CorePlugin.Event.TEIID10040, propName, stringVal, Double.class, e);
         }
     }
 
     public static boolean getBooleanProperty(Properties props, String propName, boolean defaultValue) {
         String stringVal = props.getProperty(propName);
         if(stringVal == null) {
-        	return defaultValue;
+            return defaultValue;
         }
-    	stringVal = stringVal.trim();
-    	if (stringVal.length() == 0) {
-    		return defaultValue;
-    	}
+        stringVal = stringVal.trim();
+        if (stringVal.length() == 0) {
+            return defaultValue;
+        }
         return Boolean.valueOf(stringVal);
     }
 
@@ -239,12 +239,12 @@ public final class PropertiesUtils {
     };
 
     public static String toHex(byte[] bytes) {
-    	StringBuilder sb = new StringBuilder(bytes.length * 2);
-    	for (byte b : bytes) {
-			sb.append(toHex(b >>> 4));
-			sb.append(toHex(b));
-		}
-    	return sb.toString();
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(toHex(b >>> 4));
+            sb.append(toHex(b));
+        }
+        return sb.toString();
     }
 
     /**
@@ -282,12 +282,12 @@ public final class PropertiesUtils {
     }
 
     public static void toHex(StringBuilder sb, InputStream is) throws IOException {
-    	int i = 0;
-    	while ((i = is.read()) != -1) {
-    		byte b = (byte)i;
-			sb.append(toHex(b >>> 4));
-			sb.append(toHex(b));
-		}
+        int i = 0;
+        while ((i = is.read()) != -1) {
+            byte b = (byte)i;
+            sb.append(toHex(b >>> 4));
+            sb.append(toHex(b));
+        }
     }
 
     /**
@@ -342,7 +342,7 @@ public final class PropertiesUtils {
 
                         // this will handle case where we did not resolve, mark it blank
                         if (nestedvalue == null) {
-                        	  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10042, CorePlugin.Util.gs(CorePlugin.Event.TEIID10042, nestedkey));
+                              throw new TeiidRuntimeException(CorePlugin.Event.TEIID10042, CorePlugin.Util.gs(CorePlugin.Event.TEIID10042, nestedkey));
                         }
                         value = value.substring(0,start)+nestedvalue+value.substring(end+1);
                         modified = true;
@@ -350,91 +350,91 @@ public final class PropertiesUtils {
                 }
             }
             if(modified) {
-            	original.setProperty(key, value);
+                original.setProperty(key, value);
             }
         }
         return original;
     }
 
     public static void setBeanProperties(Object bean, Properties props, String prefix) {
-    	setBeanProperties(bean, props, prefix, false);
+        setBeanProperties(bean, props, prefix, false);
     }
 
     public static void setBeanProperties(Object bean, Properties props, String prefix, boolean caseSensitive) {
-		// Move all prop names to lower case so we can use reflection to get
-	    // method names and look them up in the connection props.
-    	Map<?, ?> map = props;
-    	if (!caseSensitive) {
-    		map = caseInsensitiveProps(props);
-    	}
-	    final Method[] methods = bean.getClass().getMethods();
-	    for (int i = 0; i < methods.length; i++) {
-	        final Method method = methods[i];
-	        final String methodName = method.getName();
-	        // If setter ...
-	        if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 ) { //$NON-NLS-1$
-	        	continue;
-	        }
+        // Move all prop names to lower case so we can use reflection to get
+        // method names and look them up in the connection props.
+        Map<?, ?> map = props;
+        if (!caseSensitive) {
+            map = caseInsensitiveProps(props);
+        }
+        final Method[] methods = bean.getClass().getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            final Method method = methods[i];
+            final String methodName = method.getName();
+            // If setter ...
+            if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 ) { //$NON-NLS-1$
+                continue;
+            }
             // Get the property name
             String propertyName = methodName.substring(3);    // remove the "set"
             if (prefix != null) {
-            	if (caseSensitive) {
-            		propertyName = prefix + "." + Character.toLowerCase(propertyName.charAt(0)) + propertyName.substring(1, propertyName.length()); //$NON-NLS-1$
-            	} else {
-            		propertyName = prefix + "." + propertyName; //$NON-NLS-1$
-            	}
+                if (caseSensitive) {
+                    propertyName = prefix + "." + Character.toLowerCase(propertyName.charAt(0)) + propertyName.substring(1, propertyName.length()); //$NON-NLS-1$
+                } else {
+                    propertyName = prefix + "." + propertyName; //$NON-NLS-1$
+                }
             }
             Object propertyValue = map.get(propertyName);
             if (propertyValue != null || map.containsKey(propertyName)) {
-            	setProperty(bean, propertyValue, method, propertyName);
+                setProperty(bean, propertyValue, method, propertyName);
             }
-	    }
-	}
+        }
+    }
 
     public static void setBeanProperty(Object bean, String name, Object value) {
-	    final Method[] methods = bean.getClass().getMethods();
-	    for (int i = 0; i < methods.length; i++) {
-	        final Method method = methods[i];
-	        final String methodName = method.getName();
-	        // If setter ...
-	        if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 || !StringUtil.endsWithIgnoreCase(methodName, name)) { //$NON-NLS-1$
-	        	continue;
-	        }
+        final Method[] methods = bean.getClass().getMethods();
+        for (int i = 0; i < methods.length; i++) {
+            final Method method = methods[i];
+            final String methodName = method.getName();
+            // If setter ...
+            if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 || !StringUtil.endsWithIgnoreCase(methodName, name)) { //$NON-NLS-1$
+                continue;
+            }
             // Get the property name
             final String propertyName = methodName.substring(3);    // remove the "set"
             setProperty(bean, value, method, propertyName);
-	    }
-	}
+        }
+    }
 
-	private static Class<?> setProperty(Object bean, Object value,
-			final Method method, final String propertyName) {
-		final Class<?> argType = method.getParameterTypes()[0];
-		try {
-			Object[] params = new Object[] {value};
-			if (value != null && !argType.isAssignableFrom(value.getClass())) {
-				params = new Object[] {StringUtil.valueOf(value.toString(), argType)};
-			}
-		    method.invoke(bean, params);
-		} catch (Throwable e) {
-			  throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value, argType, e);
-		}
-		return argType;
-	}
+    private static Class<?> setProperty(Object bean, Object value,
+            final Method method, final String propertyName) {
+        final Class<?> argType = method.getParameterTypes()[0];
+        try {
+            Object[] params = new Object[] {value};
+            if (value != null && !argType.isAssignableFrom(value.getClass())) {
+                params = new Object[] {StringUtil.valueOf(value.toString(), argType)};
+            }
+            method.invoke(bean, params);
+        } catch (Throwable e) {
+              throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value, argType, e);
+        }
+        return argType;
+    }
 
-	private static TreeMap<String, String> caseInsensitiveProps(final Properties connectionProps) {
-	    final TreeMap<String, String> caseInsensitive = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-	    final Enumeration<?> itr = connectionProps.propertyNames();
-	    while ( itr.hasMoreElements() ) {
-	        final String name = (String) itr.nextElement();
-	        String propValue = connectionProps.getProperty(name);
-	        if (propValue != null || connectionProps.containsKey(name)) {
-	        	caseInsensitive.put(name, propValue);
-	        }
-	    }
-	    return caseInsensitive;
-	}
+    private static TreeMap<String, String> caseInsensitiveProps(final Properties connectionProps) {
+        final TreeMap<String, String> caseInsensitive = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        final Enumeration<?> itr = connectionProps.propertyNames();
+        while ( itr.hasMoreElements() ) {
+            final String name = (String) itr.nextElement();
+            String propValue = connectionProps.getProperty(name);
+            if (propValue != null || connectionProps.containsKey(name)) {
+                caseInsensitive.put(name, propValue);
+            }
+        }
+        return caseInsensitive;
+    }
 
-	/**
+    /**
      * Search for the property first in the environment, then in the system properties
      * @param key
      * @param defaultValue
@@ -444,15 +444,15 @@ public final class PropertiesUtils {
         return getHierarchicalProperty(key, defaultValue, String.class);
     }
 
-	/**
-	 * Search for the property first in the environment, then in the system properties
-	 * @param key
-	 * @param defaultValue
-	 * @param clazz
-	 * @return
-	 */
-	public static <T> T getHierarchicalProperty(String key, T defaultValue, Class<T> clazz) {
-	    String stringVal = System.getenv(key);
+    /**
+     * Search for the property first in the environment, then in the system properties
+     * @param key
+     * @param defaultValue
+     * @param clazz
+     * @return
+     */
+    public static <T> T getHierarchicalProperty(String key, T defaultValue, Class<T> clazz) {
+        String stringVal = System.getenv(key);
         if(stringVal != null) {
             stringVal = stringVal.trim();
             if (stringVal.length() != 0) {
@@ -467,13 +467,13 @@ public final class PropertiesUtils {
             }
         }
         return defaultValue;
-	}
+    }
 
-	public static Properties getCombinedProperties() {
-	    Properties properties = new Properties();
+    public static Properties getCombinedProperties() {
+        Properties properties = new Properties();
         properties.putAll(System.getProperties());
         properties.putAll(System.getenv());
         return properties;
-	}
+    }
 
 }

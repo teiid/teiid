@@ -75,11 +75,11 @@ public class Delete extends BaseLanguageObject implements BulkCommand {
 
     @Override
     public Iterator<? extends List<?>> getParameterValues() {
-    	return parameterValues;
+        return parameterValues;
     }
 
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
-		this.parameterValues = parameterValues;
-	}
+        this.parameterValues = parameterValues;
+    }
 
 }

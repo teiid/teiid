@@ -48,7 +48,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  */
 @SuppressWarnings("nls")
 public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.AbstractQueryTest
-	implements TransactionQueryTestCase {
+    implements TransactionQueryTestCase {
 
     private static String initialized = null;
 
@@ -59,83 +59,83 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     protected ConnectionStrategy connStrategy;
 
     // because only a SQLException is accounted for in AbstractQueryTest,
-    //	the applicationException is used to when unaccounted for exceptions occur.  This could
+    //    the applicationException is used to when unaccounted for exceptions occur.  This could
     // unintentional errors from the driver or ctc client test code.
     private Throwable applicationException=null;
 
     public AbstractQueryTransactionTest() {
-	super();
+    super();
 
-	this.connStrategy = ConnectionStrategyFactory
-	    .createConnectionStrategy();
+    this.connStrategy = ConnectionStrategyFactory
+        .createConnectionStrategy();
     }
 
     public AbstractQueryTransactionTest(String testname) {
-	this();
-	this.testname = testname;
+    this();
+    this.testname = testname;
     }
 
     public String getTestName() {
-	return this.testname;
+    return this.testname;
 
     }
 
     @Override
     public ConnectionStrategy getConnectionStrategy() {
-	// TODO Auto-generated method stub
-	return this.connStrategy;
+    // TODO Auto-generated method stub
+    return this.connStrategy;
     }
 
     @SuppressWarnings("deprecation")
     @Override
     protected void assignExecutionProperties(Statement stmt) {
-	if (stmt instanceof org.teiid.jdbc.TeiidStatement) {
-		org.teiid.jdbc.TeiidStatement statement = (org.teiid.jdbc.TeiidStatement) stmt;
+    if (stmt instanceof org.teiid.jdbc.TeiidStatement) {
+        org.teiid.jdbc.TeiidStatement statement = (org.teiid.jdbc.TeiidStatement) stmt;
 
-	    Properties executionProperties = this.connStrategy.getEnvironment();
-	    if (executionProperties != null) {
-		String txnautowrap = executionProperties
-			.getProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP);
-		if (txnautowrap != null) {
-		    statement.setExecutionProperty(
-			    CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP,
-			    txnautowrap);
-		}
+        Properties executionProperties = this.connStrategy.getEnvironment();
+        if (executionProperties != null) {
+        String txnautowrap = executionProperties
+            .getProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP);
+        if (txnautowrap != null) {
+            statement.setExecutionProperty(
+                CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP,
+                txnautowrap);
+        }
 
-		String fetchSizeStr = executionProperties
-		    .getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE);
-		if (fetchSizeStr != null) {
-		    try {
-			fetchSize = Integer.parseInt(fetchSizeStr);
+        String fetchSizeStr = executionProperties
+            .getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE);
+        if (fetchSizeStr != null) {
+            try {
+            fetchSize = Integer.parseInt(fetchSizeStr);
 
-			TestLogger.log("FetchSize = " + fetchSize);
-		    } catch (NumberFormatException e) {
-			fetchSize = -1;
-		    // this.print("Invalid fetch size value: " + fetchSizeStr
-		    // + ", ignoring");
-		    }
-		}
+            TestLogger.log("FetchSize = " + fetchSize);
+            } catch (NumberFormatException e) {
+            fetchSize = -1;
+            // this.print("Invalid fetch size value: " + fetchSizeStr
+            // + ", ignoring");
+            }
+        }
 
-	    }
+        }
 
 
 
-	    if (this.fetchSize > 0) {
-		try {
-		    statement.setFetchSize(this.fetchSize);
-		} catch (SQLException e) {
-		    TestLogger.log(e.getMessage());
-		}
-	    }
+        if (this.fetchSize > 0) {
+        try {
+            statement.setFetchSize(this.fetchSize);
+        } catch (SQLException e) {
+            TestLogger.log(e.getMessage());
+        }
+        }
 
-	    if (this.queryTimeout > 0) {
-		try {
-		    statement.setQueryTimeout(this.queryTimeout);
-		} catch (SQLException e) {
-		    TestLogger.log(e.getMessage());
-		}
-	    }
-	}
+        if (this.queryTimeout > 0) {
+        try {
+            statement.setQueryTimeout(this.queryTimeout);
+        } catch (SQLException e) {
+            TestLogger.log(e.getMessage());
+        }
+        }
+    }
 
     }
 
@@ -153,27 +153,27 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
     @Override
     public void setup() throws QueryTestFailedException {
 
-	this.applicationException = null;
-	this.setConnection(connStrategy.getConnection());
-	setupDataStore();
+    this.applicationException = null;
+    this.setConnection(connStrategy.getConnection());
+    setupDataStore();
 
     }
 
     protected void setupDataStore() {
 
 
-	if (! this.getConnectionStrategy().isDataStoreDisabled()) {
-	    TestLogger.logDebug("Perform DataStore setup for test: " + this.testname );
-        	if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
-        	    initialized = this.getClass().getSimpleName();
-        	    DataStore.initialize(connStrategy);
+    if (! this.getConnectionStrategy().isDataStoreDisabled()) {
+        TestLogger.logDebug("Perform DataStore setup for test: " + this.testname );
+            if (initialized == null || !initialized.equalsIgnoreCase(this.getClass().getSimpleName()) ) {
+                initialized = this.getClass().getSimpleName();
+                DataStore.initialize(connStrategy);
 
-        	}
+            }
 
-        	DataStore.setup(connStrategy);
-	} else {
-	    TestLogger.logDebug("DataStore setup is disabled for test: " + this.testname );
-	}
+            DataStore.setup(connStrategy);
+    } else {
+        TestLogger.logDebug("DataStore setup is disabled for test: " + this.testname );
+    }
 
     }
 
@@ -187,24 +187,24 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * @throws QueryTestFailedException
      */
     public Connection getSource(String identifier)
-	    throws QueryTestFailedException {
+        throws QueryTestFailedException {
 
-	Connection conn = this.connStrategy.createDriverConnection(identifier);
-	// force autocommit back to true, just in case the last user didnt
-	try {
-		conn.setAutoCommit(true);
-	} catch (Exception sqle) {
-		throw new QueryTestFailedException(sqle);
-	}
+    Connection conn = this.connStrategy.createDriverConnection(identifier);
+    // force autocommit back to true, just in case the last user didnt
+    try {
+        conn.setAutoCommit(true);
+    } catch (Exception sqle) {
+        throw new QueryTestFailedException(sqle);
+    }
 
-	return conn;
+    return conn;
 
     }
 
     public XAConnection getXASource(String identifier)
-	    throws QueryTestFailedException {
+        throws QueryTestFailedException {
 
-	return this.connStrategy.createDataSourceConnection(identifier);
+    return this.connStrategy.createDataSourceConnection(identifier);
 
     }
 
@@ -226,7 +226,7 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * @since
      */
     public boolean rollbackAllways() {
-	return false;
+    return false;
     }
 
     /**
@@ -257,50 +257,50 @@ public abstract class AbstractQueryTransactionTest extends  org.teiid.jdbc.Abstr
      * end of the test.
      */
     public void cleanup() {
-	ConfigPropertyLoader.reset();
+    ConfigPropertyLoader.reset();
 
     }
 
     @Override
     public XAConnection getXAConnection() {
-	return null;
+    return null;
 
     }
 
     @Override
     public void setApplicationException(Throwable t) {
-	this.applicationException = t;
+    this.applicationException = t;
 
     }
 
     @Override
     public boolean exceptionOccurred() {
-	return (super.exceptionOccurred() ? super.exceptionOccurred() : this.applicationException != null);
+    return (super.exceptionOccurred() ? super.exceptionOccurred() : this.applicationException != null);
 
     }
 
     @Override
     public SQLException getLastException() {
-	if (super.getLastException() != null) {
-	    return super.getLastException();
-	}
-	if (this.applicationException != null) {
-	    if (this.applicationException instanceof SQLException) {
-		return (SQLException) this.applicationException;
-	    }
+    if (super.getLastException() != null) {
+        return super.getLastException();
+    }
+    if (this.applicationException != null) {
+        if (this.applicationException instanceof SQLException) {
+        return (SQLException) this.applicationException;
+        }
 
-	    TeiidSQLException mm = new TeiidSQLException(this.applicationException.getMessage());
-	    return mm;
+        TeiidSQLException mm = new TeiidSQLException(this.applicationException.getMessage());
+        return mm;
 
-	}
+    }
 
-	return null;
+    return null;
      }
 
     @Override
     public Throwable getApplicationException() {
-	// TODO Auto-generated method stub
-	return this.applicationException;
+    // TODO Auto-generated method stub
+    return this.applicationException;
     }
 
 

@@ -27,18 +27,18 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class ReturnStatement extends AssignmentStatement {
 
-	public ReturnStatement(Expression value) {
-		super(null, value);
-	}
+    public ReturnStatement(Expression value) {
+        super(null, value);
+    }
 
-	/**
-	 * Return the type for this statement, this is one of the types
-	 * defined on the statement object.
-	 * @return The type of this statement
-	 */
-	public int getType() {
-		return Statement.TYPE_RETURN;
-	}
+    /**
+     * Return the type for this statement, this is one of the types
+     * defined on the statement object.
+     * @return The type of this statement
+     */
+    public int getType() {
+        return Statement.TYPE_RETURN;
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
@@ -48,33 +48,33 @@ public class ReturnStatement extends AssignmentStatement {
         visitor.visit(this);
     }
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone
-	 */
-	public Object clone() {
-		ReturnStatement clone = new ReturnStatement(null);
-		if (this.getExpression() != null) {
-			clone.setExpression((Expression) this.getExpression().clone());
-		}
-		if (this.getVariable() != null) {
-			clone.setVariable(this.getVariable().clone());
-		}
-		return clone;
-	}
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public Object clone() {
+        ReturnStatement clone = new ReturnStatement(null);
+        if (this.getExpression() != null) {
+            clone.setExpression((Expression) this.getExpression().clone());
+        }
+        if (this.getVariable() != null) {
+            clone.setVariable(this.getVariable().clone());
+        }
+        return clone;
+    }
 
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(!(obj instanceof ReturnStatement)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(!(obj instanceof ReturnStatement)) {
+            return false;
+        }
 
-		ReturnStatement other = (ReturnStatement) obj;
+        ReturnStatement other = (ReturnStatement) obj;
         return super.equals(other);
     }
 

@@ -38,7 +38,7 @@ import org.teiid.test.util.TestResultSetUtil;
 @SuppressWarnings("nls")
 public class XMLGenerateResults implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
-	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
+        "yyyyMMdd_HHmmss"); //$NON-NLS-1$
     private static final int MAX_COL_WIDTH = 65;
 
     private String outputDir = "";
@@ -47,50 +47,50 @@ public class XMLGenerateResults implements ResultsGenerator {
 
     public XMLGenerateResults( String testname, Properties props) {
 
-	outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
+    outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
 
-	Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
-		+ " was not specified", outputDir);
+    Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
+        + " was not specified", outputDir);
 
-	outputDir = outputDir + "/" + testname;
+    outputDir = outputDir + "/" + testname;
 
-	File d = new File(this.outputDir);
-	this.outputDir = d.getAbsolutePath();
-	d = new File(this.outputDir);
-	if (d.exists()) {
-	    FileUtils.removeDirectoryAndChildren(d);
+    File d = new File(this.outputDir);
+    this.outputDir = d.getAbsolutePath();
+    d = new File(this.outputDir);
+    if (d.exists()) {
+        FileUtils.removeDirectoryAndChildren(d);
 
-	}
-	if (!d.exists()) {
-	    d.mkdirs();
-	}
+    }
+    if (!d.exists()) {
+        d.mkdirs();
+    }
 
-	generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
-	Assert.assertNotNull("Property " + PROP_GENERATE_DIR
-		+ " was not specified", this.generateDir);
+    generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
+    Assert.assertNotNull("Property " + PROP_GENERATE_DIR
+        + " was not specified", this.generateDir);
 
-	d = new File(generateDir, testname);
-	generateDir = d.getAbsolutePath();
-	d = new File(generateDir);
-	if (d.exists()) {
-	    FileUtils.removeDirectoryAndChildren(d);
-	}
-	if (!d.exists()) {
-	    d.mkdirs();
-	}
+    d = new File(generateDir, testname);
+    generateDir = d.getAbsolutePath();
+    d = new File(generateDir);
+    if (d.exists()) {
+        FileUtils.removeDirectoryAndChildren(d);
+    }
+    if (!d.exists()) {
+        d.mkdirs();
+    }
 
     }
 
     @Override
     public String getGenerateDir() {
-	// TODO Auto-generated method stub
-	return this.generateDir;
+    // TODO Auto-generated method stub
+    return this.generateDir;
     }
 
     @Override
     public String getOutputDir() {
-	// TODO Auto-generated method stub
-	return outputDir;
+    // TODO Auto-generated method stub
+    return outputDir;
     }
 
     /**
@@ -105,149 +105,149 @@ public class XMLGenerateResults implements ResultsGenerator {
      */
 
     public void generateQueryResultFile(String querySetID, String queryID,
-	    String query, ResultSet result, Throwable ex, int testStatus)
-	    throws QueryTestFailedException {
+        String query, ResultSet result, Throwable ex, int testStatus)
+        throws QueryTestFailedException {
 
-    	try {
-			if (result != null ) result.isClosed();
-		} catch (SQLException e1) {
-			e1.printStackTrace();
-		}
-	File resultsFile = createNewResultsFile(queryID, querySetID,
-		getGenerateDir());
-	OutputStream outputStream;
-	try {
-	    FileOutputStream fos = new FileOutputStream(resultsFile);
-	    outputStream = new BufferedOutputStream(fos);
-	} catch (IOException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to open new results file: " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+        try {
+            if (result != null ) result.isClosed();
+        } catch (SQLException e1) {
+            e1.printStackTrace();
+        }
+    File resultsFile = createNewResultsFile(queryID, querySetID,
+        getGenerateDir());
+    OutputStream outputStream;
+    try {
+        FileOutputStream fos = new FileOutputStream(resultsFile);
+        outputStream = new BufferedOutputStream(fos);
+    } catch (IOException e) {
+        throw new QueryTestFailedException(
+            "Failed to open new results file: " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	try {
-	    XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
+    try {
+        XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
 
-	    // Create root JDOM element
-	    Element rootElement = new Element(TagNames.Elements.ROOT_ELEMENT);
+        // Create root JDOM element
+        Element rootElement = new Element(TagNames.Elements.ROOT_ELEMENT);
 
-	    // Create Query element
-	    Element queryElement = new Element(TagNames.Elements.QUERY);
-	    queryElement.addContent(new CDATA(query));
-	    rootElement.addContent(queryElement);
+        // Create Query element
+        Element queryElement = new Element(TagNames.Elements.QUERY);
+        queryElement.addContent(new CDATA(query));
+        rootElement.addContent(queryElement);
 
-	    // create a result attribute for the queryID
-	    Attribute resultsIDAttribute = new Attribute(
-		    TagNames.Attributes.NAME, queryID);
+        // create a result attribute for the queryID
+        Attribute resultsIDAttribute = new Attribute(
+            TagNames.Attributes.NAME, queryID);
 
-	    if (result != null) {
-		// produce a JDOM element from the results object
-		Element resultsElement = jstrat.produceResults(result);
-		// set the resultsIDAttribute on the results element
-		resultsElement.setAttribute(resultsIDAttribute);
-		// add the results elements to the root element
-		rootElement.addContent(resultsElement);
-		// debug:
-		// System.out.println("\n Result: " + printResultSet(result));
-	    } else {
-		// create a JDOM element from the exception object with the
-		// results tag
-		Element exceptionElement = new Element(
-			TagNames.Elements.QUERY_RESULTS);
-		// produce xml for the actualException and this to the
-		// exceptionElement
-		if (ex != null) {
-		    exceptionElement.addContent(jstrat.produceMsg(ex, null));
-		}
-		// set the resultsIDAttribute on the exception element
-		exceptionElement.setAttribute(resultsIDAttribute);
-		// add the results elements to the root element
-		rootElement.addContent(exceptionElement);
+        if (result != null) {
+        // produce a JDOM element from the results object
+        Element resultsElement = jstrat.produceResults(result);
+        // set the resultsIDAttribute on the results element
+        resultsElement.setAttribute(resultsIDAttribute);
+        // add the results elements to the root element
+        rootElement.addContent(resultsElement);
+        // debug:
+        // System.out.println("\n Result: " + printResultSet(result));
+        } else {
+        // create a JDOM element from the exception object with the
+        // results tag
+        Element exceptionElement = new Element(
+            TagNames.Elements.QUERY_RESULTS);
+        // produce xml for the actualException and this to the
+        // exceptionElement
+        if (ex != null) {
+            exceptionElement.addContent(jstrat.produceMsg(ex, null));
+        }
+        // set the resultsIDAttribute on the exception element
+        exceptionElement.setAttribute(resultsIDAttribute);
+        // add the results elements to the root element
+        rootElement.addContent(exceptionElement);
 
-	    }
+        }
 
-	    // Output xml
-	    XMLOutputter outputter = new XMLOutputter(JdomHelper.getFormat(
-		    "  ", true)); //$NON-NLS-1$
-	    outputter.output(new Document(rootElement), outputStream);
+        // Output xml
+        XMLOutputter outputter = new XMLOutputter(JdomHelper.getFormat(
+            "  ", true)); //$NON-NLS-1$
+        outputter.output(new Document(rootElement), outputStream);
 
-	} catch (SQLException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert results to JDOM: " + e.getMessage()); //$NON-NLS-1$
-	} catch (JDOMException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert results to JDOM: " + e.getMessage()); //$NON-NLS-1$
-	} catch (IOException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to output new results to " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-	} catch (Throwable e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert results to JDOM: " + StringUtil.getStackTrace(e)); //$NON-NLS-1$
-	} finally {
-	    try {
-		outputStream.close();
-	    } catch (IOException e) {
-	    }
-	}
+    } catch (SQLException e) {
+        throw new QueryTestFailedException(
+            "Failed to convert results to JDOM: " + e.getMessage()); //$NON-NLS-1$
+    } catch (JDOMException e) {
+        throw new QueryTestFailedException(
+            "Failed to convert results to JDOM: " + e.getMessage()); //$NON-NLS-1$
+    } catch (IOException e) {
+        throw new QueryTestFailedException(
+            "Failed to output new results to " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+    } catch (Throwable e) {
+        throw new QueryTestFailedException(
+            "Failed to convert results to JDOM: " + StringUtil.getStackTrace(e)); //$NON-NLS-1$
+    } finally {
+        try {
+        outputStream.close();
+        } catch (IOException e) {
+        }
+    }
     }
 
 //  Begin New from Impl
 
 
     public String generateErrorFile_keep(final String querySetID,
-	    final String queryID, final String sql, final ResultSet resultSet,
-	    final Throwable queryError, final Object results)
-	    throws QueryTestFailedException {
+        final String queryID, final String sql, final ResultSet resultSet,
+        final Throwable queryError, final Object results)
+        throws QueryTestFailedException {
 
-	String errorFileName = null;
-	try {
-	    // write actual results to error file
-	    errorFileName = generateErrorFileName(queryID, querySetID);
-	    // configID, queryID, Integer.toString(clientID));
-	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
-	    File errorFile = new File(getOutputDir(), errorFileName);
+    String errorFileName = null;
+    try {
+        // write actual results to error file
+        errorFileName = generateErrorFileName(queryID, querySetID);
+        // configID, queryID, Integer.toString(clientID));
+        //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
+        File errorFile = new File(getOutputDir(), errorFileName);
 
-	    // the resultset will be passed in as null when
-	    // the error was due to a thrown exception, and not based comparison issues
-	    if (resultSet == null) {
-		FileOutputStream actualOut = null;
-		try {
-		    actualOut = new FileOutputStream(errorFile);
-		    PrintStream filePrintStream = new PrintStream(actualOut);
+        // the resultset will be passed in as null when
+        // the error was due to a thrown exception, and not based comparison issues
+        if (resultSet == null) {
+        FileOutputStream actualOut = null;
+        try {
+            actualOut = new FileOutputStream(errorFile);
+            PrintStream filePrintStream = new PrintStream(actualOut);
 
 
-		    TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
+            TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
 
-		    filePrintStream.flush();
+            filePrintStream.flush();
 
-		} catch (Exception e) {
-			    e.printStackTrace();
-			    throw new QueryTestFailedException(e);
-		} finally {
-		    	if (actualOut != null) {
-				try {
-				    actualOut.close();
-				} catch (IOException e) {
-				    // TODO Auto-generated catch block
-				    e.printStackTrace();
-				}
-			}
-		}
-		return errorFileName;
+        } catch (Exception e) {
+                e.printStackTrace();
+                throw new QueryTestFailedException(e);
+        } finally {
+                if (actualOut != null) {
+                try {
+                    actualOut.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        return errorFileName;
 
-	    }
+        }
 
-	    // rewind resultset
+        // rewind resultset
 
-	    resultSet.beforeFirst();
+        resultSet.beforeFirst();
 
-	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, (File) results);
+        generateErrorResults(querySetID, queryID, sql, errorFile,
+            resultSet, (File) results);
 
-	} catch (Throwable e) {
-	    throw new QueryTestFailedException(e.getMessage());
-	    //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	return errorFileName;
+    } catch (Throwable e) {
+        throw new QueryTestFailedException(e.getMessage());
+        //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    return errorFileName;
     }
 
 
@@ -265,70 +265,70 @@ public class XMLGenerateResults implements ResultsGenerator {
      * @throws QueryTestFailedException
      */
     private void generateErrorResults(String querySetID, String queryID,
-	    String sql, File resultsFile, ResultSet actualResult,
-	    File results)
-	    throws QueryTestFailedException {
+        String sql, File resultsFile, ResultSet actualResult,
+        File results)
+        throws QueryTestFailedException {
 
-	FileOutputStream actualOut = null;
-	try {
-	    actualOut = new FileOutputStream(resultsFile);
-	    PrintStream filePrintStream = new PrintStream(actualOut);
+    FileOutputStream actualOut = null;
+    try {
+        actualOut = new FileOutputStream(resultsFile);
+        PrintStream filePrintStream = new PrintStream(actualOut);
 
-	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
+        TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
 
 
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new QueryTestFailedException(e);
-	} finally {
-	    if (actualOut != null) {
-		try {
-		    actualOut.close();
-		} catch (IOException e) {
-		    // TODO Auto-generated catch block
-		    e.printStackTrace();
-		}
-	    }
-	}
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new QueryTestFailedException(e);
+    } finally {
+        if (actualOut != null) {
+        try {
+            actualOut.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        }
+    }
     }
 //  End of copy from impl
 
     public String generateErrorFile(final String querySetID,
-	    final String queryID, final String sql, final ResultSet resultSet,
-	    final Throwable queryError, final Object expectedResultsFile)
-	    throws QueryTestFailedException {
+        final String queryID, final String sql, final ResultSet resultSet,
+        final Throwable queryError, final Object expectedResultsFile)
+        throws QueryTestFailedException {
 
-	String errorFileName = null;
-	try {
-	    // write actual results to error file
-	    errorFileName = generateErrorFileName(queryID, querySetID);
-	    // configID, queryID, Integer.toString(clientID));
-	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
-	    File errorFile = new File(getOutputDir(), errorFileName);
+    String errorFileName = null;
+    try {
+        // write actual results to error file
+        errorFileName = generateErrorFileName(queryID, querySetID);
+        // configID, queryID, Integer.toString(clientID));
+        //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
+        File errorFile = new File(getOutputDir(), errorFileName);
 
-	    // rewind resultset
-	    if (resultSet != null) {
-		resultSet.beforeFirst();
-	    }
-	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, (File) expectedResultsFile, queryError);
+        // rewind resultset
+        if (resultSet != null) {
+        resultSet.beforeFirst();
+        }
+        generateErrorResults(querySetID, queryID, sql, errorFile,
+            resultSet, (File) expectedResultsFile, queryError);
 
-	} catch (Throwable e) {
-	    throw new QueryTestFailedException(e.getMessage());
-	    //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	return errorFileName;
+    } catch (Throwable e) {
+        throw new QueryTestFailedException(e.getMessage());
+        //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    return errorFileName;
     }
 
     private File createNewResultsFile(String queryID, String querySetID,
-	    String genDir) {
-	String resultFileName = queryID + ".xml"; //$NON-NLS-1$
+        String genDir) {
+    String resultFileName = queryID + ".xml"; //$NON-NLS-1$
 
-	String targetDirname = genDir + File.separator + querySetID; //$NON-NLS-1$
-	File targetDir = new File(targetDirname);
-	targetDir.mkdirs();
+    String targetDirname = genDir + File.separator + querySetID; //$NON-NLS-1$
+    File targetDir = new File(targetDirname);
+    targetDir.mkdirs();
 
-	return new File(targetDir, resultFileName);
+    return new File(targetDir, resultFileName);
     }
 
     //
@@ -350,16 +350,16 @@ public class XMLGenerateResults implements ResultsGenerator {
     // }
 
     private String generateErrorFileName(String queryID, String querySetID) {
-//	String errorFileName = "ERROR_"
-		// configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
-		//                               + querySetID + "_" //$NON-NLS-1$
-//	    String errorFileName = queryID +
-//		+ "_" //$NON-NLS-1$
-//		+ FILE_NAME_DATE_FORMATER.format(new Date(System
-//			.currentTimeMillis())) + ".xml"; //$NON-NLS-1$
-//	return errorFileName;
+//    String errorFileName = "ERROR_"
+        // configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
+        //                               + querySetID + "_" //$NON-NLS-1$
+//        String errorFileName = queryID +
+//        + "_" //$NON-NLS-1$
+//        + FILE_NAME_DATE_FORMATER.format(new Date(System
+//            .currentTimeMillis())) + ".xml"; //$NON-NLS-1$
+//    return errorFileName;
 
-	return  queryID + ".err";
+    return  queryID + ".err";
     }
 
     /**
@@ -376,157 +376,157 @@ public class XMLGenerateResults implements ResultsGenerator {
      * @throws QueryTestFailedException
      */
     private void generateErrorResults(String querySetID, String queryID,
-	    String sql, File resultsFile, ResultSet actualResult,
-	    File expectedResultFile, Throwable ex)
-	    throws QueryTestFailedException {
-	OutputStream outputStream;
-	try {
-	    FileOutputStream fos = new FileOutputStream(resultsFile);
-	    outputStream = new BufferedOutputStream(fos);
-	} catch (IOException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to open error results file: " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+        String sql, File resultsFile, ResultSet actualResult,
+        File expectedResultFile, Throwable ex)
+        throws QueryTestFailedException {
+    OutputStream outputStream;
+    try {
+        FileOutputStream fos = new FileOutputStream(resultsFile);
+        outputStream = new BufferedOutputStream(fos);
+    } catch (IOException e) {
+        throw new QueryTestFailedException(
+            "Failed to open error results file: " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	try {
-	    XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
+    try {
+        XMLQueryVisitationStrategy jstrat = new XMLQueryVisitationStrategy();
 
-	    // Create root JDOM element
-	    Element rootElement = new Element(TagNames.Elements.ROOT_ELEMENT);
+        // Create root JDOM element
+        Element rootElement = new Element(TagNames.Elements.ROOT_ELEMENT);
 
-	    // create a JDOM element for the results
-	    Element resultElement = new Element(TagNames.Elements.QUERY_RESULTS);
-	    // set the queryIDAttr on the exception element
-	    resultElement.setAttribute(new Attribute(TagNames.Attributes.NAME,
-		    queryID));
-	    // set the querySQLAttr on the exception element
-	    resultElement.setAttribute(new Attribute(TagNames.Attributes.VALUE,
-		    sql));
+        // create a JDOM element for the results
+        Element resultElement = new Element(TagNames.Elements.QUERY_RESULTS);
+        // set the queryIDAttr on the exception element
+        resultElement.setAttribute(new Attribute(TagNames.Attributes.NAME,
+            queryID));
+        // set the querySQLAttr on the exception element
+        resultElement.setAttribute(new Attribute(TagNames.Attributes.VALUE,
+            sql));
 
-	    // ---------------------
-	    // Actual Exception
-	    // ---------------------
-	    // create a JDOM element from the actual exception object
-	    // produce xml for the actualException and this to the
-	    // exceptionElement
-	    if (ex != null) {
-		Element actualExceptionElement = new Element(
-			TagNames.Elements.ACTUAL_EXCEPTION);
+        // ---------------------
+        // Actual Exception
+        // ---------------------
+        // create a JDOM element from the actual exception object
+        // produce xml for the actualException and this to the
+        // exceptionElement
+        if (ex != null) {
+        Element actualExceptionElement = new Element(
+            TagNames.Elements.ACTUAL_EXCEPTION);
 
-		actualExceptionElement = XMLQueryVisitationStrategy
-			.jdomException(ex, actualExceptionElement);
-		resultElement.addContent(actualExceptionElement);
-	    }
+        actualExceptionElement = XMLQueryVisitationStrategy
+            .jdomException(ex, actualExceptionElement);
+        resultElement.addContent(actualExceptionElement);
+        }
 
-	    if (actualResult != null) {
-		// ------------------------------
-		// Got a ResultSet from server
-		// error was in comparing results
-		// ------------------------------
+        if (actualResult != null) {
+        // ------------------------------
+        // Got a ResultSet from server
+        // error was in comparing results
+        // ------------------------------
 
-		// --------------------------
-		// Actual Result - ResultSet
-		// --------------------------
-		// produce a JDOM element from the actual results object
-		Element actualResultsElement = new Element(
-			TagNames.Elements.ACTUAL_QUERY_RESULTS);
-		actualResultsElement = jstrat.produceMsg(actualResult,
-			actualResultsElement);
+        // --------------------------
+        // Actual Result - ResultSet
+        // --------------------------
+        // produce a JDOM element from the actual results object
+        Element actualResultsElement = new Element(
+            TagNames.Elements.ACTUAL_QUERY_RESULTS);
+        actualResultsElement = jstrat.produceMsg(actualResult,
+            actualResultsElement);
 
-		// add the results elements to the root element
-		resultElement.addContent(actualResultsElement);
+        // add the results elements to the root element
+        resultElement.addContent(actualResultsElement);
 
-		// ---------------------
-		// Expected Results - ...
-		// ---------------------
-		// produce xml for the expected results
-		// Get expected results
-		Element expectedResult = new Element("bogus"); //$NON-NLS-1$
-		expectedResult = jstrat.parseXMLResultsFile(expectedResultFile,
-			expectedResult);
-		if (expectedResult.getChild(TagNames.Elements.SELECT) != null) {
-		    //----------------------------------------------------------
-		    // -
-		    // Expected result was a ResultSet set element name to
-		    // reflect
-		    //----------------------------------------------------------
-		    // -
-		    expectedResult
-			    .setName(TagNames.Elements.EXPECTED_QUERY_RESULTS);
-		} else {
-		    //----------------------------------------------------------
-		    // --
-		    // Expected result was an exception set element name to
-		    // reflect
-		    //----------------------------------------------------------
-		    // --
-		    expectedResult
-			    .setName(TagNames.Elements.EXPECTED_EXCEPTION);
-		}
-		resultElement.addContent(expectedResult);
-	    } else {
+        // ---------------------
+        // Expected Results - ...
+        // ---------------------
+        // produce xml for the expected results
+        // Get expected results
+        Element expectedResult = new Element("bogus"); //$NON-NLS-1$
+        expectedResult = jstrat.parseXMLResultsFile(expectedResultFile,
+            expectedResult);
+        if (expectedResult.getChild(TagNames.Elements.SELECT) != null) {
+            //----------------------------------------------------------
+            // -
+            // Expected result was a ResultSet set element name to
+            // reflect
+            //----------------------------------------------------------
+            // -
+            expectedResult
+                .setName(TagNames.Elements.EXPECTED_QUERY_RESULTS);
+        } else {
+            //----------------------------------------------------------
+            // --
+            // Expected result was an exception set element name to
+            // reflect
+            //----------------------------------------------------------
+            // --
+            expectedResult
+                .setName(TagNames.Elements.EXPECTED_EXCEPTION);
+        }
+        resultElement.addContent(expectedResult);
+        } else {
 
-		// ---------------------
-		// Expected Results - ...
-		// ---------------------
-		// produce xml for the expected results
-		// Get expected results
-		Element expectedResult = new Element("bogus"); //$NON-NLS-1$
-		expectedResult = jstrat.parseXMLResultsFile(expectedResultFile,
-			expectedResult);
-		if (expectedResult.getChild(TagNames.Elements.SELECT) != null) {
-		    //----------------------------------------------------------
-		    // -
-		    // Expected result was a ResultSet set element name to
-		    // reflect
-		    //----------------------------------------------------------
-		    // -
-		    expectedResult
-			    .setName(TagNames.Elements.EXPECTED_QUERY_RESULTS);
-		} else {
-		    //----------------------------------------------------------
-		    // --
-		    // Expected result was an exception set element name to
-		    // reflect
-		    //----------------------------------------------------------
-		    // --
-		    expectedResult
-			    .setName(TagNames.Elements.EXPECTED_EXCEPTION);
-		}
-		resultElement.addContent(expectedResult);
-	    }
+        // ---------------------
+        // Expected Results - ...
+        // ---------------------
+        // produce xml for the expected results
+        // Get expected results
+        Element expectedResult = new Element("bogus"); //$NON-NLS-1$
+        expectedResult = jstrat.parseXMLResultsFile(expectedResultFile,
+            expectedResult);
+        if (expectedResult.getChild(TagNames.Elements.SELECT) != null) {
+            //----------------------------------------------------------
+            // -
+            // Expected result was a ResultSet set element name to
+            // reflect
+            //----------------------------------------------------------
+            // -
+            expectedResult
+                .setName(TagNames.Elements.EXPECTED_QUERY_RESULTS);
+        } else {
+            //----------------------------------------------------------
+            // --
+            // Expected result was an exception set element name to
+            // reflect
+            //----------------------------------------------------------
+            // --
+            expectedResult
+                .setName(TagNames.Elements.EXPECTED_EXCEPTION);
+        }
+        resultElement.addContent(expectedResult);
+        }
 
-	    // ------------------------------
-	    // Got an exeption from the server
-	    // error was in comparing exceptions
-	    // ------------------------------
+        // ------------------------------
+        // Got an exeption from the server
+        // error was in comparing exceptions
+        // ------------------------------
 
-	    // add the results elements to the root element
-	    rootElement.addContent(resultElement);
+        // add the results elements to the root element
+        rootElement.addContent(resultElement);
 
-	    // Output xml
-	    XMLOutputter outputter = new XMLOutputter(JdomHelper.getFormat(
-		    "  ", true)); //$NON-NLS-1$
-	    outputter.output(new Document(rootElement), outputStream);
+        // Output xml
+        XMLOutputter outputter = new XMLOutputter(JdomHelper.getFormat(
+            "  ", true)); //$NON-NLS-1$
+        outputter.output(new Document(rootElement), outputStream);
 
-	} catch (SQLException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert error results to JDOM: " + e.getMessage()); //$NON-NLS-1$
-	} catch (JDOMException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert error results to JDOM: " + e.getMessage()); //$NON-NLS-1$
-	} catch (IOException e) {
-	    throw new QueryTestFailedException(
-		    "Failed to output error results to " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-	} catch (Throwable e) {
-	    throw new QueryTestFailedException(
-		    "Failed to convert error results to JDOM: " + StringUtil.getStackTrace(e)); //$NON-NLS-1$
-	} finally {
-	    try {
-		outputStream.close();
-	    } catch (IOException e) {
-	    }
-	}
+    } catch (SQLException e) {
+        throw new QueryTestFailedException(
+            "Failed to convert error results to JDOM: " + e.getMessage()); //$NON-NLS-1$
+    } catch (JDOMException e) {
+        throw new QueryTestFailedException(
+            "Failed to convert error results to JDOM: " + e.getMessage()); //$NON-NLS-1$
+    } catch (IOException e) {
+        throw new QueryTestFailedException(
+            "Failed to output error results to " + resultsFile.getPath() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+    } catch (Throwable e) {
+        throw new QueryTestFailedException(
+            "Failed to convert error results to JDOM: " + StringUtil.getStackTrace(e)); //$NON-NLS-1$
+    } finally {
+        try {
+        outputStream.close();
+        } catch (IOException e) {
+        }
+    }
     }
 
 }

@@ -81,7 +81,7 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
     }
 
     public static enum Event implements BundleUtil.Event {
-    	Code,
+        Code,
     }
     public void testMetaMatrixRuntimeExceptionWithExceptionAndCodeAndMessage() {
         final String code = "1234"; //$NON-NLS-1$

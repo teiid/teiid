@@ -49,20 +49,20 @@ import org.hibernate.type.TimeType;
 import org.hibernate.type.TimestampType;
 
 public class TeiidDialect extends Dialect {
-	private static DoubleType DOUBLE = DoubleType.INSTANCE;
-	private static StringType STRING = StringType.INSTANCE;
-	private static BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
-	private static FloatType FLOAT = FloatType.INSTANCE;
-	private static IntegerType INTEGER = IntegerType.INSTANCE;
-	private static LongType LONG = LongType.INSTANCE;
-	private static CharacterType CHARACTER = CharacterType.INSTANCE;
-	private static BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
-	private static DateType DATE = DateType.INSTANCE;
-	private static TimeType TIME = TimeType.INSTANCE;
-	private static TimestampType TIMESTAMP = TimestampType.INSTANCE;
-	private static BlobType BLOB = BlobType.INSTANCE;
-	private static ClobType CLOB = ClobType.INSTANCE;
-	private static ObjectType OBJECT = ObjectType.INSTANCE;
+    private static DoubleType DOUBLE = DoubleType.INSTANCE;
+    private static StringType STRING = StringType.INSTANCE;
+    private static BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+    private static FloatType FLOAT = FloatType.INSTANCE;
+    private static IntegerType INTEGER = IntegerType.INSTANCE;
+    private static LongType LONG = LongType.INSTANCE;
+    private static CharacterType CHARACTER = CharacterType.INSTANCE;
+    private static BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
+    private static DateType DATE = DateType.INSTANCE;
+    private static TimeType TIME = TimeType.INSTANCE;
+    private static TimestampType TIMESTAMP = TimestampType.INSTANCE;
+    private static BlobType BLOB = BlobType.INSTANCE;
+    private static ClobType CLOB = ClobType.INSTANCE;
+    private static ObjectType OBJECT = ObjectType.INSTANCE;
 
     public TeiidDialect() {
         // Register types
@@ -263,50 +263,50 @@ public class TeiidDialect extends Dialect {
         return col;
     }
 
-	public String getForUpdateNowaitString() {
-		return ""; //$NON-NLS-1$
-	}
+    public String getForUpdateNowaitString() {
+        return ""; //$NON-NLS-1$
+    }
 
-	public String getForUpdateNowaitString(String aliases) {
-		return "";		 //$NON-NLS-1$
-	}
+    public String getForUpdateNowaitString(String aliases) {
+        return "";         //$NON-NLS-1$
+    }
 
-	public String getForUpdateString() {
-		return ""; //$NON-NLS-1$
-	}
+    public String getForUpdateString() {
+        return ""; //$NON-NLS-1$
+    }
 
-	public String getForUpdateString(LockMode lockMode) {
-		return ""; //$NON-NLS-1$
-	}
+    public String getForUpdateString(LockMode lockMode) {
+        return ""; //$NON-NLS-1$
+    }
 
-	public String getForUpdateString(String aliases) {
-		return ""; //$NON-NLS-1$
-	}
-
-	@Override
-	public String getSelectGUIDString() {
-		return "select uuid()"; //$NON-NLS-1$
-	}
-
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
+    public String getForUpdateString(String aliases) {
+        return ""; //$NON-NLS-1$
+    }
 
     @Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
+    public String getSelectGUIDString() {
+        return "select uuid()"; //$NON-NLS-1$
+    }
 
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return sequenceName + "_nextval()";
-	}
+    @Override
+    public boolean supportsSequences() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsPooledSequences() {
+        return true;
+    }
+
+    @Override
+    public String getSequenceNextValString(String sequenceName) {
+        return "select " + getSelectSequenceNextValString( sequenceName );
+    }
+
+    @Override
+    public String getSelectSequenceNextValString(String sequenceName) {
+        return sequenceName + "_nextval()";
+    }
 
     public MultiTableBulkIdStrategy getDefaultMultiTableBulkIdStrategy() {
         return new LocalTemporaryTableBulkIdStrategy(

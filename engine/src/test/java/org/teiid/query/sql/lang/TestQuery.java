@@ -98,7 +98,7 @@ public class TestQuery extends TestCase {
     }
 
     public void testAreResultsCachable(){
-    	//SELECT y FROM h
+        //SELECT y FROM h
         Query query = new Query();
         Select select = new Select();
         select.addSymbol(new ElementSymbol("y"));        //$NON-NLS-1$
@@ -132,7 +132,7 @@ public class TestQuery extends TestCase {
     }
 
     public void testClone3() {
-    	Query q = sample2();
+        Query q = sample2();
         q.setInto(new Into(new GroupSymbol("#foo"))); //$NON-NLS-1$
         Query qclone = (Query)q.clone();
         assertNotNull(qclone.getInto());

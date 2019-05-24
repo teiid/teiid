@@ -68,7 +68,7 @@ public class LanguageFactory {
     }
 
     public Function createFunction(String functionName, Expression[] args, Class<?> type) {
-    	return new Function(functionName, Arrays.asList(args), type);
+        return new Function(functionName, Arrays.asList(args), type);
     }
 
     public Function createFunction(String functionName, List<? extends Expression> args, Class<?> type) {
@@ -92,7 +92,7 @@ public class LanguageFactory {
     }
 
     public ExpressionValueSource createInsertExpressionValueSource(List<Expression> values) {
-    	return new ExpressionValueSource(values);
+        return new ExpressionValueSource(values);
     }
 
     public IsNull createIsNullCriteria(Expression expression, boolean isNegated) {
@@ -158,7 +158,7 @@ public class LanguageFactory {
     }
 
     public SearchedWhenClause createSearchedWhenCondition(Condition condition, Expression result) {
-    	return new SearchedWhenClause(condition, result);
+        return new SearchedWhenClause(condition, result);
     }
 
     public DerivedColumn createSelectSymbol(String name, Expression expression) {
@@ -196,8 +196,8 @@ public class LanguageFactory {
         return queryImpl;
     }
 
-	public SetClause createSetClause(ColumnReference symbol, Expression value) {
-		return new SetClause(symbol, value);
-	}
+    public SetClause createSetClause(ColumnReference symbol, Expression value) {
+        return new SetClause(symbol, value);
+    }
 
 }

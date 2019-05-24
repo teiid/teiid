@@ -46,31 +46,31 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+    private Admin admin;
 
-	@Before
-	public void setup() throws Exception {
+    @Before
+    public void setup() throws Exception {
         admin = AdminFactory.getInstance().createAdmin("localhost",
                 AdminUtil.MANAGEMENT_PORT, "admin", "admin".toCharArray());
-	}
+    }
 
-	@After
-	public void teardown() throws AdminException {
-		AdminUtil.cleanUp(admin);
-		admin.close();
-	}
+    @After
+    public void teardown() throws AdminException {
+        AdminUtil.cleanUp(admin);
+        admin.close();
+    }
 
-	@Test
-	public void testDDL() throws Exception {
-		String ddl = "create database foo version '1';"
-		        + "use database foo version '1';"
-				+ "create foreign data wrapper loopback;"
-				+ "create server NONE type 'NONE' foreign data wrapper loopback;"
-				+ "create schema test server NONE;"
-				+ "set schema test;"
-				+ "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double)";
+    @Test
+    public void testDDL() throws Exception {
+        String ddl = "create database foo version '1';"
+                + "use database foo version '1';"
+                + "create foreign data wrapper loopback;"
+                + "create server NONE type 'NONE' foreign data wrapper loopback;"
+                + "create schema test server NONE;"
+                + "set schema test;"
+                + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double)";
 
-		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
+        this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user;autoFailover=true", null);
 
@@ -91,29 +91,29 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user;autoFailover=true", null);
 
         // and execute, using the same connection
-    	execute("SELECT * FROM test.G2"); //$NON-NLS-1$
+        execute("SELECT * FROM test.G2"); //$NON-NLS-1$
         assertRowCount(1);
         printResults();
 
         String exportedDdl = admin.getSchema("foo", "1", null, null, null);
-		Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-vdb.ddl")),
-				exportedDdl);
+        Assert.assertEquals(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("exported-vdb.ddl")),
+                exportedDdl);
 
         closeConnection();
         admin.undeploy("foo-vdb.ddl");
-	}
+    }
 
-	@Test
-	public void testOverrideTranslator() throws Exception {
-		String ddl = "create database foo;"
-		+ "use database foo version '1';"
+    @Test
+    public void testOverrideTranslator() throws Exception {
+        String ddl = "create database foo;"
+        + "use database foo version '1';"
         + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
         + "create server serverOne type 'NONE' foreign data wrapper loopy;"
         + "create schema test server serverOne;"
         + "set schema test;"
         + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
 
-		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
+        this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
 
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo@mm://localhost:31000;user=user;password=user", null);
@@ -124,20 +124,20 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         admin.undeploy("foo-vdb.ddl");
     }
 
-	@Test
+    @Test
     public void testVDBImport() throws Exception {
-		String ddl = "create database foo;"
-		        + "use database foo version '1';"
-		        + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
-		        + "create server serverOne type 'NONE' foreign data wrapper loopy;"
-		        + "create schema test server serverOne;"
-		        + "set schema test;"
-		        + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
-		String bar =  "create database BAR;"
-		        + "IMPORT database foo VERSION '1';";
+        String ddl = "create database foo;"
+                + "use database foo version '1';"
+                + "create foreign data wrapper loopy type loopback OPTIONS(IncrementRows true, RowCount 500);"
+                + "create server serverOne type 'NONE' foreign data wrapper loopy;"
+                + "create schema test server serverOne;"
+                + "set schema test;"
+                + "CREATE FOREIGN TABLE G1 (e1 integer PRIMARY KEY, e2 varchar(25), e3 double);";
+        String bar =  "create database BAR;"
+                + "IMPORT database foo VERSION '1';";
 
-		this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
-		this.admin.deploy("bar-vdb.ddl", new ByteArrayInputStream(bar.getBytes()), false);
+        this.admin.deploy("foo-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
+        this.admin.deploy("bar-vdb.ddl", new ByteArrayInputStream(bar.getBytes()), false);
 
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:BAR@mm://localhost:31000;user=user;password=user", null);
@@ -149,7 +149,7 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         admin.undeploy("foo-vdb.ddl");
     }
 
-	@Test
+    @Test
     public void testUdfClasspath() throws Exception {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "func.jar")
                   .addClasses(SampleFunctions.class);
@@ -157,9 +157,9 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
 
         String ddl = "create database \"dynamic-func\" OPTIONS(lib 'deployment.func.jar');"
                 + "USE DATABASE \"dynamic-func\" version '1';"
-        		+ "CREATE VIRTUAL schema test;"
+                + "CREATE VIRTUAL schema test;"
                 + "SET SCHEMA test;"
-        		+ "CREATE function func (val string) returns integer "
+                + "CREATE function func (val string) returns integer "
                 + "options (JAVA_CLASS 'org.teiid.arquillian.SampleFunctions',  JAVA_METHOD 'doSomething');";
 
         this.admin.deploy("dynamic-vdb.ddl", new ByteArrayInputStream(ddl.getBytes()), false);
@@ -172,9 +172,9 @@ public class IntegrationTestDDL extends AbstractMMQueryTestCase {
         closeConnection();
     }
 
-	@Test(expected=SQLException.class)
+    @Test(expected=SQLException.class)
     public void testDDLOverJDBCNoAuth() throws Exception {
         this.internalConnection = TeiidDriver.getInstance()
                 .connect("jdbc:teiid:foo2@mm://localhost:31000;user=dummy;password=user;autoFailover=true;vdbEdit=true", null);
-	}
+    }
 }

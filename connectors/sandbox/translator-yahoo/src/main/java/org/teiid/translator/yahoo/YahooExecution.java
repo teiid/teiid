@@ -158,12 +158,12 @@ public class YahooExecution implements ResultSetExecution {
         } catch(IOException e) {
             throw new TranslatorException(e, e.getMessage());
         } finally {
-        	if (buffReader != null) {
-        		try {
-					buffReader.close();
-				} catch (IOException e) {
-				}
-        	}
+            if (buffReader != null) {
+                try {
+                    buffReader.close();
+                } catch (IOException e) {
+                }
+            }
         }
 
         return rows;
@@ -191,10 +191,10 @@ public class YahooExecution implements ResultSetExecution {
             } else if(i==2) {
                 if(!data.equals("0")){ //$NON-NLS-1$
                     try {
-                    	synchronized (DATE_FORMAT) {
+                        synchronized (DATE_FORMAT) {
                             Date date = DATE_FORMAT.parse(data);
                             row.add(new java.sql.Date(date.getTime()));
-						}
+                        }
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
                         LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14001, params));
@@ -206,10 +206,10 @@ public class YahooExecution implements ResultSetExecution {
             } else if(i==3) {
                 if(!data.equals("0")){ //$NON-NLS-1$
                     try {
-                    	synchronized (TIME_FORMAT) {
+                        synchronized (TIME_FORMAT) {
                             Date time = TIME_FORMAT.parse(data);
                             row.add(new java.sql.Time(time.getTime()));
-						}
+                        }
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
                         LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14002, params));

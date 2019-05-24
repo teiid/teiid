@@ -58,7 +58,7 @@ import org.teiid.query.sql.symbol.Expression;
 public class SubqueryCompareCriteria extends AbstractCompareCriteria
 implements SubqueryContainer<QueryCommand>, ContextReference {
 
-	private static AtomicInteger ID = new AtomicInteger();
+    private static AtomicInteger ID = new AtomicInteger();
 
     /** "Some" predicate quantifier (equivalent to "Any") */
     public static final int SOME = 2;
@@ -90,7 +90,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     @Override
     public String getContextSymbol() {
-    	return id;
+        return id;
     }
 
     /**
@@ -206,38 +206,38 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
         SubqueryCompareCriteria copy = new SubqueryCompareCriteria(leftCopy, copyCommand, this.getOperator(), this.getPredicateQuantifier());
         if (this.subqueryHint != null) {
-        	copy.subqueryHint = this.subqueryHint.clone();
+            copy.subqueryHint = this.subqueryHint.clone();
         }
         if (this.arrayExpression != null) {
-        	copy.arrayExpression = (Expression) this.arrayExpression.clone();
+            copy.arrayExpression = (Expression) this.arrayExpression.clone();
         }
         return copy;
     }
 
     @Override
     public void negate() {
-    	super.negate();
-    	if (this.predicateQuantifier == ALL) {
-    		this.predicateQuantifier = SOME;
-    	} else {
-    		this.predicateQuantifier = ALL;
-    	}
+        super.negate();
+        if (this.predicateQuantifier == ALL) {
+            this.predicateQuantifier = SOME;
+        } else {
+            this.predicateQuantifier = ALL;
+        }
     }
 
     public SubqueryHint getSubqueryHint() {
-		return subqueryHint;
-	}
+        return subqueryHint;
+    }
 
     public void setSubqueryHint(SubqueryHint subqueryHint) {
-		this.subqueryHint = subqueryHint;
-	}
+        this.subqueryHint = subqueryHint;
+    }
 
     public Expression getArrayExpression() {
-		return arrayExpression;
-	}
+        return arrayExpression;
+    }
 
     public void setArrayExpression(Expression expression) {
-		this.arrayExpression = expression;
-	}
+        this.arrayExpression = expression;
+    }
 
 }

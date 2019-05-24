@@ -29,7 +29,7 @@ import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 
 class TranslatorRemove extends AbstractRemoveStepHandler {
-	public static TranslatorRemove INSTANCE = new TranslatorRemove();
+    public static TranslatorRemove INSTANCE = new TranslatorRemove();
 
     @Override
     protected void performRuntime(OperationContext context,
@@ -39,13 +39,13 @@ class TranslatorRemove extends AbstractRemoveStepHandler {
         final ModelNode address = operation.require(OP_ADDR);
         final PathAddress pathAddress = PathAddress.pathAddress(address);
 
-    	String translatorName = pathAddress.getLastElement().getValue();
+        String translatorName = pathAddress.getLastElement().getValue();
 
-    	final ServiceRegistry registry = context.getServiceRegistry(true);
+        final ServiceRegistry registry = context.getServiceRegistry(true);
         final ServiceName serviceName = TeiidServiceNames.translatorServiceName(translatorName);
         final ServiceController<?> controller = registry.getService(serviceName);
         if (controller != null) {
-        	context.removeService(serviceName);
+            context.removeService(serviceName);
         }
-	}
+    }
 }

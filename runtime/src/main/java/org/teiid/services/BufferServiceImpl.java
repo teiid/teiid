@@ -47,8 +47,8 @@ import org.teiid.runtime.RuntimePlugin;
  * for file service access.
  */
 public class BufferServiceImpl implements BufferService, Serializable {
-	private static final long serialVersionUID = -6217808623863643531L;
-	private static final long MB = 1<<20;
+    private static final long serialVersionUID = -6217808623863643531L;
+    private static final long MB = 1<<20;
 
     // Instance
     private BufferManagerImpl bufferMgr;
@@ -68,11 +68,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxReservedHeapKb = BufferManager.DEFAULT_RESERVE_BUFFER_KB;
 
     //fixed memory properties
-	private long fixedMemoryBufferSpaceMb = -1;
+    private long fixedMemoryBufferSpaceMb = -1;
     private boolean fixedMemoryBufferOffHeap;
 
-	//disk properties
-	private File bufferDir;
+    //disk properties
+    private File bufferDir;
     private boolean encryptFiles = false;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
@@ -87,11 +87,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
      * @since 4.3
      */
     void cleanDirectory(File file) {
-    	FileUtils.removeChildrenRecursively(file);
+        FileUtils.removeChildrenRecursively(file);
     }
 
     public void start(){
-    	try {
+        try {
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl(false);
             this.bufferMgr.setProcessorBatchSize(processorBatchSize);
@@ -103,11 +103,11 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
             // If necessary, add disk storage manager
             if(useDisk) {
-        		LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
-        		if (!bufferDir.exists()) {
-        			this.bufferDir.mkdirs();
-        		}
-            	// start the file storage manager in clean state
+                LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
+                if (!bufferDir.exists()) {
+                    this.bufferDir.mkdirs();
+                }
+                // start the file storage manager in clean state
                 // wise FileStorageManager is smart enough to clean up after itself
                 cleanDirectory(bufferDir);
                 // Get the properties for FileStorageManager and create.
@@ -119,7 +119,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 ssm.setMaxFileSize(maxFileSize);
                 StorageManager sm = ssm;
                 if (encryptFiles) {
-                	sm = new EncryptedStorageManager(ssm);
+                    sm = new EncryptedStorageManager(ssm);
                 }
                 fsc = new BufferFrontedFileStoreCache();
                 fsc.setBufferManager(this.bufferMgr);
@@ -128,37 +128,37 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 if (fixedMemoryBufferSpaceMb < 0) {
                     //use approximately 40% of what's set aside for the reserved accounting for conversion from kb to bytes
                     long autoMaxBufferSpace = 4*(((long)this.bufferMgr.getMaxReserveKB())<<10)/10;
-				    if (this.maxReservedHeapKb >= 0) {
-				        //if the max reserve has been - it may be too high
-				        //across most vm sizes we use about 1/4 of the remaining memory for the fixed buffer
-				        autoMaxBufferSpace = Math.min(autoMaxBufferSpace, (vmMaxMemory - (((long)this.bufferMgr.getMaxReserveKB())<<10))/4);
-				    }
-				    fsc.setMemoryBufferSpace(autoMaxBufferSpace);
+                    if (this.maxReservedHeapKb >= 0) {
+                        //if the max reserve has been - it may be too high
+                        //across most vm sizes we use about 1/4 of the remaining memory for the fixed buffer
+                        autoMaxBufferSpace = Math.min(autoMaxBufferSpace, (vmMaxMemory - (((long)this.bufferMgr.getMaxReserveKB())<<10))/4);
+                    }
+                    fsc.setMemoryBufferSpace(autoMaxBufferSpace);
                 } else {
-                	//scale from MB to bytes
-                	fsc.setMemoryBufferSpace(fixedMemoryBufferSpaceMb << 20);
+                    //scale from MB to bytes
+                    fsc.setMemoryBufferSpace(fixedMemoryBufferSpaceMb << 20);
                 }
                 //estimate inode/batch overhead
-				long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(fixedMemoryBufferOffHeap?19:17);
-        		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - batchAndInodeOverheadKB));
+                long batchAndInodeOverheadKB = fsc.getMemoryBufferSpace()>>(fixedMemoryBufferOffHeap?19:17);
+                this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - batchAndInodeOverheadKB));
                 if (this.maxReservedHeapKb < 0) {
-                	if (fixedMemoryBufferOffHeap) {
-                		//the default is too large if off heap
-                		this.bufferMgr.setMaxReserveKB(8*this.bufferMgr.getMaxReserveKB()/10);
-                	} else {
-	            		//adjust the value for the main memory buffer
-	            		this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - (fsc.getMemoryBufferSpace()>>10)));
-                	}
+                    if (fixedMemoryBufferOffHeap) {
+                        //the default is too large if off heap
+                        this.bufferMgr.setMaxReserveKB(8*this.bufferMgr.getMaxReserveKB()/10);
+                    } else {
+                        //adjust the value for the main memory buffer
+                        this.bufferMgr.setMaxReserveKB((int)Math.max(0, this.bufferMgr.getMaxReserveKB() - (fsc.getMemoryBufferSpace()>>10)));
+                    }
                 }
                 fsc.setStorageManager(sm);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
             } else {
-            	MemoryStorageManager msm = new MemoryStorageManager();
-            	SplittableStorageManager ssm = new SplittableStorageManager(msm);
-            	ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
-            	this.bufferMgr.setCache(msm);
-            	this.bufferMgr.setStorageManager(ssm);
+                MemoryStorageManager msm = new MemoryStorageManager();
+                SplittableStorageManager ssm = new SplittableStorageManager(msm);
+                ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
+                this.bufferMgr.setCache(msm);
+                this.bufferMgr.setStorageManager(ssm);
             }
 
         } catch(TeiidComponentException e) {
@@ -169,16 +169,16 @@ public class BufferServiceImpl implements BufferService, Serializable {
     }
 
     public void stop() {
-    	LogManager.logDetail(LogConstants.CTX_DQP, "Stopping BufferManager using", bufferDir); //$NON-NLS-1$
-    	if (bufferMgr != null) {
-    		bufferMgr.shutdown();
-    		bufferMgr = null;
-    	}
+        LogManager.logDetail(LogConstants.CTX_DQP, "Stopping BufferManager using", bufferDir); //$NON-NLS-1$
+        if (bufferMgr != null) {
+            bufferMgr.shutdown();
+            bufferMgr = null;
+        }
 
         // Delete the buffer directory
         if (bufferDir != null) {
-	        cleanDirectory(bufferDir);
-	        bufferDir.delete();
+            cleanDirectory(bufferDir);
+            bufferDir.delete();
         }
     }
 
@@ -188,56 +188,56 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     @Override
     public TupleBufferCache getTupleBufferCache() {
-    	return this.bufferMgr;
+        return this.bufferMgr;
     }
 
-	public void setUseDisk(boolean flag) {
-		this.useDisk = flag;
-	}
+    public void setUseDisk(boolean flag) {
+        this.useDisk = flag;
+    }
 
-	public void setDiskDirectory(String dir) {
-		this.bufferDir = new File(dir, "buffer"); //$NON-NLS-1$
-	}
+    public void setDiskDirectory(String dir) {
+        this.bufferDir = new File(dir, "buffer"); //$NON-NLS-1$
+    }
 
-	public void setProcessorBatchSize(int size) {
-		this.processorBatchSize = size;
-	}
+    public void setProcessorBatchSize(int size) {
+        this.processorBatchSize = size;
+    }
 
-	public void setInlineLobs(boolean inlineLobs) {
-		this.inlineLobs = inlineLobs;
-	}
+    public void setInlineLobs(boolean inlineLobs) {
+        this.inlineLobs = inlineLobs;
+    }
 
-	public File getBufferDirectory() {
-		return bufferDir;
-	}
+    public File getBufferDirectory() {
+        return bufferDir;
+    }
 
-	public boolean isUseDisk() {
-		return this.useDisk;
-	}
+    public boolean isUseDisk() {
+        return this.useDisk;
+    }
 
-	public boolean isInlineLobs() {
-		return inlineLobs;
-	}
+    public boolean isInlineLobs() {
+        return inlineLobs;
+    }
 
-	public int getProcessorBatchSize() {
-		return this.processorBatchSize;
-	}
+    public int getProcessorBatchSize() {
+        return this.processorBatchSize;
+    }
 
     public void setMaxFileSize(long maxFileSize) {
-    	this.maxFileSize = maxFileSize;
-	}
+        this.maxFileSize = maxFileSize;
+    }
 
-	public long getMaxFileSize() {
-		return maxFileSize;
-	}
+    public long getMaxFileSize() {
+        return maxFileSize;
+    }
 
     public void setMaxOpenFiles(int maxOpenFiles) {
-		this.maxOpenFiles = maxOpenFiles;
-	}
+        this.maxOpenFiles = maxOpenFiles;
+    }
 
     public int getMaxProcessingKb() {
-		return maxProcessingKb;
-	}
+        return maxProcessingKb;
+    }
 
     public void setMaxReservedHeapMb(int maxReservedHeap) {
         this.maxReservedHeapKb = (int)Math.min(Integer.MAX_VALUE, ((long)maxReservedHeap)<<10);
@@ -248,29 +248,29 @@ public class BufferServiceImpl implements BufferService, Serializable {
     }
 
     public void setMaxProcessingKb(int maxProcessingKb) {
-		this.maxProcessingKb = maxProcessingKb;
-	}
+        this.maxProcessingKb = maxProcessingKb;
+    }
 
     @Deprecated
     public void setMaxReserveKb(int maxReserveKb) {
-		this.maxReservedHeapKb = maxReserveKb;
-	}
+        this.maxReservedHeapKb = maxReserveKb;
+    }
 
-	public long getMaxDiskBufferSpaceMb() {
-		return maxDiskBufferSpace;
-	}
+    public long getMaxDiskBufferSpaceMb() {
+        return maxDiskBufferSpace;
+    }
 
     public void setMaxDiskBufferSpaceMb(long maxBufferSpace) {
-		this.maxDiskBufferSpace = maxBufferSpace;
-	}
+        this.maxDiskBufferSpace = maxBufferSpace;
+    }
 
     public void setFixedMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
-		this.fixedMemoryBufferOffHeap = memoryBufferOffHeap;
-	}
+        this.fixedMemoryBufferOffHeap = memoryBufferOffHeap;
+    }
 
     public void setFixedMemoryBufferSpaceMb(int memoryBufferSpace) {
-		this.fixedMemoryBufferSpaceMb = memoryBufferSpace;
-	}
+        this.fixedMemoryBufferSpaceMb = memoryBufferSpace;
+    }
 
     @Deprecated
     public void setMaxStorageObjectSize(int maxStorageObjectSize) {
@@ -282,10 +282,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
     }
 
     public long getUsedDiskBufferSpaceMb() {
-    	if (fsm != null) {
-    		return fsm.getUsedBufferSpace()/MB;
-    	}
-    	return 0;
+        if (fsm != null) {
+            return fsm.getUsedBufferSpace()/MB;
+        }
+        return 0;
     }
 
     public int getTotalOutOfDiskErrors() {
@@ -295,66 +295,66 @@ public class BufferServiceImpl implements BufferService, Serializable {
         return 0;
     }
 
-	public long getHeapBufferInUseKb() {
-		return bufferMgr.getActiveBatchBytes()/1024;
-	}
+    public long getHeapBufferInUseKb() {
+        return bufferMgr.getActiveBatchBytes()/1024;
+    }
 
-	public long getMemoryReservedByActivePlansKb() {
-		return this.bufferMgr.getMaxReserveKB() - bufferMgr.getReserveBatchBytes()/1024;
-	}
+    public long getMemoryReservedByActivePlansKb() {
+        return this.bufferMgr.getMaxReserveKB() - bufferMgr.getReserveBatchBytes()/1024;
+    }
 
-	public long getDiskReadCount() {
-		if (fsc != null) {
-			return fsc.getStorageReads();
-		}
-		return 0;
-	}
+    public long getDiskReadCount() {
+        if (fsc != null) {
+            return fsc.getStorageReads();
+        }
+        return 0;
+    }
 
     public long getDiskWriteCount() {
-    	if (fsc != null) {
-    		return fsc.getStorageWrites();
-    	}
-    	return 0;
+        if (fsc != null) {
+            return fsc.getStorageWrites();
+        }
+        return 0;
     }
 
     public long getMemoryBufferUsedKb() {
-    	if (fsc != null) {
-    		return fsc.getMemoryInUseBytes() >> 10;
-    	}
-    	return 0;
+        if (fsc != null) {
+            return fsc.getMemoryInUseBytes() >> 10;
+        }
+        return 0;
     }
 
     public long getStorageReadCount() {
-    	return bufferMgr.getReadCount();
+        return bufferMgr.getReadCount();
     }
 
     public long getStorageWriteCount() {
-    	return bufferMgr.getWriteCount();
+        return bufferMgr.getWriteCount();
     }
 
-	public long getReadAttempts() {
-		return bufferMgr.getReadAttempts();
-	}
+    public long getReadAttempts() {
+        return bufferMgr.getReadAttempts();
+    }
 
     public int getFixedMemoryBufferSpaceMb() {
-		return (int)fixedMemoryBufferSpaceMb;
-	}
+        return (int)fixedMemoryBufferSpaceMb;
+    }
 
     public int getMaxStorageObjectSizeKb() {
-		return maxStorageObjectSize >> 10;
-	}
+        return maxStorageObjectSize >> 10;
+    }
 
     public boolean isFixedMemoryBufferOffHeap() {
-		return fixedMemoryBufferOffHeap;
-	}
+        return fixedMemoryBufferOffHeap;
+    }
 
     public boolean isEncryptFiles() {
-		return encryptFiles;
-	}
+        return encryptFiles;
+    }
 
     public void setEncryptFiles(boolean encryptFiles) {
-		this.encryptFiles = encryptFiles;
-	}
+        this.encryptFiles = encryptFiles;
+    }
 
     public void setBufferManager(BufferManagerImpl bufferManager) {
         this.bufferMgr = bufferManager;

@@ -44,42 +44,42 @@ import org.teiid.translator.TypeFacility;
 @SuppressWarnings("nls")
 public class TestFileExecutionFactory {
 
-	@Test public void testGetTextFiles() throws Exception {
-		FileExecutionFactory fef = new FileExecutionFactory();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		fef.getMetadata(mf, null);
-		Procedure p = mf.getSchema().getProcedure("getTextFiles");
-		VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
-		Mockito.stub(fc.getFiles("*.txt")).toReturn(JavaVirtualFile.getFiles("*.txt", new File(UnitTestUtil.getTestDataPath(), "*.txt")));
-		Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
-		ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
-		pe.execute();
-		int count = 0;
-		while (true) {
-		    List<?> val = pe.next();
-			if (val == null) {
-				break;
-			}
-			assertEquals(5, val.size());
-			assertTrue(val.get(3) instanceof Timestamp);
-			assertEquals(Long.valueOf(0), val.get(4));
-			count++;
-		}
-		assertEquals(2, count);
+    @Test public void testGetTextFiles() throws Exception {
+        FileExecutionFactory fef = new FileExecutionFactory();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "text", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+        fef.getMetadata(mf, null);
+        Procedure p = mf.getSchema().getProcedure("getTextFiles");
+        VirtualFileConnection fc = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(fc.getFiles("*.txt")).toReturn(JavaVirtualFile.getFiles("*.txt", new File(UnitTestUtil.getTestDataPath(), "*.txt")));
+        Call call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*.txt", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
+        ProcedureExecution pe = fef.createProcedureExecution(call, null, null, fc);
+        pe.execute();
+        int count = 0;
+        while (true) {
+            List<?> val = pe.next();
+            if (val == null) {
+                break;
+            }
+            assertEquals(5, val.size());
+            assertTrue(val.get(3) instanceof Timestamp);
+            assertEquals(Long.valueOf(0), val.get(4));
+            count++;
+        }
+        assertEquals(2, count);
 
 
-		call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
-		pe = fef.createProcedureExecution(call, null, null, fc);
-		Mockito.stub(fc.getFiles("*1*")).toReturn(JavaVirtualFile.getFiles("*1*", new File(UnitTestUtil.getTestDataPath(), "*1*")));
-		pe.execute();
-		count = 0;
-		while (true) {
-			if (pe.next() == null) {
-				break;
-			}
-			count++;
-		}
-		assertEquals(1, count);
-	}
+        call = fef.getLanguageFactory().createCall("getTextFiles", Arrays.asList(new Argument(Direction.IN, new Literal("*1*", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)), p);
+        pe = fef.createProcedureExecution(call, null, null, fc);
+        Mockito.stub(fc.getFiles("*1*")).toReturn(JavaVirtualFile.getFiles("*1*", new File(UnitTestUtil.getTestDataPath(), "*1*")));
+        pe.execute();
+        count = 0;
+        while (true) {
+            if (pe.next() == null) {
+                break;
+            }
+            count++;
+        }
+        assertEquals(1, count);
+    }
 
 }

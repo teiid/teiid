@@ -45,103 +45,103 @@ public class DriverConnection extends ConnectionStrategy {
 
 
     public DriverConnection(Properties props) throws QueryTestFailedException {
-	super(props);
-	validate();
+    super(props);
+    validate();
     }
 
     public void validate() {
 
-	String urlProp = this.getEnvironment().getProperty(DS_URL);
-	if (urlProp == null || urlProp.length() == 0) {
-	    throw new TransactionRuntimeException("Property " + DS_URL
-		    + " was not specified");
-	}
-	StringBuffer urlSB = new StringBuffer(urlProp);
+    String urlProp = this.getEnvironment().getProperty(DS_URL);
+    if (urlProp == null || urlProp.length() == 0) {
+        throw new TransactionRuntimeException("Property " + DS_URL
+            + " was not specified");
+    }
+    StringBuffer urlSB = new StringBuffer(urlProp);
 
-	String appl = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
-	if (appl != null) {
-	    urlSB.append(";");
-	    urlSB.append("ApplicationName").append("=").append(appl);
-	}
+    String appl = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
+    if (appl != null) {
+        urlSB.append(";");
+        urlSB.append("ApplicationName").append("=").append(appl);
+    }
 
-	url = urlSB.toString();
+    url = urlSB.toString();
 
-	driver = this.getEnvironment().getProperty(DS_DRIVER);
-	if (driver == null || driver.length() == 0) {
-	    throw new TransactionRuntimeException("Property " + DS_DRIVER
-		    + " was not specified");
-	}
+    driver = this.getEnvironment().getProperty(DS_DRIVER);
+    if (driver == null || driver.length() == 0) {
+        throw new TransactionRuntimeException("Property " + DS_DRIVER
+            + " was not specified");
+    }
 
-	// need both user variables because Teiid uses 'user' and connectors use
-	// 'username'
+    // need both user variables because Teiid uses 'user' and connectors use
+    // 'username'
 
-	this.username = this.getEnvironment().getProperty(DS_USER);
-	if (username == null) {
-	    this.username = this.getEnvironment().getProperty(DS_USERNAME);
-	}
-	this.pwd = this.getEnvironment().getProperty(DS_PASSWORD);
+    this.username = this.getEnvironment().getProperty(DS_USER);
+    if (username == null) {
+        this.username = this.getEnvironment().getProperty(DS_USERNAME);
+    }
+    this.pwd = this.getEnvironment().getProperty(DS_PASSWORD);
 
-	try {
-	    // Load jdbc driver
-	    Class.forName(driver);
-	} catch (ClassNotFoundException e) {
-	    throw new TransactionRuntimeException(e);
-	}
+    try {
+        // Load jdbc driver
+        Class.forName(driver);
+    } catch (ClassNotFoundException e) {
+        throw new TransactionRuntimeException(e);
+    }
 
     }
 
     public synchronized Connection getConnection()
-	    throws QueryTestFailedException {
-	if (this.connection != null) {
-	    try {
-		if (!this.connection.isClosed()) {
-		    return this.connection;
-		}
-	    } catch (SQLException e) {
+        throws QueryTestFailedException {
+    if (this.connection != null) {
+        try {
+        if (!this.connection.isClosed()) {
+            return this.connection;
+        }
+        } catch (SQLException e) {
 
-	    }
+        }
 
-	}
+    }
 
-	this.connection = getJDBCConnection(this.driver, this.url,
-		this.username, this.pwd);
-	return this.connection;
+    this.connection = getJDBCConnection(this.driver, this.url,
+        this.username, this.pwd);
+    return this.connection;
     }
 
     private Connection getJDBCConnection(String driver, String url,
-	    String user, String passwd) throws QueryTestFailedException {
+        String user, String passwd) throws QueryTestFailedException {
 
-	TestLogger.log("Creating Driver Connection: \"" + url + "\"" + " user:password - " + (user!=null?user:"NA") + ":" + (passwd!=null?passwd:"NA")); //$NON-NLS-1$ //$NON-NLS-2$
+    TestLogger.log("Creating Driver Connection: \"" + url + "\"" + " user:password - " + (user!=null?user:"NA") + ":" + (passwd!=null?passwd:"NA")); //$NON-NLS-1$ //$NON-NLS-2$
 
-	Connection conn = null;
-	try {
-	    // Create a connection
-	    if (user != null && user.length() > 0) {
-		conn = DriverManager.getConnection(url, user, passwd);
-	    } else {
-		conn = DriverManager.getConnection(url);
-	    }
+    Connection conn = null;
+    try {
+        // Create a connection
+        if (user != null && user.length() > 0) {
+        conn = DriverManager.getConnection(url, user, passwd);
+        } else {
+        conn = DriverManager.getConnection(url);
+        }
 
-	} catch (Throwable t) {
-	    t.printStackTrace();
-	    throw new QueryTestFailedException(t.getMessage());
-	}
-	return conn;
+    } catch (Throwable t) {
+        t.printStackTrace();
+        throw new QueryTestFailedException(t.getMessage());
+    }
+    return conn;
 
     }
 
     @Override
     public void shutdown() {
-	super.shutdown();
-	if (this.connection != null) {
-	    try {
-		this.connection.close();
-	    } catch (Exception e) {
-		// ignore
-	    }
-	}
+    super.shutdown();
+    if (this.connection != null) {
+        try {
+        this.connection.close();
+        } catch (Exception e) {
+        // ignore
+        }
+    }
 
-	this.connection = null;
+    this.connection = null;
 
     }
 }

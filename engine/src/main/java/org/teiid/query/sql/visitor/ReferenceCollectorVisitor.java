@@ -57,13 +57,13 @@ public class ReferenceCollectorVisitor extends LanguageVisitor {
         this.references.add(obj);
     }
 
-	/**
+    /**
      * Helper to quickly get the references from obj in a collection.
      * @param obj Language object
      * @return List of {@link org.teiid.query.sql.symbol.Reference}
      */
     public static List<Reference> getReferences(LanguageObject obj) {
-    	ReferenceCollectorVisitor visitor = new ReferenceCollectorVisitor();
+        ReferenceCollectorVisitor visitor = new ReferenceCollectorVisitor();
         DeepPreOrderNavigator.doVisit(obj, visitor);
 
         return visitor.getReferences();

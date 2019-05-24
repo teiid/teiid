@@ -42,207 +42,207 @@ import javax.xml.stream.events.XMLEvent;
  */
 class XMLEventStreamReader extends AbstractXMLStreamReader {
 
-	private XMLEvent event;
+    private XMLEvent event;
 
-	private final XMLEventReader eventReader;
+    private final XMLEventReader eventReader;
 
-	XMLEventStreamReader(XMLEventReader eventReader) throws XMLStreamException {
-		this.eventReader = eventReader;
-		event = eventReader.nextEvent();
-	}
+    XMLEventStreamReader(XMLEventReader eventReader) throws XMLStreamException {
+        this.eventReader = eventReader;
+        event = eventReader.nextEvent();
+    }
 
-	public boolean isStandalone() {
-		if (event.isStartDocument()) {
-			return ((StartDocument) event).isStandalone();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public boolean isStandalone() {
+        if (event.isStartDocument()) {
+            return ((StartDocument) event).isStandalone();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public String getVersion() {
-		if (event.isStartDocument()) {
-			return ((StartDocument) event).getVersion();
-		}
-		else {
-			return null;
-		}
-	}
+    public String getVersion() {
+        if (event.isStartDocument()) {
+            return ((StartDocument) event).getVersion();
+        }
+        else {
+            return null;
+        }
+    }
 
-	public int getTextStart() {
-		return 0;
-	}
+    public int getTextStart() {
+        return 0;
+    }
 
-	public String getText() {
-		if (event.isCharacters()) {
-			return event.asCharacters().getData();
-		} else if (event.getEventType() == COMMENT) {
-			return event.toString().substring(4, event.toString().length()-3);
-		} else {
-			throw new IllegalStateException();
-		}
-	}
+    public String getText() {
+        if (event.isCharacters()) {
+            return event.asCharacters().getData();
+        } else if (event.getEventType() == COMMENT) {
+            return event.toString().substring(4, event.toString().length()-3);
+        } else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public String getPITarget() {
-		if (event.isProcessingInstruction()) {
-			return ((ProcessingInstruction) event).getTarget();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public String getPITarget() {
+        if (event.isProcessingInstruction()) {
+            return ((ProcessingInstruction) event).getTarget();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public String getPIData() {
-		if (event.isProcessingInstruction()) {
-			return ((ProcessingInstruction) event).getData();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public String getPIData() {
+        if (event.isProcessingInstruction()) {
+            return ((ProcessingInstruction) event).getData();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public int getNamespaceCount() {
-		initNamespaces();
-		return namespacesList.size();
-	}
+    public int getNamespaceCount() {
+        initNamespaces();
+        return namespacesList.size();
+    }
 
-	public NamespaceContext getNamespaceContext() {
-		if (event.isStartElement()) {
-			return event.asStartElement().getNamespaceContext();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public NamespaceContext getNamespaceContext() {
+        if (event.isStartElement()) {
+            return event.asStartElement().getNamespaceContext();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public QName getName() {
-		if (event.isStartElement()) {
-			return event.asStartElement().getName();
-		}
-		else if (event.isEndElement()) {
-			return event.asEndElement().getName();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public QName getName() {
+        if (event.isStartElement()) {
+            return event.asStartElement().getName();
+        }
+        else if (event.isEndElement()) {
+            return event.asEndElement().getName();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	public Location getLocation() {
-		return event.getLocation();
-	}
+    public Location getLocation() {
+        return event.getLocation();
+    }
 
-	public int getEventType() {
-		return event.getEventType();
-	}
+    public int getEventType() {
+        return event.getEventType();
+    }
 
-	public String getEncoding() {
-		return null;
-	}
+    public String getEncoding() {
+        return null;
+    }
 
-	public String getCharacterEncodingScheme() {
-		return null;
-	}
+    public String getCharacterEncodingScheme() {
+        return null;
+    }
 
-	public int getAttributeCount() {
-		initAttributes();
-		return attributesList.size();
-	}
+    public int getAttributeCount() {
+        initAttributes();
+        return attributesList.size();
+    }
 
-	public void close() throws XMLStreamException {
-		eventReader.close();
-	}
+    public void close() throws XMLStreamException {
+        eventReader.close();
+    }
 
-	public QName getAttributeName(int index) {
-		return getAttribute(index).getName();
-	}
+    public QName getAttributeName(int index) {
+        return getAttribute(index).getName();
+    }
 
-	public String getAttributeType(int index) {
-		return getAttribute(index).getDTDType();
-	}
+    public String getAttributeType(int index) {
+        return getAttribute(index).getDTDType();
+    }
 
-	public String getAttributeValue(int index) {
-		return getAttribute(index).getValue();
-	}
+    public String getAttributeValue(int index) {
+        return getAttribute(index).getValue();
+    }
 
-	public String getNamespacePrefix(int index) {
-		return getNamespace(index).getPrefix();
-	}
+    public String getNamespacePrefix(int index) {
+        return getNamespace(index).getPrefix();
+    }
 
-	public String getNamespaceURI(int index) {
-		return getNamespace(index).getNamespaceURI();
-	}
+    public String getNamespaceURI(int index) {
+        return getNamespace(index).getNamespaceURI();
+    }
 
-	public Object getProperty(String name) throws IllegalArgumentException {
-		return eventReader.getProperty(name);
-	}
+    public Object getProperty(String name) throws IllegalArgumentException {
+        return eventReader.getProperty(name);
+    }
 
-	public boolean isAttributeSpecified(int index) {
-		return getAttribute(index).isSpecified();
-	}
+    public boolean isAttributeSpecified(int index) {
+        return getAttribute(index).isSpecified();
+    }
 
-	public int next() throws XMLStreamException {
-		event = eventReader.nextEvent();
-		return event.getEventType();
-	}
+    public int next() throws XMLStreamException {
+        event = eventReader.nextEvent();
+        return event.getEventType();
+    }
 
-	public boolean standaloneSet() {
-		if (event.isStartDocument()) {
-			return ((StartDocument) event).standaloneSet();
-		}
-		else {
-			throw new IllegalStateException();
-		}
-	}
+    public boolean standaloneSet() {
+        if (event.isStartDocument()) {
+            return ((StartDocument) event).standaloneSet();
+        }
+        else {
+            throw new IllegalStateException();
+        }
+    }
 
-	private XMLEvent attributesEvent;
-	List<Attribute> attributesList;
+    private XMLEvent attributesEvent;
+    List<Attribute> attributesList;
 
-	private Attribute getAttribute(int index) {
-		initAttributes();
-		return attributesList.get(index);
-	}
+    private Attribute getAttribute(int index) {
+        initAttributes();
+        return attributesList.get(index);
+    }
 
     private void initAttributes() {
         if (!event.isStartElement()) {
-			throw new IllegalStateException();
-		}
-		if (event != attributesEvent) {
-	        attributesEvent = event;
-	        attributesList = new ArrayList<>();
-	        Iterator attributes = event.asStartElement().getAttributes();
-	        while (attributes.hasNext()) {
-	            Attribute attribute = (Attribute) attributes.next();
-	            attributesList.add(attribute);
-	        }
-		}
+            throw new IllegalStateException();
+        }
+        if (event != attributesEvent) {
+            attributesEvent = event;
+            attributesList = new ArrayList<>();
+            Iterator attributes = event.asStartElement().getAttributes();
+            while (attributes.hasNext()) {
+                Attribute attribute = (Attribute) attributes.next();
+                attributesList.add(attribute);
+            }
+        }
     }
 
     private XMLEvent namespacesEvent;
     List<Namespace> namespacesList;
 
-	private Namespace getNamespace(int index) {
-	    initNamespaces();
-		return namespacesList.get(index);
-	}
+    private Namespace getNamespace(int index) {
+        initNamespaces();
+        return namespacesList.get(index);
+    }
 
     private void initNamespaces() {
         if (event != namespacesEvent) {
-	        namespacesEvent = event;
-    		Iterator namespaces;
-    		if (event.isStartElement()) {
-    			namespaces = event.asStartElement().getNamespaces();
-    		}
-    		else if (event.isEndElement()) {
-    			namespaces = event.asEndElement().getNamespaces();
-    		}
-    		else {
-    			throw new IllegalStateException();
-    		}
-    		namespacesList = new ArrayList<>();
+            namespacesEvent = event;
+            Iterator namespaces;
+            if (event.isStartElement()) {
+                namespaces = event.asStartElement().getNamespaces();
+            }
+            else if (event.isEndElement()) {
+                namespaces = event.asEndElement().getNamespaces();
+            }
+            else {
+                throw new IllegalStateException();
+            }
+            namespacesList = new ArrayList<>();
             while (namespaces.hasNext()) {
-	            Namespace namespace = (Namespace) namespaces.next();
-	            namespacesList.add(namespace);
-	        }
-	    }
+                Namespace namespace = (Namespace) namespaces.next();
+                namespacesList.add(namespace);
+            }
+        }
     }
 }

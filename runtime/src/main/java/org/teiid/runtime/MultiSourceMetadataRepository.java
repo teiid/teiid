@@ -34,39 +34,39 @@ import org.teiid.translator.TranslatorException;
 
 public class MultiSourceMetadataRepository implements MetadataRepository<Object, Object> {
 
-	private String multiSourceColumnName;
+    private String multiSourceColumnName;
 
-	public MultiSourceMetadataRepository(String multiSourceColumnName) {
-		this.multiSourceColumnName = multiSourceColumnName;
-	}
+    public MultiSourceMetadataRepository(String multiSourceColumnName) {
+        this.multiSourceColumnName = multiSourceColumnName;
+    }
 
-	@Override
-	public void loadMetadata(MetadataFactory factory,
-			ExecutionFactory<Object, Object> executionFactory, Object connectionFactory)
-			throws TranslatorException {
-		Schema s = factory.getSchema();
-		for (Table t : s.getTables().values()) {
-			if (!t.isPhysical()) {
-				continue;
-			}
-			Column c = t.getColumnByName(multiSourceColumnName);
-			if (c == null) {
-				c = factory.addColumn(multiSourceColumnName, DataTypeManager.DefaultDataTypes.STRING, t);
-				MultiSourceMetadataWrapper.setMultiSourceElementMetadata(c);
-			}
-		}
-		outer: for (Procedure p : s.getProcedures().values()) {
-			if (p.isVirtual()) {
-				continue;
-			}
-			for (ProcedureParameter pp : p.getParameters()) {
-				if (multiSourceColumnName.equalsIgnoreCase(pp.getName())) {
-					continue outer;
-				}
-			}
-			ProcedureParameter pp = factory.addProcedureParameter(multiSourceColumnName, DataTypeManager.DefaultDataTypes.STRING, Type.In, p);
-			pp.setNullType(NullType.Nullable);
-		}
-	}
+    @Override
+    public void loadMetadata(MetadataFactory factory,
+            ExecutionFactory<Object, Object> executionFactory, Object connectionFactory)
+            throws TranslatorException {
+        Schema s = factory.getSchema();
+        for (Table t : s.getTables().values()) {
+            if (!t.isPhysical()) {
+                continue;
+            }
+            Column c = t.getColumnByName(multiSourceColumnName);
+            if (c == null) {
+                c = factory.addColumn(multiSourceColumnName, DataTypeManager.DefaultDataTypes.STRING, t);
+                MultiSourceMetadataWrapper.setMultiSourceElementMetadata(c);
+            }
+        }
+        outer: for (Procedure p : s.getProcedures().values()) {
+            if (p.isVirtual()) {
+                continue;
+            }
+            for (ProcedureParameter pp : p.getParameters()) {
+                if (multiSourceColumnName.equalsIgnoreCase(pp.getName())) {
+                    continue outer;
+                }
+            }
+            ProcedureParameter pp = factory.addProcedureParameter(multiSourceColumnName, DataTypeManager.DefaultDataTypes.STRING, Type.In, p);
+            pp.setNullType(NullType.Nullable);
+        }
+    }
 
 }

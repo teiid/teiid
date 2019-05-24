@@ -66,8 +66,8 @@ public final class LanguageUtil {
         if(crit instanceof AndOr) {
             AndOr compCrit = (AndOr) crit;
             if(compCrit.getOperator() == Operator.AND) {
-            	separateCriteria(compCrit.getLeftCondition(), parts);
-            	separateCriteria(compCrit.getRightCondition(), parts);
+                separateCriteria(compCrit.getLeftCondition(), parts);
+                separateCriteria(compCrit.getRightCondition(), parts);
             } else {
                 parts.add(crit);
             }
@@ -105,15 +105,15 @@ public final class LanguageUtil {
             return null;
         }
         if (crits.size() == 1) {
-        	return crits.get(0);
+            return crits.get(0);
         }
         Condition result = null;
         for (Condition crit : crits) {
-        	if (result == null) {
-        		result = crit;
-        	} else {
-        		result = new AndOr(result, crit, Operator.AND);
-        	}
+            if (result == null) {
+                result = crit;
+            } else {
+                result = new AndOr(result, crit, Operator.AND);
+            }
         }
         return result;
     }

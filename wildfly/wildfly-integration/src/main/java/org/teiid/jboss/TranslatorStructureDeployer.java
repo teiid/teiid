@@ -36,7 +36,7 @@ public final class TranslatorStructureDeployer implements DeploymentUnitProcesso
     public void deploy(final DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         if (TeiidAttachments.isTranslator(deploymentUnit)) {
-        	return;
+            return;
         }
 
         List<ResourceRoot> resourceRoots = DeploymentUtils.allResourceRoots(deploymentUnit);

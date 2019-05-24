@@ -79,7 +79,7 @@ public class TestDerbySQLTranslator {
     }
 
     @Test public void testTempTable() throws Exception {
-    	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+        assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
 
     @Test public void testXmlSelect() throws Exception {
@@ -100,7 +100,7 @@ public class TestDerbySQLTranslator {
 
     @Test
     public void testOffset() throws Exception {
-    	String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
+        String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA OFFSET 50 ROWS FETCH FIRST 100 ROWS ONLY"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);

@@ -93,12 +93,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
         PlanNode current = chainRoot;
         boolean isDependentSet = false;
         while(current.getType() == NodeConstants.Types.SELECT) {
-        	if (!current.getCorrelatedReferenceElements().isEmpty()) {
-        		//add at the end for delayed evaluation
-        		subqueryCriteria.add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
-        	} else {
-        		critParts.getCriteria().add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
-        	}
+            if (!current.getCorrelatedReferenceElements().isEmpty()) {
+                //add at the end for delayed evaluation
+                subqueryCriteria.add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
+            } else {
+                critParts.getCriteria().add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA));
+            }
 
             isDependentSet |= current.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET);
 

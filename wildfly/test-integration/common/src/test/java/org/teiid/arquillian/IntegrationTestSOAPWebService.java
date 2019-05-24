@@ -44,26 +44,26 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestSOAPWebService {
 
-	private Admin admin;
+    private Admin admin;
 
-	@Before
-	public void setup() throws Exception {
+    @Before
+    public void setup() throws Exception {
         admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT, "admin",
                 "admin".toCharArray());
-	}
+    }
 
-	@After
-	public void teardown() throws AdminException {
-		AdminUtil.cleanUp(admin);
-		admin.close();
-	}
+    @After
+    public void teardown() throws AdminException {
+        AdminUtil.cleanUp(admin);
+        admin.close();
+    }
 
-	@Test
-	public void testVDBDeployment() throws Exception {
-		Collection<?> vdbs = admin.getVDBs();
-		assertTrue(vdbs.isEmpty());
+    @Test
+    public void testVDBDeployment() throws Exception {
+        Collection<?> vdbs = admin.getVDBs();
+        assertTrue(vdbs.isEmpty());
 
-		assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
+        assertTrue(admin.getDataSourceTemplateNames().contains("webservice"));
         String raSource = "web-ds";
         assertFalse(admin.getDataSourceNames().contains(raSource));
 
@@ -77,16 +77,16 @@ public class IntegrationTestSOAPWebService {
 
         assertTrue(admin.getDataSourceNames().contains(raSource));
 
-		admin.deploy("soapsvc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("soapsvc-vdb.xml")));
-		vdbs = admin.getVDBs();
-		assertFalse(vdbs.isEmpty());
+        admin.deploy("soapsvc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("soapsvc-vdb.xml")));
+        vdbs = admin.getVDBs();
+        assertFalse(vdbs.isEmpty());
 
-		VDB vdb = admin.getVDB("WSMSG", "1");
-		AdminUtil.waitForVDBLoad(admin, "WSMSG", 1);
+        VDB vdb = admin.getVDB("WSMSG", "1");
+        AdminUtil.waitForVDBLoad(admin, "WSMSG", 1);
 
-		vdb = admin.getVDB("WSMSG", "1");
-		assertTrue(vdb.isValid());
-		assertTrue(vdb.getStatus().equals(Status.ACTIVE));
+        vdb = admin.getVDB("WSMSG", "1");
+        assertTrue(vdb.isValid());
+        assertTrue(vdb.getStatus().equals(Status.ACTIVE));
 
         Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:WSMSG@mm://localhost:31000;user=user;password=user;", null);
         Statement stmt = conn.createStatement();
@@ -100,5 +100,5 @@ public class IntegrationTestSOAPWebService {
         assertTrue(rs.next());
         assertEquals("Hello World!", rs.getString(1));
         conn.close();
-	}
+    }
 }

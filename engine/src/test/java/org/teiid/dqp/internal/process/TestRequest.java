@@ -48,7 +48,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 public class TestRequest {
 
     private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
-	private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
+    private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
 
     /**
      * Test Request.validateEntitlement().
@@ -67,8 +67,8 @@ public class TestRequest {
         RequestMessage message = new RequestMessage();
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
 
-		request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,
-				new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
+        request.initialize(message, BufferManagerFactory.getStandaloneBufferManager(), null,
+                new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
         request.initMetadata();
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         DataRolePolicyDecider drpd = new DataRolePolicyDecider();
@@ -119,16 +119,16 @@ public class TestRequest {
                                                            TeiidProcessingException {
         Request request = null;
         if (cache != null) {
-        	request = new PreparedStatementRequest(cache);
+            request = new PreparedStatementRequest(cache);
         } else {
-        	request = new Request();
+            request = new Request();
         }
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         workContext.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
 
         request.initialize(message, Mockito.mock(BufferManager.class),
-				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
+                new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         request.setAuthorizationValidator(drav);
         request.processRequest();

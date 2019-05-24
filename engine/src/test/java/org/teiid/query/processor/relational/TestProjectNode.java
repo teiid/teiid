@@ -51,7 +51,7 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class TestProjectNode {
 
-	public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) {
+    public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
 

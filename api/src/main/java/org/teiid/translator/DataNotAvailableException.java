@@ -32,64 +32,64 @@ import org.teiid.core.TeiidRuntimeException;
  */
 public class DataNotAvailableException extends TeiidRuntimeException {
 
-	private static final long serialVersionUID = 5569111182915674334L;
+    private static final long serialVersionUID = 5569111182915674334L;
 
-	private long retryDelay = 0;
-	private Date waitUntil;
-	private boolean strict;
+    private long retryDelay = 0;
+    private Date waitUntil;
+    private boolean strict;
 
-	/**
-	 * Indicate that the engine should not poll for results and will be notified
-	 * via the {@link ExecutionContext#dataAvailable()} method.  However the engine may still ask
-	 * for results before the dataAvailable is called.
-	 */
-	public static final DataNotAvailableException NO_POLLING = new DataNotAvailableException(-1);
+    /**
+     * Indicate that the engine should not poll for results and will be notified
+     * via the {@link ExecutionContext#dataAvailable()} method.  However the engine may still ask
+     * for results before the dataAvailable is called.
+     */
+    public static final DataNotAvailableException NO_POLLING = new DataNotAvailableException(-1);
 
-	/**
-	 * Uses a delay of 0, which implies an immediate poll for results.
-	 */
-	public DataNotAvailableException() {
-	}
+    /**
+     * Uses a delay of 0, which implies an immediate poll for results.
+     */
+    public DataNotAvailableException() {
+    }
 
-	/**
-	 * Uses the given retryDelay.  Negative values indicate that the
-	 * engine should not poll for results (see also {@link DataNotAvailableException#NO_POLLING} and will be notified
-	 * via the {@link ExecutionContext#dataAvailable()} method.
-	 * @param retryDelay in milliseconds
-	 */
-	public DataNotAvailableException(long retryDelay) {
-		this.retryDelay = retryDelay;
-	}
+    /**
+     * Uses the given retryDelay.  Negative values indicate that the
+     * engine should not poll for results (see also {@link DataNotAvailableException#NO_POLLING} and will be notified
+     * via the {@link ExecutionContext#dataAvailable()} method.
+     * @param retryDelay in milliseconds
+     */
+    public DataNotAvailableException(long retryDelay) {
+        this.retryDelay = retryDelay;
+    }
 
-	/**
-	 * Instructs the engine to wait until the Date is met before getting results.  By default this will
-	 * be strictly enforced, meaning that no attempt will be made to get results before the given Date.
-	 * @param waitUntil
-	 */
-	public DataNotAvailableException(Date waitUntil) {
-		this.waitUntil = waitUntil;
-		this.strict = true;
-	}
+    /**
+     * Instructs the engine to wait until the Date is met before getting results.  By default this will
+     * be strictly enforced, meaning that no attempt will be made to get results before the given Date.
+     * @param waitUntil
+     */
+    public DataNotAvailableException(Date waitUntil) {
+        this.waitUntil = waitUntil;
+        this.strict = true;
+    }
 
-	public long getRetryDelay() {
-		return retryDelay;
-	}
+    public long getRetryDelay() {
+        return retryDelay;
+    }
 
-	public Date getWaitUntil() {
-		return waitUntil;
-	}
+    public Date getWaitUntil() {
+        return waitUntil;
+    }
 
-	/**
-	 * If the delay or Date is strictly enforced then the execution will not asked for results until
-	 * after that time or until {@link ExecutionContext#dataAvailable()} is called.
-	 * @return
-	 */
-	public boolean isStrict() {
-		return strict;
-	}
+    /**
+     * If the delay or Date is strictly enforced then the execution will not asked for results until
+     * after that time or until {@link ExecutionContext#dataAvailable()} is called.
+     * @return
+     */
+    public boolean isStrict() {
+        return strict;
+    }
 
-	public void setStrict(boolean strict) {
-		this.strict = strict;
-	}
+    public void setStrict(boolean strict) {
+        this.strict = strict;
+    }
 
 }

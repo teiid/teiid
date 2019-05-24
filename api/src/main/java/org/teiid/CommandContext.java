@@ -38,128 +38,128 @@ import org.teiid.jdbc.TeiidSQLWarning;
  */
 public interface CommandContext {
 
-	/**
-	 * Get the current user name, which will just be the base user name
-	 * and not include the security domain.  See also {@link #getSession()} - {@link Session#getSecurityDomain()}
-	 * @return
-	 */
-	String getUserName();
+    /**
+     * Get the current user name, which will just be the base user name
+     * and not include the security domain.  See also {@link #getSession()} - {@link Session#getSecurityDomain()}
+     * @return
+     */
+    String getUserName();
 
-	/**
-	 * Get the current vdb name
-	 * @return
-	 */
-	String getVdbName();
+    /**
+     * Get the current vdb name
+     * @return
+     */
+    String getVdbName();
 
-	/**
-	 * Get the current vdb version
-	 * @return
-	 */
-	String getVdbVersion();
+    /**
+     * Get the current vdb version
+     * @return
+     */
+    String getVdbVersion();
 
-	/**
-	 * Get the connection id
-	 * @return
-	 */
-	String getConnectionId();
+    /**
+     * Get the connection id
+     * @return
+     */
+    String getConnectionId();
 
-	/**
-	 * Get the connection id
-	 * @return
-	 * @deprecated see {@link #getConnectionId()}
-	 */
-	String getConnectionID();
+    /**
+     * Get the connection id
+     * @return
+     * @deprecated see {@link #getConnectionId()}
+     */
+    String getConnectionID();
 
-	/**
-	 * Get the next random double value
-	 * @return
-	 */
-	double getNextRand();
+    /**
+     * Get the next random double value
+     * @return
+     */
+    double getNextRand();
 
-	/**
-	 * Sets the seed value and returns the next random double value.
-	 * Additional calls to {@link #getNextRand()} will be based upon the seed value.
-	 * @param seed
-	 * @return
-	 */
-	double getNextRand(long seed);
+    /**
+     * Sets the seed value and returns the next random double value.
+     * Additional calls to {@link #getNextRand()} will be based upon the seed value.
+     * @param seed
+     * @return
+     */
+    double getNextRand(long seed);
 
-	/**
-	 * Get the processor batch size set on the BufferManager
-	 * @return - the nominal batch size target.  actual batch sizes will vary based
-	 * upon the column types
-	 */
-	int getProcessorBatchSize();
+    /**
+     * Get the processor batch size set on the BufferManager
+     * @return - the nominal batch size target.  actual batch sizes will vary based
+     * upon the column types
+     */
+    int getProcessorBatchSize();
 
-	/**
-	 * Get the server {@link TimeZone}
-	 * @return
-	 */
-	TimeZone getServerTimeZone();
+    /**
+     * Get the server {@link TimeZone}
+     * @return
+     */
+    TimeZone getServerTimeZone();
 
-	/**
-	 * Get the current subject
-	 * @return
-	 */
-	Subject getSubject();
+    /**
+     * Get the current subject
+     * @return
+     */
+    Subject getSubject();
 
-	/**
-	 * Get the current session
-	 * @return
-	 */
-	Session getSession();
+    /**
+     * Get the current session
+     * @return
+     */
+    Session getSession();
 
-	/**
-	 * Get the current command payload
-	 * @return may be null if the client did not set a payload
-	 */
-	Serializable getCommandPayload();
+    /**
+     * Get the current command payload
+     * @return may be null if the client did not set a payload
+     */
+    Serializable getCommandPayload();
 
-	/**
-	 * Get the current request id
-	 * @return
-	 */
-	String getRequestId();
+    /**
+     * Get the current request id
+     * @return
+     */
+    String getRequestId();
 
-	/**
-	 * Get the user's data policies, never null
-	 * @return
-	 */
-	Map<String, DataPolicy> getAllowedDataPolicies();
+    /**
+     * Get the user's data policies, never null
+     * @return
+     */
+    Map<String, DataPolicy> getAllowedDataPolicies();
 
-	/**
-	 * Get the current vdb
-	 * @return
-	 */
-	VDB getVdb();
+    /**
+     * Get the current vdb
+     * @return
+     */
+    VDB getVdb();
 
-	/**
-	 * Add a listener for command events
-	 * @param listener
-	 */
-	void addListener(CommandListener listener);
+    /**
+     * Add a listener for command events
+     * @param listener
+     */
+    void addListener(CommandListener listener);
 
-	/**
-	 * Add a listener for command events
-	 * @param listener
-	 */
-	void removeListener(CommandListener listener);
+    /**
+     * Add a listener for command events
+     * @param listener
+     */
+    void removeListener(CommandListener listener);
 
-	/**
-	 * Get the number of times this command has been reused.  Useful
-	 * in continuous executions.
-	 * @see #isContinuous()
-	 * @return
-	 */
-	long getReuseCount();
+    /**
+     * Get the number of times this command has been reused.  Useful
+     * in continuous executions.
+     * @see #isContinuous()
+     * @return
+     */
+    long getReuseCount();
 
-	/**
-	 * Get class loader for VDB.
-	 * @return
-	 */
-	ClassLoader getVDBClassLoader();
+    /**
+     * Get class loader for VDB.
+     * @return
+     */
+    ClassLoader getVDBClassLoader();
 
-	/**
+    /**
      * Add an exception as a warning.  The exception will be wrapped by a {@link TeiidSQLWarning} for the client.
      * The warnings can be consumed through the {@link Statement#getWarnings()} method.
      * @param ex
@@ -170,7 +170,7 @@ public interface CommandContext {
      *
      * @return true if this is a continuous query
      */
-	boolean isContinuous();
+    boolean isContinuous();
 
     /**
      * Whether to return the keys generated by an insert.
@@ -184,39 +184,39 @@ public interface CommandContext {
      * @param columnDataTypes
      * @return
      */
-	GeneratedKeys returnGeneratedKeys(String[] columnNames,
-			Class<?>[] columnDataTypes);
+    GeneratedKeys returnGeneratedKeys(String[] columnNames,
+            Class<?>[] columnDataTypes);
 
-	/**
-	 * Returns the last set of generated keys or null if no keys have been generated.
-	 */
-	GeneratedKeys getGeneratedKeys();
+    /**
+     * Returns the last set of generated keys or null if no keys have been generated.
+     */
+    GeneratedKeys getGeneratedKeys();
 
-	/**
-	 * Set the session variable and return the old value if any
-	 * @param key
-	 * @param value
-	 * @return
-	 */
-	Object setSessionVariable(String key, Object value);
+    /**
+     * Set the session variable and return the old value if any
+     * @param key
+     * @param value
+     * @return
+     */
+    Object setSessionVariable(String key, Object value);
 
-	/**
-	 * Get the session variable
-	 * @param key
-	 * @return
-	 */
-	Object getSessionVariable(String key);
+    /**
+     * Get the session variable
+     * @param key
+     * @return
+     */
+    Object getSessionVariable(String key);
 
-	/**
-	 * Gets a connection to the current session.
-	 * <br><b>WARNING</b> be careful with blocking/recursive operations.
-	 * <br>The returned connection is considered to be derived and is not allowed
-	 * to alter the transaction state or close the session.
-	 * <br>Each call to this method will return a new connection.
-	 * <br>Client side execution/connection properties are specific to
-	 * each connection instance
-	 * @return a Connection to the current session
-	 * @throws TeiidSQLException
-	 */
-	TeiidConnection getConnection() throws TeiidSQLException;
+    /**
+     * Gets a connection to the current session.
+     * <br><b>WARNING</b> be careful with blocking/recursive operations.
+     * <br>The returned connection is considered to be derived and is not allowed
+     * to alter the transaction state or close the session.
+     * <br>Each call to this method will return a new connection.
+     * <br>Client side execution/connection properties are specific to
+     * each connection instance
+     * @return a Connection to the current session
+     * @throws TeiidSQLException
+     */
+    TeiidConnection getConnection() throws TeiidSQLException;
 }

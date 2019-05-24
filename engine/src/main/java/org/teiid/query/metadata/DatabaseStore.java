@@ -194,7 +194,7 @@ public abstract class DatabaseStore {
     }
 
     protected boolean shouldValidateDatabaseBeforeDeploy() {
-    	return true;
+        return true;
     }
 
     public void schemaCreated(Schema schema, List<String> serverNames) {
@@ -516,8 +516,8 @@ public abstract class DatabaseStore {
                     QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31273, procedure.getFullName()));
         }
 
-		assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.PROCEDURE,
-				procedure);
+        assertGrant(Grant.Permission.Privilege.DROP, Database.ResourceType.PROCEDURE,
+                procedure);
 
         Schema s = procedure.getParent();
         s.removeProcedure(procedureName);
@@ -527,11 +527,11 @@ public abstract class DatabaseStore {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
-		assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.FUNCTION, function);
+        assertGrant(Grant.Permission.Privilege.CREATE, Database.ResourceType.FUNCTION, function);
 
         Schema s = getCurrentSchema();
 
-      	setUUID(s.getUUID(), function);
+          setUUID(s.getUUID(), function);
         for (FunctionParameter param : function.getInputParameters()) {
             setUUID(s.getUUID(), param);
         }
@@ -593,7 +593,7 @@ public abstract class DatabaseStore {
         }
     }
 
-	public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable) {
+    public void enableTableTriggerPlan(final String tableName, final Table.TriggerEvent event, final boolean enable) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
@@ -705,8 +705,8 @@ public abstract class DatabaseStore {
         OptionsUtil.removeOption(record, key);
     }
 
-	public void addOrSetOption(String recordName, Database.ResourceType type, String childName,
-			Database.ResourceType childType, String key, String value, boolean reload) {
+    public void addOrSetOption(String recordName, Database.ResourceType type, String childName,
+            Database.ResourceType childType, String key, String value, boolean reload) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
@@ -734,8 +734,8 @@ public abstract class DatabaseStore {
     }
 
 
-	public void removeOption(String recordName, Database.ResourceType type, String childName,
-			Database.ResourceType childType, String key) {
+    public void removeOption(String recordName, Database.ResourceType type, String childName,
+            Database.ResourceType childType, String key) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
@@ -800,7 +800,7 @@ public abstract class DatabaseStore {
         this.currentDatabase.removeRole(roleName);
     }
 
-	public void grantCreated(Grant grant) {
+    public void grantCreated(Grant grant) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
         }
@@ -941,26 +941,26 @@ public abstract class DatabaseStore {
         schema.setUUID("tid:" + MetadataFactory.hex(msb, 12)); //$NON-NLS-1$
     }
 
-	private void assertGrant(Privilege allowence, ResourceType type, AbstractMetadataRecord record) {
-		/*if (this.commandContext != null) {
-			AuthorizationValidator validator = this.commandContext.getAuthorizationValidator();
-			String[] resources = new String[] { record.getName() };
+    private void assertGrant(Privilege allowence, ResourceType type, AbstractMetadataRecord record) {
+        /*if (this.commandContext != null) {
+            AuthorizationValidator validator = this.commandContext.getAuthorizationValidator();
+            String[] resources = new String[] { record.getName() };
 
-			if (validator.allowDDLEvent(this.commandContext, allowence, type, record)) {
-				AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-granted", resources, //$NON-NLS-1$
-						commandContext);
-				LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
-			} else {
-				AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-denied", resources, //$NON-NLS-1$
-						commandContext);
-				LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+            if (validator.allowDDLEvent(this.commandContext, allowence, type, record)) {
+                AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-granted", resources, //$NON-NLS-1$
+                        commandContext);
+                LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
+            } else {
+                AuditMessage msg = new AuditMessage(allowence.name(), "ddl execution-denied", resources, //$NON-NLS-1$
+                        commandContext);
+                LogManager.logDetail(LogConstants.CTX_AUDITLOGGING, msg);
 
-				throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31243,
-						QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31243, allowence.name(), type.name(),
-								record.getName(), this.commandContext.getUserName()));
-			}
-		}*/
-	}
+                throw new org.teiid.metadata.MetadataException(QueryPlugin.Event.TEIID31243,
+                        QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31243, allowence.name(), type.name(),
+                                record.getName(), this.commandContext.getUserName()));
+            }
+        }*/
+    }
 
     public Table getTableForCreateColumn(String objectName, ResourceType type) {
         if (!assertInEditMode(Mode.SCHEMA)) {

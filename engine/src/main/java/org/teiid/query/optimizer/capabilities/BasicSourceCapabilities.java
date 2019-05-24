@@ -30,7 +30,7 @@ import org.teiid.translator.ExecutionFactory.Format;
  */
 public class BasicSourceCapabilities implements SourceCapabilities, Serializable {
 
-	private static final long serialVersionUID = -1779069588746365579L;
+    private static final long serialVersionUID = -1779069588746365579L;
 
     private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
@@ -54,12 +54,12 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     }
 
     public void setCapabilitySupport(Capability capability, boolean supports) {
-    	if (supports && capability == Capability.QUERY_AGGREGATES) {
-    		capabilityMap.put(Capability.QUERY_GROUP_BY, true);
-    		capabilityMap.put(Capability.QUERY_HAVING, true);
-    	} else {
-    		capabilityMap.put(capability, supports);
-    	}
+        if (supports && capability == Capability.QUERY_AGGREGATES) {
+            capabilityMap.put(Capability.QUERY_GROUP_BY, true);
+            capabilityMap.put(Capability.QUERY_HAVING, true);
+        } else {
+            capabilityMap.put(capability, supports);
+        }
     }
 
     public void setFunctionSupport(String function, boolean supports) {
@@ -90,21 +90,21 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
 
     @Override
     public boolean supportsConvert(int sourceType, int targetType) {
-    	if (this.translator == null) {
-    		return true;
-    	}
-    	return this.translator.supportsConvert(sourceType, targetType);
+        if (this.translator == null) {
+            return true;
+        }
+        return this.translator.supportsConvert(sourceType, targetType);
     }
 
     public void setTranslator(ExecutionFactory<?, ?> translator) {
-		this.translator = translator;
-	}
+        this.translator = translator;
+    }
 
     public boolean supportsFormatLiteral(String literal, Format format) {
-    	if (this.translator == null) {
-    		return false;
-    	}
-		return this.translator.supportsFormatLiteral(literal, format);
-	}
+        if (this.translator == null) {
+            return false;
+        }
+        return this.translator.supportsFormatLiteral(literal, format);
+    }
 
 }

@@ -79,8 +79,8 @@ public class TestJoinNode {
     private FakeDataManager dataMgr;
 
     @Before public void setup() {
-    	leftTuples = createTuples1();
-    	rightTuples = createTuples2();
+        leftTuples = createTuples1();
+        rightTuples = createTuples2();
     }
 
     protected List[] createTuples1() {
@@ -184,16 +184,16 @@ public class TestJoinNode {
         List rightElements = new ArrayList();
         rightElements.add(es2);
         rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
-        	@Override
-        	public boolean hasBuffer() {
-        		return false;
-        	}
+            @Override
+            public boolean hasBuffer() {
+                return false;
+            }
 
-        	@Override
-        	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        		fail();
-        		throw new AssertionError();
-        	};
+            @Override
+            public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+                fail();
+                throw new AssertionError();
+            };
         };
         rightNode.setElements(rightElements);
 
@@ -203,7 +203,7 @@ public class TestJoinNode {
 
         join = new JoinNode(3);
         joinStrategy = new NestedLoopJoinStrategy();
-    	join.setJoinStrategy(joinStrategy);
+        join.setJoinStrategy(joinStrategy);
         join.setElements(joinElements);
         join.setJoinType(joinType);
 
@@ -229,21 +229,21 @@ public class TestJoinNode {
     }
 
     public void helpTestJoin() throws TeiidComponentException, TeiidProcessingException {
-    	for (int batchSize : new int[] {1, 10, leftTuples.length, 100}) {
-	        helpCreateJoin();
-	        if (batchSize == 0) {
-	        	continue;
-	        }
-	        helpTestJoinDirect(expected, batchSize, 100000);
-	        List[] temp = leftTuples;
-	        leftTuples = rightTuples;
-	        rightTuples = temp;
-	        helpCreateJoin();
-	        helpTestJoinDirect(expectedReversed, batchSize, 100000);
-	        temp = leftTuples;
-	        leftTuples = rightTuples;
-	        rightTuples = temp;
-    	}
+        for (int batchSize : new int[] {1, 10, leftTuples.length, 100}) {
+            helpCreateJoin();
+            if (batchSize == 0) {
+                continue;
+            }
+            helpTestJoinDirect(expected, batchSize, 100000);
+            List[] temp = leftTuples;
+            leftTuples = rightTuples;
+            rightTuples = temp;
+            helpCreateJoin();
+            helpTestJoinDirect(expectedReversed, batchSize, 100000);
+            temp = leftTuples;
+            leftTuples = rightTuples;
+            rightTuples = temp;
+        }
     }
 
     public void helpTestJoinDirect(List[] expectedResults, int batchSize, int processingBytes) throws TeiidComponentException, TeiidProcessingException {
@@ -265,9 +265,9 @@ public class TestJoinNode {
         process(expectedResults);
     }
 
-	private void process(List[] expectedResults)
-			throws TeiidComponentException, TeiidProcessingException {
-		join.open();
+    private void process(List[] expectedResults)
+            throws TeiidComponentException, TeiidProcessingException {
+        join.open();
 
         int currentRow = 1;
         while(true) {
@@ -286,7 +286,7 @@ public class TestJoinNode {
         }
         assertEquals(expectedResults.length, currentRow - 1);
         join.close();
-	}
+    }
 
     @Test public void testNoRows() throws Exception {
         leftTuples = new List[0];
@@ -300,7 +300,7 @@ public class TestJoinNode {
     @Test public void testInnerJoin() throws Exception {
         joinType = JoinType.JOIN_INNER;
         expected = new List[] {
-        	Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),
@@ -329,7 +329,7 @@ public class TestJoinNode {
             Arrays.asList(new Object[] { new Integer(11), null })
         };
         expectedReversed = new List[] {
-        	Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { null, null }),
             Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
@@ -649,16 +649,16 @@ public class TestJoinNode {
     }
 
     @Test public void testMergeJoinOptimizationRepeatedElements() throws Exception {
-    	this.joinType = JoinType.JOIN_INNER;
+        this.joinType = JoinType.JOIN_INNER;
         this.leftTuples = createMultiColTuples(9, 2);
         this.rightTuples = new List[100];
         for (int i = 0; i < rightTuples.length; i++) {
-        	rightTuples[i] = new ArrayList(this.leftTuples[i%this.leftTuples.length]);
-        	if (i == 0) {
-        		rightTuples[i].add(1, rightTuples[i].get(0));
-        	} else {
-        		rightTuples[i].add(1, (Integer)rightTuples[i].get(0) + 1);
-        	}
+            rightTuples[i] = new ArrayList(this.leftTuples[i%this.leftTuples.length]);
+            if (i == 0) {
+                rightTuples[i].add(1, rightTuples[i].get(0));
+            } else {
+                rightTuples[i].add(1, (Integer)rightTuples[i].get(0) + 1);
+            }
         }
 
         expected = new List[] {
@@ -695,24 +695,24 @@ public class TestJoinNode {
         helpTestJoinDirect(expected, 10, 1);
     }
 
-	private List[] createMultiColTuples(int rows, int cols) {
-		List[] data = new List[rows];
+    private List[] createMultiColTuples(int rows, int cols) {
+        List[] data = new List[rows];
         for(int i=0; i<rows; i++) {
             data[i] = new ArrayList();
             for (int j = 0; j < cols; j++) {
                 data[i].add(((i+j)*17) % 47);
             }
         }
-		return data;
-	}
+        return data;
+    }
 
     @Test public void testMergeJoinOptimization() throws Exception {
         helpTestEnhancedSortMergeJoin(99);
     }
 
-	private void helpTestEnhancedSortMergeJoin(int batchSize)
-			throws TeiidComponentException, TeiidProcessingException {
-		this.joinType = JoinType.JOIN_INNER;
+    private void helpTestEnhancedSortMergeJoin(int batchSize)
+            throws TeiidComponentException, TeiidProcessingException {
+        this.joinType = JoinType.JOIN_INNER;
         int rows = 100;
         List[] data = new List[rows];
         for(int i=0; i<rows; i++) {
@@ -746,10 +746,10 @@ public class TestJoinNode {
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, batchSize, 1);
-	}
+    }
 
-	@Test public void testMergeJoinOptimizationLeftOuter() throws Exception {
-		this.joinType = JoinType.JOIN_LEFT_OUTER;
+    @Test public void testMergeJoinOptimizationLeftOuter() throws Exception {
+        this.joinType = JoinType.JOIN_LEFT_OUTER;
         int rows = 12;
         List[] data = new List[rows];
         for(int i=0; i<rows; i++) {
@@ -781,10 +781,10 @@ public class TestJoinNode {
         this.join.setJoinStrategy(joinStrategy);
 
         helpTestJoinDirect(expected, 10, 1);
-	}
+    }
 
-	@Test public void testMergeJoinOptimizationLeftOuterEmpty() throws Exception {
-		this.joinType = JoinType.JOIN_LEFT_OUTER;
+    @Test public void testMergeJoinOptimizationLeftOuterEmpty() throws Exception {
+        this.joinType = JoinType.JOIN_LEFT_OUTER;
         int rows = 12;
         List[] data = new List[rows];
         for(int i=0; i<rows; i++) {
@@ -815,14 +815,14 @@ public class TestJoinNode {
         this.join.setJoinStrategy(joinStrategy);
 
         helpTestJoinDirect(expected, 10, 1);
-	}
+    }
 
     @Test public void testMergeJoinOptimizationMultiBatch() throws Exception {
-    	helpTestEnhancedSortMergeJoin(10);
+        helpTestEnhancedSortMergeJoin(10);
     }
 
     @Test public void testMergeJoinOptimizationMultiBatch1() throws Exception {
-    	helpTestEnhancedSortMergeJoin(1);
+        helpTestEnhancedSortMergeJoin(1);
     }
 
     @Test public void testMergeJoinOptimizationNoRows() throws Exception {
@@ -922,7 +922,7 @@ public class TestJoinNode {
         expected = new List[] {
            Arrays.asList(new Object[] { 1, 1 }),
            Arrays.asList(new Object[] { 2, 2 }),
-    	   Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 4, 4 }),
            Arrays.asList(new Object[] { 6, 6 }),
            Arrays.asList(new Object[] { 7, 7 }),
            Arrays.asList(new Object[] { 8, 8 }),
@@ -930,15 +930,15 @@ public class TestJoinNode {
         helpCreateJoin();
         this.joinStrategy = new MergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED, false);
         BlockingFakeRelationalNode newNode = new BlockingFakeRelationalNode(2, rightTuples) {
-        	@Override
-        	public TupleBatch nextBatchDirect() throws BlockedException,
-        			TeiidComponentException, TeiidProcessingException {
-        		TupleBatch tb = super.nextBatchDirect();
-        		if (tb.getTerminationFlag()) {
-        			assertFalse(leftNode.isClosed());
-        		}
-        		return tb;
-        	}
+            @Override
+            public TupleBatch nextBatchDirect() throws BlockedException,
+                    TeiidComponentException, TeiidProcessingException {
+                TupleBatch tb = super.nextBatchDirect();
+                if (tb.getTerminationFlag()) {
+                    assertFalse(leftNode.isClosed());
+                }
+                return tb;
+            }
         };
         newNode.setElements(rightNode.getElements());
         rightNode = newNode;
@@ -975,11 +975,11 @@ public class TestJoinNode {
     }
 
     @Test public void testRepeatedMerge() throws Exception {
-    	helpTestRepeatedMerge(false);
+        helpTestRepeatedMerge(false);
     }
 
     @Test public void testRepeatedMergeWithDistinct() throws Exception {
-    	helpTestRepeatedMerge(true);
+        helpTestRepeatedMerge(true);
     }
 
     public void helpTestRepeatedMerge(boolean indexDistinct) throws Exception {
@@ -990,33 +990,33 @@ public class TestJoinNode {
             data[i]=Arrays.asList((i*17) % 91);
         }
         if (indexDistinct) {
-        	data[2] = Arrays.asList(0);
+            data[2] = Arrays.asList(0);
         }
         data[6] = Arrays.asList((Integer)null);
         this.rightTuples = data;
         this.leftTuples = new List[17];
         for (int i = 0; i < this.leftTuples.length; i++) {
-        	this.leftTuples[i] = Arrays.asList(i*4);
+            this.leftTuples[i] = Arrays.asList(i*4);
         }
         if (!indexDistinct) {
-        	this.leftTuples[3] = Arrays.asList(0);
+            this.leftTuples[3] = Arrays.asList(0);
         }
         this.leftTuples[11] = Arrays.asList((Integer)null);
 
         expected = new List[] {
-        		Arrays.asList(0, 0),
-        		Arrays.asList(0, 0),
-        		Arrays.asList(28, 28),
-        		Arrays.asList(56, 56),
-        		Arrays.asList(16, 16),
-        		Arrays.asList(4, 4),
-        		Arrays.asList(32, 32),
-        		Arrays.asList(20, 20),
-        		Arrays.asList(60, 60),
-        		Arrays.asList(48, 48),
-        		Arrays.asList(8, 8),
-        		Arrays.asList(36, 36),
-        		Arrays.asList(64, 64),
+                Arrays.asList(0, 0),
+                Arrays.asList(0, 0),
+                Arrays.asList(28, 28),
+                Arrays.asList(56, 56),
+                Arrays.asList(16, 16),
+                Arrays.asList(4, 4),
+                Arrays.asList(32, 32),
+                Arrays.asList(20, 20),
+                Arrays.asList(60, 60),
+                Arrays.asList(48, 48),
+                Arrays.asList(8, 8),
+                Arrays.asList(36, 36),
+                Arrays.asList(64, 64),
         };
         helpCreateJoin();
         EnhancedSortMergeJoinStrategy psj = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
@@ -1027,7 +1027,7 @@ public class TestJoinNode {
     }
 
     @Test public void testSortMergeWithDistinct() throws TeiidComponentException, TeiidProcessingException {
-    	this.leftTuples = new List[] {Arrays.asList(1, 2), Arrays.asList(1, 3)};
+        this.leftTuples = new List[] {Arrays.asList(1, 2), Arrays.asList(1, 3)};
         this.rightTuples = new List[] {Arrays.asList(1, 4), Arrays.asList(1, 5)};
 
         expected = new List[] {
@@ -1037,7 +1037,7 @@ public class TestJoinNode {
                 Arrays.asList(1, 3, 1, 5),
         };
 
-    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
@@ -1056,16 +1056,16 @@ public class TestJoinNode {
         List rightElements = Arrays.asList(es3, es4);
 
         rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
-        	@Override
-        	public boolean hasBuffer() {
-        		return false;
-        	}
+            @Override
+            public boolean hasBuffer() {
+                return false;
+            }
 
-        	@Override
-        	public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-        		fail();
-        		throw new AssertionError();
-        	};
+            @Override
+            public TupleBuffer getBufferDirect(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+                fail();
+                throw new AssertionError();
+            };
         };
         rightNode.setElements(rightElements);
 
@@ -1087,18 +1087,18 @@ public class TestJoinNode {
     }
 
     @Test public void testEnhancedWithSortDistinct() throws Exception {
-    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b where a.e1 = b.e1"; //$NON-NLS-1$
+        String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b where a.e1 = b.e1"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
         HardcodedDataManager hdm = new HardcodedDataManager();
         List<?>[] rows = new List<?>[10];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i));
+            rows[i] = Arrays.asList(String.valueOf(i));
         }
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
         rows = new List<?>[10];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i), i);
+            rows[i] = Arrays.asList(String.valueOf(i), i);
         }
         hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
@@ -1109,41 +1109,41 @@ public class TestJoinNode {
     }
 
     @Test public void testPrefetchDistinct() throws Exception {
-    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
+        String sql = "select a.e1, b.e2 from pm1.g1 as a, (select e1, e2 from pm2.g2 union select e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
         HardcodedDataManager hdm = new HardcodedDataManager() {
-        	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
-        		final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
-        		return new TupleSource() {
+            public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
+                final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
+                return new TupleSource() {
 
-					private int block;
+                    private int block;
 
-					@Override
-					public List<?> nextTuple() throws TeiidComponentException,
-							TeiidProcessingException {
-						if (block++%2==0) {
-							throw BlockedException.INSTANCE;
-						}
-						return source.nextTuple();
-					}
+                    @Override
+                    public List<?> nextTuple() throws TeiidComponentException,
+                            TeiidProcessingException {
+                        if (block++%2==0) {
+                            throw BlockedException.INSTANCE;
+                        }
+                        return source.nextTuple();
+                    }
 
-					@Override
-					public void closeSource() {
-						source.closeSource();
-					}
+                    @Override
+                    public void closeSource() {
+                        source.closeSource();
+                    }
 
-        		};
-        	}
+                };
+            }
         };
         List<?>[] rows = new List<?>[2];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i));
+            rows[i] = Arrays.asList(String.valueOf(i));
         }
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
         rows = new List<?>[2];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i), i);
+            rows[i] = Arrays.asList(String.valueOf(i), i);
         }
         hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
@@ -1154,18 +1154,18 @@ public class TestJoinNode {
     }
 
     @Test public void testEnhancedWithLimit() throws Exception {
-    	String sql = "select a.e1, b.e2 from pm1.g1 as a, pm2.g2 as b where a.e1 = b.e1 limit 10"; //$NON-NLS-1$
+        String sql = "select a.e1, b.e2 from pm1.g1 as a, pm2.g2 as b where a.e1 = b.e1 limit 10"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
         HardcodedDataManager hdm = new HardcodedDataManager();
         List<?>[] rows = new List<?>[50];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i));
+            rows[i] = Arrays.asList(String.valueOf(i));
         }
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
         rows = new List<?>[200];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i), i);
+            rows[i] = Arrays.asList(String.valueOf(i), i);
         }
         hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
@@ -1175,47 +1175,47 @@ public class TestJoinNode {
 
         rows = new List<?>[10];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i), i);
+            rows[i] = Arrays.asList(String.valueOf(i), i);
         }
         TestProcessor.helpProcess(plan, context, hdm, rows);
     }
 
     @Test public void testDupRemoveUnderJoin() throws Exception {
-    	String sql = "select a.e1, b.e2 from pm1.g1 as a, (select distinct e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
+        String sql = "select a.e1, b.e2 from pm1.g1 as a, (select distinct e1, e2 from pm2.g2) as b"; //$NON-NLS-1$
 
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
         HardcodedDataManager hdm = new HardcodedDataManager() {
-        	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
-        		final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
-        		return new TupleSource() {
+            public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException {
+                final TupleSource source = super.registerRequest(context, command, modelName, parameterObject);
+                return new TupleSource() {
 
-					private int block;
+                    private int block;
 
-					@Override
-					public List<?> nextTuple() throws TeiidComponentException,
-							TeiidProcessingException {
-						if (block++%2==0) {
-							throw BlockedException.INSTANCE;
-						}
-						return source.nextTuple();
-					}
+                    @Override
+                    public List<?> nextTuple() throws TeiidComponentException,
+                            TeiidProcessingException {
+                        if (block++%2==0) {
+                            throw BlockedException.INSTANCE;
+                        }
+                        return source.nextTuple();
+                    }
 
-					@Override
-					public void closeSource() {
-						source.closeSource();
-					}
+                    @Override
+                    public void closeSource() {
+                        source.closeSource();
+                    }
 
-        		};
-        	}
+                };
+            }
         };
         List<?>[] rows = new List<?>[1];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i));
+            rows[i] = Arrays.asList(String.valueOf(i));
         }
         hdm.addData("SELECT pm1.g1.e1 FROM pm1.g1", rows);
         rows = new List<?>[1025];
         for (int i = 0; i < rows.length; i++) {
-        	rows[i] = Arrays.asList(String.valueOf(i), i);
+            rows[i] = Arrays.asList(String.valueOf(i), i);
         }
         hdm.addData("SELECT pm2.g2.e1, pm2.g2.e2 FROM pm2.g2", rows);
         BufferManagerImpl mgr = BufferManagerFactory.getTestBufferManager(1, 2);
@@ -1225,7 +1225,7 @@ public class TestJoinNode {
         List<?>[] results = new List<?>[1025];
 
         for (int i = 0; i < results.length; i++) {
-        	results[i] = Arrays.asList("0", i);
+            results[i] = Arrays.asList("0", i);
         }
 
         TestProcessor.helpProcess(plan, context, hdm, results);

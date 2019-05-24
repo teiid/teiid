@@ -26,7 +26,7 @@ package org.teiid.core;
  */
 public class TeiidComponentException extends TeiidException {
 
-	private static final long serialVersionUID = 5853804556425201591L;
+    private static final long serialVersionUID = 5853804556425201591L;
 
     public TeiidComponentException(  ) {
         super(  );
@@ -46,7 +46,7 @@ public class TeiidComponentException extends TeiidException {
      * @param e An exception to chain to this exception
      */
     public TeiidComponentException( Throwable e ) {
-		super( e );
+        super( e );
     }
 
     public TeiidComponentException(BundleUtil.Event code, final String message) {

@@ -60,7 +60,7 @@ public class TestClobValue {
     }
 
     @Test public void testReferencePersistence() throws Exception {
-    	String testString = "this is test clob"; //$NON-NLS-1$
+        String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray());
 
         ClobType cv = new ClobType(clob);
@@ -75,13 +75,13 @@ public class TestClobValue {
     }
 
     @SuppressWarnings("serial")
-	@Test public void testReferencePersistenceError() throws Exception {
-    	String testString = "this is test clob"; //$NON-NLS-1$
+    @Test public void testReferencePersistenceError() throws Exception {
+        String testString = "this is test clob"; //$NON-NLS-1$
         SerialClob clob = new SerialClob(testString.toCharArray()) {
-        	@Override
-        	public Reader getCharacterStream() throws SerialException {
-        		throw new SerialException();
-        	}
+            @Override
+            public Reader getCharacterStream() throws SerialException {
+                throw new SerialException();
+            }
         };
 
         ClobType cv = new ClobType(clob);
@@ -96,39 +96,39 @@ public class TestClobValue {
     }
 
     @Test public void testClobSubstring() throws Exception {
-    	ClobImpl clob = new ClobImpl() {
-    		public java.io.Reader getCharacterStream() throws java.sql.SQLException {
-    			return new Reader() {
+        ClobImpl clob = new ClobImpl() {
+            public java.io.Reader getCharacterStream() throws java.sql.SQLException {
+                return new Reader() {
 
-    				int pos = 0;
+                    int pos = 0;
 
-					@Override
-					public void close() throws IOException {
+                    @Override
+                    public void close() throws IOException {
 
-					}
+                    }
 
-					@Override
-					public int read(char[] cbuf, int off, int len)
-							throws IOException {
-						if (pos < 2) {
-							cbuf[off] = 'a';
-							pos++;
-							return 1;
-						}
-						return -1;
-					}
-    			};
-    		}
-    	};
-    	assertEquals("aa", clob.getSubString(1, 3));
+                    @Override
+                    public int read(char[] cbuf, int off, int len)
+                            throws IOException {
+                        if (pos < 2) {
+                            cbuf[off] = 'a';
+                            pos++;
+                            return 1;
+                        }
+                        return -1;
+                    }
+                };
+            }
+        };
+        assertEquals("aa", clob.getSubString(1, 3));
 
-    	assertEquals("", clob.getSubString(1, 0));
+        assertEquals("", clob.getSubString(1, 0));
 
-    	clob = new ClobImpl("hello world");
+        clob = new ClobImpl("hello world");
 
-    	assertEquals("hel", clob.getSubString(1, 3));
+        assertEquals("hel", clob.getSubString(1, 3));
 
-    	assertEquals("orld", clob.getSubString(8, 5));
+        assertEquals("orld", clob.getSubString(8, 5));
     }
 
     @Test public void testClobCompare() throws Exception {

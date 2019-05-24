@@ -40,69 +40,69 @@ import com.datastax.driver.core.TableMetadata;
 
 public class CassandraMetadataProcessor implements MetadataProcessor<CassandraConnection>{
 
-	@ExtensionMetadataProperty(applicable=Table.class, datatype=Boolean.class, display="Allow Filtering", description="This is to avoid the warning from Cassandra when it might not be able to execute the query in an efficient way", required=false)
-	public static final String ALLOWFILTERING = "ALLOWFILTERING";
+    @ExtensionMetadataProperty(applicable=Table.class, datatype=Boolean.class, display="Allow Filtering", description="This is to avoid the warning from Cassandra when it might not be able to execute the query in an efficient way", required=false)
+    public static final String ALLOWFILTERING = "ALLOWFILTERING";
 
-	/**
-	 * Creates metadata from all column families in current keyspace.
-	 */
-	public void process(MetadataFactory factory, CassandraConnection connection) throws TranslatorException {
+    /**
+     * Creates metadata from all column families in current keyspace.
+     */
+    public void process(MetadataFactory factory, CassandraConnection connection) throws TranslatorException {
         try {
-    		for (TableMetadata columnFamily : connection.keyspaceInfo().getTables()){
-    			addTable(factory, columnFamily);
-    		}
+            for (TableMetadata columnFamily : connection.keyspaceInfo().getTables()){
+                addTable(factory, columnFamily);
+            }
         } catch (TranslatorException e) {
             throw new TranslatorException(Event.TEIID22000, e, CassandraExecutionFactory.UTIL.gs(Event.TEIID22000));
         }
-	}
+    }
 
-	/**
-	 * Adds table.
-	 * @param columnFamily
-	 */
-	private void addTable(MetadataFactory factory, TableMetadata columnFamily) {
-		Table table = factory.addTable(columnFamily.getName());
-		addColumnsToTable(factory, table, columnFamily);
+    /**
+     * Adds table.
+     * @param columnFamily
+     */
+    private void addTable(MetadataFactory factory, TableMetadata columnFamily) {
+        Table table = factory.addTable(columnFamily.getName());
+        addColumnsToTable(factory, table, columnFamily);
         addPrimaryKey(factory, table, columnFamily);
-		for (IndexMetadata index : columnFamily.getIndexes()) {
-		    Column c = table.getColumnByName(index.getTarget());
-		    if (c != null) {
-		        c.setSearchType(SearchType.Searchable);
-	            factory.addIndex(index.getName(), false, Arrays.asList(index.getTarget()), table);
-		    }
-		}
-		table.setSupportsUpdate(true);
-	}
+        for (IndexMetadata index : columnFamily.getIndexes()) {
+            Column c = table.getColumnByName(index.getTarget());
+            if (c != null) {
+                c.setSearchType(SearchType.Searchable);
+                factory.addIndex(index.getName(), false, Arrays.asList(index.getTarget()), table);
+            }
+        }
+        table.setSupportsUpdate(true);
+    }
 
-	/**
-	 * Adds a primary key from columnFamily to given table.
-	 * @param table			Teiid table
-	 * @param columnFamily
-	 */
-	private void addPrimaryKey(MetadataFactory factory, Table table, TableMetadata columnFamily) {
-		List<ColumnMetadata> primaryKeys = columnFamily.getPrimaryKey();
-		List<String> names = new ArrayList<String>();
+    /**
+     * Adds a primary key from columnFamily to given table.
+     * @param table            Teiid table
+     * @param columnFamily
+     */
+    private void addPrimaryKey(MetadataFactory factory, Table table, TableMetadata columnFamily) {
+        List<ColumnMetadata> primaryKeys = columnFamily.getPrimaryKey();
+        List<String> names = new ArrayList<String>();
 
-		for (ColumnMetadata columnName : primaryKeys){
-		    names.add(columnName.getName());
-			table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
-		}
-		factory.addPrimaryKey("PK_" + columnFamily.getName(), names, table); //$NON-NLS-1$
-	}
+        for (ColumnMetadata columnName : primaryKeys){
+            names.add(columnName.getName());
+            table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
+        }
+        factory.addPrimaryKey("PK_" + columnFamily.getName(), names, table); //$NON-NLS-1$
+    }
 
-	/**
-	 * Adds all columns of column family.
-	 * @param table			Teiid table
-	 * @param columnFamily	Column family
-	 */
-	private void addColumnsToTable(MetadataFactory factory, Table table, TableMetadata columnFamily) {
-		for (ColumnMetadata column : columnFamily.getColumns()){
-		    String type = asTeiidRuntimeType(column.getType().getName());
-			Column c = factory.addColumn(column.getName(), type, table);
-			c.setUpdatable(true);
-			c.setSearchType(SearchType.Unsearchable);
-		}
-	}
+    /**
+     * Adds all columns of column family.
+     * @param table            Teiid table
+     * @param columnFamily    Column family
+     */
+    private void addColumnsToTable(MetadataFactory factory, Table table, TableMetadata columnFamily) {
+        for (ColumnMetadata column : columnFamily.getColumns()){
+            String type = asTeiidRuntimeType(column.getType().getName());
+            Column c = factory.addColumn(column.getName(), type, table);
+            c.setUpdatable(true);
+            c.setSearchType(SearchType.Unsearchable);
+        }
+    }
 
     private String asTeiidRuntimeType(Name name) {
 

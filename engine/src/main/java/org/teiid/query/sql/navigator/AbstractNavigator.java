@@ -43,7 +43,7 @@ public class AbstractNavigator extends LanguageVisitor {
     }
 
     protected void visitVisitor(LanguageObject obj) {
-    	if(this.visitor.shouldAbort()) {
+        if(this.visitor.shouldAbort()) {
             return;
         }
 
@@ -66,16 +66,16 @@ public class AbstractNavigator extends LanguageVisitor {
         }
         int size = nodes.size();
         if (size > 0) {
-        	if (nodes instanceof List<?> && nodes instanceof RandomAccess) {
-        		List<? extends LanguageObject> list = (List<? extends LanguageObject>) nodes;
-        		for (int i = 0; i < size; i++) {
-        			visitNode(list.get(i));
-        		}
-        		return;
-        	}
-        	for (LanguageObject languageObject : nodes) {
-				visitNode(languageObject);
-			}
+            if (nodes instanceof List<?> && nodes instanceof RandomAccess) {
+                List<? extends LanguageObject> list = (List<? extends LanguageObject>) nodes;
+                for (int i = 0; i < size; i++) {
+                    visitNode(list.get(i));
+                }
+                return;
+            }
+            for (LanguageObject languageObject : nodes) {
+                visitNode(languageObject);
+            }
         }
     }
 

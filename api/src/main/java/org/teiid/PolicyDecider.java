@@ -30,46 +30,46 @@ import org.teiid.adminapi.DataPolicy.PermissionType;
  */
 public interface PolicyDecider {
 
-	/**
-	 * Called by the system hasRole function to determine role membership.
-	 * @param roleName
-	 * @param context
-	 * @return true if the user has the given role name, otherwise false
-	 */
-	boolean hasRole(String roleName, CommandContext context);
+    /**
+     * Called by the system hasRole function to determine role membership.
+     * @param roleName
+     * @param context
+     * @return true if the user has the given role name, otherwise false
+     */
+    boolean hasRole(String roleName, CommandContext context);
 
-	/**
-	 * Returns the set of resources not allowed to be accessed by the current user.
-	 * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
-	 * @param action if context is METADATA, then action execute means a procedure or function, and read some other resource
-	 * @param resources
-	 * @param context in which the action is performed.
-	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
-	 * @param commandContext
-	 * @return the set of inaccessible resources, never null
-	 */
-	Set<String> getInaccessibleResources(PermissionType action,
-			Set<String> resources, Context context,
-			CommandContext commandContext);
+    /**
+     * Returns the set of resources not allowed to be accessed by the current user.
+     * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
+     * @param action if context is METADATA, then action execute means a procedure or function, and read some other resource
+     * @param resources
+     * @param context in which the action is performed.
+     *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
+     * @param commandContext
+     * @return the set of inaccessible resources, never null
+     */
+    Set<String> getInaccessibleResources(PermissionType action,
+            Set<String> resources, Context context,
+            CommandContext commandContext);
 
-	/**
-	 * Checks if the given temp table is accessible.  Typically as long as temp tables can be created, all operations are allowed.
-	 * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
-	 * @param action
-	 * @param resource
-	 * @param context in which the action is performed.
-	 *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
-	 * @param commandContext
-	 * @return true if the access is allowed, otherwise false
-	 */
-	boolean isTempAccessible(PermissionType action, String resource,
-			Context context, CommandContext commandContext);
+    /**
+     * Checks if the given temp table is accessible.  Typically as long as temp tables can be created, all operations are allowed.
+     * Resource names are given based upon the FQNs (NOTE these are non-SQL names - identifiers are not quoted).
+     * @param action
+     * @param resource
+     * @param context in which the action is performed.
+     *   For example you can have a context of {@link Context#UPDATE} for a {@link PermissionType#READ} for columns used in an UPDATE condition.
+     * @param commandContext
+     * @return true if the access is allowed, otherwise false
+     */
+    boolean isTempAccessible(PermissionType action, String resource,
+            Context context, CommandContext commandContext);
 
-	/**
-	 * Determines if an authorization check should proceed
-	 * @param commandContext
-	 * @return
-	 */
-	boolean validateCommand(CommandContext commandContext);
+    /**
+     * Determines if an authorization check should proceed
+     * @param commandContext
+     * @return
+     */
+    boolean validateCommand(CommandContext commandContext);
 
 }

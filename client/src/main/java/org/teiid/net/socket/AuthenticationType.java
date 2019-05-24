@@ -19,5 +19,5 @@
 package org.teiid.net.socket;
 
 public enum AuthenticationType {
-	USERPASSWORD,GSS;
+    USERPASSWORD,GSS;
 }

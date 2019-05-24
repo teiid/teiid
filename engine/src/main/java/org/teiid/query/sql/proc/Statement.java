@@ -28,35 +28,35 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class Statement implements LanguageObject {
 
-	public interface Labeled {
-		String getLabel();
-		void setLabel(String label);
-	}
+    public interface Labeled {
+        String getLabel();
+        void setLabel(String label);
+    }
 
-	/**
-	 * Represents an unknown type of statement
-	 */
-	public static final int TYPE_UNKNOWN = 0;
+    /**
+     * Represents an unknown type of statement
+     */
+    public static final int TYPE_UNKNOWN = 0;
 
-	/**
-	 * Represents a IF statement
-	 */
-	public static final int TYPE_IF = 1;
+    /**
+     * Represents a IF statement
+     */
+    public static final int TYPE_IF = 1;
 
-	/**
-	 * Represents a SQL COMMAND statement
-	 */
-	public static final int TYPE_COMMAND = 2;
+    /**
+     * Represents a SQL COMMAND statement
+     */
+    public static final int TYPE_COMMAND = 2;
 
-	/**
-	 * Represents a DECLARE statement
-	 */
-	public static final int TYPE_DECLARE = 3;
+    /**
+     * Represents a DECLARE statement
+     */
+    public static final int TYPE_DECLARE = 3;
 
-	/**
-	 * Represents a ERROR statement
-	 */
-	public static final int TYPE_ERROR = 4;
+    /**
+     * Represents a ERROR statement
+     */
+    public static final int TYPE_ERROR = 4;
 
     /**
      * Represents a ASSIGNMENT statement
@@ -89,26 +89,26 @@ public abstract class Statement implements LanguageObject {
 
     public static final int TYPE_LEAVE = 12;
 
-	public static final int TYPE_RETURN = 13;
+    public static final int TYPE_RETURN = 13;
 
-	/**
-	 * Return type of statement to make it easier to build switch statements by statement type.
-	 * @return Type from TYPE constants
-	 */
-	public abstract int getType();
+    /**
+     * Return type of statement to make it easier to build switch statements by statement type.
+     * @return Type from TYPE constants
+     */
+    public abstract int getType();
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
     // =========================================================================
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone
-	 */
-	public abstract Object clone();
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public abstract Object clone();
 
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
 }

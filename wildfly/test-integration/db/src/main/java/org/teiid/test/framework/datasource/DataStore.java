@@ -24,13 +24,13 @@ public class DataStore {
      */
     public static void initialize(ConnectionStrategy connStrategy) {
 
-	if (connStrategy.isDataStoreDisabled()) {
-	    return;
-	}
-	try {
-	    load(getConnection("pm1", connStrategy));
+    if (connStrategy.isDataStoreDisabled()) {
+        return;
+    }
+    try {
+        load(getConnection("pm1", connStrategy));
 
-	    load(getConnection("pm2", connStrategy));
+        load(getConnection("pm2", connStrategy));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -38,15 +38,15 @@ public class DataStore {
     }
 
     private static Connection getConnection(String identifier, ConnectionStrategy connStrategy) throws QueryTestFailedException {
-	Connection conn = connStrategy.createDriverConnection(identifier);
-	// force autocommit back to true, just in case the last user didnt
-	try {
-		conn.setAutoCommit(true);
-	} catch (Exception sqle) {
-		throw new QueryTestFailedException(sqle);
-	}
+    Connection conn = connStrategy.createDriverConnection(identifier);
+    // force autocommit back to true, just in case the last user didnt
+    try {
+        conn.setAutoCommit(true);
+    } catch (Exception sqle) {
+        throw new QueryTestFailedException(sqle);
+    }
 
-	return conn;
+    return conn;
     }
 
     private static void load(Connection c) throws Exception {
@@ -78,7 +78,7 @@ public class DataStore {
                 }
 
             } finally {
-        	stmt.close();
+            stmt.close();
             }
 
     }
@@ -91,13 +91,13 @@ public class DataStore {
      * @param connStrategy
      */
     public static void setup(ConnectionStrategy connStrategy) {
-	if (connStrategy.isDataStoreDisabled()) {
-	    return;
-	}
-	try {
-	    setUpTest(getConnection("pm1", connStrategy));
+    if (connStrategy.isDataStoreDisabled()) {
+        return;
+    }
+    try {
+        setUpTest(getConnection("pm1", connStrategy));
 
-	    setUpTest(getConnection("pm2", connStrategy));
+        setUpTest(getConnection("pm2", connStrategy));
 
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -114,7 +114,7 @@ public class DataStore {
                 stmt.execute("delete from g1 where e1 >= 100");
 
             } finally {
-        	stmt.close();
+            stmt.close();
             }
 
 

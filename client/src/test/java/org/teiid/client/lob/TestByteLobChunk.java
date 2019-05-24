@@ -37,7 +37,7 @@ public class TestByteLobChunk extends TestCase {
     }
 
     public void testSerialization() throws Exception {
-    	String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
+        String testString = "This is test string for testing ByteLobChunk"; //$NON-NLS-1$
         LobChunk chunk = new LobChunk(testString.getBytes(), true);
 
         LobChunk result = UnitTestUtil.helpSerialize(chunk);

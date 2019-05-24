@@ -37,81 +37,81 @@ import org.teiid.core.CorePlugin;
  */
 public class InputStreamReader extends Reader {
 
-	private CharsetDecoder cd;
-	private ReadableByteChannel rbc;
-	private ByteBuffer bb;
-	private CharBuffer cb;
-	private boolean done;
-	private int bytesProcessed;
+    private CharsetDecoder cd;
+    private ReadableByteChannel rbc;
+    private ByteBuffer bb;
+    private CharBuffer cb;
+    private boolean done;
+    private int bytesProcessed;
 
-	public InputStreamReader(InputStream in, CharsetDecoder cd) {
-		this(in, cd, ReaderInputStream.DEFAULT_BUFFER_SIZE);
-	}
+    public InputStreamReader(InputStream in, CharsetDecoder cd) {
+        this(in, cd, ReaderInputStream.DEFAULT_BUFFER_SIZE);
+    }
 
-	public InputStreamReader(InputStream in, CharsetDecoder cd, int bufferSize) {
-		this.cd = cd;
-		this.rbc = Channels.newChannel(in);
-		this.bb = ByteBuffer.allocate(bufferSize);
-		this.cb = CharBuffer.allocate((int)(bufferSize * (double)cd.maxCharsPerByte()));
-		this.cb.limit(0);
-	}
+    public InputStreamReader(InputStream in, CharsetDecoder cd, int bufferSize) {
+        this.cd = cd;
+        this.rbc = Channels.newChannel(in);
+        this.bb = ByteBuffer.allocate(bufferSize);
+        this.cb = CharBuffer.allocate((int)(bufferSize * (double)cd.maxCharsPerByte()));
+        this.cb.limit(0);
+    }
 
-	@Override
-	public void close() throws IOException {
-		rbc.close();
-		cd.reset();
-	}
+    @Override
+    public void close() throws IOException {
+        rbc.close();
+        cd.reset();
+    }
 
-	@Override
-	public int read(char[] cbuf, int off, int len) throws IOException {
-		if ((off < 0) || (off > cbuf.length) || (len < 0) ||
+    @Override
+    public int read(char[] cbuf, int off, int len) throws IOException {
+        if ((off < 0) || (off > cbuf.length) || (len < 0) ||
             ((off + len) > cbuf.length) || ((off + len) < 0)) {
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
             return 0;
         }
-		while (!done && !cb.hasRemaining()) {
-			int read = 0;
-			int pos = bb.position();
-	    	while ((read = rbc.read(bb)) == 0) {
-	    		//blocking read
-	    	}
-	    	bb.flip();
-	    	cb.clear();
-			CoderResult cr = cd.decode(bb, cb, read == -1);
-			checkResult(cr);
-	    	if (read == -1) {
-	    		cr = cd.flush(cb);
-	    		checkResult(cr);
-	    		done = true;
-	    	}
-	    	bytesProcessed += bb.position() - pos;
-	    	if (bb.position() != read + pos) {
-	    		bb.compact();
-	    	} else {
-	    		bb.clear();
-	    	}
-    		cb.flip();
-		}
-		len = Math.min(len, cb.remaining());
-		if (len == 0 && done) {
-			return -1;
-		}
-		cb.get(cbuf, off, len);
-		return len;
-	}
+        while (!done && !cb.hasRemaining()) {
+            int read = 0;
+            int pos = bb.position();
+            while ((read = rbc.read(bb)) == 0) {
+                //blocking read
+            }
+            bb.flip();
+            cb.clear();
+            CoderResult cr = cd.decode(bb, cb, read == -1);
+            checkResult(cr);
+            if (read == -1) {
+                cr = cd.flush(cb);
+                checkResult(cr);
+                done = true;
+            }
+            bytesProcessed += bb.position() - pos;
+            if (bb.position() != read + pos) {
+                bb.compact();
+            } else {
+                bb.clear();
+            }
+            cb.flip();
+        }
+        len = Math.min(len, cb.remaining());
+        if (len == 0 && done) {
+            return -1;
+        }
+        cb.get(cbuf, off, len);
+        return len;
+    }
 
-	private void checkResult(CoderResult cr) throws IOException {
-		if (!cr.isUnderflow() && cr.isError()) {
-			if (cr.isMalformed() || cr.isUnmappable()) {
-				try {
-					cr.throwException();
-				} catch (CharacterCodingException e) {
-					throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cd.charset().displayName(), bytesProcessed + bb.position() + 1), e);
-				}
-			}
-		    cr.throwException();
-		}
-	}
+    private void checkResult(CoderResult cr) throws IOException {
+        if (!cr.isUnderflow() && cr.isError()) {
+            if (cr.isMalformed() || cr.isUnmappable()) {
+                try {
+                    cr.throwException();
+                } catch (CharacterCodingException e) {
+                    throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cd.charset().displayName(), bytesProcessed + bb.position() + 1), e);
+                }
+            }
+            cr.throwException();
+        }
+    }
 
 }

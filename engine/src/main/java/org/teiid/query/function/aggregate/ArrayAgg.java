@@ -41,59 +41,59 @@ public class ArrayAgg extends SingleArgumentAggregateFunction {
 
     @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
-    	this.componentType = inputType;
-    	if (!SizeUtility.isVariableSize(componentType)) {
-    	    elemSize = SizeUtility.getSize(false, componentType);
-    	}
+        this.componentType = inputType;
+        if (!SizeUtility.isVariableSize(componentType)) {
+            elemSize = SizeUtility.getSize(false, componentType);
+        }
     }
 
-	@Override
-	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-		if (this.result == null) {
-			this.result = new ArrayList<Object>();
-			size = 0;
-		}
-		this.result.add(input);
-		size += SizeUtility.REFERENCE_SIZE;
-		if (input != null) {
-        	if (elemSize != 0) {
-        	    size += elemSize;
-        	} else {
-        	    size += SizeUtility.getSize(input, false);
-        	}
-	    }
+    @Override
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
+        if (this.result == null) {
+            this.result = new ArrayList<Object>();
+            size = 0;
+        }
+        this.result.add(input);
+        size += SizeUtility.REFERENCE_SIZE;
+        if (input != null) {
+            if (elemSize != 0) {
+                size += elemSize;
+            } else {
+                size += SizeUtility.getSize(input, false);
+            }
+        }
         if (size > MAX_SIZE) {
             throw new TeiidProcessingException(QueryPlugin.Event.TEIID31209, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31209, MAX_SIZE));
         }
-	}
+    }
 
-	@Override
-	public Object getResult(CommandContext commandContext) throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException,TeiidProcessingException {
-		if (this.result == null) {
-			return null;
-		}
-		if (this.componentType == DataTypeManager.DefaultDataClasses.OBJECT) {
-			return new ArrayImpl(this.result.toArray());
-		}
-		Object array = Array.newInstance(componentType, this.result.size());
-		for (int i = 0; i < result.size(); i++) {
-			Object val = result.get(i);
-			if (val instanceof ArrayImpl) {
-				val = ((ArrayImpl)val).getValues();
-			}
-			Array.set(array, i, val);
-		}
-		return new ArrayImpl((Object[]) array);
-	}
+    @Override
+    public Object getResult(CommandContext commandContext) throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException,TeiidProcessingException {
+        if (this.result == null) {
+            return null;
+        }
+        if (this.componentType == DataTypeManager.DefaultDataClasses.OBJECT) {
+            return new ArrayImpl(this.result.toArray());
+        }
+        Object array = Array.newInstance(componentType, this.result.size());
+        for (int i = 0; i < result.size(); i++) {
+            Object val = result.get(i);
+            if (val instanceof ArrayImpl) {
+                val = ((ArrayImpl)val).getValues();
+            }
+            Array.set(array, i, val);
+        }
+        return new ArrayImpl((Object[]) array);
+    }
 
-	@Override
-	public void reset() {
-		this.result = null;
-	}
+    @Override
+    public void reset() {
+        this.result = null;
+    }
 
-	@Override
-	public boolean respectsNull() {
-		return true;
-	}
+    @Override
+    public boolean respectsNull() {
+        return true;
+    }
 
 }

@@ -117,21 +117,21 @@ public class AbstractValidationVisitor extends LanguageVisitor {
     // ######################### Helper methods for validation #########################
 
     protected Collection<ElementSymbol> validateElementsSupport(Collection<ElementSymbol> elements, int supportsFlag) {
-	    // Collect any identifiers not supporting flag
-	    List<ElementSymbol> dontSupport = null;
+        // Collect any identifiers not supporting flag
+        List<ElementSymbol> dontSupport = null;
         ElementSymbol symbol = null;
 
         try {
-	        Iterator<ElementSymbol> elemIter = elements.iterator();
+            Iterator<ElementSymbol> elemIter = elements.iterator();
             while(elemIter.hasNext()) {
-		    symbol = elemIter.next();
+            symbol = elemIter.next();
                if(! getMetadata().elementSupports(symbol.getMetadataID(), supportsFlag)) {
                     if(dontSupport == null) {
                         dontSupport = new ArrayList<ElementSymbol>();
                     }
                     dontSupport.add(symbol);
                 }
-		    }
+            }
         } catch(QueryMetadataException e) {
             handleException(e, symbol);
         } catch(TeiidComponentException e) {

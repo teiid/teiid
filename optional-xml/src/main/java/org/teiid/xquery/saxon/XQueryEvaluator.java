@@ -95,115 +95,115 @@ import nux.xom.xquery.StreamingTransform;
  */
 public class XQueryEvaluator {
 
-	private static Nodes NONE = new Nodes();
-	private static InputStream FAKE_IS = new InputStream() {
+    private static Nodes NONE = new Nodes();
+    private static InputStream FAKE_IS = new InputStream() {
 
-		@Override
-		public int read() throws IOException {
-			return 0;
-		}
-	};
+        @Override
+        public int read() throws IOException {
+            return 0;
+        }
+    };
 
-	public static SaxonXQueryExpression.Result evaluateXQuery(final SaxonXQueryExpression xquery, Object context, Map<String, Object> parameterValues, final RowProcessor processor, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
-	    DynamicQueryContext dynamicContext = new DynamicQueryContext(xquery.config);
+    public static SaxonXQueryExpression.Result evaluateXQuery(final SaxonXQueryExpression xquery, Object context, Map<String, Object> parameterValues, final RowProcessor processor, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
+        DynamicQueryContext dynamicContext = new DynamicQueryContext(xquery.config);
 
-	    SaxonXQueryExpression.Result result = new SaxonXQueryExpression.Result();
-	    try {
-	        for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
-	            try {
-    	            Object value = entry.getValue();
-    	            Sequence s = null;
-    	            if(value instanceof SQLXML) {
-    	            	value = XMLSystemFunctions.convertToSource(value);
-    	            	result.sources.add((Source)value);
-    	            	Source source = wrapStax((Source)value);
-    	            	s = xquery.config.buildDocumentTree(source).getRootNode();
-    	            } else if (value instanceof java.util.Date) {
-    	            	s = XQueryEvaluator.convertToAtomicValue(value);
-    	            } else if (value instanceof BinaryType) {
-    	            	s = new HexBinaryValue(((BinaryType)value).getBytesDirect());
-    	            }
-    	            dynamicContext.setParameter(StructuredQName.fromClarkName(entry.getKey()), s);
-	            } catch (TransformerException e) {
-	                throw new TeiidProcessingException(QueryPlugin.Event.TEIID30148, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30148, entry.getKey()));
-	            }
-	        }
-	        if (context != null) {
-	        	Source source = XMLSystemFunctions.convertToSource(context);
-	        	result.sources.add(source);
-	        	source = wrapStax(source);
-	            if (xquery.contextRoot != null) {
-	            	//create our own filter as this logic is not provided in the free saxon
-	                AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
-	                sourceInput.addFilter(new FilterFactory() {
+        SaxonXQueryExpression.Result result = new SaxonXQueryExpression.Result();
+        try {
+            for (Map.Entry<String, Object> entry : parameterValues.entrySet()) {
+                try {
+                    Object value = entry.getValue();
+                    Sequence s = null;
+                    if(value instanceof SQLXML) {
+                        value = XMLSystemFunctions.convertToSource(value);
+                        result.sources.add((Source)value);
+                        Source source = wrapStax((Source)value);
+                        s = xquery.config.buildDocumentTree(source).getRootNode();
+                    } else if (value instanceof java.util.Date) {
+                        s = XQueryEvaluator.convertToAtomicValue(value);
+                    } else if (value instanceof BinaryType) {
+                        s = new HexBinaryValue(((BinaryType)value).getBytesDirect());
+                    }
+                    dynamicContext.setParameter(StructuredQName.fromClarkName(entry.getKey()), s);
+                } catch (TransformerException e) {
+                    throw new TeiidProcessingException(QueryPlugin.Event.TEIID30148, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30148, entry.getKey()));
+                }
+            }
+            if (context != null) {
+                Source source = XMLSystemFunctions.convertToSource(context);
+                result.sources.add(source);
+                source = wrapStax(source);
+                if (xquery.contextRoot != null) {
+                    //create our own filter as this logic is not provided in the free saxon
+                    AugmentedSource sourceInput = AugmentedSource.makeAugmentedSource(source);
+                    sourceInput.addFilter(new FilterFactory() {
 
-						@Override
-						public ProxyReceiver makeFilter(Receiver arg0) {
-							return new PathMapFilter(xquery.contextRoot, arg0);
-						}
-					});
-	                source = sourceInput;
+                        @Override
+                        public ProxyReceiver makeFilter(Receiver arg0) {
+                            return new PathMapFilter(xquery.contextRoot, arg0);
+                        }
+                    });
+                    source = sourceInput;
 
-	            	//use streamable processing instead
-	                if (xquery.streamingPath != null && processor != null) {
-	                	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-	                		LogManager.logDetail(LogConstants.CTX_DQP, "Using stream processing for evaluation of", xquery.xQueryString); //$NON-NLS-1$
-	                	}
-	                	//set to non-blocking in case default expression evaluation blocks
-	                	boolean isNonBlocking = commandContext.isNonBlocking();
-						commandContext.setNonBlocking(true);
+                    //use streamable processing instead
+                    if (xquery.streamingPath != null && processor != null) {
+                        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+                            LogManager.logDetail(LogConstants.CTX_DQP, "Using stream processing for evaluation of", xquery.xQueryString); //$NON-NLS-1$
+                        }
+                        //set to non-blocking in case default expression evaluation blocks
+                        boolean isNonBlocking = commandContext.isNonBlocking();
+                        commandContext.setNonBlocking(true);
 
-						final StreamingTransform myTransform = new StreamingTransform() {
-							public Nodes transform(Element elem) {
-								processor.processRow(XQueryEvaluator.wrap(elem, xquery.config));
-								return NONE;
-							}
-						};
+                        final StreamingTransform myTransform = new StreamingTransform() {
+                            public Nodes transform(Element elem) {
+                                processor.processRow(XQueryEvaluator.wrap(elem, xquery.config));
+                                return NONE;
+                            }
+                        };
 
-						Builder builder = new Builder(new SaxonReader(xquery.config, sourceInput), false,
-								new StreamingPathFilter(xquery.streamingPath, xquery.namespaceMap).createNodeFactory(null, myTransform));
-						try {
-							//the builder is hard wired to parse the source, but the api will throw an exception if the stream is null
-							builder.build(FAKE_IS);
-							return result;
-						} catch (ParsingException e) {
-						     if (e.getCause() instanceof TeiidRuntimeException) {
-						         RelationalNode.unwrapException((TeiidRuntimeException)e.getCause());
-							 }
-							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
-						} catch (IOException e) {
-							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
-						} finally {
-							if (!isNonBlocking) {
-								commandContext.setNonBlocking(false);
-							}
-						}
-	                }
-	            }
-	            TreeInfo doc;
-				try {
-					doc = xquery.config.buildDocumentTree(source);
-				} catch (XPathException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
-				}
-		        dynamicContext.setContextItem(doc.getRootNode());
-	        }
-	        try {
-	        	result.iter = xquery.xQuery.iterator(dynamicContext);
-	        	return result;
-	        } catch (TransformerException e) {
-	        	 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30152, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30152));
-	        }
-	    } finally {
-	    	if (result.iter == null) {
-	    		result.close();
-	    	}
-	    }
-	}
+                        Builder builder = new Builder(new SaxonReader(xquery.config, sourceInput), false,
+                                new StreamingPathFilter(xquery.streamingPath, xquery.namespaceMap).createNodeFactory(null, myTransform));
+                        try {
+                            //the builder is hard wired to parse the source, but the api will throw an exception if the stream is null
+                            builder.build(FAKE_IS);
+                            return result;
+                        } catch (ParsingException e) {
+                             if (e.getCause() instanceof TeiidRuntimeException) {
+                                 RelationalNode.unwrapException((TeiidRuntimeException)e.getCause());
+                             }
+                             throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
+                        } catch (IOException e) {
+                             throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
+                        } finally {
+                            if (!isNonBlocking) {
+                                commandContext.setNonBlocking(false);
+                            }
+                        }
+                    }
+                }
+                TreeInfo doc;
+                try {
+                    doc = xquery.config.buildDocumentTree(source);
+                } catch (XPathException e) {
+                     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
+                }
+                dynamicContext.setContextItem(doc.getRootNode());
+            }
+            try {
+                result.iter = xquery.xQuery.iterator(dynamicContext);
+                return result;
+            } catch (TransformerException e) {
+                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30152, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30152));
+            }
+        } finally {
+            if (result.iter == null) {
+                result.close();
+            }
+        }
+    }
 
-	private static Source wrapStax(Source value) throws TeiidProcessingException {
-		if (value instanceof StAXSource) {
-		    StAXSource staxSource = (StAXSource)value;
+    private static Source wrapStax(Source value) throws TeiidProcessingException {
+        if (value instanceof StAXSource) {
+            StAXSource staxSource = (StAXSource)value;
             if (staxSource.getXMLStreamReader() != null) {
                 return staxSource;
             }
@@ -213,31 +213,31 @@ public class XQueryEvaluator {
                 //should not happen as the StAXSource already peeked
                 throw new TeiidProcessingException(e);
             }
-		}
-		return value;
-	}
+        }
+        return value;
+    }
 
-	/**
-	 * Converts a xom node into something readable by Saxon
-	 * @param node
-	 * @param config
-	 * @return
-	 */
-	static NodeInfo wrap(Node node, Configuration config) {
-		if (node == null)
-			throw new IllegalArgumentException("node must not be null"); //$NON-NLS-1$
-		if (node instanceof DocType)
-			throw new IllegalArgumentException("DocType can't be queried by XQuery/XPath"); //$NON-NLS-1$
+    /**
+     * Converts a xom node into something readable by Saxon
+     * @param node
+     * @param config
+     * @return
+     */
+    static NodeInfo wrap(Node node, Configuration config) {
+        if (node == null)
+            throw new IllegalArgumentException("node must not be null"); //$NON-NLS-1$
+        if (node instanceof DocType)
+            throw new IllegalArgumentException("DocType can't be queried by XQuery/XPath"); //$NON-NLS-1$
 
-		Node root = node;
-		while (root.getParent() != null) {
-			root = root.getParent();
-		}
+        Node root = node;
+        while (root.getParent() != null) {
+            root = root.getParent();
+        }
 
-		XOMDocumentWrapper docWrapper = new XOMDocumentWrapper(root, config);
+        XOMDocumentWrapper docWrapper = new XOMDocumentWrapper(root, config);
 
-		return docWrapper.wrap(node);
-	}
+        return docWrapper.wrap(node);
+    }
 
     static final class XMLQueryRowProcessor implements RowProcessor {
         XmlConcat concat; //just used to get a writer
@@ -390,21 +390,21 @@ public class XQueryEvaluator {
     }
 
     public static AtomicValue convertToAtomicValue(Object value) throws TransformerException {
-    	if (value instanceof java.util.Date) { //special handling for time types
-        	java.util.Date d = (java.util.Date)value;
-        	DateTimeValue tdv = DateTimeValue.fromJavaDate(d);
-        	if (value instanceof Date) {
-        		value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes(), true);
-        	} else if (value instanceof Time) {
-        		value = new TimeValue(tdv.getHour(), tdv.getMinute(), tdv.getSecond(), tdv.getMicrosecond(), tdv.getTimezoneInMinutes());
-        	} else if (value instanceof Timestamp) {
-        		Timestamp ts = (Timestamp)value;
-        		value = tdv.add(DayTimeDurationValue.fromMicroseconds(ts.getNanos() / 1000));
-        	}
-        	return (AtomicValue)value;
+        if (value instanceof java.util.Date) { //special handling for time types
+            java.util.Date d = (java.util.Date)value;
+            DateTimeValue tdv = DateTimeValue.fromJavaDate(d);
+            if (value instanceof Date) {
+                value = new DateValue(tdv.getYear(), tdv.getMonth(), tdv.getDay(), tdv.getTimezoneInMinutes(), true);
+            } else if (value instanceof Time) {
+                value = new TimeValue(tdv.getHour(), tdv.getMinute(), tdv.getSecond(), tdv.getMicrosecond(), tdv.getTimezoneInMinutes());
+            } else if (value instanceof Timestamp) {
+                Timestamp ts = (Timestamp)value;
+                value = tdv.add(DayTimeDurationValue.fromMicroseconds(ts.getNanos() / 1000));
+            }
+            return (AtomicValue)value;
         }
-    	JPConverter converter = JPConverter.allocate(value.getClass(), null, null);
-    	return (AtomicValue)converter.convert(value, null);
+        JPConverter converter = JPConverter.allocate(value.getClass(), null, null);
+        return (AtomicValue)converter.convert(value, null);
     }
 
 }

@@ -48,12 +48,12 @@ public class Limit extends BaseLanguageObject {
     }
 
     public void setRowLimit(int rowLimit) {
-		this.rowLimit = rowLimit;
-	}
+        this.rowLimit = rowLimit;
+    }
 
     public void setRowOffset(int rowOffset) {
-		this.rowOffset = rowOffset;
-	}
+        this.rowOffset = rowOffset;
+    }
 
     public void acceptVisitor(LanguageObjectVisitor visitor) {
         visitor.visit(this);

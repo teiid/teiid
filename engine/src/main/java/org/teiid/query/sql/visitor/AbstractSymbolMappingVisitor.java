@@ -42,7 +42,7 @@ import org.teiid.query.sql.symbol.Symbol;
  */
 public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisitor {
 
-	private List unmappedSymbols;
+    private List unmappedSymbols;
 
     protected AbstractSymbolMappingVisitor() {
         super(null);
@@ -66,22 +66,22 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      */
     public void visit(Insert obj) {
 
-    	List physicalElements = new ArrayList();
+        List physicalElements = new ArrayList();
 
-    	// get the GroupSymbol on the insert
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));
+        // get the GroupSymbol on the insert
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
 
-    	// get all virtual columns present on the Insert and  replace them with
-    	// physical elements
-    	if(obj.getVariables() != null) {
-        	Iterator elementIter = obj.getVariables().iterator();
-        	while(elementIter.hasNext()) {
-        		ElementSymbol virtualElement = (ElementSymbol) elementIter.next();
-        		physicalElements.add(getMappedElement(virtualElement));
-        	}
-        	obj.setVariables(physicalElements);
-    	}
+        // get all virtual columns present on the Insert and  replace them with
+        // physical elements
+        if(obj.getVariables() != null) {
+            Iterator elementIter = obj.getVariables().iterator();
+            while(elementIter.hasNext()) {
+                ElementSymbol virtualElement = (ElementSymbol) elementIter.next();
+                physicalElements.add(getMappedElement(virtualElement));
+            }
+            obj.setVariables(physicalElements);
+        }
     }
 
     /**
@@ -92,9 +92,9 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      */
     public void visit(Delete obj) {
 
-    	// get the GroupSymbol on the delete
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));
+        // get the GroupSymbol on the delete
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
     }
 
     /**
@@ -105,47 +105,47 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      */
     public void visit(Update obj) {
 
-    	// get the GroupSymbol on the update
-    	GroupSymbol virtualGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(virtualGroup));
+        // get the GroupSymbol on the update
+        GroupSymbol virtualGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(virtualGroup));
     }
 
     public void visit(SetClause obj) {
-    	obj.setSymbol(getMappedElement(obj.getSymbol()));
+        obj.setSymbol(getMappedElement(obj.getSymbol()));
     }
 
-	/**
-	 * Swap each ElementSymbol referenced by AllInGroupSymbol
-	 * @param obj Object to remap
-	 */
+    /**
+     * Swap each ElementSymbol referenced by AllInGroupSymbol
+     * @param obj Object to remap
+     */
     public void visit(MultipleElementSymbol obj) {
-		List<ElementSymbol> oldSymbols = obj.getElementSymbols();
-		if(oldSymbols != null && oldSymbols.size() > 0) {
-			List<ElementSymbol> newSymbols = new ArrayList<ElementSymbol>(oldSymbols.size());
+        List<ElementSymbol> oldSymbols = obj.getElementSymbols();
+        if(oldSymbols != null && oldSymbols.size() > 0) {
+            List<ElementSymbol> newSymbols = new ArrayList<ElementSymbol>(oldSymbols.size());
 
-			Iterator<ElementSymbol> iter = oldSymbols.iterator();
-			while(iter.hasNext()) {
-				ElementSymbol es = iter.next();
-				ElementSymbol mappedSymbol = getMappedElement(es);
-				newSymbols.add( mappedSymbol );
-			}
-			obj.setElementSymbols(newSymbols);
-		}
+            Iterator<ElementSymbol> iter = oldSymbols.iterator();
+            while(iter.hasNext()) {
+                ElementSymbol es = iter.next();
+                ElementSymbol mappedSymbol = getMappedElement(es);
+                newSymbols.add( mappedSymbol );
+            }
+            obj.setElementSymbols(newSymbols);
+        }
 
-		if (obj.getGroup() == null) {
-			return;
-		}
+        if (obj.getGroup() == null) {
+            return;
+        }
 
-		obj.setGroup(getMappedGroup(obj.getGroup()));
+        obj.setGroup(getMappedGroup(obj.getGroup()));
     }
 
-	/**
-	 * Swap group in unary from clause.
-	 * @param obj Object to remap
-	 */
+    /**
+     * Swap group in unary from clause.
+     * @param obj Object to remap
+     */
     public void visit(UnaryFromClause obj) {
-    	GroupSymbol srcGroup = obj.getGroup();
-    	obj.setGroup(getMappedGroup(srcGroup));
+        GroupSymbol srcGroup = obj.getGroup();
+        obj.setGroup(getMappedGroup(srcGroup));
     }
 
     /**
@@ -187,13 +187,13 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      */
     private ElementSymbol getMappedElement(ElementSymbol obj) {
 
-    	ElementSymbol element = (ElementSymbol) getMappedSymbol(obj);
+        ElementSymbol element = (ElementSymbol) getMappedSymbol(obj);
 
-    	if(element != null) {
-    	    return element;
-    	}
-		markUnmapped(obj);
-		return obj;
+        if(element != null) {
+            return element;
+        }
+        markUnmapped(obj);
+        return obj;
     }
 
     /**
@@ -204,13 +204,13 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      */
     private GroupSymbol getMappedGroup(GroupSymbol obj) {
 
-    	GroupSymbol group = (GroupSymbol) getMappedSymbol(obj);
+        GroupSymbol group = (GroupSymbol) getMappedSymbol(obj);
 
-    	if(group != null) {
-    	    return group;
-    	}
-		markUnmapped(obj);
-		return obj;
+        if(group != null) {
+            return group;
+        }
+        markUnmapped(obj);
+        return obj;
     }
 
     /**
@@ -218,11 +218,11 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      * @param symbol Unmapped symbol
      */
     private void markUnmapped(Symbol symbol) {
-    	if(unmappedSymbols == null) {
-    	 	unmappedSymbols = new ArrayList();
-    	}
+        if(unmappedSymbols == null) {
+             unmappedSymbols = new ArrayList();
+        }
 
-    	unmappedSymbols.add(symbol);
+        unmappedSymbols.add(symbol);
     }
 
     /**
@@ -232,7 +232,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
      * all symbols mapped successfully
      */
     public List getUnmappedSymbols() {
-    	return unmappedSymbols;
+        return unmappedSymbols;
     }
 
 }

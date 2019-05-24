@@ -22,10 +22,10 @@ import org.teiid.query.sql.symbol.Expression;
 
 public interface ExpressionStatement {
 
-	Expression getExpression();
+    Expression getExpression();
 
-	void setExpression(Expression expr);
+    void setExpression(Expression expr);
 
-	Class<?> getExpectedType();
+    Class<?> getExpectedType();
 
 }

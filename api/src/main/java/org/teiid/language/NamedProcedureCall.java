@@ -55,11 +55,11 @@ public class NamedProcedureCall extends BaseLanguageObject implements TableRefer
     }
 
     public boolean isLateral() {
-		return lateral;
-	}
+        return lateral;
+    }
 
     public void setLateral(boolean lateral) {
-		this.lateral = lateral;
-	}
+        this.lateral = lateral;
+    }
 
 }

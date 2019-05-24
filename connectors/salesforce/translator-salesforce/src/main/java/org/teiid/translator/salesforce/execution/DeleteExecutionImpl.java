@@ -31,22 +31,22 @@ import org.teiid.translator.salesforce.execution.visitors.IQueryProvidingVisitor
 public class DeleteExecutionImpl extends AbstractUpdateExecution {
 
 
-	public DeleteExecutionImpl(SalesForceExecutionFactory ef, Command command,
-			SalesforceConnection salesforceConnection,
-			RuntimeMetadata metadata, ExecutionContext context) {
-		super(ef, command, salesforceConnection, metadata, context);
-	}
+    public DeleteExecutionImpl(SalesForceExecutionFactory ef, Command command,
+            SalesforceConnection salesforceConnection,
+            RuntimeMetadata metadata, ExecutionContext context) {
+        super(ef, command, salesforceConnection, metadata, context);
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
-		dVisitor.visitNode(command);
-		execute(((Delete)command).getWhere(), dVisitor);
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        DeleteVisitor dVisitor = new DeleteVisitor(getMetadata());
+        dVisitor.visitNode(command);
+        execute(((Delete)command).getWhere(), dVisitor);
+    }
 
-	@Override
-	protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
-	        throws TranslatorException {
-	    return getConnection().delete(ids);
-	}
+    @Override
+    protected int processIds(String[] ids, IQueryProvidingVisitor visitor)
+            throws TranslatorException {
+        return getConnection().delete(ids);
+    }
 }

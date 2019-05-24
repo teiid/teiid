@@ -36,24 +36,24 @@ import java.util.Set;
 
 public final class JDBCSQLTypeInfo {
 
-	public static class TypeInfo {
-		String name;
-		int maxDisplaySize;
-		int defaultPrecision;
-		String javaClassName;
-		int[] jdbcTypes;
+    public static class TypeInfo {
+        String name;
+        int maxDisplaySize;
+        int defaultPrecision;
+        String javaClassName;
+        int[] jdbcTypes;
 
-		public TypeInfo(int maxDisplaySize, int precision, String name,
-				String javaClassName, int[] jdbcTypes) {
-			super();
-			this.maxDisplaySize = maxDisplaySize;
-			this.defaultPrecision = precision;
-			this.name = name;
-			this.javaClassName = javaClassName;
-			this.jdbcTypes = jdbcTypes;
-		}
+        public TypeInfo(int maxDisplaySize, int precision, String name,
+                String javaClassName, int[] jdbcTypes) {
+            super();
+            this.maxDisplaySize = maxDisplaySize;
+            this.defaultPrecision = precision;
+            this.name = name;
+            this.javaClassName = javaClassName;
+            this.jdbcTypes = jdbcTypes;
+        }
 
-	}
+    }
 
     // Prevent instantiation
     private JDBCSQLTypeInfo() {}
@@ -69,54 +69,54 @@ public final class JDBCSQLTypeInfo {
     private static Map<String, TypeInfo> CLASSNAME_TO_TYPEINFO = new HashMap<String, TypeInfo>();
 
     static {
-    	//note the order in which these are added matters.  if there are multiple sql type mappings (e.g. biginteger and bigdecimal to numeric), the latter will be the primary
-    	addType(DataTypeManager.DefaultDataTypes.BIG_INTEGER, 20, 19, DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName(), Types.NUMERIC);
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "decimal"}, 22, 20, DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName(), Types.NUMERIC, Types.DECIMAL); //$NON-NLS-1$
+        //note the order in which these are added matters.  if there are multiple sql type mappings (e.g. biginteger and bigdecimal to numeric), the latter will be the primary
+        addType(DataTypeManager.DefaultDataTypes.BIG_INTEGER, 20, 19, DataTypeManager.DefaultDataClasses.BIG_INTEGER.getName(), Types.NUMERIC);
+        addType(new String[] {DataTypeManager.DefaultDataTypes.BIG_DECIMAL, "decimal"}, 22, 20, DataTypeManager.DefaultDataClasses.BIG_DECIMAL.getName(), Types.NUMERIC, Types.DECIMAL); //$NON-NLS-1$
         addType(DataTypeManager.DefaultDataTypes.GEOMETRY, Integer.MAX_VALUE, Integer.MAX_VALUE, GeometryType.class.getName(), Types.BLOB, Types.LONGVARBINARY);
         addType(DataTypeManager.DefaultDataTypes.GEOGRAPHY, Integer.MAX_VALUE, Integer.MAX_VALUE, GeographyType.class.getName(), Types.BLOB, Types.LONGVARBINARY);
-    	addType(DataTypeManager.DefaultDataTypes.BLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Blob.class.getName(), Types.BLOB, Types.LONGVARBINARY);
-    	addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$
-    	addType(DataTypeManager.DefaultDataTypes.CHAR, 1, 1, DataTypeManager.DefaultDataClasses.CHAR.getName(), Types.CHAR);
-    	addType(DataTypeManager.DefaultDataTypes.JSON, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
-    	addType(DataTypeManager.DefaultDataTypes.CLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
-    	addType(DataTypeManager.DefaultDataTypes.DATE, 10, 10, DataTypeManager.DefaultDataClasses.DATE.getName(), Types.DATE);
-    	addType(DataTypeManager.DefaultDataTypes.DOUBLE, 22, 20, DataTypeManager.DefaultDataClasses.DOUBLE.getName(), Types.DOUBLE, Types.FLOAT);
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.FLOAT, "real"}, 22, 20, DataTypeManager.DefaultDataClasses.FLOAT.getName(), Types.REAL); //$NON-NLS-1$
-    	addType(DataTypeManager.DefaultDataTypes.INTEGER, 11, 10, DataTypeManager.DefaultDataClasses.INTEGER.getName(), Types.INTEGER);
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.LONG, "bigint"}, 20, 19, DataTypeManager.DefaultDataClasses.LONG.getName(), Types.BIGINT); //$NON-NLS-1$
-    	addType(DataTypeManager.DefaultDataTypes.OBJECT, Integer.MAX_VALUE, Integer.MAX_VALUE, DataTypeManager.DefaultDataClasses.OBJECT.getName(), Types.JAVA_OBJECT);
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.SHORT, "smallint"}, 6, 5, DataTypeManager.DefaultDataClasses.SHORT.getName(), Types.SMALLINT); //$NON-NLS-1$
-    	addType(new String[] {DataTypeManager.DefaultDataTypes.STRING, "varchar"}, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.DefaultDataClasses.STRING.getName(), Types.VARCHAR, Types.NVARCHAR, Types.CHAR, Types.NCHAR); //$NON-NLS-1$
-    	addType(DataTypeManager.DefaultDataTypes.TIME, 8, 8, DataTypeManager.DefaultDataClasses.TIME.getName(), Types.TIME);
-    	addType(DataTypeManager.DefaultDataTypes.TIMESTAMP, 29, 29, DataTypeManager.DefaultDataClasses.TIMESTAMP.getName(), Types.TIMESTAMP);
-    	addType(DataTypeManager.DefaultDataTypes.XML, Integer.MAX_VALUE, Integer.MAX_VALUE, SQLXML.class.getName(), Types.SQLXML);
-    	addType(DataTypeManager.DefaultDataTypes.NULL, 4, 1, null, Types.NULL);
-    	addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_VARBINARY_BYTES, DataTypeManager.MAX_VARBINARY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
+        addType(DataTypeManager.DefaultDataTypes.BLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Blob.class.getName(), Types.BLOB, Types.LONGVARBINARY);
+        addType(DataTypeManager.DefaultDataTypes.BOOLEAN, 5, 1, DataTypeManager.DefaultDataClasses.BOOLEAN.getName(), Types.BIT, Types.BOOLEAN);
+        addType(new String[] {DataTypeManager.DefaultDataTypes.BYTE, "tinyint"}, 4, 3, DataTypeManager.DefaultDataClasses.BYTE.getName(), Types.TINYINT); //$NON-NLS-1$
+        addType(DataTypeManager.DefaultDataTypes.CHAR, 1, 1, DataTypeManager.DefaultDataClasses.CHAR.getName(), Types.CHAR);
+        addType(DataTypeManager.DefaultDataTypes.JSON, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
+        addType(DataTypeManager.DefaultDataTypes.CLOB, Integer.MAX_VALUE, Integer.MAX_VALUE, Clob.class.getName(), Types.CLOB, Types.NCLOB, Types.LONGNVARCHAR, Types.LONGVARCHAR);
+        addType(DataTypeManager.DefaultDataTypes.DATE, 10, 10, DataTypeManager.DefaultDataClasses.DATE.getName(), Types.DATE);
+        addType(DataTypeManager.DefaultDataTypes.DOUBLE, 22, 20, DataTypeManager.DefaultDataClasses.DOUBLE.getName(), Types.DOUBLE, Types.FLOAT);
+        addType(new String[] {DataTypeManager.DefaultDataTypes.FLOAT, "real"}, 22, 20, DataTypeManager.DefaultDataClasses.FLOAT.getName(), Types.REAL); //$NON-NLS-1$
+        addType(DataTypeManager.DefaultDataTypes.INTEGER, 11, 10, DataTypeManager.DefaultDataClasses.INTEGER.getName(), Types.INTEGER);
+        addType(new String[] {DataTypeManager.DefaultDataTypes.LONG, "bigint"}, 20, 19, DataTypeManager.DefaultDataClasses.LONG.getName(), Types.BIGINT); //$NON-NLS-1$
+        addType(DataTypeManager.DefaultDataTypes.OBJECT, Integer.MAX_VALUE, Integer.MAX_VALUE, DataTypeManager.DefaultDataClasses.OBJECT.getName(), Types.JAVA_OBJECT);
+        addType(new String[] {DataTypeManager.DefaultDataTypes.SHORT, "smallint"}, 6, 5, DataTypeManager.DefaultDataClasses.SHORT.getName(), Types.SMALLINT); //$NON-NLS-1$
+        addType(new String[] {DataTypeManager.DefaultDataTypes.STRING, "varchar"}, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.MAX_STRING_LENGTH, DataTypeManager.DefaultDataClasses.STRING.getName(), Types.VARCHAR, Types.NVARCHAR, Types.CHAR, Types.NCHAR); //$NON-NLS-1$
+        addType(DataTypeManager.DefaultDataTypes.TIME, 8, 8, DataTypeManager.DefaultDataClasses.TIME.getName(), Types.TIME);
+        addType(DataTypeManager.DefaultDataTypes.TIMESTAMP, 29, 29, DataTypeManager.DefaultDataClasses.TIMESTAMP.getName(), Types.TIMESTAMP);
+        addType(DataTypeManager.DefaultDataTypes.XML, Integer.MAX_VALUE, Integer.MAX_VALUE, SQLXML.class.getName(), Types.SQLXML);
+        addType(DataTypeManager.DefaultDataTypes.NULL, 4, 1, null, Types.NULL);
+        addType(DataTypeManager.DefaultDataTypes.VARBINARY, DataTypeManager.MAX_VARBINARY_BYTES, DataTypeManager.MAX_VARBINARY_BYTES, byte[].class.getName(), Types.VARBINARY, Types.BINARY);
 
-    	TypeInfo typeInfo = new TypeInfo(Integer.MAX_VALUE, 0, "ARRAY", Array.class.getName(), new int[Types.ARRAY]); //$NON-NLS-1$
-		CLASSNAME_TO_TYPEINFO.put(Array.class.getName(), typeInfo);
-    	TYPE_TO_TYPEINFO.put(Types.ARRAY, typeInfo);
+        TypeInfo typeInfo = new TypeInfo(Integer.MAX_VALUE, 0, "ARRAY", Array.class.getName(), new int[Types.ARRAY]); //$NON-NLS-1$
+        CLASSNAME_TO_TYPEINFO.put(Array.class.getName(), typeInfo);
+        TYPE_TO_TYPEINFO.put(Types.ARRAY, typeInfo);
     }
 
-	private static TypeInfo addType(String typeName, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
-		TypeInfo ti = new TypeInfo(maxDisplaySize, precision, typeName, javaClassName, sqlTypes);
-		NAME_TO_TYPEINFO.put(typeName, ti);
-		if (javaClassName != null) {
-			CLASSNAME_TO_TYPEINFO.put(javaClassName, ti);
-		}
-		for (int i : sqlTypes) {
-			TYPE_TO_TYPEINFO.put(i, ti);
-		}
-		return ti;
-	}
+    private static TypeInfo addType(String typeName, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
+        TypeInfo ti = new TypeInfo(maxDisplaySize, precision, typeName, javaClassName, sqlTypes);
+        NAME_TO_TYPEINFO.put(typeName, ti);
+        if (javaClassName != null) {
+            CLASSNAME_TO_TYPEINFO.put(javaClassName, ti);
+        }
+        for (int i : sqlTypes) {
+            TYPE_TO_TYPEINFO.put(i, ti);
+        }
+        return ti;
+    }
 
-	private static void addType(String[] typeNames, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
-		TypeInfo ti = addType(typeNames[0], maxDisplaySize, precision, javaClassName, sqlTypes);
-		for (int i = 1; i < typeNames.length; i++) {
-			NAME_TO_TYPEINFO.put(typeNames[i], ti);
-		}
-	}
+    private static void addType(String[] typeNames, int maxDisplaySize, int precision, String javaClassName, int... sqlTypes) {
+        TypeInfo ti = addType(typeNames[0], maxDisplaySize, precision, javaClassName, sqlTypes);
+        for (int i = 1; i < typeNames.length; i++) {
+            NAME_TO_TYPEINFO.put(typeNames[i], ti);
+        }
+    }
 
     /**
      * This method is used to obtain a short indicating JDBC SQL type for any object.
@@ -133,9 +133,9 @@ public final class JDBCSQLTypeInfo {
         TypeInfo sqlType = NAME_TO_TYPEINFO.get(typeName);
 
         if (sqlType == null) {
-        	if (DataTypeManager.isArrayType(typeName)) {
-        		return Types.ARRAY;
-        	}
+            if (DataTypeManager.isArrayType(typeName)) {
+                return Types.ARRAY;
+            }
             return Types.JAVA_OBJECT;
         }
 
@@ -169,9 +169,9 @@ public final class JDBCSQLTypeInfo {
      * @return the SQL type code
      */
     public static final int getSQLTypeFromRuntimeType(Class<?> type) {
-    	if (type == null) {
-    		return Types.NULL;
-    	}
+        if (type == null) {
+            return Types.NULL;
+        }
 
         String name = DataTypeManager.getDataTypeName(type);
 
@@ -190,51 +190,51 @@ public final class JDBCSQLTypeInfo {
      * @return A String representing the java class name for the given SQL Type.
      */
     public static final String getJavaClassName(int jdbcSQLType) {
-    	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(jdbcSQLType);
+        TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(jdbcSQLType);
 
-    	if (typeInfo == null) {
-    		return DataTypeManager.DefaultDataClasses.OBJECT.getName();
-    	}
+        if (typeInfo == null) {
+            return DataTypeManager.DefaultDataClasses.OBJECT.getName();
+        }
 
-    	return typeInfo.javaClassName;
+        return typeInfo.javaClassName;
     }
 
     public static final String getTypeName(int sqlType) {
-    	TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(sqlType);
+        TypeInfo typeInfo = TYPE_TO_TYPEINFO.get(sqlType);
 
-    	if (typeInfo == null) {
-    		return DataTypeManager.DefaultDataTypes.OBJECT;
-    	}
+        if (typeInfo == null) {
+            return DataTypeManager.DefaultDataTypes.OBJECT;
+        }
 
-    	return typeInfo.name;
+        return typeInfo.name;
     }
 
     public static Set<String> getMMTypeNames() {
-    	return NAME_TO_TYPEINFO.keySet();
+        return NAME_TO_TYPEINFO.keySet();
     }
 
-	public static Integer getMaxDisplaySize(Class<?> dataTypeClass) {
-	    return getMaxDisplaySize(DataTypeManager.getDataTypeName(dataTypeClass));
-	}
+    public static Integer getMaxDisplaySize(Class<?> dataTypeClass) {
+        return getMaxDisplaySize(DataTypeManager.getDataTypeName(dataTypeClass));
+    }
 
-	public static Integer getMaxDisplaySize(String typeName) {
-		TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
-		if (ti == null) {
-			return null;
-		}
-	    return ti.maxDisplaySize;
-	}
+    public static Integer getMaxDisplaySize(String typeName) {
+        TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
+        if (ti == null) {
+            return null;
+        }
+        return ti.maxDisplaySize;
+    }
 
-	public static Integer getDefaultPrecision(Class<?> dataTypeClass) {
-	    return getDefaultPrecision(DataTypeManager.getDataTypeName(dataTypeClass));
-	}
+    public static Integer getDefaultPrecision(Class<?> dataTypeClass) {
+        return getDefaultPrecision(DataTypeManager.getDataTypeName(dataTypeClass));
+    }
 
-	public static Integer getDefaultPrecision(String typeName) {
-		TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
-		if (ti == null) {
-			return null;
-		}
-	    return ti.defaultPrecision;
-	}
+    public static Integer getDefaultPrecision(String typeName) {
+        TypeInfo ti = NAME_TO_TYPEINFO.get(typeName);
+        if (ti == null) {
+            return null;
+        }
+        return ti.defaultPrecision;
+    }
 
 }

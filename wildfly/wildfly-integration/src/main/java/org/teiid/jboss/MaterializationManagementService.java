@@ -29,56 +29,56 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.runtime.MaterializationManager;
 
 class MaterializationManagementService implements Service<MaterializationManager> {
-	private ScheduledExecutorService scheduler;
-	private MaterializationManager manager;
-	protected final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();
-	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	protected final InjectedValue<NodeTracker> nodeTrackerInjector = new InjectedValue<NodeTracker>();
-	private JBossLifeCycleListener shutdownListener;
+    private ScheduledExecutorService scheduler;
+    private MaterializationManager manager;
+    protected final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();
+    protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
+    protected final InjectedValue<NodeTracker> nodeTrackerInjector = new InjectedValue<NodeTracker>();
+    private JBossLifeCycleListener shutdownListener;
 
-	public MaterializationManagementService(JBossLifeCycleListener shutdownListener, ScheduledExecutorService scheduler) {
-		this.shutdownListener = shutdownListener;
-		this.scheduler = scheduler;
-	}
+    public MaterializationManagementService(JBossLifeCycleListener shutdownListener, ScheduledExecutorService scheduler) {
+        this.shutdownListener = shutdownListener;
+        this.scheduler = scheduler;
+    }
 
-	@Override
-	public void start(StartContext context) throws StartException {
-		manager = new MaterializationManager(shutdownListener) {
-			@Override
-			public ScheduledExecutorService getScheduledExecutorService() {
-				return scheduler;
-			}
+    @Override
+    public void start(StartContext context) throws StartException {
+        manager = new MaterializationManager(shutdownListener) {
+            @Override
+            public ScheduledExecutorService getScheduledExecutorService() {
+                return scheduler;
+            }
 
-			@Override
-			public DQPCore getDQP() {
-				return dqpInjector.getValue();
-			}
+            @Override
+            public DQPCore getDQP() {
+                return dqpInjector.getValue();
+            }
 
             @Override
             public VDBRepository getVDBRepository() {
                 return vdbRepositoryInjector.getValue();
             }
-		};
+        };
 
-		vdbRepositoryInjector.getValue().addListener(manager);
+        vdbRepositoryInjector.getValue().addListener(manager);
 
-		if (nodeTrackerInjector.getValue() != null) {
-		    nodeTrackerInjector.getValue().addNodeListener(manager);
-		}
-	}
+        if (nodeTrackerInjector.getValue() != null) {
+            nodeTrackerInjector.getValue().addNodeListener(manager);
+        }
+    }
 
-	@Override
-	public void stop(StopContext context) {
-		scheduler.shutdownNow();
-		vdbRepositoryInjector.getValue().removeListener(manager);
-		NodeTracker value = nodeTrackerInjector.getValue();
-		if (value != null) {
-		    value.removeNodeListener(manager);
-		}
-	}
+    @Override
+    public void stop(StopContext context) {
+        scheduler.shutdownNow();
+        vdbRepositoryInjector.getValue().removeListener(manager);
+        NodeTracker value = nodeTrackerInjector.getValue();
+        if (value != null) {
+            value.removeNodeListener(manager);
+        }
+    }
 
-	@Override
-	public MaterializationManager getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.manager;
-	}
+    @Override
+    public MaterializationManager getValue() throws IllegalStateException, IllegalArgumentException {
+        return this.manager;
+    }
 }

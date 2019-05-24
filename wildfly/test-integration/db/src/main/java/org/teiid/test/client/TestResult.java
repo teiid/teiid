@@ -37,43 +37,43 @@ public interface TestResult {
      */
     public interface RESULT_STATE {
 
-	/**
-	 * TEST_SUCCESS - indicates the executed query performed as expected
-	 */
-	public static final int TEST_SUCCESS = 0;
-	/**
-	 * TEST_EXCEPTION - indicates an unexpected exception occurred during
-	 * the execution of the query
-	 */
-	public static final int TEST_EXCEPTION = 1;
-	/**
-	 * TEST_EXPECTED_EXCEPTION - indicates the expected result was suppose
-	 * to an exception, how, the query executed without error
-	 */
-	public static final int TEST_EXPECTED_EXCEPTION = 4;
+    /**
+     * TEST_SUCCESS - indicates the executed query performed as expected
+     */
+    public static final int TEST_SUCCESS = 0;
+    /**
+     * TEST_EXCEPTION - indicates an unexpected exception occurred during
+     * the execution of the query
+     */
+    public static final int TEST_EXCEPTION = 1;
+    /**
+     * TEST_EXPECTED_EXCEPTION - indicates the expected result was suppose
+     * to an exception, how, the query executed without error
+     */
+    public static final int TEST_EXPECTED_EXCEPTION = 4;
     }
 
     public interface RESULT_STATE_STRING {
-	/**
-	 * The string value for when a
-	 * {@link TestResult.RESULT_STATE#TEST_SUCCESS occurs
-	 */
-	public static final String PASS = "pass";
-	/**
-	 * The string value for when a
-	 * {@link TestResult.RESULT_STATE#TEST_EXCEPTION occurs
-	 */
-	public static final String FAIL = "fail";
-	/**
-	 * The string value for when a
-	 * {@link TestResult.RESULT_STATE#TEST_EXPECTED_EXCEPTION occurs
-	 */
-	public static final String FAIL_EXPECTED_EXCEPTION = "fail-expected_exception";
+    /**
+     * The string value for when a
+     * {@link TestResult.RESULT_STATE#TEST_SUCCESS occurs
+     */
+    public static final String PASS = "pass";
+    /**
+     * The string value for when a
+     * {@link TestResult.RESULT_STATE#TEST_EXCEPTION occurs
+     */
+    public static final String FAIL = "fail";
+    /**
+     * The string value for when a
+     * {@link TestResult.RESULT_STATE#TEST_EXPECTED_EXCEPTION occurs
+     */
+    public static final String FAIL_EXPECTED_EXCEPTION = "fail-expected_exception";
 
-	/**
-	 * The string value for when a status occurs that hasn't been defined
-	 */
-	public static final String UNKNOWN = "unknown";
+    /**
+     * The string value for when a status occurs that hasn't been defined
+     */
+    public static final String UNKNOWN = "unknown";
 
     }
 

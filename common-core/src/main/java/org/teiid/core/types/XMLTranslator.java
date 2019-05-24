@@ -32,10 +32,10 @@ public abstract class XMLTranslator {
 
     public abstract void translate(Writer writer) throws TransformerException, IOException;
 
-	public String getString() throws IOException, TransformerException {
-		StringWriter writer = new StringWriter();
-		this.translate(writer);
-		return writer.toString();
-	}
+    public String getString() throws IOException, TransformerException {
+        StringWriter writer = new StringWriter();
+        this.translate(writer);
+        return writer.toString();
+    }
 
 }

@@ -31,39 +31,39 @@ import org.teiid.client.util.ExceptionHolder;
  * the key is set to an {@link ExceptionHolder}
  */
 public class Message implements Externalizable {
-	public static final long serialVersionUID = 1063704220782714098L;
-	private Object contents;
-	private Serializable messageKey;
+    public static final long serialVersionUID = 1063704220782714098L;
+    private Object contents;
+    private Serializable messageKey;
 
-	public String toString() {
-		return "MessageHolder: key=" + messageKey + " contents=" + contents; //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    public String toString() {
+        return "MessageHolder: key=" + messageKey + " contents=" + contents; //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	public void setContents(Object contents) {
-		this.contents = contents;
-	}
+    public void setContents(Object contents) {
+        this.contents = contents;
+    }
 
-	public Object getContents() {
-		return contents;
-	}
+    public Object getContents() {
+        return contents;
+    }
 
-	public void readExternal(ObjectInput in) throws IOException,
-			ClassNotFoundException {
-		this.contents = in.readObject();
-		this.messageKey = (Serializable) in.readObject();
-	}
+    public void readExternal(ObjectInput in) throws IOException,
+            ClassNotFoundException {
+        this.contents = in.readObject();
+        this.messageKey = (Serializable) in.readObject();
+    }
 
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(this.contents);
-		out.writeObject(messageKey);
-	}
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeObject(this.contents);
+        out.writeObject(messageKey);
+    }
 
-	public Serializable getMessageKey() {
-		return messageKey;
-	}
+    public Serializable getMessageKey() {
+        return messageKey;
+    }
 
-	public void setMessageKey(Serializable messageKey) {
-		this.messageKey = messageKey;
-	}
+    public void setMessageKey(Serializable messageKey) {
+        this.messageKey = messageKey;
+    }
 
 }

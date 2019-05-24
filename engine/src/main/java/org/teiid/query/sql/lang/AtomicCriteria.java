@@ -26,43 +26,43 @@ package org.teiid.query.sql.lang;
  */
 public abstract class AtomicCriteria extends LogicalCriteria {
 
-	/** The single sub criteria */
-	private Criteria criteria;
+    /** The single sub criteria */
+    private Criteria criteria;
 
-	/**
-	 * Constructs a default instance of this class.
-	 */
-	protected AtomicCriteria() {
-	}
+    /**
+     * Constructs a default instance of this class.
+     */
+    protected AtomicCriteria() {
+    }
 
-	/**
-	 * Constructs an instance of this class with a single sub-criteria.
-	 */
-	protected AtomicCriteria(Criteria crit) {
-		setCriteria(crit);
-	}
+    /**
+     * Constructs an instance of this class with a single sub-criteria.
+     */
+    protected AtomicCriteria(Criteria crit) {
+        setCriteria(crit);
+    }
 
-	/**
-	 * Get sub criteria
-	 * @return Sub criteria
-	 */
-	public Criteria getCriteria() {
-		return criteria;
-	}
+    /**
+     * Get sub criteria
+     * @return Sub criteria
+     */
+    public Criteria getCriteria() {
+        return criteria;
+    }
 
-	/**
-	 * Set sub criteria
-	 * @param criteria Sub criteria
-	 */
-	public void setCriteria(Criteria criteria) {
-		this.criteria = criteria;
-	}
+    /**
+     * Set sub criteria
+     * @param criteria Sub criteria
+     */
+    public void setCriteria(Criteria criteria) {
+        this.criteria = criteria;
+    }
 
-	/**
-	 * Deep copy of object
-	 * @return Deep copy of object
-	 */
-	public abstract Object clone();
+    /**
+     * Deep copy of object
+     * @return Deep copy of object
+     */
+    public abstract Object clone();
 
 }
 

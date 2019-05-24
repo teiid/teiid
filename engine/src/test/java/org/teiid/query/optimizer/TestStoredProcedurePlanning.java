@@ -31,7 +31,7 @@ public class TestStoredProcedurePlanning {
     /**
      * Test planning stored queries. GeminiStoredQueryTestPlan - 1a
      */
-	@Ignore("stored procedure wrapper removal logic has been removed")
+    @Ignore("stored procedure wrapper removal logic has been removed")
     @Test public void testStoredQuery1() {
         ProcessorPlan plan = TestOptimizer.helpPlan("EXEC pm1.sq1()", new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1" }); //$NON-NLS-1$
@@ -41,7 +41,7 @@ public class TestStoredProcedurePlanning {
     /**
      * Test planning stored queries
      */
-	@Ignore("stored procedure wrapper removal logic has been removed")
+    @Ignore("stored procedure wrapper removal logic has been removed")
     @Test public void testStoredQuery2() {
         ProcessorPlan plan = TestOptimizer.helpPlan("EXEC pm1.sq1()", new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1" }); //$NON-NLS-1$
@@ -51,13 +51,13 @@ public class TestStoredProcedurePlanning {
     /**
      * Test planning stored queries. GeminiStoredQueryTestPlan - 1b
      */
-	@Ignore("stored procedure wrapper removal logic has been removed")
+    @Ignore("stored procedure wrapper removal logic has been removed")
     @Test public void testStoredQuery3() {
         ProcessorPlan plan = TestOptimizer.helpPlan("EXEC pm1.sq2('1')", new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "SELECT e1, e2 FROM pm1.g1 WHERE e1 = '1'" }); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
-	@Ignore("stored procedure wrapper removal logic has been removed")
+    @Ignore("stored procedure wrapper removal logic has been removed")
     @Test public void testStoredQuery4() {
         ProcessorPlan plan = TestOptimizer.helpPlan("select x.e1 from (EXEC pm1.sq1()) as x", new TempMetadataAdapter(RealMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1" }); //$NON-NLS-1$

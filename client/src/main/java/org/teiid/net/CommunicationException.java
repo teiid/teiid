@@ -27,9 +27,9 @@ import org.teiid.core.TeiidException;
  * transport should be able to tell the difference and recover if possible.
  */
 public class CommunicationException extends TeiidException {
-	private static final long serialVersionUID = -8352601998078723446L;
+    private static final long serialVersionUID = -8352601998078723446L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public CommunicationException(  ) {

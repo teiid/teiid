@@ -50,7 +50,7 @@ import org.teiid.jdbc.JDBCPlugin;
  * ssl connection
  */
 public class SocketUtil {
-	private static Logger logger = Logger.getLogger(SocketUtil.class.getName());
+    private static Logger logger = Logger.getLogger(SocketUtil.class.getName());
 
     static final String TRUSTSTORE_PASSWORD = "org.teiid.ssl.trustStorePassword"; //$NON-NLS-1$
     public static final String TRUSTSTORE_FILENAME = "org.teiid.ssl.trustStore"; //$NON-NLS-1$
@@ -71,43 +71,43 @@ public class SocketUtil {
     public static final String DEFAULT_PROTOCOL = "TLSv1.2"; //$NON-NLS-1$
 
     private final static X509TrustManager[] TRUST_ALL_MANAGER = new X509TrustManager[] {new X509TrustManager() {
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return null;
-		}
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
 
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1)
-				throws CertificateException {
+        @Override
+        public void checkServerTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
 
-		}
+        }
 
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1)
-				throws CertificateException {
+        @Override
+        public void checkClientTrusted(X509Certificate[] arg0, String arg1)
+                throws CertificateException {
 
-		}
-	}};
+        }
+    }};
 
-	public static class SSLSocketFactory {
-    	private boolean isAnon;
-    	private boolean warned;
-    	private javax.net.ssl.SSLSocketFactory factory;
+    public static class SSLSocketFactory {
+        private boolean isAnon;
+        private boolean warned;
+        private javax.net.ssl.SSLSocketFactory factory;
 
-    	public SSLSocketFactory(SSLContext context, boolean isAnon) {
-			this.factory = context.getSocketFactory();
-			this.isAnon = isAnon;
-		}
+        public SSLSocketFactory(SSLContext context, boolean isAnon) {
+            this.factory = context.getSocketFactory();
+            this.isAnon = isAnon;
+        }
 
-		public synchronized Socket getSocket(String host, int port) throws IOException {
-    		SSLSocket result = (SSLSocket)factory.createSocket(host, port);
-    		result.setUseClientMode(true);
-    		if (isAnon && !addCipherSuite(result, ANON_CIPHER_SUITE) && !warned) {
-    			warned = true;
-    			logger.warning(JDBCPlugin.Util.getString("SocketUtil.anon_not_available")); //$NON-NLS-1$
-    		}
-    		return result;
-    	}
+        public synchronized Socket getSocket(String host, int port) throws IOException {
+            SSLSocket result = (SSLSocket)factory.createSocket(host, port);
+            result.setUseClientMode(true);
+            if (isAnon && !addCipherSuite(result, ANON_CIPHER_SUITE) && !warned) {
+                warned = true;
+                logger.warning(JDBCPlugin.Util.getString("SocketUtil.anon_not_available")); //$NON-NLS-1$
+            }
+            return result;
+        }
     }
 
     public static SSLSocketFactory getSSLSocketFactory(Properties props) throws IOException, GeneralSecurityException{
@@ -132,9 +132,9 @@ public class SocketUtil {
         //    all the certificates into one single certificate
         // 3) else = javax properties; this is default way to define the SSL anywhere.
         if (keystore != null || truststore != null || trustAll || checkExpired) {
-        	result = getSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias, keyPassword, trustAll, checkExpired);
+            result = getSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias, keyPassword, trustAll, checkExpired);
         } else {
-        	result = SSLContext.getDefault();
+            result = SSLContext.getDefault();
         }
         //TODO: could allow a custom SSLSocketFactory to be plugged in like the pg jdbc driver
         return new SSLSocketFactory(result, anon);
@@ -142,7 +142,7 @@ public class SocketUtil {
 
     public static boolean addCipherSuite(SSLSocket engine, String cipherSuite) {
         if (!Arrays.asList(engine.getSupportedCipherSuites()).contains(cipherSuite)) {
-        	return false;
+            return false;
         }
 
         String[] suites = engine.getEnabledCipherSuites();
@@ -172,9 +172,9 @@ public class SocketUtil {
                                             boolean trustAll,
                                             boolean checkExpired) throws IOException, GeneralSecurityException {
 
-    	if (algorithm == null) {
-    		algorithm = KeyManagerFactory.getDefaultAlgorithm();
-    	}
+        if (algorithm == null) {
+            algorithm = KeyManagerFactory.getDefaultAlgorithm();
+        }
         // Configure the Keystore Manager
         KeyManager[] keyManagers = null;
         if (keystore != null) {
@@ -183,21 +183,21 @@ public class SocketUtil {
 
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
                 if (keyPassword == null) {
-                	keyPassword = password;
+                    keyPassword = password;
                 }
                 kmf.init(ks, keyPassword != null ? keyPassword.toCharArray() : null);
                 keyManagers = kmf.getKeyManagers();
                 if (keyAlias != null) {
-                	if (!ks.isKeyEntry(keyAlias)) {
+                    if (!ks.isKeyEntry(keyAlias)) {
                         throw new GeneralSecurityException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
                     }
                     if (DEFAULT_KEYSTORE_TYPE.equals(keystoreType)) {
                         keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
                     }
                     for(int i=0; i < keyManagers.length; i++) {
-                    	if (keyManagers[i] instanceof X509KeyManager) {
-                    		keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
-                    	}
+                        if (keyManagers[i] instanceof X509KeyManager) {
+                            keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
+                        }
                     }
                 }
             }
@@ -206,19 +206,19 @@ public class SocketUtil {
         // Configure the Trust Store Manager
         TrustManager[] trustManagers = null;
         if (trustAll) {
-        	trustManagers = TRUST_ALL_MANAGER;
+            trustManagers = TRUST_ALL_MANAGER;
         } else {
-        	if (truststore != null) {
-	            KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
-	            if (ks != null) {
-	                TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-	                tmf.init(ks);
-	                trustManagers = tmf.getTrustManagers();
-	            }
-        	}
+            if (truststore != null) {
+                KeyStore ks = loadKeyStore(truststore, truststorePassword, keystoreType);
+                if (ks != null) {
+                    TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+                    tmf.init(ks);
+                    trustManagers = tmf.getTrustManagers();
+                }
+            }
 
             if (checkExpired) {
-            	trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
+                trustManagers = getCheckExpiredTrustManager(algorithm, trustManagers);
             }
         }
 
@@ -228,52 +228,52 @@ public class SocketUtil {
         return sslc;
     }
 
-	private static TrustManager[] getCheckExpiredTrustManager(String algorithm,
-			TrustManager[] trustManagers) throws NoSuchAlgorithmException,
-			KeyStoreException {
-		if (trustManagers == null) {
-			//use the default
-			TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
-			tmf.init((KeyStore)null);
-		    trustManagers = tmf.getTrustManagers();
-		}
-		//this should always be the case, but we'll check
-		if (trustManagers.length > 0 && trustManagers[0] instanceof X509TrustManager) {
-			final X509TrustManager tm = (X509TrustManager)trustManagers[0];
-			trustManagers[0] = new X509TrustManager() {
+    private static TrustManager[] getCheckExpiredTrustManager(String algorithm,
+            TrustManager[] trustManagers) throws NoSuchAlgorithmException,
+            KeyStoreException {
+        if (trustManagers == null) {
+            //use the default
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(algorithm);
+            tmf.init((KeyStore)null);
+            trustManagers = tmf.getTrustManagers();
+        }
+        //this should always be the case, but we'll check
+        if (trustManagers.length > 0 && trustManagers[0] instanceof X509TrustManager) {
+            final X509TrustManager tm = (X509TrustManager)trustManagers[0];
+            trustManagers[0] = new X509TrustManager() {
 
-				@Override
-				public X509Certificate[] getAcceptedIssuers() {
-					return tm.getAcceptedIssuers();
-				}
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return tm.getAcceptedIssuers();
+                }
 
-				@Override
-				public void checkServerTrusted(X509Certificate[] chain, String authType)
-						throws CertificateException {
-					tm.checkServerTrusted(chain, authType);
-					Date date = new Date();
-					for (X509Certificate cert : chain) {
-						if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
-							throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
-						}
-					}
-				}
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                    tm.checkServerTrusted(chain, authType);
+                    Date date = new Date();
+                    for (X509Certificate cert : chain) {
+                        if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
+                            throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
+                        }
+                    }
+                }
 
-				@Override
-				public void checkClientTrusted(X509Certificate[] chain, String authType)
-						throws CertificateException {
-					tm.checkClientTrusted(chain, authType);
-					Date date = new Date();
-					for (X509Certificate cert : chain) {
-						if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
-							throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
-						}
-					}
-				}
-			};
-		}
-		return trustManagers;
-	}
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType)
+                        throws CertificateException {
+                    tm.checkClientTrusted(chain, authType);
+                    Date date = new Date();
+                    for (X509Certificate cert : chain) {
+                        if (cert.getNotBefore().after(date) || cert.getNotAfter().before(date)) {
+                            throw new CertificateException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20038));
+                        }
+                    }
+                }
+            };
+        }
+        return trustManagers;
+    }
 
     /**
      * Load any defined keystore file, by first looking in the classpath
@@ -300,62 +300,62 @@ public class SocketUtil {
 
         KeyStore ks = KeyStore.getInstance(type);
         try {
-        	ks.load(stream, password != null ? password.toCharArray() : null);
+            ks.load(stream, password != null ? password.toCharArray() : null);
         } finally {
-    		stream.close();
+            stream.close();
         }
         return ks;
     }
 
     static class AliasAwareKeyManager extends X509ExtendedKeyManager {
-    	private X509KeyManager delegate;
-    	private String keyAlias;
+        private X509KeyManager delegate;
+        private String keyAlias;
 
-    	public AliasAwareKeyManager(X509KeyManager delegate, String alias) {
-    		this.delegate = delegate;
-    		this.keyAlias = alias;
-    	}
+        public AliasAwareKeyManager(X509KeyManager delegate, String alias) {
+            this.delegate = delegate;
+            this.keyAlias = alias;
+        }
 
-		@Override
-		public String chooseClientAlias(String[] keyType, Principal[] issuers,Socket socket) {
-			return keyAlias;
-		}
+        @Override
+        public String chooseClientAlias(String[] keyType, Principal[] issuers,Socket socket) {
+            return keyAlias;
+        }
 
-		@Override
-		public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
-			return keyAlias;
-		}
+        @Override
+        public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
+            return keyAlias;
+        }
 
-		@Override
-		public X509Certificate[] getCertificateChain(String alias) {
-			return delegate.getCertificateChain(alias);
-		}
+        @Override
+        public X509Certificate[] getCertificateChain(String alias) {
+            return delegate.getCertificateChain(alias);
+        }
 
-		@Override
-		public String[] getClientAliases(String keyType, Principal[] issuers) {
-			return delegate.getClientAliases(keyType, issuers);
-		}
+        @Override
+        public String[] getClientAliases(String keyType, Principal[] issuers) {
+            return delegate.getClientAliases(keyType, issuers);
+        }
 
-		@Override
-		public PrivateKey getPrivateKey(String alias) {
-			return delegate.getPrivateKey(alias);
-		}
+        @Override
+        public PrivateKey getPrivateKey(String alias) {
+            return delegate.getPrivateKey(alias);
+        }
 
-		@Override
-		public String[] getServerAliases(String keyType, Principal[] issuers) {
-			return delegate.getServerAliases(keyType, issuers);
-		}
+        @Override
+        public String[] getServerAliases(String keyType, Principal[] issuers) {
+            return delegate.getServerAliases(keyType, issuers);
+        }
 
-		@Override
-		public String chooseEngineClientAlias(String[] keyType,
-				Principal[] issuers, SSLEngine engine) {
-			return keyAlias;
-		}
+        @Override
+        public String chooseEngineClientAlias(String[] keyType,
+                Principal[] issuers, SSLEngine engine) {
+            return keyAlias;
+        }
 
-		@Override
-		public String chooseEngineServerAlias(String keyType,
-				Principal[] issuers, SSLEngine engine) {
-			return keyAlias;
-		}
+        @Override
+        public String chooseEngineServerAlias(String keyType,
+                Principal[] issuers, SSLEngine engine) {
+            return keyAlias;
+        }
     }
 }

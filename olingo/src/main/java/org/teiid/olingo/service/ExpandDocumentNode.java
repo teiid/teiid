@@ -80,15 +80,15 @@ public class ExpandDocumentNode extends DocumentNode {
         return skip;
     }
 
-	public void setColumnIndex(int count) {
-		this.columnIndex = count;
-	}
+    public void setColumnIndex(int count) {
+        this.columnIndex = count;
+    }
 
-	public int getColumnIndex() {
-		return columnIndex;
-	}
+    public int getColumnIndex() {
+        return columnIndex;
+    }
 
-	public DocumentNode getCollectionContext() {
+    public DocumentNode getCollectionContext() {
         return collectionContext;
     }
 

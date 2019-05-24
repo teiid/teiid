@@ -29,25 +29,11 @@ import org.teiid.adminapi.VDB.ConnectionType;
 
 public interface Admin {
 
-	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
+    public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
 
-	public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
+    public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
 
-	public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
-
-    /**
-     * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
-     *
-     * @param vdbName Name of the VDB
-     * @param vdbVersion Version of the VDB
-     * @param modelName  Name of the Model
-     * @param sourceName source name
-     * @throws AdminException
-     */
-	@Deprecated
-	void removeSource(String vdbName, int vdbVersion, String modelName,
-			String sourceName)
-			throws AdminException;
+    public enum TranlatorPropertyType{IMPORT, OVERRIDE, EXTENSION_METADATA, ALL};
 
     /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
@@ -58,9 +44,23 @@ public interface Admin {
      * @param sourceName source name
      * @throws AdminException
      */
-	void removeSource(String vdbName, String vdbVersion, String modelName,
-			String sourceName)
-			throws AdminException;
+    @Deprecated
+    void removeSource(String vdbName, int vdbVersion, String modelName,
+            String sourceName)
+            throws AdminException;
+
+    /**
+     * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
+     *
+     * @param vdbName Name of the VDB
+     * @param vdbVersion Version of the VDB
+     * @param modelName  Name of the Model
+     * @param sourceName source name
+     * @throws AdminException
+     */
+    void removeSource(String vdbName, String vdbVersion, String modelName,
+            String sourceName)
+            throws AdminException;
 
     /**
      * Adds a {@link Translator} and Data source to a {@link VDB}'s Model
@@ -73,10 +73,10 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
-	@Deprecated
-	void addSource(String vdbName, int vdbVersion, String modelName,
-			String sourceName, String translatorName, String dsName)
-			throws AdminException;
+    @Deprecated
+    void addSource(String vdbName, int vdbVersion, String modelName,
+            String sourceName, String translatorName, String dsName)
+            throws AdminException;
 
     /**
      * Adds a {@link Translator} and Data source to a {@link VDB}'s Model
@@ -89,9 +89,9 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
-	void addSource(String vdbName, String vdbVersion, String modelName,
-			String sourceName, String translatorName, String dsName)
-			throws AdminException;
+    void addSource(String vdbName, String vdbVersion, String modelName,
+            String sourceName, String translatorName, String dsName)
+            throws AdminException;
 
     /**
      * Update a source's {@link Translator} and Data source
@@ -103,9 +103,9 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
-	@Deprecated
-	void updateSource(String vdbName, int vdbVersion, String sourceName,
-			String translatorName, String dsName) throws AdminException;
+    @Deprecated
+    void updateSource(String vdbName, int vdbVersion, String sourceName,
+            String translatorName, String dsName) throws AdminException;
 
     /**
      * Update a source's {@link Translator} and Data source
@@ -117,8 +117,8 @@ public interface Admin {
      * @param dsName data source name that can found in the JNDI map.
      * @throws AdminException
      */
-	void updateSource(String vdbName, String vdbVersion, String sourceName,
-			String translatorName, String dsName) throws AdminException;
+    void updateSource(String vdbName, String vdbVersion, String sourceName,
+            String translatorName, String dsName) throws AdminException;
 
     /**
      * Change the {@link ConnectionType} of the {@link VDB}.
@@ -127,7 +127,7 @@ public interface Admin {
      * @param type
      * @throws AdminException
      */
-	@Deprecated
+    @Deprecated
     void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException;
 
     /**

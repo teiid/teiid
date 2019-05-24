@@ -48,9 +48,9 @@ import org.teiid.query.util.CommandContext;
  */
 public class ArrayTableNode extends SubqueryAwareRelationalNode {
 
-	private ArrayTable table;
+    private ArrayTable table;
 
-	//initialized state
+    //initialized state
     private int[] projectionIndexes;
 
     //multi-row state
@@ -58,65 +58,65 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
     private int length;
     private Object array;
 
-	public ArrayTableNode(int nodeID) {
-		super(nodeID);
-	}
+    public ArrayTableNode(int nodeID) {
+        super(nodeID);
+    }
 
-	@Override
-	public void initialize(CommandContext context, BufferManager bufferManager,
-			ProcessorDataManager dataMgr) {
-		super.initialize(context, bufferManager, dataMgr);
-		if (projectionIndexes != null) {
-			return;
-		}
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+            ProcessorDataManager dataMgr) {
+        super.initialize(context, bufferManager, dataMgr);
+        if (projectionIndexes != null) {
+            return;
+        }
         Map elementMap = createLookupMap(table.getProjectedSymbols());
         this.projectionIndexes = getProjectionIndexes(elementMap, getElements());
-	}
+    }
 
-	@Override
-	public void reset() {
-	    super.reset();
-	    array = null;
-	    length = 0;
-	    index = 0;
-	}
+    @Override
+    public void reset() {
+        super.reset();
+        array = null;
+        length = 0;
+        index = 0;
+    }
 
-	@Override
-	public void closeDirect() {
-		super.closeDirect();
-		reset();
-	}
+    @Override
+    public void closeDirect() {
+        super.closeDirect();
+        reset();
+    }
 
-	public void setTable(ArrayTable table) {
-		this.table = table;
-	}
+    public void setTable(ArrayTable table) {
+        this.table = table;
+    }
 
-	@Override
-	public ArrayTableNode clone() {
-		ArrayTableNode clone = new ArrayTableNode(getID());
-		this.copyTo(clone);
-		clone.setTable(table);
-		return clone;
-	}
+    @Override
+    public ArrayTableNode clone() {
+        ArrayTableNode clone = new ArrayTableNode(getID());
+        this.copyTo(clone);
+        clone.setTable(table);
+        return clone;
+    }
 
-	@Override
-	protected TupleBatch nextBatchDirect() throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-	    if (array == null) {
-	        array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
-	    }
+    @Override
+    protected TupleBatch nextBatchDirect() throws BlockedException,
+            TeiidComponentException, TeiidProcessingException {
+        if (array == null) {
+            array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
+        }
 
-		if (array != null) {
-		    if (!Boolean.FALSE.equals(table.getSingleRow())) {
-    			createRow(array);
-		    } else {
+        if (array != null) {
+            if (!Boolean.FALSE.equals(table.getSingleRow())) {
+                createRow(array);
+            } else {
                 try {
-    		        if (length == 0) {
-    	                length = FunctionMethods.array_length(array);
-    	                index = 0;
-    		        }
-    		        for (; index < length; index++) {
-    		            if (this.isBatchFull()) {
+                    if (length == 0) {
+                        length = FunctionMethods.array_length(array);
+                        index = 0;
+                    }
+                    for (; index < length; index++) {
+                        if (this.isBatchFull()) {
                             return pullBatch();
                         }
                         Object rowArray = FunctionMethods.array_get(array, index + 1);
@@ -127,44 +127,44 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
                             throw new TeiidProcessingException(QueryPlugin.Event.TEIID31297, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31297));
                         }
                         createRow(rowArray);
-    		        }
+                    }
                 } catch (SQLException e) {
                     throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
                 }
-		    }
-		}
-		array = null;
-		terminateBatches();
-		return pullBatch();
-	}
+            }
+        }
+        array = null;
+        terminateBatches();
+        return pullBatch();
+    }
 
     private void createRow(Object arrayValue)
             throws FunctionExecutionException, TeiidProcessingException {
         ArrayList<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
         for (int output : projectionIndexes) {
-        	ProjectedColumn col = table.getColumns().get(output);
-        	try {
-        		Object val = FunctionMethods.array_get(arrayValue, output + 1);
-        		tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-        	} catch (TransformationException e) {
-        		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
-        	} catch (SQLException e) {
-        		throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
-        	}
+            ProjectedColumn col = table.getColumns().get(output);
+            try {
+                Object val = FunctionMethods.array_get(arrayValue, output + 1);
+                tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+            } catch (TransformationException e) {
+                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
+            } catch (SQLException e) {
+                throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
+            }
         }
         addBatchRow(tuple);
     }
 
-	@Override
-	public Collection<? extends LanguageObject> getObjects() {
-		return Arrays.asList(this.table.getArrayValue());
-	}
+    @Override
+    public Collection<? extends LanguageObject> getObjects() {
+        return Arrays.asList(this.table.getArrayValue());
+    }
 
-	@Override
-	public PlanNode getDescriptionProperties() {
-		PlanNode props = super.getDescriptionProperties();
+    @Override
+    public PlanNode getDescriptionProperties() {
+        PlanNode props = super.getDescriptionProperties();
         AnalysisRecord.addLanaguageObjects(props, AnalysisRecord.PROP_TABLE_FUNCTION, Arrays.asList(this.table));
         return props;
-	}
+    }
 
 }

@@ -95,7 +95,7 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
         if (!joinType.isOuter()) {
-        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER);
+            return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER);
         }
 
         if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER)) {
@@ -116,9 +116,9 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
         if (groupCols != null && !groupCols.isEmpty()) {
-        	if (!caps.supportsCapability(Capability.QUERY_GROUP_BY)) {
-        		return false;
-        	}
+            if (!caps.supportsCapability(Capability.QUERY_GROUP_BY)) {
+                return false;
+            }
             boolean supportsFunctionsInGroupBy = caps.supportsCapability(Capability.QUERY_FUNCTIONS_IN_GROUP_BY);
             boolean supportsInlineView = caps.supportsCapability(Capability.QUERY_FROM_INLINE_VIEWS);
 
@@ -187,14 +187,14 @@ public class CapabilitiesUtil {
             }
             break;
         case STRING_AGG:
-        	if(!caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
-        	    //check for more specific list support
+            if(!caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
+                //check for more specific list support
                 if(aggregate.getType() == DataTypeManager.DefaultDataClasses.BLOB
                         || !caps.supportsCapability(Capability.QUERY_AGGREGATES_LIST)
                         || !EvaluatableVisitor.willBecomeConstant(aggregate.getArg(1))) {
                     return false;
                 }
-        	}
+            }
             break;
         case RANK:
         case DENSE_RANK:
@@ -203,10 +203,10 @@ public class CapabilitiesUtil {
         case LAST_VALUE:
         case LEAD:
         case LAG:
-        	if (!caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
-        		return false;
-        	}
-        	break;
+            if (!caps.supportsCapability(Capability.ELEMENTARY_OLAP)) {
+                return false;
+            }
+            break;
         case NTILE:
             if (!caps.supportsCapability(Capability.QUERY_WINDOW_FUNCTION_NTILE)) {
                 return false;
@@ -228,19 +228,19 @@ public class CapabilitiesUtil {
             }
             break;
         case USER_DEFINED:
-        	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
-        		return false;
-        	}
-        	break;
+            if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
+                return false;
+            }
+            break;
         default:
-        	if (aggregate.isEnhancedNumeric()) {
-        		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
-        			return false;
-        		}
-        	} else {
-        		return false;
-        	}
-        	break;
+            if (aggregate.isEnhancedNumeric()) {
+                if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+            break;
         }
 
         // Check DISTINCT if necessary
@@ -249,7 +249,7 @@ public class CapabilitiesUtil {
         }
 
         if (aggregate.getCondition() != null && !caps.supportsCapability(Capability.ADVANCED_OLAP)) {
-    		return false;
+            return false;
         }
 
         // Passed all the checks!
@@ -259,8 +259,8 @@ public class CapabilitiesUtil {
     public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
 
-		FunctionMethod method = function.getFunctionDescriptor().getMethod();
-		if (metadata.isVirtualModel(modelID) || method.getPushdown() == PushDown.CANNOT_PUSHDOWN){
+        FunctionMethod method = function.getFunctionDescriptor().getMethod();
+        if (metadata.isVirtualModel(modelID) || method.getPushdown() == PushDown.CANNOT_PUSHDOWN){
             return false;
         }
 
@@ -294,7 +294,7 @@ public class CapabilitiesUtil {
                 Class<?> fromType = function.getArg(0).getType();
                 Class<?> targetType = function.getType();
                 if (fromType == targetType) {
-                	return true; //this should be removed in rewrite
+                    return true; //this should be removed in rewrite
                 }
                 return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
             }
@@ -309,7 +309,7 @@ public class CapabilitiesUtil {
                 }
             }
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
-        	return caps.supportsFunction(fullName);
+            return caps.supportsFunction(fullName);
         }
 
         return true;
@@ -317,17 +317,17 @@ public class CapabilitiesUtil {
 
     public static boolean supportsSelectDistinct(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_SELECT_DISTINCT, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_SELECT_DISTINCT, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSelectExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
     }
 
     public static boolean supportsOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_ORDERBY, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_ORDERBY, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSetOp(Object modelID, Operation setOp, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
@@ -354,22 +354,22 @@ public class CapabilitiesUtil {
 
     public static boolean supportsSetQueryOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_SET_ORDER_BY, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_SET_ORDER_BY, modelID, metadata, capFinder);
     }
 
     public static boolean supportsCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_CASE, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_CASE, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSearchedCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return supports(Capability.QUERY_SEARCHED_CASE, modelID, metadata, capFinder);
+        return supports(Capability.QUERY_SEARCHED_CASE, modelID, metadata, capFinder);
     }
 
     public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return getIntProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
+        return getIntProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
     }
 
     public static Object getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
@@ -411,12 +411,12 @@ public class CapabilitiesUtil {
 
     public static int getMaxDependentPredicates(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return getIntProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
+        return getIntProperty(Capability.MAX_DEPENDENT_PREDICATES, modelID, metadata, capFinder);
     }
 
     public static int getMaxFromGroups(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
+        return getIntProperty(Capability.MAX_QUERY_FROM_GROUPS, modelID, metadata, capFinder);
     }
 
     public static int getMaxProjectedColumns(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
@@ -431,7 +431,7 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         SupportedJoinCriteria crits = (SupportedJoinCriteria)caps.getSourceProperty(Capability.JOIN_CRITERIA_ALLOWED);
         if (crits == null) {
-        	return SupportedJoinCriteria.ANY;
+            return SupportedJoinCriteria.ANY;
         }
         return crits;
     }
@@ -443,7 +443,7 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         NullOrder order = (NullOrder)caps.getSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER);
         if (order == null) {
-        	return NullOrder.UNKNOWN;
+            return NullOrder.UNKNOWN;
         }
         return order;
     }
@@ -470,7 +470,7 @@ public class CapabilitiesUtil {
         }
 
         if (capFinder == null) {
-        	return false;
+            return false;
         }
 
         // Find capabilities
@@ -493,16 +493,16 @@ public class CapabilitiesUtil {
     public static boolean requiresCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.REQUIRES_CRITERIA, modelID, metadata, capFinder);
-	}
+    }
 
     public static boolean useAnsiJoin(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
         return supports(Capability.QUERY_FROM_ANSI_JOIN, modelID, metadata, capFinder);
-	}
+    }
 
     public static boolean supports(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, TeiidComponentException {
-    	if (metadata.isVirtualModel(modelID)){
+        if (metadata.isVirtualModel(modelID)){
             return false;
         }
 
@@ -514,48 +514,48 @@ public class CapabilitiesUtil {
         return caps.supportsCapability(cap);
     }
 
-	/**
-	 * Validate that the elements are searchable and can be used in a criteria against this source.
-	 * TODO: this check is too general and not type based
-	 */
-	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType)
-	throws QueryMetadataException, TeiidComponentException {
-		if (objs != null) {
-		    for (LanguageObject lo : objs) {
-		    	if (lo instanceof OrderByItem) {
-		    		lo = ((OrderByItem)lo).getSymbol();
-		    	}
-		    	if (!(lo instanceof Expression)) {
-		    		continue;
-		    	}
-	    		lo = SymbolMap.getExpression((Expression)lo);
-		    	if (!(lo instanceof ElementSymbol)) {
-		    		continue;
-		    	}
-		        if (!metadata.elementSupports(((ElementSymbol)lo).getMetadataID(), searchableType)) {
-		        	return false;
-		        }
-		    }
-		}
-	    return true;
-	}
+    /**
+     * Validate that the elements are searchable and can be used in a criteria against this source.
+     * TODO: this check is too general and not type based
+     */
+    static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType)
+    throws QueryMetadataException, TeiidComponentException {
+        if (objs != null) {
+            for (LanguageObject lo : objs) {
+                if (lo instanceof OrderByItem) {
+                    lo = ((OrderByItem)lo).getSymbol();
+                }
+                if (!(lo instanceof Expression)) {
+                    continue;
+                }
+                lo = SymbolMap.getExpression((Expression)lo);
+                if (!(lo instanceof ElementSymbol)) {
+                    continue;
+                }
+                if (!metadata.elementSupports(((ElementSymbol)lo).getMetadataID(), searchableType)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
-	static boolean supportsNullOrdering(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, Object modelID, OrderByItem symbol)
-			throws QueryMetadataException, TeiidComponentException {
-		boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
-		NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
-		if (symbol.getNullOrdering() != null && !supportsNullOrdering) {
-			if (symbol.getNullOrdering() == NullOrdering.FIRST) {
-				if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW)
-						&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
-					return false;
-				}
-			} else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)
-					&& !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
-				return false;
-			}
-		}
-		return true;
-	}
+    static boolean supportsNullOrdering(QueryMetadataInterface metadata,
+            CapabilitiesFinder capFinder, Object modelID, OrderByItem symbol)
+            throws QueryMetadataException, TeiidComponentException {
+        boolean supportsNullOrdering = CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, modelID, metadata, capFinder);
+        NullOrder defaultNullOrder = CapabilitiesUtil.getDefaultNullOrder(modelID, metadata, capFinder);
+        if (symbol.getNullOrdering() != null && !supportsNullOrdering) {
+            if (symbol.getNullOrdering() == NullOrdering.FIRST) {
+                if (defaultNullOrder != NullOrder.FIRST && !(symbol.isAscending() && defaultNullOrder == NullOrder.LOW)
+                        && !(!symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)) {
+                    return false;
+                }
+            } else if (defaultNullOrder != NullOrder.LAST && !(symbol.isAscending() && defaultNullOrder == NullOrder.HIGH)
+                    && !(!symbol.isAscending() && defaultNullOrder == NullOrder.LOW)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

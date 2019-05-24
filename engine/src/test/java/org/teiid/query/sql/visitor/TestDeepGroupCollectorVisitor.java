@@ -39,7 +39,7 @@ public class TestDeepGroupCollectorVisitor extends TestCase {
         try {
             obj = QueryParser.getQueryParser().parseCommand(sql);
         } catch(TeiidException e) {
-        	throw new RuntimeException(e);
+            throw new RuntimeException(e);
         }
 
         Collection actualGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj, false);

@@ -75,17 +75,17 @@ public final class RuleCopyCriteria implements OptimizerRule {
 
     static boolean COPY_ALL = false; //flag mainly for testing pre-TEIID-4943
 
-	/**
-	 * Execute the rule as described in the class comments.
-	 * @param plan Incoming query plan, may be modified during method and may be returned from method
-	 * @param metadata Metadata source
-	 * @param rules Rules from optimizer rule stack, may be manipulated during method
-	 * @return Updated query plan if rule fired, else original query plan
-	 */
-	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
-		throws QueryPlannerException, TeiidComponentException {
+    /**
+     * Execute the rule as described in the class comments.
+     * @param plan Incoming query plan, may be modified during method and may be returned from method
+     * @param metadata Metadata source
+     * @param rules Rules from optimizer rule stack, may be manipulated during method
+     * @return Updated query plan if rule fired, else original query plan
+     */
+    public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
+        throws QueryPlannerException, TeiidComponentException {
 
-	    List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT | NodeConstants.Types.JOIN);
+        List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT | NodeConstants.Types.JOIN);
         boolean shouldRun = false;
         for (PlanNode critNode : critNodes) {
             if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
@@ -107,11 +107,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
 
         //mark the old criteria nodes as copied.  this will prevent RulePushSelectCriteria from considering them again
         for (PlanNode critNode : critNodes) {
-        	critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.TRUE);
+            critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.TRUE);
         }
 
-		return plan;
-	}
+        return plan;
+    }
 
     /**
      * Given a criteria and a map of elements to values try to create a new single group criteria
@@ -144,7 +144,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
         }
 
         if (tgtCrit instanceof IsNullCriteria && ((IsNullCriteria)tgtCrit).isNegated()) {
-        	return null;
+            return null;
         }
 
         int endGroups = GroupsUsedByElementsVisitor.getGroups(tgtCrit).size();
@@ -190,11 +190,11 @@ public final class RuleCopyCriteria implements OptimizerRule {
         if (isNew) {
             joinCriteria.add(tgtCrit);
             if (tgtCrit instanceof CompareCriteria) {
-            	CompareCriteria cc = (CompareCriteria)tgtCrit;
-            	if (!EvaluatableVisitor.willBecomeConstant(cc.getRightExpression()) &&
-            			!EvaluatableVisitor.willBecomeConstant(cc.getRightExpression())) {
-            		((CompareCriteria)tgtCrit).setOptional(true);
-            	}
+                CompareCriteria cc = (CompareCriteria)tgtCrit;
+                if (!EvaluatableVisitor.willBecomeConstant(cc.getRightExpression()) &&
+                        !EvaluatableVisitor.willBecomeConstant(cc.getRightExpression())) {
+                    ((CompareCriteria)tgtCrit).setOptional(true);
+                }
             }
             return endGroups;
         } else if (checkForGroupReduction && endGroups < 2) {
@@ -284,7 +284,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 criteriaInfo[0].removeAll(rightChildCriteria[0]);
                 criteriaInfo[1].removeAll(rightChildCriteria[1]);
             } else if (node.getSubqueryContainers().isEmpty()) {
-            	if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
+                if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
                     toCopy.addAll(combinedCriteria);
                 }
                 allCriteria.addAll(joinCrits);
@@ -333,7 +333,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                    List<Criteria> newJoinCrits,
                                                    QueryMetadataInterface metadata, boolean underAccess, PlanNode node) {
         boolean changedTree = false;
-    	if (srcToTgt.size() == 0) {
+        if (srcToTgt.size() == 0) {
             return changedTree;
         }
         Iterator<Criteria> i = toCopy.iterator();
@@ -343,9 +343,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
             Integer endGroups = copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata, underAccess);
 
             if (endGroups != null) {
-            	changedTree = true;
-            	if (endGroups < 2) {
-            	    if (copyingJoinCriteria) {
+                changedTree = true;
+                if (endGroups < 2) {
+                    if (copyingJoinCriteria) {
                         if (crit instanceof CompareCriteria) {
                             CompareCriteria cc = (CompareCriteria)crit;
                             //don't remove theta criteria, just mark it as optional
@@ -353,31 +353,31 @@ public final class RuleCopyCriteria implements OptimizerRule {
                             continue;
                         }
                         i.remove();
-            	    } else {
+                    } else {
                         //this is already a defacto dependent join across the join predicates, no need to make it one again
-            	        if (crit instanceof CompareCriteria) {
-            	            CompareCriteria cc = (CompareCriteria)crit;
-            	            if (cc.getOperator() != CompareCriteria.EQ) {
-            	                continue;
-            	            }
-            	        } else if (crit instanceof SetCriteria) {
-            	            SetCriteria sc = (SetCriteria)crit;
+                        if (crit instanceof CompareCriteria) {
+                            CompareCriteria cc = (CompareCriteria)crit;
+                            if (cc.getOperator() != CompareCriteria.EQ) {
+                                continue;
+                            }
+                        } else if (crit instanceof SetCriteria) {
+                            SetCriteria sc = (SetCriteria)crit;
                             if (sc.isNegated()) {
                                 continue;
                             }
-            	        } else {
-            	            continue;
-            	        }
-                	    PlanNode childNode = FrameUtil.findJoinSourceNode(node.getFirstChild());
-                	    if (childNode != null && !childNode.hasProperty(Info.MAKE_DEP) && !childNode.hasProperty(Info.ACCESS_PATTERNS)) {
-                	        childNode.setProperty(Info.MAKE_NOT_DEP, true);
-                	    }
+                        } else {
+                            continue;
+                        }
+                        PlanNode childNode = FrameUtil.findJoinSourceNode(node.getFirstChild());
+                        if (childNode != null && !childNode.hasProperty(Info.MAKE_DEP) && !childNode.hasProperty(Info.ACCESS_PATTERNS)) {
+                            childNode.setProperty(Info.MAKE_NOT_DEP, true);
+                        }
                         childNode = FrameUtil.findJoinSourceNode(node.getLastChild());
                         if (childNode != null && !childNode.hasProperty(Info.MAKE_DEP) && !childNode.hasProperty(Info.ACCESS_PATTERNS)) {
                             childNode.setProperty(Info.MAKE_NOT_DEP, true);
                         }
-            	    }
-            	}
+                    }
+                }
             }
         }
         return changedTree;
@@ -404,7 +404,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                   boolean changedTree,
                                   QueryMetadataInterface metadata, boolean underAccess) {
         if (node.getChildCount() > 0) {
-        	underAccess |= node.getType() == NodeConstants.Types.ACCESS;
+            underAccess |= node.getType() == NodeConstants.Types.ACCESS;
             List<PlanNode> children = node.getChildren();
             for (int i = 0; i < children.size(); i++) {
                 PlanNode childNode = children.get(i);
@@ -425,16 +425,16 @@ public final class RuleCopyCriteria implements OptimizerRule {
     Map<Expression, Expression> buildElementMap(Collection<Criteria> crits, List<Criteria> newJoinCrits, Set<Criteria> allCriteria, QueryMetadataInterface metadata, boolean underAccess) {
         Map<Expression, Expression> srcToTgt = null;
         for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
-        	Criteria theCrit = iter.next();
+            Criteria theCrit = iter.next();
             if (theCrit instanceof IsNullCriteria) {
-            	IsNullCriteria isNull = (IsNullCriteria)theCrit;
-            	if (!isNull.isNegated() && isNull.getExpression() instanceof ElementSymbol) {
-            		if (srcToTgt == null) {
-            			srcToTgt = new HashMap<Expression, Expression>();
-            		}
-            		srcToTgt.put(isNull.getExpression(), new Constant(null, isNull.getExpression().getType()));
-            	}
-            	continue;
+                IsNullCriteria isNull = (IsNullCriteria)theCrit;
+                if (!isNull.isNegated() && isNull.getExpression() instanceof ElementSymbol) {
+                    if (srcToTgt == null) {
+                        srcToTgt = new HashMap<Expression, Expression>();
+                    }
+                    srcToTgt.put(isNull.getExpression(), new Constant(null, isNull.getExpression().getType()));
+                }
+                continue;
             }
             if(!(theCrit instanceof CompareCriteria)) {
                 continue;
@@ -443,16 +443,16 @@ public final class RuleCopyCriteria implements OptimizerRule {
             if (crit.getOperator() == CompareCriteria.EQ) {
                 if (srcToTgt == null) {
                     srcToTgt = new HashMap<Expression, Expression>();
-            	}
+                }
                 Expression oldValue = srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
                 boolean removed = false;
                 if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getRightExpression(), metadata, underAccess)) {
-                	iter.remove();
-                	removed = true;
+                    iter.remove();
+                    removed = true;
                 }
                 oldValue = srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
                 if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getLeftExpression(), metadata, underAccess) && !removed) {
-                	iter.remove();
+                    iter.remove();
                 }
             }
         }
@@ -465,40 +465,40 @@ public final class RuleCopyCriteria implements OptimizerRule {
     /**
      * @return true if the original crit can be removed
      */
-	private boolean checkWithinJoin(CompareCriteria crit, List<Criteria> newJoinCrits, Set<Criteria> allCriteria,
-			Expression oldValue, Expression left, QueryMetadataInterface metadata, boolean underAccess) {
-		if (newJoinCrits == null || oldValue == null) {
-			return false;
-		}
-		if (oldValue.equals(left)) {
-			return true;
-		}
-		Criteria newCrit = new CompareCriteria((Expression)left.clone(), CompareCriteria.EQ, (Expression)oldValue.clone());
-		try {
-			newCrit = QueryRewriter.rewriteCriteria(newCrit, null, metadata);
-		} catch (TeiidException e) {
-			LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, e, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
-			return false;
-		}
-		if (allCriteria.add(newCrit)) {
-			if (underAccess && GroupsUsedByElementsVisitor.getGroups(newCrit).size() > 1) {
-				return false;
-			}
-			if (newCrit instanceof CompareCriteria) {
-				((CompareCriteria)newCrit).setOptional(true);
-			}
-			newJoinCrits.add(newCrit);
-		}
-		if (!GroupsUsedByElementsVisitor.getGroups(crit.getLeftExpression()).isEmpty() && !GroupsUsedByElementsVisitor.getGroups(crit.getRightExpression()).isEmpty()
-				&& (GroupsUsedByElementsVisitor.getGroups(left).isEmpty() || GroupsUsedByElementsVisitor.getGroups(oldValue).isEmpty())) {
-			crit.setOptional(null); //the original has been simplified
-		}
-		return false;
-	}
+    private boolean checkWithinJoin(CompareCriteria crit, List<Criteria> newJoinCrits, Set<Criteria> allCriteria,
+            Expression oldValue, Expression left, QueryMetadataInterface metadata, boolean underAccess) {
+        if (newJoinCrits == null || oldValue == null) {
+            return false;
+        }
+        if (oldValue.equals(left)) {
+            return true;
+        }
+        Criteria newCrit = new CompareCriteria((Expression)left.clone(), CompareCriteria.EQ, (Expression)oldValue.clone());
+        try {
+            newCrit = QueryRewriter.rewriteCriteria(newCrit, null, metadata);
+        } catch (TeiidException e) {
+            LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, e, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
+            return false;
+        }
+        if (allCriteria.add(newCrit)) {
+            if (underAccess && GroupsUsedByElementsVisitor.getGroups(newCrit).size() > 1) {
+                return false;
+            }
+            if (newCrit instanceof CompareCriteria) {
+                ((CompareCriteria)newCrit).setOptional(true);
+            }
+            newJoinCrits.add(newCrit);
+        }
+        if (!GroupsUsedByElementsVisitor.getGroups(crit.getLeftExpression()).isEmpty() && !GroupsUsedByElementsVisitor.getGroups(crit.getRightExpression()).isEmpty()
+                && (GroupsUsedByElementsVisitor.getGroups(left).isEmpty() || GroupsUsedByElementsVisitor.getGroups(oldValue).isEmpty())) {
+            crit.setOptional(null); //the original has been simplified
+        }
+        return false;
+    }
 
 
-	public String toString() {
-		return "CopyCriteria"; //$NON-NLS-1$
-	}
+    public String toString() {
+        return "CopyCriteria"; //$NON-NLS-1$
+    }
 
 }

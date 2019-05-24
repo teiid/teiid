@@ -21,9 +21,9 @@ package org.teiid.client.security;
 import org.teiid.core.BundleUtil;
 
 public class InvalidSessionException extends TeiidSecurityException {
-	private static final long serialVersionUID = 594047711693346844L;
+    private static final long serialVersionUID = 594047711693346844L;
 
-	/**
+    /**
      * No-Arg Constructor
      */
     public InvalidSessionException(  ) {
@@ -35,7 +35,7 @@ public class InvalidSessionException extends TeiidSecurityException {
      * @param the detail message
      */
     public InvalidSessionException(String message) {
-    	super(message);
+        super(message);
     }
     /**
      * Constructs an instance of the exception with no detail message but with a

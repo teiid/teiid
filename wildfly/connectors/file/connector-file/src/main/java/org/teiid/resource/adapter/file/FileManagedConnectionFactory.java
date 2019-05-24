@@ -29,78 +29,78 @@ import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 
-	private static final long serialVersionUID = -1495488034205703625L;
-	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FileManagedConnectionFactory.class);
+    private static final long serialVersionUID = -1495488034205703625L;
+    public static final BundleUtil UTIL = BundleUtil.getBundleUtil(FileManagedConnectionFactory.class);
 
-	private String parentDirectory;
-	private String fileMapping;
-	private boolean allowParentPaths = true;
+    private String parentDirectory;
+    private String fileMapping;
+    private boolean allowParentPaths = true;
 
-	@Override
-	@SuppressWarnings("serial")
-	public BasicConnectionFactory<FileConnectionImpl> createConnectionFactory() throws ResourceException {
-		if (this.parentDirectory == null) {
-			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
-		}
-		final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
-		return new BasicConnectionFactory<FileConnectionImpl>() {
+    @Override
+    @SuppressWarnings("serial")
+    public BasicConnectionFactory<FileConnectionImpl> createConnectionFactory() throws ResourceException {
+        if (this.parentDirectory == null) {
+            throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
+        }
+        final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
+        return new BasicConnectionFactory<FileConnectionImpl>() {
 
-			@Override
-			public FileConnectionImpl getConnection() throws ResourceException {
-				return new FileConnectionImpl(parentDirectory, map, allowParentPaths);
-			}
-		};
-	}
+            @Override
+            public FileConnectionImpl getConnection() throws ResourceException {
+                return new FileConnectionImpl(parentDirectory, map, allowParentPaths);
+            }
+        };
+    }
 
-	public String getParentDirectory() {
-		return parentDirectory;
-	}
+    public String getParentDirectory() {
+        return parentDirectory;
+    }
 
-	public void setParentDirectory(String parentDirectory) {
-		this.parentDirectory = parentDirectory;
-	}
+    public void setParentDirectory(String parentDirectory) {
+        this.parentDirectory = parentDirectory;
+    }
 
-	public String getFileMapping() {
-		return fileMapping;
-	}
+    public String getFileMapping() {
+        return fileMapping;
+    }
 
-	public void setFileMapping(String fileMapping) {
-		this.fileMapping = fileMapping;
-	}
+    public void setFileMapping(String fileMapping) {
+        this.fileMapping = fileMapping;
+    }
 
-	public Boolean isAllowParentPaths() {
-		return allowParentPaths;
-	}
+    public Boolean isAllowParentPaths() {
+        return allowParentPaths;
+    }
 
-	public void setAllowParentPaths(Boolean allowParentPaths) {
-		this.allowParentPaths = allowParentPaths != null && allowParentPaths;
-	}
+    public void setAllowParentPaths(Boolean allowParentPaths) {
+        this.allowParentPaths = allowParentPaths != null && allowParentPaths;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (allowParentPaths ? 1231 : 1237);
-		result = prime * result + ((fileMapping == null) ? 0 : fileMapping.hashCode());
-		result = prime * result + ((parentDirectory == null) ? 0 : parentDirectory.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (allowParentPaths ? 1231 : 1237);
+        result = prime * result + ((fileMapping == null) ? 0 : fileMapping.hashCode());
+        result = prime * result + ((parentDirectory == null) ? 0 : parentDirectory.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		FileManagedConnectionFactory other = (FileManagedConnectionFactory) obj;
-		if (allowParentPaths != other.allowParentPaths)
-			return false;
-		if (!checkEquals(this.fileMapping, other.fileMapping)) {
-			return false;
-		}
-		if (!checkEquals(this.parentDirectory, other.parentDirectory)) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null) return false;
+        if (getClass() != obj.getClass()) return false;
+        FileManagedConnectionFactory other = (FileManagedConnectionFactory) obj;
+        if (allowParentPaths != other.allowParentPaths)
+            return false;
+        if (!checkEquals(this.fileMapping, other.fileMapping)) {
+            return false;
+        }
+        if (!checkEquals(this.parentDirectory, other.parentDirectory)) {
+            return false;
+        }
+        return true;
+    }
 
 }

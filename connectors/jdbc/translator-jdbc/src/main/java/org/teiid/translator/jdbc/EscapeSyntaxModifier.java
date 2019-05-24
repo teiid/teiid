@@ -32,7 +32,7 @@ import org.teiid.language.Function;
 public class EscapeSyntaxModifier extends FunctionModifier {
 
     public List<?> translate(Function function) {
-    	List<Object> objs = new ArrayList<Object>();
+        List<Object> objs = new ArrayList<Object>();
         objs.add("{fn "); //$NON-NLS-1$
         objs.add(function);
         objs.add("}"); //$NON-NLS-1$

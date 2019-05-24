@@ -83,9 +83,9 @@ public class SimpleDbAPIClassTest {
 
     @Test
     public void testAddNullAttribute() throws Exception {
-    	ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
-    	simpleDbApi.addAttribute("x", null, attributes);
-    	assertNull(attributes.get(0).getValue());
+        ArrayList<ReplaceableAttribute> attributes = new ArrayList<ReplaceableAttribute>();
+        simpleDbApi.addAttribute("x", null, attributes);
+        assertNull(attributes.get(0).getValue());
     }
 
     private void replaceField(String fieldName, Object object, Object newFieldValue){

@@ -61,21 +61,21 @@ import nu.xom.Nodes;
  */
 public interface StreamingTransform {
 
-	/**
-	 * Called by the node factory of a {@link StreamingPathFilter}whenever an
-	 * element matches the filter's entire location path.
-	 *
-	 * @param element
-	 *            The current element (fully build, including its ancestors and descendants)
-	 *            matching the entire location path.
-	 * @return a node list containing zero or more nodes (the list must not
-	 *         contain nulls). If the returned node list is empty (i.e. contains
-	 *         zero nodes) the current element is thrown away during parsing.
-	 *         The thrown away element is immediately subject to garbage
-	 *         collection. If the returned nodes list is non-empty, the
-	 *         contained nodes are added to the document being build by a
-	 *         {@link nu.xom.Builder}, replacing the current element.
-	 */
-	public Nodes transform(Element element);
+    /**
+     * Called by the node factory of a {@link StreamingPathFilter}whenever an
+     * element matches the filter's entire location path.
+     *
+     * @param element
+     *            The current element (fully build, including its ancestors and descendants)
+     *            matching the entire location path.
+     * @return a node list containing zero or more nodes (the list must not
+     *         contain nulls). If the returned node list is empty (i.e. contains
+     *         zero nodes) the current element is thrown away during parsing.
+     *         The thrown away element is immediately subject to garbage
+     *         collection. If the returned nodes list is non-empty, the
+     *         contained nodes are added to the document being build by a
+     *         {@link nu.xom.Builder}, replacing the current element.
+     */
+    public Nodes transform(Element element);
 }
 

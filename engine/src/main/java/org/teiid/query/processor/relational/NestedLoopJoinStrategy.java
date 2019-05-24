@@ -58,8 +58,8 @@ public class NestedLoopJoinStrategy extends MergeJoinStrategy {
 
     @Override
     protected void loadRight() throws TeiidComponentException,
-    		TeiidProcessingException {
-    	this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
+            TeiidProcessingException {
+        this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
     }
 
     /**

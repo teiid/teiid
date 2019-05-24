@@ -33,65 +33,65 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public class DeclareStatement extends AssignmentStatement {
 
-	// type of the variable
-	private String varType;
+    // type of the variable
+    private String varType;
 
-	/**
-	 * Constructor for DeclareStatement.
-	 */
-	public DeclareStatement() {
-		super();
-	}
+    /**
+     * Constructor for DeclareStatement.
+     */
+    public DeclareStatement() {
+        super();
+    }
 
-	/**
-	 * Constructor for DeclareStatement.
-	 * @param variable The <code>ElementSymbol</code> object that is the variable
-	 * @param valueType The type of this variable
-	 */
-	public DeclareStatement(ElementSymbol variable, String varType) {
-		super(variable, (Expression)null);
+    /**
+     * Constructor for DeclareStatement.
+     * @param variable The <code>ElementSymbol</code> object that is the variable
+     * @param valueType The type of this variable
+     */
+    public DeclareStatement(ElementSymbol variable, String varType) {
+        super(variable, (Expression)null);
         this.varType = varType;
-	}
+    }
 
-	/**
-	 * Constructor for DeclareStatement.
-	 * @param variable The <code>ElementSymbol</code> object that is the variable
-	 * @param valueType The type of this variable
-	 */
-	public DeclareStatement(ElementSymbol variable, String varType, Expression value) {
+    /**
+     * Constructor for DeclareStatement.
+     * @param variable The <code>ElementSymbol</code> object that is the variable
+     * @param valueType The type of this variable
+     */
+    public DeclareStatement(ElementSymbol variable, String varType, Expression value) {
         super(variable, value);
-		this.varType = varType;
-	}
+        this.varType = varType;
+    }
 
-	@Deprecated public DeclareStatement(ElementSymbol variable, String varType, Command value) {
+    @Deprecated public DeclareStatement(ElementSymbol variable, String varType, Command value) {
         super(variable, value);
-		this.varType = varType;
-	}
+        this.varType = varType;
+    }
 
-	/**
-	 * Get the type of this variable declared in this statement.
-	 * @return A string giving the variable type
-	 */
-	public String getVariableType() {
-		return varType;
-	}
+    /**
+     * Get the type of this variable declared in this statement.
+     * @return A string giving the variable type
+     */
+    public String getVariableType() {
+        return varType;
+    }
 
-	/**
-	 * Set the type of this variable declared in this statement.
-	 * @param varType A string giving the variable type
-	 */
-	public void setVariableType(String varType) {
-		this.varType = varType;
-	}
+    /**
+     * Set the type of this variable declared in this statement.
+     * @param varType A string giving the variable type
+     */
+    public void setVariableType(String varType) {
+        this.varType = varType;
+    }
 
-	/**
-	 * Return the type for this statement, this is one of the types
-	 * defined on the statement object.
-	 * @return The type of this statement
-	 */
-	public int getType() {
-		return Statement.TYPE_DECLARE;
-	}
+    /**
+     * Return the type for this statement, this is one of the types
+     * defined on the statement object.
+     * @return The type of this statement
+     */
+    public int getType() {
+        return Statement.TYPE_DECLARE;
+    }
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
@@ -101,16 +101,16 @@ public class DeclareStatement extends AssignmentStatement {
         visitor.visit(this);
     }
 
-	/**
-	 * Deep clone statement to produce a new identical statement.
-	 * @return Deep clone
-	 */
-	public Object clone() {
+    /**
+     * Deep clone statement to produce a new identical statement.
+     * @return Deep clone
+     */
+    public Object clone() {
         if (getExpression() == null) {
             return new DeclareStatement(this.getVariable().clone(), this.varType);
         }
         return new DeclareStatement(this.getVariable().clone(), this.varType, (Expression)getExpression().clone());
-	}
+    }
 
     /**
      * Compare two DeclareStatements for equality.  They will only evaluate to equal if
@@ -119,17 +119,17 @@ public class DeclareStatement extends AssignmentStatement {
      * @return True if equal
      */
     public boolean equals(Object obj) {
-    	// Quick same object test
-    	if(this == obj) {
-    		return true;
-		}
+        // Quick same object test
+        if(this == obj) {
+            return true;
+        }
 
-		// Quick fail tests
-    	if(obj == null || !(obj instanceof DeclareStatement) || !super.equals(obj)) {
-    		return false;
-		}
+        // Quick fail tests
+        if(obj == null || !(obj instanceof DeclareStatement) || !super.equals(obj)) {
+            return false;
+        }
 
-		DeclareStatement other = (DeclareStatement) obj;
+        DeclareStatement other = (DeclareStatement) obj;
 
         return
             EquivalenceUtil.areEqual(getVariableType(), other.getVariableType());
@@ -143,19 +143,19 @@ public class DeclareStatement extends AssignmentStatement {
      * @return Hash code
      */
     public int hashCode() {
-    	// This hash code relies on the variable and its value for this statement
-    	// and criteria clauses, not on the from, order by, or option clauses
-    	int myHash = super.hashCode();
-    	myHash = HashCodeUtil.hashCode(myHash, this.getVariableType());
+        // This hash code relies on the variable and its value for this statement
+        // and criteria clauses, not on the from, order by, or option clauses
+        int myHash = super.hashCode();
+        myHash = HashCodeUtil.hashCode(myHash, this.getVariableType());
         return myHash;
-	}
+    }
 
     /**
      * Returns a string representation of an instance of this class.
      * @return String representation of object
      */
     public String toString() {
-    	return SQLStringVisitor.getSQLString(this);
+        return SQLStringVisitor.getSQLString(this);
     }
 
 } // END CLASS

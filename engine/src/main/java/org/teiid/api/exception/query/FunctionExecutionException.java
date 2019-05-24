@@ -25,9 +25,9 @@ import org.teiid.core.BundleUtil;
  */
 public class FunctionExecutionException extends ExpressionEvaluationException {
 
-	private static final long serialVersionUID = -4421419169341759699L;
+    private static final long serialVersionUID = -4421419169341759699L;
 
-	/**
+    /**
      * No-arg constructor required by Externalizable semantics.
      */
     public FunctionExecutionException() {

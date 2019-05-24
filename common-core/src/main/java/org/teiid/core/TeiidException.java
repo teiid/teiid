@@ -29,9 +29,9 @@ import java.sql.SQLException;
  */
 public class TeiidException extends Exception {
 
-	private static final long serialVersionUID = -3033427629587497938L;
-	protected String code;
-	private transient String originalType;
+    private static final long serialVersionUID = -3033427629587497938L;
+    protected String code;
+    private transient String originalType;
 
     public TeiidException() {
     }
@@ -48,9 +48,9 @@ public class TeiidException extends Exception {
     public TeiidException(BundleUtil.Event code, Throwable t, final String message) {
         super(message, t);
         if (message != null && t != null && message.equals(t.getMessage())) {
-        	setCode(code, t);
+            setCode(code, t);
         } else {
-        	setCode(code.toString());
+            setCode(code.toString());
         }
     }
 
@@ -59,16 +59,16 @@ public class TeiidException extends Exception {
         setCode(code, t);
     }
 
-	private void setCode(BundleUtil.Event code, Throwable t) {
-		String codeStr = code.toString();
+    private void setCode(BundleUtil.Event code, Throwable t) {
+        String codeStr = code.toString();
         if (t instanceof TeiidException) {
-        	TeiidException te = (TeiidException)t;
-        	if (te.getCode() != null) {
-        		codeStr = te.getCode();
-        	}
+            TeiidException te = (TeiidException)t;
+            if (te.getCode() != null) {
+                codeStr = te.getCode();
+            }
         }
         setCode(codeStr);
-	}
+    }
 
     public TeiidException(Throwable e) {
         this(e, e != null? e.getMessage() : null);
@@ -84,37 +84,37 @@ public class TeiidException extends Exception {
     }
 
     public void setCode(String code) {
-    	this.code = code;
+        this.code = code;
     }
 
     public String getOriginalType() {
-		return originalType;
-	}
+        return originalType;
+    }
 
     public void setOriginalType(String originalType) {
-		this.originalType = originalType;
-	}
+        this.originalType = originalType;
+    }
 
     static String getCode(Throwable e) {
         if (e instanceof TeiidException) {
             return (((TeiidException) e).getCode());
         } else if (e instanceof TeiidRuntimeException) {
-        	return ((TeiidRuntimeException) e).getCode();
+            return ((TeiidRuntimeException) e).getCode();
         } else if (e instanceof SQLException) {
-        	return ((SQLException)e).getSQLState();
+            return ((SQLException)e).getSQLState();
         }
         return null;
     }
 
-	public String getMessage() {
-		String message = super.getMessage();
-		if (message == null) {
-			return code;
-		}
-		if (code == null || code.length() == 0 || message.startsWith(code)) {
-			return message;
-		}
-		return code+" "+message; //$NON-NLS-1$
-	}
+    public String getMessage() {
+        String message = super.getMessage();
+        if (message == null) {
+            return code;
+        }
+        if (code == null || code.length() == 0 || message.startsWith(code)) {
+            return message;
+        }
+        return code+" "+message; //$NON-NLS-1$
+    }
 
 }

@@ -28,42 +28,42 @@ import org.teiid.core.types.TransformationException;
  */
 public class AnyToStringTransform extends Transform {
 
-	private Class<?> sourceType;
+    private Class<?> sourceType;
 
-	public AnyToStringTransform(Class<?> sourceType) {
-		this.sourceType = sourceType;
-	}
+    public AnyToStringTransform(Class<?> sourceType) {
+        this.sourceType = sourceType;
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return sourceType;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return sourceType;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return String.class;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return String.class;
+    }
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value - Integer
-	 * @return Outgoing value - String
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		String result = value.toString();
-		if (result != null && result.length() > DataTypeManager.MAX_STRING_LENGTH) {
-			return result.substring(0, DataTypeManager.MAX_STRING_LENGTH);
-		}
-		return result;
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value - Integer
+     * @return Outgoing value - String
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        String result = value.toString();
+        if (result != null && result.length() > DataTypeManager.MAX_STRING_LENGTH) {
+            return result.substring(0, DataTypeManager.MAX_STRING_LENGTH);
+        }
+        return result;
+    }
 
 }

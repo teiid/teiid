@@ -61,12 +61,12 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
     }
 
     public UpdateInfo getUpdateInfo() {
-		return updateInfo;
-	}
+        return updateInfo;
+    }
 
     public void setUpdateInfo(UpdateInfo updateInfo) {
-		this.updateInfo = updateInfo;
-	}
+        this.updateInfo = updateInfo;
+    }
 
     public boolean hasTag(String name) {
         return tags != null && tags.contains(name);

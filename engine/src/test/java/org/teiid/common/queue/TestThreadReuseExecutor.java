@@ -36,13 +36,13 @@ import org.teiid.dqp.internal.process.ThreadReuseExecutor;
  */
 public class TestThreadReuseExecutor {
 
-	ThreadReuseExecutor pool = null;
+    ThreadReuseExecutor pool = null;
 
-	@After public void tearDown() {
-		if (pool != null) {
-			pool.shutdownNow();
-		}
-	}
+    @After public void tearDown() {
+        if (pool != null) {
+            pool.shutdownNow();
+        }
+    }
 
     @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
@@ -70,7 +70,7 @@ public class TestThreadReuseExecutor {
         pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
 
         for(int i=0; i<NUM_THREADS; i++) {
-        	pool.execute(new FakeWorkItem(SINGLE_WAIT));
+            pool.execute(new FakeWorkItem(SINGLE_WAIT));
 
             try {
                 Thread.sleep(SINGLE_WAIT*3);
@@ -87,71 +87,71 @@ public class TestThreadReuseExecutor {
     }
 
     @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
-    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+        pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
         pool.shutdown();
-    	pool.execute(new FakeWorkItem(1));
+        pool.execute(new FakeWorkItem(1));
     }
 
     @Test public void testFailingWork() throws Exception {
-    	pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	final Semaphore signal = new Semaphore(1);
-    	pool.execute(new Runnable() {
-    		@Override
-    		public void run() {
-    			signal.release();
-    			throw new RuntimeException();
-    		}
+        pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+        final Semaphore signal = new Semaphore(1);
+        pool.execute(new Runnable() {
+            @Override
+            public void run() {
+                signal.release();
+                throw new RuntimeException();
+            }
 
-    	});
-    	assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
+        });
+        assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
     }
 
     @Test public void testPriorities() throws Exception {
-    	pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
-    	FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
-    		public Boolean call() throws Exception {
-    			synchronized (pool) {
-    				while (pool.getSubmittedCount() < 4) {
-    					pool.wait();
-    				}
-				}
-    			return true;
-    		}
-		}, 0);
-    	final ConcurrentLinkedQueue<Integer> order = new ConcurrentLinkedQueue<Integer>();
-    	FutureWork<Boolean> work2 = new FutureWork<Boolean>(new Callable<Boolean>() {
-    		public Boolean call() throws Exception {
-    			order.add(2);
-    			return true;
-    		}
-		}, 2);
-    	FutureWork<Boolean> work3 = new FutureWork<Boolean>(new Callable<Boolean>() {
-    		public Boolean call() throws Exception {
-    			order.add(3);
-    			return false;
-    		}
-		}, 1);
-    	Thread.sleep(20); //ensure a later timestamp
-    	FutureWork<Boolean> work4 = new FutureWork<Boolean>(new Callable<Boolean>() {
-    		public Boolean call() throws Exception {
-    			order.add(4);
-    			return false;
-    		}
-		}, 2);
-    	pool.execute(work1);
-    	pool.execute(work2);
-    	pool.execute(work3);
-    	pool.execute(work4);
-    	synchronized (pool) {
-        	pool.notifyAll();
-		}
-    	work1.get();
-    	work2.get();
-    	work3.get();
-    	work4.get();
-    	assertEquals(Integer.valueOf(3), order.remove());
-    	assertEquals(Integer.valueOf(2), order.remove());
-    	assertEquals(Integer.valueOf(4), order.remove());
+        pool = new ThreadReuseExecutor("test", 1); //$NON-NLS-1$
+        FutureWork<Boolean> work1 = new FutureWork<Boolean>(new Callable<Boolean>() {
+            public Boolean call() throws Exception {
+                synchronized (pool) {
+                    while (pool.getSubmittedCount() < 4) {
+                        pool.wait();
+                    }
+                }
+                return true;
+            }
+        }, 0);
+        final ConcurrentLinkedQueue<Integer> order = new ConcurrentLinkedQueue<Integer>();
+        FutureWork<Boolean> work2 = new FutureWork<Boolean>(new Callable<Boolean>() {
+            public Boolean call() throws Exception {
+                order.add(2);
+                return true;
+            }
+        }, 2);
+        FutureWork<Boolean> work3 = new FutureWork<Boolean>(new Callable<Boolean>() {
+            public Boolean call() throws Exception {
+                order.add(3);
+                return false;
+            }
+        }, 1);
+        Thread.sleep(20); //ensure a later timestamp
+        FutureWork<Boolean> work4 = new FutureWork<Boolean>(new Callable<Boolean>() {
+            public Boolean call() throws Exception {
+                order.add(4);
+                return false;
+            }
+        }, 2);
+        pool.execute(work1);
+        pool.execute(work2);
+        pool.execute(work3);
+        pool.execute(work4);
+        synchronized (pool) {
+            pool.notifyAll();
+        }
+        work1.get();
+        work2.get();
+        work3.get();
+        work4.get();
+        assertEquals(Integer.valueOf(3), order.remove());
+        assertEquals(Integer.valueOf(2), order.remove());
+        assertEquals(Integer.valueOf(4), order.remove());
     }
 
 }

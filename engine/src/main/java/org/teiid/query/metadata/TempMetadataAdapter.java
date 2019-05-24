@@ -61,41 +61,41 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     private Map<Object, QueryNode> queryNodes;
     private boolean session;
 
-	public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore) {
-		super(metadata);
+    public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore) {
+        super(metadata);
         this.tempStore = tempStore;
-	}
+    }
 
     public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore, Map<Object, Object> materializationTables, Map<Object, QueryNode> queryNodes) {
-    	super(metadata);
+        super(metadata);
         this.tempStore = tempStore;
         this.materializationTables = materializationTables;
         this.queryNodes = queryNodes;
     }
 
     public boolean isSession() {
-		return session;
-	}
+        return session;
+    }
 
     public void setSession(boolean session) {
-		this.session = session;
-	}
+        this.session = session;
+    }
 
     public QueryMetadataInterface getSessionMetadata() {
-    	if (isSession()) {
-    		TempMetadataAdapter tma = new TempMetadataAdapter(new BasicQueryMetadata(), this.tempStore);
-    		tma.session = true;
-    		return tma;
-    	}
-    	return this.actualMetadata.getSessionMetadata();
+        if (isSession()) {
+            TempMetadataAdapter tma = new TempMetadataAdapter(new BasicQueryMetadata(), this.tempStore);
+            tma.session = true;
+            return tma;
+        }
+        return this.actualMetadata.getSessionMetadata();
     }
 
     @Override
     protected QueryMetadataInterface createDesignTimeMetadata() {
-    	if (isSession()) {
-    		return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), new TempMetadataStore());
-    	}
-		return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), tempStore, materializationTables, queryNodes);
+        if (isSession()) {
+            return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), new TempMetadataStore());
+        }
+        return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), tempStore, materializationTables, queryNodes);
     }
 
     public TempMetadataStore getMetadataStore() {
@@ -154,106 +154,106 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 
     @Override
     public Collection getGroupsForPartialName(String partialGroupName)
-    		throws TeiidComponentException, QueryMetadataException {
-    	Collection groups = super.getGroupsForPartialName(partialGroupName);
-    	ArrayList<String> allGroups = new ArrayList<String>(groups);
-    	for (Map.Entry<String, TempMetadataID> entry : tempStore.getData().entrySet()) {
-    		String name = entry.getKey();
-    		if (StringUtil.endsWithIgnoreCase(name, partialGroupName)
-    				//don't want to match tables by anything less than the full name,
-    				//since this should be a temp or a global temp and in the latter case there's a real metadata entry
-    				//alternatively we could check to see if the name is already in the result list
-    				&& (name.length() == partialGroupName.length() || (entry.getValue().getMetadataType() != Type.TEMP && name.length() > partialGroupName.length() && name.charAt(name.length() - partialGroupName.length() - 1) == '.'))) {
-    			allGroups.add(name);
-    		}
-    	}
-    	return allGroups;
+            throws TeiidComponentException, QueryMetadataException {
+        Collection groups = super.getGroupsForPartialName(partialGroupName);
+        ArrayList<String> allGroups = new ArrayList<String>(groups);
+        for (Map.Entry<String, TempMetadataID> entry : tempStore.getData().entrySet()) {
+            String name = entry.getKey();
+            if (StringUtil.endsWithIgnoreCase(name, partialGroupName)
+                    //don't want to match tables by anything less than the full name,
+                    //since this should be a temp or a global temp and in the latter case there's a real metadata entry
+                    //alternatively we could check to see if the name is already in the result list
+                    && (name.length() == partialGroupName.length() || (entry.getValue().getMetadataType() != Type.TEMP && name.length() > partialGroupName.length() && name.charAt(name.length() - partialGroupName.length() - 1) == '.'))) {
+                allGroups.add(name);
+            }
+        }
+        return allGroups;
     }
 
     public Object getModelID(Object groupOrElementID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupOrElementID = getActualMetadataId(groupOrElementID);
+        groupOrElementID = getActualMetadataId(groupOrElementID);
 
         if(groupOrElementID instanceof TempMetadataID) {
-        	TempMetadataID tid = (TempMetadataID)groupOrElementID;
-        	Object oid = tid.getOriginalMetadataID();
+            TempMetadataID tid = (TempMetadataID)groupOrElementID;
+            Object oid = tid.getOriginalMetadataID();
             if (oid instanceof Procedure) {
-            	return actualMetadata.getModelID(oid);
+                return actualMetadata.getModelID(oid);
             }
             return TempMetadataAdapter.TEMP_MODEL;
         }
         //special handling for global temp tables
         Object id = groupOrElementID;
         if (groupOrElementID instanceof Column) {
-        	id = ((Column)id).getParent();
+            id = ((Column)id).getParent();
         }
         if (id instanceof Table) {
-        	Table t = (Table)id;
-        	if (t.getTableType() == Table.Type.TemporaryTable && t.isVirtual()) {
-        		return TempMetadataAdapter.TEMP_MODEL;
-        	}
+            Table t = (Table)id;
+            if (t.getTableType() == Table.Type.TemporaryTable && t.isVirtual()) {
+                return TempMetadataAdapter.TEMP_MODEL;
+            }
         }
- 		return this.actualMetadata.getModelID(groupOrElementID);
-	}
+         return this.actualMetadata.getModelID(groupOrElementID);
+    }
 
-	// SPECIAL: Override for temp groups
+    // SPECIAL: Override for temp groups
     public String getFullName(Object metadataID)
         throws TeiidComponentException, QueryMetadataException {
 
-		if(metadataID instanceof TempMetadataID) {
-			return ((TempMetadataID)metadataID).getID();
-		}
-		return this.actualMetadata.getFullName(metadataID);
-	}
+        if(metadataID instanceof TempMetadataID) {
+            return ((TempMetadataID)metadataID).getID();
+        }
+        return this.actualMetadata.getFullName(metadataID);
+    }
 
     @Override
     public String getName(Object metadataID) throws TeiidComponentException,
-    		QueryMetadataException {
-    	if(metadataID instanceof TempMetadataID) {
-    		TempMetadataID tid = (TempMetadataID)metadataID;
-    		return tid.getName();
-		}
-		return this.actualMetadata.getName(metadataID);
+            QueryMetadataException {
+        if(metadataID instanceof TempMetadataID) {
+            TempMetadataID tid = (TempMetadataID)metadataID;
+            return tid.getName();
+        }
+        return this.actualMetadata.getName(metadataID);
     }
 
-	// SPECIAL: Override for temp groups
+    // SPECIAL: Override for temp groups
     public List getElementIDsInGroupID(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
-		if(groupID instanceof TempMetadataID) {
-			return new ArrayList<Object>(((TempMetadataID)groupID).getElements());
-		}
-		return this.actualMetadata.getElementIDsInGroupID(groupID);
-	}
+        if(groupID instanceof TempMetadataID) {
+            return new ArrayList<Object>(((TempMetadataID)groupID).getElements());
+        }
+        return this.actualMetadata.getElementIDsInGroupID(groupID);
+    }
 
-	// SPECIAL: Override for temp groups
+    // SPECIAL: Override for temp groups
     public Object getGroupIDForElementID(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
 
-		if(elementID instanceof TempMetadataID) {
-			String elementName = ((TempMetadataID)elementID).getID();
-			String groupName = elementName.substring(0, elementName.lastIndexOf(SEPARATOR));
-			return this.tempStore.getTempGroupID(groupName);
-		}
-		return this.actualMetadata.getGroupIDForElementID(elementID);
-	}
+        if(elementID instanceof TempMetadataID) {
+            String elementName = ((TempMetadataID)elementID).getID();
+            String groupName = elementName.substring(0, elementName.lastIndexOf(SEPARATOR));
+            return this.tempStore.getTempGroupID(groupName);
+        }
+        return this.actualMetadata.getGroupIDForElementID(elementID);
+    }
 
-	// SPECIAL: Override for temp groups
-	public String getElementRuntimeTypeName(Object elementID)
-		throws TeiidComponentException, QueryMetadataException {
+    // SPECIAL: Override for temp groups
+    public String getElementRuntimeTypeName(Object elementID)
+        throws TeiidComponentException, QueryMetadataException {
 
-		if(elementID instanceof TempMetadataID) {
+        if(elementID instanceof TempMetadataID) {
             TempMetadataID tempID = (TempMetadataID)elementID;
             if (tempID.getType() != null) {
                 return DataTypeManager.getDataTypeName( tempID.getType() );
             }
             throw new AssertionError("No type set for element " + elementID); //$NON-NLS-1$
         }
-		return this.actualMetadata.getElementRuntimeTypeName(elementID);
-	}
+        return this.actualMetadata.getElementRuntimeTypeName(elementID);
+    }
 
     public String getDefaultValue(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
@@ -262,7 +262,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             return null;
         }
         return this.actualMetadata.getDefaultValue(elementID);
-	}
+    }
 
     public Object getMaximumValue(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
@@ -314,10 +314,10 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
 
         if (this.queryNodes != null) {
-        	QueryNode node = this.queryNodes.get(groupID);
-        	if (node != null) {
-        		return node;
-        	}
+            QueryNode node = this.queryNodes.get(groupID);
+            if (node != null) {
+                return node;
+            }
         }
 
         if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {
@@ -328,18 +328,18 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             }
             throw new QueryMetadataException(QueryPlugin.Event.TEIID31265, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31265, tid.getName()));
         }
-   		return this.actualMetadata.getVirtualPlan(groupID);
-	}
+           return this.actualMetadata.getVirtualPlan(groupID);
+    }
 
-	// SPECIAL: Override for temp groups
+    // SPECIAL: Override for temp groups
     public boolean isVirtualGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 
-		if(groupID instanceof TempMetadataID) {
-			return ((TempMetadataID)groupID).isVirtual();
-		}
-		return this.actualMetadata.isVirtualGroup(groupID);
-	}
+        if(groupID instanceof TempMetadataID) {
+            return ((TempMetadataID)groupID).isVirtual();
+        }
+        return this.actualMetadata.isVirtualGroup(groupID);
+    }
 
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#hasMaterialization(java.lang.Object)
@@ -371,7 +371,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         if (this.materializationTables != null) {
             Object result = this.materializationTables.get(groupID);
             if (result != null) {
-            	return result;
+                return result;
             }
         }
 
@@ -406,9 +406,9 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.isVirtualModel(modelID);
     }
 
-	// --------------------- Implement OptimizerMetadata -------------------
+    // --------------------- Implement OptimizerMetadata -------------------
 
-	public boolean elementSupports(Object elementID, int supportConstant)
+    public boolean elementSupports(Object elementID, int supportConstant)
         throws TeiidComponentException, QueryMetadataException {
 
         if (elementID instanceof TempMetadataID) {
@@ -420,16 +420,16 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
                 case SupportConstants.Element.SEARCHABLE_EQUALITY:return true;
                 case SupportConstants.Element.SELECT:            return true;
                 case SupportConstants.Element.NULL: {
-                	if (id.isNotNull()) {
-                		return false;
-                	}
-                	if (id.isTempTable()) {
-                		return true;
-                	}
-                	break;
+                    if (id.isNotNull()) {
+                        return false;
+                    }
+                    if (id.isTempTable()) {
+                        return true;
+                    }
+                    break;
                 }
-                case SupportConstants.Element.AUTO_INCREMENT:	 return id.isAutoIncrement();
-                case SupportConstants.Element.UPDATE:			 return id.isTempTable() || id.isUpdatable();
+                case SupportConstants.Element.AUTO_INCREMENT:     return id.isAutoIncrement();
+                case SupportConstants.Element.UPDATE:             return id.isTempTable() || id.isUpdatable();
 
             }
 
@@ -446,7 +446,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
 
         return this.actualMetadata.elementSupports(elementID, supportConstant);
-	}
+    }
 
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getIndexesInGroup(java.lang.Object)
@@ -454,14 +454,14 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Collection getIndexesInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
-        	List<TempMetadataID> result = ((TempMetadataID)groupID).getIndexes();
-        	if (result == null) {
-        		return Collections.emptyList();
-        	}
-        	return result;
+            List<TempMetadataID> result = ((TempMetadataID)groupID).getIndexes();
+            if (result == null) {
+                return Collections.emptyList();
+            }
+            return result;
         }
         return this.actualMetadata.getIndexesInGroup(groupID);
     }
@@ -469,17 +469,17 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Collection getUniqueKeysInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
-        	LinkedList<List<TempMetadataID>> result = new LinkedList<List<TempMetadataID>>();
-        	TempMetadataID id = (TempMetadataID)groupID;
-        	if (id.getPrimaryKey() != null) {
-        		result.add(id.getPrimaryKey());
-        	}
-        	if (id.getUniqueKeys() != null) {
-        		result.addAll(id.getUniqueKeys());
-        	}
+            LinkedList<List<TempMetadataID>> result = new LinkedList<List<TempMetadataID>>();
+            TempMetadataID id = (TempMetadataID)groupID;
+            if (id.getPrimaryKey() != null) {
+                result.add(id.getPrimaryKey());
+            }
+            if (id.getUniqueKeys() != null) {
+                result.addAll(id.getUniqueKeys());
+            }
             return result;
         }
         return this.actualMetadata.getUniqueKeysInGroup(groupID);
@@ -488,7 +488,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Collection getForeignKeysInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
             return Collections.EMPTY_LIST;
@@ -507,16 +507,16 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public List getElementIDsInKey(Object keyID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	if (keyID instanceof List) {
-    		return (List)keyID;
-    	}
+        if (keyID instanceof List) {
+            return (List)keyID;
+        }
 
-    	if (keyID instanceof TempMetadataID) {
-    		TempMetadataID id = (TempMetadataID)keyID;
-    		if (id.getMetadataType() == Type.INDEX) {
-    			return id.getElements();
-    		}
-    	}
+        if (keyID instanceof TempMetadataID) {
+            TempMetadataID id = (TempMetadataID)keyID;
+            if (id.getMetadataType() == Type.INDEX) {
+                return id.getElements();
+            }
+        }
 
         return this.actualMetadata.getElementIDsInKey(keyID);
     }
@@ -524,9 +524,9 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public boolean groupSupports(Object groupID, int groupConstant)
         throws TeiidComponentException, QueryMetadataException {
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
-    	if(groupID instanceof TempMetadataID){
+        if(groupID instanceof TempMetadataID){
             return true;
         }
 
@@ -542,13 +542,13 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getVirtualDatabaseName();
     }
 
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getAccessPatternsInGroup(Object)
-	 */
-	public Collection getAccessPatternsInGroup(Object groupID)
-		throws TeiidComponentException, QueryMetadataException {
+    /**
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getAccessPatternsInGroup(Object)
+     */
+    public Collection getAccessPatternsInGroup(Object groupID)
+        throws TeiidComponentException, QueryMetadataException {
 
-		groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)groupID;
@@ -556,13 +556,13 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             return id.getAccessPatterns();
         }
         return this.actualMetadata.getAccessPatternsInGroup(groupID);
-	}
+    }
 
-	/**
-	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInAccessPattern(Object)
-	 */
-	public List getElementIDsInAccessPattern(Object accessPattern)
-		throws TeiidComponentException, QueryMetadataException {
+    /**
+     * @see org.teiid.query.metadata.QueryMetadataInterface#getElementIDsInAccessPattern(Object)
+     */
+    public List getElementIDsInAccessPattern(Object accessPattern)
+        throws TeiidComponentException, QueryMetadataException {
 
         if (accessPattern instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)accessPattern;
@@ -573,24 +573,24 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         }
 
         return this.actualMetadata.getElementIDsInAccessPattern(accessPattern);
-	}
+    }
 
     public float getCardinality(Object groupID)
-    	throws TeiidComponentException, QueryMetadataException{
+        throws TeiidComponentException, QueryMetadataException{
 
-    	groupID = getActualMetadataId(groupID);
+        groupID = getActualMetadataId(groupID);
 
         if(groupID instanceof TempMetadataID) {
            return ((TempMetadataID)groupID).getCardinality();
         }
         if (this.isSession() && groupID instanceof Table) {
-        	Table t = (Table)groupID;
-        	if (t.getTableType() == Table.Type.TemporaryTable && t.isVirtual()) {
-        		TempMetadataID id = this.tempStore.getTempGroupID(t.getName());
-        		if (id != null) {
-        			return id.getCardinality();
-        		}
-        	}
+            Table t = (Table)groupID;
+            if (t.getTableType() == Table.Type.TemporaryTable && t.isVirtual()) {
+                TempMetadataID id = this.tempStore.getTempGroupID(t.getName());
+                if (id != null) {
+                    return id.getCardinality();
+                }
+            }
         }
 
         return this.actualMetadata.getCardinality(groupID);
@@ -599,11 +599,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Properties getExtensionProperties(Object metadataID)
         throws TeiidComponentException, QueryMetadataException {
 
-    	metadataID = getActualMetadataId(metadataID);
+        metadataID = getActualMetadataId(metadataID);
 
-    	if (metadataID instanceof TempMetadataID) {
-    		return TransformationMetadata.EMPTY_PROPS;
-    	}
+        if (metadataID instanceof TempMetadataID) {
+            return TransformationMetadata.EMPTY_PROPS;
+        }
 
         return actualMetadata.getExtensionProperties(metadataID);
     }
@@ -627,7 +627,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 
     public int getPosition(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
-        	return ((TempMetadataID)elementID).getPosition();
+            return ((TempMetadataID)elementID).getPosition();
         }
         return actualMetadata.getPosition(elementID);
     }
@@ -671,7 +671,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
      * @since 4.2
      */
     public String getNativeType(Object elementID) throws TeiidComponentException,
-    											QueryMetadataException {
+                                                QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)elementID;
             elementID = id.getOriginalMetadataID();
@@ -683,122 +683,122 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return actualMetadata.getNativeType(elementID);
     }
 
-	public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public boolean isProcedure(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof TempMetadataID) {
             Object oid = ((TempMetadataID) elementID).getOriginalMetadataID();
             if (oid != null) {
-            	return actualMetadata.isProcedure(oid);
+                return actualMetadata.isProcedure(oid);
             }
-        	return false;
+            return false;
         }
 
         return actualMetadata.isProcedure(elementID);
-	}
+    }
 
     public boolean isTemporaryTable(Object groupID) throws TeiidComponentException, QueryMetadataException {
         if(groupID instanceof TempMetadataID) {
             return ((TempMetadataID)groupID).isTempTable();
         }
         if (groupID instanceof Table) {
-        	Table t = (Table)groupID;
-        	if (t.getTableType() == Table.Type.TemporaryTable) {
-        		return true;
-        	}
+            Table t = (Table)groupID;
+            if (t.getTableType() == Table.Type.TemporaryTable) {
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public Object addToMetadataCache(Object metadataID, String key, Object value)
-    		throws TeiidComponentException, QueryMetadataException {
-    	if (metadataID instanceof TempMetadataID) {
-    		TempMetadataID tid = (TempMetadataID)metadataID;
-    		return tid.setProperty(key, value);
-    	}
+            throws TeiidComponentException, QueryMetadataException {
+        if (metadataID instanceof TempMetadataID) {
+            TempMetadataID tid = (TempMetadataID)metadataID;
+            return tid.setProperty(key, value);
+        }
 
-    	return this.actualMetadata.addToMetadataCache(metadataID, key, value);
+        return this.actualMetadata.addToMetadataCache(metadataID, key, value);
     }
 
     @Override
     public Object getFromMetadataCache(Object metadataID, String key)
-    		throws TeiidComponentException, QueryMetadataException {
-    	if (metadataID instanceof TempMetadataID) {
-    		TempMetadataID tid = (TempMetadataID)metadataID;
-    		return tid.getProperty(key);
-    	}
+            throws TeiidComponentException, QueryMetadataException {
+        if (metadataID instanceof TempMetadataID) {
+            TempMetadataID tid = (TempMetadataID)metadataID;
+            return tid.getProperty(key);
+        }
 
-    	return this.actualMetadata.getFromMetadataCache(metadataID, key);
+        return this.actualMetadata.getFromMetadataCache(metadataID, key);
     }
 
     @Override
     public boolean isScalarGroup(Object groupID)
-    		throws TeiidComponentException, QueryMetadataException {
-    	if (groupID instanceof TempMetadataID) {
-    		TempMetadataID tid = (TempMetadataID)groupID;
-    		return tid.isScalarGroup();
-    	}
+            throws TeiidComponentException, QueryMetadataException {
+        if (groupID instanceof TempMetadataID) {
+            TempMetadataID tid = (TempMetadataID)groupID;
+            return tid.isScalarGroup();
+        }
 
-    	return this.actualMetadata.isScalarGroup(groupID);
+        return this.actualMetadata.isScalarGroup(groupID);
     }
 
     @Override
     public Object getPrimaryKey(Object metadataID) {
 
-    	metadataID = getActualMetadataId(metadataID);
+        metadataID = getActualMetadataId(metadataID);
 
-    	if (metadataID instanceof TempMetadataID) {
-    		return ((TempMetadataID)metadataID).getPrimaryKey();
-    	}
-    	return this.actualMetadata.getPrimaryKey(metadataID);
+        if (metadataID instanceof TempMetadataID) {
+            return ((TempMetadataID)metadataID).getPrimaryKey();
+        }
+        return this.actualMetadata.getPrimaryKey(metadataID);
     }
 
     @Override
     public boolean isMultiSource(Object modelId) throws QueryMetadataException,
-    		TeiidComponentException {
-    	if (modelId instanceof TempMetadataID) {
-    		return false;
-    	}
-    	return this.actualMetadata.isMultiSource(modelId);
+            TeiidComponentException {
+        if (modelId instanceof TempMetadataID) {
+            return false;
+        }
+        return this.actualMetadata.isMultiSource(modelId);
     }
 
     @Override
     public boolean isMultiSourceElement(Object elementId)
-    		throws QueryMetadataException, TeiidComponentException {
-    	if (elementId instanceof TempMetadataID) {
-    		return false;
-    	}
-    	return this.actualMetadata.isMultiSourceElement(elementId);
+            throws QueryMetadataException, TeiidComponentException {
+        if (elementId instanceof TempMetadataID) {
+            return false;
+        }
+        return this.actualMetadata.isMultiSourceElement(elementId);
     }
 
     @Override
     public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
-    	if (metadataID instanceof TempMetadataID) {
-    		return ((TempMetadataID)metadataID).getTableData().getFunctionBasedExpressions();
-    	}
-    	return super.getFunctionBasedExpressions(metadataID);
+        if (metadataID instanceof TempMetadataID) {
+            return ((TempMetadataID)metadataID).getTableData().getFunctionBasedExpressions();
+        }
+        return super.getFunctionBasedExpressions(metadataID);
     }
 
     public static Object getActualMetadataId(Object id) {
-    	if (!(id instanceof TempMetadataID)) {
-    		return id;
-    	}
-    	TempMetadataID tid = (TempMetadataID)id;
-    	Object oid = tid.getOriginalMetadataID();
+        if (!(id instanceof TempMetadataID)) {
+            return id;
+        }
+        TempMetadataID tid = (TempMetadataID)id;
+        Object oid = tid.getOriginalMetadataID();
         if (oid != null && tid.getTableData().getModel() != null) {
-        	return tid.getOriginalMetadataID();
+            return tid.getOriginalMetadataID();
         }
         return tid;
     }
 
     @Override
     public String getExtensionProperty(Object metadataID, String key,
-    		boolean checkUnqualified) {
-    	metadataID = getActualMetadataId(metadataID);
+            boolean checkUnqualified) {
+        metadataID = getActualMetadataId(metadataID);
 
-    	if (metadataID instanceof TempMetadataID) {
-    		return null;
-    	}
-    	return super.getExtensionProperty(metadataID, key, checkUnqualified);
+        if (metadataID instanceof TempMetadataID) {
+            return null;
+        }
+        return super.getExtensionProperty(metadataID, key, checkUnqualified);
     }
 
 }

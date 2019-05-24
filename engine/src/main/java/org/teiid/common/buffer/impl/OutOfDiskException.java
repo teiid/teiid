@@ -22,10 +22,10 @@ import java.io.IOException;
 
 public class OutOfDiskException extends IOException {
 
-	private static final long serialVersionUID = -1332091322315668612L;
+    private static final long serialVersionUID = -1332091322315668612L;
 
-	public OutOfDiskException(String message) {
-		super(message);
-	}
+    public OutOfDiskException(String message) {
+        super(message);
+    }
 
 }

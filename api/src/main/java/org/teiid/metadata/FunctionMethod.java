@@ -52,22 +52,22 @@ import org.teiid.core.util.HashCodeUtil;
  */
 public class FunctionMethod extends AbstractMetadataRecord {
 
-	public static final String SYSTEM_NAME = AbstractMetadataRecord.RELATIONAL_URI + "system-name"; //$NON-NLS-1$
+    public static final String SYSTEM_NAME = AbstractMetadataRecord.RELATIONAL_URI + "system-name"; //$NON-NLS-1$
 
-	private static final long serialVersionUID = -8039086494296455152L;
+    private static final long serialVersionUID = -8039086494296455152L;
 
-	private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$
-	private static final String ALLOWED = "ALLOWED"; //$NON-NLS-1$
-	private static final String REQUIRED = "REQUIRED"; //$NON-NLS-1$
+    private static final String NOT_ALLOWED = "NOT_ALLOWED"; //$NON-NLS-1$
+    private static final String ALLOWED = "ALLOWED"; //$NON-NLS-1$
+    private static final String REQUIRED = "REQUIRED"; //$NON-NLS-1$
 
-	/**
-	 * Function Pushdown
-	 * CAN_PUSHDOWN = If the source supports the function, then it will be pushed down. Must supply the Java impl
-	 * CANNOT_PUSHDOWN = It will not be pushed down, evaluated in Teiid. Must supply the Java impl
-	 * MUST_PUSHDOWN = Function must be pushed to source, no need to supply Java impl.
-	 * SYNTHETIC = system functions that will be rewritten
-	 */
-	public enum PushDown {CAN_PUSHDOWN, CANNOT_PUSHDOWN, MUST_PUSHDOWN, SYNTHETIC};
+    /**
+     * Function Pushdown
+     * CAN_PUSHDOWN = If the source supports the function, then it will be pushed down. Must supply the Java impl
+     * CANNOT_PUSHDOWN = It will not be pushed down, evaluated in Teiid. Must supply the Java impl
+     * MUST_PUSHDOWN = Function must be pushed to source, no need to supply Java impl.
+     * SYNTHETIC = system functions that will be rewritten
+     */
+    public enum PushDown {CAN_PUSHDOWN, CANNOT_PUSHDOWN, MUST_PUSHDOWN, SYNTHETIC};
 
     /**
      * DETERMINISTIC - normal deterministic functions
@@ -85,13 +85,13 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * processing time.
      */
     public enum Determinism{
-    	NONDETERMINISTIC,
-    	INSTRUCTION_DETERMINISTIC, //specifically for the now function which is not fully non-deterministic TEIID-5290
-    	COMMAND_DETERMINISTIC,
-    	SESSION_DETERMINISTIC,
-    	USER_DETERMINISTIC,
-    	VDB_DETERMINISTIC,
-    	DETERMINISTIC;
+        NONDETERMINISTIC,
+        INSTRUCTION_DETERMINISTIC, //specifically for the now function which is not fully non-deterministic TEIID-5290
+        COMMAND_DETERMINISTIC,
+        SESSION_DETERMINISTIC,
+        USER_DETERMINISTIC,
+        VDB_DETERMINISTIC,
+        DETERMINISTIC;
     }
 
     private String description;
@@ -113,7 +113,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
 
     public FunctionMethod(String name, String description, String category, FunctionParameter[] inputParams, FunctionParameter outputParam) {
-    	this(name, description, category, PushDown.MUST_PUSHDOWN, null, null, inputParams!=null?Arrays.asList(inputParams):null, outputParam, true, Determinism.DETERMINISTIC);
+        this(name, description, category, PushDown.MUST_PUSHDOWN, null, null, inputParams!=null?Arrays.asList(inputParams):null, outputParam, true, Determinism.DETERMINISTIC);
     }
 
     public FunctionMethod(String name,
@@ -194,17 +194,17 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
 
     public void setPushDown(String pushdown) {
-    	if (pushdown != null) {
-			if (pushdown.equals(REQUIRED)) {
-				this.pushdown = PushDown.MUST_PUSHDOWN;
-			} else if (pushdown.equals(ALLOWED)) {
-				this.pushdown = PushDown.CAN_PUSHDOWN;
-			} else if (pushdown.equals(NOT_ALLOWED)) {
-				this.pushdown = PushDown.CANNOT_PUSHDOWN;
-			}
-		} else {
-			this.pushdown = PushDown.CAN_PUSHDOWN;
-		}
+        if (pushdown != null) {
+            if (pushdown.equals(REQUIRED)) {
+                this.pushdown = PushDown.MUST_PUSHDOWN;
+            } else if (pushdown.equals(ALLOWED)) {
+                this.pushdown = PushDown.CAN_PUSHDOWN;
+            } else if (pushdown.equals(NOT_ALLOWED)) {
+                this.pushdown = PushDown.CANNOT_PUSHDOWN;
+            }
+        } else {
+            this.pushdown = PushDown.CAN_PUSHDOWN;
+        }
     }
 
     /**
@@ -286,10 +286,10 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @param param Output Parameter
      */
     public void setOutputParameter(FunctionParameter param) {
-    	if (param != null) {
-    		param.setName(FunctionParameter.OUTPUT_PARAMETER_NAME);
-    		param.setParent(this);
-    	}
+        if (param != null) {
+            param.setName(FunctionParameter.OUTPUT_PARAMETER_NAME);
+            param.setParent(this);
+        }
         this.outputParameter = param;
     }
 
@@ -329,7 +329,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
             }
 
             if (!EquivalenceUtil.areEqual(this.parent, other.getParent())) {
-            	return false;
+                return false;
             }
 
             if(! other.getName().equalsIgnoreCase(this.getName()) ) {
@@ -414,7 +414,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
 
     public void setDeterministicBoolean(boolean deterministic) {
-    	this.determinism = deterministic ? Determinism.DETERMINISTIC : Determinism.NONDETERMINISTIC;
+        this.determinism = deterministic ? Determinism.DETERMINISTIC : Determinism.NONDETERMINISTIC;
     }
 
     public void setDeterminism(Determinism determinism) {
@@ -422,10 +422,10 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
 
     public boolean isVarArgs() {
-    	if (this.inParameters != null && this.inParameters.size() > 0) {
-    		return inParameters.get(inParameters.size() - 1).isVarArg();
-    	}
-    	return false;
+        if (this.inParameters != null && this.inParameters.size() > 0) {
+            return inParameters.get(inParameters.size() - 1).isVarArg();
+        }
+        return false;
     }
 
     /**
@@ -434,20 +434,20 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @return true if the value was successfully set.
      */
     public boolean setVarArgs(boolean varargs) {
-    	if (this.inParameters != null && this.inParameters.size() > 0) {
-    		inParameters.get(inParameters.size() - 1).setVarArg(varargs);
-    		return true;
-    	}
-    	return false;
+        if (this.inParameters != null && this.inParameters.size() > 0) {
+            inParameters.get(inParameters.size() - 1).setVarArg(varargs);
+            return true;
+        }
+        return false;
     }
 
     public void setParent(Schema parent) {
-		this.parent = parent;
-	}
+        this.parent = parent;
+    }
 
     @Override
     public Schema getParent() {
-    	return parent;
+        return parent;
     }
 
     /**
@@ -456,70 +456,70 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @return
      */
     public AggregateAttributes getAggregateAttributes() {
-		return aggregateAttributes;
-	}
+        return aggregateAttributes;
+    }
 
     public void setAggregateAttributes(AggregateAttributes aggregateAttributes) {
-		this.aggregateAttributes = aggregateAttributes;
-	}
+        this.aggregateAttributes = aggregateAttributes;
+    }
 
-	public static FunctionMethod createFunctionMethod(String name, String description, String category,
-			String returnType, String... paramTypes) {
-		FunctionParameter[] params = new FunctionParameter[paramTypes.length];
-		for (int i = 0; i < paramTypes.length; i++) {
-			params[i] = new FunctionParameter("param" + (i+1), paramTypes[i]); //$NON-NLS-1$
-		}
-		FunctionMethod method = new FunctionMethod(name, description, category, params, new FunctionParameter("result", returnType)); //$NON-NLS-1$
-		method.setNameInSource(name);
-		return method;
-	}
+    public static FunctionMethod createFunctionMethod(String name, String description, String category,
+            String returnType, String... paramTypes) {
+        FunctionParameter[] params = new FunctionParameter[paramTypes.length];
+        for (int i = 0; i < paramTypes.length; i++) {
+            params[i] = new FunctionParameter("param" + (i+1), paramTypes[i]); //$NON-NLS-1$
+        }
+        FunctionMethod method = new FunctionMethod(name, description, category, params, new FunctionParameter("result", returnType)); //$NON-NLS-1$
+        method.setNameInSource(name);
+        return method;
+    }
 
-	public static void convertExtensionMetadata(Procedure procedureRecord,
-			FunctionMethod function) {
-		String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$
-		boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", true)); //$NON-NLS-1$
-		String varargs = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true); //$NON-NLS-1$
-		String javaClass = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-class", true); //$NON-NLS-1$
-		String javaMethod = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-method", true); //$NON-NLS-1$
-		if (function.getInvocationClass() == null) {
-			function.setInvocationClass(javaClass);
-		}
-		if (function.getInvocationMethod() == null) {
-			function.setInvocationMethod(javaMethod);
-		}
-		if (!procedureRecord.getParameters().isEmpty()) {
-			function.setProperties(procedureRecord.getProperties());
-		}
-		boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
-		if (deterministic != null) {
-			function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
-		}
-		function.setNullOnNull(nullOnNull);
-		if (varargs != null && !function.getInputParameters().isEmpty()) {
-			function.getInputParameters().get(function.getInputParameterCount() - 1).setVarArg(Boolean.valueOf(varargs));
-		}
-		if (aggregate) {
-			boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", true)); //$NON-NLS-1$
-			boolean allowsOrderBy = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-orderby", true)); //$NON-NLS-1$
-			boolean usesDistinctRows = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "uses-distinct-rows", true)); //$NON-NLS-1$
-			boolean allowsDistinct = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-distinct", true)); //$NON-NLS-1$
-			boolean decomposable = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "decomposable", true)); //$NON-NLS-1$
-			AggregateAttributes aa = new AggregateAttributes();
-			aa.setAnalytic(analytic);
-			aa.setAllowsOrderBy(allowsOrderBy);
-			aa.setUsesDistinctRows(usesDistinctRows);
-			aa.setAllowsDistinct(allowsDistinct);
-			aa.setDecomposable(decomposable);
-			function.setAggregateAttributes(aa);
-		}
-	}
+    public static void convertExtensionMetadata(Procedure procedureRecord,
+            FunctionMethod function) {
+        String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$
+        boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", true)); //$NON-NLS-1$
+        String varargs = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true); //$NON-NLS-1$
+        String javaClass = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-class", true); //$NON-NLS-1$
+        String javaMethod = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-method", true); //$NON-NLS-1$
+        if (function.getInvocationClass() == null) {
+            function.setInvocationClass(javaClass);
+        }
+        if (function.getInvocationMethod() == null) {
+            function.setInvocationMethod(javaMethod);
+        }
+        if (!procedureRecord.getParameters().isEmpty()) {
+            function.setProperties(procedureRecord.getProperties());
+        }
+        boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
+        if (deterministic != null) {
+            function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
+        }
+        function.setNullOnNull(nullOnNull);
+        if (varargs != null && !function.getInputParameters().isEmpty()) {
+            function.getInputParameters().get(function.getInputParameterCount() - 1).setVarArg(Boolean.valueOf(varargs));
+        }
+        if (aggregate) {
+            boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", true)); //$NON-NLS-1$
+            boolean allowsOrderBy = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-orderby", true)); //$NON-NLS-1$
+            boolean usesDistinctRows = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "uses-distinct-rows", true)); //$NON-NLS-1$
+            boolean allowsDistinct = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-distinct", true)); //$NON-NLS-1$
+            boolean decomposable = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "decomposable", true)); //$NON-NLS-1$
+            AggregateAttributes aa = new AggregateAttributes();
+            aa.setAnalytic(analytic);
+            aa.setAllowsOrderBy(allowsOrderBy);
+            aa.setUsesDistinctRows(usesDistinctRows);
+            aa.setAllowsDistinct(allowsDistinct);
+            aa.setDecomposable(decomposable);
+            function.setAggregateAttributes(aa);
+        }
+    }
 
-	public Method getMethod() {
-		return method;
-	}
+    public Method getMethod() {
+        return method;
+    }
 
-	public void setMethod(Method method) {
-		this.method = method;
-	}
+    public void setMethod(Method method) {
+        this.method = method;
+    }
 
 }

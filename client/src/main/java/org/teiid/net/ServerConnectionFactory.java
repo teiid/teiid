@@ -32,5 +32,5 @@ public interface ServerConnectionFactory {
      * @throws CommunicationException If an error occurs in connecting, typically due to
      * problems with the connection properties (bad user name, bad password, bad host name, etc)
      */
-	ServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
+    ServerConnection getConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
 }

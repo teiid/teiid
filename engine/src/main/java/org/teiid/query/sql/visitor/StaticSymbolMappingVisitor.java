@@ -33,7 +33,7 @@ import org.teiid.query.sql.symbol.Symbol;
  */
 public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
 
-	private Map symbolMap; // Map between virtual elements/groups and their physical elements
+    private Map symbolMap; // Map between virtual elements/groups and their physical elements
 
     /**
      * <p> This constructor initialises this object by setting the symbolMap and

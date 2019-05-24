@@ -20,10 +20,10 @@ package org.teiid.adminapi;
 
 public interface VDBImport {
 
-	String getName();
+    String getName();
 
-	String getVersion();
+    String getVersion();
 
-	boolean isImportDataPolicies();
+    boolean isImportDataPolicies();
 
 }

@@ -104,31 +104,31 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
 
     @Override
     public void open() throws TeiidComponentException,
-    		TeiidProcessingException {
-    	super.open();
-    	shareVariableContext(this, this.getProcessorPlan().getContext());
+            TeiidProcessingException {
+        super.open();
+        shareVariableContext(this, this.getProcessorPlan().getContext());
     }
 
-	public static void shareVariableContext(RelationalNode node, CommandContext context) {
-		// we need to look up through our parents and share this context
-    	RelationalNode parent = node.getParent();
-    	int projectCount = 0;
-    	while (parent != null && projectCount < 2) {
-    		parent.setContext(context);
-    		if (parent instanceof ProjectNode) {
-    			projectCount++;
-    		}
-    		parent = parent.getParent();
-    	}
-	}
+    public static void shareVariableContext(RelationalNode node, CommandContext context) {
+        // we need to look up through our parents and share this context
+        RelationalNode parent = node.getParent();
+        int projectCount = 0;
+        while (parent != null && projectCount < 2) {
+            parent.setContext(context);
+            if (parent instanceof ProjectNode) {
+                projectCount++;
+            }
+            parent = parent.getParent();
+        }
+    }
 
-	@Override
-	public Boolean requiresTransaction(boolean transactionalReads) {
-	    Boolean requires = super.requiresTransaction(transactionalReads);
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+        Boolean requires = super.requiresTransaction(transactionalReads);
         if (requires == null || requires) {
             return true;
         }
         return false;
-	}
+    }
 
 }

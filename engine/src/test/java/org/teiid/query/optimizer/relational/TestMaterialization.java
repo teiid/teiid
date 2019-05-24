@@ -166,8 +166,8 @@ public class TestMaterialization {
 
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
-    	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
+        cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP2.x FROM #MAT_MATVIEW.VGROUP2"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();
@@ -185,7 +185,7 @@ public class TestMaterialization {
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        cc.setGlobalTableStore(gts);
         RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP3.x, #MAT_MATVIEW.VGROUP3.y FROM #MAT_MATVIEW.VGROUP3 WHERE #MAT_MATVIEW.VGROUP3.x = 'foo'"}, plan);
@@ -204,7 +204,7 @@ public class TestMaterialization {
         Command command = helpGetCommand(userSql, metadata);
         CommandContext cc = new CommandContext();
         GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
-    	cc.setGlobalTableStore(gts);
+        cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP4.x FROM #MAT_MATVIEW.VGROUP4"}, plan);
         Collection<Annotation> annotations = analysis.getAnnotations();

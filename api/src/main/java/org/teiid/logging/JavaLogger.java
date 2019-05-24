@@ -30,65 +30,65 @@ import org.teiid.core.util.StringUtil;
  */
 public class JavaLogger implements org.teiid.logging.Logger {
 
-	private static ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
+    private static ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 
-	@Override
-	public boolean isEnabled(String context, int msgLevel) {
-		Logger logger = getLogger(context);
+    @Override
+    public boolean isEnabled(String context, int msgLevel) {
+        Logger logger = getLogger(context);
 
-    	Level javaLevel = convertLevel(msgLevel);
-    	return logger.isLoggable(javaLevel);
-	}
+        Level javaLevel = convertLevel(msgLevel);
+        return logger.isLoggable(javaLevel);
+    }
 
-	private Logger getLogger(String context) {
-		Logger logger = loggers.get(context);
-		if (logger == null) {
-			logger = Logger.getLogger(context);
-			loggers.put(context, logger);
-		}
-		return logger;
-	}
+    private Logger getLogger(String context) {
+        Logger logger = loggers.get(context);
+        if (logger == null) {
+            logger = Logger.getLogger(context);
+            loggers.put(context, logger);
+        }
+        return logger;
+    }
 
     public void log(int level, String context, Object... msg) {
-    	log(level, context, null, msg);
+        log(level, context, null, msg);
     }
 
     public void log(int level, String context, Throwable t, Object... msg) {
-    	Logger logger = getLogger(context);
+        Logger logger = getLogger(context);
 
-    	Level javaLevel = convertLevel(level);
+        Level javaLevel = convertLevel(level);
 
-		if (msg.length == 0) {
-			logger.log(javaLevel, null, t);
-		}
-		else if (msg.length == 1 && !(msg[0] instanceof String)) {
-    		String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
-    		LogRecord record = new LogRecord(javaLevel, msgStr);
-    		record.setParameters(msg);
-    		record.setThrown(t);
-    		record.setLoggerName(context);
-    		logger.log(record);
-		}
-    	else {
-			logger.log(javaLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
-    	}
+        if (msg.length == 0) {
+            logger.log(javaLevel, null, t);
+        }
+        else if (msg.length == 1 && !(msg[0] instanceof String)) {
+            String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
+            LogRecord record = new LogRecord(javaLevel, msgStr);
+            record.setParameters(msg);
+            record.setThrown(t);
+            record.setLoggerName(context);
+            logger.log(record);
+        }
+        else {
+            logger.log(javaLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
+        }
     }
 
     public Level convertLevel(int level) {
-    	switch (level) {
-    	case MessageLevel.CRITICAL:
-    	case MessageLevel.ERROR:
-    		return Level.SEVERE;
-    	case MessageLevel.WARNING:
-    		return Level.WARNING;
-    	case MessageLevel.INFO:
-    		return Level.FINE;
-    	case MessageLevel.DETAIL:
-    		return Level.FINER;
-    	case MessageLevel.TRACE:
-    		return Level.FINEST;
-    	}
-    	return Level.ALL;
+        switch (level) {
+        case MessageLevel.CRITICAL:
+        case MessageLevel.ERROR:
+            return Level.SEVERE;
+        case MessageLevel.WARNING:
+            return Level.WARNING;
+        case MessageLevel.INFO:
+            return Level.FINE;
+        case MessageLevel.DETAIL:
+            return Level.FINER;
+        case MessageLevel.TRACE:
+            return Level.FINEST;
+        }
+        return Level.ALL;
     }
 
     public void shutdown() {

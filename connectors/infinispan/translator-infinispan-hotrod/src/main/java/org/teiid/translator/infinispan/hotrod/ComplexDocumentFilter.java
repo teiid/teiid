@@ -83,12 +83,12 @@ public class ComplexDocumentFilter implements DocumentFilter {
             }
 
             for (Column column : childTable.getMetadataObject().getColumns()) {
-            	if (ProtobufMetadataProcessor.isPseudo(column)) {
-            		Column parentColumn = IckleConversionVisitor.normalizePseudoColumn(column, this.metadata);
-            		tuple.add(i++, parentProperties.get(MarshallerBuilder.getDocumentAttributeName(parentColumn, false, metadata)));
-            	} else {
-            		tuple.add(i++, childProperties.get(MarshallerBuilder.getDocumentAttributeName(column, true, metadata)));
-            	}
+                if (ProtobufMetadataProcessor.isPseudo(column)) {
+                    Column parentColumn = IckleConversionVisitor.normalizePseudoColumn(column, this.metadata);
+                    tuple.add(i++, parentProperties.get(MarshallerBuilder.getDocumentAttributeName(parentColumn, false, metadata)));
+                } else {
+                    tuple.add(i++, childProperties.get(MarshallerBuilder.getDocumentAttributeName(column, true, metadata)));
+                }
             }
             org.teiid.query.util.CommandContext cc = new org.teiid.query.util.CommandContext();
             final Evaluator evaluator = new Evaluator(elementMap, null, cc);

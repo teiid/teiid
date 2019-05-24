@@ -114,9 +114,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
                            GroupSymbol group) throws TeiidComponentException,
                                              QueryMetadataException, QueryResolverException;
 
-	public static void addChanging(TempMetadataStore discoveredMetadata,
-			GroupContext externalGroups, List<ElementSymbol> elements) {
-		List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
+    public static void addChanging(TempMetadataStore discoveredMetadata,
+            GroupContext externalGroups, List<ElementSymbol> elements) {
+        List<ElementSymbol> changingElements = new ArrayList<ElementSymbol>(elements.size());
         for(int i=0; i<elements.size(); i++) {
             ElementSymbol virtualElmnt = elements.get(i);
             ElementSymbol changeElement = virtualElmnt.clone();
@@ -125,7 +125,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         }
 
         addScalarGroup(ProcedureReservedWords.CHANGING, discoveredMetadata, externalGroups, changingElements, false);
-	}
+    }
 
     /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.TempMetadataAdapter, boolean)
@@ -142,65 +142,65 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         //getPlan(metadata, procCommand);
     }
 
-	private String getPlan(QueryMetadataInterface metadata, ProcedureContainer procCommand)
-			throws TeiidComponentException, QueryMetadataException,
-			QueryResolverException {
-		if(!procCommand.getGroup().isTempTable() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
+    private String getPlan(QueryMetadataInterface metadata, ProcedureContainer procCommand)
+            throws TeiidComponentException, QueryMetadataException,
+            QueryResolverException {
+        if(!procCommand.getGroup().isTempTable() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
             String plan = getPlan(metadata, procCommand.getGroup());
             if (plan == null && !metadata.isProcedure(procCommand.getGroup().getMetadataID())) {
-            	int type = procCommand.getType();
-            	//force validation
-            	getUpdateInfo(procCommand.getGroup(), metadata, type, true);
+                int type = procCommand.getType();
+                //force validation
+                getUpdateInfo(procCommand.getGroup(), metadata, type, true);
             }
             return plan;
         }
-		return null;
-	}
+        return null;
+    }
 
-	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type, boolean validate) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
-		UpdateInfo info = getUpdateInfo(group, metadata);
+    public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type, boolean validate) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
+        UpdateInfo info = getUpdateInfo(group, metadata);
 
-		if (info == null) {
-			return null;
-		}
-    	if (validate) {
-    		String error = validateUpdateInfo(group, type, info);
-    		if (error != null) {
-    			throw new QueryResolverException(QueryPlugin.Event.TEIID30061, error);
-    		}
-    	}
-    	return info;
-	}
+        if (info == null) {
+            return null;
+        }
+        if (validate) {
+            String error = validateUpdateInfo(group, type, info);
+            if (error != null) {
+                throw new QueryResolverException(QueryPlugin.Event.TEIID30061, error);
+            }
+        }
+        return info;
+    }
 
-	public static String validateUpdateInfo(GroupSymbol group, int type,
-			UpdateInfo info) {
-		String error = info.getDeleteValidationError();
-		String name = "Delete"; //$NON-NLS-1$
-		if (type == Command.TYPE_UPDATE) {
-			error = info.getUpdateValidationError();
-			name = "Update"; //$NON-NLS-1$
-		} else if (type == Command.TYPE_INSERT) {
-			error = info.getInsertValidationError();
-			name = "Insert"; //$NON-NLS-1$
-		}
-		if (error != null) {
-			return QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30061, group, name, error);
-		}
-		return null;
-	}
+    public static String validateUpdateInfo(GroupSymbol group, int type,
+            UpdateInfo info) {
+        String error = info.getDeleteValidationError();
+        String name = "Delete"; //$NON-NLS-1$
+        if (type == Command.TYPE_UPDATE) {
+            error = info.getUpdateValidationError();
+            name = "Update"; //$NON-NLS-1$
+        } else if (type == Command.TYPE_INSERT) {
+            error = info.getInsertValidationError();
+            name = "Insert"; //$NON-NLS-1$
+        }
+        if (error != null) {
+            return QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30061, group, name, error);
+        }
+        return null;
+    }
 
-	public static UpdateInfo getUpdateInfo(GroupSymbol group,
-			QueryMetadataInterface metadata) throws TeiidComponentException,
-			QueryMetadataException, QueryResolverException {
-		if (!QueryResolver.isView(group, metadata)) {
-			return null;
-		}
-		try {
-			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, false).getUpdateInfo();
-		} catch (QueryValidatorException e) {
-			 throw new QueryResolverException(e);
-		}
-	}
+    public static UpdateInfo getUpdateInfo(GroupSymbol group,
+            QueryMetadataInterface metadata) throws TeiidComponentException,
+            QueryMetadataException, QueryResolverException {
+        if (!QueryResolver.isView(group, metadata)) {
+            return null;
+        }
+        try {
+            return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata, false).getUpdateInfo();
+        } catch (QueryValidatorException e) {
+             throw new QueryResolverException(e);
+        }
+    }
 
     /**
      * @param metadata
@@ -215,109 +215,109 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
         if (!group.isTempTable()) {
-        	procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
+            procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
         }
     }
 
     public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {
-    	return addScalarGroup(name, metadata, externalGroups, symbols, true);
+        return addScalarGroup(name, metadata, externalGroups, symbols, true);
     }
 
-	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean updatable) {
-		boolean[] updateArray = new boolean[symbols.size()];
-		if (updatable) {
-			Arrays.fill(updateArray, true);
-		}
-		return addScalarGroup(name, metadata, externalGroups, symbols, updateArray);
-	}
+    public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean updatable) {
+        boolean[] updateArray = new boolean[symbols.size()];
+        if (updatable) {
+            Arrays.fill(updateArray, true);
+        }
+        return addScalarGroup(name, metadata, externalGroups, symbols, updateArray);
+    }
 
-	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean[] updatable) {
-		GroupSymbol variables = new GroupSymbol(name);
-	    externalGroups.addGroup(variables);
-	    TempMetadataID tid = metadata.addTempGroup(name, symbols);
-	    tid.setMetadataType(Type.SCALAR);
-	    int i = 0;
-	    for (TempMetadataID cid : tid.getElements()) {
-			cid.setMetadataType(Type.SCALAR);
-			cid.setUpdatable(updatable[i++]);
-		}
-	    variables.setMetadataID(tid);
-	    return variables;
-	}
+    public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols, boolean[] updatable) {
+        GroupSymbol variables = new GroupSymbol(name);
+        externalGroups.addGroup(variables);
+        TempMetadataID tid = metadata.addTempGroup(name, symbols);
+        tid.setMetadataType(Type.SCALAR);
+        int i = 0;
+        for (TempMetadataID cid : tid.getElements()) {
+            cid.setMetadataType(Type.SCALAR);
+            cid.setUpdatable(updatable[i++]);
+        }
+        variables.setMetadataID(tid);
+        return variables;
+    }
 
-	/**
-	 * Set the appropriate "external" metadata for the given command
-	 * @param inferProcedureResultSetColumns
-	 * @throws QueryResolverException
-	 */
-	public static void findChildCommandMetadata(Command currentCommand,
-			GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns)
-			throws QueryMetadataException, TeiidComponentException, QueryResolverException {
-		//find the childMetadata using a clean metadata store
-	    TempMetadataStore childMetadata = new TempMetadataStore();
-	    TempMetadataAdapter tma = new TempMetadataAdapter(metadata, childMetadata);
-	    GroupContext externalGroups = new GroupContext();
+    /**
+     * Set the appropriate "external" metadata for the given command
+     * @param inferProcedureResultSetColumns
+     * @throws QueryResolverException
+     */
+    public static void findChildCommandMetadata(Command currentCommand,
+            GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns)
+            throws QueryMetadataException, TeiidComponentException, QueryResolverException {
+        //find the childMetadata using a clean metadata store
+        TempMetadataStore childMetadata = new TempMetadataStore();
+        TempMetadataAdapter tma = new TempMetadataAdapter(metadata, childMetadata);
+        GroupContext externalGroups = new GroupContext();
 
-		if (currentCommand instanceof TriggerAction) {
-			TriggerAction ta = (TriggerAction)currentCommand;
-			ta.setView(container);
-		    //TODO: it seems easier to just inline the handling here rather than have each of the resolvers check for trigger actions
-		    List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
-		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_INSERT) {
-		    	ProcedureContainerResolver.addChanging(tma.getMetadataStore(), externalGroups, viewElements);
-		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
-	            if (type == Command.TYPE_INSERT) {
+        if (currentCommand instanceof TriggerAction) {
+            TriggerAction ta = (TriggerAction)currentCommand;
+            ta.setView(container);
+            //TODO: it seems easier to just inline the handling here rather than have each of the resolvers check for trigger actions
+            List<ElementSymbol> viewElements = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
+            if (type == Command.TYPE_UPDATE || type == Command.TYPE_INSERT) {
+                ProcedureContainerResolver.addChanging(tma.getMetadataStore(), externalGroups, viewElements);
+                ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.NEW, tma.getMetadataStore(), externalGroups, viewElements, false);
+                if (type == Command.TYPE_INSERT) {
                     List<ElementSymbol> key = InsertResolver.getAutoIncrementKey(ta.getView().getMetadataID(), viewElements, metadata);
                     if (key != null) {
                         ProcedureContainerResolver.addScalarGroup(SQLConstants.NonReserved.KEY, tma.getMetadataStore(), externalGroups, key, true);
                     }
                 }
-		    }
-		    if (type == Command.TYPE_UPDATE || type == Command.TYPE_DELETE) {
-		    	ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
-		    }
-		} else if (currentCommand instanceof CreateProcedureCommand) {
-			CreateProcedureCommand cupc = (CreateProcedureCommand)currentCommand;
-			cupc.setVirtualGroup(container);
-			if (type == Command.TYPE_STORED_PROCEDURE) {
-				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getName());
-		        // Create temporary metadata that defines a group based on either the stored proc
-		        // name or the stored query name - this will be used later during planning
-		        String procName = info.getProcedureCallableName();
+            }
+            if (type == Command.TYPE_UPDATE || type == Command.TYPE_DELETE) {
+                ProcedureContainerResolver.addScalarGroup(SQLConstants.Reserved.OLD, tma.getMetadataStore(), externalGroups, viewElements, false);
+            }
+        } else if (currentCommand instanceof CreateProcedureCommand) {
+            CreateProcedureCommand cupc = (CreateProcedureCommand)currentCommand;
+            cupc.setVirtualGroup(container);
+            if (type == Command.TYPE_STORED_PROCEDURE) {
+                StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getName());
+                // Create temporary metadata that defines a group based on either the stored proc
+                // name or the stored query name - this will be used later during planning
+                String procName = info.getProcedureCallableName();
 
-		        // Look through parameters to find input elements - these become child metadata
-		        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());
-		        boolean[] updatable = new boolean[info.getParameters().size()];
-		        int i = 0;
-		        List<ElementSymbol> rsColumns = Collections.emptyList();
-		        for (SPParameter param : info.getParameters()) {
-		            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
-		                ElementSymbol symbol = param.getParameterSymbol();
-		                tempElements.add(symbol);
-		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;
-		                if (param.getParameterType() == ParameterInfo.RETURN_VALUE) {
-		                	cupc.setReturnVariable(symbol);
-		                }
-		            } else {
-		            	rsColumns = param.getResultSetColumns();
-		            }
-		        }
-		        if (inferProcedureResultSetColumns) {
-		        	rsColumns = null;
-		        }
-		        GroupSymbol gs = ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
-		        if (cupc.getReturnVariable() != null) {
-		        	ResolverVisitor.resolveLanguageObject(cupc.getReturnVariable(), Arrays.asList(gs), metadata);
-		        }
-		        cupc.setResultSetColumns(rsColumns);
-		        //the relational planner will override this with the appropriate value
-		        cupc.setProjectedSymbols(rsColumns);
-			} else {
-    			cupc.setUpdateType(type);
-			}
-		}
+                // Look through parameters to find input elements - these become child metadata
+                List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());
+                boolean[] updatable = new boolean[info.getParameters().size()];
+                int i = 0;
+                List<ElementSymbol> rsColumns = Collections.emptyList();
+                for (SPParameter param : info.getParameters()) {
+                    if(param.getParameterType() != ParameterInfo.RESULT_SET) {
+                        ElementSymbol symbol = param.getParameterSymbol();
+                        tempElements.add(symbol);
+                        updatable[i++] = param.getParameterType() != ParameterInfo.IN;
+                        if (param.getParameterType() == ParameterInfo.RETURN_VALUE) {
+                            cupc.setReturnVariable(symbol);
+                        }
+                    } else {
+                        rsColumns = param.getResultSetColumns();
+                    }
+                }
+                if (inferProcedureResultSetColumns) {
+                    rsColumns = null;
+                }
+                GroupSymbol gs = ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+                if (cupc.getReturnVariable() != null) {
+                    ResolverVisitor.resolveLanguageObject(cupc.getReturnVariable(), Arrays.asList(gs), metadata);
+                }
+                cupc.setResultSetColumns(rsColumns);
+                //the relational planner will override this with the appropriate value
+                cupc.setProjectedSymbols(rsColumns);
+            } else {
+                cupc.setUpdateType(type);
+            }
+        }
 
-	    QueryResolver.setChildMetadata(currentCommand, childMetadata, externalGroups);
-	}
+        QueryResolver.setChildMetadata(currentCommand, childMetadata, externalGroups);
+    }
 
 }

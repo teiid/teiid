@@ -37,7 +37,7 @@ public class QueryScenarioImpl extends QueryScenario {
 
 
     public QueryScenarioImpl(String scenarioName, Properties queryProperties) {
-	super(scenarioName, queryProperties);
+    super(scenarioName, queryProperties);
 
     }
 
@@ -47,71 +47,71 @@ public class QueryScenarioImpl extends QueryScenario {
      */
     @Override
     public void handleTestResult(TestResult tr, ResultSet resultSet, int updateCnt, boolean resultFromQuery, String sql) {
- 	Throwable resultException = tr.getException();
-	if (getResultsMode().equalsIgnoreCase(
-		TestProperties.RESULT_MODES.COMPARE)) {
+     Throwable resultException = tr.getException();
+    if (getResultsMode().equalsIgnoreCase(
+        TestProperties.RESULT_MODES.COMPARE)) {
 
-		Object results = null;
-		try {
-		    results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(),
-			    sql,
-			    resultSet,
-			    resultException,
-			    tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
+        Object results = null;
+        try {
+            results = this.getExpectedResults(tr.getQuerySetID()).compareResults(tr.getQueryID(),
+                sql,
+                resultSet,
+                resultException,
+                tr.getStatus(), isOrdered(sql), updateCnt, resultFromQuery);
 
-		    if (results == null) {
-			tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
-		    } else {
-			tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
-			tr.setExceptionMessage("Results did not compare to expected results");
-		    }
-
-
-		} catch (QueryTestFailedException qtf) {
-		    resultException = (resultException != null ? resultException
-			    : qtf);
-		    tr.setException(resultException);
-		    tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
-
-		}
-
-		if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
-		    try {
-    		    	this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
-    			    tr.getQueryID(), sql, resultSet, resultException,
-    			    results );
-
-		    } catch (QueryTestFailedException qtfe) {
-			    throw new TransactionRuntimeException(qtfe.getMessage());
-		    }
-		}
+            if (results == null) {
+            tr.setStatus(TestResult.RESULT_STATE.TEST_SUCCESS);
+            } else {
+            tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+            tr.setExceptionMessage("Results did not compare to expected results");
+            }
 
 
-	} else if (getResultsMode().equalsIgnoreCase(
-		TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
+        } catch (QueryTestFailedException qtf) {
+            resultException = (resultException != null ? resultException
+                : qtf);
+            tr.setException(resultException);
+            tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
 
-	    try {
+        }
 
-		this.getResultsGenerator().generateQueryResultFile(tr.getQuerySetID(),
-			tr.getQueryID(), sql, resultSet, resultException, tr.getStatus());
+        if (tr.getStatus() == TestResult.RESULT_STATE.TEST_EXCEPTION) {
+            try {
+                    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
+                    tr.getQueryID(), sql, resultSet, resultException,
+                    results );
 
-	    } catch (QueryTestFailedException qtfe) {
-		throw new TransactionRuntimeException(qtfe.getMessage());
-	    }
+            } catch (QueryTestFailedException qtfe) {
+                throw new TransactionRuntimeException(qtfe.getMessage());
+            }
+        }
 
-	} else {
-	    // just create the error file for any failures
-	    if (tr.getException() != null) {
-		tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
-		try {
-		    this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
-			    tr.getQueryID(), sql, resultSet, resultException, null);
 
-		} catch (QueryTestFailedException qtfe) {
-		    throw new TransactionRuntimeException(qtfe.getMessage());
-		}
-	    }
-	}
+    } else if (getResultsMode().equalsIgnoreCase(
+        TestProperties.RESULT_MODES.GENERATE)) { //$NON-NLS-1$
+
+        try {
+
+        this.getResultsGenerator().generateQueryResultFile(tr.getQuerySetID(),
+            tr.getQueryID(), sql, resultSet, resultException, tr.getStatus());
+
+        } catch (QueryTestFailedException qtfe) {
+        throw new TransactionRuntimeException(qtfe.getMessage());
+        }
+
+    } else {
+        // just create the error file for any failures
+        if (tr.getException() != null) {
+        tr.setStatus(TestResult.RESULT_STATE.TEST_EXCEPTION);
+        try {
+            this.getResultsGenerator().generateErrorFile(tr.getQuerySetID(),
+                tr.getQueryID(), sql, resultSet, resultException, null);
+
+        } catch (QueryTestFailedException qtfe) {
+            throw new TransactionRuntimeException(qtfe.getMessage());
+        }
+        }
+    }
 
 
 
@@ -120,10 +120,10 @@ public class QueryScenarioImpl extends QueryScenario {
 
     private boolean isOrdered(String sql) {
 
-	if (sql.toLowerCase().indexOf(" order by ") > 0) {
-	    return true;
-	}
-	return false;
+    if (sql.toLowerCase().indexOf(" order by ") > 0) {
+        return true;
+    }
+    return false;
 
     }
 

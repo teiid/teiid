@@ -27,10 +27,10 @@ import org.teiid.query.sql.LanguageObject;
  */
 public interface Expression extends LanguageObject {
 
-	/**
-	 * Get the return type of this expression.
-	 * @return Java class may be null prior to being resolved
-	 */
-	Class<?> getType();
+    /**
+     * Get the return type of this expression.
+     * @return Java class may be null prior to being resolved
+     */
+    Class<?> getType();
 
 }

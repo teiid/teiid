@@ -43,9 +43,9 @@ import org.teiid.query.sql.util.SymbolMap;
 
 public class ProjectNode extends SubqueryAwareRelationalNode {
 
-	private static final List<?>[] EMPTY_TUPLE = new List[]{Arrays.asList(new Object[] {})};
+    private static final List<?>[] EMPTY_TUPLE = new List[]{Arrays.asList(new Object[] {})};
 
-	private List<? extends Expression> selectSymbols;
+    private List<? extends Expression> selectSymbols;
 
     // Derived element lookup map
     private Map<Expression, Integer> elementMap;
@@ -58,12 +58,12 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     private int currentRow = 1;
 
     protected ProjectNode() {
-    	super();
+        super();
     }
 
-	public ProjectNode(int nodeID) {
-		super(nodeID);
-	}
+    public ProjectNode(int nodeID) {
+        super(nodeID);
+    }
 
     public void reset() {
         super.reset();
@@ -80,26 +80,26 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
         return this.selectSymbols;
     }
 
-	public void setSelectSymbols(List<? extends Expression> symbols) {
-		this.selectSymbols = symbols;
-		elementMap = Collections.emptyMap();
-		this.projectionIndexes = new int[this.selectSymbols.size()];
-    	Arrays.fill(this.projectionIndexes, -1);
+    public void setSelectSymbols(List<? extends Expression> symbols) {
+        this.selectSymbols = symbols;
+        elementMap = Collections.emptyMap();
+        this.projectionIndexes = new int[this.selectSymbols.size()];
+        Arrays.fill(this.projectionIndexes, -1);
 
-    	this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
-    	for (Expression ses : this.selectSymbols) {
-			this.expressions.add(SymbolMap.getExpression(ses));
-		}
-	}
+        this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
+        for (Expression ses : this.selectSymbols) {
+            this.expressions.add(SymbolMap.getExpression(ses));
+        }
+    }
 
-	@Override
-	public void addChild(RelationalNode child) {
-		super.addChild(child);
-		init();
-	}
+    @Override
+    public void addChild(RelationalNode child) {
+        super.addChild(child);
+        init();
+    }
 
-	void init() {
-		List<? extends Expression> childElements = getChildren()[0].getElements();
+    void init() {
+        List<? extends Expression> childElements = getChildren()[0].getElements();
         // Create element lookup map for evaluating project expressions
         this.elementMap = createLookupMap(childElements);
 
@@ -114,7 +114,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             if(symbol instanceof AliasSymbol) {
                 Integer index = elementMap.get(symbol);
                 if(index != null && index.intValue() == i) {
-                	projectionIndexes[i] = index;
+                    projectionIndexes[i] = index;
                     continue;
                 }
                 symbol = ((AliasSymbol)symbol).getSymbol();
@@ -124,83 +124,83 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             if(index == null) {
                 needsProject = true;
             } else {
-            	if (index.intValue() != i) {
-            		needsProject = true;
-            	}
-            	projectionIndexes[i] = index;
+                if (index.intValue() != i) {
+                    needsProject = true;
+                }
+                projectionIndexes[i] = index;
             }
         }
-	}
+    }
 
-	public TupleBatch nextBatchDirect()
-		throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBatch nextBatchDirect()
+        throws BlockedException, TeiidComponentException, TeiidProcessingException {
 
         if(currentBatch == null) {
             // There was no saved batch, so get a new one
             //in the case of select with no from, should return only
             //one batch with one row
             if(this.getChildren()[0] == null){
-            	currentBatch = new TupleBatch(1, EMPTY_TUPLE);
-            	currentBatch.setTerminationFlag(true);
+                currentBatch = new TupleBatch(1, EMPTY_TUPLE);
+                currentBatch.setTerminationFlag(true);
             }else{
-            	currentBatch = this.getChildren()[0].nextBatch();
+                currentBatch = this.getChildren()[0].nextBatch();
             }
 
             // Check for no project needed and pass through
             if(!needsProject) {
-            	TupleBatch result = currentBatch;
-            	currentBatch = null;
+                TupleBatch result = currentBatch;
+                currentBatch = null;
                 return result;
             }
         }
 
         while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
-    		List<?> tuple = currentBatch.getTuple(currentRow);
+            List<?> tuple = currentBatch.getTuple(currentRow);
 
-			List<Object> projectedTuple = new ArrayList<Object>(selectSymbols.size());
+            List<Object> projectedTuple = new ArrayList<Object>(selectSymbols.size());
 
-			// Walk through symbols
+            // Walk through symbols
             for(int i=0; i<expressions.size(); i++) {
-				Expression symbol = expressions.get(i);
-				updateTuple(symbol, i, tuple, projectedTuple);
-			}
+                Expression symbol = expressions.get(i);
+                updateTuple(symbol, i, tuple, projectedTuple);
+            }
 
             // Add to batch
             addBatchRow(projectedTuple);
             currentRow++;
-		}
-
-        if (currentRow > currentBatch.getEndRow()) {
-	        if(currentBatch.getTerminationFlag()) {
-	            terminateBatches();
-	        }
-	        currentBatch = null;
         }
 
-    	return pullBatch();
-	}
+        if (currentRow > currentBatch.getEndRow()) {
+            if(currentBatch.getTerminationFlag()) {
+                terminateBatches();
+            }
+            currentBatch = null;
+        }
 
-	private void updateTuple(Expression symbol, int projectionIndex, List<?> values, List<Object> tuple)
-		throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
+        return pullBatch();
+    }
+
+    private void updateTuple(Expression symbol, int projectionIndex, List<?> values, List<Object> tuple)
+        throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 
         int index = this.projectionIndexes[projectionIndex];
         if(index != -1) {
-			tuple.add(values.get(index));
+            tuple.add(values.get(index));
         } else {
-			tuple.add(getEvaluator(this.elementMap).evaluate(symbol, values));
-		}
-	}
+            tuple.add(getEvaluator(this.elementMap).evaluate(symbol, values));
+        }
+    }
 
-	protected void getNodeString(StringBuffer str) {
-		super.getNodeString(str);
-		str.append(selectSymbols);
-	}
+    protected void getNodeString(StringBuffer str) {
+        super.getNodeString(str);
+        str.append(selectSymbols);
+    }
 
-	public Object clone(){
-		ProjectNode clonedNode = new ProjectNode();
+    public Object clone(){
+        ProjectNode clonedNode = new ProjectNode();
         this.copyTo(clonedNode);
-		return clonedNode;
-	}
+        return clonedNode;
+    }
 
     protected void copyTo(ProjectNode target){
         super.copyTo(target);
@@ -212,25 +212,25 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     }
 
     public PlanNode getDescriptionProperties() {
-    	PlanNode props = super.getDescriptionProperties();
-    	AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);
+        PlanNode props = super.getDescriptionProperties();
+        AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);
         return props;
     }
 
     @Override
     public Collection<? extends LanguageObject> getObjects() {
-    	return this.selectSymbols;
+        return this.selectSymbols;
     }
 
     @Override
     public boolean hasBuffer() {
-    	return !needsProject && this.getChildren()[0].hasBuffer();
+        return !needsProject && this.getChildren()[0].hasBuffer();
     }
 
     @Override
     public TupleBuffer getBufferDirect(int maxRows) throws BlockedException,
-    		TeiidComponentException, TeiidProcessingException {
-    	return this.getChildren()[0].getBuffer(maxRows);
+            TeiidComponentException, TeiidProcessingException {
+        return this.getChildren()[0].getBuffer(maxRows);
     }
 
 }

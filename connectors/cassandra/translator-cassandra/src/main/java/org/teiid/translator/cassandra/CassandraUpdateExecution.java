@@ -41,111 +41,111 @@ import com.datastax.driver.core.ResultSetFuture;
 
 public class CassandraUpdateExecution implements UpdateExecution {
 
-	private CassandraConnection connection;
-	private ExecutionContext executionContext;
-	private RuntimeMetadata metadata;
-	private Command command;
-	private int updateCount = 1;
-	private ResultSetFuture resultSetFuture;
+    private CassandraConnection connection;
+    private ExecutionContext executionContext;
+    private RuntimeMetadata metadata;
+    private Command command;
+    private int updateCount = 1;
+    private ResultSetFuture resultSetFuture;
 
-	public CassandraUpdateExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			CassandraConnection connection) {
-		this.command = command;
-		this.executionContext = executionContext;
-		this.metadata = metadata;
-		this.connection = connection;
-	}
+    public CassandraUpdateExecution(Command command,
+            ExecutionContext executionContext, RuntimeMetadata metadata,
+            CassandraConnection connection) {
+        this.command = command;
+        this.executionContext = executionContext;
+        this.metadata = metadata;
+        this.connection = connection;
+    }
 
-	@Override
-	public void close() {
-		this.resultSetFuture = null;
-	}
+    @Override
+    public void close() {
+        this.resultSetFuture = null;
+    }
 
-	@Override
-	public void cancel() throws TranslatorException {
-		if (this.resultSetFuture != null) {
-			this.resultSetFuture.cancel(true);
-		}
-	}
+    @Override
+    public void cancel() throws TranslatorException {
+        if (this.resultSetFuture != null) {
+            this.resultSetFuture.cancel(true);
+        }
+    }
 
-	@Override
-	public void execute() throws TranslatorException {
-		internalExecute();
-		resultSetFuture.addListener(new Runnable() {
-			@Override
-			public void run() {
-				executionContext.dataAvailable();
-			}
-		}, GuavaCompatibility.INSTANCE.sameThreadExecutor());
-	}
+    @Override
+    public void execute() throws TranslatorException {
+        internalExecute();
+        resultSetFuture.addListener(new Runnable() {
+            @Override
+            public void run() {
+                executionContext.dataAvailable();
+            }
+        }, GuavaCompatibility.INSTANCE.sameThreadExecutor());
+    }
 
-	private void internalExecute() throws TranslatorException {
-		if (this.command instanceof BatchedUpdates) {
-			handleBatchedUpdates();
-			return;
-		}
-		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
-		visitor.translateSQL(this.command);
-		String cql = visitor.getTranslatedSQL();
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
-		this.executionContext.logCommand(cql);
-		if (this.command instanceof BulkCommand) {
-		    BulkCommand bc = (BulkCommand)this.command;
-			if (bc.getParameterValues() != null) {
-				int count = 0;
-				List<Object[]> newValues = new ArrayList<Object[]>();
-				Iterator<? extends List<?>> values = bc.getParameterValues();
-				while (values.hasNext()) {
-					Object[] bindValues = values.next().toArray();
-					for (int i = 0; i < bindValues.length; i++) {
-						if (bindValues[i] instanceof Blob) {
-							Blob blob = (Blob)bindValues[i];
-							try {
-								if (blob.length() > Integer.MAX_VALUE) {
-									throw new AssertionError("Blob is too large"); //$NON-NLS-1$
-								}
-								byte[] bytes = ((Blob)bindValues[i]).getBytes(0, (int) blob.length());
-								bindValues[i] = ByteBuffer.wrap(bytes);
-							} catch (SQLException e) {
-								throw new TranslatorException(e);
-							}
-						} else if (bindValues[i] instanceof BinaryType) {
-							bindValues[i] = ByteBuffer.wrap(((BinaryType)bindValues[i]).getBytesDirect());
-						}
-					}
-					newValues.add(bindValues);
-					count++;
-				}
-				updateCount = count;
-				resultSetFuture = connection.executeBatch(cql, newValues);
-				return;
-			}
-		}
-		resultSetFuture = connection.executeQuery(cql);
-	}
+    private void internalExecute() throws TranslatorException {
+        if (this.command instanceof BatchedUpdates) {
+            handleBatchedUpdates();
+            return;
+        }
+        CassandraSQLVisitor visitor = new CassandraSQLVisitor();
+        visitor.translateSQL(this.command);
+        String cql = visitor.getTranslatedSQL();
+        LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
+        this.executionContext.logCommand(cql);
+        if (this.command instanceof BulkCommand) {
+            BulkCommand bc = (BulkCommand)this.command;
+            if (bc.getParameterValues() != null) {
+                int count = 0;
+                List<Object[]> newValues = new ArrayList<Object[]>();
+                Iterator<? extends List<?>> values = bc.getParameterValues();
+                while (values.hasNext()) {
+                    Object[] bindValues = values.next().toArray();
+                    for (int i = 0; i < bindValues.length; i++) {
+                        if (bindValues[i] instanceof Blob) {
+                            Blob blob = (Blob)bindValues[i];
+                            try {
+                                if (blob.length() > Integer.MAX_VALUE) {
+                                    throw new AssertionError("Blob is too large"); //$NON-NLS-1$
+                                }
+                                byte[] bytes = ((Blob)bindValues[i]).getBytes(0, (int) blob.length());
+                                bindValues[i] = ByteBuffer.wrap(bytes);
+                            } catch (SQLException e) {
+                                throw new TranslatorException(e);
+                            }
+                        } else if (bindValues[i] instanceof BinaryType) {
+                            bindValues[i] = ByteBuffer.wrap(((BinaryType)bindValues[i]).getBytesDirect());
+                        }
+                    }
+                    newValues.add(bindValues);
+                    count++;
+                }
+                updateCount = count;
+                resultSetFuture = connection.executeBatch(cql, newValues);
+                return;
+            }
+        }
+        resultSetFuture = connection.executeQuery(cql);
+    }
 
-	private void handleBatchedUpdates() {
-		BatchedUpdates updates = (BatchedUpdates)this.command;
-		List<String> cqlUpdates = new ArrayList<String>();
-		for (Command update : updates.getUpdateCommands()) {
-			CassandraSQLVisitor visitor = new CassandraSQLVisitor();
-			visitor.translateSQL(update);
-			String cql = visitor.getTranslatedSQL();
-			cqlUpdates.add(cql);
-		}
-		this.updateCount = cqlUpdates.size();
-		resultSetFuture = connection.executeBatch(cqlUpdates);
-	}
+    private void handleBatchedUpdates() {
+        BatchedUpdates updates = (BatchedUpdates)this.command;
+        List<String> cqlUpdates = new ArrayList<String>();
+        for (Command update : updates.getUpdateCommands()) {
+            CassandraSQLVisitor visitor = new CassandraSQLVisitor();
+            visitor.translateSQL(update);
+            String cql = visitor.getTranslatedSQL();
+            cqlUpdates.add(cql);
+        }
+        this.updateCount = cqlUpdates.size();
+        resultSetFuture = connection.executeBatch(cqlUpdates);
+    }
 
-	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException,
-			TranslatorException {
-		if (!resultSetFuture.isDone()) {
-			throw DataNotAvailableException.NO_POLLING;
-		}
-		resultSetFuture.getUninterruptibly();
-		return new int[] {this.updateCount};
-	}
+    @Override
+    public int[] getUpdateCounts() throws DataNotAvailableException,
+            TranslatorException {
+        if (!resultSetFuture.isDone()) {
+            throw DataNotAvailableException.NO_POLLING;
+        }
+        resultSetFuture.getUninterruptibly();
+        return new int[] {this.updateCount};
+    }
 
 }

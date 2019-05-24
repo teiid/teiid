@@ -32,18 +32,18 @@ import org.teiid.resource.api.Connection;
  */
 public interface WSConnection extends Connection {
 
-	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
+    public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 
-	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
+    <T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
 
-	<T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
+    <T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
 
-	URL getWsdl();
+    URL getWsdl();
 
-	QName getServiceQName();
+    QName getServiceQName();
 
-	QName getPortQName();
+    QName getPortQName();
 
-	String getStatusMessage(int status);
+    String getStatusMessage(int status);
 
 }

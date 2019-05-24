@@ -35,27 +35,27 @@ public class ArrayTable extends TableFunctionReference {
     private Boolean singleRow;
 
     public List<ProjectedColumn> getColumns() {
-		return columns;
-	}
+        return columns;
+    }
 
     public void setColumns(List<ProjectedColumn> columns) {
-		this.columns = columns;
-	}
+        this.columns = columns;
+    }
 
     public Expression getArrayValue() {
-		return arrayValue;
-	}
+        return arrayValue;
+    }
 
     public void setArrayValue(Expression arrayValue) {
-		this.arrayValue = arrayValue;
-	}
+        this.arrayValue = arrayValue;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	public void setSingleRow(Boolean singleRow) {
+    public void setSingleRow(Boolean singleRow) {
         this.singleRow = singleRow;
     }
 
@@ -63,30 +63,30 @@ public class ArrayTable extends TableFunctionReference {
         return singleRow;
     }
 
-	@Override
-	protected ArrayTable cloneDirect() {
-		ArrayTable clone = new ArrayTable();
-		this.copy(clone);
-		clone.singleRow = singleRow;
-		clone.setArrayValue((Expression)this.arrayValue.clone());
-		for (ProjectedColumn column : columns) {
-			clone.getColumns().add(column.copyTo(new ProjectedColumn()));
-		}
-		return clone;
-	}
+    @Override
+    protected ArrayTable cloneDirect() {
+        ArrayTable clone = new ArrayTable();
+        this.copy(clone);
+        clone.singleRow = singleRow;
+        clone.setArrayValue((Expression)this.arrayValue.clone());
+        for (ProjectedColumn column : columns) {
+            clone.getColumns().add(column.copyTo(new ProjectedColumn()));
+        }
+        return clone;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (!super.equals(obj) || !(obj instanceof ArrayTable)) {
-			return false;
-		}
-		ArrayTable other = (ArrayTable)obj;
-		return this.columns.equals(other.columns)
-			&& EquivalenceUtil.areEqual(arrayValue, other.arrayValue)
-			&& EquivalenceUtil.areEqual(singleRow, other.singleRow);
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!super.equals(obj) || !(obj instanceof ArrayTable)) {
+            return false;
+        }
+        ArrayTable other = (ArrayTable)obj;
+        return this.columns.equals(other.columns)
+            && EquivalenceUtil.areEqual(arrayValue, other.arrayValue)
+            && EquivalenceUtil.areEqual(singleRow, other.singleRow);
+    }
 
 }

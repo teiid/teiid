@@ -36,52 +36,52 @@ import org.teiid.jdbc.JDBCPlugin;
 public class TeiidURL {
 
     public static interface JDBC {
-	    // constant indicating Virtual database name
-	    public static final String VDB_NAME = "VirtualDatabaseName"; //$NON-NLS-1$
-	    // constant indicating Virtual database version
-	    public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
-	    // constant for vdb version part of serverURL
-	    public static final String VERSION = "version"; //$NON-NLS-1$
-	}
+        // constant indicating Virtual database name
+        public static final String VDB_NAME = "VirtualDatabaseName"; //$NON-NLS-1$
+        // constant indicating Virtual database version
+        public static final String VDB_VERSION = "VirtualDatabaseVersion"; //$NON-NLS-1$
+        // constant for vdb version part of serverURL
+        public static final String VERSION = "version"; //$NON-NLS-1$
+    }
 
-	public static interface CONNECTION {
-		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
-		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
-		public static final String CLIENT_MAC = "clientMAC"; //$NON-NLS-1$
-		/**
-		 * If true, will automatically select a new server instance after a communication exception.
-		 * @since 5.6
-		 */
-		public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
+    public static interface CONNECTION {
+        public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
+        public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
+        public static final String CLIENT_MAC = "clientMAC"; //$NON-NLS-1$
+        /**
+         * If true, will automatically select a new server instance after a communication exception.
+         * @since 5.6
+         */
+        public static final String AUTO_FAILOVER = "autoFailover";  //$NON-NLS-1$
 
-		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
-		/**
-		 * Non-secure Protocol.
-		 */
-		public static final String NON_SECURE_PROTOCOL = "mm"; //$NON-NLS-1$
-		/**
-		 * Secure Protocol.
-		 */
-		public static final String SECURE_PROTOCOL = "mms"; //$NON-NLS-1$
-		// name of the application which is obtaining connection
-		public static final String APP_NAME = "ApplicationName"; //$NON-NLS-1$
-		// constant for username part of url
-		public static final String USER_NAME = "user"; //$NON-NLS-1$
-		// constant for password part of url
-		public static final String PASSWORD = "password"; //$NON-NLS-1$
+        public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
+        /**
+         * Non-secure Protocol.
+         */
+        public static final String NON_SECURE_PROTOCOL = "mm"; //$NON-NLS-1$
+        /**
+         * Secure Protocol.
+         */
+        public static final String SECURE_PROTOCOL = "mms"; //$NON-NLS-1$
+        // name of the application which is obtaining connection
+        public static final String APP_NAME = "ApplicationName"; //$NON-NLS-1$
+        // constant for username part of url
+        public static final String USER_NAME = "user"; //$NON-NLS-1$
+        // constant for password part of url
+        public static final String PASSWORD = "password"; //$NON-NLS-1$
 
-		public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
+        public static final String PASSTHROUGH_AUTHENTICATION = "PassthroughAuthentication"; //$NON-NLS-1$
 
-		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
+        public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
 
-		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$;
+        public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$;
 
-		public static final String ENCRYPT_REQUESTS = "encryptRequests"; //$NON-NLS-1$;
-		public static final String LOGIN_TIMEOUT = "loginTimeout"; //$NON-NLS-1$
+        public static final String ENCRYPT_REQUESTS = "encryptRequests"; //$NON-NLS-1$;
+        public static final String LOGIN_TIMEOUT = "loginTimeout"; //$NON-NLS-1$
 
-	}
+    }
 
-	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
+    public static final String DOT_DELIMITER = "."; //$NON-NLS-1$
     public static final String DOUBLE_SLASH_DELIMITER = "//"; //$NON-NLS-1$
     public static final String COMMA_DELIMITER = ","; //$NON-NLS-1$
 
@@ -113,21 +113,21 @@ public class TeiidURL {
             throw new MalformedURLException(INVALID_FORMAT_SERVER);
         }
         if (StringUtil.startsWithIgnoreCase(serverURL, SECURE_PROTOCOL)) {
-        	usingSSL = true;
+            usingSSL = true;
         } else if (!StringUtil.startsWithIgnoreCase(serverURL, DEFAULT_PROTOCOL)) {
-        	throw new MalformedURLException(INVALID_FORMAT_SERVER);
+            throw new MalformedURLException(INVALID_FORMAT_SERVER);
         }
 
         appServerURL = serverURL;
-		parseServerURL(serverURL.substring(usingSSL?SECURE_PROTOCOL.length():DEFAULT_PROTOCOL.length()), INVALID_FORMAT_SERVER);
+        parseServerURL(serverURL.substring(usingSSL?SECURE_PROTOCOL.length():DEFAULT_PROTOCOL.length()), INVALID_FORMAT_SERVER);
     }
 
     public TeiidURL(String host, int port, boolean secure) {
         usingSSL = secure;
         if(host.startsWith("[")) { //$NON-NLS-1$
-        	host = host.substring(1, host.indexOf(']'));
+            host = host.substring(1, host.indexOf(']'));
         }
-		hosts.add(new HostInfo(host, port));
+        hosts.add(new HostInfo(host, port));
     }
 
     /**
@@ -203,28 +203,28 @@ public class TeiidURL {
             throw new MalformedURLException(exceptionMessage);
         }
         while (st.hasMoreTokens()) {
-        	String nextToken = st.nextToken();
-        	nextToken = nextToken.trim();
-        	String host = ""; //$NON-NLS-1$
-        	String port = ""; //$NON-NLS-1$
-        	if (nextToken.startsWith("[")) { //$NON-NLS-1$
-        		int hostEnd = nextToken.indexOf("]:"); //$NON-NLS-1$
-        		if (hostEnd == -1) {
-        			throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_ipv6_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
-        		}
-        		host = nextToken.substring(1, hostEnd);
-        		port = nextToken.substring(hostEnd+2);
-        	}
-        	else {
-        		int hostEnd = nextToken.indexOf(":"); //$NON-NLS-1$
-        		if (hostEnd == -1) {
-        			throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
-        		}
-        		host = nextToken.substring(0, hostEnd);
-        		port = nextToken.substring(hostEnd+1);
-        	}
-        	host = host.trim();
-        	port = port.trim();
+            String nextToken = st.nextToken();
+            nextToken = nextToken.trim();
+            String host = ""; //$NON-NLS-1$
+            String port = ""; //$NON-NLS-1$
+            if (nextToken.startsWith("[")) { //$NON-NLS-1$
+                int hostEnd = nextToken.indexOf("]:"); //$NON-NLS-1$
+                if (hostEnd == -1) {
+                    throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_ipv6_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
+                }
+                host = nextToken.substring(1, hostEnd);
+                port = nextToken.substring(hostEnd+2);
+            }
+            else {
+                int hostEnd = nextToken.indexOf(":"); //$NON-NLS-1$
+                if (hostEnd == -1) {
+                    throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
+                }
+                host = nextToken.substring(0, hostEnd);
+                port = nextToken.substring(hostEnd+1);
+            }
+            host = host.trim();
+            port = port.trim();
             if (host.equals("") || port.equals("")) { //$NON-NLS-1$ //$NON-NLS-2$
                 throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.invalid_hostport", nextToken, exceptionMessage)); //$NON-NLS-1$
             }
@@ -234,26 +234,26 @@ public class TeiidURL {
         }
     }
 
-	public static int validatePort(String port) throws MalformedURLException {
-		int portNumber;
-		try {
-		    portNumber = Integer.parseInt(port);
-		} catch (NumberFormatException nfe) {
-		    throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.non_numeric_port", port)); //$NON-NLS-1$
-		}
-		String msg = validatePort(portNumber);
-		if (msg != null) {
-			throw new MalformedURLException(msg);
-		}
-		return portNumber;
-	}
+    public static int validatePort(String port) throws MalformedURLException {
+        int portNumber;
+        try {
+            portNumber = Integer.parseInt(port);
+        } catch (NumberFormatException nfe) {
+            throw new MalformedURLException(JDBCPlugin.Util.getString("TeiidURL.non_numeric_port", port)); //$NON-NLS-1$
+        }
+        String msg = validatePort(portNumber);
+        if (msg != null) {
+            throw new MalformedURLException(msg);
+        }
+        return portNumber;
+    }
 
-	public static String validatePort(int portNumber) {
-		if (portNumber < 0 || portNumber > 0xFFFF) {
-		    return JDBCPlugin.Util.getString("TeiidURL.port_out_of_range", portNumber); //$NON-NLS-1$
-		}
-		return null;
-	}
+    public static String validatePort(int portNumber) {
+        if (portNumber < 0 || portNumber > 0xFFFF) {
+            return JDBCPlugin.Util.getString("TeiidURL.port_out_of_range", portNumber); //$NON-NLS-1$
+        }
+        return null;
+    }
 
     /**
      * Get the Application Server URL
@@ -275,11 +275,11 @@ public class TeiidURL {
 
                 boolean ipv6HostName = host.getHostName().indexOf(':') != -1;
                 if (ipv6HostName) {
-                	sb.append('[');
+                    sb.append('[');
                 }
                 sb.append(host.getHostName());
                 if (ipv6HostName) {
-                	sb.append(']');
+                    sb.append(']');
                 }
                 sb.append(COLON_DELIMITER);
                 sb.append(host.getPortNumber());
@@ -323,8 +323,8 @@ public class TeiidURL {
         return appServerURL.hashCode();
     }
 
-	public boolean isUsingSSL() {
-		return usingSSL;
-	}
+    public boolean isUsingSSL() {
+        return usingSSL;
+    }
 
 }

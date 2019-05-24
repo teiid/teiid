@@ -36,117 +36,117 @@ import org.teiid.core.util.StringUtil;
  */
 public abstract class AbstractMetadataRecord implements Serializable {
 
-	private static final Collection<AbstractMetadataRecord> EMPTY_INCOMING = Collections.emptyList();
+    private static final Collection<AbstractMetadataRecord> EMPTY_INCOMING = Collections.emptyList();
 
-	public interface Modifiable {
-		long getLastModified();
-	}
+    public interface Modifiable {
+        long getLastModified();
+    }
 
-	public interface DataModifiable {
-		public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_URI + "data-ttl"; //$NON-NLS-1$
+    public interface DataModifiable {
+        public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_URI + "data-ttl"; //$NON-NLS-1$
 
-		long getLastDataModification();
-	}
+        long getLastDataModification();
+    }
 
-	private static final long serialVersionUID = 564092984812414058L;
+    private static final long serialVersionUID = 564092984812414058L;
 
-	public final static char NAME_DELIM_CHAR = '.';
+    public final static char NAME_DELIM_CHAR = '.';
 
-	private static AtomicLong UUID_SEQUENCE = new AtomicLong();
+    private static AtomicLong UUID_SEQUENCE = new AtomicLong();
 
     private String uuid; //globally unique id
     private String name; //contextually unique name
 
     private String nameInSource;
 
-	private volatile Map<String, String> properties;
-	private String annotation;
+    private volatile Map<String, String> properties;
+    private String annotation;
 
-	private transient Collection<AbstractMetadataRecord> incomingObjects;
+    private transient Collection<AbstractMetadataRecord> incomingObjects;
 
-	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
+    public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
 
-	public String getUUID() {
-		if (uuid == null) {
-			uuid = String.valueOf(UUID_SEQUENCE.getAndIncrement());
-		}
-		return uuid;
-	}
+    public String getUUID() {
+        if (uuid == null) {
+            uuid = String.valueOf(UUID_SEQUENCE.getAndIncrement());
+        }
+        return uuid;
+    }
 
-	public void setUUID(String uuid) {
-		this.uuid = uuid;
-	}
+    public void setUUID(String uuid) {
+        this.uuid = uuid;
+    }
 
-	public String getNameInSource() {
-		return nameInSource;
-	}
+    public String getNameInSource() {
+        return nameInSource;
+    }
 
-	public void setNameInSource(String nameInSource) {
-		this.nameInSource = DataTypeManager.getCanonicalString(nameInSource);
-	}
+    public void setNameInSource(String nameInSource) {
+        this.nameInSource = DataTypeManager.getCanonicalString(nameInSource);
+    }
 
-	/**
-	 * Get the name in source or the name if
-	 * the name in source is not set.
-	 * @return
-	 */
-	public String getSourceName() {
-		if (this.nameInSource != null && this.nameInSource.length() > 0) {
-			return this.nameInSource;
-		}
-		return getName();
-	}
+    /**
+     * Get the name in source or the name if
+     * the name in source is not set.
+     * @return
+     */
+    public String getSourceName() {
+        if (this.nameInSource != null && this.nameInSource.length() > 0) {
+            return this.nameInSource;
+        }
+        return getName();
+    }
 
-	/**
+    /**
      * WARNING - The name returned by this method may be ambiguous and
      * is not SQL safe - it may need quoted/escaped
      */
-	public String getFullName() {
+    public String getFullName() {
         AbstractMetadataRecord parent = getParent();
         if (parent != null) {
-        	String result = parent.getFullName() + NAME_DELIM_CHAR + getName();
-        	return result;
+            String result = parent.getFullName() + NAME_DELIM_CHAR + getName();
+            return result;
         }
         return name;
-	}
+    }
 
-	public void getSQLString(StringBuilder sb) {
-		AbstractMetadataRecord parent = getParent();
-		if (parent != null) {
-        	parent.getSQLString(sb);
-        	sb.append(NAME_DELIM_CHAR);
+    public void getSQLString(StringBuilder sb) {
+        AbstractMetadataRecord parent = getParent();
+        if (parent != null) {
+            parent.getSQLString(sb);
+            sb.append(NAME_DELIM_CHAR);
         }
-		sb.append('"').append(StringUtil.replace(name, "\"", "\"\"")).append('"'); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+        sb.append('"').append(StringUtil.replace(name, "\"", "\"\"")).append('"'); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	/**
-	 * Get the full name as a SQL safe string
-	 * @return
-	 */
-	public String getSQLString() {
-		StringBuilder sb = new StringBuilder();
-		getSQLString(sb);
-		return sb.toString();
-	}
+    /**
+     * Get the full name as a SQL safe string
+     * @return
+     */
+    public String getSQLString() {
+        StringBuilder sb = new StringBuilder();
+        getSQLString(sb);
+        return sb.toString();
+    }
 
-	public AbstractMetadataRecord getParent() {
-		return null;
-	}
+    public AbstractMetadataRecord getParent() {
+        return null;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = DataTypeManager.getCanonicalString(name);
-	}
+    public void setName(String name) {
+        this.name = DataTypeManager.getCanonicalString(name);
+    }
 
-	public String getCanonicalName() {
-		return name.toUpperCase();
-	}
+    public String getCanonicalName() {
+        return name.toUpperCase();
+    }
 
     public String toString() {
-    	StringBuffer sb = new StringBuffer(100);
+        StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());
         sb.append(" name="); //$NON-NLS-1$
         sb.append(getName());
@@ -164,22 +164,22 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * @return
      */
     public Map<String, String> getProperties() {
-    	if (properties == null) {
-    		return Collections.emptyMap();
-    	}
-    	return properties;
-	}
+        if (properties == null) {
+            return Collections.emptyMap();
+        }
+        return properties;
+    }
 
     public String getProperty(String key, boolean checkUnqualified) {
-    	String value = getProperties().get(key);
-    	if (value != null || !checkUnqualified) {
-    		return value;
-    	}
-    	int index = key.indexOf('}');
-    	if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
-    		key = key.substring(index + 1, key.length());
-    	}
-    	return getProperties().get(key);
+        String value = getProperties().get(key);
+        if (value != null || !checkUnqualified) {
+            return value;
+        }
+        int index = key.indexOf('}');
+        if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
+            key = key.substring(index + 1, key.length());
+        }
+        return getProperties().get(key);
     }
 
     /**
@@ -188,38 +188,38 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * @param value, if null the property will be removed
      */
     public String setProperty(String key, String value) {
-    	if (this.properties == null) {
-    		synchronized (this) {
-    			if (this.properties == null && value == null) {
-    				return null;
-    			}
-    			this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-    		}
-		}
-    	if (value == null) {
-    		return this.properties.remove(key);
-    	}
-    	return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
+        if (this.properties == null) {
+            synchronized (this) {
+                if (this.properties == null && value == null) {
+                    return null;
+                }
+                this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+            }
+        }
+        if (value == null) {
+            return this.properties.remove(key);
+        }
+        return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
 
     public synchronized void setProperties(Map<String, String> properties) {
-    	if (this.properties == null) {
-    		this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-    	} else {
-    		this.properties.clear();
-    	}
-		if (properties != null) {
-			this.properties.putAll(properties);
-		}
-	}
+        if (this.properties == null) {
+            this.properties = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        } else {
+            this.properties.clear();
+        }
+        if (properties != null) {
+            this.properties.putAll(properties);
+        }
+    }
 
     public String getAnnotation() {
-		return annotation;
-	}
+        return annotation;
+    }
 
     public void setAnnotation(String annotation) {
-		this.annotation = DataTypeManager.getCanonicalString(annotation);
-	}
+        this.annotation = DataTypeManager.getCanonicalString(annotation);
+    }
 
     /**
      * Compare two records for equality.
@@ -239,10 +239,10 @@ public abstract class AbstractMetadataRecord implements Serializable {
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-    	in.defaultReadObject();
-    	if (this.properties != null && !(this.properties instanceof ConcurrentSkipListMap<?, ?>)) {
-    		this.properties = new ConcurrentSkipListMap<String, String>(this.properties);
-    	}
+        in.defaultReadObject();
+        if (this.properties != null && !(this.properties instanceof ConcurrentSkipListMap<?, ?>)) {
+            this.properties = new ConcurrentSkipListMap<String, String>(this.properties);
+        }
     }
 
     public int hashCode() {
@@ -254,18 +254,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
      * @return
      */
     public Collection<AbstractMetadataRecord> getIncomingObjects() {
-    	if (incomingObjects == null) {
-    		return EMPTY_INCOMING;
-    	}
-		return incomingObjects;
-	}
+        if (incomingObjects == null) {
+            return EMPTY_INCOMING;
+        }
+        return incomingObjects;
+    }
 
     public void setIncomingObjects(Collection<AbstractMetadataRecord> incomingObjects) {
-		this.incomingObjects = incomingObjects;
-	}
+        this.incomingObjects = incomingObjects;
+    }
 
     public boolean isUUIDSet() {
-    	return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
+        return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
     }
 
 }

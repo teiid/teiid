@@ -48,271 +48,271 @@ public class TestExcelExecution {
     }
 
     static ArrayList helpExecute(String ddl, VirtualFileConnection connection, String query, boolean format) throws Exception {
-		ExcelExecutionFactory translator = new ExcelExecutionFactory();
-		translator.setFormatStrings(format);
-    	translator.start();
+        ExcelExecutionFactory translator = new ExcelExecutionFactory();
+        translator.setFormatStrings(format);
+        translator.start();
 
-    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "vdb", "excel");
-    	TranslationUtility utility = new TranslationUtility(metadata);
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "vdb", "excel");
+        TranslationUtility utility = new TranslationUtility(metadata);
 
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
 
-		ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
-		try {
-			execution.execute();
+        ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
+        try {
+            execution.execute();
 
-			ArrayList results = new ArrayList();
-			while (true) {
-				List<?> row = execution.next();
-				if (row == null) {
-					break;
-				}
-				results.add(row);
-			}
-			return results;
-		} finally {
-			execution.close();
-		}
-	}
+            ArrayList results = new ArrayList();
+            while (true) {
+                List<?> row = execution.next();
+                if (row == null) {
+                    break;
+                }
+                results.add(row);
+            }
+            return results;
+        } finally {
+            execution.close();
+        }
+    }
 
-	@Test
-	public void testExecutionNoDataNumberXLS() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
-				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
-				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls');";
+    @Test
+    public void testExecutionNoDataNumberXLS() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
+                "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
+                "	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" 'names.xls');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[13, FirstName, LastName, Age], [14, John, Doe, 44.0], [15, Jane, Smith, 40.0], [16, Matt, Liek, 13.0], [17, Sarah, Byne, 10.0], [18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionNoDataNumberXLSX() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
-				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
-				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx');";
+    @Test
+    public void testExecutionNoDataNumberXLSX() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
+                "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
+                "	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[1, FirstName, LastName, Age], [2, John, Doe, null], [3, Jane, Smith, 40.0], [4, Matt, Liek, 13.0], [5, Sarah, Byne, 10.0], [6, Rocky, Dog, 3.0]]", results.toString());
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[1, FirstName, LastName, Age], [2, John, Doe, null], [3, Jane, Smith, 40.0], [4, Matt, Liek, 13.0], [5, Sarah, Byne, 10.0], [6, Rocky, Dog, 3.0]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionColumnWithNullCell() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1')\n" +
-				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
+    @Test
+    public void testExecutionColumnWithNullCell() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1')\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals(results.size(), 7);
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals(results.size(), 7);
+    }
 
-	/**
-	 * Test a sheet with a header row where 1 column is empty
-	 * @throws Exception
-	 */
-	@Test
-	public void testExecutionHeaderWithEmptyCell() throws Exception {
-		String ddl = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-		        "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
-				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
-				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
+    /**
+     * Test a sheet with a header row where 1 column is empty
+     * @throws Exception
+     */
+    @Test
+    public void testExecutionHeaderWithEmptyCell() throws Exception {
+        String ddl = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
+                "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
+                "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
+                "	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (NAMEINSOURCE 'Sheet1', \"teiid_excel:FILE\" 'empty-ignore.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '2');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("empty-ignore.xls")).toReturn(JavaVirtualFile.getFiles("empty-ignore.xls", new File(UnitTestUtil.getTestDataPath(), "empty-ignore.xls")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("empty-ignore.xls")).toReturn(JavaVirtualFile.getFiles("empty-ignore.xls", new File(UnitTestUtil.getTestDataPath(), "empty-ignore.xls")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals(6, results.size());
-    	ArrayList row = (ArrayList) results.get(4);
-    	assertEquals(4, row.size());
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals(6, results.size());
+        ArrayList row = (ArrayList) results.get(4);
+        assertEquals(4, row.size());
+    }
 
-	@Test
-	public void testExecutionColumnsWithNullCell() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
-				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2')\n" +
-				") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
+    @Test
+    public void testExecutionColumnsWithNullCell() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
+                "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2')\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" '3219.xlsx');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("3219.xlsx")).toReturn(JavaVirtualFile.getFiles("3219.xlsx", new File(UnitTestUtil.getTestDataPath(), "3219.xlsx")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals(results.size(), 7);
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals(results.size(), 7);
+    }
 
-	@Test
-	public void testExecutionWithDataNumberXLS() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
-				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
-				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
+    @Test
+    public void testExecutionWithDataNumberXLS() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
+                "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
+                "	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
 
-    	results = helpExecute(ddl, connection, "select * from Sheet1", true);
+        results = helpExecute(ddl, connection, "select * from Sheet1", true);
         assertEquals("[[18, Rocky, Dog, 3], [19, Total, null, 110]]", results.toString());
-	}
+    }
 
-	@Test
-	public void testExecutionWithDataNumberXLSX() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
-				"	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
-				"	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '6');";
+    @Test
+    public void testExecutionWithDataNumberXLSX() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
+                "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
+                "	column3 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '3'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" 'names.xlsx', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '6');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[6, Rocky, Dog, 3.0]]", results.toString());
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[6, Rocky, Dog, 3.0]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionWithDataNumberWithHeaderXLS() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
-				"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-				"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
-				"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
-				"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
-				"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-				") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
+    @Test
+    public void testExecutionWithDataNumberWithHeaderXLS() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
+                "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+                "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
+                "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
+                "	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+                ") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '18');";
 
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
-    	assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
-	}
+        ArrayList results = helpExecute(ddl, connection, "select * from Sheet1");
+        assertEquals("[[18, Rocky, Dog, 3.0], [19, Total, null, 110.0]]", results.toString());
+    }
 
-	static String commonDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
-			"	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
-			"	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
-			"	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
-			"	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
-			"	\"time\" time OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
-			"	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
-			") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '14');";
+    static String commonDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
+            "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
+            "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
+            "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
+            "	Age double OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '9'),\n" +
+            "	\"time\" time OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '4'),\n" +
+            "	CONSTRAINT PK0 PRIMARY KEY(ROW_ID)\n" +
+            ") OPTIONS (\"teiid_excel:FILE\" 'names.xls', \"teiid_excel:FIRST_DATA_ROW_NUMBER\" '14');";
 
-	@Test
-	public void testExecutionEquals() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionEquals() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID=16");
-    	assertEquals("[[Matt]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID=16");
+        assertEquals("[[Matt]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionGT() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionGT() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>16");
-    	assertEquals("[[Sarah], [Rocky], [Total]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>16");
+        assertEquals("[[Sarah], [Rocky], [Total]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionGE() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionGE() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>=16");
-    	assertEquals("[[Matt], [Sarah], [Rocky], [Total]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID>=16");
+        assertEquals("[[Matt], [Sarah], [Rocky], [Total]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionLT() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionLT() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID < 16");
-    	assertEquals("[[John], [Jane]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID < 16");
+        assertEquals("[[John], [Jane]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionLE() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionLE() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID <= 16");
-    	assertEquals("[[John], [Jane], [Matt]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID <= 16");
+        assertEquals("[[John], [Jane], [Matt]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionNE() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionNE() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
-    	assertEquals("[[John], [Jane], [Sarah], [Rocky], [Total]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
+        assertEquals("[[John], [Jane], [Sarah], [Rocky], [Total]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionLimit() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionLimit() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 3,1");
-    	assertEquals("[[Sarah]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 3,1");
+        assertEquals("[[Sarah]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionLimit2() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionLimit2() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 1");
-    	assertEquals("[[John]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 LIMIT 1");
+        assertEquals("[[John]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionAnd() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionAnd() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID > 16 and ROW_ID < 18");
-    	assertEquals("[[Sarah]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID > 16 and ROW_ID < 18");
+        assertEquals("[[Sarah]]", results.toString());
+    }
 
-	@Test
-	public void testExecutionIN() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
+    @Test
+    public void testExecutionIN() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xls", new File(UnitTestUtil.getTestDataPath(), "names.xls")));
 
-    	ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID IN (13, 18)");
-    	assertEquals("[[John], [Total]]", results.toString());
-	}
+        ArrayList results = helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID IN (13, 18)");
+        assertEquals("[[John], [Total]]", results.toString());
+    }
 
     @Test
     public void testStartBeyondRows() throws Exception {
@@ -324,17 +324,17 @@ public class TestExcelExecution {
         assertEquals("[]", results.toString());
     }
 
-	@Test
-	public void testTime() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
+    @Test
+    public void testTime() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xls")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File(UnitTestUtil.getTestDataPath(), "names.xlsx")));
 
-    	String ddl = commonDDL.replace("14", "6");
+        String ddl = commonDDL.replace("14", "6");
         ArrayList results = helpExecute(ddl, connection, "select \"time\" from Sheet1");
-    	//typed as time
-    	assertEquals("[[10:12:14]]", results.toString());
+        //typed as time
+        assertEquals("[[10:12:14]]", results.toString());
 
-    	ddl = ddl.replace("\"time\" time", "\"time\" string");
+        ddl = ddl.replace("\"time\" time", "\"time\" string");
         results = helpExecute(ddl, connection, "select \"time\" from Sheet1", true);
         //typed as string with formatting - Excel format
         assertEquals("[[10:12:14 AM]]", results.toString());
@@ -354,13 +354,13 @@ public class TestExcelExecution {
             TimestampWithTimezone.resetCalendar(null);
             LocaleUtil.setUserTimeZone(defaultTz);
         }
-	}
+    }
 
-	@Test(expected=TranslatorException.class)
-	public void testExecutionNoFile() throws Exception {
-    	VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
-    	Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File("does not exist")));
+    @Test(expected=TranslatorException.class)
+    public void testExecutionNoFile() throws Exception {
+        VirtualFileConnection connection = Mockito.mock(VirtualFileConnection.class);
+        Mockito.stub(connection.getFiles("names.xlsx")).toReturn(JavaVirtualFile.getFiles("names.xlsx", new File("does not exist")));
 
-    	helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
-	}
+        helpExecute(commonDDL, connection, "select FirstName from Sheet1 WHERE ROW_ID != 16");
+    }
 }

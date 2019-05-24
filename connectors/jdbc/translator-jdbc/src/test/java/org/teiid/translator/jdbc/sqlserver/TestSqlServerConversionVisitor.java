@@ -51,9 +51,9 @@ public class TestSqlServerConversionVisitor {
 
     @Before
     public void setUp() throws Exception {
-    	trans = new SQLServerExecutionFactory();
-    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
-    	trans.start();
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2005);
+        trans.start();
     }
 
     public String getTestVDB() {
@@ -65,7 +65,7 @@ public class TestSqlServerConversionVisitor {
     }
 
     public void helpTestVisitor(String vdb, String input, String expectedOutput) throws TranslatorException {
-    	TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
+        TranslationHelper.helpTestVisitor(vdb, input, expectedOutput, trans);
     }
 
     @Test
@@ -175,9 +175,9 @@ public class TestSqlServerConversionVisitor {
     }
 
     @Test public void testConvertDate2008() throws Exception {
-    	trans = new SQLServerExecutionFactory();
-    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
-    	trans.start();
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans.start();
         String input = "select stringkey from bqt1.smalla where BQT1.SmallA.DateValue IN (convert('2000-01-12', date), convert('2000-02-02', date))"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.DateValue IN (CAST('2000-01-12' AS DATE), CAST('2000-02-02' AS DATE))"; //$NON-NLS-1$
 
@@ -187,10 +187,10 @@ public class TestSqlServerConversionVisitor {
     }
 
     @Test public void testTimeLiteral2008() throws Exception {
-    	trans = new SQLServerExecutionFactory();
-    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
-    	trans.start();
-    	String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans.start();
+        String input = "select stringkey from bqt1.smalla where BQT1.SmallA.TimeValue = {t '00:00:00'}"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE SmallA.TimeValue = cast('00:00:00' as time)"; //$NON-NLS-1$
 
         helpTestVisitor(getBQTVDB(),
@@ -199,9 +199,9 @@ public class TestSqlServerConversionVisitor {
     }
 
     @Test public void testTimestampConversion2008() throws Exception {
-    	trans = new SQLServerExecutionFactory();
-    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
-    	trans.start();
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans.start();
         String input = "select stringkey from bqt1.smalla where cast(BQT1.SmallA.Timestampvalue as time) = timevalue"; //$NON-NLS-1$
         String output = "SELECT SmallA.StringKey FROM SmallA WHERE cast(SmallA.TimestampValue AS time) = SmallA.TimeValue"; //$NON-NLS-1$
 
@@ -211,8 +211,8 @@ public class TestSqlServerConversionVisitor {
     }
 
     @Test public void testUniqueidentifier() throws Exception {
-    	MetadataStore metadataStore = new MetadataStore();
-    	Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
+        MetadataStore metadataStore = new MetadataStore();
+        Schema foo = RealMetadataFactory.createPhysicalModel("foo", metadataStore); //$NON-NLS-1$
         Table table = RealMetadataFactory.createPhysicalGroup("bar", foo); //$NON-NLS-1$
         String[] elemNames = new String[] {
             "x"  //$NON-NLS-1$
@@ -253,7 +253,7 @@ public class TestSqlServerConversionVisitor {
         String input = "select intkey from (select intkey from bqt1.smalla) as x order by intkey limit 100"; //$NON-NLS-1$
         String output = "SELECT TOP 100 v_0.c_0 FROM (SELECT g_0.IntKey AS c_0 FROM SmallA g_0) v_0 ORDER BY v_0.c_0"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
@@ -262,7 +262,7 @@ public class TestSqlServerConversionVisitor {
         String input = "with x as /*+ no_inline */ (select intkey from bqt1.smalla) select intkey from x limit 100"; //$NON-NLS-1$
         String output = "WITH x (IntKey) AS (SELECT g_0.IntKey FROM SmallA g_0) SELECT TOP 100 g_1.intkey AS c_0 FROM x g_1"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
@@ -271,36 +271,36 @@ public class TestSqlServerConversionVisitor {
         String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT CONVERT(DATETIME, convert(varchar, g_0.TimestampValue, 21), 102), CONVERT(VARCHAR, g_0.TimestampValue, 2) FROM SmallA g_0"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
 
     @Test public void testTempTable() throws Exception {
-    	assertEquals("create table foo (COL1 int, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(trans, true));
+        assertEquals("create table foo (COL1 int, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(trans, true));
     }
 
     @Test public void testUnicodeLiteral() throws Exception {
         String input = "select N'\u0FFF'"; //$NON-NLS-1$
         String output = "SELECT N'\u0FFF'"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
 
     @Test public void testConvertSupport() throws Exception {
-    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.TIME));
-    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.INTEGER));
-    	assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.CLOB));
-    	assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.TIMESTAMP, TypeFacility.RUNTIME_CODES.TIME));
+        assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.TIME));
+        assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.INTEGER));
+        assertFalse(trans.supportsConvert(TypeFacility.RUNTIME_CODES.OBJECT, TypeFacility.RUNTIME_CODES.CLOB));
+        assertTrue(trans.supportsConvert(TypeFacility.RUNTIME_CODES.TIMESTAMP, TypeFacility.RUNTIME_CODES.TIME));
     }
 
     @Test public void testWithInsert() throws Exception {
         String input = "insert into bqt1.smalla (intkey) with a (x) as /*+ no_inline */ (select intnum from bqt1.smallb) select x from a"; //$NON-NLS-1$
         String output = "WITH a (x) AS (SELECT SmallB.IntNum FROM SmallB) INSERT INTO SmallA (IntKey) SELECT a.x FROM a"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
@@ -309,20 +309,20 @@ public class TestSqlServerConversionVisitor {
         String input = "select locate('a', stringkey, 2) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT CHARINDEX('a', g_0.StringKey, 2) FROM SmallA g_0"; //$NON-NLS-1$
 
-		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
 
     @Test public void testDateFormat() throws Exception {
-    	trans = new SQLServerExecutionFactory();
-    	trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
-    	trans.start();
-    	Connection c = Mockito.mock(Connection.class);
-    	Mockito.stub(c.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
-    	trans.initCapabilities(c);
+        trans = new SQLServerExecutionFactory();
+        trans.setDatabaseVersion(SQLServerExecutionFactory.V_2008);
+        trans.start();
+        Connection c = Mockito.mock(Connection.class);
+        Mockito.stub(c.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
+        trans.initCapabilities(c);
 
-    	String input = "select cast(smalla.stringkey as date), formatdate(smalla.datevalue, 'dd/MM/yy'), parsedate(smalla.stringkey, 'dd/MM/yy') from bqt1.smalla where smalla.datevalue = {d'2000-01-01'}"; //$NON-NLS-1$
+        String input = "select cast(smalla.stringkey as date), formatdate(smalla.datevalue, 'dd/MM/yy'), parsedate(smalla.stringkey, 'dd/MM/yy') from bqt1.smalla where smalla.datevalue = {d'2000-01-01'}"; //$NON-NLS-1$
         String output = "SELECT cast(SmallA.StringKey AS date), CONVERT(VARCHAR, cast(SmallA.DateValue AS datetime2), 3), cast(CONVERT(DATETIME2, SmallA.StringKey, 3) AS DATE) FROM SmallA WHERE SmallA.DateValue = CAST('2000-01-01' AS DATE)"; //$NON-NLS-1$
 
         helpTestVisitor(getBQTVDB(),
@@ -331,20 +331,20 @@ public class TestSqlServerConversionVisitor {
     }
 
     @Test public void testRecursiveCTEWithTypeMatching() throws Exception {
-    	String input = "with a (intkey, stringkey, bigintegervalue) as (select intkey, NULL as stringkey, bigintegervalue from bqt1.smalla where intkey = 1 "
-    			+ "union all "
-    			+ " select n.intkey, n.stringkey, 1 from bqt1.smalla n inner join a rcte on n.intkey = rcte.intkey + 1) "
-    			+ "select * from a";
-    	String output = "WITH a (intkey, stringkey, bigintegervalue) AS (SELECT cast(g_2.IntKey AS int) AS c_0, cast(NULL AS char) AS c_1, cast(g_2.BigIntegerValue AS numeric(38, 0)) AS c_2 FROM SmallA g_2 WHERE g_2.IntKey = 1 UNION ALL SELECT cast(g_0.IntKey AS int) AS c_0, g_0.StringKey AS c_1, cast(1 AS numeric(38, 0)) AS c_2 FROM SmallA g_0 INNER JOIN a g_1 ON g_0.IntKey = (g_1.intkey + 1)) SELECT g_3.intkey, g_3.stringkey, g_3.bigintegervalue FROM a g_3";
+        String input = "with a (intkey, stringkey, bigintegervalue) as (select intkey, NULL as stringkey, bigintegervalue from bqt1.smalla where intkey = 1 "
+                + "union all "
+                + " select n.intkey, n.stringkey, 1 from bqt1.smalla n inner join a rcte on n.intkey = rcte.intkey + 1) "
+                + "select * from a";
+        String output = "WITH a (intkey, stringkey, bigintegervalue) AS (SELECT cast(g_2.IntKey AS int) AS c_0, cast(NULL AS char) AS c_1, cast(g_2.BigIntegerValue AS numeric(38, 0)) AS c_2 FROM SmallA g_2 WHERE g_2.IntKey = 1 UNION ALL SELECT cast(g_0.IntKey AS int) AS c_0, g_0.StringKey AS c_1, cast(1 AS numeric(38, 0)) AS c_2 FROM SmallA g_0 INNER JOIN a g_1 ON g_0.IntKey = (g_1.intkey + 1)) SELECT g_3.intkey, g_3.stringkey, g_3.bigintegervalue FROM a g_3";
 
-    	CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
 
     @Test
     public void testOffset() throws Exception {
-    	String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
+        String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY @@version) ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
@@ -364,7 +364,7 @@ public class TestSqlServerConversionVisitor {
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
 
-    	input = "select distinct intkey c1 from bqt1.smalla order by c1 limit 10, 20"; //$NON-NLS-1$
+        input = "select distinct intkey c1 from bqt1.smalla order by c1 limit 10, 20"; //$NON-NLS-1$
         output = "SELECT c1 FROM (SELECT v.*, ROW_NUMBER() OVER (ORDER BY c1) ROWNUM_ FROM (SELECT DISTINCT SmallA.IntKey AS c1 FROM SmallA) v) v WHERE ROWNUM_ <= 30 AND ROWNUM_ > 10 ORDER BY ROWNUM_"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans);
@@ -372,7 +372,7 @@ public class TestSqlServerConversionVisitor {
 
     @Test
     public void testOffset2012() throws Exception {
-    	String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
+        String input = "select intkey from bqt1.smalla limit 10, 20"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA ORDER BY @@version OFFSET 10 ROWS FETCH NEXT 20 ROWS ONLY"; //$NON-NLS-1$
 
         SQLServerExecutionFactory trans1 = new SQLServerExecutionFactory();
@@ -381,7 +381,7 @@ public class TestSqlServerConversionVisitor {
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);
 
-    	input = "select intkey from bqt1.smalla order by stringkey limit 20"; //$NON-NLS-1$
+        input = "select intkey from bqt1.smalla order by stringkey limit 20"; //$NON-NLS-1$
         output = "SELECT SmallA.IntKey FROM SmallA ORDER BY SmallA.StringKey OFFSET 0 ROWS FETCH NEXT 20 ROWS ONLY"; //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, trans1);

@@ -45,49 +45,49 @@ import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestSAPODataMetadataProcessor {
-	private SAPODataExecutionFactory translator;
+    private SAPODataExecutionFactory translator;
 
-	@Test
-	public void testSchema() throws Exception {
-    	translator = new SAPODataExecutionFactory();
-    	translator.start();
+    @Test
+    public void testSchema() throws Exception {
+        translator = new SAPODataExecutionFactory();
+        translator.start();
 
-		String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sap-metadata.xml"));
-		SAPMetadataProcessor processor = new SAPMetadataProcessor();
-		Properties props = new Properties();
-		MetadataFactory mf = new MetadataFactory("vdb", 1, "flight", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-		processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
+        String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sap-metadata.xml"));
+        SAPMetadataProcessor processor = new SAPMetadataProcessor();
+        Properties props = new Properties();
+        MetadataFactory mf = new MetadataFactory("vdb", 1, "flight", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
+        processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
 
-		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "flight", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
-    	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
-    	if (report.hasItems()) {
-    		throw new RuntimeException(report.getFailureMessage());
-    	}
+        TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "flight", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
+        ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
+        if (report.hasItems()) {
+            throw new RuntimeException(report.getFailureMessage());
+        }
 
-//		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-//		System.out.println(ddl);
+//        String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+//        System.out.println(ddl);
 //
-//		MetadataFactory mf2 = new MetadataFactory(null, 1, "flight", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-//		QueryParser.getQueryParser().parseDDL(mf2, ddl);
+//        MetadataFactory mf2 = new MetadataFactory(null, 1, "flight", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+//        QueryParser.getQueryParser().parseDDL(mf2, ddl);
 
-    	TranslationUtility utility = new TranslationUtility(metadata);
-    	RuntimeMetadata rm = utility.createRuntimeMetadata();
+        TranslationUtility utility = new TranslationUtility(metadata);
+        RuntimeMetadata rm = utility.createRuntimeMetadata();
 
-    	Table t = rm.getTable("flight", "SubscriptionCollection");
-    	assertNotNull(t);
+        Table t = rm.getTable("flight", "SubscriptionCollection");
+        assertNotNull(t);
 
-    	// check the label name
-    	assertNotNull(t.getColumnByName("persistNotifications"));
-    	assertTrue(!t.getColumnByName("ID").isUpdatable());
-    	assertEquals("Persist Notification", t.getColumnByName("persistNotifications").getAnnotation());
-    	// check filterable
-    	assertEquals(SearchType.Unsearchable, t.getColumnByName("persistNotifications").getSearchType());
-    	// check sortable
-    	assertEquals(SearchType.Unsearchable, t.getColumnByName("filter").getSearchType());
-    	// check visible
-    	assertEquals(false, t.getColumnByName("filter").isSelectable());
-    	//check required-in-filter
-    	assertEquals(1, t.getAccessPatterns().size());
-    	assertEquals(2, t.getAccessPatterns().get(0).getColumns().size());
-	}
+        // check the label name
+        assertNotNull(t.getColumnByName("persistNotifications"));
+        assertTrue(!t.getColumnByName("ID").isUpdatable());
+        assertEquals("Persist Notification", t.getColumnByName("persistNotifications").getAnnotation());
+        // check filterable
+        assertEquals(SearchType.Unsearchable, t.getColumnByName("persistNotifications").getSearchType());
+        // check sortable
+        assertEquals(SearchType.Unsearchable, t.getColumnByName("filter").getSearchType());
+        // check visible
+        assertEquals(false, t.getColumnByName("filter").isSelectable());
+        //check required-in-filter
+        assertEquals(1, t.getAccessPatterns().size());
+        assertEquals(2, t.getAccessPatterns().get(0).getColumns().size());
+    }
 }

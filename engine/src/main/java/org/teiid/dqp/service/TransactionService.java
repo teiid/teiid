@@ -59,19 +59,19 @@ public interface TransactionService {
     // global transaction methods
     int prepare(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 
-	void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException;
+    void commit(final String threadId, XidImpl xid, boolean onePhase, boolean singleTM) throws XATransactionException;
 
-	void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
+    void rollback(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 
-	Xid[] recover(int flag, boolean singleTM) throws XATransactionException;
+    Xid[] recover(int flag, boolean singleTM) throws XATransactionException;
 
-	void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
+    void forget(final String threadId, XidImpl xid, boolean singleTM) throws XATransactionException;
 
-	void start(final String threadId, XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
+    void start(final String threadId, XidImpl xid, int flags, int timeout, boolean singleTM) throws XATransactionException;
 
-	void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
+    void end(final String threadId, XidImpl xid, int flags, boolean singleTM) throws XATransactionException;
 
-	// management methods
+    // management methods
     Collection<TransactionMetadata> getTransactions();
 
     void terminateTransaction(String threadId) throws AdminException;

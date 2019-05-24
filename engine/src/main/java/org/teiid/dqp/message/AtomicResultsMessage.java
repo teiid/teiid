@@ -25,7 +25,7 @@ import org.teiid.translator.CacheDirective.Scope;
 
 public class AtomicResultsMessage {
 
-	private List<?>[] results;
+    private List<?>[] results;
 
     // Final row index in complete result set, if known
     private long finalRow = -1;
@@ -38,12 +38,12 @@ public class AtomicResultsMessage {
     private Scope scope;
 
     // to honor the externalizable contract
-	public AtomicResultsMessage() {
-	}
+    public AtomicResultsMessage() {
+    }
 
-	public AtomicResultsMessage(List<?>[] results) {
+    public AtomicResultsMessage(List<?>[] results) {
         this.results = results;
-	}
+    }
 
     public boolean supportsImplicitClose() {
         return this.supportsImplicitClose;
@@ -61,23 +61,23 @@ public class AtomicResultsMessage {
         finalRow = i;
     }
 
-	public List[] getResults() {
-		return results;
-	}
+    public List[] getResults() {
+        return results;
+    }
 
-	public void setWarnings(List<Exception> warnings) {
-		this.warnings = warnings;
-	}
+    public void setWarnings(List<Exception> warnings) {
+        this.warnings = warnings;
+    }
 
-	public List<Exception> getWarnings() {
-		return warnings;
-	}
+    public List<Exception> getWarnings() {
+        return warnings;
+    }
 
-	public void setScope(Scope scope) {
-		this.scope = scope;
-	}
+    public void setScope(Scope scope) {
+        this.scope = scope;
+    }
 
-	public Scope getScope() {
-		return scope;
-	}
+    public Scope getScope() {
+        return scope;
+    }
 }

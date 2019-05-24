@@ -27,6 +27,6 @@ public interface CapabilitiesFinder {
 
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException;
 
-	public boolean isValid(String modelName);
+    public boolean isValid(String modelName);
 
 }

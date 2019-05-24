@@ -51,24 +51,24 @@ public interface VirtualFileConnection extends Connection {
      */
     boolean remove(String path) throws TranslatorException;
 
-	public static class Util {
+    public static class Util {
 
-		/**
-		 * Gets the file or files, if the path is a directory, at the given path.
-		 * Note the path can only refer to a single directory - directories are not recursively scanned.
-		 * @param exceptionIfFileNotFound
-		 * @param path
-		 * @return
-		 */
-		public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound) throws TranslatorException {
-			VirtualFile[] files = fc.getFiles(location);
-			if (files == null && exceptionIfFileNotFound) {
+        /**
+         * Gets the file or files, if the path is a directory, at the given path.
+         * Note the path can only refer to a single directory - directories are not recursively scanned.
+         * @param exceptionIfFileNotFound
+         * @param path
+         * @return
+         */
+        public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound) throws TranslatorException {
+            VirtualFile[] files = fc.getFiles(location);
+            if (files == null && exceptionIfFileNotFound) {
                 throw new TranslatorException(DataPlugin.Util.gs("file_not_found", location)); //$NON-NLS-1$
-			}
+            }
 
-	        return files;
-		}
+            return files;
+        }
 
-	}
+    }
 
 }

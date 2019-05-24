@@ -37,7 +37,7 @@ import org.teiid.test.util.TestResultSetUtil;
 @SuppressWarnings("nls")
 public class ResultsGeneratorImpl implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
-	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$
+        "yyyyMMdd_HHmmss"); //$NON-NLS-1$
     private String outputDir = "";
     private String generateDir = "";
 
@@ -46,54 +46,54 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
 
     public ResultsGeneratorImpl( String testname, Properties props) {
 
-	outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
+    outputDir = props.getProperty(TestProperties.PROP_OUTPUT_DIR, ".");
 
-	Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
-		+ " was not specified", outputDir);
+    Assert.assertNotNull("Property " + TestProperties.PROP_OUTPUT_DIR
+        + " was not specified", outputDir);
 
-	outputDir = outputDir + "/" + testname;
-
-
-	generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
-	Assert.assertNotNull("Property " + PROP_GENERATE_DIR
-		+ " was not specified", this.generateDir);
+    outputDir = outputDir + "/" + testname;
 
 
-	File d = new File(this.outputDir);
-	this.outputDir = d.getAbsolutePath();
-	d = new File(this.outputDir);
-	if (d.exists()) {
-	    FileUtils.removeDirectoryAndChildren(d);
-
-	}
-	if (!d.exists()) {
-	    d.mkdirs();
-	}
+    generateDir = props.getProperty(PROP_GENERATE_DIR, ".");
+    Assert.assertNotNull("Property " + PROP_GENERATE_DIR
+        + " was not specified", this.generateDir);
 
 
-	d = new File(generateDir, testname);
-	generateDir = d.getAbsolutePath();
-	d = new File(generateDir);
-	if (d.exists()) {
-	    FileUtils.removeDirectoryAndChildren(d);
-	}
-	if (!d.exists()) {
-	    d.mkdirs();
-	}
+    File d = new File(this.outputDir);
+    this.outputDir = d.getAbsolutePath();
+    d = new File(this.outputDir);
+    if (d.exists()) {
+        FileUtils.removeDirectoryAndChildren(d);
+
+    }
+    if (!d.exists()) {
+        d.mkdirs();
+    }
+
+
+    d = new File(generateDir, testname);
+    generateDir = d.getAbsolutePath();
+    d = new File(generateDir);
+    if (d.exists()) {
+        FileUtils.removeDirectoryAndChildren(d);
+    }
+    if (!d.exists()) {
+        d.mkdirs();
+    }
 
     }
 
 
     @Override
     public String getGenerateDir() {
-	// TODO Auto-generated method stub
-	return this.generateDir;
+    // TODO Auto-generated method stub
+    return this.generateDir;
     }
 
     @Override
     public String getOutputDir() {
-	// TODO Auto-generated method stub
-	return outputDir;
+    // TODO Auto-generated method stub
+    return outputDir;
     }
 
     /**
@@ -108,120 +108,120 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
      */
 
     public void generateQueryResultFile(String querySetID, String queryID,
-	    String query, ResultSet result, Throwable ex, int testStatus)
-	    throws QueryTestFailedException {
+        String query, ResultSet result, Throwable ex, int testStatus)
+        throws QueryTestFailedException {
 
-	File fos = createNewResultsFile(queryID, querySetID,
-		getGenerateDir());
+    File fos = createNewResultsFile(queryID, querySetID,
+        getGenerateDir());
 
 
-	FileOutputStream actualOut = null;
-	try {
-	    actualOut = new FileOutputStream(fos);
-	    PrintStream filePrintStream = new PrintStream(actualOut);
-	    if (ex != null) {
-		TestResultSetUtil.printThrowable(ex, query, filePrintStream);
-	    } else if (result != null ){
-		result.beforeFirst();
-		TestResultSetUtil.printResultSet(result, query, MAX_COL_WIDTH, true, filePrintStream);
-	    }
+    FileOutputStream actualOut = null;
+    try {
+        actualOut = new FileOutputStream(fos);
+        PrintStream filePrintStream = new PrintStream(actualOut);
+        if (ex != null) {
+        TestResultSetUtil.printThrowable(ex, query, filePrintStream);
+        } else if (result != null ){
+        result.beforeFirst();
+        TestResultSetUtil.printResultSet(result, query, MAX_COL_WIDTH, true, filePrintStream);
+        }
 
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new QueryTestFailedException(e);
-	} finally {
-	    if (actualOut != null) {
-		try {
-		    actualOut.close();
-		} catch (IOException e) {
-		    // TODO Auto-generated catch block
-		    e.printStackTrace();
-		}
-	    }
-	}
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new QueryTestFailedException(e);
+    } finally {
+        if (actualOut != null) {
+        try {
+            actualOut.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        }
+    }
 
     }
 
     public String generateErrorFile(final String querySetID,
-	    final String queryID, final String sql, final ResultSet resultSet,
-	    final Throwable queryError, final Object results)
-	    throws QueryTestFailedException {
+        final String queryID, final String sql, final ResultSet resultSet,
+        final Throwable queryError, final Object results)
+        throws QueryTestFailedException {
 
-	String errorFileName = null;
-	try {
-	    // write actual results to error file
-	    errorFileName = generateErrorFileName(queryID, querySetID);
-	    // configID, queryID, Integer.toString(clientID));
-	    //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
-	    File errorFile = new File(getOutputDir(), errorFileName);
+    String errorFileName = null;
+    try {
+        // write actual results to error file
+        errorFileName = generateErrorFileName(queryID, querySetID);
+        // configID, queryID, Integer.toString(clientID));
+        //           CombinedTestClient.log("\t" + this.clientID + ": Writing error file with actual results: " + errorFileName); //$NON-NLS-1$ //$NON-NLS-2$
+        File errorFile = new File(getOutputDir(), errorFileName);
 
-	    // the resultset will be passed in as null when
-	    // the error was due to a thrown exception, and not based comparison issues
-	    if (resultSet == null) {
-		FileOutputStream actualOut = null;
-		try {
-		    actualOut = new FileOutputStream(errorFile);
-		    PrintStream filePrintStream = new PrintStream(actualOut);
+        // the resultset will be passed in as null when
+        // the error was due to a thrown exception, and not based comparison issues
+        if (resultSet == null) {
+        FileOutputStream actualOut = null;
+        try {
+            actualOut = new FileOutputStream(errorFile);
+            PrintStream filePrintStream = new PrintStream(actualOut);
 
 
-		    TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
+            TestResultSetUtil.printThrowable(queryError, sql, filePrintStream);
 
-		    filePrintStream.flush();
+            filePrintStream.flush();
 
-		} catch (Exception e) {
-			    e.printStackTrace();
-			    throw new QueryTestFailedException(e);
-		} finally {
-		    	if (actualOut != null) {
-				try {
-				    actualOut.close();
-				} catch (IOException e) {
-				    // TODO Auto-generated catch block
-				    e.printStackTrace();
-				}
-			}
-		}
-		return errorFileName;
+        } catch (Exception e) {
+                e.printStackTrace();
+                throw new QueryTestFailedException(e);
+        } finally {
+                if (actualOut != null) {
+                try {
+                    actualOut.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        }
+        return errorFileName;
 
-	    }
+        }
 
-	    // rewind resultset
+        // rewind resultset
 
-	    resultSet.beforeFirst();
+        resultSet.beforeFirst();
 
-	    generateErrorResults(querySetID, queryID, sql, errorFile,
-		    resultSet, (results != null ? (List) results : null));
+        generateErrorResults(querySetID, queryID, sql, errorFile,
+            resultSet, (results != null ? (List) results : null));
 
-	} catch (Throwable e) {
-	    throw new QueryTestFailedException(e.getMessage());
-	    //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	return errorFileName;
+    } catch (Throwable e) {
+        throw new QueryTestFailedException(e.getMessage());
+        //           CombinedTestClient.logError("Error writing error file \"" + outputDir + "\"/" + errorFileName + ": " + e); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    return errorFileName;
     }
 
     private File createNewResultsFile(String queryID, String querySetID,
-	    String genDir) {
-	String resultFileName = queryID + ".txt"; //$NON-NLS-1$
+        String genDir) {
+    String resultFileName = queryID + ".txt"; //$NON-NLS-1$
 
-	String targetDirname = genDir + File.separator + querySetID; //$NON-NLS-1$
-	File targetDir = new File(targetDirname);
-	targetDir.mkdirs();
+    String targetDirname = genDir + File.separator + querySetID; //$NON-NLS-1$
+    File targetDir = new File(targetDirname);
+    targetDir.mkdirs();
 
-	return new File(targetDir, resultFileName);
+    return new File(targetDir, resultFileName);
     }
 
 
     private String generateErrorFileName(String queryID, String querySetID) {
-//	String errorFileName = "ERROR_"
-//		// configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
-//		//                               + querySetID + "_" //$NON-NLS-1$
-//		+ queryID
-//		+ "_" //$NON-NLS-1$
-//		+ FILE_NAME_DATE_FORMATER.format(new Date(System
-//			.currentTimeMillis())) + ".txt"; //$NON-NLS-1$
-//	return errorFileName;
+//    String errorFileName = "ERROR_"
+//        // configID + "_" //$NON-NLS-1$ //$NON-NLS-2$
+//        //                               + querySetID + "_" //$NON-NLS-1$
+//        + queryID
+//        + "_" //$NON-NLS-1$
+//        + FILE_NAME_DATE_FORMATER.format(new Date(System
+//            .currentTimeMillis())) + ".txt"; //$NON-NLS-1$
+//    return errorFileName;
 
-	return  queryID + ".txt";
+    return  queryID + ".txt";
 
     }
 
@@ -239,41 +239,41 @@ public class ResultsGeneratorImpl implements ResultsGenerator {
      * @throws QueryTestFailedException
      */
     private void generateErrorResults(String querySetID, String queryID,
-	    String sql, File resultsFile, ResultSet actualResult,
-	    List<String> results)
-	    throws QueryTestFailedException {
+        String sql, File resultsFile, ResultSet actualResult,
+        List<String> results)
+        throws QueryTestFailedException {
 
-	FileOutputStream actualOut = null;
-	try {
-	    actualOut = new FileOutputStream(resultsFile);
-	    PrintStream filePrintStream = new PrintStream(actualOut);
+    FileOutputStream actualOut = null;
+    try {
+        actualOut = new FileOutputStream(resultsFile);
+        PrintStream filePrintStream = new PrintStream(actualOut);
 
-	    TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
+        TestResultSetUtil.printResultSet(actualResult, sql, MAX_COL_WIDTH, true, filePrintStream);
 
-//	    if (results != null) {
-//        	    for (Iterator<String> it=results.iterator(); it.hasNext();) {
-//        		String line = it.next();
-//        		filePrintStream.print(line);
-//        	    }
-//	    } else {
+//        if (results != null) {
+//                for (Iterator<String> it=results.iterator(); it.hasNext();) {
+//                String line = it.next();
+//                filePrintStream.print(line);
+//                }
+//        } else {
 //
-//		ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
-//	    }
+//        ResultSetUtil.printResultSet(actualResult, MAX_COL_WIDTH, true, filePrintStream);
+//        }
 
 
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new QueryTestFailedException(e);
-	} finally {
-	    if (actualOut != null) {
-		try {
-		    actualOut.close();
-		} catch (IOException e) {
-		    // TODO Auto-generated catch block
-		    e.printStackTrace();
-		}
-	    }
-	}
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new QueryTestFailedException(e);
+    } finally {
+        if (actualOut != null) {
+        try {
+            actualOut.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        }
+    }
     }
 
 }

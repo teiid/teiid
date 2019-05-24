@@ -23,6 +23,6 @@ package org.teiid;
  */
 public interface CommandListener {
 
-	void commandClosed(CommandContext context);
+    void commandClosed(CommandContext context);
 
 }

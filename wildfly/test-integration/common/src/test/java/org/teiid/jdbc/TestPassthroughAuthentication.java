@@ -34,82 +34,82 @@ import org.teiid.security.SecurityHelper;
 @SuppressWarnings("nls")
 public class TestPassthroughAuthentication {
 
-	static FakeServer server = new FakeServer(false);
-	static TestableSecurityHelper securityHelper = new TestableSecurityHelper();
+    static FakeServer server = new FakeServer(false);
+    static TestableSecurityHelper securityHelper = new TestableSecurityHelper();
 
-	@AfterClass public static void oneTimeTearDown() {
-		server.stop();
-	}
+    @AfterClass public static void oneTimeTearDown() {
+        server.stop();
+    }
 
-	@BeforeClass public static void oneTimeSetup() throws Exception {
-    	server.setUseCallingThread(true);
-    	server.start(new EmbeddedConfiguration() {
-    		@Override
+    @BeforeClass public static void oneTimeSetup() throws Exception {
+        server.setUseCallingThread(true);
+        server.start(new EmbeddedConfiguration() {
+            @Override
             public SecurityHelper getSecurityHelper() {
-    			return securityHelper;
-    		}
-    	}, false);
-	}
+                return securityHelper;
+            }
+        }, false);
+    }
 
-	@Test
-	public void test() throws Exception {
-		try {
-			server.deployVDB("not_there", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-			server.getSessionService().setTrustAllLocal(false);
-			try {
-				server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
-				fail();
-			} catch (Exception e) {
-			}
+    @Test
+    public void test() throws Exception {
+        try {
+            server.deployVDB("not_there", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+            server.getSessionService().setTrustAllLocal(false);
+            try {
+                server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
+                fail();
+            } catch (Exception e) {
+            }
 
-			server.getSessionService().setTrustAllLocal(true);
-			server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
+            server.getSessionService().setTrustAllLocal(true);
+            server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
 
-			securityHelper.associateSecurityContext("testSC");
-			try {
-				server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
-			} catch (Exception e) {
-				fail();
-			}
-		} finally {
-			server.undeployVDB("not_there");
-		}
-	}
+            securityHelper.associateSecurityContext("testSC");
+            try {
+                server.createConnection("jdbc:teiid:not_there.1;passthroughAuthentication=true");
+            } catch (Exception e) {
+                fail();
+            }
+        } finally {
+            server.undeployVDB("not_there");
+        }
+    }
 
-	private static class TestableSecurityHelper implements SecurityHelper {
-		Object ctx;
-		@Override
-		public Object associateSecurityContext(Object context) {
-			return ctx = context;
-		}
-		@Override
-		public void clearSecurityContext() {
-			ctx = null;
-		}
-		@Override
-		public Object getSecurityContext(String securityDomain) {
-		    if (securityDomain.equals("teiid-security")) {
-		        return this.ctx;
-		    }
-		    return null;
-		}
+    private static class TestableSecurityHelper implements SecurityHelper {
+        Object ctx;
+        @Override
+        public Object associateSecurityContext(Object context) {
+            return ctx = context;
+        }
+        @Override
+        public void clearSecurityContext() {
+            ctx = null;
+        }
+        @Override
+        public Object getSecurityContext(String securityDomain) {
+            if (securityDomain.equals("teiid-security")) {
+                return this.ctx;
+            }
+            return null;
+        }
 
-		@Override
-		public Subject getSubjectInContext(Object context) {
-			if (context != null) {
-				return new Subject();
-			}
-			return null;
-		}
+        @Override
+        public Subject getSubjectInContext(Object context) {
+            if (context != null) {
+                return new Subject();
+            }
+            return null;
+        }
 
-		@Override
-		public Object authenticate(String securityDomain, String baseUserName,
-				Credentials credentials, String applicationName) throws LoginException {
+        @Override
+        public Object authenticate(String securityDomain, String baseUserName,
+                Credentials credentials, String applicationName) throws LoginException {
             return ctx;
         }
         @Override
         public GSSResult negotiateGssLogin(String securityDomain, byte[] serviceTicket) throws LoginException {
             return null;
         }
-	};
+    };
 }

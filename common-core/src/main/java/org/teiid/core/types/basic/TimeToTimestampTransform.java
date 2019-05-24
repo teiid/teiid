@@ -26,32 +26,32 @@ import org.teiid.core.types.TransformationException;
 
 public class TimeToTimestampTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-		return new Timestamp( ((java.sql.Time) value).getTime() );
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        return new Timestamp( ((java.sql.Time) value).getTime() );
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return java.sql.Time.class;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class getSourceType() {
+        return java.sql.Time.class;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class getTargetType() {
-		return java.sql.Timestamp.class;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class getTargetType() {
+        return java.sql.Timestamp.class;
+    }
 
 }

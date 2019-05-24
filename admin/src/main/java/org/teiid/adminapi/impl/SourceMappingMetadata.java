@@ -20,49 +20,49 @@ package org.teiid.adminapi.impl;
 import java.io.Serializable;
 
 public class SourceMappingMetadata implements Serializable {
-	private static final long serialVersionUID = -4417878417697685794L;
+    private static final long serialVersionUID = -4417878417697685794L;
 
     private String name;
     private String jndiName;
     private String translatorName;
 
-	public SourceMappingMetadata() {}
+    public SourceMappingMetadata() {}
 
     public SourceMappingMetadata(String name, String translatorName, String connJndiName) {
-    	this.name = name;
-    	this.translatorName = translatorName;
-    	this.jndiName = connJndiName;
+        this.name = name;
+        this.translatorName = translatorName;
+        this.jndiName = connJndiName;
     }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	/**
-	 *
-	 * @return the jndi name or null if no connection factory is defined
-	 */
-	public String getConnectionJndiName() {
-		return jndiName;
-	}
+    /**
+     *
+     * @return the jndi name or null if no connection factory is defined
+     */
+    public String getConnectionJndiName() {
+        return jndiName;
+    }
 
-	public void setConnectionJndiName(String jndiName) {
-		this.jndiName = jndiName;
-	}
+    public void setConnectionJndiName(String jndiName) {
+        this.jndiName = jndiName;
+    }
 
     public String getTranslatorName() {
-		return translatorName;
-	}
+        return translatorName;
+    }
 
-	public void setTranslatorName(String translatorName) {
-		this.translatorName = translatorName;
-	}
+    public void setTranslatorName(String translatorName) {
+        this.translatorName = translatorName;
+    }
 
-	public String toString() {
-		return getName()+", "+getTranslatorName()+", "+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
-	}
+    public String toString() {
+        return getName()+", "+getTranslatorName()+", "+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

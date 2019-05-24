@@ -72,9 +72,9 @@ public class TestODataQueryExecution {
 
     private ResultSetExecution helpExecute(String query,
             final String resultXML, String expectedURL) throws Exception {
-	    TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
-		return helpExecute(query, resultXML, expectedURL, 200, metadata);
-	}
+        TransformationMetadata metadata = TestDataEntitySchemaBuilder.getNorthwindMetadataFromODataXML();
+        return helpExecute(query, resultXML, expectedURL, 200, metadata);
+    }
 
     private ResultSetExecution helpExecute(String query,
             final String resultXML, String expectedURL, int responseCode)
@@ -89,106 +89,106 @@ public class TestODataQueryExecution {
         ODataExecutionFactory translator = new ODataExecutionFactory();
         translator.start();
         TranslationUtility utility = new TranslationUtility(metadata);
-		Command cmd = utility.parseCommand(query);
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		WSConnection connection = Mockito.mock(WSConnection.class);
+        Command cmd = utility.parseCommand(query);
+        ExecutionContext context = Mockito.mock(ExecutionContext.class);
+        WSConnection connection = Mockito.mock(WSConnection.class);
 
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
+        Map<String, Object> headers = new HashMap<String, Object>();
+        headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
+        headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 
-		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
-		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
-		Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
+        Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
+        Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
+        Mockito.stub(dispatch.getResponseContext()).toReturn(headers);
 
-		Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
+        Mockito.stub(connection.createDispatch(Mockito.eq(HTTPBinding.HTTP_BINDING), Mockito.anyString(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE))).toReturn(dispatch);
 
-		DataSource ds = new DataSource() {
-			@Override
-			public OutputStream getOutputStream() throws IOException {
-				return new ByteArrayOutputStream();
-			}
-			@Override
-			public String getName() {
-				return "result";
-			}
-			@Override
-			public InputStream getInputStream() throws IOException {
-				ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
-				return in;
-			}
-			@Override
-			public String getContentType() {
-				return "application/xml";
-			}
-		};
-		Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
+        DataSource ds = new DataSource() {
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                return new ByteArrayOutputStream();
+            }
+            @Override
+            public String getName() {
+                return "result";
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                ByteArrayInputStream in = new ByteArrayInputStream(resultXML.getBytes());
+                return in;
+            }
+            @Override
+            public String getContentType() {
+                return "application/xml";
+            }
+        };
+        Mockito.stub(dispatch.invoke(Mockito.any(DataSource.class))).toReturn(ds);
 
-		ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
-		execution.execute();
+        ResultSetExecution execution = translator.createResultSetExecution((QueryExpression)cmd, context, utility.createRuntimeMetadata(), connection);
+        execution.execute();
 
-		ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
-		ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> endpoint = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> binding = ArgumentCaptor.forClass(String.class);
 
-		Mockito.verify(connection).createDispatch(binding.capture(), endpoint.capture(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE));
-		assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
-		return execution;
-	}
+        Mockito.verify(connection).createDispatch(binding.capture(), endpoint.capture(), Mockito.eq(DataSource.class), Mockito.eq(Mode.MESSAGE));
+        assertEquals(expectedURL, URLDecoder.decode(endpoint.getValue(), "utf-8"));
+        return execution;
+    }
 
-	@Test
-	public void testSimpleSelectNoAssosiations() throws Exception {
-		String query = "SELECT CategoryID, CategoryName, Description FROM Categories";
-		String expectedURL = "Categories?$select=CategoryID,CategoryName,Description";
+    @Test
+    public void testSimpleSelectNoAssosiations() throws Exception {
+        String query = "SELECT CategoryID, CategoryName, Description FROM Categories";
+        String expectedURL = "Categories?$select=CategoryID,CategoryName,Description";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
 
-		assertArrayEquals(new Object[] {1, "Beverages", "Soft drinks, coffees, teas, beers, and ales"}, excution.next().toArray(new Object[3]));
-		assertArrayEquals(new Object[] {2, "Condiments", "Sweet and savory sauces, relishes, spreads, and seasonings"}, excution.next().toArray(new Object[3]));
-		assertArrayEquals(new Object[] {3, "Confections", "Desserts, candies, and sweet breads"}, excution.next().toArray(new Object[3]));
-		reader.close();
-	}
+        assertArrayEquals(new Object[] {1, "Beverages", "Soft drinks, coffees, teas, beers, and ales"}, excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {2, "Condiments", "Sweet and savory sauces, relishes, spreads, and seasonings"}, excution.next().toArray(new Object[3]));
+        assertArrayEquals(new Object[] {3, "Confections", "Desserts, candies, and sweet breads"}, excution.next().toArray(new Object[3]));
+        reader.close();
+    }
 
-	@Test
-	public void testSimpleSelectStar() throws Exception {
-		String query = "SELECT * FROM Categories";
-		String expectedURL = "Categories?$select=CategoryID,CategoryName,Description,Picture";
+    @Test
+    public void testSimpleSelectStar() throws Exception {
+        String query = "SELECT * FROM Categories";
+        String expectedURL = "Categories?$select=CategoryID,CategoryName,Description,Picture";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
-		reader.close();
-	}
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+    }
 
-	@Test
-	public void testSimpleSelectEmbedded() throws Exception {
-		String query = "SELECT * FROM Customers";
-		String expectedURL = "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing,Shipping";
+    @Test
+    public void testSimpleSelectEmbedded() throws Exception {
+        String query = "SELECT * FROM Customers";
+        String expectedURL = "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing,Shipping";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("customer.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
-		reader.close();
-		assertEquals(18, excution.next().size());
-	}
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("customer.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+        assertEquals(18, excution.next().size());
+    }
 
-	@Test
-	public void testSimplePKWhere() throws Exception {
-		String query = "SELECT * FROM Categories Where CategoryId = 3";
-		String expectedURL = "Categories(3)?$select=CategoryID,CategoryName,Description,Picture";
+    @Test
+    public void testSimplePKWhere() throws Exception {
+        String query = "SELECT * FROM Categories Where CategoryId = 3";
+        String expectedURL = "Categories(3)?$select=CategoryID,CategoryName,Description,Picture";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
-		reader.close();
-	}
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+    }
 
-	@Test
-	public void testSimpleWhere() throws Exception {
-		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
-		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
+    @Test
+    public void testSimpleWhere() throws Exception {
+        String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
+        String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
 
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
-		reader.close();
-	}
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+        reader.close();
+    }
 
     @Test
     public void testArrayType() throws Exception {
@@ -250,60 +250,60 @@ public class TestODataQueryExecution {
 
     }
 
-	@Test(expected=TranslatorException.class)
-	public void testError() throws Exception {
-		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
-		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
-		String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" +
-				"<code>005056A509B11EE1BB8AF4A65EC3CA20</code>\n" +
-				"<message xml:lang=\"en\">\n" +
-				"Invalid parametertype used at function '' (Position: 16)\n" +
-				"</message>\n" +
-				"</error>";
-		ResultSetExecution excution = helpExecute(query, error, expectedURL, 400);
-		excution.next();
-	}
+    @Test(expected=TranslatorException.class)
+    public void testError() throws Exception {
+        String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
+        String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
+        String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" +
+                "<code>005056A509B11EE1BB8AF4A65EC3CA20</code>\n" +
+                "<message xml:lang=\"en\">\n" +
+                "Invalid parametertype used at function '' (Position: 16)\n" +
+                "</message>\n" +
+                "</error>";
+        ResultSetExecution excution = helpExecute(query, error, expectedURL, 400);
+        excution.next();
+    }
 
-	@Test
-	public void testNoResults() throws Exception {
-		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
-		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
-		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 404);
-		excution.execute();
-		assertNull(excution.next());
-		reader.close();
+    @Test
+    public void testNoResults() throws Exception {
+        String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
+        String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=CategoryID,CategoryName,Description,Picture";
+        FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 404);
+        excution.execute();
+        assertNull(excution.next());
+        reader.close();
 
-		reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
-		excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 204);
-		excution.execute();
-		assertNull(excution.next());
-		reader.close();
-	}
+        reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+        excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 204);
+        excution.execute();
+        assertNull(excution.next());
+        reader.close();
+    }
 
 
-	@Test
-	public void testErrorParsing() {
-		String innerError = "<innererror>\n" +
-				"      <transactionid>529E9BFBEDA868F2E1000000AC140C37</transactionid>\n" +
-				"      <errordetails>\n" +
-				"         <errordetail>\n" +
-				"             <code>/IWBEP/CX_MGW_TECH_EXCEPTION</code>\n" +
-				"             <message>Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" +
-				"              <propertyref></propertyref>\n" +
-				"              <severity>error</severity>\n" +
-				"        </errordetail>\n" +
-				"     </errordetails>\n" +
-				"   </innererror>";
+    @Test
+    public void testErrorParsing() {
+        String innerError = "<innererror>\n" +
+                "      <transactionid>529E9BFBEDA868F2E1000000AC140C37</transactionid>\n" +
+                "      <errordetails>\n" +
+                "         <errordetail>\n" +
+                "             <code>/IWBEP/CX_MGW_TECH_EXCEPTION</code>\n" +
+                "             <message>Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" +
+                "              <propertyref></propertyref>\n" +
+                "              <severity>error</severity>\n" +
+                "        </errordetail>\n" +
+                "     </errordetails>\n" +
+                "   </innererror>";
 
-		String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" +
-				"   <code>SY/530</code>\n" +
-				"   <message xml:lang=\"en\"> Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" +
-				innerError +
-				"</error>";
+        String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" +
+                "   <code>SY/530</code>\n" +
+                "   <message xml:lang=\"en\"> Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" +
+                innerError +
+                "</error>";
 
-		FormatParser<OError> parser =  new AtomErrorFormatParser();
-		OError oerror = parser.parse(new StringReader(error)); //$NON-NLS-1$
-		assertEquals(innerError, oerror.getInnerError());
-	}
+        FormatParser<OError> parser =  new AtomErrorFormatParser();
+        OError oerror = parser.parse(new StringReader(error)); //$NON-NLS-1$
+        assertEquals(innerError, oerror.getInnerError());
+    }
 }

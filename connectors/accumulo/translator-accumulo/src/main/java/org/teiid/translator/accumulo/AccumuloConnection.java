@@ -22,6 +22,6 @@ import org.apache.accumulo.core.security.Authorizations;
 import org.teiid.resource.api.Connection;
 
 public interface AccumuloConnection extends Connection {
-	Connector getInstance();
-	Authorizations getAuthorizations();
+    Connector getInstance();
+    Authorizations getAuthorizations();
 }

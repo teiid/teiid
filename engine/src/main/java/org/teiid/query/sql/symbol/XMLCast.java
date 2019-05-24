@@ -23,69 +23,69 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class XMLCast implements Expression {
 
-	private Expression expression;
-	private String typeName;
-	private Class<?> type;
+    private Expression expression;
+    private String typeName;
+    private Class<?> type;
 
-	public XMLCast(Expression expression, String typeName) {
-		this.expression = expression;
-		this.typeName = typeName;
-	}
+    public XMLCast(Expression expression, String typeName) {
+        this.expression = expression;
+        this.typeName = typeName;
+    }
 
-	public Expression getExpression() {
-		return expression;
-	}
+    public Expression getExpression() {
+        return expression;
+    }
 
-	public void setExpression(Expression expression) {
-		this.expression = expression;
-	}
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
 
-	@Override
-	public void acceptVisitor(LanguageVisitor visitor) {
-		visitor.visit(this);
-	}
+    @Override
+    public void acceptVisitor(LanguageVisitor visitor) {
+        visitor.visit(this);
+    }
 
-	@Override
-	public Object clone() {
-		return new XMLCast((Expression) expression.clone(), typeName);
-	}
+    @Override
+    public Object clone() {
+        return new XMLCast((Expression) expression.clone(), typeName);
+    }
 
-	public String getTypeName() {
-	    return typeName;
-	}
+    public String getTypeName() {
+        return typeName;
+    }
 
-	@Override
-	public Class<?> getType() {
-		return type;
-	}
+    @Override
+    public Class<?> getType() {
+        return type;
+    }
 
-	public void setType(Class<?> type) {
+    public void setType(Class<?> type) {
         this.type = type;
     }
 
-	@Override
-	public int hashCode() {
-		return expression.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return expression.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof XMLCast)) {
-			return false;
-		}
-		XMLCast other = (XMLCast)obj;
-		return this.expression.equals(other.expression) && getType().equals(other.getType());
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof XMLCast)) {
+            return false;
+        }
+        XMLCast other = (XMLCast)obj;
+        return this.expression.equals(other.expression) && getType().equals(other.getType());
+    }
 
-	@Override
-	public String toString() {
-		return SQLStringVisitor.getSQLString(this);
-	}
+    @Override
+    public String toString() {
+        return SQLStringVisitor.getSQLString(this);
+    }
 
 }

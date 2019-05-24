@@ -38,21 +38,21 @@ public class Function extends BaseLanguageObject implements Expression, Metadata
     public Function(String name, List<? extends Expression> params, Class<?> type) {
         this.name = name;
         if (params == null) {
-        	this.parameters = new ArrayList<Expression>(0);
+            this.parameters = new ArrayList<Expression>(0);
         } else {
-        	this.parameters = new ArrayList<Expression>(params);
+            this.parameters = new ArrayList<Expression>(params);
         }
         this.type = type;
     }
 
     @Override
     public FunctionMethod getMetadataObject() {
-    	return metadataObject;
+        return metadataObject;
     }
 
     public void setMetadataObject(FunctionMethod metadataObject) {
-		this.metadataObject = metadataObject;
-	}
+        this.metadataObject = metadataObject;
+    }
 
     /**
      * Get name of the function

@@ -249,16 +249,16 @@ public class DynamicCommand extends Command {
 
     @Override
     public boolean returnsResultSet() {
-    	return intoGroup == null;
+        return intoGroup == null;
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public List<? extends Expression> getResultSetColumns() {
-    	if (returnsResultSet()) {
-    		return asColumns;
-    	}
-    	return Collections.emptyList();
+        if (returnsResultSet()) {
+            return asColumns;
+        }
+        return Collections.emptyList();
     }
 
 }

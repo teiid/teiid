@@ -32,16 +32,16 @@ import org.teiid.core.types.GeometryType;
  */
 public abstract class GeometryInputSource {
 
-	public InputStream getEwkb() throws Exception {
-		return null;
-	}
+    public InputStream getEwkb() throws Exception {
+        return null;
+    }
 
-	public Integer getSrid() {
-		return null;
-	}
+    public Integer getSrid() {
+        return null;
+    }
 
-	public Reader getGml() throws Exception {
-		return null;
-	}
+    public Reader getGml() throws Exception {
+        return null;
+    }
 
 }

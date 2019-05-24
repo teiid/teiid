@@ -72,7 +72,7 @@ public class TestCreateDrop {
     }
 
     @Test public void testCreateTempTable3() throws QueryParserException {
-    	String sql = "Create TEMPORARY table tempTable (c1 boolean, c2 byte)";
+        String sql = "Create TEMPORARY table tempTable (c1 boolean, c2 byte)";
         assertEquals("CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", QueryParser.getQueryParser().parseCommand(sql).toString()); //$NON-NLS-1$
     }
 

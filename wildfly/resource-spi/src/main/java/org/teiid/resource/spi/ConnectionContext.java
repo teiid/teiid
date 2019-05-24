@@ -31,76 +31,76 @@ import javax.security.auth.Subject;
  * connector connection is created.
  */
 public class ConnectionContext {
-	private static ThreadLocal<Subject> SUBJECT = new ThreadLocal<Subject>() {
-		@Override
-		protected Subject initialValue() {
-			return null;
-		}
-	};
+    private static ThreadLocal<Subject> SUBJECT = new ThreadLocal<Subject>() {
+        @Override
+        protected Subject initialValue() {
+            return null;
+        }
+    };
 
-	public static Subject getSubject() {
-		return SUBJECT.get();
-	}
+    public static Subject getSubject() {
+        return SUBJECT.get();
+    }
 
-	public static void setSubject(Subject subject) {
-		SUBJECT.set(subject);
-	}
+    public static void setSubject(Subject subject) {
+        SUBJECT.set(subject);
+    }
 
-	public static String getUserName(Subject subject, BasicManagedConnectionFactory mcf, String defalt) {
-		Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
-		if ((creds != null) && (creds.size() > 0)) {
-			for (PasswordCredential cred : creds) {
-				if (cred.getManagedConnectionFactory().equals(mcf)) {
-					if (cred.getUserName() != null) {
-						return cred.getUserName();
-					}
-				}
-			}
-		}
-		return defalt;
-	}
+    public static String getUserName(Subject subject, BasicManagedConnectionFactory mcf, String defalt) {
+        Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
+        if ((creds != null) && (creds.size() > 0)) {
+            for (PasswordCredential cred : creds) {
+                if (cred.getManagedConnectionFactory().equals(mcf)) {
+                    if (cred.getUserName() != null) {
+                        return cred.getUserName();
+                    }
+                }
+            }
+        }
+        return defalt;
+    }
 
-	public static String getPassword(Subject subject, BasicManagedConnectionFactory mcf, String userName, String defalt) {
-		Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
-		if ((creds != null) && (creds.size() > 0)) {
-			for (PasswordCredential cred : creds) {
-				if (cred.getManagedConnectionFactory().equals(mcf)) {
-					if (cred.getUserName().equals(userName)) {
-						if (cred.getPassword() != null) {
-							return new String(cred.getPassword());
-						}
-					}
-				}
-			}
-		}
-		return defalt;
-	}
+    public static String getPassword(Subject subject, BasicManagedConnectionFactory mcf, String userName, String defalt) {
+        Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
+        if ((creds != null) && (creds.size() > 0)) {
+            for (PasswordCredential cred : creds) {
+                if (cred.getManagedConnectionFactory().equals(mcf)) {
+                    if (cred.getUserName().equals(userName)) {
+                        if (cred.getPassword() != null) {
+                            return new String(cred.getPassword());
+                        }
+                    }
+                }
+            }
+        }
+        return defalt;
+    }
 
-	public static String[] getRoles(Subject subject, String[] defalt) {
-		ArrayList<String> roles = new ArrayList<String>();
-		Set<Group> principals = subject.getPrincipals(Group.class);
-		if ((principals != null) && (principals.size() > 0)) {
-			for (Group group : principals) {
-				if (group.getName().equalsIgnoreCase("roles")) { //$NON-NLS-1$
-					Enumeration<? extends Principal> members = group.members();
-					while(members.hasMoreElements()) {
-						Principal member = members.nextElement();
-						roles.add(member.getName());
-					}
-				}
-			}
-			return roles.toArray(new String[roles.size()]);
-		}
-		return defalt;
-	}
+    public static String[] getRoles(Subject subject, String[] defalt) {
+        ArrayList<String> roles = new ArrayList<String>();
+        Set<Group> principals = subject.getPrincipals(Group.class);
+        if ((principals != null) && (principals.size() > 0)) {
+            for (Group group : principals) {
+                if (group.getName().equalsIgnoreCase("roles")) { //$NON-NLS-1$
+                    Enumeration<? extends Principal> members = group.members();
+                    while(members.hasMoreElements()) {
+                        Principal member = members.nextElement();
+                        roles.add(member.getName());
+                    }
+                }
+            }
+            return roles.toArray(new String[roles.size()]);
+        }
+        return defalt;
+    }
 
-	// can not associate with MCF, as AS framework only identifies the PasswordCredential as known credential
-	// and assigns the MCF. So, we just take the first credential.
-	public static <T> T getSecurityCredential(Subject subject, Class<T> clazz) {
-		Set<T> creds = subject.getPrivateCredentials(clazz);
-		if ((creds != null) && (creds.size() > 0)) {
-			return creds.iterator().next();
-		}
-		return null;
-	}
+    // can not associate with MCF, as AS framework only identifies the PasswordCredential as known credential
+    // and assigns the MCF. So, we just take the first credential.
+    public static <T> T getSecurityCredential(Subject subject, Class<T> clazz) {
+        Set<T> creds = subject.getPrivateCredentials(clazz);
+        if ((creds != null) && (creds.size() > 0)) {
+            return creds.iterator().next();
+        }
+        return null;
+    }
 }

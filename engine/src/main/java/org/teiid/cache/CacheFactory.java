@@ -20,16 +20,16 @@ package org.teiid.cache;
 
 public interface CacheFactory {
 
-	/**
-	 * Create / Get the cache for the give type use
-	 * @param name - name of the cache
-	 * @return
-	 */
-	<K,V> Cache<K, V> get(String name);
+    /**
+     * Create / Get the cache for the give type use
+     * @param name - name of the cache
+     * @return
+     */
+    <K,V> Cache<K, V> get(String name);
 
-	/**
-	 * Destroy the cache factory and any caches underneath.
-	 */
-	void destroy();
+    /**
+     * Destroy the cache factory and any caches underneath.
+     */
+    void destroy();
 
 }

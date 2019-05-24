@@ -52,12 +52,12 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
 
     @Override
     public String getLabel() {
-    	return label;
+        return label;
     }
 
     @Override
     public void setLabel(String label) {
-    	this.label = label;
+        this.label = label;
     }
 
     public void process(ProcedurePlan procEnv) throws TeiidComponentException {
@@ -71,7 +71,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
                 Expression element = (Expression)schema.get(i);
                 ElementSymbol e = new ElementSymbol(rsName + Symbol.SEPARATOR + Symbol.getShortName(element));
                 e.setType(element.getType());
-				elements.add(e);
+                elements.add(e);
             }
         }
         for(int i=0; i< elements.size(); i++){

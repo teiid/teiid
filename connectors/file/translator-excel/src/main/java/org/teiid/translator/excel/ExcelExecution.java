@@ -37,12 +37,12 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
 
     private Class<?>[] expectedColumnTypes;
 
-	public ExcelExecution(Select query, ExecutionContext executionContext,
-			RuntimeMetadata metadata, VirtualFileConnection connection)
-			throws TranslatorException {
-	    super(executionContext, metadata, connection);
+    public ExcelExecution(Select query, ExecutionContext executionContext,
+            RuntimeMetadata metadata, VirtualFileConnection connection)
+            throws TranslatorException {
+        super(executionContext, metadata, connection);
         this.expectedColumnTypes = query.getColumnTypes();
-	    visit(query);
+        visit(query);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
         if (row == null) {
             return null;
         }
-    	return projectRow(row);
+        return projectRow(row);
     }
 
     /**
@@ -66,19 +66,19 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
         int i = -1;
         for (int index:this.visitor.getProjectedColumns()) {
 
-        	i++;
-        	// check if the row is ROW_ID
-        	if (index == -1) {
-        		output.add(id);
-        		continue;
-        	}
+            i++;
+            // check if the row is ROW_ID
+            if (index == -1) {
+                output.add(id);
+                continue;
+            }
 
-        	Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
-        	if (cell == null) {
-        		output.add(null);
-        		continue;
-        	}
-        	switch (this.evaluator.evaluateInCell(cell).getCellType()) {
+            Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
+            if (cell == null) {
+                output.add(null);
+                continue;
+            }
+            switch (this.evaluator.evaluateInCell(cell).getCellType()) {
                 case Cell.CELL_TYPE_NUMERIC:
                     output.add(convertFromExcelType(cell.getNumericCellValue(), cell, this.expectedColumnTypes[i]));
                     break;
@@ -89,7 +89,7 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
                     output.add(convertFromExcelType(cell.getBooleanCellValue(), this.expectedColumnTypes[i]));
                     break;
                 default:
-                	output.add(null);
+                    output.add(null);
                     break;
             }
         }

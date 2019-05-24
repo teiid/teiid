@@ -51,11 +51,11 @@ public class GroupBy extends BaseLanguageObject {
     }
 
     public boolean isRollup() {
-		return rollup;
-	}
+        return rollup;
+    }
 
     public void setRollup(boolean rollup) {
-		this.rollup = rollup;
-	}
+        this.rollup = rollup;
+    }
 
 }

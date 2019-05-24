@@ -25,17 +25,17 @@ import org.teiid.language.Command;
  */
 public interface ReusableExecution<C> extends Execution {
 
-	/**
-	 * Called to reinitialized the execution for use.
-	 * @param c
-	 * @param executionContext
-	 * @param connection
-	 */
-	void reset(Command c, ExecutionContext executionContext, C connection);
+    /**
+     * Called to reinitialized the execution for use.
+     * @param c
+     * @param executionContext
+     * @param connection
+     */
+    void reset(Command c, ExecutionContext executionContext, C connection);
 
-	/**
-	 * Called when the execution is no longer used.
-	 */
-	void dispose();
+    /**
+     * Called when the execution is no longer used.
+     */
+    void dispose();
 
 }

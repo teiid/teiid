@@ -45,39 +45,39 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class Command implements LanguageObject {
 
-	/**
-	 * Represents an unknown type of command
-	 */
-	public static final int TYPE_UNKNOWN = 0;
+    /**
+     * Represents an unknown type of command
+     */
+    public static final int TYPE_UNKNOWN = 0;
 
-	/**
-	 * Represents a SQL SELECT statement
-	 */
-	public static final int TYPE_QUERY = 1;
+    /**
+     * Represents a SQL SELECT statement
+     */
+    public static final int TYPE_QUERY = 1;
 
-	/**
-	 * Represents a SQL INSERT statement
-	 */
-	public static final int TYPE_INSERT = 2;
+    /**
+     * Represents a SQL INSERT statement
+     */
+    public static final int TYPE_INSERT = 2;
 
-	/**
-	 * Represents a SQL UPDATE statement
-	 */
-	public static final int TYPE_UPDATE = 3;
+    /**
+     * Represents a SQL UPDATE statement
+     */
+    public static final int TYPE_UPDATE = 3;
 
-	/**
-	 * Represents a SQL DELETE statement
-	 */
-	public static final int TYPE_DELETE = 4;
+    /**
+     * Represents a SQL DELETE statement
+     */
+    public static final int TYPE_DELETE = 4;
 
-	/**
-	 * Represents a stored procedure command
-	 */
+    /**
+     * Represents a stored procedure command
+     */
     public static final int TYPE_STORED_PROCEDURE = 6;
 
-	/**
-	 * Represents a update stored procedure command
-	 */
+    /**
+     * Represents a update stored procedure command
+     */
     public static final int TYPE_UPDATE_PROCEDURE = 7;
 
     /**
@@ -114,33 +114,33 @@ public abstract class Command implements LanguageObject {
 
     private boolean isResolved;
 
-	/** The option clause */
-	private Option option;
+    /** The option clause */
+    private Option option;
 
-	private ProcessorPlan plan;
+    private ProcessorPlan plan;
 
-	private SymbolMap correlatedReferences;
+    private SymbolMap correlatedReferences;
 
-	private CacheHint cacheHint;
-	private SourceHint sourceHint;
+    private CacheHint cacheHint;
+    private SourceHint sourceHint;
 
-	/**
-	 * Return type of command to make it easier to build switch statements by command type.
-	 * @return Type from TYPE constants
-	 */
-	public abstract int getType();
+    /**
+     * Return type of command to make it easier to build switch statements by command type.
+     * @return Type from TYPE constants
+     */
+    public abstract int getType();
 
-	/**
-	 * Get the correlated references to the containing scope only
-	 * @return
-	 */
-	public SymbolMap getCorrelatedReferences() {
-		return correlatedReferences;
-	}
+    /**
+     * Get the correlated references to the containing scope only
+     * @return
+     */
+    public SymbolMap getCorrelatedReferences() {
+        return correlatedReferences;
+    }
 
-	public void setCorrelatedReferences(SymbolMap correlatedReferences) {
-		this.correlatedReferences = correlatedReferences;
-	}
+    public void setCorrelatedReferences(SymbolMap correlatedReferences) {
+        this.correlatedReferences = correlatedReferences;
+    }
 
     public void setTemporaryMetadata(TempMetadataStore metadata) {
         this.tempGroupIDs = metadata;
@@ -193,7 +193,7 @@ public abstract class Command implements LanguageObject {
 
         copy.plan = this.plan;
         if (this.correlatedReferences != null) {
-        	copy.correlatedReferences = this.correlatedReferences.clone();
+            copy.correlatedReferences = this.correlatedReferences.clone();
         }
         if(this.getOption() != null) {
             copy.setOption( (Option) this.getOption().clone() );
@@ -254,19 +254,19 @@ public abstract class Command implements LanguageObject {
         this.option = option;
     }
 
-	/**
-	 * Get the ordered list of all elements returned by this query.  These elements
-	 * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
-	 * single column.
-	 * @return Ordered list of SingleElementSymbol
-	 */
-	public abstract List<Expression> getProjectedSymbols();
+    /**
+     * Get the ordered list of all elements returned by this query.  These elements
+     * may be ElementSymbols or ExpressionSymbols but in all cases each represents a
+     * single column.
+     * @return Ordered list of SingleElementSymbol
+     */
+    public abstract List<Expression> getProjectedSymbols();
 
-	/**
-	 * Whether the results are cachable.
-	 * @return True if the results are cachable; false otherwise.
-	 */
-	public abstract boolean areResultsCachable();
+    /**
+     * Whether the results are cachable.
+     * @return True if the results are cachable; false otherwise.
+     */
+    public abstract boolean areResultsCachable();
 
     public static List<Expression> getUpdateCommandSymbol() {
         if (updateCommandSymbol == null ) {
@@ -278,28 +278,28 @@ public abstract class Command implements LanguageObject {
     }
 
     public ProcessorPlan getProcessorPlan() {
-    	return this.plan;
+        return this.plan;
     }
 
     public void setProcessorPlan(ProcessorPlan plan) {
-    	this.plan = plan;
+        this.plan = plan;
     }
 
     public CacheHint getCacheHint() {
-		return cacheHint;
-	}
+        return cacheHint;
+    }
 
     public void setCacheHint(CacheHint cacheHint) {
-		this.cacheHint = cacheHint;
-	}
+        this.cacheHint = cacheHint;
+    }
 
     public SourceHint getSourceHint() {
-		return sourceHint;
-	}
+        return sourceHint;
+    }
 
     public void setSourceHint(SourceHint sourceHint) {
-		this.sourceHint = sourceHint;
-	}
+        this.sourceHint = sourceHint;
+    }
 
     /**
      * Returns a string representation of an instance of this class.
@@ -310,8 +310,8 @@ public abstract class Command implements LanguageObject {
     }
 
     protected boolean sameOptionAndHint(Command cmd) {
-    	return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
-    	EquivalenceUtil.areEqual(this.option, cmd.option);
+        return EquivalenceUtil.areEqual(this.cacheHint, cmd.cacheHint) &&
+        EquivalenceUtil.areEqual(this.option, cmd.option);
     }
 
     public boolean returnsResultSet() {
@@ -321,41 +321,41 @@ public abstract class Command implements LanguageObject {
     /**
      * @return null if unknown, empty if results are not returned, or the resultset columns
      */
-	public List<? extends Expression> getResultSetColumns() {
-		if (returnsResultSet()) {
-			return getProjectedSymbols();
-		}
-		return Collections.emptyList();
-	}
+    public List<? extends Expression> getResultSetColumns() {
+        if (returnsResultSet()) {
+            return getProjectedSymbols();
+        }
+        return Collections.emptyList();
+    }
 
-	//TODO: replace with enum
-	public static String getCommandToken(int commandType) {
-		switch (commandType) {
-		case Command.TYPE_INSERT:
-			return "I"; //$NON-NLS-1$
-		case Command.TYPE_UPDATE:
-			return "U"; //$NON-NLS-1$
-		case Command.TYPE_DELETE:
-			return "D"; //$NON-NLS-1$
-		case Command.TYPE_DROP:
-			return "DT"; //$NON-NLS-1$
-		case Command.TYPE_ALTER_PROC:
-			return "AP"; //$NON-NLS-1$
-		case Command.TYPE_ALTER_TRIGGER:
-			return "AT"; //$NON-NLS-1$
-		case Command.TYPE_ALTER_VIEW:
-			return "AV"; //$NON-NLS-1$
-		case Command.TYPE_CREATE:
-			return "CT"; //$NON-NLS-1$
-		case Command.TYPE_DYNAMIC:
-			return "Dy"; //$NON-NLS-1$
-		case Command.TYPE_QUERY:
-			return "S"; //$NON-NLS-1$
-		case Command.TYPE_STORED_PROCEDURE:
-			return "Sp"; //$NON-NLS-1$
-		case Command.TYPE_UPDATE_PROCEDURE:
-			return "Up"; //$NON-NLS-1$
-		}
+    //TODO: replace with enum
+    public static String getCommandToken(int commandType) {
+        switch (commandType) {
+        case Command.TYPE_INSERT:
+            return "I"; //$NON-NLS-1$
+        case Command.TYPE_UPDATE:
+            return "U"; //$NON-NLS-1$
+        case Command.TYPE_DELETE:
+            return "D"; //$NON-NLS-1$
+        case Command.TYPE_DROP:
+            return "DT"; //$NON-NLS-1$
+        case Command.TYPE_ALTER_PROC:
+            return "AP"; //$NON-NLS-1$
+        case Command.TYPE_ALTER_TRIGGER:
+            return "AT"; //$NON-NLS-1$
+        case Command.TYPE_ALTER_VIEW:
+            return "AV"; //$NON-NLS-1$
+        case Command.TYPE_CREATE:
+            return "CT"; //$NON-NLS-1$
+        case Command.TYPE_DYNAMIC:
+            return "Dy"; //$NON-NLS-1$
+        case Command.TYPE_QUERY:
+            return "S"; //$NON-NLS-1$
+        case Command.TYPE_STORED_PROCEDURE:
+            return "Sp"; //$NON-NLS-1$
+        case Command.TYPE_UPDATE_PROCEDURE:
+            return "Up"; //$NON-NLS-1$
+        }
         return "?"; //$NON-NLS-1$
     }
 

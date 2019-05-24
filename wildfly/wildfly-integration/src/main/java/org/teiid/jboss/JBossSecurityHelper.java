@@ -56,51 +56,51 @@ import org.teiid.security.GSSResult;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
-	private static final long serialVersionUID = 3598997061994110254L;
-	public static final String AT = "@"; //$NON-NLS-1$
+    private static final long serialVersionUID = 3598997061994110254L;
+    public static final String AT = "@"; //$NON-NLS-1$
 
-	@Override
-	public SecurityContext associateSecurityContext(Object newContext) {
-		SecurityContext context = SecurityActions.getSecurityContext();
-		if (newContext != context) {
-			SecurityActions.setSecurityContext((SecurityContext)newContext);
-		}
-		return context;
-	}
+    @Override
+    public SecurityContext associateSecurityContext(Object newContext) {
+        SecurityContext context = SecurityActions.getSecurityContext();
+        if (newContext != context) {
+            SecurityActions.setSecurityContext((SecurityContext)newContext);
+        }
+        return context;
+    }
 
-	@Override
-	public void clearSecurityContext() {
-		SecurityActions.clearSecurityContext();
-	}
+    @Override
+    public void clearSecurityContext() {
+        SecurityActions.clearSecurityContext();
+    }
 
-	@Override
-	public Object getSecurityContext(String securityDomain) {
-	    SecurityContext sc = SecurityActions.getSecurityContext();
+    @Override
+    public Object getSecurityContext(String securityDomain) {
+        SecurityContext sc = SecurityActions.getSecurityContext();
         if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
             return sc;
         }
         return null;
-	}
+    }
 
-	public SecurityContext createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
-		return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
-	}
+    public SecurityContext createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
+        return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
+    }
 
-	@Override
-	public Subject getSubjectInContext(Object context) {
-		if (!(context instanceof SecurityContext)) {
-			return null;
-		}
-		SecurityContext sc = (SecurityContext)context;
-		SubjectInfo si = sc.getSubjectInfo();
-		Subject subject = si.getAuthenticatedSubject();
-		return subject;
-	}
+    @Override
+    public Subject getSubjectInContext(Object context) {
+        if (!(context instanceof SecurityContext)) {
+            return null;
+        }
+        SecurityContext sc = (SecurityContext)context;
+        SubjectInfo si = sc.getSubjectInfo();
+        Subject subject = si.getAuthenticatedSubject();
+        return subject;
+    }
 
-	@Override
-	public SecurityContext authenticate(String domain,
-			String baseUsername, Credentials credentials, String applicationName) throws LoginException {
-	    // If username specifies a domain (user@domain) only that domain is authenticated against.
+    @Override
+    public SecurityContext authenticate(String domain,
+            String baseUsername, Credentials credentials, String applicationName) throws LoginException {
+        // If username specifies a domain (user@domain) only that domain is authenticated against.
         SecurityDomainContext securityDomainContext = getSecurityDomainContext(domain);
         if (securityDomainContext != null) {
             Subject subject = new Subject();

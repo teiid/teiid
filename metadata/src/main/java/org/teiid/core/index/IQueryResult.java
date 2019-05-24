@@ -12,5 +12,5 @@
 package org.teiid.core.index;
 
 public interface IQueryResult {
-	String getPath();
+    String getPath();
 }

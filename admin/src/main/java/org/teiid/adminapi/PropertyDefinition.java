@@ -25,13 +25,13 @@ import java.util.Collection;
  */
 public interface PropertyDefinition extends AdminObject {
 
-	public enum RestartType {
-		NONE,
-		SERVICE,
-		PROCESS,
-		ALL_PROCESSES,
-		CLUSTER
-	}
+    public enum RestartType {
+        NONE,
+        SERVICE,
+        PROCESS,
+        ALL_PROCESSES,
+        CLUSTER
+    }
     /**
      * The value of the maximum multiplicity if the multiplicity is considered unbounded.
      */

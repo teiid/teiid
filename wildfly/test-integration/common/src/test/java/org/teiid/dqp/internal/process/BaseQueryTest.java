@@ -78,20 +78,20 @@ public abstract class BaseQueryTest extends TestCase {
     }
 
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
-    	CommandContext context = createCommandContext();
+        CommandContext context = createCommandContext();
         BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
         bm.setProcessorBatchSize(context.getProcessorBatchSize());
         context.setBufferManager(bm);
         doProcess(metadata, sql, capFinder, dataManager, expectedResults,
-				debug, context);
+                debug, context);
     }
 
-	protected void doProcess(QueryMetadataInterface metadata, String sql,
-			CapabilitiesFinder capFinder, ProcessorDataManager dataManager,
-			List[] expectedResults, boolean debug, CommandContext context)
-			throws TeiidComponentException, TeiidProcessingException,
-			QueryMetadataException, QueryPlannerException, Exception {
-		Command command = TestOptimizer.helpGetCommand(sql, metadata);
+    protected void doProcess(QueryMetadataInterface metadata, String sql,
+            CapabilitiesFinder capFinder, ProcessorDataManager dataManager,
+            List[] expectedResults, boolean debug, CommandContext context)
+            throws TeiidComponentException, TeiidProcessingException,
+            QueryMetadataException, QueryPlannerException, Exception {
+        Command command = TestOptimizer.helpGetCommand(sql, metadata);
 
         // plan
         AnalysisRecord analysisRecord = new AnalysisRecord(false, debug);
@@ -104,8 +104,8 @@ public abstract class BaseQueryTest extends TestCase {
             }
         }
 
-    	TestProcessor.doProcess(plan, dataManager, expectedResults, context);
-	}
+        TestProcessor.doProcess(plan, dataManager, expectedResults, context);
+    }
 
     protected CommandContext createCommandContext() {
         CommandContext context = new CommandContext(new RequestID(), "test", "user", "myvdb", 1); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

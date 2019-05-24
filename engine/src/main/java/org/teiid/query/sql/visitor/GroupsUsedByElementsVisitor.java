@@ -38,9 +38,9 @@ public class GroupsUsedByElementsVisitor {
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(obj, true);
 
         for (ElementSymbol elementSymbol : elements) {
-        	if (elementSymbol.getGroupSymbol() != null) {
-        		groups.add(elementSymbol.getGroupSymbol());
-        	}
+            if (elementSymbol.getGroupSymbol() != null) {
+                groups.add(elementSymbol.getGroupSymbol());
+            }
         }
     }
 

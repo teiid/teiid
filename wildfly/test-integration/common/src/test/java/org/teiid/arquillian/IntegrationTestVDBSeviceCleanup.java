@@ -39,50 +39,50 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestVDBSeviceCleanup extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+    private Admin admin;
 
-	@Before
-	public void setup() throws Exception {
-		admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
-	}
-
-	@After
-	public void teardown() throws AdminException {
-		AdminUtil.cleanUp(admin);
-		admin.close();
-	}
-
-	@Test
-    public void testServiceCleanup() throws Exception {
-		admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
-
-		createDS("ServiceDS");
-
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
-
-		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
-
-		admin.undeploy("service-vdb.xml");
-
-		admin.deleteDataSource("ServiceDS");
-
-		/*
-		admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
-
-		createDS("ServiceDS");
-
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
-
-		assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
-		*/
+    @Before
+    public void setup() throws Exception {
+        admin = AdminFactory.getInstance().createAdmin("localhost", AdminUtil.MANAGEMENT_PORT,	"admin", "admin".toCharArray());
     }
 
-	private void createDS(String deployName) throws AdminException {
-		Properties props = new Properties();
-		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
-		props.setProperty("user-name", "sa");
-		props.setProperty("password", "sa");
-		AdminUtil.createDataSource(admin, deployName, "h2", props);
-	}
+    @After
+    public void teardown() throws AdminException {
+        AdminUtil.cleanUp(admin);
+        admin.close();
+    }
+
+    @Test
+    public void testServiceCleanup() throws Exception {
+        admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
+
+        createDS("ServiceDS");
+
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1));
+
+        assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
+
+        admin.undeploy("service-vdb.xml");
+
+        admin.deleteDataSource("ServiceDS");
+
+        /*
+        admin.deploy("service-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("service-vdb.xml")));
+
+        createDS("ServiceDS");
+
+        assertTrue(AdminUtil.waitForVDBLoad(admin, "service", 1, 3));
+
+        assertNotNull(TeiidDriver.getInstance().connect("jdbc:teiid:service@mm://localhost:31000;user=user;password=user", null));
+        */
+    }
+
+    private void createDS(String deployName) throws AdminException {
+        Properties props = new Properties();
+        props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+        props.setProperty("user-name", "sa");
+        props.setProperty("password", "sa");
+        AdminUtil.createDataSource(admin, deployName, "h2", props);
+    }
 
 }

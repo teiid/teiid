@@ -64,17 +64,17 @@ public class Insert extends BaseLanguageObject implements BulkCommand {
     }
 
     public void setValueSource(InsertValueSource values) {
-    	this.valueSource = values;
+        this.valueSource = values;
     }
 
     @Override
-	public Iterator<? extends List<?>> getParameterValues() {
-    	return this.parameterValues;
+    public Iterator<? extends List<?>> getParameterValues() {
+        return this.parameterValues;
     }
 
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
-		this.parameterValues = parameterValues;
-	}
+        this.parameterValues = parameterValues;
+    }
 
     public boolean isUpsert() {
         return upsert;

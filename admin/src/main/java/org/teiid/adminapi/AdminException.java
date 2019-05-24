@@ -38,8 +38,8 @@ import org.teiid.core.TeiidException;
  */
 public abstract class AdminException extends TeiidException {
 
-	private static final long serialVersionUID = -4446936145500241358L;
-	// List of Admin exceptions in
+    private static final long serialVersionUID = -4446936145500241358L;
+    // List of Admin exceptions in
     // case of multiple failure
     private List<AdminException> children;
 
@@ -62,7 +62,7 @@ public abstract class AdminException extends TeiidException {
     }
 
     AdminException(Throwable cause) {
-    	super(cause);
+        super(cause);
     }
 
     /**
@@ -107,9 +107,9 @@ public abstract class AdminException extends TeiidException {
      * @since 4.3
      */
     public List<AdminException> getChildren() {
-    	if (children == null) {
-    		return Collections.emptyList();
-    	}
+        if (children == null) {
+            return Collections.emptyList();
+        }
         return children;
     }
 

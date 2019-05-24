@@ -33,9 +33,9 @@ public class AggregateFunction extends Function {
     public static final String MIN = "MIN"; //$NON-NLS-1$
     public static final String MAX = "MAX";     //$NON-NLS-1$
     public static final String STDDEV_POP = "STDDEV_POP"; //$NON-NLS-1$
-	public static final String STDDEV_SAMP = "STDDEV_SAMP"; //$NON-NLS-1$
-	public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
-	public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
+    public static final String STDDEV_SAMP = "STDDEV_SAMP"; //$NON-NLS-1$
+    public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
+    public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
 
     private String aggName;
     private boolean isDistinct;
@@ -43,7 +43,7 @@ public class AggregateFunction extends Function {
     private OrderBy orderBy;
 
     public AggregateFunction(String aggName, boolean isDistinct, List<? extends Expression> params, Class<?> type) {
-    	super(aggName, params, type);
+        super(aggName, params, type);
         this.aggName = aggName;
         this.isDistinct = isDistinct;
     }
@@ -75,9 +75,9 @@ public class AggregateFunction extends Function {
      * @deprecated
      */
     public Expression getExpression() {
-    	if (this.getParameters().isEmpty()) {
-    		return null;
-    	}
+        if (this.getParameters().isEmpty()) {
+            return null;
+        }
         return this.getParameters().get(0);
     }
 
@@ -109,19 +109,19 @@ public class AggregateFunction extends Function {
      * @return the filter clause condition
      */
     public Expression getCondition() {
-		return condition;
-	}
+        return condition;
+    }
 
     public void setCondition(Expression condition) {
-		this.condition = condition;
-	}
+        this.condition = condition;
+    }
 
     public OrderBy getOrderBy() {
-		return orderBy;
-	}
+        return orderBy;
+    }
 
-	public void setOrderBy(OrderBy orderBy) {
-		this.orderBy = orderBy;
-	}
+    public void setOrderBy(OrderBy orderBy) {
+        this.orderBy = orderBy;
+    }
 
 }

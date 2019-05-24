@@ -81,8 +81,8 @@ public interface ExecutionProperties {
     public static final String DISABLE_LOCAL_TRANSACTIONS = "disableLocalTxn";  //$NON-NLS-1$
 
     /**
-	 * Overrides the handling of double quoted identifiers to allow them to be strings.
-	 * @since 4.3
+     * Overrides the handling of double quoted identifiers to allow them to be strings.
+     * @since 4.3
      */
     public static final String ANSI_QUOTED_IDENTIFIERS = "ansiQuotedIdentifiers"; //$NON-NLS-1$
 
@@ -100,16 +100,16 @@ public interface ExecutionProperties {
 
     public static final String QUERYTIMEOUT = "QUERYTIMEOUT"; //$NON-NLS-1$
 
-	/**
-	 * TEIID-1651
-	 * A change was made in JDBC4 so that when an 'Alias' is used it will
-	 * now be returned as the label.   Prior to this, it was returned as
-	 * the name.   Setting this property to <code>false</code> will enable
-	 * backwards compatibility when JDBC3 and older support is still required.
-	 *
-	 * Default is <code>true</code>
-	 * @since 7.4.1
-	 */
+    /**
+     * TEIID-1651
+     * A change was made in JDBC4 so that when an 'Alias' is used it will
+     * now be returned as the label.   Prior to this, it was returned as
+     * the name.   Setting this property to <code>false</code> will enable
+     * backwards compatibility when JDBC3 and older support is still required.
+     *
+     * Default is <code>true</code>
+     * @since 7.4.1
+     */
 
     public static final String JDBC4COLUMNNAMEANDLABELSEMANTICS = "useJDBC4ColumnNameAndLabelSemantics"; //$NON-NLS-1$
 

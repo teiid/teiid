@@ -74,12 +74,12 @@ public class DependentProcedureAccessNode extends AccessNode {
 
     @Override
     public void open() throws TeiidComponentException,
-    		TeiidProcessingException {
-    	CommandContext context  = getContext().clone();
-    	context.pushVariableContext(new VariableContext());
-    	this.setContext(context);
-    	DependentProcedureExecutionNode.shareVariableContext(this, context);
-    	super.open();
+            TeiidProcessingException {
+        CommandContext context  = getContext().clone();
+        context.pushVariableContext(new VariableContext());
+        this.setContext(context);
+        DependentProcedureExecutionNode.shareVariableContext(this, context);
+        super.open();
     }
 
     /**
@@ -92,7 +92,7 @@ public class DependentProcedureAccessNode extends AccessNode {
         }
 
         if (criteriaProcessor.prepareNextCommand(this.getContext().getVariableContext())) {
-        	return super.prepareNextCommand(atomicCommand);
+            return super.prepareNextCommand(atomicCommand);
         }
 
         return false;
@@ -100,7 +100,7 @@ public class DependentProcedureAccessNode extends AccessNode {
 
     @Override
     protected boolean processCommandsIndividually() {
-    	return true;
+        return true;
     }
 
     /**
@@ -119,11 +119,11 @@ public class DependentProcedureAccessNode extends AccessNode {
 
     @Override
     public Boolean requiresTransaction(boolean transactionalReads) {
-    	Boolean requires = super.requiresTransaction(transactionalReads);
-		if (requires == null || requires) {
-			return true;
-		}
-		return false;
+        Boolean requires = super.requiresTransaction(transactionalReads);
+        if (requires == null || requires) {
+            return true;
+        }
+        return false;
     }
 
 }

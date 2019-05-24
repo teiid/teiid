@@ -30,11 +30,11 @@ package org.teiid.query.sql.lang;
  */
 public abstract class PredicateCriteria extends Criteria {
 
-	public interface Negatable {
+    public interface Negatable {
 
-		void negate();
+        void negate();
 
-	}
+    }
 
     /**
      * Constructs a default instance of this class.
@@ -42,10 +42,10 @@ public abstract class PredicateCriteria extends Criteria {
     public PredicateCriteria() {
     }
 
-	/**
-	 * Deep copy of object
-	 * @return Deep copy of object
-	 */
-	public abstract Object clone();
+    /**
+     * Deep copy of object
+     * @return Deep copy of object
+     */
+    public abstract Object clone();
 
 }  // END CLASS

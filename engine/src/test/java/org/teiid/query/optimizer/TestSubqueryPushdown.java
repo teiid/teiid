@@ -58,24 +58,24 @@ import org.teiid.translator.SourceSystemFunctions;
 @SuppressWarnings("nls")
 public class TestSubqueryPushdown {
 
-	@Test public void testPushSubqueryBelowVirtual() throws Exception {
-		String sql = "select g3.e1 from (select e1, max(e2) y from pm1.g1 group by e1) x, pm1.g3 where exists (select e1 from pm1.g2 where x.e1 = e1)"; //$NON-NLS-1$
+    @Test public void testPushSubqueryBelowVirtual() throws Exception {
+        String sql = "select g3.e1 from (select e1, max(e2) y from pm1.g1 group by e1) x, pm1.g3 where exists (select e1 from pm1.g2 where x.e1 = e1)"; //$NON-NLS-1$
 
-	    // Create capabilities
-	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-	    caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        // Create capabilities
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
-	    // Plan query
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
-	        null, capFinder,
-	        new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE EXISTS (SELECT g_1.e1 FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1)", //$NON-NLS-1$
-	    		"SELECT g_0.e1 FROM pm1.g3 AS g_0" },  //$NON-NLS-1$
-	        TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
+            null, capFinder,
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE EXISTS (SELECT g_1.e1 FROM pm1.g2 AS g_1 WHERE g_1.e1 = g_0.e1)", //$NON-NLS-1$
+                "SELECT g_0.e1 FROM pm1.g3 AS g_0" },  //$NON-NLS-1$
+            TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
@@ -92,30 +92,30 @@ public class TestSubqueryPushdown {
                 0,      // Sort
                 0       // UnionAll
             });
-	}
+    }
 
-	/**
-	 * Same as above, but using a correlated variable based on an aggregate
-	 * @throws Exception
-	 */
-	@Test public void testDontPushSubqueryBelowVirtual() throws Exception {
-		String sql = "select g3.e1 from (select e1, max(e2) y from pm1.g1 group by e1) x, pm1.g3 where exists (select e1 from pm1.g2 where x.y = e1)"; //$NON-NLS-1$
+    /**
+     * Same as above, but using a correlated variable based on an aggregate
+     * @throws Exception
+     */
+    @Test public void testDontPushSubqueryBelowVirtual() throws Exception {
+        String sql = "select g3.e1 from (select e1, max(e2) y from pm1.g1 group by e1) x, pm1.g3 where exists (select e1 from pm1.g2 where x.y = e1)"; //$NON-NLS-1$
 
-	    // Create capabilities
-	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-	    caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        // Create capabilities
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
-	    QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
-	    // Plan query
-	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
-	        null, capFinder,
-	        new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0", //$NON-NLS-1$
-	    		"SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" },  //$NON-NLS-1$
-	        TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
+            null, capFinder,
+            new String[] { "SELECT g_0.e1 FROM pm1.g3 AS g_0", //$NON-NLS-1$
+                "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0" },  //$NON-NLS-1$
+            TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);
         TestOptimizer.checkNodeTypes(plan, new int[] {
                 2,      // Access
                 0,      // DependentAccess
@@ -132,9 +132,9 @@ public class TestSubqueryPushdown {
                 0,      // Sort
                 0       // UnionAll
             });
-	}
+    }
 
-	@Test public void testPushCorrelatedSubquery1() throws Exception {
+    @Test public void testPushCorrelatedSubquery1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
@@ -693,7 +693,7 @@ public class TestSubqueryPushdown {
         });
     }
 
-	@Test public void testPushMultipleCorrelatedSubquery1() {
+    @Test public void testPushMultipleCorrelatedSubquery1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_OR, true);
@@ -750,10 +750,10 @@ public class TestSubqueryPushdown {
 
         plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
                 null, capFinder,
-		new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
-		checkNodeTypes(plan, FULL_PUSHDOWN);
+        new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);
 
-		assertNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
+        assertNull(plan.getDescriptionProperties().getProperty("Query Subplan 0"));
     }
 
     @Test public void testScalarSubquery2() {
@@ -806,15 +806,15 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached(), cc);
     }
 
     //won't rewrite since we need distinct and don't have all equi join predicates
     @Test public void testSubqueryRewriteToJoinDistinct1() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1 and e2 < x.e2)", "SELECT e1 FROM pm1.g1 AS x WHERE EXISTS (SELECT pm1.g1.e1 FROM pm1.g1 WHERE (e1 = x.e1) AND (e2 < x.e2) LIMIT 1)", RealMetadataFactory.example1Cached(), cc);
     }
 
@@ -822,8 +822,8 @@ public class TestSubqueryPushdown {
      * Agg does not depend on cardinality
      */
     @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached(), cc);
     }
 
@@ -835,28 +835,28 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryDoNotRewriteToJoin() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where not exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1 WHERE NOT EXISTS (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e1 = pm3.g1.e1 LIMIT 1)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryDoNotRewriteToJoin2() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where e2 < some (select pm1.g1.e2 FROM pm1.g1)", "SELECT e1 FROM pm3.g1 WHERE e2 < (SELECT MAX(X.e2) FROM (SELECT pm1.g1.e2 FROM pm1.g1) AS X)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryDoNotRewriteToJoin3() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where e2 < some (select pm1.g1.e2 FROM pm1.g1 where pm3.g1.e3 <> e3)", "SELECT e1 FROM pm3.g1 WHERE e2 < SOME (SELECT MAX(pm1.g1.e2) FROM pm1.g1 WHERE e3 <> pm3.g1.e3)", RealMetadataFactory.example4(), cc);
         //should rewrite as we have an equi join predicate
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where e2 < some (select pm1.g1.e2 FROM pm1.g1 where pm3.g1.e3 = e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(pm1.g1.e2) AS expr1, e3 FROM pm1.g1 GROUP BY e3) AS X__1 WHERE (e2 < X__1.expr1) AND (pm3.g1.e3 = X__1.e3)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryRewriteToJoin() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
     }
 
@@ -885,7 +885,7 @@ public class TestSubqueryPushdown {
 
     /* the uniqueness must be on the IN and not the correlated variables */
     @Test public void testSubqueryRewriteToJoin2d() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e3 in /*+ mj */ (select pm1.g1.e3 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e3 IN /*+ MJ */ (SELECT pm1.g1.e3 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e3 in /*+ mj */ (select pm1.g1.e3 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e3 IN /*+ MJ */ (SELECT pm1.g1.e3 FROM pm1.g1 WHERE e1 = pm3.g1.e1)", RealMetadataFactory.example4());
     }
 
     /**
@@ -900,14 +900,14 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testDontRewriteToJoinWithOtherCriteria() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryRewriteToJoinWithAggregate() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
 
@@ -920,20 +920,20 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryRewriteToJoinWithAggregate2() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e3) AS expr3 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.expr3 < pm3.g1.e3) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryRewriteToJoinWithGroupingExpression() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT MIN(e3) AS expr1, concat(convert(e4, string), 'x') AS expr2, concat(convert(MIN(e3), string), concat(convert(e4, string), 'x')) AS expr FROM pm1.g1 GROUP BY concat(convert(e4, string), 'x')) AS X__1 WHERE convert(pm3.g1.e3, string) = X__1.expr", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryRewriteToJoinExistsNoKey() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm1.g1 x where exists (select 1 FROM pm1.g2 where pm1.g2.e1 = x.e1)", "SELECT e1 FROM pm1.g1 AS x, (SELECT DISTINCT pm1.g2.e1 FROM pm1.g2) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
     }
 
@@ -954,24 +954,24 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testRewriteSubqueryCompare() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 <> SOME (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 <> SOME (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteSubqueryCompare1() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 NOT IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 <> ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 NOT IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteSubqueryCompare2() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ANY (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 IN (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteSubqueryCompare3() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 = ALL (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+        TestQueryRewriter.helpTestRewriteCommand("select e1 from pm1.g1 where e1 = ALL (select e1 from pm1.g1)", "SELECT e1 FROM pm1.g1 WHERE e1 = ALL (SELECT e1 FROM pm1.g1)", RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testSubqueryExpressionJoin() throws Exception {
-    	CommandContext cc = new CommandContext();
-    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        CommandContext cc = new CommandContext();
+        cc.setOptions(new Options().subqueryUnnestDefault(true));
         TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e2) AS expr3 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.expr3, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
 
@@ -1146,7 +1146,7 @@ public class TestSubqueryPushdown {
     }
 
     void checkJoinCounts(ProcessorPlan plan, int semi, int antiSemi) {
-    	checkNodeTypes(plan, new int[] {semi, antiSemi}, new Class[] {SemiJoin.class, AntiSemiJoin.class});
+        checkNodeTypes(plan, new int[] {semi, antiSemi}, new Class[] {SemiJoin.class, AntiSemiJoin.class});
     }
 
     @Test public void testNonSemiJoin() throws Exception {
@@ -1174,12 +1174,12 @@ public class TestSubqueryPushdown {
      * Test to ensure that we don't create an invalid semijoin query when attempting to convert the subquery to a semijoin
      */
     @Test public void testGeneratedSemijoinQuery() throws Exception {
-    	String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = /*+ MJ */ (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
-    	TestQueryRewriter.helpTestRewriteCommand(sql, "SELECT intkey FROM BQT1.SmallA AS A, (SELECT MAX(convert(shortvalue, integer)) AS expr1, b.intnum FROM (SELECT BQT1.SmallA.IntKey, BQT1.SmallA.StringKey, BQT1.SmallA.IntNum, BQT1.SmallA.StringNum, BQT1.SmallA.FloatNum, BQT1.SmallA.LongNum, BQT1.SmallA.DoubleNum, BQT1.SmallA.ByteNum, BQT1.SmallA.DateValue, BQT1.SmallA.TimeValue, BQT1.SmallA.TimestampValue, BQT1.SmallA.BooleanValue, BQT1.SmallA.CharValue, BQT1.SmallA.ShortValue, BQT1.SmallA.BigIntegerValue, BQT1.SmallA.BigDecimalValue, BQT1.SmallA.ObjectValue FROM BQT1.SmallA) AS B GROUP BY b.intnum) AS X__1 WHERE (a.intnum = X__1.IntNum) AND (convert(shortvalue, integer) = X__1.expr1) ORDER BY intkey", RealMetadataFactory.exampleBQTCached());
+        String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE convert(shortvalue, integer) = /*+ MJ */ (SELECT MAX(convert(shortvalue, integer)) FROM (select * from BQT1.SmallA) AS B WHERE b.intnum = a.intnum) ORDER BY intkey";
+        TestQueryRewriter.helpTestRewriteCommand(sql, "SELECT intkey FROM BQT1.SmallA AS A, (SELECT MAX(convert(shortvalue, integer)) AS expr1, b.intnum FROM (SELECT BQT1.SmallA.IntKey, BQT1.SmallA.StringKey, BQT1.SmallA.IntNum, BQT1.SmallA.StringNum, BQT1.SmallA.FloatNum, BQT1.SmallA.LongNum, BQT1.SmallA.DoubleNum, BQT1.SmallA.ByteNum, BQT1.SmallA.DateValue, BQT1.SmallA.TimeValue, BQT1.SmallA.TimestampValue, BQT1.SmallA.BooleanValue, BQT1.SmallA.CharValue, BQT1.SmallA.ShortValue, BQT1.SmallA.BigIntegerValue, BQT1.SmallA.BigDecimalValue, BQT1.SmallA.ObjectValue FROM BQT1.SmallA) AS B GROUP BY b.intnum) AS X__1 WHERE (a.intnum = X__1.IntNum) AND (convert(shortvalue, integer) = X__1.expr1) ORDER BY intkey", RealMetadataFactory.exampleBQTCached());
     }
 
     @Test public void testGeneratedSemijoinQuery1() throws Exception {
-    	TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 IN /*+ mj */ (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.expr1)", RealMetadataFactory.example4());
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 IN /*+ mj */ (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (pm3.g1.e1 = X__1.e1) AND (pm3.g1.e2 = X__1.expr1)", RealMetadataFactory.example4());
     }
 
     @Test public void testCompareSubquery2() throws Exception {
@@ -1214,14 +1214,14 @@ public class TestSubqueryPushdown {
      * Shows the default preference against on subquery
      */
     @Test public void testSubuqeryOn() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 INNER JOIN bqt1.smallb as AG5 ON 1 = 1 WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1233,13 +1233,13 @@ public class TestSubqueryPushdown {
      * Shows the pushdown is inhibited due to lack of support
      */
     @Test public void testSubuqeryOn1() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
         TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1250,14 +1250,14 @@ public class TestSubqueryPushdown {
      * Shows pushdown of on subquery with support
      */
     @Test public void testSubuqeryOn2() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+        bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
         TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1270,10 +1270,10 @@ public class TestSubqueryPushdown {
      * Shows the uncorrelated subquery is evaluated ahead of time
      */
     @Test public void testCorrelatedOnly() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla where EXISTS (SELECT 'Y' FROM bqt1.mediuma)", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1288,8 +1288,8 @@ public class TestSubqueryPushdown {
      * Detect if a subquery should prevent pushdown
      */
     @Test public void testDeleteSubquery() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         TestOptimizer.helpPlan("delete FROM bqt1.smalla where intkey in (select cast(stringkey as integer) from bqt1.smallb)", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       null, false); //$NON-NLS-1$
@@ -1317,7 +1317,7 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryPlan() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
         ProcessorPlan plan = TestOptimizer.helpPlan("select 1, (select cast(stringkey as integer) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
@@ -1325,14 +1325,14 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testCorrelatedGroupingExpression() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
-    	ProcessorPlan plan = TestOptimizer.helpPlan("select intkey, (select avg(intkey) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla group by intkey", //$NON-NLS-1$
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("select intkey, (select avg(intkey) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla group by intkey", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {"SELECT g_0.IntKey, (SELECT AVG(g_1.IntKey) FROM BQT1.SmallB AS g_1 WHERE g_1.IntKey = g_0.IntKey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
@@ -1484,10 +1484,10 @@ public class TestSubqueryPushdown {
      * Shows the default preference against on subquery
      */
     @Test public void testSubuqeryLimit() throws Exception {
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
-    	bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
         TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE bqt1.smalla.intkey = bqt1.mediuma.intnum order by stringkey limit 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1504,7 +1504,7 @@ public class TestSubqueryPushdown {
     @Test public void testNestedSubquerySemiJoin() throws Exception {
         String sql = "SELECT intkey FROM BQT1.SmallA AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM BQT1.SMALLA AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                 RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
@@ -1529,7 +1529,7 @@ public class TestSubqueryPushdown {
     @Test public void testNestedSubquerySemiJoin1() throws Exception {
         String sql = "SELECT intkey FROM (select * from bqt1.smalla) AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM bqt1.smalla AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                 RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
@@ -1549,7 +1549,7 @@ public class TestSubqueryPushdown {
     @Test public void testNestedSubquerySemiJoin2() throws Exception {
         String sql = "SELECT intkey FROM bqt1.smalla AS A WHERE INTKEY IN /*+ mj */ (SELECT CONVERT(STRINGKEY, INTEGER) FROM (select * from bqt1.smalla) AS A WHERE STRINGKEY IN (SELECT CONVERT(INTKEY, STRING) FROM BQT1.SMALLA AS B WHERE A.INTNUM = B.INTNUM))";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,
                 RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
@@ -1567,12 +1567,12 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testAliasConflict() throws Exception {
-    	String sql = "select * from ( SELECT ( SELECT x.e1 FROM pm1.g1 AS x WHERE x.e2 = g_0.e2 ) AS c_2 FROM pm1.g2 AS g_0 ) AS v_0";
+        String sql = "select * from ( SELECT ( SELECT x.e1 FROM pm1.g1 AS x WHERE x.e2 = g_0.e2 ) AS c_2 FROM pm1.g2 AS g_0 ) AS v_0";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
         TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1580,18 +1580,18 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testPreEvaluationInAggregate() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x",
-    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"),
-				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x",
+                new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"),
+                new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
 
-    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x INNER JOIN pg.test_a y ON x.b = y.b";
+        String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x INNER JOIN pg.test_a y ON x.b = y.b";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-    	bsc.setFunctionSupport("-", true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        bsc.setFunctionSupport("-", true);
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       tm, null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1607,18 +1607,18 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testPreEvaluationInAggregate1() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL("x",
-    			new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"),
-				new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("x",
+                new DDLHolder("my", "CREATE foreign TABLE test_b (b integer, c integer)"),
+                new DDLHolder("pg", "CREATE foreign TABLE test_a (a integer, b integer); CREATE foreign TABLE test_only_pg (a integer, b integer);"));
 
-    	String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x";
+        String sql = "SELECT SUM(x.b - (SELECT a FROM pg.test_only_pg WHERE b = 1)) FROM my.test_b x";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-    	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-    	bsc.setFunctionSupport("-", true);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR_PROJECTION, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        bsc.setFunctionSupport("-", true);
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       tm, null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1633,12 +1633,12 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testNestedCorrelation() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
-    			+ "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
+                + "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
 
-    	String sql = "SELECT (select c2 from b where c3 = (select c5 from c where c6 = c1)) FROM a group by c1, c2";
+        String sql = "SELECT (select c2 from b where c3 = (select c5 from c where c6 = c1)) FROM a group by c1, c2";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
         /*ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       tm, null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1674,12 +1674,12 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testNestedCorrelationInAggregate() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
-    			+ "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("CREATE foreign TABLE a (c1 integer, c2 integer); "
+                + "CREATE foreign TABLE b (c3 integer, c4 integer); CREATE foreign TABLE c (c5 integer, c6 integer);", "x", "y");
 
-    	String sql = "SELECT max((select c2 from (select * from b as x) as b where c3 = (select c5 from c as x where c6 = c1))) FROM a as x group by c1, c2";
+        String sql = "SELECT max((select c2 from (select * from b as x) as b where c3 = (select c5 from c as x where c6 = c1))) FROM a as x group by c1, c2";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       tm, null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
@@ -1695,12 +1695,12 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryProducingBuffer() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
 
-    	String sql = "SELECT e1, (select e2 from pm2.g1 where e1 = pm1.g1.e1 order by e2 limit 1) from pm1.g1 limit 1";
+        String sql = "SELECT e1, (select e2 from pm2.g1 where e1 = pm1.g1.e1 order by e2 limit 1) from pm1.g1 limit 1";
 
-    	BasicSourceCapabilities bsc = getTypicalCapabilities();
-    	bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, //$NON-NLS-1$
                                       tm, null, new DefaultCapabilitiesFinder(bsc),
@@ -1709,28 +1709,28 @@ public class TestSubqueryPushdown {
 
         HardcodedDataManager hdm = new HardcodedDataManager(tm) {
 
-        	@Override
-        	public TupleSource registerRequest(CommandContext context,
-        			Command command, String modelName,
-        			RegisterRequestParameter parameterObject)
-        			throws TeiidComponentException {
-        		if (command.toString().equals("SELECT g_0.e2 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'")) {
-        			return new TupleSource() {
+            @Override
+            public TupleSource registerRequest(CommandContext context,
+                    Command command, String modelName,
+                    RegisterRequestParameter parameterObject)
+                    throws TeiidComponentException {
+                if (command.toString().equals("SELECT g_0.e2 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'")) {
+                    return new TupleSource() {
 
-						@Override
-						public List<?> nextTuple() throws TeiidComponentException,
-								TeiidProcessingException {
-							throw new TeiidProcessingException("something's wrong");
-						}
+                        @Override
+                        public List<?> nextTuple() throws TeiidComponentException,
+                                TeiidProcessingException {
+                            throw new TeiidProcessingException("something's wrong");
+                        }
 
-						@Override
-						public void closeSource() {
+                        @Override
+                        public void closeSource() {
 
-						}
-					};
-        		}
-        		return super.registerRequest(context, command, modelName, parameterObject);
-        	}
+                        }
+                    };
+                }
+                return super.registerRequest(context, command, modelName, parameterObject);
+            }
 
         };
         hdm.addData("SELECT g_0.e1 FROM g1 AS g_0", Arrays.asList("a"));
@@ -1739,17 +1739,17 @@ public class TestSubqueryPushdown {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setMetadata(tm);
         try {
-        	TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
-        	fail();
+            TestProcessor.helpProcess(plan, cc, hdm, new List[] {Arrays.asList(2)} );
+            fail();
         } catch (TeiidProcessingException e) {
-        	assert(e.getMessage().contains("something's wrong"));
+            assert(e.getMessage().contains("something's wrong"));
         }
     }
 
-	@Test public void testAggNestedSubquery() throws Exception {
-		String sql = "SELECT g0.a, g0.b, (SELECT max((SELECT g2.a FROM m.z AS g2 WHERE g2.b = g1.a)) FROM m.y AS g1 WHERE g0.a = g1.b) FROM m.x AS g0"; //$NON-NLS-1$
+    @Test public void testAggNestedSubquery() throws Exception {
+        String sql = "SELECT g0.a, g0.b, (SELECT max((SELECT g2.a FROM m.z AS g2 WHERE g2.b = g1.a)) FROM m.y AS g1 WHERE g0.a = g1.b) FROM m.x AS g0"; //$NON-NLS-1$
 
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table x ("
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table x ("
                 + " a string, "
                 + " b string, "
                 + " primary key (a)"
@@ -1765,15 +1765,15 @@ public class TestSubqueryPushdown {
                 + " primary key (a)"
                 + ") options (updatable true);", "x", "m");
 
-		ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
-	    HardcodedDataManager dataManager = new HardcodedDataManager();
-	    dataManager.addData("SELECT g_0.a, g_0.b FROM m.x AS g_0", Arrays.asList("a", "b"), Arrays.asList("a1", "b1"));
-	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a"));
-	    dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a1'", Arrays.asList("b"));
-	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'b'", Arrays.asList("b2"));
-	    dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a2"));
-		TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
-	}
+        ProcessorPlan pp = TestProcessor.helpGetPlan(sql, metadata, TestOptimizer.getGenericFinder());
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.a, g_0.b FROM m.x AS g_0", Arrays.asList("a", "b"), Arrays.asList("a1", "b1"));
+        dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a"));
+        dataManager.addData("SELECT g_0.a FROM m.y AS g_0 WHERE g_0.b = 'a1'", Arrays.asList("b"));
+        dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'b'", Arrays.asList("b2"));
+        dataManager.addData("SELECT g_0.a FROM m.z AS g_0 WHERE g_0.b = 'a'", Arrays.asList("a2"));
+        TestProcessor.helpProcess(pp, dataManager, new List[] {Arrays.asList("a", "b", "a2"), Arrays.asList("a1", "b1", "b2")});
+    }
 
     @Test public void testAggSubqueryAsJoin() throws Exception {
         String sql = "SELECT INTKEY, LONGNUM FROM BQT1.SMALLA AS A WHERE LONGNUM > (SELECT SUM(LONGNUM) FROM BQT1.SMALLA AS B WHERE A.INTKEY = B.INTKEY) ORDER BY INTKEY"; //$NON-NLS-1$

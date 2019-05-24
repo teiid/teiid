@@ -33,8 +33,8 @@ public interface BulkCommand extends BatchedCommand {
     /**
      * The {@link Parameter} values.  May be null.
      */
-	Iterator<? extends List<?>> getParameterValues();
+    Iterator<? extends List<?>> getParameterValues();
 
-	void setParameterValues(Iterator<? extends List<?>> values);
+    void setParameterValues(Iterator<? extends List<?>> values);
 
 }

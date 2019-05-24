@@ -213,11 +213,11 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
             AnalysisRecord analysisRecord, CommandContext context)
             throws QueryPlannerException, QueryMetadataException,
             TeiidComponentException {
-		SourceEventCommand sec = (SourceEventCommand)command;
+        SourceEventCommand sec = (SourceEventCommand)command;
 
         Map<Expression, Integer> lookup = new HashMap<Expression, Integer>();
         Map<ElementSymbol, Expression> params = new HashMap<ElementSymbol, Expression>();
-		List<Object> tuple = new ArrayList<Object>();
+        List<Object> tuple = new ArrayList<Object>();
 
         Map<String, Integer> map = null;
 
@@ -333,6 +333,6 @@ public final class SourceTriggerActionPlanner implements CommandPlanner {
         }
 
         return new CompositeProcessorPlan(plans, names, sec.table);
-	}
+    }
 
 }

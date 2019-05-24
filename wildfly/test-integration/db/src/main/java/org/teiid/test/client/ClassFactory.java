@@ -91,71 +91,71 @@ public class ClassFactory {
 
     public static QueryScenario createQueryScenario(String scenarioName) {
 
-	String clzzname = ConfigPropertyLoader.getInstance().getProperty(QUERY_SCENARIO_CLASSNAME);
-		if (clzzname == null || clzzname.startsWith("${")) {
-	    clzzname = QUERY_SCENARIO_DEFAULT_CLASSNAME;
-	}
+    String clzzname = ConfigPropertyLoader.getInstance().getProperty(QUERY_SCENARIO_CLASSNAME);
+        if (clzzname == null || clzzname.startsWith("${")) {
+        clzzname = QUERY_SCENARIO_DEFAULT_CLASSNAME;
+    }
 
-	    Collection<Object> args = new ArrayList<Object>(2);
-	    args.add(scenarioName);
-	    args.add(ConfigPropertyLoader.getInstance().getProperties());
+        Collection<Object> args = new ArrayList<Object>(2);
+        args.add(scenarioName);
+        args.add(ConfigPropertyLoader.getInstance().getProperties());
 
-	QueryScenario scenario;
-	try {
-	    scenario = (QueryScenario) ReflectionHelper.create(clzzname, args, null);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new TransactionRuntimeException(e);
-	}
-	return scenario;
+    QueryScenario scenario;
+    try {
+        scenario = (QueryScenario) ReflectionHelper.create(clzzname, args, null);
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new TransactionRuntimeException(e);
+    }
+    return scenario;
     }
 
     public static QueryReader createQueryReader(Collection<?> args) {
-	String clzzname = ConfigPropertyLoader.getInstance().getProperty(QUERY_READER_CLASSNAME);
-	if (clzzname == null) {
-	    clzzname = QUERY_READER_DEFAULT_CLASSNAME;
-	}
+    String clzzname = ConfigPropertyLoader.getInstance().getProperty(QUERY_READER_CLASSNAME);
+    if (clzzname == null) {
+        clzzname = QUERY_READER_DEFAULT_CLASSNAME;
+    }
 
-	QueryReader reader;
-	try {
-	    reader = (QueryReader) ReflectionHelper.create(clzzname, args, null);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    throw new TransactionRuntimeException(e);
-	}
+    QueryReader reader;
+    try {
+        reader = (QueryReader) ReflectionHelper.create(clzzname, args, null);
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new TransactionRuntimeException(e);
+    }
 
-	return reader;
+    return reader;
     }
 
     public static ResultsGenerator createResultsGenerator(Collection<?> args) {
-	String clzzname = ConfigPropertyLoader.getInstance().getProperty(RESULTS_GENERATOR_CLASSNAME);
-	if (clzzname == null) {
-	    clzzname = RESULTS_GENERATOR_DEFAULT_CLASSNAME;
-	}
+    String clzzname = ConfigPropertyLoader.getInstance().getProperty(RESULTS_GENERATOR_CLASSNAME);
+    if (clzzname == null) {
+        clzzname = RESULTS_GENERATOR_DEFAULT_CLASSNAME;
+    }
 
-	ResultsGenerator resultsgen;
-	try {
-	    resultsgen = (ResultsGenerator) ReflectionHelper.create(clzzname, args, null);
-	} catch (Exception e) {
-	    throw new TransactionRuntimeException(e.getMessage());
-	}
+    ResultsGenerator resultsgen;
+    try {
+        resultsgen = (ResultsGenerator) ReflectionHelper.create(clzzname, args, null);
+    } catch (Exception e) {
+        throw new TransactionRuntimeException(e.getMessage());
+    }
 
-	return resultsgen;
+    return resultsgen;
     }
 
     public static ExpectedResults createExpectedResults(Collection<?> args)  {
-	String clzzname = ConfigPropertyLoader.getInstance().getProperty(EXPECTED_RESULTS_CLASSNAME);
-	if (clzzname == null) {
-	    clzzname = EXPECTED_RESULTS_DEFAULT_CLASSNAME;
-	}
+    String clzzname = ConfigPropertyLoader.getInstance().getProperty(EXPECTED_RESULTS_CLASSNAME);
+    if (clzzname == null) {
+        clzzname = EXPECTED_RESULTS_DEFAULT_CLASSNAME;
+    }
 
-	ExpectedResults expResults;
-	try {
-	    expResults = (ExpectedResults) ReflectionHelper.create(clzzname, args, null);
-	} catch (Exception e) {
-	    throw new TransactionRuntimeException(e.getMessage());
-	}
+    ExpectedResults expResults;
+    try {
+        expResults = (ExpectedResults) ReflectionHelper.create(clzzname, args, null);
+    } catch (Exception e) {
+        throw new TransactionRuntimeException(e.getMessage());
+    }
 
-	return expResults;
+    return expResults;
     }
 }

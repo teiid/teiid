@@ -23,29 +23,29 @@ import java.util.List;
 
 public interface GeneratedKeys {
 
-	/**
-	 * Add a generated key to this result.  The list values must match the class types of this result.
-	 * @param vals
-	 */
-	void addKey(List<?> vals);
+    /**
+     * Add a generated key to this result.  The list values must match the class types of this result.
+     * @param vals
+     */
+    void addKey(List<?> vals);
 
-	/**
-	 * Get the column names of this result.
-	 * @return
-	 */
-	String[] getColumnNames();
+    /**
+     * Get the column names of this result.
+     * @return
+     */
+    String[] getColumnNames();
 
-	/**
-	 * Get the column types of this result.
-	 * @return
-	 */
-	Class<?>[] getColumnTypes();
+    /**
+     * Get the column types of this result.
+     * @return
+     */
+    Class<?>[] getColumnTypes();
 
-	/**
-	 * Get an iterator to the keys added to this result.  The iterator is not guaranteed to be thread-safe
-	 * with respect to the {@link #addKey(List)} method.
-	 * @return
-	 */
-	Iterator<List<?>> getKeyIterator();
+    /**
+     * Get an iterator to the keys added to this result.  The iterator is not guaranteed to be thread-safe
+     * with respect to the {@link #addKey(List)} method.
+     * @return
+     */
+    Iterator<List<?>> getKeyIterator();
 
 }

@@ -27,42 +27,42 @@ import org.teiid.core.types.TransformationException;
 
 public class GeographyToGeometryTransform extends Transform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transformDirect(Object value) throws TransformationException {
-	    GeographyType geog = (GeographyType)value;
-	    GeometryType geom = new GeometryType(geog.getReference());
-	    geog.copyTo(geom);
-		return geom;
-	}
+    /**
+     * This method transforms a value of the source type into a value
+     * of the target type.
+     * @param value Incoming value of source type
+     * @return Outgoing value of target type
+     * @throws TransformationException if value is an incorrect input type or
+     * the transformation fails
+     */
+    public Object transformDirect(Object value) throws TransformationException {
+        GeographyType geog = (GeographyType)value;
+        GeometryType geom = new GeometryType(geog.getReference());
+        geog.copyTo(geom);
+        return geom;
+    }
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class<?> getSourceType() {
-		return DefaultDataClasses.GEOGRAPHY;
-	}
+    /**
+     * Type of the incoming value.
+     * @return Source type
+     */
+    public Class<?> getSourceType() {
+        return DefaultDataClasses.GEOGRAPHY;
+    }
 
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
-	public Class<?> getTargetType() {
-		return DefaultDataClasses.GEOMETRY;
-	}
+    /**
+     * Type of the outgoing value.
+     * @return Target type
+     */
+    public Class<?> getTargetType() {
+        return DefaultDataClasses.GEOMETRY;
+    }
 
-	public boolean isExplicit() {
-	    //currently lossless as we don't take any corrective
-	    //actions on the conversion, but we should match the
-	    //behavior of postgis
-		return true;
-	}
+    public boolean isExplicit() {
+        //currently lossless as we don't take any corrective
+        //actions on the conversion, but we should match the
+        //behavior of postgis
+        return true;
+    }
 
 }

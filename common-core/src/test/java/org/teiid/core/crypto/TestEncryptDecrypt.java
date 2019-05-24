@@ -52,7 +52,7 @@ public class TestEncryptDecrypt {
     private static Cryptor cryptor;
 
     @BeforeClass public static void oneTimeSetup() throws CryptoException, IOException {
-    	cryptor = SymmetricCryptor.getSymmectricCryptor(TestEncryptDecrypt.class.getResource("/teiid.keystore")); //$NON-NLS-1$
+        cryptor = SymmetricCryptor.getSymmectricCryptor(TestEncryptDecrypt.class.getResource("/teiid.keystore")); //$NON-NLS-1$
     }
 
     // =========================================================================

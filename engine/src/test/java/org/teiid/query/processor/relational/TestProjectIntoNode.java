@@ -133,8 +133,8 @@ public class TestProjectIntoNode {
 
             // ensure that we have the right kind of insert, and that the data for this row is valid
             if (command instanceof Insert) {
-            	Insert insert = (Insert)command;
-            	if (isBulk(insert)) {
+                Insert insert = (Insert)command;
+                if (isBulk(insert)) {
                     List batch = getBulkRows(insert, insert.getVariables());
                     batchSize = batch.size();
                     assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
@@ -142,17 +142,17 @@ public class TestProjectIntoNode {
                     for (int i = 0; i < batchSize; i++) {
                         ensureValue2((List)batch.get(i), 2, ((callCount-1) * batchSize) + i + 1);
                     }
-            	} else if (insert.getTupleSource() != null) {
-            		TupleSource ts = insert.getTupleSource();
-            		List tuple = null;
-            		int i = 0;
-            		while ((tuple = ts.nextTuple()) != null) {
-                		ensureValue2(tuple, 2, ++i);
-            		}
-            		batchSize = i;
-            	} else {
-            		ensureValue(insert, 2, callCount);
-            	}
+                } else if (insert.getTupleSource() != null) {
+                    TupleSource ts = insert.getTupleSource();
+                    List tuple = null;
+                    int i = 0;
+                    while ((tuple = ts.nextTuple()) != null) {
+                        ensureValue2(tuple, 2, ++i);
+                    }
+                    batchSize = i;
+                } else {
+                    ensureValue(insert, 2, callCount);
+                }
             } else if ( command instanceof BatchedUpdateCommand ){
                 BatchedUpdateCommand bu = (BatchedUpdateCommand)command;
                 List<Command> batch = bu.getUpdateCommands();
@@ -163,7 +163,7 @@ public class TestProjectIntoNode {
                 fail("Unexpected command type"); //$NON-NLS-1$
             }
             if (batchSize > 1) {
-            	return CollectionTupleSource.createUpdateCountArrayTupleSource(batchSize);
+                return CollectionTupleSource.createUpdateCountArrayTupleSource(batchSize);
             }
             List counts = Arrays.asList(new Object[] { new Integer(batchSize)});
             FakeTupleSource fakeTupleSource = new FakeTupleSource(null, new List[] {counts});
@@ -181,11 +181,11 @@ public class TestProjectIntoNode {
             Object val = row.get(0);
             assertEquals(new Integer(value), val);
         }
-		@Override
-		public EventDistributor getEventDistributor() {
-			// TODO Auto-generated method stub
-			return null;
-		}
+        @Override
+        public EventDistributor getEventDistributor() {
+            // TODO Auto-generated method stub
+            return null;
+        }
     }
 
     private static final class FakeDataTupleSource implements TupleSource {
@@ -209,44 +209,44 @@ public class TestProjectIntoNode {
         }
     }
 
-	public static List<List<Object>> getBulkRows(Insert insert, List<ElementSymbol> elements) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-		int bulkRowCount = 1;
-		if (isBulk(insert)) {
-			Constant c = (Constant)insert.getValues().get(0);
-			bulkRowCount = ((List<?>)c.getValue()).size();
-		}
+    public static List<List<Object>> getBulkRows(Insert insert, List<ElementSymbol> elements) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+        int bulkRowCount = 1;
+        if (isBulk(insert)) {
+            Constant c = (Constant)insert.getValues().get(0);
+            bulkRowCount = ((List<?>)c.getValue()).size();
+        }
 
-		List<List<Object>> tuples = new ArrayList<List<Object>>(bulkRowCount);
+        List<List<Object>> tuples = new ArrayList<List<Object>>(bulkRowCount);
 
-		for (int row = 0; row < bulkRowCount; row++) {
-			List<Object> currentRow = new ArrayList<Object>(insert.getValues().size());
-			for (ElementSymbol symbol : elements) {
+        for (int row = 0; row < bulkRowCount; row++) {
+            List<Object> currentRow = new ArrayList<Object>(insert.getValues().size());
+            for (ElementSymbol symbol : elements) {
                 int index = insert.getVariables().indexOf(symbol);
                 Object value = null;
                 if (index != -1) {
-                	if (isBulk(insert)) {
-	                	Constant multiValue = (Constant)insert.getValues().get(index);
-	    		    	value = ((List<?>)multiValue.getValue()).get(row);
-                	} else {
-                		Expression expr = (Expression)insert.getValues().get(index);
+                    if (isBulk(insert)) {
+                        Constant multiValue = (Constant)insert.getValues().get(index);
+                        value = ((List<?>)multiValue.getValue()).get(row);
+                    } else {
+                        Expression expr = (Expression)insert.getValues().get(index);
                         value = Evaluator.evaluate(expr);
-                	}
+                    }
                 }
                 currentRow.add(value);
             }
-		    tuples.add(currentRow);
-		}
-		return tuples;
-	}
+            tuples.add(currentRow);
+        }
+        return tuples;
+    }
 
     public static boolean isBulk(Insert insert) {
-    	if (insert.getValues() == null) {
-    		return false;
-    	}
-    	if (!(insert.getValues().get(0) instanceof Constant)) {
-    		return false;
-    	}
-    	return ((Constant)insert.getValues().get(0)).isMultiValued();
+        if (insert.getValues() == null) {
+            return false;
+        }
+        if (!(insert.getValues().get(0) instanceof Constant)) {
+            return false;
+        }
+        return ((Constant)insert.getValues().get(0)).isMultiValued();
     }
 
 }

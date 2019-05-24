@@ -36,12 +36,12 @@ import org.teiid.core.types.DataTypeManager;
 
 public class TestSizeUtility {
 
-	private static class SomeObject implements Serializable {
-		private String state;
-		public SomeObject(String state) {
-			this.state = state;
-		}
-	}
+    private static class SomeObject implements Serializable {
+        private String state;
+        public SomeObject(String state) {
+            this.state = state;
+        }
+    }
 
     public void helpTestGetStaticSize(Object obj, long expectedSize) {
         helpTestGetSize(obj, expectedSize);
@@ -173,11 +173,11 @@ public class TestSizeUtility {
            };
 
         Class<?>[] types = {DataTypeManager.DefaultDataClasses.STRING,
-        		DataTypeManager.DefaultDataClasses.INTEGER,
-        		DataTypeManager.DefaultDataClasses.BOOLEAN,
-        		DataTypeManager.DefaultDataClasses.DOUBLE,
-        		DataTypeManager.DefaultDataClasses.STRING,
-        		DataTypeManager.DefaultDataClasses.INTEGER};
+                DataTypeManager.DefaultDataClasses.INTEGER,
+                DataTypeManager.DefaultDataClasses.BOOLEAN,
+                DataTypeManager.DefaultDataClasses.DOUBLE,
+                DataTypeManager.DefaultDataClasses.STRING,
+                DataTypeManager.DefaultDataClasses.INTEGER};
 
         long actualSize = new SizeUtility(types).getBatchSize(false, Arrays.asList(expected));
         assertEquals("Got unexpected size: ", 2667, actualSize); //$NON-NLS-1$

@@ -36,113 +36,113 @@ import org.teiid.query.sql.util.SymbolMap;
  */
 public class NestedTableJoinStrategy extends JoinStrategy {
 
-	private SymbolMap rightMap;
-	private Evaluator eval;
-	private boolean outerMatched;
+    private SymbolMap rightMap;
+    private Evaluator eval;
+    private boolean outerMatched;
 
-	@Override
-	public NestedTableJoinStrategy clone() {
-		NestedTableJoinStrategy clone = new NestedTableJoinStrategy();
-		clone.rightMap = rightMap;
-		return clone;
-	}
+    @Override
+    public NestedTableJoinStrategy clone() {
+        NestedTableJoinStrategy clone = new NestedTableJoinStrategy();
+        clone.rightMap = rightMap;
+        return clone;
+    }
 
-	@Override
-	public void initialize(JoinNode joinNode) {
-		super.initialize(joinNode);
-		this.eval = new Evaluator(null, joinNode.getDataManager(), joinNode.getContext());
-	}
+    @Override
+    public void initialize(JoinNode joinNode) {
+        super.initialize(joinNode);
+        this.eval = new Evaluator(null, joinNode.getDataManager(), joinNode.getContext());
+    }
 
-	public void setRightMap(SymbolMap rightMap) {
-		this.rightMap = rightMap;
-	}
+    public void setRightMap(SymbolMap rightMap) {
+        this.rightMap = rightMap;
+    }
 
-	@Override
-	protected void openRight() throws TeiidComponentException,
-			TeiidProcessingException {
-		if (rightMap == null) {
-			super.openRight();
-			this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
-		}
-	}
+    @Override
+    protected void openRight() throws TeiidComponentException,
+            TeiidProcessingException {
+        if (rightMap == null) {
+            super.openRight();
+            this.rightSource.setImplicitBuffer(ImplicitBuffer.FULL);
+        }
+    }
 
-	@Override
-	protected void process() throws TeiidComponentException,
-			TeiidProcessingException {
+    @Override
+    protected void process() throws TeiidComponentException,
+            TeiidProcessingException {
 
-		IndexedTupleSource its = leftSource.getIterator();
+        IndexedTupleSource its = leftSource.getIterator();
 
-		while (its.hasNext() || leftSource.getCurrentTuple() != null) {
+        while (its.hasNext() || leftSource.getCurrentTuple() != null) {
 
-			List<?> leftTuple = leftSource.getCurrentTuple();
-			if (leftTuple == null) {
-				leftTuple = leftSource.saveNext();
-			}
-			updateContext(leftTuple, leftSource.getSource().getElements());
+            List<?> leftTuple = leftSource.getCurrentTuple();
+            if (leftTuple == null) {
+                leftTuple = leftSource.saveNext();
+            }
+            updateContext(leftTuple, leftSource.getSource().getElements());
 
-			if (rightMap != null && !rightSource.open) {
-				for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
-					joinNode.getContext().getVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
-				}
-				rightSource.getSource().reset();
-				super.openRight();
-			}
+            if (rightMap != null && !rightSource.open) {
+                for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
+                    joinNode.getContext().getVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
+                }
+                rightSource.getSource().reset();
+                super.openRight();
+            }
 
-			IndexedTupleSource right = rightSource.getIterator();
+            IndexedTupleSource right = rightSource.getIterator();
 
-			while (right.hasNext() || rightSource.getCurrentTuple() != null) {
+            while (right.hasNext() || rightSource.getCurrentTuple() != null) {
 
-				List<?> rightTuple = rightSource.getCurrentTuple();
-				if (rightTuple == null) {
-					rightTuple = rightSource.saveNext();
-				}
+                List<?> rightTuple = rightSource.getCurrentTuple();
+                if (rightTuple == null) {
+                    rightTuple = rightSource.saveNext();
+                }
 
-				List<?> outputTuple = outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getCurrentTuple());
+                List<?> outputTuple = outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getCurrentTuple());
 
                 boolean matches = this.joinNode.matchesCriteria(outputTuple);
 
                 rightSource.saveNext();
 
                 if (matches) {
-                	outerMatched = true;
-                	joinNode.addBatchRow(outputTuple);
+                    outerMatched = true;
+                    joinNode.addBatchRow(outputTuple);
                 }
-			}
-
-			if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
-            	joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
             }
 
-			outerMatched = false;
+            if (!outerMatched && this.joinNode.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
+                joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
+            }
 
-			if (rightMap == null) {
-				rightSource.getIterator().setPosition(1);
-			} else {
-				rightSource.close();
-				for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
-					joinNode.getContext().getVariableContext().remove(entry.getKey());
-				}
-			}
+            outerMatched = false;
 
-			leftSource.saveNext();
-			updateContext(null, leftSource.getSource().getElements());
-		}
+            if (rightMap == null) {
+                rightSource.getIterator().setPosition(1);
+            } else {
+                rightSource.close();
+                for (Map.Entry<ElementSymbol, Expression> entry : rightMap.asMap().entrySet()) {
+                    joinNode.getContext().getVariableContext().remove(entry.getKey());
+                }
+            }
 
-	}
+            leftSource.saveNext();
+            updateContext(null, leftSource.getSource().getElements());
+        }
 
-	private void updateContext(List<?> tuple,
-			List<? extends Expression> elements) {
-		for (int i = 0; i < elements.size(); i++) {
-			Expression element = elements.get(i);
-			if (element instanceof ElementSymbol) {
-				if (tuple == null) {
-					joinNode.getContext().getVariableContext().remove((ElementSymbol)element);
-				} else {
-					joinNode.getContext().getVariableContext().setValue((ElementSymbol)element, tuple.get(i));
-				}
-			}
-		}
-	}
+    }
+
+    private void updateContext(List<?> tuple,
+            List<? extends Expression> elements) {
+        for (int i = 0; i < elements.size(); i++) {
+            Expression element = elements.get(i);
+            if (element instanceof ElementSymbol) {
+                if (tuple == null) {
+                    joinNode.getContext().getVariableContext().remove((ElementSymbol)element);
+                } else {
+                    joinNode.getContext().getVariableContext().setValue((ElementSymbol)element, tuple.get(i));
+                }
+            }
+        }
+    }
 
     public String toString() {
         return "NESTED TABLE JOIN"; //$NON-NLS-1$

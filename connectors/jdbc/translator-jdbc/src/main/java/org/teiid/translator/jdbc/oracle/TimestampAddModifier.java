@@ -31,32 +31,32 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 public class TimestampAddModifier extends FunctionModifier {
 
-	private static Map<String, String> INTERVAL_MAP = new HashMap<String, String>();
+    private static Map<String, String> INTERVAL_MAP = new HashMap<String, String>();
 
-	static {
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_MINUTE, ExtractFunctionModifier.MINUTE);
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_MONTH, ExtractFunctionModifier.MONTH);
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
-		INTERVAL_MAP.put(NonReserved.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
-	}
+    static {
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_DAY, ExtractFunctionModifier.DAY);
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_HOUR, ExtractFunctionModifier.HOUR);
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_MINUTE, ExtractFunctionModifier.MINUTE);
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_MONTH, ExtractFunctionModifier.MONTH);
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_SECOND, ExtractFunctionModifier.SECOND);
+        INTERVAL_MAP.put(NonReserved.SQL_TSI_YEAR, ExtractFunctionModifier.YEAR);
+    }
 
-	@Override
-	public List<?> translate(Function function) {
-	    ArrayList<Object> result = new ArrayList<Object>();
-	    Literal intervalType = (Literal)function.getParameters().get(0);
+    @Override
+    public List<?> translate(Function function) {
+        ArrayList<Object> result = new ArrayList<Object>();
+        Literal intervalType = (Literal)function.getParameters().get(0);
         String interval = ((String)intervalType.getValue()).toUpperCase();
         //by capabilities this must be a literal integer
         int value = (Integer)((Literal)function.getParameters().get(1)).getValue();
         long adjustedValue = value;
 
         //handle the year/month case
-	    if (interval.equals(NonReserved.SQL_TSI_YEAR)) {
-	        interval = NonReserved.SQL_TSI_MONTH;
+        if (interval.equals(NonReserved.SQL_TSI_YEAR)) {
+            interval = NonReserved.SQL_TSI_MONTH;
             adjustedValue = value*12L;
         }
-	    if (interval.equals(NonReserved.SQL_TSI_MONTH)) {
+        if (interval.equals(NonReserved.SQL_TSI_MONTH)) {
             interval = ExtractFunctionModifier.MONTH;
             result.add("ADD_MONTHS("); //$NON-NLS-1$
             result.add(function.getParameters().get(2));
@@ -66,39 +66,39 @@ public class TimestampAddModifier extends FunctionModifier {
             return result;
         }
 
-	    result.add(function.getParameters().get(2));
-	    result.add(" + (INTERVAL '"); //$NON-NLS-1$
-		String newInterval = INTERVAL_MAP.get(interval);
-		if (newInterval != null) {
-			result.add(value);
-		} else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
-		    newInterval = ExtractFunctionModifier.MONTH;
-		    adjustedValue = value*3L;
-		    result.add(adjustedValue);
-		} else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
-			newInterval = ExtractFunctionModifier.SECOND;
-		    result.add(String.format("0.%09d", value)); //$NON-NLS-1$
-		    adjustedValue = 1;
-		} else {
-			newInterval = ExtractFunctionModifier.DAY;
-			adjustedValue = value*7L;
-			result.add(adjustedValue);
-		}
-		result.add("' "); //$NON-NLS-1$
-		result.add(newInterval);
-		result.add("("); //$NON-NLS-1$
-		result.add(precision(Math.abs(adjustedValue)));
-		result.add("))"); //$NON-NLS-1$
-		return result;
-	}
+        result.add(function.getParameters().get(2));
+        result.add(" + (INTERVAL '"); //$NON-NLS-1$
+        String newInterval = INTERVAL_MAP.get(interval);
+        if (newInterval != null) {
+            result.add(value);
+        } else if (interval.equals(NonReserved.SQL_TSI_QUARTER)) {
+            newInterval = ExtractFunctionModifier.MONTH;
+            adjustedValue = value*3L;
+            result.add(adjustedValue);
+        } else if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+            newInterval = ExtractFunctionModifier.SECOND;
+            result.add(String.format("0.%09d", value)); //$NON-NLS-1$
+            adjustedValue = 1;
+        } else {
+            newInterval = ExtractFunctionModifier.DAY;
+            adjustedValue = value*7L;
+            result.add(adjustedValue);
+        }
+        result.add("' "); //$NON-NLS-1$
+        result.add(newInterval);
+        result.add("("); //$NON-NLS-1$
+        result.add(precision(Math.abs(adjustedValue)));
+        result.add("))"); //$NON-NLS-1$
+        return result;
+    }
 
-	static int precision(long value) {
-	    int precision = 1;
-	    while (value >= 10) {
-	        precision++;
-	        value /= 10;
-	    }
-	    return precision;
-	}
+    static int precision(long value) {
+        int precision = 1;
+        while (value >= 10) {
+            precision++;
+            value /= 10;
+        }
+        return precision;
+    }
 
 }

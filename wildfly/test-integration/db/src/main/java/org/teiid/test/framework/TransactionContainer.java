@@ -26,76 +26,76 @@ public abstract class TransactionContainer {
 
     public void runTransaction(TransactionQueryTestCase test) {
 
-	this.testClassName = StringUtil.getLastToken(test.getClass().getName(),
-		".");
+    this.testClassName = StringUtil.getLastToken(test.getClass().getName(),
+        ".");
 
-	try {
-	    debug("Start transaction test: " + test.getTestName());
+    try {
+        debug("Start transaction test: " + test.getTestName());
 
-	    try {
+        try {
 
-		test.setup();
+        test.setup();
 
-	    } catch (TransactionRuntimeException tre) {
-			if (!test.exceptionExpected()) {
-			    tre.printStackTrace();
-			}
-        		throw tre;
-	    } catch (Throwable e) {
-		if (!test.exceptionExpected()) {
-		    e.printStackTrace();
-		}
-		throw new TransactionRuntimeException(e.getMessage());
-	    }
+        } catch (TransactionRuntimeException tre) {
+            if (!test.exceptionExpected()) {
+                tre.printStackTrace();
+            }
+                throw tre;
+        } catch (Throwable e) {
+        if (!test.exceptionExpected()) {
+            e.printStackTrace();
+        }
+        throw new TransactionRuntimeException(e.getMessage());
+        }
 
-	    runTest(test);
+        runTest(test);
 
-	    debug("Completed transaction test: " + test.getTestName());
+        debug("Completed transaction test: " + test.getTestName());
 
-	} finally {
-	    debug("	test.cleanup");
+    } finally {
+        debug("	test.cleanup");
 
-		test.cleanup();
+        test.cleanup();
 
-	}
+    }
 
     }
 
     protected void runTest(TransactionQueryTestCase test) {
-	debug("Start runTest: " + test.getTestName());
+    debug("Start runTest: " + test.getTestName());
 
 
-	    debug("	before(test)");
+        debug("	before(test)");
 
-	    before(test);
-	    debug("	test.before");
+        before(test);
+        debug("	test.before");
 
-	    test.before();
+        test.before();
 
-	    debug("	test.testcase");
+        debug("	test.testcase");
 
-	try {
+    try {
 
 
-	    // run the test
-	    test.testCase();
+        // run the test
+        test.testCase();
 
-	} catch (Throwable e) {
-	    // this catches the non-SQLExceptions that the AbstractQueryTest catches.
-	    // And therefore, the exception needs to be set as an application exception,
-	    // considered outside the bounds of the normal sqlexceptions.
-	    test.setApplicationException(e);
+    } catch (Throwable e) {
+        // this catches the non-SQLExceptions that the AbstractQueryTest catches.
+        // And therefore, the exception needs to be set as an application exception,
+        // considered outside the bounds of the normal sqlexceptions.
+        test.setApplicationException(e);
 
-	}
+    }
 
-	    debug("	test.after");
+        debug("	test.after");
 
-	    test.after();
-	    debug("	after(test)");
+        test.after();
+        debug("	after(test)");
 
-	    after(test);
+        after(test);
 
-	    debug("End runTest: " + test.getTestName());
+        debug("End runTest: " + test.getTestName());
 
 
 
@@ -104,15 +104,15 @@ public abstract class TransactionContainer {
 
 
     protected void debug(String message) {
-	TestLogger.logDebug("[" + this.testClassName + "] " + message);
+    TestLogger.logDebug("[" + this.testClassName + "] " + message);
     }
 
     protected void detail(String message) {
-	TestLogger.log("[" + this.testClassName + "] " + message);
+    TestLogger.log("[" + this.testClassName + "] " + message);
     }
 
     protected boolean done() {
-	return true;
+    return true;
     }
 
 }

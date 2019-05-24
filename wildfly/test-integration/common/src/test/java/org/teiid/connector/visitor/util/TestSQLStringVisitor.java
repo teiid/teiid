@@ -352,20 +352,20 @@ public class TestSQLStringVisitor  {
     }
 
     @Test public void testTimestampAddFunction() throws Exception {
-    	String sql = "select timestampadd(" +NonReserved.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$ //$NON-NLS-2$
+        String sql = "select timestampadd(" +NonReserved.SQL_TSI_DAY+ ", 2, timestampvalue) from bqt1.smalla"; //$NON-NLS-1$ //$NON-NLS-2$
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
-    	assertEquals("SELECT timestampadd(SQL_TSI_DAY, 2, SmallA.TimestampValue) FROM SmallA", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql);
+        assertEquals("SELECT timestampadd(SQL_TSI_DAY, 2, SmallA.TimestampValue) FROM SmallA", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testInsertWithQuery() throws Exception {
-    	String sql = "insert into pm1.g1 values (null, null, null, null)"; //$NON-NLS-1$
+        String sql = "insert into pm1.g1 values (null, null, null, null)"; //$NON-NLS-1$
 
-    	Insert insert = (Insert)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand(sql);
+        Insert insert = (Insert)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand(sql);
 
-    	Select command = (Select)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand("select * from pm1.g2"); //$NON-NLS-1$
-    	insert.setValueSource(command);
-    	assertEquals("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", insert.toString()); //$NON-NLS-1$
+        Select command = (Select)FakeTranslationFactory.getInstance().getExampleTranslationUtility().parseCommand("select * from pm1.g2"); //$NON-NLS-1$
+        insert.setValueSource(command);
+        assertEquals("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", insert.toString()); //$NON-NLS-1$
     }
 
     @Test public void testUpsert() throws Exception {
@@ -376,84 +376,84 @@ public class TestSQLStringVisitor  {
     }
 
     @Test public void testUnrelatedOrderBy() throws Exception {
-    	String sql = "select intkey from bqt1.smalla order by stringkey"; //$NON-NLS-1$
+        String sql = "select intkey from bqt1.smalla order by stringkey"; //$NON-NLS-1$
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testOrderByDerivedColumn() throws Exception {
-    	String sql = "select intkey as x from bqt1.smalla order by intkey"; //$NON-NLS-1$
+        String sql = "select intkey as x from bqt1.smalla order by intkey"; //$NON-NLS-1$
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testOrderByAlias() throws Exception {
-    	String sql = "select intkey as x from bqt1.smalla order by x"; //$NON-NLS-1$
+        String sql = "select intkey as x from bqt1.smalla order by x"; //$NON-NLS-1$
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testOrderByNullOrdering() throws Exception {
-    	String sql = "select intkey as x from bqt1.smalla order by x nulls first"; //$NON-NLS-1$
+        String sql = "select intkey as x from bqt1.smalla order by x nulls first"; //$NON-NLS-1$
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0 NULLS FIRST", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0 NULLS FIRST", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testWindowFunction() throws Exception {
-    	String sql = "select max(intnum) over (order by intkey nulls first) from bqt1.smalla";
+        String sql = "select max(intnum) over (order by intkey nulls first) from bqt1.smalla";
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT MAX(g_0.IntNum) OVER (ORDER BY g_0.IntKey NULLS FIRST) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT MAX(g_0.IntNum) OVER (ORDER BY g_0.IntKey NULLS FIRST) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testTrim() throws Exception {
-    	String sql = "select trim(both 'x' from stringkey) from bqt1.smalla";
+        String sql = "select trim(both 'x' from stringkey) from bqt1.smalla";
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT trim('x' FROM g_0.StringKey) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT trim('x' FROM g_0.StringKey) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
 
     @Test public void testNativeParsing() throws Exception {
-    	String sql = "select $1 from $2";
-    	String expected = "select *0 from *1";
-    	helpTestNativeParsing(sql, expected);
+        String sql = "select $1 from $2";
+        String expected = "select *0 from *1";
+        helpTestNativeParsing(sql, expected);
     }
 
-	private void helpTestNativeParsing(String sql, String expected) {
-		StringBuilder sb = new StringBuilder();
+    private void helpTestNativeParsing(String sql, String expected) {
+        StringBuilder sb = new StringBuilder();
 
-    	Substitutor sub = new Substitutor() {
-			@Override
-			public void substitute(Argument arg, StringBuilder builder, int index) {
-				builder.append("*").append(index);
-			}
-		};
+        Substitutor sub = new Substitutor() {
+            @Override
+            public void substitute(Argument arg, StringBuilder builder, int index) {
+                builder.append("*").append(index);
+            }
+        };
 
-    	SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)), sb, sub);
-    	assertEquals(expected, sb.toString());
-	}
+        SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)), sb, sub);
+        assertEquals(expected, sb.toString());
+    }
 
     @Test public void testNativeParsing1() throws Exception {
-    	String sql = "select $$1 from $$$2";
-    	String expected = "select $1 from $*1";
-    	helpTestNativeParsing(sql, expected);
+        String sql = "select $$1 from $$$2";
+        String expected = "select $1 from $*1";
+        helpTestNativeParsing(sql, expected);
     }
 
     @Test(expected=IllegalArgumentException.class) public void testNativeParsing2() throws Exception {
-    	String sql = "select $$1 from $$$3";
-    	String expected = "select $1 from $*1";
-    	helpTestNativeParsing(sql, expected);
+        String sql = "select $$1 from $$$3";
+        String expected = "select $1 from $*1";
+        helpTestNativeParsing(sql, expected);
     }
 
     @Test public void testConditionNesting() throws Exception {
-    	String sql = "select (intkey = intnum) is null, (intkey < intnum) in (true, false) from bqt1.smalla";
+        String sql = "select (intkey = intnum) is null, (intkey < intnum) in (true, false) from bqt1.smalla";
 
-    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
-    	assertEquals("SELECT (g_0.IntKey = g_0.IntNum) IS NULL, (g_0.IntKey < g_0.IntNum) IN (TRUE, FALSE) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
+        Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+        assertEquals("SELECT (g_0.IntKey = g_0.IntNum) IS NULL, (g_0.IntKey < g_0.IntNum) IN (TRUE, FALSE) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
 
 }

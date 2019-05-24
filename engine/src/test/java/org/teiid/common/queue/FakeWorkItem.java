@@ -24,7 +24,7 @@ import java.sql.Timestamp;
  */
 public class FakeWorkItem implements Runnable {
 
-	private static boolean DEBUG = false;
+    private static boolean DEBUG = false;
 
     long begin = 0;
     long end = 0;
@@ -58,10 +58,10 @@ public class FakeWorkItem implements Runnable {
     }
 
     private void log(String msg) {
-    	if (DEBUG) {
-    		System.out.println((new Timestamp(System.currentTimeMillis())).toString() + " " +  //$NON-NLS-1$
-    				Thread.currentThread().getName() + ": " + msg);     //$NON-NLS-1$
-    	}
+        if (DEBUG) {
+            System.out.println((new Timestamp(System.currentTimeMillis())).toString() + " " +  //$NON-NLS-1$
+                    Thread.currentThread().getName() + ": " + msg);     //$NON-NLS-1$
+        }
     }
 
 }

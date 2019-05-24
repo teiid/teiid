@@ -37,7 +37,7 @@ import org.teiid.translator.SourceSystemFunctions;
 public class TestInsertProcessing {
 
     @Test public void testSelectIntoWithTypeConversion() {
-    	MetadataStore metadataStore = new MetadataStore();
+        MetadataStore metadataStore = new MetadataStore();
         Schema pm1 = RealMetadataFactory.createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$
         Table pm1g1 = RealMetadataFactory.createPhysicalGroup("g1", pm1); //$NON-NLS-1$
 
@@ -251,7 +251,7 @@ public class TestInsertProcessing {
     }
 
     public void helpInsertIntoWithSubquery( Capability cap) throws Exception {
-    	helpInsertIntoWithSubquery(cap, true);
+        helpInsertIntoWithSubquery(cap, true);
     }
 
     public void helpInsertIntoWithSubquery( Capability cap, boolean txn ) throws Exception {
@@ -267,49 +267,49 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 
         HardcodedDataManager dataManager = new HardcodedDataManager() {
-        	@Override
-        	public TupleSource registerRequest(CommandContext context,
-        			Command command, String modelName,
-        			RegisterRequestParameter parameterObject)
-        			throws TeiidComponentException {
-        		if (command instanceof Insert) {
-        			Insert insert = (Insert)command;
-        			if (insert.getTupleSource() != null) {
-        				commandHistory.add(insert);
-        				TupleSource ts = insert.getTupleSource();
-        				int count = 0;
-        				try {
-							while (ts.nextTuple() != null) {
-								count++;
-							}
-							return CollectionTupleSource.createUpdateCountArrayTupleSource(count);
-						} catch (TeiidProcessingException e) {
-							throw new RuntimeException(e);
-						}
-        			}
-        		}
-        		return super.registerRequest(context, command, modelName, parameterObject);
-        	}
+            @Override
+            public TupleSource registerRequest(CommandContext context,
+                    Command command, String modelName,
+                    RegisterRequestParameter parameterObject)
+                    throws TeiidComponentException {
+                if (command instanceof Insert) {
+                    Insert insert = (Insert)command;
+                    if (insert.getTupleSource() != null) {
+                        commandHistory.add(insert);
+                        TupleSource ts = insert.getTupleSource();
+                        int count = 0;
+                        try {
+                            while (ts.nextTuple() != null) {
+                                count++;
+                            }
+                            return CollectionTupleSource.createUpdateCountArrayTupleSource(count);
+                        } catch (TeiidProcessingException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                return super.registerRequest(context, command, modelName, parameterObject);
+            }
         };
 
-    	List[] data = new List[txn?2:50];
-    	for (int i = 1; i <= data.length; i++) {
-    		data[i-1] = Arrays.asList(String.valueOf(i), i, (i%2==0)?Boolean.TRUE:Boolean.FALSE, Double.valueOf(i));
-    	}
+        List[] data = new List[txn?2:50];
+        for (int i = 1; i <= data.length; i++) {
+            data[i-1] = Arrays.asList(String.valueOf(i), i, (i%2==0)?Boolean.TRUE:Boolean.FALSE, Double.valueOf(i));
+        }
         dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$
-        		data);
+                data);
 
         if (cap != null) {
-        	switch (cap) {
-	        case BATCHED_UPDATES:
-	            dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$
-	                    new List[] { Arrays.asList(1), Arrays.asList(1)});
-	            break;
-	        case INSERT_WITH_QUERYEXPRESSION:
-	        	dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$
-	                    new List[] { Arrays.asList(new Object[] { 2})});
-	        	break;
-	        }
+            switch (cap) {
+            case BATCHED_UPDATES:
+                dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$
+                        new List[] { Arrays.asList(1), Arrays.asList(1)});
+                break;
+            case INSERT_WITH_QUERYEXPRESSION:
+                dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$
+                        new List[] { Arrays.asList(new Object[] { 2})});
+                break;
+            }
         } else {
             dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
@@ -329,10 +329,10 @@ public class TestInsertProcessing {
 
         CommandContext cc = TestProcessor.createCommandContext();
         if (!txn) {
-        	TransactionContext tc = new TransactionContext();
-        	cc.setTransactionContext(tc);
-        	cc.setBufferManager(null);
-        	cc.setProcessorBatchSize(2);
+            TransactionContext tc = new TransactionContext();
+            cc.setTransactionContext(tc);
+            cc.setBufferManager(null);
+            cc.setProcessorBatchSize(2);
         }
 
         helpProcess(plan, cc, dataManager, expected);
@@ -345,7 +345,7 @@ public class TestInsertProcessing {
             assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$
         } else if (cap == Capability.INSERT_WITH_ITERATOR) {
-        	assertEquals(txn?6:9, dataManager.getCommandHistory().size());
+            assertEquals(txn?6:9, dataManager.getCommandHistory().size());
         }
     }
 
@@ -456,7 +456,7 @@ public class TestInsertProcessing {
 
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0", expected);
+        dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g_0.e1, g_0.e2, g_0.e3, g_0.e4 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
 
@@ -474,13 +474,13 @@ public class TestInsertProcessing {
 
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO g1 (e1) SELECT g_0.e1 FROM g2 AS g_0", expected);
+        dataManager.addData("INSERT INTO g1 (e1) SELECT g_0.e1 FROM g2 AS g_0", expected);
         helpProcess(plan, dataManager, expected);
     }
 
     @Test public void testInsertQueryExpressionInlineView() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE Test_Insert  (  status varchar(4000) ) options (updatable true);"
-        		+ " CREATE foreign TABLE test_a  (  a varchar(4000) )", "x",  "y" );
+                + " CREATE foreign TABLE test_a  (  a varchar(4000) )", "x",  "y" );
 
         String sql = "INSERT INTO Test_Insert SELECT CASE WHEN (status = '0') AND (cnt > 0) THEN '4' ELSE status END AS status FROM"
                 + "(SELECT (SELECT COUNT(*) FROM test_a AS smh2) AS cnt, a AS status FROM test_a AS smh) AS a  "; //$NON-NLS-1$
@@ -497,11 +497,11 @@ public class TestInsertProcessing {
     }
 
     @Test public void testInsertQueryExpressionLayeredView() throws Exception {
-    	QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE target  (  a integer ) options (updatable true);"
-        		+ " CREATE foreign TABLE source  (  a integer );"
-        		+ "create view v1 as select a from source group by a; create view v2 as select a from y.v1 group by a;", "x",  "y" );
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL("CREATE foreign TABLE target  (  a integer ) options (updatable true);"
+                + " CREATE foreign TABLE source  (  a integer );"
+                + "create view v1 as select a from source group by a; create view v2 as select a from y.v1 group by a;", "x",  "y" );
 
-    	String sql = "insert into target SELECT * FROM y.v2;"; //$NON-NLS-1$
+        String sql = "insert into target SELECT * FROM y.v2;"; //$NON-NLS-1$
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
@@ -516,16 +516,16 @@ public class TestInsertProcessing {
     }
 
     @Test public void testValidation() throws Exception {
-    	QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-    	String sql = "insert into pm1.g1 (e1) SELECT key_name FROM (select 'a' as key_name, 'b' as key_type) k  HAVING count(*)>1"; //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        String sql = "insert into pm1.g1 (e1) SELECT key_name FROM (select 'a' as key_name, 'b' as key_type) k  HAVING count(*)>1"; //$NON-NLS-1$
 
         TestValidator.helpValidate(sql, new String[]{"key_name"}, metadata);
     }
 
     @Test public void testAutoIncrementView() throws Exception {
-    	String ddl = "create foreign table t1 (x integer options (auto_increment true), y string) options (updatable true); \n"
-    		+ "create view v1 (x integer options (auto_increment true), y string) options (updatable true) as select * from t1;";
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        String ddl = "create foreign table t1 (x integer options (auto_increment true), y string) options (updatable true); \n"
+            + "create view v1 (x integer options (auto_increment true), y string) options (updatable true) as select * from t1;";
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
 
         String sql = "insert into v1 (y) values ('a')"; //$NON-NLS-1$
 
@@ -535,13 +535,13 @@ public class TestInsertProcessing {
 
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
-		dataManager.addData("INSERT INTO t1 (y) VALUES ('a')", expected);
+        dataManager.addData("INSERT INTO t1 (y) VALUES ('a')", expected);
         helpProcess(plan, dataManager, expected);
     }
 
     @Test public void testMerge() throws Exception {
-    	String ddl = "create foreign table t1 (x integer primary key, y string) options (updatable true);";
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+        String ddl = "create foreign table t1 (x integer primary key, y string) options (updatable true);";
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
 
         String sql = "merge into t1 (x, y) select 1, 'a' union all select 2, 'b'"; //$NON-NLS-1$
 
@@ -560,9 +560,9 @@ public class TestInsertProcessing {
     @Test public void testInsertDefaultResolving() throws Exception {
         String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
         TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
-        		"create foreign table t (y string, z string) options (updatable true); " +
-        		"create view x (y string, z string default 'a') options (updatable true) as select * from t; " +
-        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+                "create foreign table t (y string, z string) options (updatable true); " +
+                "create view x (y string, z string default 'a') options (updatable true) as select * from t; " +
+                "create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
         Command command = helpParse(sql);
 
         ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder());
@@ -575,9 +575,9 @@ public class TestInsertProcessing {
     @Test public void testInsertDefaultResolvingExpression() throws Exception {
         String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
         TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
-        		"create foreign table t (y string, z string) options (updatable true); " +
-        		"create view x (y string, z string default 'a' || user()) options (updatable true) as select * from t; " +
-        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+                "create foreign table t (y string, z string) options (updatable true); " +
+                "create view x (y string, z string default 'a' || user()) options (updatable true) as select * from t; " +
+                "create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
         Command command = helpParse(sql);
 
         ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder());
@@ -619,7 +619,7 @@ public class TestInsertProcessing {
     }
 
     @Test public void testInsertSubquery() throws Exception {
-    	String sql = "Insert into pm1.g1 (e1) values ((select current_database()))"; //$NON-NLS-1$
+        String sql = "Insert into pm1.g1 (e1) values ((select current_database()))"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
             Arrays.asList(1)
@@ -634,7 +634,7 @@ public class TestInsertProcessing {
     }
 
     @Test public void testInsertSubquery1() throws Exception {
-    	String sql = "Insert into pm1.g1 (e3) values ('a' < all (select current_database()))"; //$NON-NLS-1$
+        String sql = "Insert into pm1.g1 (e3) values ('a' < all (select current_database()))"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
             Arrays.asList(1)
@@ -649,11 +649,11 @@ public class TestInsertProcessing {
     }
 
     @Test public void testInsertDefaultSubquery() throws Exception {
-    	TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table p (e1 string) options (updatable 'true'); "
-    			+ "create view t (col string, col1 string default '(select current_database())' options (\"teiid_rel:default_handling\" 'expression')) options (updatable 'true') as select e1, e1 from p; "
-    			+ "create trigger on t instead of insert as for each row begin insert into p (e1) values (new.col1); end;", "x", "y");
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign table p (e1 string) options (updatable 'true'); "
+                + "create view t (col string, col1 string default '(select current_database())' options (\"teiid_rel:default_handling\" 'expression')) options (updatable 'true') as select e1, e1 from p; "
+                + "create trigger on t instead of insert as for each row begin insert into p (e1) values (new.col1); end;", "x", "y");
 
-    	String sql = "Insert into t (col) values ('a')"; //$NON-NLS-1$
+        String sql = "Insert into t (col) values ('a')"; //$NON-NLS-1$
 
         List<?>[] expected = new List[] {
             Arrays.asList(1)

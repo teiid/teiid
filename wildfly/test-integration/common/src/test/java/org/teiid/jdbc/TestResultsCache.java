@@ -50,207 +50,207 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestResultsCache {
 
-	private Connection conn;
-	private static FakeServer server;
+    private Connection conn;
+    private static FakeServer server;
 
-	@BeforeClass public static void oneTimeSetup() throws Exception {
-		server = new FakeServer(true);
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
-	}
-
-	@AfterClass public static void oneTimeTeardown() {
-		server.stop();
-	}
-
-	@Before public void setUp() throws Exception {
-    	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
+    @BeforeClass public static void oneTimeSetup() throws Exception {
+        server = new FakeServer(true);
+        server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     }
 
-	@After public void teardown() throws SQLException {
-		conn.close();
-	}
+    @AfterClass public static void oneTimeTeardown() {
+        server.stop();
+    }
 
-	@Test public void testCacheHint() throws Exception {
-		Statement s = conn.createStatement();
-		s.execute("set showplan on");
-		ResultSet rs = s.executeQuery("/* cache */ select 1");
-		assertTrue(rs.next());
-		s.execute("set noexec on");
-		rs = s.executeQuery("/* cache */ select 1");
-		assertTrue(rs.next());
-		rs = s.executeQuery("select 1");
-		assertFalse(rs.next());
-	}
+    @Before public void setUp() throws Exception {
+        conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
-	@Test public void testCacheHintWithMaxRows() throws Exception {
-		Statement s = conn.createStatement();
-		s.setMaxRows(1);
-		ResultSet rs = s.executeQuery("/* cache */ select 1 union all select 2");
-		assertTrue(rs.next());
-		assertFalse(rs.next());
-		s.setMaxRows(2);
-		rs = s.executeQuery("/* cache */ select 1 union all select 2");
-		assertTrue(rs.next());
-		assertTrue(rs.next());
-	}
+    @After public void teardown() throws SQLException {
+        conn.close();
+    }
 
-	@Test public void testCacheHintTtl() throws Exception {
-		Statement s = conn.createStatement();
-		s.execute("set showplan on");
-		ResultSet rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
-		assertTrue(rs.next());
-		s.execute("set noexec on");
-		Thread.sleep(60);
-		rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
-		assertFalse(rs.next());
-	}
+    @Test public void testCacheHint() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set showplan on");
+        ResultSet rs = s.executeQuery("/* cache */ select 1");
+        assertTrue(rs.next());
+        s.execute("set noexec on");
+        rs = s.executeQuery("/* cache */ select 1");
+        assertTrue(rs.next());
+        rs = s.executeQuery("select 1");
+        assertFalse(rs.next());
+    }
 
-	@Test public void testExecutionProperty() throws Exception {
-		Statement s = conn.createStatement();
-		s.execute("set showplan on");
-		s.execute("set resultSetCacheMode true");
-		ResultSet rs = s.executeQuery("select 1");
-		assertTrue(rs.next());
-		s.execute("set noexec on");
-		rs = s.executeQuery("select 1");
-		assertTrue(rs.next());
-		s.execute("set resultSetCacheMode false");
-		rs = s.executeQuery("select 1");
-		assertFalse(rs.next());
-	}
+    @Test public void testCacheHintWithMaxRows() throws Exception {
+        Statement s = conn.createStatement();
+        s.setMaxRows(1);
+        ResultSet rs = s.executeQuery("/* cache */ select 1 union all select 2");
+        assertTrue(rs.next());
+        assertFalse(rs.next());
+        s.setMaxRows(2);
+        rs = s.executeQuery("/* cache */ select 1 union all select 2");
+        assertTrue(rs.next());
+        assertTrue(rs.next());
+    }
 
-	@Test public void testCacheHintWithLargeSQLXML() throws Exception {
-		Statement s = conn.createStatement();
-		ResultSet rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
-		assertTrue(rs.next());
-		assertEquals(148907, rs.getString(1).length());
-		assertFalse(rs.next());
-		rs.close();
-		rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
-		assertTrue(rs.next());
-		assertEquals(148907, rs.getString(1).length());
-		assertFalse(rs.next());
-	}
+    @Test public void testCacheHintTtl() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set showplan on");
+        ResultSet rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
+        assertTrue(rs.next());
+        s.execute("set noexec on");
+        Thread.sleep(60);
+        rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
+        assertFalse(rs.next());
+    }
 
-	@Test public void testScope() throws Exception {
-		ModelMetaData mmd = new ModelMetaData();
-		mmd.setName("x");
-		mmd.addProperty("teiid_rel:determinism", "USER_DETERMINISTIC");
-		mmd.addSourceMapping("x", "x", null);
-		mmd.addSourceMetadata("ddl", "create foreign table t (c string); create foreign procedure p () returns table (c string);");
-		final AtomicBoolean setScope = new AtomicBoolean();
-		server.addTranslator("x", new ExecutionFactory() {
-			@Override
-			public boolean isSourceRequired() {
-				return false;
-			}
+    @Test public void testExecutionProperty() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("set showplan on");
+        s.execute("set resultSetCacheMode true");
+        ResultSet rs = s.executeQuery("select 1");
+        assertTrue(rs.next());
+        s.execute("set noexec on");
+        rs = s.executeQuery("select 1");
+        assertTrue(rs.next());
+        s.execute("set resultSetCacheMode false");
+        rs = s.executeQuery("select 1");
+        assertFalse(rs.next());
+    }
 
-			@Override
-			public ResultSetExecution createResultSetExecution(
-					QueryExpression command, final ExecutionContext executionContext,
-					RuntimeMetadata metadata, Object connection)
-					throws TranslatorException {
-				return createProcedureExecution(null, executionContext, metadata, connection);
-			}
+    @Test public void testCacheHintWithLargeSQLXML() throws Exception {
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+        assertTrue(rs.next());
+        assertEquals(148907, rs.getString(1).length());
+        assertFalse(rs.next());
+        rs.close();
+        rs = s.executeQuery("/* cache */ WITH t(n) AS ( VALUES (1) UNION ALL SELECT n+1 FROM t WHERE n < 10000 ) SELECT xmlelement(root, xmlagg(xmlelement(val, n))) FROM t");
+        assertTrue(rs.next());
+        assertEquals(148907, rs.getString(1).length());
+        assertFalse(rs.next());
+    }
 
-			@Override
-			public ProcedureExecution createProcedureExecution(Call command,
-					final ExecutionContext executionContext,
-					RuntimeMetadata metadata, Object connection)
-					throws TranslatorException {
-				return new ProcedureExecution() {
+    @Test public void testScope() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.addProperty("teiid_rel:determinism", "USER_DETERMINISTIC");
+        mmd.addSourceMapping("x", "x", null);
+        mmd.addSourceMetadata("ddl", "create foreign table t (c string); create foreign procedure p () returns table (c string);");
+        final AtomicBoolean setScope = new AtomicBoolean();
+        server.addTranslator("x", new ExecutionFactory() {
+            @Override
+            public boolean isSourceRequired() {
+                return false;
+            }
 
-					boolean returned = false;
+            @Override
+            public ResultSetExecution createResultSetExecution(
+                    QueryExpression command, final ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Object connection)
+                    throws TranslatorException {
+                return createProcedureExecution(null, executionContext, metadata, connection);
+            }
 
-					@Override
-					public void execute() throws TranslatorException {
+            @Override
+            public ProcedureExecution createProcedureExecution(Call command,
+                    final ExecutionContext executionContext,
+                    RuntimeMetadata metadata, Object connection)
+                    throws TranslatorException {
+                return new ProcedureExecution() {
 
-					}
+                    boolean returned = false;
 
-					@Override
-					public void close() {
+                    @Override
+                    public void execute() throws TranslatorException {
 
-					}
+                    }
 
-					@Override
-					public void cancel() throws TranslatorException {
+                    @Override
+                    public void close() {
 
-					}
+                    }
 
-					@Override
-					public List<?> next() throws TranslatorException, DataNotAvailableException {
-						if (setScope.get()) {
-							executionContext.setScope(Scope.SESSION); //prevent caching altogether
-						}
-						if (returned) {
-							return null;
-						}
-						returned = true;
-						return Arrays.asList(executionContext.getSession().getSessionId());
-					}
+                    @Override
+                    public void cancel() throws TranslatorException {
 
-					@Override
-					public List<?> getOutputParameterValues()
-							throws TranslatorException {
-						return null;
-					}
-				};
-			}
-		});
-		server.deployVDB("x", mmd);
-		Connection c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
-		Statement s = c.createStatement();
-		ResultSet rs = s.executeQuery("/* cache */ select * from t");
-		assertTrue(rs.next());
-		String sessionid = rs.getString(1);
+                    }
 
-		//should be the same with same user/session
-		rs = s.executeQuery("/* cache */ select * from t");
-		assertTrue(rs.next());
-		assertEquals(sessionid, rs.getString(1));
-		c.close();
+                    @Override
+                    public List<?> next() throws TranslatorException, DataNotAvailableException {
+                        if (setScope.get()) {
+                            executionContext.setScope(Scope.SESSION); //prevent caching altogether
+                        }
+                        if (returned) {
+                            return null;
+                        }
+                        returned = true;
+                        return Arrays.asList(executionContext.getSession().getSessionId());
+                    }
 
-		c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
-		s = c.createStatement();
-		rs = s.executeQuery("/* cache */ select * from t");
-		assertTrue(rs.next());
-		assertEquals(sessionid, rs.getString(1));
-		c.close();
+                    @Override
+                    public List<?> getOutputParameterValues()
+                            throws TranslatorException {
+                        return null;
+                    }
+                };
+            }
+        });
+        server.deployVDB("x", mmd);
+        Connection c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
+        Statement s = c.createStatement();
+        ResultSet rs = s.executeQuery("/* cache */ select * from t");
+        assertTrue(rs.next());
+        String sessionid = rs.getString(1);
 
-		//for the final test
-		setScope.set(true);
+        //should be the same with same user/session
+        rs = s.executeQuery("/* cache */ select * from t");
+        assertTrue(rs.next());
+        assertEquals(sessionid, rs.getString(1));
+        c.close();
 
-		//should be different with another user
-		c = server.getDriver().connect("jdbc:teiid:x;user=bill", null);
-		s = c.createStatement();
-		rs = s.executeQuery("/* cache */ select * from t");
-		assertTrue(rs.next());
-		String sessionid1 = rs.getString(1);
-		c.close();
+        c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
+        s = c.createStatement();
+        rs = s.executeQuery("/* cache */ select * from t");
+        assertTrue(rs.next());
+        assertEquals(sessionid, rs.getString(1));
+        c.close();
 
-		assertNotEquals(sessionid, sessionid1);
+        //for the final test
+        setScope.set(true);
 
-		c = server.getDriver().connect("jdbc:teiid:x;user=bill", null);
-		s = c.createStatement();
-		rs = s.executeQuery("/* cache */ select * from t");
-		assertTrue(rs.next());
+        //should be different with another user
+        c = server.getDriver().connect("jdbc:teiid:x;user=bill", null);
+        s = c.createStatement();
+        rs = s.executeQuery("/* cache */ select * from t");
+        assertTrue(rs.next());
+        String sessionid1 = rs.getString(1);
+        c.close();
 
-		//scope session should prevent reuse
-		assertNotEquals(sessionid1, rs.getString(1));
+        assertNotEquals(sessionid, sessionid1);
 
-		setScope.set(false);
+        c = server.getDriver().connect("jdbc:teiid:x;user=bill", null);
+        s = c.createStatement();
+        rs = s.executeQuery("/* cache */ select * from t");
+        assertTrue(rs.next());
 
-		rs = s.executeQuery("/* cache */ call p()");
-		assertTrue(rs.next());
-		sessionid = rs.getString(1);
-		c.close();
+        //scope session should prevent reuse
+        assertNotEquals(sessionid1, rs.getString(1));
 
-		c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
-		s = c.createStatement();
-		rs = s.executeQuery("/* cache */ call p()");
-		assertTrue(rs.next());
-		assertNotEquals(sessionid, rs.getString(1));
-		c.close();
-	}
+        setScope.set(false);
+
+        rs = s.executeQuery("/* cache */ call p()");
+        assertTrue(rs.next());
+        sessionid = rs.getString(1);
+        c.close();
+
+        c = server.getDriver().connect("jdbc:teiid:x;user=alice", null);
+        s = c.createStatement();
+        rs = s.executeQuery("/* cache */ call p()");
+        assertTrue(rs.next());
+        assertNotEquals(sessionid, rs.getString(1));
+        c.close();
+    }
 
 }

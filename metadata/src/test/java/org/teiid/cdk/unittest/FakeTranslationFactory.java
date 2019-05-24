@@ -25,18 +25,18 @@ import org.teiid.query.unittest.RealMetadataFactory;
 @SuppressWarnings("nls")
 public class FakeTranslationFactory {
 
-	private static FakeTranslationFactory instance = new FakeTranslationFactory();
+    private static FakeTranslationFactory instance = new FakeTranslationFactory();
 
-	public static FakeTranslationFactory getInstance() {
-		return instance;
-	}
+    public static FakeTranslationFactory getInstance() {
+        return instance;
+    }
 
-	public TranslationUtility getBQTTranslationUtility() {
-		return new TranslationUtility(RealMetadataFactory.exampleBQTCached());
-	}
+    public TranslationUtility getBQTTranslationUtility() {
+        return new TranslationUtility(RealMetadataFactory.exampleBQTCached());
+    }
 
-	public TranslationUtility getYahooTranslationUtility() {
-		MetadataStore metadataStore = new MetadataStore();
+    public TranslationUtility getYahooTranslationUtility() {
+        MetadataStore metadataStore = new MetadataStore();
         // Create models
         Schema yahoo = RealMetadataFactory.createPhysicalModel("Yahoo", metadataStore); //$NON-NLS-1$
 
@@ -73,11 +73,11 @@ public class FakeTranslationFactory {
         cols.get(0).setSelectable(false);
         cols.get(0).setSearchType(SearchType.Unsearchable);
 
-		return new TranslationUtility(RealMetadataFactory.createTransformationMetadata(metadataStore, "yahoo"));
-	}
+        return new TranslationUtility(RealMetadataFactory.createTransformationMetadata(metadataStore, "yahoo"));
+    }
 
-	public TranslationUtility getExampleTranslationUtility() {
-		return new TranslationUtility(RealMetadataFactory.example1Cached());
-	}
+    public TranslationUtility getExampleTranslationUtility() {
+        return new TranslationUtility(RealMetadataFactory.example1Cached());
+    }
 
 }

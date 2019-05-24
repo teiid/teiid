@@ -41,14 +41,14 @@ public class TestCallableStatementParsing {
         assertEquals((returnValue ? "? = ":"") +"EXEC procedure_name(?, ?, ?)", sp.toString()); //$NON-NLS-1$
     }
 
-	private StoredProcedure helpTest(String call, boolean returnValue)
-			throws QueryParserException {
-		StoredProcedure sp = (StoredProcedure)QueryParser.getQueryParser().parseCommand(call);
+    private StoredProcedure helpTest(String call, boolean returnValue)
+            throws QueryParserException {
+        StoredProcedure sp = (StoredProcedure)QueryParser.getQueryParser().parseCommand(call);
         assertTrue(sp.isCallableStatement());
         assertEquals(returnValue, sp.returnsScalarValue());
         assertEquals("procedure_name", sp.getProcedureName()); //$NON-NLS-1$
-		return sp;
-	}
+        return sp;
+    }
 
     @Test public void testCallNoParams() throws QueryParserException {
         StoredProcedure sp = (StoredProcedure)QueryParser.getQueryParser().parseCommand("{call procedure_name}"); //$NON-NLS-1$
@@ -90,7 +90,7 @@ public class TestCallableStatementParsing {
     }
 
     @Test public void testNamedParams() throws QueryParserException {
-    	assertEquals("? = EXEC procedure_name(a => ?)", helpTest("{?=call procedure_name(a=>?)}", true).toString());
+        assertEquals("? = EXEC procedure_name(a => ?)", helpTest("{?=call procedure_name(a=>?)}", true).toString());
     }
 
     @Test(expected=QueryParserException.class) public void testBadCallKeyword() throws Exception {

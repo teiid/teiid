@@ -27,20 +27,20 @@ public abstract class Condition extends BaseLanguageObject implements Expression
 
     private boolean expression;
 
-	@Override
-	public Class<?> getType() {
-		return TypeFacility.RUNTIME_TYPES.BOOLEAN;
-	}
+    @Override
+    public Class<?> getType() {
+        return TypeFacility.RUNTIME_TYPES.BOOLEAN;
+    }
 
-	/**
-	 *
-	 * @return true if this is a boolean expression used as a value
-	 */
-	public boolean isExpression() {
-	    return expression;
-	}
+    /**
+     *
+     * @return true if this is a boolean expression used as a value
+     */
+    public boolean isExpression() {
+        return expression;
+    }
 
-	public void setExpression(boolean expression) {
+    public void setExpression(boolean expression) {
         this.expression = expression;
     }
 

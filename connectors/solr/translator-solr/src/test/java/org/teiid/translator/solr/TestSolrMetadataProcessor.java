@@ -37,13 +37,13 @@ import org.teiid.translator.TranslatorException;
 @SuppressWarnings("nls")
 public class TestSolrMetadataProcessor {
 
-	private FieldInfo buildField(String name, String type, EnumSet<FieldFlag> flags) {
-		FieldInfo info = Mockito.mock(FieldInfo.class);
-		Mockito.stub(info.getName()).toReturn(name);
-		Mockito.stub(info.getType()).toReturn(type);
-		Mockito.stub(info.getFlags()).toReturn(flags);
-		return info;
-	}
+    private FieldInfo buildField(String name, String type, EnumSet<FieldFlag> flags) {
+        FieldInfo info = Mockito.mock(FieldInfo.class);
+        Mockito.stub(info.getName()).toReturn(name);
+        Mockito.stub(info.getType()).toReturn(type);
+        Mockito.stub(info.getFlags()).toReturn(flags);
+        return info;
+    }
 
     @Test
     public void testMetadata() throws TranslatorException {
@@ -69,12 +69,12 @@ public class TestSolrMetadataProcessor {
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
         String expected = "CREATE FOREIGN TABLE SomeTable (\n" +
-        		"	col1 string OPTIONS (SEARCHABLE 'Searchable'),\n" +
-        		"	col2 integer OPTIONS (SEARCHABLE 'Searchable'),\n" +
-        		"	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" +
-        		"	id long OPTIONS (SEARCHABLE 'Searchable'),\n" +
-        		"	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
-        		") OPTIONS (UPDATABLE TRUE);";
+                "	col1 string OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	col2 integer OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	col3 integer[] OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	id long OPTIONS (SEARCHABLE 'Searchable'),\n" +
+                "	CONSTRAINT PK0 PRIMARY KEY(id)\n" +
+                ") OPTIONS (UPDATABLE TRUE);";
         assertEquals(expected, metadataDDL);
     }
 }

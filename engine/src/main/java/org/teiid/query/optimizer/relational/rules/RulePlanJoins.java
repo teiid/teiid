@@ -123,11 +123,11 @@ public class RulePlanJoins implements OptimizerRule {
 
             //account for nested table correlations
             for (PlanNode joinSource : joinRegion.getJoinSourceNodes().keySet()) {
-            	SymbolMap map = (SymbolMap)joinSource.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-            	if (map !=null) {
+                SymbolMap map = (SymbolMap)joinSource.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                if (map !=null) {
                     joinSource.setProperty(NodeConstants.Info.REQUIRED_ACCESS_PATTERN_GROUPS, GroupsUsedByElementsVisitor.getGroups(map.getValues()));
                     joinRegion.setContainsNestedTable(true);
-            	}
+                }
             }
 
             //check for unsatisfied dependencies
@@ -321,9 +321,9 @@ public class RulePlanJoins implements OptimizerRule {
                         if (sources.contains(accessNode1)) {
                             if (sources.contains(accessNode2) && sources.size() == 2) {
                                 Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-								if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder, null)) {
-	                                joinCriteriaNodes.add(critNode);
-	                                joinCriteria.add(crit);
+                                if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder, null)) {
+                                    joinCriteriaNodes.add(critNode);
+                                    joinCriteria.add(crit);
                                 }
                             } else if (!accessNodes.containsAll(sources)) {
                                 hasJoinCriteria = true;
@@ -337,7 +337,7 @@ public class RulePlanJoins implements OptimizerRule {
                      * If we failed to find direct criteria, a cross join may still be acceptable
                      */
                     if (joinCriteriaNodes.isEmpty() && (hasJoinCriteria || !canPushCrossJoin(metadata, accessNode1, accessNode2))) {
-                    	continue;
+                        continue;
                     }
 
                     List<PlanNode> toTest = Arrays.asList(accessNode1, accessNode2);
@@ -349,12 +349,12 @@ public class RulePlanJoins implements OptimizerRule {
                      */
                     boolean shouldPush = true;
                     int sourceCount = NodeEditor.findAllNodes(accessNode1, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).size();
-                	sourceCount += NodeEditor.findAllNodes(accessNode2, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).size();
+                    sourceCount += NodeEditor.findAllNodes(accessNode2, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).size();
 
                     if (!context.getOptions().isAggressiveJoinGrouping() && accessMap.size() > 1 && joinType == JoinType.JOIN_INNER
-                			&& (sourceCount > 2 && (accessNode1.hasProperty(Info.MAKE_DEP) || accessNode2.hasProperty(Info.MAKE_DEP)) || sourceCount > 3)
-                			&& !canPushCrossJoin(metadata, accessNode1, accessNode2)) {
-                		Collection<GroupSymbol> leftGroups = accessNode1.getGroups();
+                            && (sourceCount > 2 && (accessNode1.hasProperty(Info.MAKE_DEP) || accessNode2.hasProperty(Info.MAKE_DEP)) || sourceCount > 3)
+                            && !canPushCrossJoin(metadata, accessNode1, accessNode2)) {
+                        Collection<GroupSymbol> leftGroups = accessNode1.getGroups();
                         Collection<GroupSymbol> rightGroups = accessNode2.getGroups();
 
                         List<Expression> leftExpressions = new ArrayList<Expression>();
@@ -365,20 +365,20 @@ public class RulePlanJoins implements OptimizerRule {
 
                         //allow a 1-1 join
                         if (!NewCalculateCostUtil.usesKey(accessNode1, leftExpressions, metadata)
-                        		|| !NewCalculateCostUtil.usesKey(accessNode2, rightExpressions, metadata)) {
-                        	shouldPush = false; //don't push heuristically
+                                || !NewCalculateCostUtil.usesKey(accessNode2, rightExpressions, metadata)) {
+                            shouldPush = false; //don't push heuristically
                         }
-                	}
+                    }
 
                     //try to push to the source
                     if (!shouldPush || RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null, context, secondPass != -1, false) == null) {
-                    	if (secondPass == - 1 && sjc != SupportedJoinCriteria.KEY && discoveredJoin == -1) {
-                			for (Criteria criteria : joinCriteria) {
-                				if (criteria instanceof CompareCriteria && ((CompareCriteria) criteria).isOptional()) {
-                					discoveredJoin = k;
-                				}
-                			}
-                		}
+                        if (secondPass == - 1 && sjc != SupportedJoinCriteria.KEY && discoveredJoin == -1) {
+                            for (Criteria criteria : joinCriteria) {
+                                if (criteria instanceof CompareCriteria && ((CompareCriteria) criteria).isOptional()) {
+                                    discoveredJoin = k;
+                                }
+                            }
+                        }
                         continue;
                     }
 
@@ -419,8 +419,8 @@ public class RulePlanJoins implements OptimizerRule {
                 }
 
                 if (discoveredJoin != -1) {
-                	i++; //rerun with the discoveredJoin criteria
-                	secondPass = discoveredJoin;
+                    i++; //rerun with the discoveredJoin criteria
+                    secondPass = discoveredJoin;
                 }
             }
         }
@@ -450,14 +450,14 @@ public class RulePlanJoins implements OptimizerRule {
         return joinNode;
     }
 
-	private boolean canPushCrossJoin(QueryMetadataInterface metadata,
-			PlanNode accessNode1, PlanNode accessNode2)
-			throws QueryMetadataException, TeiidComponentException {
-		float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
-		float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
-		float acceptableCost = 64;
-		return !((cost1 == NewCalculateCostUtil.UNKNOWN_VALUE || cost2 == NewCalculateCostUtil.UNKNOWN_VALUE || (cost1 > acceptableCost && cost2 > acceptableCost)));
-	}
+    private boolean canPushCrossJoin(QueryMetadataInterface metadata,
+            PlanNode accessNode1, PlanNode accessNode2)
+            throws QueryMetadataException, TeiidComponentException {
+        float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
+        float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
+        float acceptableCost = 64;
+        return !((cost1 == NewCalculateCostUtil.UNKNOWN_VALUE || cost2 == NewCalculateCostUtil.UNKNOWN_VALUE || (cost1 > acceptableCost && cost2 > acceptableCost)));
+    }
 
     /**
      * Return a map of Access Nodes to JoinSources that may be eligible for pushdown as
@@ -518,7 +518,7 @@ public class RulePlanJoins implements OptimizerRule {
             satisfiedAP = false;
 
             for (Iterator<Map.Entry<PlanNode, PlanNode>> joinSources = dependentNodes.entrySet().iterator(); joinSources.hasNext();) {
-            	Map.Entry<PlanNode, PlanNode> entry = joinSources.next();
+                Map.Entry<PlanNode, PlanNode> entry = joinSources.next();
                 PlanNode joinSource = entry.getKey();
 
                 Collection accessPatterns = (Collection)joinSource.getProperty(NodeConstants.Info.ACCESS_PATTERNS);

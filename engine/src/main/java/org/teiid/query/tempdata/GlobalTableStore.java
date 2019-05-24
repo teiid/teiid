@@ -32,34 +32,34 @@ import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 
 public interface GlobalTableStore {
 
-	TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
+    TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
 
-	TempMetadataID getGlobalTempTableMetadataId(String matTableName);
+    TempMetadataID getGlobalTempTableMetadataId(String matTableName);
 
-	TempMetadataID getCodeTableMetadataId(String codeTableName,
-			String returnElementName, String keyElementName,
-			String matTableName) throws TeiidComponentException,
-			QueryMetadataException;
+    TempMetadataID getCodeTableMetadataId(String codeTableName,
+            String returnElementName, String keyElementName,
+            String matTableName) throws TeiidComponentException,
+            QueryMetadataException;
 
-	MatTableInfo getMatTableInfo(String matTableName);
+    MatTableInfo getMatTableInfo(String matTableName);
 
-	TempTable getTempTable(String matTableName);
+    TempTable getTempTable(String matTableName);
 
-	Serializable getAddress();
+    Serializable getAddress();
 
-	List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
+    List<?> updateMatViewRow(String matTableName, List<?> tuple, boolean delete) throws TeiidComponentException;
 
-	TempTable createMatTable(String tableName, GroupSymbol group)
-	throws TeiidComponentException, QueryMetadataException, TeiidProcessingException;
+    TempTable createMatTable(String tableName, GroupSymbol group)
+    throws TeiidComponentException, QueryMetadataException, TeiidProcessingException;
 
-	@Replicated
-	void failedLoad(String matTableName);
+    @Replicated
+    void failedLoad(String matTableName);
 
-	@Replicated(asynch=false, timeout=5000)
-	boolean needsLoading(String matTableName, Serializable loadingAddress,
-			boolean firstPass, boolean refresh, boolean invalidate);
+    @Replicated(asynch=false, timeout=5000)
+    boolean needsLoading(String matTableName, Serializable loadingAddress,
+            boolean firstPass, boolean refresh, boolean invalidate);
 
-	@Replicated(replicateState=ReplicationMode.PUSH)
-	void loaded(String matTableName, TempTable table);
+    @Replicated(replicateState=ReplicationMode.PUSH)
+    void loaded(String matTableName, TempTable table);
 
 }

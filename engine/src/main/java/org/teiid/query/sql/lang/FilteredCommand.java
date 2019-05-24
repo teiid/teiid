@@ -20,8 +20,8 @@ package org.teiid.query.sql.lang;
 
 public interface FilteredCommand {
 
-	Criteria getCriteria();
+    Criteria getCriteria();
 
-	void setCriteria(Criteria criteria);
+    void setCriteria(Criteria criteria);
 
 }

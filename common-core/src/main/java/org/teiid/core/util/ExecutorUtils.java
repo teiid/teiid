@@ -27,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 public class ExecutorUtils {
 
-	/**
-	 * Creates a fixed thread pool with named daemon threads that will expire after 60 seconds of
-	 * inactivity.
-	 * @param nThreads
-	 * @param name
-	 */
+    /**
+     * Creates a fixed thread pool with named daemon threads that will expire after 60 seconds of
+     * inactivity.
+     * @param nThreads
+     * @param name
+     */
     public static ExecutorService newFixedThreadPool(int nThreads, String name) {
         return newFixedThreadPool(nThreads, Integer.MAX_VALUE, name);
     }
@@ -47,13 +47,13 @@ public class ExecutorUtils {
 
     private static Executor direct = new Executor() {
 
-		@Override
-		public void execute(Runnable command) {
-			command.run();
-		}
-	};
+        @Override
+        public void execute(Runnable command) {
+            command.run();
+        }
+    };
 
     public static Executor getDirectExecutor() {
-    	return direct;
+        return direct;
     }
 }

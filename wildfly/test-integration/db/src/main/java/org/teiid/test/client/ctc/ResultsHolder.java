@@ -138,22 +138,22 @@ public class ResultsHolder {
         StringBuffer buf = new StringBuffer();
         buf.append("ResultsHolder... \n"); //$NON-NLS-1$
         if (isResult()) {
-	        for (int i = 0; i < this.identifiers.size(); i++) {
-	            buf.append("["); //$NON-NLS-1$
-	            buf.append(this.identifiers.get(i));
-	            buf.append(" - "); //$NON-NLS-1$
-	            buf.append(this.types.get(i));
-	            buf.append("] "); //$NON-NLS-1$
-	        }
-	        buf.append("\n"); //$NON-NLS-1$
-	        Iterator rowItr = this.rows.iterator();
-	        int i = 1;
-	        while (rowItr.hasNext()) {
-	            buf.append(i++);
-	            buf.append(": "); //$NON-NLS-1$
-	            buf.append(rowItr.next());
-	            buf.append("\n"); //$NON-NLS-1$
-	        }
+            for (int i = 0; i < this.identifiers.size(); i++) {
+                buf.append("["); //$NON-NLS-1$
+                buf.append(this.identifiers.get(i));
+                buf.append(" - "); //$NON-NLS-1$
+                buf.append(this.types.get(i));
+                buf.append("] "); //$NON-NLS-1$
+            }
+            buf.append("\n"); //$NON-NLS-1$
+            Iterator rowItr = this.rows.iterator();
+            int i = 1;
+            while (rowItr.hasNext()) {
+                buf.append(i++);
+                buf.append(": "); //$NON-NLS-1$
+                buf.append(rowItr.next());
+                buf.append("\n"); //$NON-NLS-1$
+            }
         }
         else {
             buf.append(getExceptionClassName()).append(":").append(getExceptionMsg()); //$NON-NLS-1$

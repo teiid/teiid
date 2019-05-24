@@ -38,7 +38,7 @@ public class HotRodTestServer {
 
     public HotRodTestServer(int port) {
         ConfigurationBuilder c = getConfigurationBuilder();
-        		//new ConfigurationBuilder();
+                //new ConfigurationBuilder();
         GlobalConfigurationBuilder gc = GlobalConfigurationBuilder.defaultClusteredBuilder().nonClusteredDefault();
         GlobalConfiguration config = gc.build();
         this.defaultCacheManager = new DefaultCacheManager(config, c.build(config));
@@ -74,7 +74,7 @@ public class HotRodTestServer {
     }
 
     public InfinispanConnection getConnection() throws ResourceException {
-    	return getConnection("default");
+        return getConnection("default");
     }
 
     public void stop() {

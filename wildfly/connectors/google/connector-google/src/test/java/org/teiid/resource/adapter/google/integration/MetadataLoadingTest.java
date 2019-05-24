@@ -22,32 +22,32 @@ import junit.framework.Assert;
 @SuppressWarnings("nls")
 public class MetadataLoadingTest extends IntegrationTest {
 
-	private static GDataClientLoginAPI gdata = null;
-	private static GoogleDataProtocolAPI visualizationAPI = null;
+    private static GDataClientLoginAPI gdata = null;
+    private static GoogleDataProtocolAPI visualizationAPI = null;
 
-	{
-		AuthHeaderFactory auth= new OAuth2HeaderFactory(refreshToken);
-		auth.refreshToken();
-		gdata = new GDataClientLoginAPI();
-		gdata.setHeaderFactory(auth);
-		visualizationAPI = new GoogleDataProtocolAPI();
-		visualizationAPI.setHeaderFactory(auth);
-	}
+    {
+        AuthHeaderFactory auth= new OAuth2HeaderFactory(refreshToken);
+        auth.refreshToken();
+        gdata = new GDataClientLoginAPI();
+        gdata.setHeaderFactory(auth);
+        visualizationAPI = new GoogleDataProtocolAPI();
+        visualizationAPI.setHeaderFactory(auth);
+    }
 
-	@Test
-	public void testMetadata(){
+    @Test
+    public void testMetadata(){
 
-		SpreadsheetMetadataExtractor extractor = new SpreadsheetMetadataExtractor();
-		extractor.setGdataAPI(gdata);
-		extractor.setVisualizationAPI(visualizationAPI);
-		SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests", false);
-		Assert.assertEquals(0,metadata.getWorksheetByName("Sheet1").getColumnCount());
-		Assert.assertEquals(2,metadata.getWorksheetByName("Sheet2").getColumnCount());
-		metadata= extractor.extractMetadata("people", false);
-		Assert.assertEquals(5,metadata.getWorksheetByName("list").getColumnCount());
-		Assert.assertEquals(4,metadata.getWorksheetByName("phones").getColumnCount());
+        SpreadsheetMetadataExtractor extractor = new SpreadsheetMetadataExtractor();
+        extractor.setGdataAPI(gdata);
+        extractor.setVisualizationAPI(visualizationAPI);
+        SpreadsheetInfo metadata= extractor.extractMetadata("integration_tests", false);
+        Assert.assertEquals(0,metadata.getWorksheetByName("Sheet1").getColumnCount());
+        Assert.assertEquals(2,metadata.getWorksheetByName("Sheet2").getColumnCount());
+        metadata= extractor.extractMetadata("people", false);
+        Assert.assertEquals(5,metadata.getWorksheetByName("list").getColumnCount());
+        Assert.assertEquals(4,metadata.getWorksheetByName("phones").getColumnCount());
 
-	}
+    }
 
 }
 

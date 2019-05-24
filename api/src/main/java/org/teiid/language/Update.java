@@ -29,7 +29,7 @@ import org.teiid.language.visitor.LanguageObjectVisitor;
 public class Update extends BaseLanguageObject implements BulkCommand {
 
     private NamedTable table;
-	private List<SetClause> changes;
+    private List<SetClause> changes;
     private Condition where;
     private Iterator<? extends List<?>> parameterValues;
 
@@ -69,11 +69,11 @@ public class Update extends BaseLanguageObject implements BulkCommand {
 
     @Override
     public Iterator<? extends List<?>> getParameterValues() {
-    	return parameterValues;
+        return parameterValues;
     }
 
     public void setParameterValues(Iterator<? extends List<?>> parameterValues) {
-		this.parameterValues = parameterValues;
-	}
+        this.parameterValues = parameterValues;
+    }
 
 }

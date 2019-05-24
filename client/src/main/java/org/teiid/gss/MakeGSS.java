@@ -52,10 +52,10 @@ import org.teiid.net.TeiidURL;
 
 public class MakeGSS {
 
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 
-	public static LogonResult authenticate(ILogon logon, Properties props)
-			throws LogonException, TeiidComponentException, CommunicationException   {
+    public static LogonResult authenticate(ILogon logon, Properties props)
+            throws LogonException, TeiidComponentException, CommunicationException   {
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("GSS Authentication Request"); //$NON-NLS-1$
         }
@@ -66,21 +66,21 @@ public class MakeGSS {
         String jaasApplicationName = props.getProperty(TeiidURL.CONNECTION.JAAS_NAME);
         String nl = System.getProperty("line.separator");//$NON-NLS-1$
         if (jaasApplicationName == null) {
-        	jaasApplicationName = "Teiid"; //$NON-NLS-1$
+            jaasApplicationName = "Teiid"; //$NON-NLS-1$
         }
 
         String kerberosPrincipalName =  props.getProperty(TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME);
         if (kerberosPrincipalName == null) {
-        	try {
-        		TeiidURL url = new TeiidURL(props.getProperty(TeiidURL.CONNECTION.SERVER_URL));
-        		kerberosPrincipalName="TEIID/" +  url.getHostInfo().get(0).getHostName(); //$NON-NLS-1$
-			} catch (Exception e) {
-				// Ignore exception
-			}
-        	if (kerberosPrincipalName == null) {
-        		errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME)); //$NON-NLS-1$
-        		errors.append(nl);
-        	}
+            try {
+                TeiidURL url = new TeiidURL(props.getProperty(TeiidURL.CONNECTION.SERVER_URL));
+                kerberosPrincipalName="TEIID/" +  url.getHostInfo().get(0).getHostName(); //$NON-NLS-1$
+            } catch (Exception e) {
+                // Ignore exception
+            }
+            if (kerberosPrincipalName == null) {
+                errors.append(JDBCPlugin.Util.getString("client_prop_missing", TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME)); //$NON-NLS-1$
+                errors.append(nl);
+            }
         }
 
         String krb5 = System.getProperty("java.security.krb5.conf"); //$NON-NLS-1$
@@ -89,29 +89,29 @@ public class MakeGSS {
 
 
         if (krb5 == null && realm == null && kdc == null) {
-        	errors.append(JDBCPlugin.Util.getString("no_gss_selection")); //$NON-NLS-1$
-        	errors.append(nl);
+            errors.append(JDBCPlugin.Util.getString("no_gss_selection")); //$NON-NLS-1$
+            errors.append(nl);
         }
         else if (krb5 != null && (realm != null || kdc != null)) {
-        	errors.append(JDBCPlugin.Util.getString("ambigious_gss_selection")); //$NON-NLS-1$
-        	errors.append(nl);
+            errors.append(JDBCPlugin.Util.getString("ambigious_gss_selection")); //$NON-NLS-1$
+            errors.append(nl);
         }
         else if ((realm != null && kdc == null) || (realm == null && kdc != null)) {
-        	// krb5 is null here..
+            // krb5 is null here..
             if (realm == null) {
-            	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.realm")); //$NON-NLS-1$ //$NON-NLS-2$
-            	errors.append(nl);
+                errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.realm")); //$NON-NLS-1$ //$NON-NLS-2$
+                errors.append(nl);
             }
             if (kdc == null) {
-            	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.kdc")); //$NON-NLS-1$ //$NON-NLS-2$
-            	errors.append(nl);
+                errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.kdc")); //$NON-NLS-1$ //$NON-NLS-2$
+                errors.append(nl);
             }
         }
 
         String config = System.getProperty("java.security.auth.login.config"); //$NON-NLS-1$
         if (config == null) {
-        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.auth.login.config")); //$NON-NLS-1$ //$NON-NLS-2$
-        	errors.append(nl);
+            errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.auth.login.config")); //$NON-NLS-1$ //$NON-NLS-2$
+            errors.append(nl);
         }
         try {
             String user = props.getProperty(TeiidURL.CONNECTION.USER_NAME);
@@ -138,7 +138,7 @@ public class MakeGSS {
 
             if (performAuthentication) {
                 if (errors.length() > 0) {
-                	 throw new LogonException(JDBCPlugin.Event.TEIID20005, errors.toString());
+                     throw new LogonException(JDBCPlugin.Event.TEIID20005, errors.toString());
                 }
 
                 LoginContext lc = new LoginContext(jaasApplicationName, new GSSCallbackHandler(user, password));
@@ -170,7 +170,7 @@ public class MakeGSS {
 
 class GssAction implements PrivilegedAction {
 
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+    private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
     private final ILogon logon;
     private final String kerberosPrincipalName;
     private Properties props;
@@ -186,9 +186,9 @@ class GssAction implements PrivilegedAction {
     }
 
     public Object run() {
-    	byte outToken[] = null;
+        byte outToken[] = null;
 
-    	try {
+        try {
             org.ietf.jgss.Oid desiredMechs[] = new org.ietf.jgss.Oid[1];
             desiredMechs[0] = new org.ietf.jgss.Oid("1.2.840.113554.1.2.2"); //$NON-NLS-1$
 
@@ -217,31 +217,31 @@ class GssAction implements PrivilegedAction {
             boolean established = false;
             LogonResult result = null;
             while (!established) {
-            	outToken = secContext.initSecContext(inToken, 0, inToken.length);
+                outToken = secContext.initSecContext(inToken, 0, inToken.length);
                 if (outToken != null) {
-                	if (logger.isLoggable(Level.FINE)) {
+                    if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Sending Service Token to Server (GSS Authentication Token)"); //$NON-NLS-1$
-                	}
-                	result = logon.neogitiateGssLogin(this.props, outToken, true);
-                	inToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
+                    }
+                    result = logon.neogitiateGssLogin(this.props, outToken, true);
+                    inToken = (byte[])result.getProperty(ILogon.KRB5TOKEN);
                 }
 
                 if (!secContext.isEstablished()) {
-                	if (logger.isLoggable(Level.FINE)) {
+                    if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Authentication GSS Continue"); //$NON-NLS-1$
-                	}
+                    }
                 } else {
                     established = true;
-                	if (logger.isLoggable(Level.FINE)) {
+                    if (logger.isLoggable(Level.FINE)) {
                         logger.fine("Authentication GSS Established"); //$NON-NLS-1$
-                	}
+                    }
                 }
             }
             return result;
         }  catch (GSSException gsse) {
-        	return TeiidSQLException.create(gsse, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20005));
+            return TeiidSQLException.create(gsse, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20005));
         } catch(Exception e) {
-        	return e;
+            return e;
         }
     }
 }

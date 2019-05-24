@@ -56,7 +56,7 @@ import org.teiid.translator.TypeFacility;
  * to produce a SQL String.  This class is expected to be subclassed.
  */
 public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringVisitor.Substitutor {
-	public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
+    public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT =
         new DecimalFormat("#############################0.0#############################", DecimalFormatSymbols.getInstance(Locale.US)); //$NON-NLS-1$
@@ -83,49 +83,49 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
     @Override
     public void append(LanguageObject obj) {
-    	if (shortNameOnly && obj instanceof ColumnReference) {
-    		super.append(obj);
-    		return;
-    	}
+        if (shortNameOnly && obj instanceof ColumnReference) {
+            super.append(obj);
+            return;
+        }
         boolean replacementMode = replaceWithBinding;
         if (obj instanceof Command || obj instanceof Function) {
-    	    /*
-    	     * In general it is not appropriate to use bind values within a function
-    	     * unless the particulars of the function parameters are know.
-    	     * As needed, other visitors or modifiers can set the literals used within
-    	     * a particular function as bind variables.
-    	     */
-        	this.replaceWithBinding = false;
+            /*
+             * In general it is not appropriate to use bind values within a function
+             * unless the particulars of the function parameters are know.
+             * As needed, other visitors or modifiers can set the literals used within
+             * a particular function as bind variables.
+             */
+            this.replaceWithBinding = false;
         }
-    	List<?> parts = null;
-    	if (!recursionObjects.contains(obj)) {
-    		Object trans = this.translations.get(obj);
-    		if (trans instanceof List<?>) {
-    			parts = (List<?>)trans;
-    		} else if (trans instanceof LanguageObject) {
-    			obj = (LanguageObject)trans;
-    		} else {
-    			parts = executionFactory.translate(obj, context);
-    			if (parts != null) {
-    				this.translations.put(obj, parts);
-    			} else {
-    				this.translations.put(obj, obj);
-    			}
-    		}
-    	}
-		if (parts != null) {
-			recursionObjects.add(obj);
-			for (Object part : parts) {
-			    if(part instanceof LanguageObject) {
-			        append((LanguageObject)part);
-			    } else {
-			        buffer.append(part);
-			    }
-			}
-			recursionObjects.remove(obj);
-		} else {
-			super.append(obj);
-		}
+        List<?> parts = null;
+        if (!recursionObjects.contains(obj)) {
+            Object trans = this.translations.get(obj);
+            if (trans instanceof List<?>) {
+                parts = (List<?>)trans;
+            } else if (trans instanceof LanguageObject) {
+                obj = (LanguageObject)trans;
+            } else {
+                parts = executionFactory.translate(obj, context);
+                if (parts != null) {
+                    this.translations.put(obj, parts);
+                } else {
+                    this.translations.put(obj, obj);
+                }
+            }
+        }
+        if (parts != null) {
+            recursionObjects.add(obj);
+            for (Object part : parts) {
+                if(part instanceof LanguageObject) {
+                    append((LanguageObject)part);
+                } else {
+                    buffer.append(part);
+                }
+            }
+            recursionObjects.remove(obj);
+        } else {
+            super.append(obj);
+        }
         this.replaceWithBinding = replacementMode;
     }
 
@@ -140,26 +140,26 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         } else {
             if(Number.class.isAssignableFrom(type)) {
                 boolean useFormatting = false;
-            	if (!executionFactory.useScientificNotation()) {
-	                if (Double.class.isAssignableFrom(type)){
-	                    double value = Math.abs(((Double)obj).doubleValue());
-	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
-	                }
-	                else if (Float.class.isAssignableFrom(type)){
-	                    float value = Math.abs(((Float)obj).floatValue());
-	                    useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
-	                } else if (BigDecimal.class.isAssignableFrom(type)) {
-	                	valuesbuffer.append(((BigDecimal)obj).toPlainString());
-	                	return;
-	                }
-            	}
+                if (!executionFactory.useScientificNotation()) {
+                    if (Double.class.isAssignableFrom(type)){
+                        double value = Math.abs(((Double)obj).doubleValue());
+                        useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
+                    }
+                    else if (Float.class.isAssignableFrom(type)){
+                        float value = Math.abs(((Float)obj).floatValue());
+                        useFormatting = (value <= SCIENTIFIC_LOW || value >= SCIENTIFIC_HIGH);
+                    } else if (BigDecimal.class.isAssignableFrom(type)) {
+                        valuesbuffer.append(((BigDecimal)obj).toPlainString());
+                        return;
+                    }
+                }
                 // The formatting is to avoid the so-called "scientic-notation"
                 // where toString will use for numbers greater than 10p7 and
                 // less than 10p-3, where database may not understand.
                 if (useFormatting) {
-                	synchronized (DECIMAL_FORMAT) {
+                    synchronized (DECIMAL_FORMAT) {
                         valuesbuffer.append(DECIMAL_FORMAT.format(obj));
-					}
+                    }
                 }
                 else {
                     valuesbuffer.append(obj);
@@ -169,22 +169,22 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIMESTAMP)) {
                 valuesbuffer.append(executionFactory.translateLiteralTimestamp((Timestamp)obj));
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.TIME)) {
-            	if (!executionFactory.hasTimeType()) {
-            		valuesbuffer.append(executionFactory.translateLiteralTimestamp(new Timestamp(((Time)obj).getTime())));
-            	} else {
-            		valuesbuffer.append(executionFactory.translateLiteralTime((Time)obj));
-            	}
+                if (!executionFactory.hasTimeType()) {
+                    valuesbuffer.append(executionFactory.translateLiteralTimestamp(new Timestamp(((Time)obj).getTime())));
+                } else {
+                    valuesbuffer.append(executionFactory.translateLiteralTime((Time)obj));
+                }
             } else if(type.equals(TypeFacility.RUNTIME_TYPES.DATE)) {
                 valuesbuffer.append(executionFactory.translateLiteralDate((java.sql.Date)obj));
             } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	valuesbuffer.append(executionFactory.translateLiteralBinaryType((BinaryType)obj));
+                valuesbuffer.append(executionFactory.translateLiteralBinaryType((BinaryType)obj));
             } else {
                 // If obj is string, toSting() will not create a new String
                 // object, it returns it self, so new object creation.
-            	String val = obj.toString();
-            	if (useUnicodePrefix() && isNonAscii(val)) {
+                String val = obj.toString();
+                if (useUnicodePrefix() && isNonAscii(val)) {
                     buffer.append("N"); //$NON-NLS-1$
-            	}
+                }
                 valuesbuffer.append(Tokens.QUOTE)
                       .append(escapeString(removeCharacters(val), Tokens.QUOTE))
                       .append(Tokens.QUOTE);
@@ -205,33 +205,33 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     }
 
     protected boolean useUnicodePrefix() {
-    	return this.executionFactory.useUnicodePrefix();
+        return this.executionFactory.useUnicodePrefix();
     }
 
     /**
      * @see org.teiid.language.visitor.SQLStringVisitor#visit(org.teiid.language.Call)
      */
     public void visit(Call obj) {
-    	usingBinding = true;
-    	Procedure p = obj.getMetadataObject();
-    	if (p != null) {
-	    	String nativeQuery = p.getProperty(TEIID_NATIVE_QUERY, false);
-	    	if (nativeQuery != null) {
-	    		this.prepared = !Boolean.valueOf(p.getProperty(TEIID_NON_PREPARED, false));
-	    		if (this.prepared) {
-	    			this.preparedValues = new ArrayList<Object>();
-	    		}
-	    		parseNativeQueryParts(nativeQuery, obj.getArguments(), buffer, this);
-	    		return;
-	    	}
-    	}
-    	if (obj.isTableReference()) {
-    		usingBinding = false;
-    		super.visit(obj);
-    		return;
-    	}
-		this.prepared = true;
-		/*
+        usingBinding = true;
+        Procedure p = obj.getMetadataObject();
+        if (p != null) {
+            String nativeQuery = p.getProperty(TEIID_NATIVE_QUERY, false);
+            if (nativeQuery != null) {
+                this.prepared = !Boolean.valueOf(p.getProperty(TEIID_NON_PREPARED, false));
+                if (this.prepared) {
+                    this.preparedValues = new ArrayList<Object>();
+                }
+                parseNativeQueryParts(nativeQuery, obj.getArguments(), buffer, this);
+                return;
+            }
+        }
+        if (obj.isTableReference()) {
+            usingBinding = false;
+            super.visit(obj);
+            return;
+        }
+        this.prepared = true;
+        /*
          * preparedValues is now a list of procedure params instead of just values
          */
         this.preparedValues = obj.getArguments();
@@ -239,30 +239,30 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     }
 
     public void visit(Function obj) {
-    	FunctionMethod f = obj.getMetadataObject();
-    	if (f != null) {
-	    	String nativeQuery = f.getProperty(TEIID_NATIVE_QUERY, false);
-	    	if (nativeQuery != null) {
-	    		List<Argument> args = new ArrayList<Argument>(obj.getParameters().size());
-	    		for (Expression p : obj.getParameters()) {
-	    			args.add(new Argument(Direction.IN, p, p.getType(), null));
-	    		}
-	    		parseNativeQueryParts(nativeQuery, args, buffer, this);
-	    		return;
-	    	}
-    	}
-    	super.visit(obj);
+        FunctionMethod f = obj.getMetadataObject();
+        if (f != null) {
+            String nativeQuery = f.getProperty(TEIID_NATIVE_QUERY, false);
+            if (nativeQuery != null) {
+                List<Argument> args = new ArrayList<Argument>(obj.getParameters().size());
+                for (Expression p : obj.getParameters()) {
+                    args.add(new Argument(Direction.IN, p, p.getType(), null));
+                }
+                parseNativeQueryParts(nativeQuery, args, buffer, this);
+                return;
+            }
+        }
+        super.visit(obj);
     }
 
-	@Override
-	public void visit(Parameter obj) {
+    @Override
+    public void visit(Parameter obj) {
         addBinding(obj);
-	}
+    }
 
-	/**
-	 * Add a bind ? value to the sql string and to the binding value list
-	 * @param value should be an {@link Argument}, {@link Parameter}, or {@link Argument}
-	 */
+    /**
+     * Add a bind ? value to the sql string and to the binding value list
+     * @param value should be an {@link Argument}, {@link Parameter}, or {@link Argument}
+     */
     protected void addBinding(LanguageObject value) {
         this.prepared = true;
         buffer.append(UNDEFINED_PARAM);
@@ -313,14 +313,14 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
     @Override
     public void visit(DerivedColumn obj) {
-    	replaceWithBinding = false;
-    	super.visit(obj);
+        replaceWithBinding = false;
+        super.visit(obj);
     }
 
     @Override
     public void visit(SearchedCase obj) {
-    	replaceWithBinding = false;
-    	super.visit(obj);
+        replaceWithBinding = false;
+        super.visit(obj);
     }
 
     /**
@@ -343,7 +343,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     }
 
     protected String getSourceComment(Command command) {
-    	return this.executionFactory.getSourceComment(this.context, command);
+        return this.executionFactory.getSourceComment(this.context, command);
     }
 
     /**
@@ -393,97 +393,97 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
     }
 
     public boolean isPrepared() {
-		return prepared;
-	}
+        return prepared;
+    }
 
     public void setPrepared(boolean prepared) {
-		this.prepared = prepared;
-	}
+        this.prepared = prepared;
+    }
 
     public boolean isUsingBinding() {
-		return usingBinding;
-	}
+        return usingBinding;
+    }
 
     @Override
     protected boolean useAsInGroupAlias() {
-    	return this.executionFactory.useAsInGroupAlias();
+        return this.executionFactory.useAsInGroupAlias();
     }
 
     @Override
     protected boolean useParensForSetQueries() {
-    	return executionFactory.useParensForSetQueries();
+        return executionFactory.useParensForSetQueries();
     }
 
-	@Override
-	protected String replaceElementName(String group, String element) {
-		return executionFactory.replaceElementName(group, element);
-	}
+    @Override
+    protected String replaceElementName(String group, String element) {
+        return executionFactory.replaceElementName(group, element);
+    }
 
-	@Override
-	protected void appendSetOperation(Operation operation) {
-		buffer.append(executionFactory.getSetOperationString(operation));
-	}
+    @Override
+    protected void appendSetOperation(Operation operation) {
+        buffer.append(executionFactory.getSetOperationString(operation));
+    }
 
-	@Override
+    @Override
     protected boolean useParensForJoins() {
-    	return executionFactory.useParensForJoins();
+        return executionFactory.useParensForJoins();
     }
 
-	protected boolean useSelectLimit() {
-		return executionFactory.useSelectLimit();
-	}
+    protected boolean useSelectLimit() {
+        return executionFactory.useSelectLimit();
+    }
 
-	@Override
-	protected String getLikeRegexString() {
-		return executionFactory.getLikeRegexString();
-	}
+    @Override
+    protected String getLikeRegexString() {
+        return executionFactory.getLikeRegexString();
+    }
 
-	@Override
-	protected void appendBaseName(NamedTable obj) {
-		if (obj.getMetadataObject() != null) {
-			String nativeQuery = obj.getMetadataObject().getProperty(TEIID_NATIVE_QUERY, false);
-	    	if (nativeQuery != null) {
-	    		if (obj.getCorrelationName() == null) {
-	    			throw new IllegalArgumentException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11020, obj.getName()));
-	    		}
-	    		buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
-	    		if (obj.getCorrelationName() == null) {
-	                buffer.append(Tokens.SPACE);
-	    			if (useAsInGroupAlias()){
-	                    buffer.append(AS).append(Tokens.SPACE);
-	                }
-	    		}
-	    		return;
-	    	}
-		}
-		super.appendBaseName(obj);
-	}
+    @Override
+    protected void appendBaseName(NamedTable obj) {
+        if (obj.getMetadataObject() != null) {
+            String nativeQuery = obj.getMetadataObject().getProperty(TEIID_NATIVE_QUERY, false);
+            if (nativeQuery != null) {
+                if (obj.getCorrelationName() == null) {
+                    throw new IllegalArgumentException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11020, obj.getName()));
+                }
+                buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
+                if (obj.getCorrelationName() == null) {
+                    buffer.append(Tokens.SPACE);
+                    if (useAsInGroupAlias()){
+                        buffer.append(AS).append(Tokens.SPACE);
+                    }
+                }
+                return;
+            }
+        }
+        super.appendBaseName(obj);
+    }
 
-	@Override
-	public void substitute(Argument arg, StringBuilder builder, int index) {
-		if (this.prepared && arg.getExpression() instanceof Literal) {
-		    buffer.append(UNDEFINED_PARAM);
-		    this.preparedValues.add(arg);
-		} else {
-			visit(arg);
-		}
-	}
+    @Override
+    public void substitute(Argument arg, StringBuilder builder, int index) {
+        if (this.prepared && arg.getExpression() instanceof Literal) {
+            buffer.append(UNDEFINED_PARAM);
+            this.preparedValues.add(arg);
+        } else {
+            visit(arg);
+        }
+    }
 
-	@Override
-	public void visit(GroupBy obj) {
-		if (obj.isRollup() && executionFactory.useWithRollup()) {
-			obj.setRollup(false);
-			super.visit(obj);
-			obj.setRollup(true);
-			buffer.append(" WITH ROLLUP"); //$NON-NLS-1$
-			return;
-		}
-		super.visit(obj);
-	}
+    @Override
+    public void visit(GroupBy obj) {
+        if (obj.isRollup() && executionFactory.useWithRollup()) {
+            obj.setRollup(false);
+            super.visit(obj);
+            obj.setRollup(true);
+            buffer.append(" WITH ROLLUP"); //$NON-NLS-1$
+            return;
+        }
+        super.visit(obj);
+    }
 
-	@Override
-	protected void appendLateralKeyword() {
-		buffer.append(this.executionFactory.getLateralKeyword());
-	}
+    @Override
+    protected void appendLateralKeyword() {
+        buffer.append(this.executionFactory.getLateralKeyword());
+    }
 
 }

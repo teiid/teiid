@@ -113,18 +113,18 @@ public class MetaDataProcessor {
 
         RequestWorkItem workItem = null;
         try {
-        	workItem = requestManager.getRequestWorkItem(requestID);
+            workItem = requestManager.getRequestWorkItem(requestID);
         } catch (TeiidProcessingException e) {
-        	if (preparedSql == null) {
-        		throw e;
-        	}
+            if (preparedSql == null) {
+                throw e;
+            }
         }
 
         TempTableStore tempTableStore = null;
         if(requestManager != null) {
             ClientState state = requestManager.getClientState(workContext.getSessionId(), false);
             if (state != null) {
-            	tempTableStore = state.sessionTables;
+                tempTableStore = state.sessionTables;
             }
         }
         if(tempTableStore != null) {
@@ -132,7 +132,7 @@ public class MetaDataProcessor {
         }
 
         if(workItem != null) {
-        	return getMetadataForCommand(workItem.getOriginalCommand());
+            return getMetadataForCommand(workItem.getOriginalCommand());
         }
         return obtainMetadataForPreparedSql(preparedSql, workContext, allowDoubleQuotedVariable);
     }
@@ -168,30 +168,30 @@ public class MetaDataProcessor {
 
         Map<Reference, String> paramMap = Collections.emptyMap();
         if (originalCommand instanceof StoredProcedure) {
-        	StoredProcedure sp = (StoredProcedure)originalCommand;
-        	paramMap = new HashMap<Reference, String>();
-        	Collection<SPParameter> params = sp.getParameters();
-        	for (SPParameter spParameter : params) {
-				if (spParameter.getParameterType() != SPParameter.INOUT
-						&& spParameter.getParameterType() != SPParameter.IN
-						&& spParameter.getParameterType() != SPParameter.RETURN_VALUE) {
-					continue;
-				}
-				Expression ex = spParameter.getExpression();
-				if (ex instanceof Function && FunctionLibrary.isConvert((Function)ex)) {
-					ex = ((Function)ex).getArg(0);
-				}
-				if (ex instanceof Reference) {
-					paramMap.put((Reference)ex, spParameter.getParameterSymbol().getShortName());
-				}
-			}
+            StoredProcedure sp = (StoredProcedure)originalCommand;
+            paramMap = new HashMap<Reference, String>();
+            Collection<SPParameter> params = sp.getParameters();
+            for (SPParameter spParameter : params) {
+                if (spParameter.getParameterType() != SPParameter.INOUT
+                        && spParameter.getParameterType() != SPParameter.IN
+                        && spParameter.getParameterType() != SPParameter.RETURN_VALUE) {
+                    continue;
+                }
+                Expression ex = spParameter.getExpression();
+                if (ex instanceof Function && FunctionLibrary.isConvert((Function)ex)) {
+                    ex = ((Function)ex).getArg(0);
+                }
+                if (ex instanceof Reference) {
+                    paramMap.put((Reference)ex, spParameter.getParameterSymbol().getShortName());
+                }
+            }
         }
         List<Reference> params = ReferenceCollectorVisitor.getReferences(originalCommand);
         Map<Integer, Object>[] paramMetadata = new Map[params.size()];
         for (int i = 0; i < params.size(); i++) {
-			Reference param = params.get(i);
-			paramMetadata[i] = getDefaultColumn(null, paramMap.get(param), param.getType());
-		}
+            Reference param = params.get(i);
+            paramMetadata[i] = getDefaultColumn(null, paramMap.get(param), param.getType());
+        }
 
         return new MetadataResult(columnMetadata, paramMetadata);
     }
@@ -290,7 +290,7 @@ public class MetaDataProcessor {
         if(plan != null) {
             command = plan.getCommand();
         } else {
-        	command = QueryParser.getQueryParser().parseCommand(sql, info);
+            command = QueryParser.getQueryParser().parseCommand(sql, info);
             QueryResolver.resolveCommand(command, this.metadata);
         }
         return getMetadataForCommand(command);
@@ -342,11 +342,11 @@ public class MetaDataProcessor {
             return createElementMetadata(label, (ElementSymbol) symbol);
         }
         symbol = SymbolMap.getExpression(symbol);
-    	if (symbol instanceof AggregateSymbol) {
-    		return createAggregateMetadata(label, (AggregateSymbol)symbol);
-    	} else if (symbol instanceof WindowFunction) {
-    		return createAggregateMetadata(label, ((WindowFunction)symbol).getFunction());
-    	}
+        if (symbol instanceof AggregateSymbol) {
+            return createAggregateMetadata(label, (AggregateSymbol)symbol);
+        } else if (symbol instanceof WindowFunction) {
+            return createAggregateMetadata(label, ((WindowFunction)symbol).getFunction());
+        }
         return createTypedMetadata(label, symbol);
     }
 
@@ -421,7 +421,7 @@ public class MetaDataProcessor {
 
         Type function = symbol.getAggregateFunction();
         if(function == Type.MIN || function == Type.MAX){
-        	Expression expression = symbol.getArg(0);
+            Expression expression = symbol.getArg(0);
             if(expression instanceof ElementSymbol) {
                 return createColumnMetadata(shortColumnName, expression);
             }
@@ -533,7 +533,7 @@ public class MetaDataProcessor {
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName,
         Class<?> javaType) {
-    	return getDefaultColumn(tableName, columnName, columnName, javaType);
+        return getDefaultColumn(tableName, columnName, columnName, javaType);
     }
 
     public Map<Integer, Object> getDefaultColumn(String tableName, String columnName, String columnLabel, Class<?> javaType ) {

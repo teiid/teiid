@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 public class RuleStack {
 
-	private RelationalPlanner planner;
+    private RelationalPlanner planner;
     private LinkedList<OptimizerRule> rules = new LinkedList<OptimizerRule>();
 
     public void push(OptimizerRule rule) {
@@ -30,7 +30,7 @@ public class RuleStack {
     }
 
     public void addLast(OptimizerRule rule) {
-    	rules.addLast(rule);
+        rules.addLast(rule);
     }
 
     public OptimizerRule pop() {
@@ -62,18 +62,18 @@ public class RuleStack {
     }
 
     public void setPlanner(RelationalPlanner planner) {
-		this.planner = planner;
-	}
+        this.planner = planner;
+    }
 
     public RelationalPlanner getPlanner() {
-		return planner;
-	}
+        return planner;
+    }
 
     public RuleStack clone() {
-    	RuleStack clone = new RuleStack();
-    	clone.rules.addAll(this.rules);
-    	clone.planner = this.planner;
-    	return clone;
+        RuleStack clone = new RuleStack();
+        clone.rules.addAll(this.rules);
+        clone.planner = this.planner;
+        return clone;
     }
 
 }

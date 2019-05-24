@@ -35,20 +35,20 @@ final class SimpleChannelFactory implements ChannelFactory {
 
     @Override
     public JChannel createChannel(String id) throws Exception {
-    	synchronized (this) {
-        	if (channel == null) {
-        		channel = new JChannel(this.getClass().getClassLoader().getResource(jgroupsConfigFile));
-        		channel.connect("teiid-replicator"); //$NON-NLS-1$
-        	}
-		}
-    	//assumes fork and other necessary protocols are in the main stack
-    	ForkChannel fc = new ForkChannel(channel, "teiid-replicator-fork", id); //$NON-NLS-1$
+        synchronized (this) {
+            if (channel == null) {
+                channel = new JChannel(this.getClass().getClassLoader().getResource(jgroupsConfigFile));
+                channel.connect("teiid-replicator"); //$NON-NLS-1$
+            }
+        }
+        //assumes fork and other necessary protocols are in the main stack
+        ForkChannel fc = new ForkChannel(channel, "teiid-replicator-fork", id); //$NON-NLS-1$
         return fc;
     }
 
     void stop() {
-    	if (this.channel != null) {
-    		channel.close();
-    	}
+        if (this.channel != null) {
+            channel.close();
+        }
     }
 }

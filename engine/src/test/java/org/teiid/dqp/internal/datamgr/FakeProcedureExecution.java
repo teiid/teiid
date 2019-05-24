@@ -45,11 +45,11 @@ final class FakeProcedureExecution implements ProcedureExecution {
 
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-    	List<Object> result = new ArrayList<Object>(paramSize);
-    	for (int i = 0; i < paramSize; i++) {
-    		result.add(i);
-    	}
-    	return result;
+        List<Object> result = new ArrayList<Object>(paramSize);
+        for (int i = 0; i < paramSize; i++) {
+            result.add(i);
+        }
+        return result;
     }
 
     public void close() {
@@ -60,11 +60,11 @@ final class FakeProcedureExecution implements ProcedureExecution {
 
     @Override
     public List next() throws TranslatorException, DataNotAvailableException {
-    	if (rowNum == 1) {
-    		return null;
-    	}
-    	rowNum++;
-    	return Arrays.asList(new Object[resultSetSize]);
+        if (rowNum == 1) {
+            return null;
+        }
+        rowNum++;
+        return Arrays.asList(new Object[resultSetSize]);
     }
 
 }

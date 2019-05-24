@@ -26,15 +26,15 @@ import org.teiid.translator.TranslatorException;
 
 public class DDLMetadataRepository implements MetadataRepository {
 
-	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
-		String ddl = factory.getModelProperties().getProperty("ddl");
-		if (ddl != null) {
-			text = ddl;
-		}
-		if (text != null) {
-			factory.parse(new StringReader(text));
-		}
-	}
+    @Override
+    public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory, String text) throws TranslatorException {
+        String ddl = factory.getModelProperties().getProperty("ddl");
+        if (ddl != null) {
+            text = ddl;
+        }
+        if (text != null) {
+            factory.parse(new StringReader(text));
+        }
+    }
 
 }

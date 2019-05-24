@@ -34,27 +34,27 @@ import org.teiid.query.validator.UpdateValidator.UpdateInfo;
  */
 public class QueryNode {
 
-	// Initial state
-	private String query;
-	// After parsing and resolution
-	private Command command;
-	private UpdateInfo updateInfo;
+    // Initial state
+    private String query;
+    // After parsing and resolution
+    private Command command;
+    private UpdateInfo updateInfo;
 
     /**
      * Construct a query node with the required parameters.
      * @param query SQL query
      */
-	public QueryNode(String query) {
-		this.query = query;
-	}
+    public QueryNode(String query) {
+        this.query = query;
+    }
 
     /**
      * Get SQL query
      * @return SQL query
      */
-	public String getQuery() {
-		return this.query;
-	}
+    public String getQuery() {
+        return this.query;
+    }
 
     /**
      * Set the SQL query
@@ -81,20 +81,20 @@ public class QueryNode {
         return this.command;
     }
 
-	/**
-	 * Print plantree structure starting at this node
-	 * @return String representing this node and all children under this node
-	 */
-	public String toString() {
+    /**
+     * Print plantree structure starting at this node
+     * @return String representing this node and all children under this node
+     */
+    public String toString() {
         return query;
-	}
+    }
 
-	public UpdateInfo getUpdateInfo() {
-		return updateInfo;
-	}
+    public UpdateInfo getUpdateInfo() {
+        return updateInfo;
+    }
 
-	public void setUpdateInfo(UpdateInfo updateInfo) {
-		this.updateInfo = updateInfo;
-	}
+    public void setUpdateInfo(UpdateInfo updateInfo) {
+        this.updateInfo = updateInfo;
+    }
 
 }

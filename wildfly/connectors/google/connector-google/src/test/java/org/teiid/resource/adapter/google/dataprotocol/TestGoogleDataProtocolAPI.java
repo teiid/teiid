@@ -37,35 +37,35 @@ import com.google.gdata.data.spreadsheet.ListFeed;
 @SuppressWarnings("nls")
 public class TestGoogleDataProtocolAPI {
 
-	@Test public void testValueConversion() {
-		Date date = (Date)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1)", SpreadsheetColumnType.DATE);
-		assertEquals("2001-01-01", date.toString());
-		Timestamp ts = (Timestamp)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1,1,2,3)", SpreadsheetColumnType.DATETIME);
-		assertEquals("2001-01-01 01:02:03.0", ts.toString());
-		Time t = (Time)GoogleDataProtocolAPI.convertValue(null, Arrays.asList(1.0, 2.0, 3.0, 4.0), SpreadsheetColumnType.TIMEOFDAY);
-		assertEquals("01:02:03", t.toString());
-	}
+    @Test public void testValueConversion() {
+        Date date = (Date)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1)", SpreadsheetColumnType.DATE);
+        assertEquals("2001-01-01", date.toString());
+        Timestamp ts = (Timestamp)GoogleDataProtocolAPI.convertValue(null, "Date(2001,0,1,1,2,3)", SpreadsheetColumnType.DATETIME);
+        assertEquals("2001-01-01 01:02:03.0", ts.toString());
+        Time t = (Time)GoogleDataProtocolAPI.convertValue(null, Arrays.asList(1.0, 2.0, 3.0, 4.0), SpreadsheetColumnType.TIMEOFDAY);
+        assertEquals("01:02:03", t.toString());
+    }
 
-	@Test public void testColumnsWithoutLabel() {
-	    GDataClientLoginAPI api = new GDataClientLoginAPI() {
-	        protected com.google.gdata.data.BaseFeed<?,?> getSpreadsheetFeedQuery(com.google.gdata.client.spreadsheet.SpreadsheetQuery squery, java.lang.Class<? extends com.google.gdata.data.BaseFeed<?,?>> feedClass) {
-	            ListFeed lf = new ListFeed();
-	            lf.setEntries(Arrays.asList(new ListEntry()));
-	            return lf;
-	        };
-	    };
-	    Column c1 = new Column();
-	    c1.setLabel("valid");
-	    c1.setDataType(SpreadsheetColumnType.STRING);
-	    c1.setAlphaName("A");
+    @Test public void testColumnsWithoutLabel() {
+        GDataClientLoginAPI api = new GDataClientLoginAPI() {
+            protected com.google.gdata.data.BaseFeed<?,?> getSpreadsheetFeedQuery(com.google.gdata.client.spreadsheet.SpreadsheetQuery squery, java.lang.Class<? extends com.google.gdata.data.BaseFeed<?,?>> feedClass) {
+                ListFeed lf = new ListFeed();
+                lf.setEntries(Arrays.asList(new ListEntry()));
+                return lf;
+            };
+        };
+        Column c1 = new Column();
+        c1.setLabel("valid");
+        c1.setDataType(SpreadsheetColumnType.STRING);
+        c1.setAlphaName("A");
 
-	    Column c2 = new Column();
+        Column c2 = new Column();
         c2.setDataType(SpreadsheetColumnType.STRING);
         c2.setAlphaName("B");
 
         //should succeed without an NPE
-	    api.listFeedUpdate("x", "y", "", Arrays.asList(new UpdateSet("valid", "value")), Arrays.asList(c1, c2));
-	}
+        api.listFeedUpdate("x", "y", "", Arrays.asList(new UpdateSet("valid", "value")), Arrays.asList(c1, c2));
+    }
 
 
 }

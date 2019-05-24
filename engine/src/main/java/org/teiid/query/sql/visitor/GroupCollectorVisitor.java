@@ -60,7 +60,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param groups Collection to use for groups
      * @throws IllegalArgumentException If groups is null
      */
-	public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
+    public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
         if(groups == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0023")); //$NON-NLS-1$
         }

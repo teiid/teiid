@@ -29,20 +29,20 @@ import javax.xml.transform.stream.StreamResult;
 
 public class StandardXMLTranslator extends XMLTranslator {
 
-	private static ThreadLocal<TransformerFactory> threadLocalTransformerFactory = new ThreadLocal<TransformerFactory>() {
-		protected TransformerFactory initialValue() {
-			return TransformerFactory.newInstance();
-		}
-	};
+    private static ThreadLocal<TransformerFactory> threadLocalTransformerFactory = new ThreadLocal<TransformerFactory>() {
+        protected TransformerFactory initialValue() {
+            return TransformerFactory.newInstance();
+        }
+    };
 
-	public static TransformerFactory getThreadLocalTransformerFactory() {
-		return threadLocalTransformerFactory.get();
-	}
+    public static TransformerFactory getThreadLocalTransformerFactory() {
+        return threadLocalTransformerFactory.get();
+    }
 
     private Source source;
 
     public StandardXMLTranslator(Source source) {
-    	this.source = source;
+        this.source = source;
     }
 
     @Override

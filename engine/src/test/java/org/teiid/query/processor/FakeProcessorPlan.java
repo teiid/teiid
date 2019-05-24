@@ -52,8 +52,8 @@ public class FakeProcessorPlan extends ProcessorPlan {
     }
 
     public FakeProcessorPlan(int counts) {
-    	List[] rows = new List[counts];
-    	for (int i = 0; i < counts; i++) {
+        List[] rows = new List[counts];
+        for (int i = 0; i < counts; i++) {
             rows[i] = Arrays.asList(new Object[] {new Integer(1)});
         }
         TupleBatch batch = new TupleBatch(1, rows);
@@ -63,8 +63,8 @@ public class FakeProcessorPlan extends ProcessorPlan {
     }
 
     public boolean isOpened() {
-		return opened;
-	}
+        return opened;
+    }
 
     /**
      * @see java.lang.Object#clone()
@@ -84,7 +84,7 @@ public class FakeProcessorPlan extends ProcessorPlan {
      * @see org.teiid.query.processor.ProcessorPlan#open()
      */
     public void open() throws TeiidComponentException {
-    	assertFalse("ProcessorPlan.open() should not be called more than once", opened); //$NON-NLS-1$
+        assertFalse("ProcessorPlan.open() should not be called more than once", opened); //$NON-NLS-1$
         opened = true;
     }
 

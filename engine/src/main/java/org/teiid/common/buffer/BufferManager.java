@@ -36,32 +36,32 @@ import org.teiid.query.util.Options;
  */
 public interface BufferManager extends StorageManager, TupleBufferCache {
 
-	public enum TupleSourceType {
-		/**
-		 * Indicates that a tuple source is use during query processing as a
-		 * temporary results.
-		 */
-		PROCESSOR,
-		/**
-		 * Indicates that a tuple source represents a query's final results.
-		 */
-		FINAL
-	}
+    public enum TupleSourceType {
+        /**
+         * Indicates that a tuple source is use during query processing as a
+         * temporary results.
+         */
+        PROCESSOR,
+        /**
+         * Indicates that a tuple source represents a query's final results.
+         */
+        FINAL
+    }
 
-	public enum BufferReserveMode {
-		/**
-		 * Claim all of the buffers requested, even if they are not available, without waiting
-		 */
-		FORCE,
-		/**
-		 * Claim unused buffers up to the amount requested without waiting
-		 */
-		NO_WAIT
-	}
+    public enum BufferReserveMode {
+        /**
+         * Claim all of the buffers requested, even if they are not available, without waiting
+         */
+        FORCE,
+        /**
+         * Claim unused buffers up to the amount requested without waiting
+         */
+        NO_WAIT
+    }
 
-	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 256;
-	public static int DEFAULT_MAX_PROCESSING_KB = -1;
-	public static int DEFAULT_RESERVE_BUFFER_KB = -1;
+    public static int DEFAULT_PROCESSOR_BATCH_SIZE = 256;
+    public static int DEFAULT_MAX_PROCESSING_KB = -1;
+    public static int DEFAULT_RESERVE_BUFFER_KB = -1;
 
     /**
      * Get the batch size to use during query processing.
@@ -75,14 +75,14 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
      */
     int getProcessorBatchSize();
 
-	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType)
+    TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType)
     throws TeiidComponentException;
 
-	/**
-	 * Return the max that can be temporarily held potentially
-	 * across even a blocked exception.
-	 * @return
-	 */
+    /**
+     * Return the max that can be temporarily held potentially
+     * across even a blocked exception.
+     * @return
+     */
     int getMaxProcessingSize();
 
     /**
@@ -114,22 +114,22 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 
     STree createSTree(List<? extends Expression> elements, String groupName, int keyLength);
 
-	void addTupleBuffer(TupleBuffer tb);
+    void addTupleBuffer(TupleBuffer tb);
 
-	/**
-	 * Set the maxActivePlans as a hint at determining the maxProcessing
-	 * @param maxActivePlans
-	 */
-	void setMaxActivePlans(int maxActivePlans);
+    /**
+     * Set the maxActivePlans as a hint at determining the maxProcessing
+     * @param maxActivePlans
+     */
+    void setMaxActivePlans(int maxActivePlans);
 
-	void setOptions(Options options);
+    void setOptions(Options options);
 
-	void persistLob(final Streamable<?> lob,
-			final FileStore store, byte[] bytes) throws TeiidComponentException;
+    void persistLob(final Streamable<?> lob,
+            final FileStore store, byte[] bytes) throws TeiidComponentException;
 
-	int reserveBuffersBlocking(int count, long[] attempts, boolean force) throws BlockedException;
+    int reserveBuffersBlocking(int count, long[] attempts, boolean force) throws BlockedException;
 
-	void releaseOrphanedBuffers(long count);
+    void releaseOrphanedBuffers(long count);
 
-	Options getOptions();
+    Options getOptions();
 }

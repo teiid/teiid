@@ -48,64 +48,64 @@ public class TestJBossSecurityHelper extends TestCase {
 
     private JBossSecurityHelper buildSecurityHelper(final String domain, final SecurityDomainContext sdc)
             throws Exception {
-    	Principal p = Mockito.mock(Principal.class);
-    	Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
-    	HashSet<Principal> principals = new HashSet<Principal>();
-    	principals.add(p);
+        Principal p = Mockito.mock(Principal.class);
+        Mockito.stub(p.getName()).toReturn("alreadylogged"); //$NON-NLS-1$
+        HashSet<Principal> principals = new HashSet<Principal>();
+        principals.add(p);
 
-    	@SuppressWarnings("serial")
+        @SuppressWarnings("serial")
         JBossSecurityHelper sh = new JBossSecurityHelper() {
 
-    	    @Override
+            @Override
             protected SecurityDomainContext getSecurityDomainContext(String securityDomain) {
-    	        if (securityDomain.equals(domain)) {
-    	            return sdc;
-    	        }
-    	        return null;
-    	    }
-    	};
-    	return sh;
+                if (securityDomain.equals(domain)) {
+                    return sdc;
+                }
+                return null;
+            }
+        };
+        return sh;
     }
 
     public void testAuthenticate() throws Exception {
-    	Credentials credentials = new Credentials("pass1".toCharArray());
+        Credentials credentials = new Credentials("pass1".toCharArray());
 
-    	String domains = "testFile";
+        String domains = "testFile";
 
         AuthenticationManager authManager = new AuthenticationManager() {
-			public String getSecurityDomain() {
-				return null;
-			}
-			public boolean isValid(Principal principal, Object credential, Subject activeSubject) {
-				return true;
-			}
-			public boolean isValid(Principal principal, Object credential) {
-				return true;
-			}
-			@Override
-			public Principal getTargetPrincipal(Principal anotherDomainPrincipal, Map<String, Object> contextMap) {
-				return null;
-			}
-			@Override
-			public Subject getActiveSubject() {
-				return null;
-			}
+            public String getSecurityDomain() {
+                return null;
+            }
+            public boolean isValid(Principal principal, Object credential, Subject activeSubject) {
+                return true;
+            }
+            public boolean isValid(Principal principal, Object credential) {
+                return true;
+            }
+            @Override
+            public Principal getTargetPrincipal(Principal anotherDomainPrincipal, Map<String, Object> contextMap) {
+                return null;
+            }
+            @Override
+            public Subject getActiveSubject() {
+                return null;
+            }
             @Override
             public void logout(Principal arg0, Subject arg1) {
             }
-		};
+        };
         final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
 
-    	JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
+        JBossSecurityHelper ms = buildSecurityHelper(domains, securityContext);
 
         Object c = ms.authenticate(domains, "user1", credentials, null); //$NON-NLS-1$
         assertTrue(c instanceof JBossSecurityContext); //$NON-NLS-1$
         assertEquals(domains, ((JBossSecurityContext)c).getSecurityDomain());
     }
 
-	public void validateSession(boolean securityEnabled) throws Exception {
-		final ArrayList<String> domains = new ArrayList<String>();
-		domains.add("somedomain");
+    public void validateSession(boolean securityEnabled) throws Exception {
+        final ArrayList<String> domains = new ArrayList<String>();
+        domains.add("somedomain");
 
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
         Mockito.stub(authManager.isValid(new SimplePrincipal("steve"), "pass1", new Subject())).toReturn(true);
@@ -113,55 +113,55 @@ public class TestJBossSecurityHelper extends TestCase {
         final SecurityDomainContext securityContext = new SecurityDomainContext(authManager, null, null, null, null, null);
 
         SessionServiceImpl jss = new SessionServiceImpl() {
-        	@Override
-        	protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
-        			throws SessionServiceException {
-        		return Mockito.mock(VDBMetaData.class);
-        	}
+            @Override
+            protected VDBMetaData getActiveVDB(String vdbName, String vdbVersion)
+                    throws SessionServiceException {
+                return Mockito.mock(VDBMetaData.class);
+            }
         };
         jss.setSecurityHelper(buildSecurityHelper("somedomain", securityContext));
-		jss.setSecurityDomain("somedomain");
+        jss.setSecurityDomain("somedomain");
 
-		try {
-			jss.validateSession(String.valueOf(1));
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
+        try {
+            jss.validateSession(String.valueOf(1));
+            fail("exception expected"); //$NON-NLS-1$
+        } catch (InvalidSessionException e) {
 
-		}
+        }
 
-		SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
-		if (securityEnabled) {
-			Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject());
-		}
+        SessionMetadata info = jss.createSession("x", "1", AuthenticationType.USERPASSWORD, "steve",  new Credentials("pass1".toCharArray()), "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+        if (securityEnabled) {
+            Mockito.verify(authManager).isValid(new SimplePrincipal("steve"), "pass1", new Subject());
+        }
 
-		String id1 = info.getSessionId();
-		jss.validateSession(id1);
+        String id1 = info.getSessionId();
+        jss.validateSession(id1);
 
-		assertEquals(1, jss.getActiveSessionsCount());
-		assertEquals(0, jss.getSessionsLoggedInToVDB(new VDBKey("a", 1)).size()); //$NON-NLS-1$
+        assertEquals(1, jss.getActiveSessionsCount());
+        assertEquals(0, jss.getSessionsLoggedInToVDB(new VDBKey("a", 1)).size()); //$NON-NLS-1$
 
-		jss.closeSession(id1);
+        jss.closeSession(id1);
 
-		try {
-			jss.validateSession(id1);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
+        try {
+            jss.validateSession(id1);
+            fail("exception expected"); //$NON-NLS-1$
+        } catch (InvalidSessionException e) {
 
-		}
+        }
 
-		try {
-			jss.closeSession(id1);
-			fail("exception expected"); //$NON-NLS-1$
-		} catch (InvalidSessionException e) {
+        try {
+            jss.closeSession(id1);
+            fail("exception expected"); //$NON-NLS-1$
+        } catch (InvalidSessionException e) {
 
-		}
-	}
+        }
+    }
 
-	@Test public void testvalidateSession() throws Exception{
-		validateSession(true);
-	}
+    @Test public void testvalidateSession() throws Exception{
+        validateSession(true);
+    }
 
-	@Test public void testvalidateSession2() throws Exception {
-		validateSession(false);
-	}
+    @Test public void testvalidateSession2() throws Exception {
+        validateSession(false);
+    }
 }

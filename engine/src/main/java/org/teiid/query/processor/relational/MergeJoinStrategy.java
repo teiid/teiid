@@ -89,12 +89,12 @@ public class MergeJoinStrategy extends JoinStrategy {
     protected SortOption processingSortRight;
 
     public MergeJoinStrategy(SortOption sortLeft, SortOption sortRight, boolean grouping) {
-    	if (sortLeft == null) {
-    		sortLeft = SortOption.ALREADY_SORTED;
-    	}
-    	if (sortRight == null) {
-    		sortRight = SortOption.ALREADY_SORTED;
-    	}
+        if (sortLeft == null) {
+            sortLeft = SortOption.ALREADY_SORTED;
+        }
+        if (sortRight == null) {
+            sortRight = SortOption.ALREADY_SORTED;
+        }
         this.sortLeft = sortLeft;
         this.sortRight = sortRight;
         this.grouping = grouping;
@@ -119,8 +119,8 @@ public class MergeJoinStrategy extends JoinStrategy {
         this.processingSortLeft = this.sortLeft;
     }
 
-	protected void resetMatchState() {
-		this.outerState = this.leftSource;
+    protected void resetMatchState() {
+        this.outerState = this.leftSource;
         this.innerState = this.rightSource;
         this.mergeState = MergeState.SCAN;
         this.matchState = MatchState.MATCH_LEFT;
@@ -128,7 +128,7 @@ public class MergeJoinStrategy extends JoinStrategy {
         this.leftScanState = ScanState.READ;
         this.rightScanState = ScanState.READ;
         this.outerMatched = false;
-	}
+    }
 
     /**
      * @see org.teiid.query.processor.relational.JoinStrategy#close()
@@ -142,7 +142,7 @@ public class MergeJoinStrategy extends JoinStrategy {
 
     @Override
     protected void process() throws TeiidComponentException,
-    		TeiidProcessingException {
+            TeiidProcessingException {
         while (this.mergeState != MergeState.DONE) {
 
             while (this.mergeState == MergeState.SCAN) {
@@ -197,12 +197,12 @@ public class MergeJoinStrategy extends JoinStrategy {
                 } else if (result > 0) {
                     this.leftScanState = ScanState.READ;
                     if (this.joinNode.getJoinType().isOuter()) {
-                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
+                        this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
                     }
                 } else {
                     this.rightScanState = ScanState.READ;
                     if (joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER) {
-                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
+                        this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
                     }
                 }
             }
@@ -236,8 +236,8 @@ public class MergeJoinStrategy extends JoinStrategy {
                 while (loopState == LoopState.LOAD_INNER || loopState == LoopState.EVALUATE_CRITERIA) {
                     if (loopState == LoopState.LOAD_INNER) {
                         if (!compareToPrevious(innerState)) {
-                        	loopState = LoopState.LOAD_OUTER;
-                        	break;
+                            loopState = LoopState.LOAD_OUTER;
+                            break;
                         }
                         loopState = LoopState.EVALUATE_CRITERIA;
                     }
@@ -270,9 +270,9 @@ public class MergeJoinStrategy extends JoinStrategy {
 
                 if (!outerMatched) {
                     if (matchState == MatchState.MATCH_RIGHT) {
-                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
+                        this.joinNode.addBatchRow(outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple()));
                     } else if (this.joinNode.getJoinType().isOuter()) {
-                    	this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
+                        this.joinNode.addBatchRow(outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals()));
                     }
                 }
             }
@@ -304,9 +304,9 @@ public class MergeJoinStrategy extends JoinStrategy {
                         }
                     }
                     if (!ignore) {
-                    	//sanity check - this means the sort order is not as expected
-                    	//note this is not a complete check - it will not detect all invalid circumstances as we exit early
-                    	throw new TeiidComponentException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31202));
+                        //sanity check - this means the sort order is not as expected
+                        //note this is not a complete check - it will not detect all invalid circumstances as we exit early
+                        throw new TeiidComponentException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31202));
                     }
                 }
             }
@@ -324,7 +324,7 @@ public class MergeJoinStrategy extends JoinStrategy {
                              int[] leftExpressionIndecies,
                              int[] rightExpressionIndecies) {
         return compareTuples(leftProbe, rightProbe, leftExpressionIndecies,
-				rightExpressionIndecies, grouping, false);
+                rightExpressionIndecies, grouping, false);
     }
 
     /**
@@ -343,9 +343,9 @@ public class MergeJoinStrategy extends JoinStrategy {
      * @param columnDiff
      * @return
      */
-	public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
-			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals, boolean columnDiff) {
-		for (int i = 0; i < leftExpressionIndecies.length; i++) {
+    public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
+            int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals, boolean columnDiff) {
+        for (int i = 0; i < leftExpressionIndecies.length; i++) {
             Object leftValue = leftProbe.get(leftExpressionIndecies[i]);
             Object rightValue = rightProbe.get(rightExpressionIndecies[i]);
             if (rightValue == null) {
@@ -353,14 +353,14 @@ public class MergeJoinStrategy extends JoinStrategy {
                     continue;
                 }
                 if (columnDiff) {
-                	return i;
+                    return i;
                 }
                 return -1;
             }
 
             if (leftValue == null) {
                 if (columnDiff) {
-                	return i;
+                    return i;
                 }
                 return 1;
             }
@@ -368,13 +368,13 @@ public class MergeJoinStrategy extends JoinStrategy {
             int c = Constant.COMPARATOR.compare(rightValue, leftValue);
             if (c != 0) {
                 if (columnDiff) {
-                	return i;
+                    return i;
                 }
                 return c;
             }
         }
         if (columnDiff) {
-        	return -1;
+            return -1;
         }
         // Found no difference, must be a match
         return 0;
@@ -382,39 +382,39 @@ public class MergeJoinStrategy extends JoinStrategy {
 
     @Override
     protected void loadLeft() throws TeiidComponentException,
-    		TeiidProcessingException {
+            TeiidProcessingException {
         this.leftSource.sort(this.processingSortLeft);
     }
 
     @Override
     protected void loadRight() throws TeiidComponentException,
-    		TeiidProcessingException {
-    	if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER || this.joinNode.getJoinCriteria() == null) {
-			this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
-		}
-		this.rightSource.sort(this.processingSortRight);
-	}
+            TeiidProcessingException {
+        if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER || this.joinNode.getJoinCriteria() == null) {
+            this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
+        }
+        this.rightSource.sort(this.processingSortRight);
+    }
 
     public void setProcessingSortRight(boolean processingSortRight) {
-    	if (processingSortRight && this.processingSortRight == SortOption.ALREADY_SORTED) {
-    		//it is possible that a delayed open will be called after the parent open
-    		//for now we'll just throw an assertion
-    		Assertion.assertTrue(!this.rightSource.open);
-    		this.processingSortRight = SortOption.SORT;
-    	}
+        if (processingSortRight && this.processingSortRight == SortOption.ALREADY_SORTED) {
+            //it is possible that a delayed open will be called after the parent open
+            //for now we'll just throw an assertion
+            Assertion.assertTrue(!this.rightSource.open);
+            this.processingSortRight = SortOption.SORT;
+        }
     }
 
     public void setProcessingSortLeft(boolean processingSortLeft) {
-    	if (processingSortLeft && this.processingSortLeft == SortOption.ALREADY_SORTED) {
-    		//it is possible that a delayed open will be called after the parent open
-    		//for now we'll just throw an assertion
-    		Assertion.assertTrue(!this.leftSource.open);
-    		this.processingSortLeft = SortOption.SORT;
-    	}
+        if (processingSortLeft && this.processingSortLeft == SortOption.ALREADY_SORTED) {
+            //it is possible that a delayed open will be called after the parent open
+            //for now we'll just throw an assertion
+            Assertion.assertTrue(!this.leftSource.open);
+            this.processingSortLeft = SortOption.SORT;
+        }
     }
 
     public String getName() {
-    	return "MERGE JOIN"; //$NON-NLS-1$
+        return "MERGE JOIN"; //$NON-NLS-1$
     }
 
     /**
@@ -422,14 +422,14 @@ public class MergeJoinStrategy extends JoinStrategy {
      */
     @Override
     public String toString() {
-		StringBuffer sb = new StringBuffer();
-		sb.append(getName())
-				.append(" (").append(sortLeft).append("/").append(sortRight).append(")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		if (singleMatch) {
-		    sb.append(" subquery"); //$NON-NLS-1$
-		}
-		return sb.toString();
-	}
+        StringBuffer sb = new StringBuffer();
+        sb.append(getName())
+                .append(" (").append(sortLeft).append("/").append(sortRight).append(")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if (singleMatch) {
+            sb.append(" subquery"); //$NON-NLS-1$
+        }
+        return sb.toString();
+    }
 
     /**
      * Optional flag for a left outer join to enforce the single

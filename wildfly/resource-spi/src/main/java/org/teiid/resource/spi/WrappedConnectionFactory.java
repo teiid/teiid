@@ -32,51 +32,51 @@ import javax.resource.spi.ConnectionManager;
 
 public class WrappedConnectionFactory implements ConnectionFactory, Referenceable, Serializable, org.teiid.resource.api.ConnectionFactory  {
 
-	private static final long serialVersionUID = 5499157394014613035L;
-	private BasicConnectionFactory delegate;
-	private ConnectionManager cm;
-	private BasicManagedConnectionFactory mcf;
-	private Reference reference;
+    private static final long serialVersionUID = 5499157394014613035L;
+    private BasicConnectionFactory delegate;
+    private ConnectionManager cm;
+    private BasicManagedConnectionFactory mcf;
+    private Reference reference;
 
-	public WrappedConnectionFactory() {
-		// need by spec 17.5.1.1, not sure how this will effect as the this
-		// connection factory is always built by ManagedConnectionfactory
-	}
+    public WrappedConnectionFactory() {
+        // need by spec 17.5.1.1, not sure how this will effect as the this
+        // connection factory is always built by ManagedConnectionfactory
+    }
 
-	public WrappedConnectionFactory(BasicConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
-		this.delegate = delegate;
-		this.cm = cm;
-		this.mcf = mcf;
-	}
+    public WrappedConnectionFactory(BasicConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
+        this.delegate = delegate;
+        this.cm = cm;
+        this.mcf = mcf;
+    }
 
-	@Override
-	public WrappedConnection getConnection() throws ResourceException {
-		return (WrappedConnection)cm.allocateConnection(mcf, null);
-	}
+    @Override
+    public WrappedConnection getConnection() throws ResourceException {
+        return (WrappedConnection)cm.allocateConnection(mcf, null);
+    }
 
 
-	@Override
-	public void setReference(Reference arg0) {
-		this.reference = arg0;
-	}
+    @Override
+    public void setReference(Reference arg0) {
+        this.reference = arg0;
+    }
 
-	@Override
-	public Reference getReference() throws NamingException {
-		return this.reference;
-	}
+    @Override
+    public Reference getReference() throws NamingException {
+        return this.reference;
+    }
 
-	@Override
-	public Connection getConnection(ConnectionSpec arg0) throws ResourceException {
-		return (Connection)cm.allocateConnection(mcf, new ConnectionRequestInfoWrapper(arg0));
-	}
+    @Override
+    public Connection getConnection(ConnectionSpec arg0) throws ResourceException {
+        return (Connection)cm.allocateConnection(mcf, new ConnectionRequestInfoWrapper(arg0));
+    }
 
-	@Override
-	public ResourceAdapterMetaData getMetaData() throws ResourceException {
-		return this.delegate.getMetaData();
-	}
+    @Override
+    public ResourceAdapterMetaData getMetaData() throws ResourceException {
+        return this.delegate.getMetaData();
+    }
 
-	@Override
-	public RecordFactory getRecordFactory() throws ResourceException {
-		return this.delegate.getRecordFactory();
-	}
+    @Override
+    public RecordFactory getRecordFactory() throws ResourceException {
+        return this.delegate.getRecordFactory();
+    }
 }
