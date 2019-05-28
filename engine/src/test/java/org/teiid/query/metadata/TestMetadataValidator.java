@@ -826,4 +826,17 @@ public class TestMetadataValidator {
         assertFalse(printError(report), report.hasItems());
     }
 
+    @Test
+    public void testTriggerPartiallyQualifiedWithHidden() throws Exception {
+        String ddl = "create view g2 options (updatable true) AS select * from pm1.g1; " +
+                "create trigger on g2 INSTEAD OF UPDATE AS FOR EACH ROW BEGIN ATOMIC END; ";
+        ModelMetaData mmd = buildModel("pm1", true, this.vdb, this.store, "create foreign table g1(e1 integer, e2 varchar(12));");
+        mmd.setVisible(false);
+
+        buildModel("vm1", false, this.vdb, this.store, ddl);
+        buildTransformationMetadata();
+        ValidatorReport report = new MetadataValidator().validate(vdb, store);
+        assertFalse(printError(report), report.hasItems());
+    }
+
 }

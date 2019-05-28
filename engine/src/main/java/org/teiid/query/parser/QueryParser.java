@@ -525,7 +525,7 @@ public class QueryParser implements Parser {
         CompositeMetadataStore cms = new CompositeMetadataStore(db.getMetadataStore());
         TransformationMetadata qmi = new TransformationMetadata(DatabaseUtil.convert(db), cms, null, null, null);
 
-        store.setTransformationMetadata(qmi);
+        store.setTransformationMetadata(qmi.getDesignTimeMetadata());
 
         store.schemaSwitched(factory.getSchema().getName());
         store.setMode(Mode.SCHEMA);

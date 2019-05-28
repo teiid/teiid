@@ -881,7 +881,7 @@ public class TestDDLParser {
                 //grants are already stored on the VDBMetaData
                 store.getGrants().clear();
                 return new TransformationMetadata(DatabaseUtil.convert(database), store, null,
-                        null, null);
+                        null, null).getDesignTimeMetadata();
             }
         };
         store.startEditing(true);
@@ -1248,7 +1248,7 @@ public class TestDDLParser {
                 + "USE DATABASE FOO ;"
                 + "CREATE FOREIGN DATA WRAPPER orcl;"
                 + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
-                + "CREATE SCHEMA S1 SERVER x OPTIONS (x 'y');";
+                + "CREATE SCHEMA S1 SERVER x OPTIONS (x 'y', visible false, annotation 'foo');";
 
         Database db = helpParse(ddl);
 
@@ -1256,6 +1256,8 @@ public class TestDDLParser {
         Schema schema = db.getSchema("S1");
         assertNotNull(schema);
         assertEquals("y", schema.getProperty("x", false));
+        assertFalse(schema.isVisible());
+        assertEquals("foo", schema.getAnnotation());
 
         //server test
         assertNotNull(db.getServer("x"));
@@ -1872,5 +1874,22 @@ public class TestDDLParser {
                 "end";
 
         QueryParser.getQueryParser().parseProcedure(ddl, false);
+    }
+
+    @Ignore("alter schema not yet implemented")
+    @Test
+    public void testAlterSchemaDropOptions() throws Exception {
+        String ddl = "CREATE DATABASE FOO;"
+                + "USE DATABASE FOO ;"
+                + "CREATE FOREIGN DATA WRAPPER orcl;"
+                + "CREATE SERVER x TYPE 'oracle' VERSION '2.0' FOREIGN DATA WRAPPER orcl OPTIONS (k1 'v1');"
+                + "CREATE SCHEMA S1 SERVER x OPTIONS (x 'y', visible true);"
+                + "ALTER SCHEMA S1 OPTIONS (DROP visible);";
+
+        Database db = helpParse(ddl);
+
+        // schema test
+        Schema schema = db.getSchema("S1");
+        assertTrue(schema.isVisible());
     }
 }

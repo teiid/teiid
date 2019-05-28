@@ -273,7 +273,7 @@ public abstract class AbstractVDBDeployer {
             final Database database = DatabaseUtil.convert(vdb, vdbMetadataStore);
             CompositeMetadataStore compositeStore = new CompositeMetadataStore(vdbMetadataStore);
             final TransformationMetadata metadata = new TransformationMetadata(vdb, compositeStore, null,
-                    getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null);
+                    getVDBRepository().getSystemFunctionManager().getSystemFunctions(), null).getDesignTimeMetadata();
 
             DeploymentBasedDatabaseStore deploymentStore = new DeploymentBasedDatabaseStore(getVDBRepository()) {
 

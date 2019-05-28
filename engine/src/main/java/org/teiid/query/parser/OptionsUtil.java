@@ -83,11 +83,6 @@ public class OptionsUtil {
     private static void setSchemaOptions(Schema schema) {
         Map<String, String> props = schema.getProperties();
         setCommonProperties(schema, props);
-
-        String value = props.remove(DDLConstants.VISIBLE);
-        if (value != null) {
-            schema.setVisible(isTrue(value));
-        }
     }
 
     private static void removeSchemaOption(String key, Schema schema) {
@@ -95,10 +90,6 @@ public class OptionsUtil {
             schema.setProperty(key, null);
         }
         removeCommonProperty(key, schema);
-
-        if (key.equals(DDLConstants.VISIBLE)) {
-            schema.setVisible(false);
-        }
     }
 
     private static void removeColumnOption(String key, BaseColumn c)  throws MetadataException {

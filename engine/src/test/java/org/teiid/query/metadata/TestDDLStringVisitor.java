@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.DataWrapper;
@@ -522,6 +521,8 @@ public class TestDDLStringVisitor {
         schema.setName("SchemaA");
         schema.addTable(t);
         schema.addServer(s);
+        schema.setVisible(false);
+        schema.setAnnotation("x");
         db.addSchema(schema);
 
         String metadataDDL = DDLStringVisitor.getDDLString(db);
@@ -541,7 +542,7 @@ public class TestDDLStringVisitor {
                 "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" +
                 "\n" +
                 "\n--############ Schemas ############\n" +
-                "CREATE SCHEMA SchemaA SERVER testing;\n\n" +
+                "CREATE SCHEMA SchemaA SERVER testing OPTIONS (ANNOTATION 'x', VISIBLE 'false');\n\n" +
                 "\n--############ Schema:SchemaA ############\n" +
                 "SET SCHEMA SchemaA;\n" +
                 "\n" +

@@ -32,7 +32,6 @@ public class Schema extends AbstractMetadataRecord {
     private static final long serialVersionUID = -5113742472848113008L;
 
     private boolean physical = true;
-    protected boolean visible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
 
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
@@ -199,10 +198,11 @@ public class Schema extends AbstractMetadataRecord {
     }
 
     public boolean isVisible() {
-        return visible;
+        String visible = getProperty("VISIBLE", false); //$NON-NLS-1$
+        return visible == null || Boolean.valueOf(visible);
     }
 
     public void setVisible(boolean visible) {
-        this.visible = visible;
+        setProperty("VISIBLE", String.valueOf(visible)); //$NON-NLS-1$
     }
 }
