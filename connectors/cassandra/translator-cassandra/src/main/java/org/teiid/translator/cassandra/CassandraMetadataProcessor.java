@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ExtensionMetadataProperty;
@@ -32,6 +33,7 @@ import org.teiid.translator.MetadataProcessor;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.cassandra.CassandraExecutionFactory.Event;
+import org.teiid.util.FullyQualifiedName;
 
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType.Name;
@@ -62,6 +64,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
      */
     private void addTable(MetadataFactory factory, TableMetadata columnFamily) {
         Table table = factory.addTable(columnFamily.getName());
+        table.setNameInSource(quoteName(table.getName()));
         addColumnsToTable(factory, table, columnFamily);
         addPrimaryKey(factory, table, columnFamily);
         for (IndexMetadata index : columnFamily.getIndexes()) {
@@ -72,6 +75,15 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
             }
         }
         table.setSupportsUpdate(true);
+
+        FullyQualifiedName fqn = new FullyQualifiedName();
+        fqn.append("keyspace", columnFamily.getKeyspace().getName()); //$NON-NLS-1$
+        fqn.append("table", columnFamily.getName()); //$NON-NLS-1$
+        table.setProperty(FQN, fqn.toString());
+    }
+
+    protected String quoteName(String name) {
+        return "\"" + StringUtil.replaceAll(name, "\"", "\"\"") + "\""; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
     /**
@@ -101,6 +113,7 @@ public class CassandraMetadataProcessor implements MetadataProcessor<CassandraCo
             Column c = factory.addColumn(column.getName(), type, table);
             c.setUpdatable(true);
             c.setSearchType(SearchType.Unsearchable);
+            c.setNameInSource(quoteName(c.getName()));
         }
     }
 
