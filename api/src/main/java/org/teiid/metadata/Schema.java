@@ -29,53 +29,52 @@ import org.teiid.connector.DataPlugin;
 
 public class Schema extends AbstractMetadataRecord {
 
-	private static final long serialVersionUID = -5113742472848113008L;
+    private static final long serialVersionUID = -5113742472848113008L;
 
-	private boolean physical = true;
-	protected boolean visible = true;
+    private boolean physical = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
-    
+
     private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
-	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
-	private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-	private NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);	
-	private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
-	
-	public void addTable(Table table) {
-		table.setParent(this);
-		if (this.tables.put(table.getName(), table) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
-		}
-		resolvingOrder.add(table);
-	}
-	
-	public Table removeTable(String tableName) {
-		Table previous = this.tables.remove(tableName);
-		if (previous != null){
-			resolvingOrder.remove(previous);
-		}
-		return previous;
-	}
-	
-	public void addProcedure(Procedure procedure) {
-		procedure.setParent(this);
-		if (this.procedures.put(procedure.getName(), procedure) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
-		}
-		resolvingOrder.add(procedure);
-	}
-	
-	public Procedure removeProcedure(String procedureName) {
-		Procedure previous = this.procedures.remove(procedureName);
-		if (previous != null){
-			resolvingOrder.remove(previous);
-		}
-		return previous;
-	}
-	
-	public void addFunction(FunctionMethod function) {
-	    function.setParent(this);
-	    // hash based check, which allows overloaded functions
+    private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
+    private NavigableMap<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+    private NavigableMap<String, Server> servers = new TreeMap<String, Server>(String.CASE_INSENSITIVE_ORDER);
+    private List<AbstractMetadataRecord> resolvingOrder = new ArrayList<AbstractMetadataRecord>();
+
+    public void addTable(Table table) {
+        table.setParent(this);
+        if (this.tables.put(table.getName(), table) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName()));
+        }
+        resolvingOrder.add(table);
+    }
+
+    public Table removeTable(String tableName) {
+        Table previous = this.tables.remove(tableName);
+        if (previous != null){
+            resolvingOrder.remove(previous);
+        }
+        return previous;
+    }
+
+    public void addProcedure(Procedure procedure) {
+        procedure.setParent(this);
+        if (this.procedures.put(procedure.getName(), procedure) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName()));
+        }
+        resolvingOrder.add(procedure);
+    }
+
+    public Procedure removeProcedure(String procedureName) {
+        Procedure previous = this.procedures.remove(procedureName);
+        if (previous != null){
+            resolvingOrder.remove(previous);
+        }
+        return previous;
+    }
+
+    public void addFunction(FunctionMethod function) {
+        function.setParent(this);
+        // hash based check, which allows overloaded functions
         HashSet<FunctionMethod> funcs = new HashSet<FunctionMethod>();
         for (FunctionMethod fm : getFunctions().values()) {
             funcs.add(fm);
@@ -84,68 +83,68 @@ public class Schema extends AbstractMetadataRecord {
             throw new DuplicateRecordException(DataPlugin.Event.TEIID60015,
                     DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
         }
-        
-		//TODO: ensure that all uuids are unique
-		if (this.functions.put(function.getUUID(), function) != null) {
-			throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
-		}
-		resolvingOrder.add(function);
-	}	
-	
-	public List<FunctionMethod> removeFunctions(String functionName) {
-		ArrayList<FunctionMethod> funcs = new ArrayList<FunctionMethod>();
-		for (FunctionMethod fm : this.functions.values()){
-        	if (fm.getName().equalsIgnoreCase(functionName)){
-        		funcs.add(fm);        			
-        	}
-        }
-		
-		for (FunctionMethod func:funcs) {
-			this.functions.remove(func.getUUID());
-		}
-		return funcs;
-	}
 
-	/**
-	 * Get the tables defined in this schema
-	 * @return
-	 */
-	public NavigableMap<String, Table> getTables() {
-		return tables;
-	}
-	
-	public Table getTable(String tableName) {
-		return tables.get(tableName);
-	}
-	
-	/**
-	 * Get the procedures defined in this schema
-	 * @return
-	 */
-	public NavigableMap<String, Procedure> getProcedures() {
-		return procedures;
-	}
-	
-	public Procedure getProcedure(String procName) {
-		return procedures.get(procName);
-	}
-	
-	/**
-	 * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
-	 * @return
-	 */
-	public NavigableMap<String, FunctionMethod> getFunctions() {
-		return functions;
-	}
-	
-	/**
-	 * Get a function by uid
-	 * @return
-	 */
-	public FunctionMethod getFunction(String uid) {
-		return functions.get(uid);
-	}	
-	
+        //TODO: ensure that all uuids are unique
+        if (this.functions.put(function.getUUID(), function) != null) {
+            throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
+        }
+        resolvingOrder.add(function);
+    }
+
+    public List<FunctionMethod> removeFunctions(String functionName) {
+        ArrayList<FunctionMethod> funcs = new ArrayList<FunctionMethod>();
+        for (FunctionMethod fm : this.functions.values()){
+            if (fm.getName().equalsIgnoreCase(functionName)){
+                funcs.add(fm);
+            }
+        }
+
+        for (FunctionMethod func:funcs) {
+            this.functions.remove(func.getUUID());
+        }
+        return funcs;
+    }
+
+    /**
+     * Get the tables defined in this schema
+     * @return
+     */
+    public NavigableMap<String, Table> getTables() {
+        return tables;
+    }
+
+    public Table getTable(String tableName) {
+        return tables.get(tableName);
+    }
+
+    /**
+     * Get the procedures defined in this schema
+     * @return
+     */
+    public NavigableMap<String, Procedure> getProcedures() {
+        return procedures;
+    }
+
+    public Procedure getProcedure(String procName) {
+        return procedures.get(procName);
+    }
+
+    /**
+     * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
+     * @return
+     */
+    public NavigableMap<String, FunctionMethod> getFunctions() {
+        return functions;
+    }
+
+    /**
+     * Get a function by uid
+     * @return
+     */
+    public FunctionMethod getFunction(String uid) {
+        return functions.get(uid);
+    }
+
     public String getPrimaryMetamodelUri() {
         return primaryMetamodelUri;
     }
@@ -162,47 +161,48 @@ public class Schema extends AbstractMetadataRecord {
     }
 
     public void setPhysical(boolean physical) {
-		this.physical = physical;
-	}
-    
+        this.physical = physical;
+    }
+
     /**
      * 7.1 schemas did not have functions
      */
     private void readObject(java.io.ObjectInputStream in)
     throws IOException, ClassNotFoundException {
-    	in.defaultReadObject();
-    	if (this.functions == null) {
-    		this.functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
-    	}
-    	if (this.resolvingOrder == null) {
-    		this.resolvingOrder = new ArrayList<AbstractMetadataRecord>();
-    		this.resolvingOrder.addAll(this.tables.values());
-    		this.resolvingOrder.addAll(this.procedures.values());
-    		this.resolvingOrder.addAll(this.functions.values());
-    	}
+        in.defaultReadObject();
+        if (this.functions == null) {
+            this.functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
+        }
+        if (this.resolvingOrder == null) {
+            this.resolvingOrder = new ArrayList<AbstractMetadataRecord>();
+            this.resolvingOrder.addAll(this.tables.values());
+            this.resolvingOrder.addAll(this.procedures.values());
+            this.resolvingOrder.addAll(this.functions.values());
+        }
     }
-    
+
     public List<AbstractMetadataRecord> getResolvingOrder() {
-		return resolvingOrder;
-	}
-    
+        return resolvingOrder;
+    }
+
     public void addServer(Server server) {
         this.servers.put(server.getName(), server);
     }
-    
+
     public Server getServer(String serverName) {
         return this.servers.get(serverName);
     }
-    
+
     public List<Server> getServers(){
         return new ArrayList<Server>(this.servers.values());
     }
 
-	public boolean isVisible() {
-		return visible;
-	}
+    public boolean isVisible() {
+        String visible = getProperty("VISIBLE", false); //$NON-NLS-1$
+        return visible == null || Boolean.valueOf(visible);
+    }
 
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-	}
+    public void setVisible(boolean visible) {
+        setProperty("VISIBLE", String.valueOf(visible)); //$NON-NLS-1$
+    }
 }

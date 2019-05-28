@@ -32,17 +32,17 @@ import org.teiid.query.parser.SQLParserUtil.ParsedDataType;
 
 public class OptionsUtil {
     static final Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
-    
+
     private static void setProcedureOptions(Procedure proc) {
         Map<String, String> props = proc.getProperties();
         setCommonProperties(proc, props);
-        
+
         String value = props.remove("UPDATECOUNT"); //$NON-NLS-1$
         if (value != null) {
             proc.setUpdateCount(Integer.parseInt(value));
         }
     }
-    
+
     public static void removeOption(AbstractMetadataRecord record, String key) {
         if (record instanceof Table) {
             removeTableOption(key, (Table)record);
@@ -55,11 +55,11 @@ public class OptionsUtil {
         }
         if (record instanceof Schema) {
             removeSchemaOption(key, (Schema)record);
-        }        
+        }
         record.getProperties().remove(key);
     }
-    
-	public static void setOptions(AbstractMetadataRecord record) {
+
+    public static void setOptions(AbstractMetadataRecord record) {
         if (record instanceof Table) {
             setTableOptions((Table)record);
         }
@@ -72,41 +72,32 @@ public class OptionsUtil {
         if (record instanceof Schema) {
             setSchemaOptions((Schema)record);
         }
-		if (record instanceof Database || 
-				record instanceof DataWrapper ||
-				record instanceof Server) {
-	        Map<String, String> props = record.getProperties();
-	        setCommonProperties(record, props);
+        if (record instanceof Database ||
+                record instanceof DataWrapper ||
+                record instanceof Server) {
+            Map<String, String> props = record.getProperties();
+            setCommonProperties(record, props);
         }
     }
-    
+
     private static void setSchemaOptions(Schema schema) {
         Map<String, String> props = schema.getProperties();
         setCommonProperties(schema, props);
-        
-        String value = props.remove(DDLConstants.VISIBLE); 
-        if (value != null) {
-            schema.setVisible(isTrue(value));
-        }	
-	}
+    }
 
     private static void removeSchemaOption(String key, Schema schema) {
         if (schema.getProperty(key, false) != null) {
-        	schema.setProperty(key, null);
-        }       
-        removeCommonProperty(key, schema);	
-        
-        if (key.equals(DDLConstants.VISIBLE)) {
-        	schema.setVisible(false);
+            schema.setProperty(key, null);
         }
-	}
-    
-	private static void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
+        removeCommonProperty(key, schema);
+    }
+
+    private static void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
         if (c.getProperty(key, false) != null) {
             c.setProperty(key, null);
-        }       
+        }
         removeCommonProperty(key, c);
-        
+
         if (key.equals(DDLConstants.RADIX)) {
             c.setRadix(0);
         } else if (key.equals(DDLConstants.NATIVE_TYPE)) {
@@ -114,8 +105,8 @@ public class OptionsUtil {
         } else if (c instanceof Column) {
             removeColumnOption(key, (Column)c);
         }
-    }    
-    
+    }
+
     private static void removeColumnOption(String key, Column c) {
         if (key.equals(DDLConstants.CASE_SENSITIVE)) {
             c.setCaseSensitive(false);
@@ -146,36 +137,36 @@ public class OptionsUtil {
             c.setLength(0);
             c.setPrecision(0);
             c.setScale(0);
-        }       
-    }    
+        }
+    }
    private static void removeProcedureOption(String key, Procedure proc) {
         if (proc.getProperty(key, false) != null) {
             proc.setProperty(key, null);
-        }       
+        }
         removeCommonProperty(key, proc);
-        
+
         if (key.equals("UPDATECOUNT")) { //$NON-NLS-1$
             proc.setUpdateCount(1);
         }
-    } 
-    
+    }
+
     public static void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
-        String v = props.remove(DDLConstants.UUID); 
+        String v = props.remove(DDLConstants.UUID);
         if (v != null) {
             c.setUUID(v);
         }
-        
-        v = props.remove(DDLConstants.ANNOTATION); 
+
+        v = props.remove(DDLConstants.ANNOTATION);
         if (v != null) {
             c.setAnnotation(v);
         }
-        
-        v = props.remove(DDLConstants.NAMEINSOURCE); 
+
+        v = props.remove(DDLConstants.NAMEINSOURCE);
         if (v != null) {
             c.setNameInSource(v);
         }
     }
-    
+
     private static void removeCommonProperty(String key, AbstractMetadataRecord c) {
         if (key.equals(DDLConstants.UUID)) {
             c.setUUID(null);
@@ -184,102 +175,102 @@ public class OptionsUtil {
         } else if (key.equals(DDLConstants.NAMEINSOURCE)) {
             c.setNameInSource(null);
         }
-    }   
-    
+    }
+
     private static void setTableOptions(Table table) {
         Map<String, String> props = table.getProperties();
         setCommonProperties(table, props);
-        
-        String value = props.remove(DDLConstants.MATERIALIZED); 
+
+        String value = props.remove(DDLConstants.MATERIALIZED);
         if (value != null) {
             table.setMaterialized(isTrue(value));
         }
-        
-        value = props.remove(DDLConstants.MATERIALIZED_TABLE); 
+
+        value = props.remove(DDLConstants.MATERIALIZED_TABLE);
         if (value != null) {
             Table mattable = new Table();
             mattable.setName(value);
             table.setMaterializedTable(mattable);
         }
-        
-        value = props.remove(DDLConstants.UPDATABLE); 
+
+        value = props.remove(DDLConstants.UPDATABLE);
         if (value != null) {
             table.setSupportsUpdate(isTrue(value));
         }
-        
-        value = props.remove(DDLConstants.CARDINALITY); 
+
+        value = props.remove(DDLConstants.CARDINALITY);
         if (value != null) {
             table.setCardinality(Long.valueOf(value));
         }
-    }     
-    
+    }
+
     private static void removeTableOption(String key, Table table) {
         if (table.getProperty(key, false) != null) {
             table.setProperty(key, null);
         }
         removeCommonProperty(key, table);
-        
+
         if (key.equals(DDLConstants.MATERIALIZED)) {
             table.setMaterialized(false);
         }
-        
+
         if (key.equals(DDLConstants.MATERIALIZED_TABLE)) {
             table.setMaterializedTable(null);
         }
-        
+
         if (key.equals(DDLConstants.UPDATABLE)) {
             table.setSupportsUpdate(false);
         }
-        
+
         if (key.equals(DDLConstants.CARDINALITY)) {
             table.setCardinality(-1);
-        }       
+        }
     }
-    
+
     private static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
     }
-    
+
     private static void setColumnOptions(BaseColumn c)  throws MetadataException {
         Map<String, String> props = c.getProperties();
         setCommonProperties(c, props);
-        
-        String v = props.remove(DDLConstants.RADIX); 
+
+        String v = props.remove(DDLConstants.RADIX);
         if (v != null) {
             c.setRadix(Integer.parseInt(v));
         }
-        
+
         v = props.remove(DDLConstants.NATIVE_TYPE);
         if (v != null) {
             c.setNativeType(v);
         }
-        
+
         if (c instanceof Column) {
             setColumnOptions((Column)c, props);
         }
     }
-    
+
     private static void setColumnOptions(Column c, Map<String, String> props) throws MetadataException {
-        String v = props.remove(DDLConstants.CASE_SENSITIVE); 
+        String v = props.remove(DDLConstants.CASE_SENSITIVE);
         if (v != null) {
             c.setCaseSensitive(isTrue(v));
         }
-        
+
         v = props.remove(DDLConstants.SELECTABLE);
         if (v != null) {
             c.setSelectable(isTrue(v));
         }
-        
-        v = props.remove(DDLConstants.UPDATABLE); 
+
+        v = props.remove(DDLConstants.UPDATABLE);
         if (v != null) {
             c.setUpdatable(isTrue(v));
         }
-        
+
         v = props.remove(DDLConstants.SIGNED);
         if (v != null) {
             c.setSigned(isTrue(v));
         }
-        
+
         v = props.remove(DDLConstants.CURRENCY);
         if (v != null) {
             c.setSigned(isTrue(v));
@@ -289,38 +280,38 @@ public class OptionsUtil {
         if (v != null) {
             c.setFixedLength(isTrue(v));
         }
-        
+
         v = props.remove(DDLConstants.SEARCHABLE);
         if (v != null) {
             c.setSearchType(StringUtil.caseInsensitiveValueOf(SearchType.class, v));
         }
-        
+
         v = props.remove(DDLConstants.MIN_VALUE);
         if (v != null) {
             c.setMinimumValue(v);
         }
-        
+
         v = props.remove(DDLConstants.MAX_VALUE);
         if (v != null) {
             c.setMaximumValue(v);
         }
-        
+
         v = props.remove(DDLConstants.CHAR_OCTET_LENGTH);
         if (v != null) {
             c.setCharOctetLength(Integer.parseInt(v));
         }
-        
-        v = props.remove(DDLConstants.NULL_VALUE_COUNT); 
+
+        v = props.remove(DDLConstants.NULL_VALUE_COUNT);
         if (v != null) {
             c.setNullValues(Integer.parseInt(v));
         }
-        
-        v = props.remove(DDLConstants.DISTINCT_VALUES); 
+
+        v = props.remove(DDLConstants.DISTINCT_VALUES);
         if (v != null) {
             c.setDistinctValues(Integer.parseInt(v));
         }
 
-        v = props.remove(DDLConstants.UDT); 
+        v = props.remove(DDLConstants.UDT);
         if (v != null) {
             Matcher matcher = udtPattern.matcher(v);
             List<Datatype> datatypes = SystemMetadata.getInstance().getDataTypes();
@@ -337,12 +328,12 @@ public class OptionsUtil {
                 c.setDatatype(match, false, c.getArrayDimensions());
                 c.setLength(Integer.parseInt(matcher.group(2)));
                 ParsedDataType pdt = new ParsedDataType(matcher.group(1), Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(4)), true);
-                c.setScale(Integer.parseInt(matcher.group(4)));		 
+                c.setScale(Integer.parseInt(matcher.group(4)));
                 SQLParserUtil.setTypeInfo(pdt, c);
             }
             else {
                 throw new MetadataException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
             }
         }
-    }    
+    }
 }
