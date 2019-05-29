@@ -109,6 +109,11 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
 
     @Override
+    public void visit(JsonTable obj) {
+        obj.setJson(replaceExpression(obj.getJson()));
+    }
+
+    @Override
     public void visit(ObjectTable obj) {
         for (ObjectColumn col : obj.getColumns()) {
             Expression exp = col.getDefaultExpression();

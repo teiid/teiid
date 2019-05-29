@@ -45,6 +45,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.Create.CommitAction;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.JsonTable.JsonColumn;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.lang.SetQuery.Operation;
@@ -125,8 +126,9 @@ public class SQLStringVisitor extends LanguageVisitor {
         obj.acceptVisitor(this);
     }
 
-    protected void append( Object value ) {
+    protected SQLStringVisitor append( Object value ) {
         this.parts.append(value);
+        return this;
     }
 
     protected void beginClause( @SuppressWarnings("unused") int level ) {
@@ -2298,6 +2300,44 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(DEFAULT);
                 append(SPACE);
                 visitNode(col.getDefaultExpression());
+            }
+            if (cols.hasNext()) {
+                append(","); //$NON-NLS-1$
+            }
+        }
+        endTableFunction(obj);
+    }
+
+    @Override
+    public void visit( JsonTable obj ) {
+        addHintComment(obj);
+        append(NonReserved.JSONTABLE).append(Tokens.LPAREN);
+        visitNode(obj.getJson());
+        append(SPACE);
+        visitNode(new Constant(obj.getRowPath()));
+        if (obj.getNullLeaf() != null) {
+            append(SPACE).append(Tokens.COMMA);
+            visitNode(new Constant(obj.getNullLeaf()));
+        }
+        append(SPACE);
+        append(NonReserved.COLUMNS);
+        for (Iterator<JsonColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
+            JsonColumn col = cols.next();
+            append(SPACE);
+            outputDisplayName(col.getName());
+            append(SPACE);
+            if (col.isOrdinal()) {
+                append(FOR);
+                append(SPACE);
+                append(NonReserved.ORDINALITY);
+            } else {
+                append(col.getType());
+                if (col.getPath() != null) {
+                    append(SPACE);
+                    append(NonReserved.PATH);
+                    append(SPACE);
+                    visitNode(new Constant(col.getPath()));
+                }
             }
             if (cols.hasNext()) {
                 append(","); //$NON-NLS-1$

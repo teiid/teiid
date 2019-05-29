@@ -220,7 +220,7 @@ public class MetadataFactory extends NamespaceContainer {
     /**
      * Adds a column to the table with the given name and type.
      * @param name
-     * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
+     * @param type should be one of {@link org.teiid.translator.TypeFacility.RUNTIME_NAMES}
      * @param table
      * @return
      * @throws MetadataException
@@ -491,7 +491,7 @@ public class MetadataFactory extends NamespaceContainer {
     /**
      * Add a procedure parameter.
      * @param name
-     * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
+     * @param type should be one of {@link org.teiid.translator.TypeFacility.RUNTIME_NAMES}
      * @param parameterType should be one of {@link ProcedureParameter.Type}
      * @param procedure
      * @return
@@ -522,7 +522,7 @@ public class MetadataFactory extends NamespaceContainer {
     /**
      * Add a procedure resultset column to the given procedure.
      * @param name
-     * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
+     * @param type should be one of {@link org.teiid.translator.TypeFacility.RUNTIME_NAMES}
      * @param procedure
      * @return
      * @throws MetadataException
@@ -618,7 +618,7 @@ public class MetadataFactory extends NamespaceContainer {
         if (returnTypeClass.isPrimitive()) {
             returnTypeClass = TypeFacility.convertPrimitiveToObject(returnTypeClass);
         }
-        String returnType = DataTypeManager.getDataTypeName(returnTypeClass);
+        String returnType = DataTypeManager.getDataTypeName(DataTypeManager.getRuntimeType(returnTypeClass));
         Class<?>[] params = method.getParameterTypes();
         String[] paramTypes = new String[params.length];
         boolean nullOnNull = false;
@@ -629,9 +629,9 @@ public class MetadataFactory extends NamespaceContainer {
                 clazz = TypeFacility.convertPrimitiveToObject(clazz);
             }
             if (method.isVarArgs() && i == params.length -1) {
-                paramTypes[i] = DataTypeManager.getDataTypeName(clazz.getComponentType());
+                paramTypes[i] = DataTypeManager.getDataTypeName(DataTypeManager.getRuntimeType(clazz.getComponentType()));
             } else {
-                paramTypes[i] = DataTypeManager.getDataTypeName(clazz);
+                paramTypes[i] = DataTypeManager.getDataTypeName(DataTypeManager.getRuntimeType(clazz));
             }
         }
         if (params.length > 0 && CommandContext.class.isAssignableFrom(params[0])) {

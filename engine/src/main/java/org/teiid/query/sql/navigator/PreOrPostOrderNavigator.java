@@ -509,6 +509,14 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
 
     @Override
+    public void visit(JsonTable obj) {
+        preVisitVisitor(obj);
+        visitNode(obj.getJson());
+        visitNode(obj.getGroupSymbol());
+        postVisitVisitor(obj);
+    }
+
+    @Override
     public void visit(ObjectTable obj) {
         preVisitVisitor(obj);
         visitNodes(obj.getPassing());

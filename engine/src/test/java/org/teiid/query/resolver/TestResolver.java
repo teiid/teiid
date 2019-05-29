@@ -3097,4 +3097,10 @@ public class TestResolver {
         helpResolve(sql, tm);
     }
 
+    @Test public void testJsonTable() throws Exception {
+        String sql = "SELECT * from jsontable('{}', '$..*', true columns x for ordinality, y json path '@..*') as x"; //$NON-NLS-1$
+        //optional json support not in the core engine
+        helpResolveException(sql);
+    }
+
 }
