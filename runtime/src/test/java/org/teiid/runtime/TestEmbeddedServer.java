@@ -439,7 +439,7 @@ public class TestEmbeddedServer {
         String externalDDL = "CREATE DATABASE test VERSION '1';"
                 + "USE DATABASE test VERSION '1';"
                 + "CREATE VIRTUAL SCHEMA test2;"
-                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+                + "IMPORT FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
         out.write(externalDDL.getBytes("UTF-8"));
         out.close();
 

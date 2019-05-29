@@ -5196,7 +5196,7 @@ void ddlStmt(DatabaseStore dbStore) :
 	 LOOKAHEAD(2)  revokeGrantOption(dbStore) | 
 	 LOOKAHEAD(3)  dropServer(dbStore) |
 	 LOOKAHEAD(3)  dropTableView(dbStore) |
-	 LOOKAHEAD(3)  importSchema(dbStore) |
+	 LOOKAHEAD(2)  importSchema(dbStore) |
 	 LOOKAHEAD(3)  importDatabase(dbStore) |
 	 LOOKAHEAD(2)  createDatabase(dbStore) |
 	 //LOOKAHEAD(2)  dropDatabase(dbStore) |

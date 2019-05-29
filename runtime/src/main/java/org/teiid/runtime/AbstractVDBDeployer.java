@@ -297,7 +297,9 @@ public abstract class AbstractVDBDeployer {
                     if (!excludeTables.isEmpty()) {
                         modelProperties.put("importer.excludeTables", StringUtil.join(excludeTables, ",")); //$NON-NLS-1$
                     }
-                    modelProperties.put("importer.schemaName", foreignSchemaName); //$NON-NLS-1$
+                    if (foreignSchemaName != null) {
+                        modelProperties.put("importer.schemaName", foreignSchemaName); //$NON-NLS-1$
+                    }
                     MetadataFactory factory = DatabaseStore.createMF(this, getSchema(schemaName), true, modelProperties);
                     factory.setParser(new QueryParser());
                     if (vdbResources != null) {
