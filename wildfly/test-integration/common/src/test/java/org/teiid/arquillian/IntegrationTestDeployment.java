@@ -852,11 +852,14 @@ public class IntegrationTestDeployment {
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
         out.putNextEntry(new ZipEntry("v1.ddl"));
         out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("v2.ddl"));
+        out.write("CREATE VIEW helloworld2 as SELECT 'HELLO WORLD2';".getBytes("UTF-8"));
         out.putNextEntry(new ZipEntry("META-INF/vdb.ddl"));
         String externalDDL = "CREATE DATABASE test2 VERSION '1';"
                 + "USE DATABASE test2 VERSION '1';"
                 + "CREATE VIRTUAL SCHEMA test2;"
-                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');";
+                + "IMPORT FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v1.ddl');"
+                + "IMPORT FOREIGN SCHEMA public FROM REPOSITORY \"DDL-FILE\" INTO test2 OPTIONS(\"ddl-file\" '/v2.ddl');";
         out.write(externalDDL.getBytes("UTF-8"));
         out.close();
 
@@ -867,5 +870,8 @@ public class IntegrationTestDeployment {
         ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
+        rs = conn.createStatement().executeQuery("select * from helloworld2");
+        rs.next();
+        assertEquals("HELLO WORLD2", rs.getString(1));
     }
 }
