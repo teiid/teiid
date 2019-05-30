@@ -134,6 +134,7 @@ public class SQLConstants {
         static final String EXCEPTION = "EXCEPTION"; //$NON-NLS-1$
         static final String RAISE = "RAISE"; //$NON-NLS-1$
         static final String CHAIN = "CHAIN"; //$NON-NLS-1$
+        static final String JSONTABLE = "JSONTABLE"; //$NON-NLS-1$
         static final String JSONOBJECT = "JSONOBJECT"; //$NON-NLS-1$
         static final String JSONARRAY_AGG = "JSONARRAY_AGG"; //$NON-NLS-1$
         static final String JSON = "JSON"; //$NON-NLS-1$

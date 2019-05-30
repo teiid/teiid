@@ -5385,4 +5385,20 @@ public class TestParser {
         helpException("select array(select *, 1 from (select 1) as x)"); //$NON-NLS-1$
     }
 
+    @Test public void testJsonTable() throws Exception {
+        String sql = "SELECT * from jsontable('{}', '$..*' columns x for ordinality, y json path '@..*') as x"; //$NON-NLS-1$
+        Query query = new Query();
+        query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
+        JsonTable xt = new JsonTable();
+        xt.setName("x");
+        xt.setJson(new Constant("{}"));
+        xt.setRowPath("$..*");
+        List<JsonTable.JsonColumn> columns = new ArrayList<JsonTable.JsonColumn>();
+        columns.add(new JsonTable.JsonColumn("x"));
+        columns.add(new JsonTable.JsonColumn("y", "json", "@..*"));
+        xt.setColumns(columns);
+        query.setFrom(new From(Arrays.asList(xt)));
+        helpTest(sql, "SELECT * FROM JSONTABLE('{}' '$..*' COLUMNS x FOR ORDINALITY, y json PATH '@..*') AS x", query);
+    }
+
 }

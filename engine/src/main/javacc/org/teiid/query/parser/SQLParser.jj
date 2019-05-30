@@ -478,6 +478,7 @@ TOKEN : /* NonReserved words */
 |   <SQL_TSI_YEAR: "sql_tsi_year">
 |   <TEXTTABLE: "texttable">
 |   <ARRAYTABLE: "arraytable">
+|   <JSONTABLE: "jsontable">
 |   <SELECTOR: "selector">
 |   <SKIP_KEYWORD: "skip">
 |   <WIDTH: "width">
@@ -636,7 +637,7 @@ Token nonReserved() :
     (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<COUNT_BIG>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
      |<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
-     |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
+     |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<JSONTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSON>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
@@ -2494,6 +2495,8 @@ FromClause tablePrimary(ParseInfo info) :
 	    |
 	    LOOKAHEAD(2) clause = arrayTable(info)
 	    |
+	    LOOKAHEAD(2) clause = jsonTable(info)
+	    |
 	    clause = xmlTable(info)
 	    |
 	    LOOKAHEAD(2) clause = objectTable(info)
@@ -2609,6 +2612,78 @@ ArrayTable arrayTable(ParseInfo info) :
         result.setSingleRow(single);
         return result;
     }
+}
+
+/*
+name=json table
+description=The JSONTABLE table function creates tabular results from JSON.  It can be used as a nested table reference.
+example=[source,sql]\n----\JSONTABLE (col1, '$..book', false, COLUMNS x STRING) AS y\n----\n
+*/
+JsonTable jsonTable(ParseInfo info) :
+{
+    Expression json = null;
+    JsonTable.JsonColumn column = null;
+    List<JsonTable.JsonColumn> columns = new ArrayList<JsonTable.JsonColumn>();
+    String aliasID = null;
+    Boolean nullLeaf = null;
+    String rowPath = null;
+}
+{
+    <JSONTABLE> <LPAREN> json = valueExpressionPrimary(info)
+    <COMMA> rowPath = stringVal()
+    [<COMMA> (<TRUE>{nullLeaf=true;}|<FALSE>{nullLeaf=false;})]
+    <COLUMNS>
+    column = jsonColumn(info)
+    {
+      columns.add(column);
+    }
+    (<COMMA>
+      column = jsonColumn(info)
+      {
+        columns.add(column);      
+      }
+    )*
+    <RPAREN>
+    [<AS>] aliasID=id(Boolean.FALSE)
+    {
+        JsonTable result = new JsonTable();
+        result.setJson(json);
+        result.setRowPath(rowPath);
+        result.setNullLeaf(nullLeaf);
+        result.setColumns(columns);
+        result.setName(aliasID);
+        return result;
+    }
+}
+
+/*
+name=json table column
+description=json table column.
+example=[source,sql]\n----\col FOR ORDINALITY\n----\n
+*/
+JsonTable.JsonColumn jsonColumn(ParseInfo info):
+{
+    String name = null;
+    ParsedDataType datatype = null;
+    String path = null;
+}
+{
+    name = id(Boolean.TRUE)
+    
+    ((
+      <FOR> <ORDINALITY> 
+      {
+        return new JsonTable.JsonColumn(name); 
+      } 
+    ) | (
+      datatype = parseBasicDataType()
+      [ 
+        <PATH> path = stringVal()
+      ]
+      {
+        return new JsonTable.JsonColumn(name, datatype.type, path);
+      }
+    ))
 }
 
 /*

@@ -30,6 +30,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
@@ -48,6 +49,7 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.translator.SourceSystemFunctions;
 
 public class SimpleQueryResolver implements CommandResolver {
 
@@ -397,6 +399,23 @@ public class SimpleQueryResolver implements CommandResolver {
                 }
             } catch (TeiidException e) {
                 throw new TeiidRuntimeException(e);
+            }
+        }
+
+        @Override
+        public void visit(JsonTable obj) {
+            LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
+            visitNode(obj.getJson());
+            postTableFunctionReference(obj, saved);
+            try {
+                ResolverUtil.setDesiredType(obj.getJson(), DataTypeManager.DefaultDataClasses.CLOB, obj);
+                //obj.compileXqueryExpression();
+            } catch (TeiidException e) {
+                throw new TeiidRuntimeException(e);
+            }
+            FunctionLibrary funcLibrary = this.metadata.getFunctionLibrary();
+            if (!funcLibrary.getSystemFunctions().hasFunctionWithName(SourceSystemFunctions.JSONTOARRAY)) {
+                throw new TeiidRuntimeException(new QueryResolverException(QueryPlugin.Event.TEIID31298, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31298)));
             }
         }
 

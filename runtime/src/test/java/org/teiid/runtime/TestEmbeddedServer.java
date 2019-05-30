@@ -2778,4 +2778,20 @@ public class TestEmbeddedServer {
         //stmt2.executeQuery("select * from #temp");
     }
 
+    @Test public void testJsonPath() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        es.start(ec);
+
+        es.deployVDB(new ByteArrayInputStream(createVDB("x", "1.0.0").getBytes("UTF-8")));
+
+        Connection connection = es.getDriver().connect("jdbc:teiid:x", null);
+        Statement stmt = connection.createStatement();
+
+        String sql = "select jsonpathvalue(jsonparse('{\"a\":1, \"b\":[2,3]}', false), '$.b')";
+
+        ResultSet rs = stmt.executeQuery(sql);
+        rs.next();
+        assertEquals("[2,3]", rs.getString(1));
+    }
+
 }

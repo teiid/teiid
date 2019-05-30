@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.teiid.api.exception.query.InvalidFunctionException;
-import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
@@ -264,7 +263,6 @@ public class FunctionLibrary {
      * @param args
      * @param types Existing types passed to the function
      * @throws InvalidFunctionException
-     * @throws QueryResolverException
      */
     public ConversionResult determineNecessaryConversions(String name, Class<?> returnType, Expression[] args, Class<?>[] types, boolean hasUnknownType) throws InvalidFunctionException {
         //First find existing functions with same name and same number of parameters

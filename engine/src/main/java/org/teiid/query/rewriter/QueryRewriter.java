@@ -18,6 +18,7 @@
 
 package org.teiid.query.rewriter;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -43,6 +44,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.json.simple.JSONParser;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.WindowFrame.BoundMode;
@@ -76,6 +78,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
+import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
@@ -777,7 +780,7 @@ public class QueryRewriter {
      * Rewrite the order by clause.
      * Unrelated order by expressions will cause the creation of nested inline views.
      *
-     * @param query
+     * @param queryCommand
      * @throws TeiidComponentException, MetaMatrixProcessingException
      * @throws TeiidProcessingException
      */
@@ -904,6 +907,8 @@ public class QueryRewriter {
             tt.setFile(rewriteExpressionDirect(tt.getFile()));
         } else if (clause instanceof XMLTable) {
             rewriteExpressions(clause);
+        } else if (clause instanceof JsonTable) {
+            return rewriteJsonTable((JsonTable)clause);
         } else if (clause instanceof ObjectTable) {
             rewriteExpressions(clause);
         } else if (clause instanceof ArrayTable) {
@@ -911,6 +916,56 @@ public class QueryRewriter {
             at.setArrayValue(rewriteExpressionDirect(at.getArrayValue()));
         }
         return clause;
+    }
+
+    /**
+     * Rewrite from jsontable to arraytable with jsontoarray
+     * @param clause
+     * @return
+     * @throws TeiidComponentException
+     * @throws TeiidProcessingException
+     */
+    private FromClause rewriteJsonTable(JsonTable clause) throws TeiidComponentException, TeiidProcessingException {
+        ArrayTable at = new ArrayTable();
+        List<Expression> args = new ArrayList<Expression>();
+        List<ProjectedColumn> cols = new ArrayList<>();
+
+        args.add(rewriteExpressionDirect(clause.getJson()));
+        args.add(new Constant(clause.getRowPath()));
+        args.add(new Constant(Boolean.TRUE.equals(clause.getNullLeaf())));
+
+        for (JsonTable.JsonColumn col : clause.getColumns()) {
+            cols.add(new ProjectedColumn(col.getName(), col.getType()));
+
+            if (col.isOrdinal()) {
+                args.add(new Constant("ordinal")); //$NON-NLS-1$
+            } else if (col.getPath() != null) {
+                args.add(new Constant(col.getPath()));
+            } else {
+                //default path, use bracket notation to avoid escaping issues
+                StringBuilder path = new StringBuilder("@['"); //$NON-NLS-1$
+                try {
+                    JSONParser.escape(col.getName(), path);
+                } catch (IOException e) {
+                    throw new TeiidRuntimeException(e);
+                }
+                path.append("']"); //$NON-NLS-1$
+                args.add(new Constant(path.toString()));
+            }
+        }
+
+        Function f = new Function(SourceSystemFunctions.JSONTOARRAY, args.toArray(new Expression[args.size()]));
+
+        ResolverVisitor.resolveLanguageObject(f, metadata);
+        at.setArrayValue(f);
+        at.setCorrelatedReferences(clause.getCorrelatedReferences());
+        at.setMakeDep(clause.getMakeDep());
+        at.setMakeInd(clause.getMakeInd());
+        at.setColumns(cols);
+        at.setSingleRow(false);
+        at.setName(clause.getName());
+        at.getGroupSymbol().setMetadataID(clause.getGroupSymbol().getMetadataID());
+        return at;
     }
 
     private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate)
@@ -949,8 +1004,6 @@ public class QueryRewriter {
      * Rewrite the criteria by evaluating some trivial cases.
      * @param criteria The criteria to rewrite
      * @param metadata
-     * @param userCriteria The criteria on user's command, used in rewriting HasCriteria
-     * in the procedural language.
      * @return The re-written criteria
      */
     public static Criteria rewriteCriteria(Criteria criteria, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{

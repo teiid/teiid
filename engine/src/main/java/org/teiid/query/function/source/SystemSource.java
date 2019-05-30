@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 
+import org.teiid.core.BundleUtil;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
@@ -35,15 +36,7 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.FunctionMethods;
-import org.teiid.query.function.GeographyFunctionMethods;
-import org.teiid.query.function.GeometryFunctionMethods;
-import org.teiid.query.function.GeometryUtils;
-import org.teiid.query.function.JSONFunctionMethods;
-import org.teiid.query.function.SystemFunctionMethods;
-import org.teiid.query.function.TeiidFunction;
-import org.teiid.query.function.UDFSource;
+import org.teiid.query.function.*;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -219,6 +212,8 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
             addLibrary("org.teiid.geo.GeometryJsonUtils", null, true); //$NON-NLS-1$
         }
         addLibrary("org.teiid.dataquality.OSDQFunctions", "osdq.", false); //$NON-NLS-1$ //$NON-NLS-2$
+
+        addLibrary("org.teiid.json.JsonPathFunctionMethods", null, false); //$NON-NLS-1$
     }
 
     private boolean addLibrary(String className, String prefix, boolean warn) {
@@ -247,6 +242,18 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                 return arg0.toGenericString().compareTo(arg1.toGenericString());
             }
         });
+        TeiidFunctions teiidFunctions = clazz.getAnnotation(TeiidFunctions.class);
+        String defaultCategory = FunctionCategoryConstants.MISCELLANEOUS;
+        BundleUtil bundleUtil = QueryPlugin.Util;
+        String i18nPrefix = "SystemSource."; //$NON-NLS-1$
+        if (teiidFunctions != null) {
+            defaultCategory = teiidFunctions.category();
+            BundleUtil bundle = BundleUtil.getBundleUtil(clazz);
+            if (bundle != null) {
+                bundleUtil = bundle;
+            }
+            i18nPrefix = teiidFunctions.i18nPrefix();
+        }
         for (Method method : methods) {
             TeiidFunction f = method.getAnnotation(TeiidFunction.class);
             if (f == null) {
@@ -259,22 +266,22 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
             if (prefix != null) {
                 name = prefix + name;
             }
-            addFunction(method, f, name);
+            addFunction(method, f, name, defaultCategory, bundleUtil, i18nPrefix);
             if (!f.alias().isEmpty()) {
-                addFunction(method, f, f.alias());
+                addFunction(method, f, f.alias(), defaultCategory, bundleUtil, i18nPrefix);
             }
         }
     }
 
     private FunctionMethod addFunction(Method method, TeiidFunction f,
-            String name) {
+            String name, String defaultCategory, BundleUtil bundleUtil, String prefix) {
         FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
-        func.setDescription(QueryPlugin.Util.getString(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_description"))); //$NON-NLS-1$ //$NON-NLS-2$
-        func.setCategory(f.category());
+        func.setDescription(QueryPlugin.Util.getString(bundleUtil.getString(prefix + name.toLowerCase() + "_description"))); //$NON-NLS-1$
+        func.setCategory(f.category().isEmpty()?defaultCategory:f.category());
         for (int i = 0; i < func.getInputParameterCount(); i++) {
-            func.getInputParameters().get(i).setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_param" + (i+1))); //$NON-NLS-1$ //$NON-NLS-2$
+            func.getInputParameters().get(i).setDescription(bundleUtil.getString(prefix + name.toLowerCase() + "_param" + (i+1))); //$NON-NLS-1$
         }
-        func.getOutputParameter().setDescription(QueryPlugin.Util.getString("SystemSource." + name.toLowerCase() + "_result")); //$NON-NLS-1$ //$NON-NLS-2$
+        func.getOutputParameter().setDescription(bundleUtil.getString(prefix + name.toLowerCase() + "_result")); //$NON-NLS-1$
         if (f.nullOnNull()) {
             func.setNullOnNull(true);
         }

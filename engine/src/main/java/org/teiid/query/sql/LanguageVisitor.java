@@ -154,4 +154,6 @@ public abstract class LanguageVisitor {
     public void visit(XMLCast xmlCast) {}
 
     public void visit(IsDistinctCriteria isDistinctCriteria) {}
+
+    public void visit(JsonTable jsonTable) {}
 }
