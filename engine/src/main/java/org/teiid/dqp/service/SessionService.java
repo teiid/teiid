@@ -49,9 +49,6 @@ public interface SessionService {
     public static final long DEFAULT_MAX_SESSIONS = 10000;
     public static final long DEFAULT_SESSION_EXPIRATION = 0;
 
-    public static final String MAX_SESSIONS = "session.maxSessions"; //$NON-NLS-1$
-    public static final String SESSION_EXPIRATION = "session.expirationTimeInMilli"; //$NON-NLS-1$
-
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */

@@ -142,18 +142,6 @@ public class ReflectionHelper {
         }
 
         // ---------------------------------------------------------------------------------------------
-        // Then try to find a method with the argument classes converted to a primitive, if possible ...
-        // ---------------------------------------------------------------------------------------------
-        List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
-        argumentsClassList.toArray(classArgs);
-        try {
-            result = this.targetClass.getMethod(methodName,classArgs);  // this may throw an exception if not found
-            return result;
-        } catch ( NoSuchMethodException e ) {
-            // No method found, so continue ...
-        }
-
-        // ---------------------------------------------------------------------------------------------
         // Still haven't found anything.  So far, the "getMethod" logic only finds methods that EXACTLY
         // match the argument classes (i.e., not methods declared with superclasses or interfaces of
         // the arguments).  There is no canned algorithm in Java to do this, so we have to brute-force it.
@@ -166,7 +154,7 @@ public class ReflectionHelper {
         }
         for (Method method : methodsWithSameName) {
             Class[] args = method.getParameterTypes();
-            boolean allMatch = argsMatch(argumentsClasses, argumentsClassList, args);
+            boolean allMatch = argsMatch(argumentsClasses, args);
             if ( allMatch ) {
                 if (result != null) {
                     throw new NoSuchMethodException(methodName + " Args: " + argumentsClasses + " has multiple possible signatures."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -204,15 +192,14 @@ public class ReflectionHelper {
         }
     }
 
-    private static boolean argsMatch(List<Class<?>> argumentsClasses,
-            List<Class<?>> argumentsClassList, Class[] args) {
+    private static boolean argsMatch(List<Class<?>> argumentsClasses, Class[] args) {
         if ( args.length != argumentsClasses.size() ) {
             return false;
         }
         for ( int i=0; i<args.length; ++i ) {
-            Class<?> primitiveClazz = argumentsClassList.get(i);
             Class<?> objectClazz = argumentsClasses.get(i);
             if ( objectClazz != null ) {
+                Class<?> primitiveClazz = convertArgumentClassesToPrimitive(objectClazz);
                 // Check for possible matches with (converted) primitive types
                 // as well as the original Object type
                 if ( ! args[i].equals(primitiveClazz) && ! args[i].isAssignableFrom(objectClazz) ) {
@@ -229,27 +216,19 @@ public class ReflectionHelper {
     }
 
     /**
-     * Convert any argument classes to primitives.
-     * @param arguments the list of argument classes.
-     * @return the list of Class instances in which any classes that could be represented
-     * by primitives (e.g., Boolean) were replaced with the primitive classes (e.g., Boolean.TYPE).
+     * Convert any argument class to primitive.
      */
-    private static List<Class<?>> convertArgumentClassesToPrimitives( List<Class<?>> arguments ) {
-        List<Class<?>> result = new ArrayList<Class<?>>(arguments.size());
-        for (Class<?> clazz : arguments) {
-            if      ( clazz == Boolean.class   ) clazz = Boolean.TYPE;
-            else if ( clazz == Character.class ) clazz = Character.TYPE;
-            else if ( clazz == Byte.class      ) clazz = Byte.TYPE;
-            else if ( clazz == Short.class     ) clazz = Short.TYPE;
-            else if ( clazz == Integer.class   ) clazz = Integer.TYPE;
-            else if ( clazz == Long.class      ) clazz = Long.TYPE;
-            else if ( clazz == Float.class     ) clazz = Float.TYPE;
-            else if ( clazz == Double.class    ) clazz = Double.TYPE;
-            else if ( clazz == Void.class      ) clazz = Void.TYPE;
-            result.add( clazz );
-        }
-
-        return result;
+    private static Class<?> convertArgumentClassesToPrimitive( Class<?> clazz ) {
+        if      ( clazz == Boolean.class   ) { clazz = Boolean.TYPE; }
+        else if ( clazz == Character.class ) { clazz = Character.TYPE; }
+        else if ( clazz == Byte.class      ) { clazz = Byte.TYPE; }
+        else if ( clazz == Short.class     ) { clazz = Short.TYPE; }
+        else if ( clazz == Integer.class   ) { clazz = Integer.TYPE; }
+        else if ( clazz == Long.class      ) { clazz = Long.TYPE; }
+        else if ( clazz == Float.class     ) { clazz = Float.TYPE; }
+        else if ( clazz == Double.class    ) { clazz = Double.TYPE; }
+        else if ( clazz == Void.class      ) { clazz = Void.TYPE; }
+        return clazz;
     }
 
     /**
@@ -322,9 +301,8 @@ public class ReflectionHelper {
 
         if (ctor == null && argTypes != null && argTypes.length > 0) {
             List<Class<?>> argumentsClasses = Arrays.asList(argTypes);
-            List<Class<?>> argumentsClassList = convertArgumentClassesToPrimitives(argumentsClasses);
             for (Constructor<?> possible : cls.getDeclaredConstructors()) {
-                if (argsMatch(argumentsClasses, argumentsClassList, possible.getParameterTypes())) {
+                if (argsMatch(argumentsClasses, possible.getParameterTypes())) {
                     ctor = possible;
                     break;
                 }

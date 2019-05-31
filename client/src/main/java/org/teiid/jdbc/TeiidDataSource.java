@@ -336,8 +336,9 @@ public class TeiidDataSource extends BaseDataSource {
      * @since 5.5
      */
     public String getAlternateServers() {
-        if ( this.alternateServers != null && this.alternateServers.length() < 1 )
+        if ( this.alternateServers != null && this.alternateServers.length() < 1 ) {
             return null;
+        }
         return this.alternateServers;
     }
 
@@ -383,8 +384,9 @@ public class TeiidDataSource extends BaseDataSource {
      */
     public void setAlternateServers(final String servers) {
         this.alternateServers = servers;
-        if ( this.alternateServers != null && this.alternateServers.length() < 1 )
+        if ( this.alternateServers != null && this.alternateServers.length() < 1 ) {
             this.alternateServers = null;
+        }
     }
 
 
@@ -419,7 +421,7 @@ public class TeiidDataSource extends BaseDataSource {
 
     /**
      * The reason why "socketsPerVM" is invalid.
-     * @param value of "socketsPerVM" property
+     * @param socketsPerVM property
      * @return reason
      */
     public static String reasonWhyInvalidSocketsPerVM(final String socketsPerVM) {
@@ -440,7 +442,7 @@ public class TeiidDataSource extends BaseDataSource {
 
     /**
      * The reason why "stickyConnections" is invalid.
-     * @param value of "stickyConnections" property
+     * @param stickyConnections property
      * @return reason
      */
     public static String reasonWhyInvalidStickyConnections(final String stickyConnections) {
@@ -461,7 +463,7 @@ public class TeiidDataSource extends BaseDataSource {
     }
 
     /**
-     * @param transparentFailover The transparentFailover to set.
+     * @param autoFailover The transparentFailover to set.
      */
     public void setAutoFailover(String autoFailover) {
         this.autoFailover = autoFailover;
@@ -486,7 +488,6 @@ public class TeiidDataSource extends BaseDataSource {
     /**
      * When set to true, the connection uses the passed in security domain to do the authentication.
      * @since 7.1
-     * @return
      */
     public void setPassthroughAuthentication(final boolean passthroughAuthentication) {
         this.passthroughAuthentication = passthroughAuthentication;

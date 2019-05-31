@@ -442,8 +442,9 @@ public class Base64
                         b4Posn = 0;
 
                         // If that was the equals sign, break out of 'for' loop
-                        if( sbiCrop == EQUALS_SIGN )
+                        if( sbiCrop == EQUALS_SIGN ) {
                             break;
+                        }
                     }   // end if: quartet built
 
                 }   // end if: equals sign or better

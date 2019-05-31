@@ -56,6 +56,8 @@
 
     <!-- Checks for blocks. You know, those {}'s         -->
     <!-- See http://checkstyle.sf.net/config_blocks.html -->
+    <!-- there's quite a few generated equality methods that
+         don't use braces -->
     <!-- <module name="NeedBraces"/> -->
 
     <!-- Checks for imports                              -->
