@@ -11,5 +11,6 @@
     <dependencies>
         <module name="javax.api" />
         <module name="asm.asm" />
+        <module name="org.slf4j" />
     </dependencies>
 </module>
