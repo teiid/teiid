@@ -146,6 +146,9 @@ public class LocalClient implements Client {
         if (props.getProperty(LocalProfile.WAIT_FOR_LOAD) == null) {
             props.setProperty(LocalProfile.WAIT_FOR_LOAD, "0"); //$NON-NLS-1$
         }
+        if (props.getProperty(TeiidURL.CONNECTION.APP_NAME) == null) {
+            props.setProperty(TeiidURL.CONNECTION.APP_NAME, "OData"); //$NON-NLS-1$
+        }
         ConnectionImpl connection = driver.connect(sb.toString(), props);
         return connection;
     }
