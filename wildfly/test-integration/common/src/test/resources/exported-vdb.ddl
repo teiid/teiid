@@ -4,7 +4,7 @@
 # START DATABASE foo
 ###########################################
 */
-CREATE DATABASE foo VERSION '1' OPTIONS ("connection-type" 'BY_VERSION', "deployment-name" 'foo-vdb.ddl');
+CREATE DATABASE foo VERSION '1' OPTIONS ("deployment-name" 'foo-vdb.ddl');
 USE DATABASE foo VERSION '1';
 
 --############ Translators ############
