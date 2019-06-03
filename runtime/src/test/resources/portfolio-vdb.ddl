@@ -4,7 +4,7 @@
 # START DATABASE Portfolio
 ###########################################
 */
-CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', "connection-type" 'BY_VERSION', UseConnectorMetadata 'true');
+CREATE DATABASE Portfolio VERSION '1' OPTIONS (ANNOTATION 'A Dynamic VDB', UseConnectorMetadata 'true');
 USE DATABASE Portfolio VERSION '1';
 
 --############ Translators ############
@@ -38,7 +38,7 @@ CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
 --############ Schema:MarketData ############
 SET SCHEMA MarketData;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
+IMPORT FROM SERVER "text-connector" INTO MarketData;
 
 
 --############ Schema:Accounts ############

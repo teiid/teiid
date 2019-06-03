@@ -74,6 +74,9 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
     }
 
     public void setConnectionType(ConnectionType allowConnections) {
+        if (allowConnections == null) {
+            this.connectionType = ConnectionType.BY_VERSION;
+        }
         this.connectionType = allowConnections;
     }
 

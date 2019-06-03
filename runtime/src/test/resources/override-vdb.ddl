@@ -4,7 +4,7 @@
 # START DATABASE override
 ###########################################
 */
-CREATE DATABASE override VERSION '1' OPTIONS ("connection-type" 'BY_VERSION');
+CREATE DATABASE override VERSION '1';
 USE DATABASE override VERSION '1';
 
 --############ Translators ############
@@ -24,7 +24,7 @@ CREATE SCHEMA test SERVER s1;
 --############ Schema:test ############
 SET SCHEMA test;
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER s1 INTO test;
+IMPORT FROM SERVER s1 INTO test;
 
 
 /*

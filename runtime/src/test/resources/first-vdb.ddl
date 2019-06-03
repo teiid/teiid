@@ -4,7 +4,7 @@
 # START DATABASE empty
 ###########################################
 */
-CREATE DATABASE empty VERSION '2' OPTIONS ("connection-type" 'BY_VERSION');
+CREATE DATABASE empty VERSION '2';
 USE DATABASE empty VERSION '2';
 
 --############ Translators ############

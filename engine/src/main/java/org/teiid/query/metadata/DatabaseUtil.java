@@ -25,16 +25,23 @@ import org.teiid.adminapi.DataPolicy.DataPermission;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.metadata.*;
+import org.teiid.metadata.DataWrapper;
+import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
+import org.teiid.metadata.Grant;
 import org.teiid.metadata.Grant.Permission;
 import org.teiid.metadata.Grant.Permission.Privilege;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Role;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Server;
 
 public class DatabaseUtil {
 
@@ -44,7 +51,9 @@ public class DatabaseUtil {
         if (vdb.getDescription() != null) {
             db.setAnnotation(vdb.getDescription());
         }
-        db.setProperty("connection-type", vdb.getConnectionType().name());
+        if (ConnectionType.BY_VERSION != vdb.getConnectionType()) {
+            db.setProperty("connection-type", vdb.getConnectionType().name());
+        }
 
         db.getMetadataStore().addDataTypes(metadataStore.getDatatypes());
 

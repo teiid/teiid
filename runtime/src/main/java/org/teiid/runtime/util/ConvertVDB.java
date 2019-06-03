@@ -161,9 +161,6 @@ public class ConvertVDB {
                     String replace = "";
                     String sourceName = m.getSourceNames().isEmpty()?"":m.getSourceNames().get(0);
                     String schemaName = m.getPropertiesMap().get("importer.schemaPattern");
-                    if (schemaName == null) {
-                        schemaName = "%";
-                    }
 
                     if (m.getSourceMetadataType().isEmpty()) {
                         // nothing defined; so this is NATIVE only
@@ -192,7 +189,11 @@ public class ConvertVDB {
         }
 
         private String replaceMetadataTag(ModelMetaData m, String sourceName, String schemaName, boolean server) {
-            String replace = "IMPORT FOREIGN SCHEMA "+SQLStringVisitor.escapeSinglePart(schemaName)+" FROM " + (server?"SERVER ":"REPOSITORY ")+SQLStringVisitor.escapeSinglePart(sourceName)+" INTO "+SQLStringVisitor.escapeSinglePart(m.getName());
+            String replace = "IMPORT";
+            if (schemaName != null) {
+                replace += " FOREIGN SCHEMA "+SQLStringVisitor.escapeSinglePart(schemaName);
+            }
+            replace += " FROM " + (server?"SERVER ":"REPOSITORY ")+SQLStringVisitor.escapeSinglePart(sourceName)+" INTO "+SQLStringVisitor.escapeSinglePart(m.getName());
             if (!m.getPropertiesMap().isEmpty()) {
                replace += " OPTIONS (\n";
                Iterator<String> it = m.getPropertiesMap().keySet().iterator();

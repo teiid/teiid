@@ -8,4 +8,4 @@ CREATE SERVER "text-connector" FOREIGN DATA WRAPPER "file" OPTIONS ("jndi-name" 
 
 CREATE SCHEMA MarketData SERVER "text-connector" OPTIONS (multisource true, "multisource.addColumn" true);
 
-IMPORT FOREIGN SCHEMA "%" FROM SERVER "text-connector" INTO MarketData;
+IMPORT FROM SERVER "text-connector" INTO MarketData;
