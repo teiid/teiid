@@ -63,7 +63,4 @@ public class Server extends AbstractMetadataRecord {
         setProperty("jndi-name", value); //$NON-NLS-1$
     }
 
-    public boolean isVirtual() {
-        return type == null;
-    }
 }

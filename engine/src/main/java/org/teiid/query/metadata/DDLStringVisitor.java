@@ -359,7 +359,7 @@ public class DDLStringVisitor {
     private void visit(Server server) {
         append(CREATE).append(SPACE).append(SERVER).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(server.getName()));
-        if (!server.isVirtual()) {
+        if (server.getType() != null) {
             append(SPACE).append(TYPE).append(SPACE).append(new Constant(server.getType()));
         }
         if (server.getVersion() != null) {

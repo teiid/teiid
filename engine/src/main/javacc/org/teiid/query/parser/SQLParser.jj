@@ -5306,7 +5306,7 @@ void createNameSpace(DatabaseStore dbStore) :
 /*
 name=create database
 description=create a new database
-example=[source,sql]\n----\nCREATE DATABASE foo [VERSION 'version'] OPTIONS(...)\n----\n
+example=[source,sql]\n----\nCREATE DATABASE foo OPTIONS(x 'y')\n----\n
 */
 void createDatabase(DatabaseStore dbStore) :
 {
@@ -5339,7 +5339,7 @@ void createDatabase(DatabaseStore dbStore) :
 /*
 name=use database
 description=database into working context
-example=[source,sql]\n----\nUSE DATABASE foo [VERSION 'version']\n----\n
+example=[source,sql]\n----\nUSE DATABASE foo\n----\n
 */
 void useDatabase(DatabaseStore dbStore) :
 {
@@ -5357,7 +5357,7 @@ void useDatabase(DatabaseStore dbStore) :
 /*
 name=drop database
 description=drop database 
-example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
+example=[source,sql]\n----\nDROP DATABASE\n----\n
 */
 /*void dropDatabase(DatabaseStore dbStore) :
 {
@@ -5376,7 +5376,7 @@ example=[source,sql]\n----\nDROP DATABASE foo [VERSION 'version']\n----\n
 /*
 name=create schema
 description=create a schema in database
-example=[source,sql]\n----\nCREATE [VIRTUAL] SCHEMA foo SERVER (s1,s2,s3) OPTIONS(...)\n----\n
+example=[source,sql]\n----\nCREATE VIRTUAL SCHEMA foo SERVER (s1,s2,s3);\n----\n
 */
 void createSchema(DatabaseStore dbStore) :
 {
@@ -5530,7 +5530,7 @@ void dropDataWrapper(DatabaseStore dbStore) :
 /*
 name=create role 
 description=Defines data role for the database
-example=[source,sql]\n----\nCREATE DATA ROLE <data-role>  [WITH JAAS ROLE <string>(,<string>)*]\n----\n
+example=[source,sql]\n----\nCREATE DATA ROLE lowly WITH JAAS ROLE 'enterprise=role'\n----\n
 */
 void createRole(DatabaseStore dbStore) :
 {
@@ -5711,9 +5711,9 @@ void revokeGrantOption(DatabaseStore dbStore) :
 }
 
 /*
-name=create server, aka data source
-description=Defines connection to foreign source
-example=[source,sql]\n----\nCREATE SERVER server_name [ TYPE 'server_type' ] [ VERSION 'server_version' ] FOREIGN (<DATA> <WRAPPER>|<TRANSLATOR>)  fdw_name [ OPTIONS ( option 'value' [, ... ] ) ]\n----\n
+name=create server
+description=Defines a connection to a source
+example=[source,sql]\n----\nCREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("jndi-name" 'java:/accounts-ds');\n----\n
 */
 void createServer(DatabaseStore dbStore) :
 {
@@ -5761,7 +5761,7 @@ void createServer(DatabaseStore dbStore) :
 }
 
 /*
-name=drop server, aka data source
+name=drop server
 description=Defines dropping connection to foreign source
 example=[source,sql]\n----\DROP SERVER server_name\n----\n
 */
@@ -5857,7 +5857,7 @@ CreateProcedureCommand createDDLProcedure(DatabaseStore dbStore, ParseInfo info)
 /*
 name=drop procedure
 description=Drops a table or view.
-example=[source,sql]\n----\nDROP [FOREIGN (TABLE|VIEW) table-name\n----\n
+example=[source,sql]\n----\nDROP FOREIGN TABLE table-name\n----\n
 */
 void dropProcedure(DatabaseStore dbStore) :
 {
@@ -6040,7 +6040,7 @@ void createView(DatabaseStore dbStore) :
 /*
 name=drop table
 description=Drops a table or view.
-example=[source,sql]\n----\nDROP (FOREIGN TABLE | [VIRTUAL] VIEW) table-name\n----\n
+example=[source,sql]\n----\nDROP VIEW name\n----\n
 */
 void dropTableView(DatabaseStore dbStore) :
 {
@@ -6510,7 +6510,7 @@ void alterStatement(DatabaseStore dbStore) :
 /*
 name=ALTER TABLE 
 description=alters options of database
-example=[source,sql]\n----\nALTER TABLE foo (ADD|DROP|ALTER) COLUMN <name> <type> OPTIONS ( (ADD|SET|DROP) x y)\n----\n
+example=[source,sql]\n----\nALTER TABLE foo ADD COLUMN x xml\n----\n
 */
 void alterTable(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6674,7 +6674,7 @@ void alterRenameColumn(String objectName, Database.ResourceType type, DatabaseSt
 /*
 name=ALTER PROCEDURE 
 description=alters options of database
-example=[source,sql]\n----\nALTER PROCEDURE foo [AS <stmt>] OPTIONS (ADD x y)\n----\n
+example=[source,sql]\n----\nALTER PROCEDURE foo OPTIONS (ADD x y)\n----\n
 */
 void alterProcedure(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6702,7 +6702,7 @@ void alterProcedure(DatabaseStore dbStore, ParseInfo info) :
 /*
 name=ALTER TRIGGER 
 description=alters options of table triggers
-example=[source,sql]\n----\nALTER TRIGGER ON <id> INSTEAD OF (INSERT|UPDATE|DELETE) AS [ENABLED|DISABLED]\n----\n
+example=[source,sql]\n----\nALTER TRIGGER ON vw INSTEAD OF INSERT ENABLED\n----\n
 */
 void alterTrigger(DatabaseStore dbStore, ParseInfo info) :
 {
@@ -6740,7 +6740,7 @@ void alterServer(DatabaseStore dbStore) :
 /*
 name=ALTER DATA WRAPPER 
 description=alters options of data wrapper
-example=[source,sql]\n----\nALTER [DATA WRAPPER|TRANSLATOR] foo OPTIONS (ADD x y)\n----\n
+example=[source,sql]\n----\nALTER DATA WRAPPER foo OPTIONS (ADD x y)\n----\n
 */
 void alterTranslator(DatabaseStore dbStore) :
 {
@@ -6885,7 +6885,7 @@ void alterChildOptionPair(String objectName, Database.ResourceType type, String 
 /*
 name=Import foreign schema
 description=imports schema metadata from server
-example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo [LIMIT TO (x,y,z)|EXCEPT (x,y,z)] FROM SERVER bar\n----\n
+example=[source,sql]\n----\nIMPORT FOREIGN SCHEMA foo FROM SERVER bar\n----\n
 */
 void importSchema(DatabaseStore dbStore) :
 {
@@ -6921,7 +6921,7 @@ void importSchema(DatabaseStore dbStore) :
 /*
 name=Import another Database
 description=imports another database into current database
-example=[source,sql]\n----\nIMPORT DATABASE <id> VERSION <string-val> [WITH ACCESS CONTROL]\n----\n
+example=[source,sql]\n----\nIMPORT DATABASE vdb VERSION '1.2.3' WITH ACCESS CONTROL]\n----\n
 */
 void importDatabase(DatabaseStore dbStore) :
 {

@@ -1218,7 +1218,7 @@ public class TestDDLParser {
         assertEquals("2", db.getVersion());
         Server s = db.getServer("x");
         assertNotNull(s);
-        assertTrue(s.isVirtual());
+        assertNull(s.getType());
     }
 
     @Test
