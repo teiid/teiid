@@ -60,6 +60,8 @@ public class SQLParserUtil {
 
     public static final boolean RESULT_ANY_POSITION = PropertiesUtils.getHierarchicalProperty("org.teiid.resultAnyPosition", false, Boolean.class); //$NON-NLS-1$
 
+    public static final boolean CONDITION_CONSTRAINT_DEFAULT = PropertiesUtils.getHierarchicalProperty("org.teiid.conditionConstraintDefault", true, Boolean.class); //$NON-NLS-1$
+
     String prependSign(String sign, String literal) {
         if (sign != null && sign.charAt(0) == '-') {
             return sign + literal;

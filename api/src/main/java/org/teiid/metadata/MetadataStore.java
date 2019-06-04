@@ -145,7 +145,7 @@ public class MetadataStore implements Serializable {
                         }
                         if (addPermission.getCondition() != null) {
                             if (currentPermission.getCondition() != null) {
-                                throw new MetadataException(DataPlugin.Event.TEIID60036, DataPlugin.Util.gs(DataPlugin.Event.TEIID60036, addPermission.getMask(), currentPermission.getMask()));
+                                throw new MetadataException(DataPlugin.Event.TEIID60036, DataPlugin.Util.gs(DataPlugin.Event.TEIID60036, addPermission.getCondition(), currentPermission.getCondition()));
                             }
                             currentPermission.setCondition(addPermission.getCondition(), addPermission.isConditionAConstraint());
                         }

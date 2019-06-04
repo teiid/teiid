@@ -318,8 +318,12 @@ public class DDLStringVisitor {
         if (!revoke && permission.getCondition() != null) {
             append(SPACE).append(CONDITION);
             if (!revoke) {
-                if (permission.isConditionAConstraint() != null && permission.isConditionAConstraint()) {
-                    append(SPACE).append(CONSTRAINT);
+                if (permission.isConditionAConstraint() != null) {
+                    append(SPACE);
+                    if (!permission.isConditionAConstraint()) {
+                        append(NOT).append(SPACE);
+                    }
+                    append(CONSTRAINT);
                 }
                 append(SPACE).append(new Constant(permission.getCondition()));
             }

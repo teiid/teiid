@@ -5600,7 +5600,10 @@ void grantOption(DatabaseStore dbStore) :
     String mask = null;
     int maskOrder = -1;
     String condition = null;
-    boolean isConstraint = false;
+    Boolean isConstraint = null;
+    if (!CONDITION_CONSTRAINT_DEFAULT) {
+        isConstraint = false;
+    }
     String to = null;
     ArrayList<Grant.Permission.Privilege> privileges = new ArrayList<Grant.Permission.Privilege>();
     Grant.Permission permission = new Grant.Permission();
@@ -5611,10 +5614,10 @@ void grantOption(DatabaseStore dbStore) :
        [readGrantTypes(privileges) (<COMMA> readGrantTypes(privileges))*]
        <ON> ( 
         <TABLE> resource = id(null) {on = Database.ResourceType.TABLE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> [[<NOT>{isConstraint=false;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()] |
         <FUNCTION> resource = id(null) {on = Database.ResourceType.FUNCTION;} |
         <PROCEDURE> resource = id(null) {on = Database.ResourceType.PROCEDURE;} 
-        	[<CONDITION> [<CONSTRAINT> {isConstraint=true;}] condition = stringVal()] |
+        	[<CONDITION> [[<NOT>{isConstraint=true;}] <CONSTRAINT> {if (isConstraint == null) isConstraint=true;}] condition = stringVal()] |
         <SCHEMA> resource = id(null) {on = Database.ResourceType.SCHEMA;} |
         <COLUMN> resource = id(null) {on = Database.ResourceType.COLUMN;} 
             [<MASK> [<ORDER> maskOrder = intVal()] mask = stringVal()] 
