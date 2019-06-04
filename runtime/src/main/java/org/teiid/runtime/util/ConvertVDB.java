@@ -27,6 +27,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.StringTokenizer;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -171,12 +172,16 @@ public class ConvertVDB {
                         // may one or more defined
                         for (int i = 0; i < m.getSourceMetadataType().size(); i++) {
                             String type =  m.getSourceMetadataType().get(i);
-                            if (type.equalsIgnoreCase("NATIVE")) {
-                                replace += replaceMetadataTag(m, sourceName, schemaName, true);
-                            } else if (!type.equalsIgnoreCase("DDL")){
-                                replace += replaceMetadataTag(m, type, schemaName, false);
-                            } else {
-                                replace += m.getSourceMetadataText().get(i) + "\n"; //$NON-NLS-1$
+                            StringTokenizer st = new StringTokenizer(type, ",");
+                            while (st.hasMoreTokens()) {
+                                type = st.nextToken().trim();
+                                if (type.equalsIgnoreCase("NATIVE")) {
+                                    replace += replaceMetadataTag(m, sourceName, schemaName, true);
+                                } else if (!type.equalsIgnoreCase("DDL")){
+                                    replace += replaceMetadataTag(m, type, schemaName, false);
+                                } else {
+                                    replace += m.getSourceMetadataText().get(i) + "\n"; //$NON-NLS-1$
+                                }
                             }
                         }
                     }
