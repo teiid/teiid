@@ -1268,7 +1268,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
             LogManager.logDetail(LogConstants.CTX_DQP, "source", aqr.getConnectorName(), "no longer exists, returning dummy results"); //$NON-NLS-1$ //$NON-NLS-2$
             return CollectionTupleSource.createNullTupleSource();
         }
-        ConnectorWork work = connectorManager.registerRequest(aqr);
+        ConnectorWork work;
+        try {
+            work = connectorManager.registerRequest(aqr);
+        } catch (TranslatorException te) {
+            throw new TeiidProcessingException(te);
+        }
         if (!work.isForkable()) {
             aqr.setSerial(true);
         }

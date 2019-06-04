@@ -53,6 +53,7 @@ import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.BulkCommand;
 import org.teiid.language.Call;
+import org.teiid.language.Select;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -129,7 +130,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 
     private Span span;
 
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException, TranslatorException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -170,6 +171,9 @@ public class ConnectorWorkItem implements ConnectorWork {
         factory.setConvertIn(!this.connector.supportsInCriteria());
 
         translatedCommand = factory.translate(message.getCommand());
+        if (connector.isImmutable() && !(translatedCommand instanceof Call || translatedCommand instanceof Select)) {
+            throw new TranslatorException(QueryPlugin.Event.TEIID31299, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31299));
+        }
         List<Expression> symbols = this.requestMsg.getCommand().getProjectedSymbols();
         this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
@@ -632,7 +636,7 @@ public class ConnectorWorkItem implements ConnectorWork {
                             }
                             if (copyStreamingLobs) {
                                 //if we are free, then we're either streaming or invalid
-                                if (InputStreamFactory.getStorageMode((Streamable<?>) result) == StorageMode.FREE) {
+                                if (InputStreamFactory.getStorageMode(result) == StorageMode.FREE) {
                                     try {
                                         requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
                                         explicitClose = true;

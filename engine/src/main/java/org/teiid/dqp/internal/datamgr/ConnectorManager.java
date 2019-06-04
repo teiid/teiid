@@ -212,7 +212,7 @@ public class ConnectorManager  {
         return resultCaps;
     }
 
-    public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
+    public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException, TranslatorException {
         checkStatus();
         AtomicRequestID atomicRequestId = message.getAtomicRequestID();
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {atomicRequestId, "Create State"}); //$NON-NLS-1$
@@ -257,7 +257,6 @@ public class ConnectorManager  {
 
     /**
      * initialize this <code>ConnectorManager</code>.
-     * @throws TranslatorException
      */
     public void start() {
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, QueryPlugin.Util.getString("ConnectorManagerImpl.Initializing_connector", translatorName)); //$NON-NLS-1$

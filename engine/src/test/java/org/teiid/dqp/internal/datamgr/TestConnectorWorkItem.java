@@ -38,7 +38,6 @@ import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
@@ -204,15 +203,7 @@ public class TestConnectorWorkItem {
         assertEquals(1, fc.getCloseCount());
     }
 
-    @Ignore
-    @Test public void testIsImmutablePropertySucceeds() throws Exception {
-        /*
-         * Setup:
-         *  1. requestMsg.isTransactional() must be TRUE
-         *  2. manager.isXa() must be FALSE  ()
-         *  3. command must NOT be a SELECT
-         *  4. Then, set isImmutable to TRUE, we should SUCCEED
-         */
+    @Test(expected=TranslatorException.class) public void testIsImmutable() throws Exception {
         ConnectorManager cm = TestConnectorManager.getConnectorManager();
         ((FakeConnector)cm.getExecutionFactory()).setImmutable(true);
 
@@ -232,15 +223,7 @@ public class TestConnectorWorkItem {
         new ConnectorWorkItem(requestMsg, cm);
     }
 
-    @Ignore
-    @Test(expected=TranslatorException.class) public void testIsImmutablePropertyFails() throws Exception {
-        /*
-         * Setup:
-         *  1. requestMsg.isTransactional() must be TRUE
-         *  2. manager.isXa() must be FALSE  ()
-         *  3. command must NOT be a SELECT
-         *  4. Then, set isImmutable to FALSE, and we should FAIL
-         */
+    @Test public void testIsImmutableFalse() throws Exception {
         ConnectorManager cm = TestConnectorManager.getConnectorManager();
         ((FakeConnector)cm.getExecutionFactory()).setImmutable(false);
 

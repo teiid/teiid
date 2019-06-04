@@ -308,12 +308,10 @@ public class ExecutionFactory<F, C> {
                 List<Argument> arguments = obj.getArguments();
                 return createDirectExecution(arguments, command, executionContext, metadata, connection);
             }
+            return createProcedureExecution((Call)command, executionContext, metadata, connection);
         }
         if (command instanceof QueryExpression) {
             return createResultSetExecution((QueryExpression)command, executionContext, metadata, connection);
-        }
-        if (command instanceof Call) {
-            return createProcedureExecution((Call)command, executionContext, metadata, connection);
         }
         return createUpdateExecution(command, executionContext, metadata, connection);
     }
@@ -1392,6 +1390,9 @@ public class ExecutionFactory<F, C> {
 
     @TranslatorProperty(display="Transaction Support", description="The level of transaction support. Used by the engine to determine if a transaction is needed for autoCommit mode.", advanced=true)
     public TransactionSupport getTransactionSupport() {
+        if (this.isImmutable()) {
+            return TransactionSupport.NONE;
+        }
         return transactionSupport;
     }
 
