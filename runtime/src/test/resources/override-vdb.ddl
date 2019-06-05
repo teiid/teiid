@@ -14,7 +14,7 @@ CREATE FOREIGN DATA WRAPPER "mysql-override" TYPE mysql OPTIONS (RequiresCriteri
 
 
 --############ Servers ############
-CREATE SERVER s1 FOREIGN DATA WRAPPER "mysql-override" OPTIONS ("jndi-name" 'java:/mysqlDS');
+CREATE SERVER s1 FOREIGN DATA WRAPPER "mysql-override" OPTIONS ("resource-name" 'java:/mysqlDS');
 
 
 --############ Schemas ############

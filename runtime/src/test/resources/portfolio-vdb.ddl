@@ -14,9 +14,9 @@ CREATE FOREIGN DATA WRAPPER h2;
 
 
 --############ Servers ############
-CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("jndi-name" 'java:/accounts-ds');
+CREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("resource-name" 'java:/accounts-ds');
 
-CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("jndi-name" 'java:/marketdata-file');
+CREATE SERVER "text-connector" FOREIGN DATA WRAPPER file OPTIONS ("resource-name" 'java:/marketdata-file');
 
 
 --############ Schemas ############

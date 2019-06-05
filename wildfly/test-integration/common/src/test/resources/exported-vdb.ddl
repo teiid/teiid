@@ -12,7 +12,7 @@ CREATE FOREIGN DATA WRAPPER loopback;
 
 
 --############ Servers ############
-CREATE SERVER NONE FOREIGN DATA WRAPPER loopback OPTIONS ("jndi-name" 'NONE');
+CREATE SERVER NONE FOREIGN DATA WRAPPER loopback OPTIONS ("resource-name" 'NONE');
 
 
 --############ Schemas ############

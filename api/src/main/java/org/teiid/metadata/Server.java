@@ -55,12 +55,16 @@ public class Server extends AbstractMetadataRecord {
         this.dataWrapperName = wrapperName;
     }
 
-    public String getJndiName() {
-        return getProperty("jndi-name", false);//$NON-NLS-1$
+    public String getResourceName() {
+        String result = getProperty("resource-name", false);//$NON-NLS-1$
+        if (result != null) {
+            return result;
+        }
+        return getProperty("jndi-name", false); //$NON-NLS-1$
     }
 
-    public void setJndiName(String value) {
-        setProperty("jndi-name", value); //$NON-NLS-1$
+    public void setResourceName(String value) {
+        setProperty("resource-name", value); //$NON-NLS-1$
     }
 
 }

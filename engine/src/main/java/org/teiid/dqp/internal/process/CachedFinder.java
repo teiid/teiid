@@ -94,7 +94,7 @@ public class CachedFinder implements CapabilitiesFinder {
             //TOOD: in multi-source mode it may be necessary to compute minimal capabilities across the sources
             ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
             if (mgr == null) {
-                throw new TeiidComponentException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, sourceName, modelName, sourceName));
+                throw new TeiidComponentException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, modelName, sourceName));
             }
             try {
                 caps = mgr.getCapabilities();

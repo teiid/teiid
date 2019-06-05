@@ -97,7 +97,7 @@ public class DatabaseUtil {
 
                     // add servers
                     Server server = new Server(s.getName());
-                    server.setJndiName(s.getConnectionJndiName());
+                    server.setResourceName(s.getConnectionJndiName());
                     server.setDataWrapper(s.getTranslatorName());
                     // no need to add duplicate definitions.
                     if (db.getServer(s.getName()) == null) {
@@ -244,7 +244,7 @@ public class DatabaseUtil {
 
                 for (Server server : schema.getServers()) {
                     // if there are more properties to create DS they will be lost in this translation
-                    String connectionName = server.getJndiName();
+                    String connectionName = server.getResourceName();
                     if (connectionName == null) {
                         connectionName = server.getName();
                     }

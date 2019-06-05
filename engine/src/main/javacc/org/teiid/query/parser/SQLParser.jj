@@ -5715,7 +5715,7 @@ void revokeGrantOption(DatabaseStore dbStore) :
 /*
 name=create server
 description=Defines a connection to a source
-example=[source,sql]\n----\nCREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("jndi-name" 'java:/accounts-ds');\n----\n
+example=[source,sql]\n----\nCREATE SERVER "h2-connector" FOREIGN DATA WRAPPER h2 OPTIONS ("resource-name" 'java:/accounts-ds');\n----\n
 */
 void createServer(DatabaseStore dbStore) :
 {

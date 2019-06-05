@@ -6,7 +6,7 @@ CREATE FOREIGN DATA WRAPPER "file";
 
 CREATE FOREIGN DATA WRAPPER "file1" TYPE "file" OPTIONS (exceptionIfFileNotFound false);
 
-CREATE SERVER "text-connector" FOREIGN DATA WRAPPER "file1" OPTIONS ("jndi-name" 'java:/test-file');
+CREATE SERVER "text-connector" FOREIGN DATA WRAPPER "file1" OPTIONS ("resource-name" 'java:/test-file');
 
 CREATE SCHEMA MarketData SERVER "text-connector" OPTIONS (multisource true);
 

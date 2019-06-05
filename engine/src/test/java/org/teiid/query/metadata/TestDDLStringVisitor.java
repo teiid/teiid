@@ -511,7 +511,7 @@ public class TestDDLStringVisitor {
 
         Server s = new Server("testing");
         s.setDataWrapper(dw.getName());
-        s.setJndiName("java://test-server");
+        s.setResourceName("java://test-server");
         s.setType("orcl");
         db.addServer(s);
 
@@ -539,7 +539,7 @@ public class TestDDLStringVisitor {
                 "CREATE FOREIGN DATA WRAPPER orcle;\n" +
                 "\n" +
                 "\n--############ Servers ############\n" +
-                "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"jndi-name\" 'java://test-server');\n" +
+                "CREATE SERVER testing TYPE 'orcl' FOREIGN DATA WRAPPER orcle OPTIONS (\"resource-name\" 'java://test-server');\n" +
                 "\n" +
                 "\n--############ Schemas ############\n" +
                 "CREATE SCHEMA SchemaA SERVER testing OPTIONS (ANNOTATION 'x', VISIBLE 'false');\n\n" +

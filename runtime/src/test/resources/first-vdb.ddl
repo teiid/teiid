@@ -12,7 +12,7 @@ CREATE FOREIGN DATA WRAPPER y;
 
 
 --############ Servers ############
-CREATE SERVER z FOREIGN DATA WRAPPER y OPTIONS ("jndi-name" 'z');
+CREATE SERVER z FOREIGN DATA WRAPPER y OPTIONS ("resource-name" 'z');
 
 
 --############ Schemas ############

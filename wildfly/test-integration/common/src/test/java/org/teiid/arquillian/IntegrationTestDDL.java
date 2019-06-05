@@ -18,11 +18,9 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.sql.SQLException;
 
 import org.jboss.arquillian.junit.Arquillian;
