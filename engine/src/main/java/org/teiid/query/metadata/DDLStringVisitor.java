@@ -334,18 +334,17 @@ public class DDLStringVisitor {
     }
 
     private void visit(Role role) {
-        append(CREATE).append(SPACE).append(ROLE.toUpperCase()).append(SPACE)
+        append(CREATE).append(SPACE).append(ROLE).append(SPACE)
                 .append(SQLStringVisitor.escapeSinglePart(role.getName()));
-        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
-            append(SPACE).append(WITH).append(SPACE).append(JAAS).append(SPACE).append(ROLE);
-            for (String str:role.getJassRoles()) {
+        if (role.isAnyAuthenticated()) {
+            append(SPACE).append(WITH).append(SPACE).append(ANY).append(SPACE).append(AUTHENTICATED);
+        } else if (role.getMappedRoles() != null && !role.getMappedRoles().isEmpty()) {
+            append(SPACE).append(WITH).append(SPACE).append(FOREIGN).append(SPACE).append(ROLE);
+            for (String str:role.getMappedRoles()) {
                 append(SPACE).append(SQLStringVisitor.escapeSinglePart(str));
             }
         }
 
-        if (role.isAnyAuthenticated()) {
-            append(SPACE).append(WITH).append(SPACE).append(ANY).append(SPACE).append(AUTHENTICATED);
-        }
         append(SEMICOLON);
     }
 

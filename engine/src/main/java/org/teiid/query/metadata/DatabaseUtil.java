@@ -114,7 +114,7 @@ public class DatabaseUtil {
             DataPolicyMetadata dpm = vdb.getDataPolicyMap().get(key);
             Role role = new Role(dpm.getName());
             if (dpm.getMappedRoleNames() != null && !dpm.getMappedRoleNames().isEmpty()) {
-                role.setJaasRoles(dpm.getMappedRoleNames());
+                role.setMappedRoles(dpm.getMappedRoleNames());
             }
 
             if (dpm.isAnyAuthenticated()) {
@@ -319,8 +319,8 @@ public class DatabaseUtil {
 
         dpm.setDescription(role.getAnnotation());
 
-        if (role.getJassRoles() != null && !role.getJassRoles().isEmpty()) {
-            dpm.setMappedRoleNames(role.getJassRoles());
+        if (role.getMappedRoles() != null && !role.getMappedRoles().isEmpty()) {
+            dpm.setMappedRoleNames(role.getMappedRoles());
         }
 
         if (role.isAnyAuthenticated()) {

@@ -20,7 +20,7 @@ CREATE SCHEMA PM1 SERVER z;
 
 
 --############ Roles ############
-CREATE ROLE admin WITH JAAS ROLE superuser;
+CREATE ROLE admin WITH FOREIGN ROLE superuser;
 
 
 --############ Schema:PM1 ############

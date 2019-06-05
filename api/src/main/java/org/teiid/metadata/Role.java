@@ -22,22 +22,26 @@ import java.util.List;
 
 public class Role extends AbstractMetadataRecord {
     private static final long serialVersionUID = 1379125260214964302L;
-    private List<String> jaasRoles;
+    private List<String> mappedRoles;
     private boolean anyAuthenticated;
 
     public Role(String name) {
         super.setName(name);
     }
 
-    public List<String> getJassRoles() {
-        if (this.jaasRoles != null) {
-            return new ArrayList<>(this.jaasRoles);
+    /**
+     * Get a copy of the mapped roles
+     * @return
+     */
+    public List<String> getMappedRoles() {
+        if (this.mappedRoles != null) {
+            return new ArrayList<>(this.mappedRoles);
         }
-        return jaasRoles;
+        return mappedRoles;
     }
 
-    public void setJaasRoles(List<String> jaasRoles) {
-        this.jaasRoles = new ArrayList<String>(jaasRoles);
+    public void setMappedRoles(List<String> mapped) {
+        this.mappedRoles = new ArrayList<String>(mapped);
     }
 
     public boolean isAnyAuthenticated() {

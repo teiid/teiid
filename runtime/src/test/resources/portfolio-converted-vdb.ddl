@@ -30,9 +30,9 @@ CREATE VIRTUAL SCHEMA Stocks;
 --############ Roles ############
 CREATE ROLE ReadOnly WITH ANY AUTHENTICATED;
 
-CREATE ROLE Prices WITH JAAS ROLE prices;
+CREATE ROLE Prices WITH FOREIGN ROLE prices;
 
-CREATE ROLE ReadWrite WITH JAAS ROLE superuser;
+CREATE ROLE ReadWrite WITH FOREIGN ROLE superuser;
 
 
 --############ Schema:MarketData ############

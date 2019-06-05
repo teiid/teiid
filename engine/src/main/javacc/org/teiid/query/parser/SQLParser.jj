@@ -5394,7 +5394,7 @@ void createSchema(DatabaseStore dbStore) :
         schema.setName(name);
         schema.setPhysical(physical);
     }
-    [<SERVER> readCSVString(servers)]     
+    [<SERVER> identifierList(servers)]     
     [ optionsClause(schema, dbStore.getCurrentNamespaceContainer())
       {
          OptionsUtil.setOptions(schema);
@@ -5530,7 +5530,7 @@ void dropDataWrapper(DatabaseStore dbStore) :
 /*
 name=create role 
 description=Defines data role for the database
-example=[source,sql]\n----\nCREATE DATA ROLE lowly WITH JAAS ROLE 'enterprise=role'\n----\n
+example=[source,sql]\n----\nCREATE DATA ROLE lowly WITH FOREIGN ROLE 'role'\n----\n
 */
 void createRole(DatabaseStore dbStore) :
 {
@@ -5555,16 +5555,15 @@ name=with role
 */
 void readWith(Role role) :
 {
-    List<String> jaasNames = new ArrayList<String>();
+    List<String> mappedRoles = new ArrayList<String>();
     boolean anyAuthenticated = false;
 }
 {        
-    (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;}) 
-    (<WITH>
-        (<JAAS> <ROLE> readCSVString(jaasNames) | <ANY> <AUTHENTICATED> {anyAuthenticated=true;})
-    )*
+    ((<ANY> <AUTHENTICATED> {anyAuthenticated=true;})
+    |
+    ((<JAAS>|<FOREIGN>) <ROLE> identifierList(mappedRoles))) 
     {
-        role.setJaasRoles(jaasNames);
+        role.setMappedRoles(mappedRoles);
         role.setAnyAuthenticated(anyAuthenticated);    
     } 
 }
@@ -6904,7 +6903,7 @@ void importSchema(DatabaseStore dbStore) :
 { 
     <IMPORT> [<FOREIGN> <SCHEMA> 
     foreignSchemaName = id(null)]
-    //[(<LIMIT> <TO> <LPAREN> readCSVString(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> readCSVString(excludeTables) <RPAREN>)]
+    //[(<LIMIT> <TO> <LPAREN> identifierList(includeTables) <RPAREN>) | (<EXCEPT> <LPAREN> identifierList(excludeTables) <RPAREN>)]
     <FROM> (<SERVER>{serverType = "native";}|<REPOSITORY>) serverName = id(null)    
     <INTO> schemaName = id(null)
     [optionsClause(server, dbStore.getCurrentNamespaceContainer())
@@ -6946,7 +6945,7 @@ void importDatabase(DatabaseStore dbStore) :
 /*
 name=identifier list
 */
-void readCSVString(List<String> strings) :
+void identifierList(List<String> strings) :
 {
     String name = null;
 }

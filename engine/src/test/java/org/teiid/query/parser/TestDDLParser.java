@@ -1280,20 +1280,20 @@ public class TestDDLParser {
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        assertEquals("[x, y]", role.getJassRoles().toString());
+        assertEquals("[x, y]", role.getMappedRoles().toString());
     }
 
     @Test
     public void testRoleAnyAuth() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "USE DATABASE FOO ;"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;";
+                + "CREATE ROLE superuser WITH ANY AUTHENTICATED;";
 
         Database db = helpParse(ddl);
         Role role = db.getRole("superuser");
         assertNotNull(role);
 
-        assertEquals("[x, y]", role.getJassRoles().toString());
+        assertEquals("[]", role.getMappedRoles().toString());
         assertTrue(role.isAnyAuthenticated());
     }
 
@@ -1301,7 +1301,7 @@ public class TestDDLParser {
     public void testDropRole() throws Exception {
         String ddl = "CREATE DATABASE FOO;"
                 + "USE DATABASE FOO ;"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH ANY AUTHENTICATED;"
                 + "DROP ROLE superuser";
 
         Database db = helpParse(ddl);
@@ -1319,7 +1319,7 @@ public class TestDDLParser {
                 + "CREATE  SCHEMA test SERVER pgsql;"
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH FOREIGN ROLE x,y;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;";
 
@@ -1348,7 +1348,7 @@ public class TestDDLParser {
                 + "CREATE  SCHEMA test SERVER pgsql;"
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y;"
                 + "GRANT ALL PRIVILEGES TO superuser;";
 
         Database db = helpParse(ddl);
@@ -1372,9 +1372,9 @@ public class TestDDLParser {
                 + "CREATE  SCHEMA test SERVER pgsql;"
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
-                + "CREATE ROLE otheruser WITH JAAS ROLE y WITH ANY AUTHENTICATED;"
-                + "CREATE ROLE someone WITH JAAS ROLE x WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH JAAS ROLE x,y;"
+                + "CREATE ROLE otheruser WITH JAAS ROLE y;"
+                + "CREATE ROLE someone WITH JAAS ROLE x;"
                 + "GRANT SELECT ON TABLE test.G1 CONDITION CONSTRAINT 'foo=bar' TO superuser;"
                 + "GRANT SELECT ON TABLE test.G1 CONDITION 'foo>bar' TO otheruser;"
                 + "GRANT SELECT ON TABLE test.G1 CONDITION NOT CONSTRAINT 'foo<bar' TO someone;";
@@ -1412,7 +1412,7 @@ public class TestDDLParser {
                 + "CREATE  SCHEMA test SERVER pgsql;"
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE test.G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
                 + "REVOKE SELECT ON TABLE test.G1 FROM superuser;";
@@ -1442,7 +1442,7 @@ public class TestDDLParser {
                 + "CREATE  SCHEMA test SERVER pgsql;"
                 + "SET SCHEMA test;"
                 + "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);"
-                + "CREATE ROLE superuser WITH JAAS ROLE x,y WITH ANY AUTHENTICATED;"
+                + "CREATE ROLE superuser WITH ANY AUTHENTICATED;"
                 + "GRANT SELECT,INSERT,DELETE ON TABLE G1 TO superuser;"
                 + "GRANT UPDATE ON TABLE test.G1 TO superuser;"
                 + "REVOKE ALL PRIVILEGES FROM superuser;";
