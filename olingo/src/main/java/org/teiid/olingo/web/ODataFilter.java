@@ -262,7 +262,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
 
         if (context == null) {
-            context = new OlingoBridge();
+            context = new OlingoBridge(null);
             ref = new SoftReference<OlingoBridge>(context);
             this.contextMap.put(key, ref);
         }

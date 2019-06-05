@@ -55,6 +55,16 @@ public class OlingoBridge {
 
     public static List<String> RESERVED = Arrays.asList("teiid", "edm", "core", "olingo-extensions"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
+    private String singleVDBContext;
+
+    /**
+     *
+     * @param singleVDBContext null if multi-vdb
+     */
+    public OlingoBridge(String singleVDBContext) {
+        this.singleVDBContext = singleVDBContext;
+    }
+
     //the schema name is handled as case insensitive
     private ConcurrentSkipListMap<String, HandlerInfo> handlers = new ConcurrentSkipListMap<>(String.CASE_INSENSITIVE_ORDER);
 
@@ -124,10 +134,14 @@ public class OlingoBridge {
                     ODataSchemaInfo result = infoMap.get(name);
                     if (result != null && info != result) {
                         //add a bi-directional relationship
+                        String context = singleVDBContext;
+                        if (context == null) {
+                            context = vdb.getFullName();
+                        }
                         info.edmProvider.addReferenceSchema(
-                                vdb.getFullName(), result.schema.getNamespace(), result.schema.getAlias(), result.edmProvider);
+                                context, result.schema.getNamespace(), result.schema.getAlias(), result.edmProvider);
                         result.edmProvider.addReferenceSchema(
-                                vdb.getFullName(), info.schema.getNamespace(), info.schema.getAlias(), info.edmProvider);
+                                context, info.schema.getNamespace(), info.schema.getAlias(), info.edmProvider);
                     }
                     return result;
                 }
@@ -154,4 +168,13 @@ public class OlingoBridge {
         }
         return model.isVisible();
     }
+
+    /**
+     *
+     * @param singleVDBContext
+     */
+    public void setSingleVDBContext(String singleVDBContext) {
+        this.singleVDBContext = singleVDBContext;
+    }
+
 }
