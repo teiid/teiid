@@ -73,9 +73,9 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
     //default odata behavior requires explicit versioning
     private String defaultVdbVersion = "1"; //$NON-NLS-1$
     private Map<Object, Future<Boolean>> loadingQueries = new ConcurrentHashMap<>();
-    
+
     protected OpenApiHandler openApiHandler;
-    
+
     @Override
     public void init(FilterConfig config) throws ServletException {
         // handle proxy-uri in the case of cloud environments
@@ -88,10 +88,10 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         if (proxyURI != null) {
             this.proxyBaseURI = proxyURI;
         }
-        
+
         String value = config.getInitParameter("explicit-vdb-version");  //$NON-NLS-1$
         if (value != null && !Boolean.valueOf(value)) {
-            defaultVdbVersion = null; 
+            defaultVdbVersion = null;
         }
 
         Properties props = new Properties();
@@ -108,22 +108,22 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         this.initProperties = props;
         this.openApiHandler = new OpenApiHandler(config.getServletContext());
     }
-    
+
     public String getDefaultVdbVersion() {
         return defaultVdbVersion;
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
-    		FilterChain chain) throws IOException, ServletException {
-    	try {
-    		internalDoFilter(request, response, chain);
-    	} catch (TeiidProcessingException e) {
-    		//TODO: use engine style logic to determine if the stack should be logged
-    		LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
-    		HttpServletResponse httpResponse = (HttpServletResponse)response;
-    	    writeError(request, e, httpResponse, 404);
-    	}
+            FilterChain chain) throws IOException, ServletException {
+        try {
+            internalDoFilter(request, response, chain);
+        } catch (TeiidProcessingException e) {
+            //TODO: use engine style logic to determine if the stack should be logged
+            LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16047, e.getMessage()));
+            HttpServletResponse httpResponse = (HttpServletResponse)response;
+            writeError(request, e, httpResponse, 404);
+        }
     }
 
     static void writeError(ServletRequest request, TeiidProcessingException e,
@@ -143,12 +143,12 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String code = e.getCode()==null?"":e.getCode(); //$NON-NLS-1$
         String message = e.getMessage()==null?"":e.getMessage(); //$NON-NLS-1$
         if (format.equalsIgnoreCase("json")) { //$NON-NLS-1$
-        	httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
-        	writer.write("{ \"error\": { \"code\": \""); //$NON-NLS-1$
-        	JSONParser.escape(code, writer);
-        	writer.write("\", \"message\": \""); //$NON-NLS-1$
-        	JSONParser.escape(message, writer);
-        	writer.write("\" } }"); //$NON-NLS-1$ 
+            httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_JSON.toContentTypeString());
+            writer.write("{ \"error\": { \"code\": \""); //$NON-NLS-1$
+            JSONParser.escape(code, writer);
+            writer.write("\", \"message\": \""); //$NON-NLS-1$
+            JSONParser.escape(message, writer);
+            writer.write("\" } }"); //$NON-NLS-1$
         } else {
             try {
                 httpResponse.setHeader(HttpHeader.CONTENT_TYPE, ContentType.APPLICATION_XML.toContentTypeString());
@@ -169,7 +169,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         }
         writer.close();
     }
-    
+
     public void internalDoFilter(ServletRequest request, ServletResponse response,
             FilterChain chain) throws IOException, ServletException, TeiidProcessingException {
 
@@ -191,13 +191,13 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             chain.doFilter(httpRequest, response);
             return;
         }
-        
+
         String contextPath = httpRequest.getContextPath();
         String baseURI = fullURL.substring(0, fullURL.indexOf(contextPath));
-        
+
         int endIdx = uri.indexOf('/', contextPath.length() + 1);
         int beginIdx = contextPath.length() + 1;
-        
+
         if (contextPath.equals("/odata4")) { //$NON-NLS-1$
             if (endIdx == -1) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16020, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16020));
@@ -220,65 +220,65 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             if (vdbName.isEmpty()) {
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16008, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
             }
-            
+
             modelName = URLDecoder.decode(modelName, "UTF-8"); //$NON-NLS-1$
             vdbName = URLDecoder.decode(vdbName, "UTF-8"); //$NON-NLS-1$
         } else {
-        	if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$ 
+            if (this.initProperties.getProperty("vdb-name") == null) { //$NON-NLS-1$
                 throw new TeiidProcessingException(ODataPlugin.Event.TEIID16018, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16018));
             }
-            
+
             vdbName = this.initProperties.getProperty("vdb-name"); //$NON-NLS-1$
             version = this.initProperties.getProperty("vdb-version"); //$NON-NLS-1$
-            
+
             if (endIdx == -1) {
-			    modelName = uri.substring(beginIdx).trim();
-			    if (modelName.isEmpty()) {
-			        throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
-			    }
-			} else {
-			    modelName = uri.substring(beginIdx, endIdx);
-			}
-            
+                modelName = uri.substring(beginIdx).trim();
+                if (modelName.isEmpty()) {
+                    throw new TeiidProcessingException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16021));
+                }
+            } else {
+                modelName = uri.substring(beginIdx, endIdx);
+            }
+
             contextPath = contextPath + "/" + modelName; //$NON-NLS-1$
         }
-        
+
         ContextAwareHttpSerlvetRequest contextAwareRequest = new ContextAwareHttpSerlvetRequest(httpRequest);
         contextAwareRequest.setContextPath(contextPath);
         httpRequest = contextAwareRequest;
-        
+
         key = new VDBKey(vdbName, version);
         if (key.isAtMost()) {
-        	if (key.getVersion() != null) {
-        		throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
-        	}
-    	    key = new VDBKey(vdbName, defaultVdbVersion);
+            if (key.getVersion() != null) {
+                throw new TeiidProcessingException(ODataPlugin.Event.TEIID16044, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16044, key));
+            }
+            key = new VDBKey(vdbName, defaultVdbVersion);
         }
-        
+
         SoftReference<OlingoBridge> ref = this.contextMap.get(key);
         OlingoBridge context = null;
         if (ref != null) {
             context = ref.get();
         }
-        
+
         if (context == null) {
-            context = new OlingoBridge();
+            context = new OlingoBridge(null);
             ref = new SoftReference<OlingoBridge>(context);
             this.contextMap.put(key, ref);
         }
-        
+
         Client client = buildClient(key.getName(), key.getVersion(), this.initProperties);
         try {
             Connection connection = client.open();
             registerVDBListener(client, connection);
             HandlerInfo handlerInfo = context.getHandlers(baseURI, client, modelName);
             ODataHandler handler = handlerInfo.oDataHttpHandler;
-            
+
             if (openApiHandler.processOpenApiMetadata(httpRequest, key, uri, modelName,
                     response, handlerInfo.serviceMetadata, null)) {
                 return;
             }
-            
+
             httpRequest.setAttribute(ODataHttpHandler.class.getName(), handler);
             httpRequest.setAttribute(Client.class.getName(), client);
             chain.doFilter(httpRequest, response);
@@ -293,7 +293,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             }
         }
     }
-    
+
     protected void registerVDBListener(Client client, Connection conn) {
         if (!this.listenerRegistered) {
             synchronized (this) {
@@ -306,17 +306,17 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
                             this.listenerRegistered = true;
                         } catch (SQLException e) {
                             LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014));
-                        } 
+                        }
                     }
                 }
             }
         }
     }
-    
+
     public Client buildClient(String vdbName, String version, Properties props) {
-        return new LocalClient(vdbName, version, props, loadingQueries);        
+        return new LocalClient(vdbName, version, props, loadingQueries);
     }
-        
+
     @Override
     public void destroy() {
         this.contextMap.clear();
