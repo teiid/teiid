@@ -199,8 +199,7 @@ public class ObjectConverterUtil {
 
     public static InputStream convertToInputStream(byte[] data) {
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
-        InputStream isContent = new BufferedInputStream(bais);
-        return isContent;
+        return bais;
     }
 
     public static void write(final InputStream is, final String fileName) throws IOException {

@@ -122,4 +122,9 @@ public class NioVirtualFile implements VirtualFile {
     public boolean exists() {
         return Files.exists(this.path);
     }
+
+    @Override
+    public String toString() {
+        return getPathName();
+    }
 }

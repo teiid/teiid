@@ -17,7 +17,6 @@
  */
 package org.teiid.metadatastore;
 
-import java.io.BufferedReader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +56,7 @@ public class DeploymentBasedDatabaseStore extends DatabaseStore {
         try {
             startEditing(false);
             this.setMode(Mode.DATABASE_STRUCTURE);
-            QueryParser.getQueryParser().parseDDL(this, new BufferedReader(reader));
+            QueryParser.getQueryParser().parseDDL(this, reader);
         } finally {
             reader.close();
             stopEditing();

@@ -16,12 +16,12 @@
   
   <properties>
         <site.url>http://teiid.io</site.url>
-        <version.org.wildfly>17.0.0.Alpha1</version.org.wildfly>
+        <version.org.wildfly>17.0.0.Beta1</version.org.wildfly>
 	    <version.org.wildfly.core>9.0.0.Beta6</version.org.wildfly.core>
 	    <version.org.wildfly.arquillian>2.2.0.Final</version.org.wildfly.arquillian>
         <version.org.wildfly.build-tools>1.2.10.Final</version.org.wildfly.build-tools>
         <version.org.jboss.arquillian.testenricher>1.4.1.Final</version.org.jboss.arquillian.testenricher>
-        <version.org.apache.cxf>3.2.7</version.org.apache.cxf>
+        <version.org.apache.cxf>3.3.2</version.org.apache.cxf>
         
         <version.teiid.console>3.1.0</version.teiid.console>
         <!-- <version.org.teiid>${project.version}</version.org.teiid> -->

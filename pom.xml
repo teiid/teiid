@@ -1526,7 +1526,7 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
-                <version>9.4.3.Final</version>
+                <version>9.4.11.Final</version>
                 <exclusions>
 		            <exclusion>
 		                <groupId>org.jboss.spec.javax.transaction</groupId>
@@ -1537,7 +1537,7 @@
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-commons</artifactId>
-                <version>9.4.3.Final</version>       
+                <version>9.4.11.Final</version>       
             </dependency>  
             
             <dependency>
@@ -1548,7 +1548,7 @@
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging</artifactId>
-                <version>3.3.2.Final</version>       
+                <version>3.4.0.Final</version>       
             </dependency>  
             
             <dependency>
@@ -1659,7 +1659,7 @@
            <dependency>
                <groupId>org.jboss.resteasy</groupId>
                <artifactId>resteasy-jaxrs</artifactId>
-               <version>3.6.3.Final</version>
+               <version>3.7.0.Final</version>
                <exclusions>
                    <exclusion>
                        <groupId>org.jboss.spec.javax.ws.rs</groupId>

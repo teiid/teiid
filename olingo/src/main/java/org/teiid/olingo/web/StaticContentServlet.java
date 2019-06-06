@@ -39,10 +39,7 @@ public class StaticContentServlet extends HttpServlet {
         String pathInfo = request.getPathInfo();
 
         try {
-            if (pathInfo.endsWith(".xml") //$NON-NLS-1$
-                    && !pathInfo.endsWith("pom.xml") //$NON-NLS-1$
-                    && !pathInfo.contains("META-INF") //$NON-NLS-1$
-                    && !pathInfo.contains("WEB-INF") //$NON-NLS-1$
+            if (pathInfo.endsWith("org.apache.olingo.v1.xml") || pathInfo.endsWith("org.teiid.v1.xml") //$NON-NLS-1$ //$NON-NLS-2$
                     && !pathInfo.substring(1).contains("/")) { //$NON-NLS-1$
                 InputStream contents = getClass().getResourceAsStream(pathInfo);
                 if (contents != null) {
