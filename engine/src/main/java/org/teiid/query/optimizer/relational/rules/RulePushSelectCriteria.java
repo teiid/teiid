@@ -493,7 +493,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 
                     JoinType optimized = JoinUtil.optimizeJoinType(critNode, currentNode, metadata, this.createdNodes == null);
 
-                    if (optimized == null || optimized.isOuter()) {
+                    if (optimized == null || optimized == JoinType.JOIN_FULL_OUTER) {
                         return currentNode;
                     }
                 }

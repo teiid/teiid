@@ -238,7 +238,7 @@ public class TestJoinOptimization {
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(
                 sql, RealMetadataFactory.exampleBQTCached(),
-                new String[] {""}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                new String[] {"SELECT 1 FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1", "SELECT 1 FROM BQT2.SmallB AS g_0 WHERE g_0.IntKey = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -247,8 +247,8 @@ public class TestJoinOptimization {
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
-            0,      // Join
-            1,      // MergeJoin
+            1,      // Join
+            0,      // MergeJoin
             0,      // Null
             0,      // PlanExecution
             1,      // Project
