@@ -278,7 +278,7 @@ public class TestODataIntegration {
                 response.getContentAsString());
 
         //cached fetch
-        response = http.GET(baseURL + "/loopy/vm1/swagger.json");
+        response = http.GET(baseURL + "/loopy/vm1/openapi.json");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
                 UnitTestUtil.getTestDataFile("loopy-vm1-metadata-swagger.json")).replace("${host}", "localhost:"+port),
@@ -293,20 +293,20 @@ public class TestODataIntegration {
 
     @Test
     public void testOpenApi3Metadata() throws Exception {
-        ContentResponse response = http.GET(baseURL + "/loopy/vm1/openapi.json");
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/openapi.json?version=3");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
                 UnitTestUtil.getTestDataFile("loopy-vm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
                 response.getContentAsString());
 
         //cached fetch
-        response = http.GET(baseURL + "/loopy/vm1/openapi.json");
+        response = http.GET(baseURL + "/loopy/vm1/openapi.json?version=3");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
                 UnitTestUtil.getTestDataFile("loopy-vm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
                 response.getContentAsString());
 
-        response = http.GET(baseURL + "/loopy/pm1/openapi.json");
+        response = http.GET(baseURL + "/loopy/pm1/openapi.json?version=3");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
                 UnitTestUtil.getTestDataFile("loopy-pm1-metadata-openapi.json")).replace("${host}", "http://localhost:"+port),
