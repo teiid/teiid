@@ -62,27 +62,18 @@ public class TestPropertiesUtils {
 
     // ##################### clone(Properties) ###################################
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
-     */
     @Test public void testSimpleModifiableClone(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         a = PropertiesUtils.clone(a);
         assertTrue(verifyProps(a, LIST_A));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
-     */
     @Test public void testSimpleModifiableCloneWithUnmodifiableDefaults(){
         Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), !UNMODIFIABLE);
         ab = PropertiesUtils.clone(ab);
         assertTrue(verifyProps(ab, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
-     */
     @Test public void testSimpleModifiableCloneWithModifiableDefaults(){
         Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
         ab = PropertiesUtils.clone(ab);
@@ -91,27 +82,18 @@ public class TestPropertiesUtils {
 
     // ##################### clone(Properties, boolean) ##########################
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
-     */
     @Test public void testCloneModifiableAsModifiable(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         a = PropertiesUtils.clone(a);
         assertTrue(verifyProps(a, LIST_A));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
-     */
     @Test public void testCloneUnmodifiableAsModifiable(){
         Properties a = make(MAP_A, null, UNMODIFIABLE);
         a = PropertiesUtils.clone(a);
         assertTrue(verifyProps(a, LIST_A));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
-     */
     @Test public void testCloneModifiableWithModifiableAsModifiable(){
         Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
         ab = PropertiesUtils.clone(ab);
@@ -120,9 +102,6 @@ public class TestPropertiesUtils {
 
     // ######## clone(Properties, Properties, boolean, boolean) ##################
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testCloneModAndModAsMod(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         Properties b = make(MAP_B, null, !UNMODIFIABLE);
@@ -130,9 +109,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testDeepcloneModAndModAsMod(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         Properties b = make(MAP_B, null, !UNMODIFIABLE);
@@ -140,9 +116,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testCloneModAndUnmodAsMod(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         Properties b = make(MAP_B, null, UNMODIFIABLE);
@@ -150,9 +123,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testDeepcloneModAndUnmodAsMod(){
         Properties a = make(MAP_A, null, !UNMODIFIABLE);
         Properties b = make(MAP_B, null, UNMODIFIABLE);
@@ -160,9 +130,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testCloneUnmodAndModAsMod(){
         Properties a = make(MAP_A, null, UNMODIFIABLE);
         Properties b = make(MAP_B, null, !UNMODIFIABLE);
@@ -170,9 +137,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testDeepcloneUnmodAndModAsMod(){
         Properties a = make(MAP_A, null, UNMODIFIABLE);
         Properties b = make(MAP_B, null, !UNMODIFIABLE);
@@ -180,9 +144,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testCloneUnmodAndUnmodAsMod(){
         Properties a = make(MAP_A, null, UNMODIFIABLE);
         Properties b = make(MAP_B, null, UNMODIFIABLE);
@@ -190,9 +151,6 @@ public class TestPropertiesUtils {
         assertTrue(verifyProps(a, LIST_AB));
     }
 
-    /**
-     * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
-     */
     @Test public void testDeepcloneUnmodAndUnmodAsMod(){
         Properties a = make(MAP_A, null, UNMODIFIABLE);
         Properties b = make(MAP_B, null, UNMODIFIABLE);

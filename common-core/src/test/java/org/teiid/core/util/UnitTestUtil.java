@@ -403,12 +403,6 @@ public class UnitTestUtil {
         return file;
     }
 
-    /**
-     * Obtain the file path to the root of the test data file tree. This first checks the property
-     * {@link TEST_DATA_ROOT_PROPERTY}, and if that is not set to a valid path, uses the current directory.
-     *
-     * @return File path, never null
-     */
     public static final String getTestDataPath() {
         return DEFAULT_TESTDATA_PATH;
     }

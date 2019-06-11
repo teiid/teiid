@@ -23,26 +23,9 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
- * Tests the children Iterator of the MetaMatrixException.  Primarily it does
- * this by comparing two Lists for equality: one List is created by Iterating
- * using the
- * {@link org.teiid.core.TeiidException#getChildren Iterator},
- * the other List is created by manually using the
- * {@link org.teiid.core.TeiidException#getChild getChild}
- * method recursively.
+ * Tests the children Iterator of the MetaMatrixException.
  */
 public class TestMetaMatrixException {
-
-    @Test public void testFailMetaMatrixExceptionWithNullMessage() {
-        Throwable e = null;
-        try {
-            new TeiidException((String)null);  // should throw NPE
-            fail("Should not get here"); //$NON-NLS-1$
-        } catch ( Throwable ex ) {
-            e = ex;
-        }
-        assertNotNull(e);
-    }
 
     @Test public void testMetaMatrixExceptionWithNullThrowable() {
         final TeiidException err = new TeiidException((Throwable)null);

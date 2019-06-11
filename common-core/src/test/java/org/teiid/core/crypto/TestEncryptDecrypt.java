@@ -33,10 +33,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 
-/**
- * <p>Test cases for {@link CryptoFactory} and carious <code>Encryptor</code>
- * and <code>Decryptor</code> implementations. </p>
- */
 @SuppressWarnings("nls")
 public class TestEncryptDecrypt {
 
