@@ -36,6 +36,10 @@
                    <login-module code="RealmDirect" flag="required">
                       <module-option name="password-stacking" value="useFirstPass"/>
                    </login-module>
+                   <login-module code="Identity" flag="required">
+                      <module-option name="password-stacking" value="useFirstPass"/>
+                      <module-option name="roles" value="odata"/>
+                   </login-module>
                </authentication>
            </security-domain>            
            <security-domain name="jaspitest" cache-type="default">
