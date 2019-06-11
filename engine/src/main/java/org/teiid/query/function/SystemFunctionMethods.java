@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
@@ -59,6 +61,19 @@ public class SystemFunctionMethods {
             if (col.equalsIgnoreCase(column)) {
                 return keys.getKeys().get(0).get(i);
             }
+        }
+        return null;
+    }
+
+    @TeiidFunction(category=FunctionCategoryConstants.SYSTEM, pushdown=PushDown.CANNOT_PUSHDOWN, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
+    public static Long generated_key(CommandContext context) throws TransformationException {
+        GeneratedKeysImpl keys = context.getGeneratedKeys();
+        if (keys == null || keys.getKeys().isEmpty()) {
+            return null;
+        }
+        Object value = keys.getKeys().get(0).get(0);
+        if (value != null) {
+            return (Long)DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.LONG);
         }
         return null;
     }

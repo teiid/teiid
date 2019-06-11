@@ -979,6 +979,12 @@ public class TestEmbeddedServer {
         assertEquals(1, rs.getInt(1));
         //should just be the default, rather than an exception
         assertEquals(11, rs.getMetaData().getColumnDisplaySize(1));
+
+        //test in a procedure without the statement directive
+        ps = c.prepareStatement("begin insert into t (y) values ('b'); select cast(generated_key('x') as integer); end");
+        rs = ps.executeQuery();
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
     }
 
     @Test public void testMultiSourceMetadata() throws Exception {

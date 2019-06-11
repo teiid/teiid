@@ -229,6 +229,35 @@ public class TestJoinOptimization {
                 new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.StringKey = 'a'", "SELECT g_0.IntKey FROM BQT1.SmallB AS g_0 WHERE g_0.StringKey = 'b'"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
+    @Test public void testFullOuterJoinPushCriteria() throws TeiidComponentException, TeiidProcessingException {
+        String sql = "SELECT 1\n" +
+                "from bqt1.smalla a full outer join bqt2.smallb b on a.intkey=b.intkey\n" +
+                "WHERE\n" +
+                "     a.intkey=1 ;"; //$NON-NLS-1$
+
+        // Plan query
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql, RealMetadataFactory.exampleBQTCached(),
+                new String[] {""}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // Join
+            1,      // MergeJoin
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
+
     @Test public void testEvaluatableSubqueryInOn() throws TeiidComponentException, TeiidProcessingException {
         String sql = "select b1.intkey, b2.intkey from bqt1.smalla b1 left outer join bqt1.smallb b2 on (b1.intkey = b2.intkey and b2.stringkey = (select stringkey from bqt1.mediuma))"; //$NON-NLS-1$
 
