@@ -45,7 +45,8 @@ run-batch
 
 /subsystem=security/security-domain=teiid-security:add(cache-type=default)
 /subsystem=security/security-domain=teiid-security/authentication=classic:add()
-/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=sufficient, module-options=[("password-stacking"=>"useFirstPass")])
+/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=RealmDirect:add(code=RealmDirect, flag=required, module-options=[("password-stacking"=>"useFirstPass")])
+/subsystem=security/security-domain=teiid-security/authentication=classic/login-module=Identity:add(code=Identity, flag=required, module-options={"password-stacking"=>"useFirstPass","roles"=>"odata"})
 
 /subsystem=teiid:add(authentication-security-domain=teiid-security, resultset-cache-infinispan-container=teiid-cache, distributed-cache-jgroups-stack=teiid-cluster, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid, buffer-manager-disk-max-space-mb=51200)
 /subsystem=teiid/transport=local:add()
