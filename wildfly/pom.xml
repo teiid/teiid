@@ -16,8 +16,8 @@
   
   <properties>
         <site.url>http://teiid.io</site.url>
-        <version.org.wildfly>17.0.0.Beta1</version.org.wildfly>
-	    <version.org.wildfly.core>9.0.0.Beta6</version.org.wildfly.core>
+        <version.org.wildfly>17.0.0.Final</version.org.wildfly>
+	    <version.org.wildfly.core>9.0.1.Final</version.org.wildfly.core>
 	    <version.org.wildfly.arquillian>2.2.0.Final</version.org.wildfly.arquillian>
         <version.org.wildfly.build-tools>1.2.10.Final</version.org.wildfly.build-tools>
         <version.org.jboss.arquillian.testenricher>1.4.1.Final</version.org.jboss.arquillian.testenricher>
