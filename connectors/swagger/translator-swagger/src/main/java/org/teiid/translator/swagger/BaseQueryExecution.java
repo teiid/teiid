@@ -31,10 +31,10 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
@@ -42,11 +42,11 @@ import org.teiid.translator.ws.WSConnection;
 
 public class BaseQueryExecution {
     protected WSConnection connection;
-    protected SwaggerExecutionFactory translator;
+    protected ExecutionFactory translator;
     protected RuntimeMetadata metadata;
     protected ExecutionContext executionContext;
 
-    public BaseQueryExecution(SwaggerExecutionFactory translator,
+    public BaseQueryExecution(ExecutionFactory translator,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) {
         this.metadata = metadata;
@@ -63,7 +63,7 @@ public class BaseQueryExecution {
         return (String)value;
     }
 
-    protected BinaryWSProcedureExecution buildInvokeHTTP(String method,
+    public BinaryWSProcedureExecution buildInvokeHTTP(String method,
             String uri, Object payload, Map<String, List<String>> headers)
             throws TranslatorException {
 
@@ -137,10 +137,4 @@ public class BaseQueryExecution {
         return results;
     }
 
-    public String getName(AbstractMetadataRecord table) {
-        if (table.getNameInSource() != null) {
-            return table.getNameInSource();
-        }
-        return table.getName();
-    }
 }

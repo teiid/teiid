@@ -44,6 +44,7 @@ import org.teiid.metadata.RestMetadataExtension;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
@@ -58,7 +59,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
     private Map<String, Object> responseHeaders;
 
     public SwaggerProcedureExecution(Call command,
-            SwaggerExecutionFactory translator,
+            ExecutionFactory translator,
             ExecutionContext executionContext, RuntimeMetadata metadata,
             WSConnection connection) throws TranslatorException {
         super(translator, executionContext, metadata, connection);
@@ -288,7 +289,7 @@ public class SwaggerProcedureExecution extends BaseQueryExecution implements Pro
         if (type.isJSON()) {
             return new JsonSerializer();
         } else if (type.isXML()) {
-            return new XMLSerializer();
+            throw new AssertionError("XML Not supported");
         }
         return null;
     }
