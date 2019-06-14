@@ -177,6 +177,9 @@ public class SwaggerMetadataProcessor implements MetadataProcessor<WSConnection>
     public void process(MetadataFactory mf, WSConnection connection) throws TranslatorException {
         Swagger swagger = getSchema(connection);
         String basePath = swagger.getBasePath();
+        if (basePath == null) {
+            basePath = "/"; //$NON-NLS-1$
+        }
         String scheme = null;
         if(swagger.getSchemes().size() > 0) {
             if (this.preferredScheme == null) {

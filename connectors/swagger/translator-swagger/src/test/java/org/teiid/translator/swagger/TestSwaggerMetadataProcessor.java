@@ -457,7 +457,7 @@ public class TestSwaggerMetadataProcessor {
         Procedure p = mf.getSchema().getProcedure("Operations_List");
         assertNotNull(p);
         assertEquals("GET", p.getProperty(RestMetadataExtension.METHOD, false).toUpperCase());
-        assertEquals("https://management.azure.comnull/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
+        assertEquals("https://management.azure.com/providers/Microsoft.Cache/operations", p.getProperty(RestMetadataExtension.URI, false));
         assertNotNull(p.getResultSet());
 
         assertNotNull(p.getParameterByName("api-version"));
