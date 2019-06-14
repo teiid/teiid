@@ -2617,7 +2617,7 @@ ArrayTable arrayTable(ParseInfo info) :
 /*
 name=json table
 description=The JSONTABLE table function creates tabular results from JSON.  It can be used as a nested table reference.
-example=[source,sql]\n----\JSONTABLE (col1, '$..book', false, COLUMNS x STRING) AS y\n----\n
+example=[source,sql]\n----\JSONTABLE (col1, '$..book', false COLUMNS x STRING) AS y\n----\n
 */
 JsonTable jsonTable(ParseInfo info) :
 {

@@ -2313,10 +2313,10 @@ public class SQLStringVisitor extends LanguageVisitor {
         addHintComment(obj);
         append(NonReserved.JSONTABLE).append(Tokens.LPAREN);
         visitNode(obj.getJson());
-        append(SPACE);
+        append(Tokens.COMMA).append(SPACE);
         visitNode(new Constant(obj.getRowPath()));
         if (obj.getNullLeaf() != null) {
-            append(SPACE).append(Tokens.COMMA);
+            append(Tokens.COMMA).append(SPACE);
             visitNode(new Constant(obj.getNullLeaf()));
         }
         append(SPACE);

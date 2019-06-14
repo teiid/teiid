@@ -5398,7 +5398,10 @@ public class TestParser {
         columns.add(new JsonTable.JsonColumn("y", "json", "@..*"));
         xt.setColumns(columns);
         query.setFrom(new From(Arrays.asList(xt)));
-        helpTest(sql, "SELECT * FROM JSONTABLE('{}' '$..*' COLUMNS x FOR ORDINALITY, y json PATH '@..*') AS x", query);
+        String expected = "SELECT * FROM JSONTABLE('{}', '$..*' COLUMNS x FOR ORDINALITY, y json PATH '@..*') AS x";
+        helpTest(sql, expected, query);
+        //make sure the expected is also valid
+        QueryParser.getQueryParser().parseCommand(expected, new ParseInfo());
     }
 
     @Test public void testJsonTable1() throws Exception {
@@ -5413,7 +5416,7 @@ public class TestParser {
         columns.add(new JsonTable.JsonColumn("x", "varchar", null));
         xt.setColumns(columns);
         query.setFrom(new From(Arrays.asList(xt)));
-        helpTest(sql, "SELECT * FROM JSONTABLE(null '$..*' COLUMNS x varchar) AS x", query);
+        helpTest(sql, "SELECT * FROM JSONTABLE(null, '$..*' COLUMNS x varchar) AS x", query);
     }
 
 }
