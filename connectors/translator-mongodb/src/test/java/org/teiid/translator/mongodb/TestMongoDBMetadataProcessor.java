@@ -77,6 +77,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
+        row.append("col9", new BasicDBList()); //empty list
         
         BasicDBObject child = new BasicDBObject();
         child.append("col1", "one");
@@ -156,6 +157,7 @@ public class TestMongoDBMetadataProcessor {
         		"\tcol6 string,\n" + 
         		"\tcol7 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
         		"\tcol8 varbinary,\n"+
+        		"\tcol9 object[] OPTIONS (SEARCHABLE 'Unsearchable'),\n"+
         		"\tCONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" + 
         		"\tCONSTRAINT FK_col6 FOREIGN KEY(col6) REFERENCES ns \n" + 
         		") OPTIONS (UPDATABLE TRUE);";

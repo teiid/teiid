@@ -146,8 +146,9 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
-            if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
-                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0));
+        	BasicDBList basicDBList = (BasicDBList)value;
+            if (!basicDBList.isEmpty() && basicDBList.get(0) instanceof BasicDBObject) {
+            	Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)basicDBList.get(0));
                 if (childTable != null) {
                     childTable.setProperty(MERGE, table.getName());
                     childTable.setProperty(ASSOSIATION, MergeDetails.Association.MANY.name());
