@@ -384,7 +384,11 @@ public class TestSwaggerQueryExecution {
     public void testGetSerializer(){
         assertTrue(SwaggerProcedureExecution.getSerializer("application/json") instanceof JsonSerializer);
         assertTrue(SwaggerProcedureExecution.getSerializer("application/json;charset=utf-8") instanceof JsonSerializer);
-        assertTrue(SwaggerProcedureExecution.getSerializer("application/xml") instanceof XMLSerializer);
-        assertTrue(SwaggerProcedureExecution.getSerializer("application/xml;charset=utf-8") instanceof XMLSerializer);
     }
+
+    @Test(expected=AssertionError.class)
+    public void testGetSerializerFails() {
+        SwaggerProcedureExecution.getSerializer("application/xml");
+    }
+
 }

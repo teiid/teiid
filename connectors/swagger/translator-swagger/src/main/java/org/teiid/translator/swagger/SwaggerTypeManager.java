@@ -120,7 +120,7 @@ public class SwaggerTypeManager {
         return type ;
     }
 
-    static String teiidType(String type, String format, boolean array) {
+    public static String teiidType(String type, String format, boolean array) {
         if(null == format) {
             format = "";
         }
@@ -134,7 +134,7 @@ public class SwaggerTypeManager {
         return returnType;
     }
 
-    static Object convertTeiidRuntimeType(Object value, Class<?> expectedType) throws TranslatorException {
+    public static Object convertTeiidRuntimeType(Object value, Class<?> expectedType) throws TranslatorException {
 
         if (value == null) {
             return null;
@@ -185,7 +185,7 @@ public class SwaggerTypeManager {
     }
 
     static Timestamp formTimestamp(String value) throws TranslatorException {
-        Matcher m = timestampPattern.matcher((String)value);
+        Matcher m = timestampPattern.matcher(value);
         if (m.matches()) {
             Calendar cal = null;
             String timeZone = m.group(8);
