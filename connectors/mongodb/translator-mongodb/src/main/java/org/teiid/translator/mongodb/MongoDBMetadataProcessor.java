@@ -186,25 +186,28 @@ public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnec
         }
         else if (value instanceof BasicDBList) {
             // embedded doc, list one to many
-            if (((BasicDBList)value).get(0) instanceof BasicDBObject) {
-                Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)((BasicDBList)value).get(0), table);
-                if (childTable != null) {
-                    childTable.setProperty(MERGE, table.getName());
-                    childTable.setProperty(ASSOSIATION, MergeDetails.Association.MANY.name());
+            BasicDBList basicDBList = (BasicDBList)value;
+            if (!basicDBList.isEmpty()) {
+                if (basicDBList.get(0) instanceof BasicDBObject) {
+                    Table childTable = addTable(metadataFactory, columnKey, (BasicDBObject)basicDBList.get(0), table);
+                    if (childTable != null) {
+                        childTable.setProperty(MERGE, table.getName());
+                        childTable.setProperty(ASSOSIATION, MergeDetails.Association.MANY.name());
+                    }
                 }
-            }
-            else {
-                column = table.getColumnByName(columnKey);
-                String dataType = getDataType(((BasicDBList)value).get(0))+"[]"; //$NON-NLS-1$
-                if (column == null) {
-                    column = metadataFactory.addColumn(columnKey, dataType, table);
-                    setNativeType(column, null);
-                } else if (!column.getRuntimeType().equals(dataType)) {
-                    //type conflict
-                    MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
-                    column.setNativeType(null);
+                else {
+                    column = table.getColumnByName(columnKey);
+                    String dataType = getDataType(basicDBList.get(0))+"[]"; //$NON-NLS-1$
+                    if (column == null) {
+                        column = metadataFactory.addColumn(columnKey, dataType, table);
+                        setNativeType(column, null);
+                    } else if (!column.getRuntimeType().equals(dataType)) {
+                        //type conflict
+                        MetadataFactory.setDataType(TypeFacility.RUNTIME_NAMES.OBJECT, column, metadataFactory.getDataTypes(), false);
+                        column.setNativeType(null);
+                    }
+                    column.setSearchType(SearchType.Unsearchable);
                 }
-                column.setSearchType(SearchType.Unsearchable);
             }
         }
         else if (value instanceof DBRef) {

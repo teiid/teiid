@@ -168,6 +168,7 @@ public class TestMongoDBMetadataProcessor {
         row.append("col6", new DBRef(db.getName(), "ns", "one"));
         row.append("col7", array);
         row.append("col8", new Binary("binary".getBytes()));
+        row.append("col9", new BasicDBList()); //empty list
 
         BasicDBObject child = new BasicDBObject();
         child.append("col1", "one");
