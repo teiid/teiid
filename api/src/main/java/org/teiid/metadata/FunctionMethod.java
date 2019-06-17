@@ -302,7 +302,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @return Hash code, based on name and input parameters
      */
     public int hashCode() {
-        int hash = HashCodeUtil.hashCode(0, super.getName());
+        int hash = HashCodeUtil.hashCode(0, super.getName().toUpperCase());
         if(inParameters != null) {
             hash = HashCodeUtil.hashCode(hash, inParameters.hashCode());
         }

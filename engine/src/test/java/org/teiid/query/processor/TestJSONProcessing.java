@@ -28,9 +28,11 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
@@ -139,6 +141,30 @@ public class TestJSONProcessing {
         Command command = TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
         command.getProjectedSymbols().stream().forEach(e -> assertEquals(
                 DataTypeManager.DefaultDataClasses.JSON, e.getType()));
+    }
+
+    @Test public void testCastStringToJson() throws Exception {
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        String sql = "select cast('{\"name\":123}' as json)"; //$NON-NLS-1$
+        String json = "{\"name\":123}";
+
+        List<?>[] expected = new List[] {
+                Arrays.asList(json),
+        };
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        helpProcess(plan, dataManager, expected);
+    }
+
+    @Test(expected=ExpressionEvaluationException.class) public void testCastStringToJsonFails() throws Exception {
+        String sql = "select convert('{\"name\":?}', json)"; //$NON-NLS-1$
+
+        TestProcessor.helpGetPlan(
+                TestOptimizer.helpGetCommand(sql,
+                        RealMetadataFactory.exampleBQTCached()),
+                RealMetadataFactory.exampleBQTCached(),
+                new DefaultCapabilitiesFinder(),
+                TestProcessor.createCommandContext());
     }
 
 }

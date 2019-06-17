@@ -800,7 +800,7 @@ public class ResolverVisitor extends LanguageVisitor {
             fd.setCalledWithVarArgArrayParam(true);
         }
 
-        if(fd.isSystemFunction(FunctionLibrary.CONVERT) || fd.isSystemFunction(FunctionLibrary.CAST)) {
+        if(FunctionLibrary.isConvert(function)) {
             String dataType = (String) ((Constant)args[1]).getValue();
             Class<?> dataTypeClass = metadata.getDataTypeClass(dataType);
             fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);

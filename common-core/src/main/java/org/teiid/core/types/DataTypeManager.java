@@ -842,6 +842,7 @@ public class DataTypeManager {
         DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToCharacterTransform());
         DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToClobTransform());
         DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToSQLXMLTransform());
+        DataTypeManager.addTransform(new org.teiid.core.types.basic.StringToJsonTransform());
 
         DataTypeManager.addTransform(new org.teiid.core.types.basic.BinaryToBlobTransform());
 

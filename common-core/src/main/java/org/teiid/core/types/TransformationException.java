@@ -44,7 +44,7 @@ public class TransformationException extends TeiidProcessingException {
         super(message);
     }
 
-    public TransformationException(Exception e) {
+    public TransformationException(Throwable e) {
         super(e);
     }
 
@@ -54,7 +54,7 @@ public class TransformationException extends TeiidProcessingException {
      * @param message A message describing the exception
      * @param e An exception to nest within this one
      */
-    public TransformationException( Exception e, String message ) {
+    public TransformationException( Throwable e, String message ) {
         super( e, message );
     }
     public TransformationException(BundleUtil.Event event, String message) {

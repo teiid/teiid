@@ -520,7 +520,7 @@ public class FunctionLibrary {
     }
 
     /**
-     * Return a copy of the given FunctionDescriptor with the sepcified return type.
+     * Return a copy of the given FunctionDescriptor with the specified return type.
      * @param fd FunctionDescriptor to be copied.
      * @param returnType The return type to apply to the copied FunctionDescriptor.
      * @return The copy of FunctionDescriptor.
