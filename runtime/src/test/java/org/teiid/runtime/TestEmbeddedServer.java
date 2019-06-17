@@ -936,6 +936,9 @@ public class TestEmbeddedServer {
                 "create view v (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;"+
                 "create view v1 (i integer, k integer not null auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;"+
                 "create trigger on v1 instead of insert as for each row begin atomic "
+                + "insert into tbl (x) values (new.i); key.k = cast(generated_key('y') as integer); end;" +
+                "create view v2 (i integer, k integer auto_increment primary key) OPTIONS (UPDATABLE true) as select x, y from tbl;"+
+                "create trigger on v1 instead of insert as for each row begin atomic "
                 + "insert into tbl (x) values (new.i); key.k = cast(generated_key('y') as integer); end;");
 
         es.deployVDB("vdb", mmd1);
@@ -947,7 +950,19 @@ public class TestEmbeddedServer {
         assertTrue(rs.next());
         assertEquals("k", rs.getMetaData().getColumnLabel(1));
 
+        /**
+         * TODO: some systems when using not null on auto increment allow a null insert to
+         */
         ps = c.prepareStatement("insert into v1 (i) values (1)", Statement.RETURN_GENERATED_KEYS);
+        assertEquals(1, ps.executeUpdate());
+        rs = ps.getGeneratedKeys();
+        assertTrue(rs.next());
+        assertEquals("k", rs.getMetaData().getColumnLabel(1));
+
+        /**
+         * Not null on v2.k should not be required for this to work.
+         */
+        ps = c.prepareStatement("insert into v2 (i) values (1)", Statement.RETURN_GENERATED_KEYS);
         assertEquals(1, ps.executeUpdate());
         rs = ps.getGeneratedKeys();
         assertTrue(rs.next());

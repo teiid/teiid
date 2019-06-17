@@ -289,6 +289,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                     if (!metadata.elementSupports(varSymbol.getMetadataID(), SupportConstants.Element.NULL)) {
                         continue;
                     }
+                    varSymbol = next.clone();
                 }
                 Expression value = ResolverUtil.getDefault(varSymbol, metadata);
                 varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
