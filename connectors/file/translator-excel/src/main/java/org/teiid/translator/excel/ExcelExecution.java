@@ -65,20 +65,19 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
         
         int i = -1;
         for (int index:this.visitor.getProjectedColumns()) {
-        	
-        	i++;
-        	// check if the row is ROW_ID
-        	if (index == -1) {
-        		output.add(id);
-        		continue;
-        	}
-        	
-        	Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
-        	if (cell == null) {
-        		output.add(null);
-        		continue;
-        	}
-        	switch (this.evaluator.evaluateInCell(cell).getCellType()) {
+            i++;
+            // check if the row is ROW_ID
+            if (index == -1) {
+                output.add(id);
+                continue;
+            }
+
+            Cell cell = row.getCell(index-1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            if (cell == null) {
+                output.add(null);
+                continue;
+            }
+            switch (this.evaluator.evaluateInCell(cell).getCellType()) {
                 case Cell.CELL_TYPE_NUMERIC:
                     output.add(convertFromExcelType(cell.getNumericCellValue(), cell, this.expectedColumnTypes[i]));
                     break;
