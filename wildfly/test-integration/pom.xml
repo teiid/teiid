@@ -127,7 +127,6 @@
 
   <modules>
     <module>common</module>
-    <module>db</module>
     <module>perf</module>
   </modules>
 </project>
