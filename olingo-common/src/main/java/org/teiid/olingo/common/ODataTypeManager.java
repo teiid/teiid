@@ -49,6 +49,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.EdmStream;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmString;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmTimeOfDay;
 import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.locationtech.jts.geom.Geometry;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -58,8 +59,6 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.query.function.GeometryUtils;
 import org.teiid.translator.TranslatorException;
-
-import org.locationtech.jts.geom.Geometry;
 
 public class ODataTypeManager {
 
@@ -114,6 +113,7 @@ public class ODataTypeManager {
         teiidTypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, "Edm.DateTimeOffset");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.BLOB, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.CLOB, "Edm.Stream");
+        teiidTypes.put(DataTypeManager.DefaultDataTypes.JSON, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.XML, "Edm.Stream");
         teiidTypes.put(DataTypeManager.DefaultDataTypes.VARBINARY, "Edm.Binary"); //$NON-NLS-1$
         //will fail for most values
