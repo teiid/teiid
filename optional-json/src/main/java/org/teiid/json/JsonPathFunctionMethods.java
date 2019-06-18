@@ -152,7 +152,7 @@ public class JsonPathFunctionMethods {
                 rows.add(buildRow(value, conf, paths, row++));
             }
         } else {
-            buildRow(result, conf, paths, 1);
+            rows.add(buildRow(result, conf, paths, 1));
         }
 
         return rows.toArray(new Object[rows.size()]);

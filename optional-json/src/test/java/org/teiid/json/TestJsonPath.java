@@ -161,4 +161,22 @@ public class TestJsonPath {
 
         TestProcessor.helpProcess(plan, hdm, expected);
     }
+
+    @Test public void testRootObject() throws Exception {
+        String sql = "SELECT j.id, j.name, j.status FROM JSONTABLE(cast('{\n" +
+                "  \"id\": 5,\n" +
+                "  \"name\": \"carly\",\n" +
+                "  \"status\": \"sold\"\n" +
+                "}' as json), '$', false COLUMNS id integer, name string, status string) as j";
+
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+
+        List<?>[] expected = new List[] {
+                Arrays.asList(5, "carly", "sold"),
+        };
+
+        HardcodedDataManager hdm = new HardcodedDataManager();
+
+        TestProcessor.helpProcess(plan, hdm, expected);
+    }
 }
