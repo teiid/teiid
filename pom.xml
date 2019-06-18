@@ -147,6 +147,8 @@
         <!-- OpenTracing -->
         <version.opentracing.concurrent>0.1.0</version.opentracing.concurrent>
         <version.opentracing>0.31.0</version.opentracing>
+
+        <version.xerces>2.12.0</version.xerces>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -542,7 +544,6 @@
    </dependencies>
    <dependencyManagement>
         <dependencies>
-
             <dependency>
                 <groupId>ant-contrib</groupId>
                 <artifactId>ant-contrib</artifactId>
@@ -566,7 +567,11 @@
                 </exclusions>
             </dependency>
 
-
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${version.xerces}</version>
+            </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-simpledb</artifactId>
