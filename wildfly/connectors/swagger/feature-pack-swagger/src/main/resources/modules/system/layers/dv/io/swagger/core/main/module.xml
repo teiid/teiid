@@ -11,6 +11,14 @@
         <artifact name="${io.swagger:swagger-annotations}"/>
         <artifact name="${io.swagger:swagger-models}"/>
         <artifact name="${io.swagger:swagger-parser}"/>
+        <artifact name="${io.swagger:swagger-compat-spec-parser}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-v3}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-v2-converter}"/>
+        <artifact name="${io.swagger.parser.v3:swagger-parser-core}"/>
+        <artifact name="${io.swagger.core.v3:swagger-models}"/>
+        <artifact name="${io.swagger.core.v3:swagger-annotations}"/>
+        <artifact name="${io.swagger.core.v3:swagger-core}"/>
     </resources>
     
     <dependencies>

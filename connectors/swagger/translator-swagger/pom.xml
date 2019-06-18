@@ -7,7 +7,6 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>translator-swagger</artifactId>
-	<groupId>org.teiid.connectors</groupId>
 	<name>Swagger Translator</name>
 	<description>This translator provides access Swagger based data sources.</description>
 	

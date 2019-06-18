@@ -28,6 +28,8 @@ import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -67,6 +69,8 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.parser.converter.SwaggerConverter;
+import io.swagger.v3.parser.core.extensions.SwaggerParserExtension;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import io.swagger.v3.parser.util.RefUtils;
@@ -160,6 +164,13 @@ public class OpenAPIMetadataProcessor implements MetadataProcessor<WSConnection>
     public void process(MetadataFactory mf, WSConnection connection) throws TranslatorException {
         SwaggerParseResult swagger = getSchema(connection);
         OpenAPI openapi = swagger.getOpenAPI();
+        List<String> messages = swagger.getMessages();
+        if (messages != null && !messages.isEmpty()) {
+            if (openapi == null) {
+                throw new TranslatorException(messages.iterator().next());
+            }
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, messages.iterator().next());
+        }
         List<Server> servers = openapi.getServers();
         Server toUse = null;
         if (server != null) {
@@ -644,7 +655,21 @@ public class OpenAPIMetadataProcessor implements MetadataProcessor<WSConnection>
                 url = "openapi"; //$NON-NLS-1$
             }
 
-            OpenAPIParser parser = new OpenAPIParser();
+            OpenAPIParser parser = new OpenAPIParser() {
+                /*
+                 * The service loader mechanism doesn't seem to work well in wildfly,
+                 * so we manually do it here
+                 */
+                @Override
+                protected List<SwaggerParserExtension> getExtensions() {
+                    List<SwaggerParserExtension> extensions = super.getExtensions();
+                    SwaggerConverter converter = new SwaggerConverter();
+                    if (!extensions.contains(converter)) {
+                        extensions.add(converter);
+                    }
+                    return extensions;
+                }
+            };
             ParseOptions parseOptions = new ParseOptions();
             parseOptions.setResolve(true);
 
@@ -653,7 +678,7 @@ public class OpenAPIMetadataProcessor implements MetadataProcessor<WSConnection>
             } else {
                 BaseQueryExecution execution = new BaseQueryExecution(this.ef, null, null, conn);
                 Map<String, List<String>> headers = new HashMap<String, List<String>>();
-                BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", "openapi", null, headers); //$NON-NLS-1$ //$NON-NLS-2$
+                BinaryWSProcedureExecution call = execution.buildInvokeHTTP("GET", url, null, headers); //$NON-NLS-1$
                 call.execute();
                 if (call.getResponseCode() != 200) {
                     throw new TranslatorException(SwaggerPlugin.Event.TEIID28015,
