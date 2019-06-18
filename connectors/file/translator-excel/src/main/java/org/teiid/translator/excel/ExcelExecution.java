@@ -73,7 +73,7 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
                 continue;
             }
 
-            Cell cell = row.getCell(index-1, Row.RETURN_BLANK_AS_NULL);
+            Cell cell = row.getCell(index-1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
             if (cell == null) {
                 output.add(null);
                 continue;
