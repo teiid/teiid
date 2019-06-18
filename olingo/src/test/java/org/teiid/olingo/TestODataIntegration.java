@@ -61,6 +61,7 @@ import org.teiid.adminapi.CacheStatistics;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.core.util.UnitTestUtil;
@@ -2077,16 +2078,22 @@ public class TestODataIntegration {
         smalla.setPrimaryKey(pk);
         String ddl = DDLStringVisitor.getDDLString(s, EnumSet.allOf(SchemaObjectType.class), "SmallA");
 
+        ddl += "; create foreign table bin_test (pk integer primary key, bin varbinary)";
+
         mmd.addSourceMetadata("DDL", ddl);
 
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
         teiid.addTranslator("x3", hc);
         teiid.deployVDB("northwind", mmd);
 
-
-
         ContentResponse response= http.GET(baseURL + "/northwind/m/SmallA?$format=json&$select=TimeValue");
         assertEquals(200, response.getStatus());
+
+        hc.addData("SELECT bin_test.pk, bin_test.bin FROM bin_test", Arrays.asList(Arrays.asList(1, new BinaryType("hello".getBytes("UTF-8")))));
+
+        response= http.GET(baseURL + "/northwind/m/bin_test?$format=json&$select=bin");
+        assertEquals(200, response.getStatus());
+        assertTrue(response.getContentAsString().contains("\"bin\":\"aGVsbG8=\""));
     }
 
     @Test
@@ -2134,9 +2141,9 @@ public class TestODataIntegration {
                 .send();
         assertEquals(200, response.getStatus());
         String string = response.getContentAsString();
-        // stream properties are computed, not shown in the payload.
-        assertFalse(string.contains("odata4/loopy/vm1/LobTable(1)/e2"));
-        assertFalse(string.contains("odata4/loopy/vm1/LobTable(2)/e2"));
+        // stream properties are shown in the metadata.
+        assertTrue(string.contains("{\"@odata.mediaEditLink\":\""+baseURL+"/loopy/vm1/LobTable(1)/e2\""));
+        assertTrue(string.contains("{\"@odata.mediaEditLink\":\""+baseURL+"/loopy/vm1/LobTable(2)/e2\""));
     }
 
     @Test

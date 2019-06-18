@@ -56,6 +56,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.core.responses.EntityResponse;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -369,6 +370,12 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         } else if (expectedType instanceof EdmTimeOfDay && sourceType == Time.class){
             return value;
         } else if (expectedType instanceof EdmBinary) {
+            if (sourceType == BinaryType.class) {
+                if (value instanceof BinaryType) {
+                    return ((BinaryType)value).getBytesDirect();
+                }
+                return value;
+            }
             // there could be memory implications here, should have been modeled as EdmStream
             LogManager.logDetail(LogConstants.CTX_ODATA, "Possible OOM when inlining the stream based values"); //$NON-NLS-1$
             if (sourceType == ClobType.class) {

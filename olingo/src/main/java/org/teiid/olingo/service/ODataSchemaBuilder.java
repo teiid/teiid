@@ -155,7 +155,7 @@ public class ODataSchemaBuilder {
 
     private static boolean hasStream(List<CsdlProperty> properties) {
         for (CsdlProperty p : properties) {
-            if (p.getType().equals(EdmPrimitiveTypeKind.Binary.getFullQualifiedName())) {
+            if (p.getType().equals(EdmPrimitiveTypeKind.Stream.getFullQualifiedName().toString())) {
                 return true;
             }
         }
