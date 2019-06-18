@@ -402,6 +402,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType, isArray));
         if (sourceType != targetType) {
             Transform t = DataTypeManager.getTransform(sourceType, targetType);
+            value = DataTypeManager.convertToRuntimeType(value, true);
             value = t != null ? t.transform(value, targetType) : value;
         }
         return value;

@@ -3191,4 +3191,17 @@ public class TestODataIntegration {
         assertEquals(501, response.getStatus());
     }
 
+    @Test public void testJson() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        mmd.addSourceMetadata("ddl", "create view v (col1 integer primary key, col2 json) as SELECT 1, JSONARRAY_AGG(JSONOBJECT('a')) from (select 1) as x");
+        teiid.deployVDB("northwind", mmd);
+
+        ContentResponse response = http.newRequest(baseURL + "/northwind/x/v")
+                .method("GET")
+                .send();
+        assertEquals(200, response.getStatus());
+    }
+
 }
