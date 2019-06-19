@@ -130,7 +130,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 
     /**
      * @see #setCacheFactory(CacheFactory) to set the {@link CacheFactory} directly
-     * @return
      */
     @Deprecated
     public void setInfinispanConfigFile(String infinispanConfigFile) {

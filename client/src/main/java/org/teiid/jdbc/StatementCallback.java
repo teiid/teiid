@@ -50,7 +50,7 @@ public interface StatementCallback {
 
     /**
      * Called when processing has completed normally.
-     * @param rs
+     * @param s
      */
     void onComplete(Statement s) throws Exception;
 

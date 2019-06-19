@@ -408,7 +408,6 @@ public class FrameUtil {
      * Returns null if the originating node cannot be found.
      *
      * @param root
-     * @param groups
      * @return
      */
     public static PlanNode findJoinSourceNode(PlanNode root) {
@@ -503,7 +502,6 @@ public class FrameUtil {
      * Look for SOURCE node either one or two steps below the access node.  Typically
      * these options look like ACCESS-SOURCE or ACCESS-PROJECT-SOURCE.
      *
-     * @param accessNode
      * @return The actual stored procedure
      */
     static Command getNonQueryCommand(PlanNode node) {

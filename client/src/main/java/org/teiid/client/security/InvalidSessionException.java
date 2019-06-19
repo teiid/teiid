@@ -32,7 +32,7 @@ public class InvalidSessionException extends TeiidSecurityException {
     /**
      * Constructs an instance of the exception with the specified detail message. A detail
      * message is a String that describes this particular exception.
-     * @param the detail message
+     * @param message the detail message
      */
     public InvalidSessionException(String message) {
         super(message);
@@ -59,7 +59,7 @@ public class InvalidSessionException extends TeiidSecurityException {
      * Construct an instance with an error code and message specified.
      *
      * @param message The error message
-     * @param code    The error code
+     * @param event    The error code
      */
     public InvalidSessionException( BundleUtil.Event event, String message ) {
         super(event, message);
@@ -68,9 +68,9 @@ public class InvalidSessionException extends TeiidSecurityException {
      * Construct an instance with a linked exception, and an error code and
      * message, specified.
      *
-     * @param e       An exception to chain to this exception
+     * @param t       An exception to chain to this exception
      * @param message The error message
-     * @param code    The error code
+     * @param event    The error code
      */
     public InvalidSessionException( BundleUtil.Event event, Throwable t, String message ) {
         super(event, t, message);

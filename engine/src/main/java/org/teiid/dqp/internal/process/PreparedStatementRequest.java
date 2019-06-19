@@ -87,11 +87,6 @@ public class PreparedStatementRequest extends Request {
         prepPlan.setReferences(references);
     }
 
-    /**
-     * @throws TeiidComponentException
-     * @throws TeiidProcessingException
-     * @see org.teiid.dqp.internal.process.Request#generatePlan()
-     */
     @Override
     protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
         createCommandContext();
@@ -158,7 +153,6 @@ public class PreparedStatementRequest extends Request {
      *     The source supports preparedBatchUpdate -> just let the command and values pass to the source
      *   else
      *     create a batchedupdatecommand that represents the batch operation
-     * @param command
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      * @throws QueryResolverException

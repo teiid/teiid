@@ -129,7 +129,7 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
     /**
      * Basically, a keyspace be map to a table, keyspace name is the table name, if TranslatorProperty TypeNameList defined,
      * a keyspace may map to several tables, for example, if the TypeNameList=`default`:`type`,
-     * then the {@link CouchbaseMetadataProcessor#addTable(MetadataFactory, CouchbaseConnection, namespace, namespace)}
+     * then the {@link CouchbaseMetadataProcessor#addTable(String, String, boolean, String, Dimension, MetadataFactory)}
      * will get all distinct `type` attribute referenced values from keyspace, and use all these values as table name.
      *
      * If multiple keyspaces has same typed value, for example, like TypeNameList=`default`:`type`,`default2`:`type`, both default and default2
@@ -222,7 +222,6 @@ public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseCo
      * @param key - The attribute name in document, which mapped with value
      * @param value - JsonObject/JsonArray which may contain nested JsonObject/JsonArray
      * @param mf
-     * @param conn
      * @param table
      * @param referenceTableName - The top table name, used to add foreign key
      * @param isNestedType - Whether the jsonValue are a nested value, or the jsonValue is a segment of document

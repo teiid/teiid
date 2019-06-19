@@ -51,7 +51,6 @@ public class LDAPSearchDetails {
      * @param name the context name
      * @param searchScope the search scope
      * @param filter the context filter
-     * @param attributeList the list of attributes
      * @param keys
      * @param limit
      * @param elementList

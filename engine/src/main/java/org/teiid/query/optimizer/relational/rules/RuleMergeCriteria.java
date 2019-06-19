@@ -40,9 +40,7 @@ import org.teiid.query.util.CommandContext;
 
 public final class RuleMergeCriteria implements OptimizerRule {
 
-    /**
-     * @see OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
-     */
+    @Override
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, TeiidComponentException {
         // Find strings of criteria and merge them, removing duplicates
@@ -58,7 +56,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
     /**
      * Walk the tree pre-order, looking for any chains of criteria
-     * @param node Root node to search
+     * @param root Root node to search
      * @param foundNodes Roots of criteria chains
      */
      void findCriteriaChains(PlanNode root, List<PlanNode> foundNodes)

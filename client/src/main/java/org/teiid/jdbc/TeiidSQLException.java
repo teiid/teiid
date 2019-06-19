@@ -219,18 +219,10 @@ public class TeiidSQLException extends SQLException {
         return message;
     }
 
-    /**
-     * @see org.teiid.jdbc.api.SQLException#isSystemErrorState()
-     * @since 4.3
-     */
     public boolean isSystemErrorState() {
         return SQLStates.isSystemErrorState(getSQLState());
     }
 
-    /**
-     * @see org.teiid.jdbc.api.SQLException#isUsageErrorState()
-     * @since 4.3
-     */
     public boolean isUsageErrorState() {
         return SQLStates.isUsageErrorState(getSQLState());
     }

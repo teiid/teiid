@@ -85,9 +85,6 @@ public class LoopStatement extends Statement implements SubqueryContainer, Label
         this.query = command;
     }
 
-    /**
-     * @param string
-     */
     public void setCursorName(String cursorName) {
         this.cursorName = cursorName;
     }

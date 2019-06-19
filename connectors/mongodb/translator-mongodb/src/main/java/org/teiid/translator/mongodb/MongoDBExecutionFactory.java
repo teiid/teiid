@@ -488,12 +488,6 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         return true;
     }
 
-    /**
-     * @param field
-     * @param expectedClass
-     * @return
-     * @throws TranslatorException
-     */
     public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn, String colName)
             throws TranslatorException {
         if (value == null) {

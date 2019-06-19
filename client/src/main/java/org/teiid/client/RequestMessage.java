@@ -129,9 +129,6 @@ public class RequestMessage implements Externalizable {
         return partialResultsFlag;
     }
 
-    /**
-     * @param i
-     */
     public void setFetchSize(int fetchSize) {
         this.fetchSize = fetchSize;
     }

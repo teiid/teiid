@@ -185,8 +185,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * Walk the tree pre-order, finding all access nodes that are candidates and
      * adding them to the matches list.
      * @param metadata Metadata implementation
-     * @param node Root node to search
-     * @param matches Collection to accumulate matches in
+     * @param root Root node to search
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      */
@@ -327,8 +326,6 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @param dca
      * @param rules
      * @param analysisRecord
-     * @param commandContext
-     * @param capFinder
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      * @throws QueryPlannerException

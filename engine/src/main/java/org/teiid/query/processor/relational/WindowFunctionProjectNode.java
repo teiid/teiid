@@ -674,7 +674,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
     /**
      * @param functions
      * @param specIndex
-     * @param rowValues
      * @return
      */
     private List<AggregateFunction> initializeAccumulators(List<WindowFunctionInfo> functions, int specIndex) {
@@ -700,8 +699,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 
     /**
      * Save the input generating any necessary expressions and adding a row id
-     * @param collectedExpressions
-     * @return
      * @throws TeiidComponentException
      * @throws TeiidProcessingException
      */

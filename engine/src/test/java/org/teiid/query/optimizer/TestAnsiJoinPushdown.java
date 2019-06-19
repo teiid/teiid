@@ -30,8 +30,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 public class TestAnsiJoinPushdown {
 
     /**
-     * See {@link TestOptimizer.testPushMultiGroupCriteria}
-     *
      * Notice that the non-join criteria is still in the on clause.
      */
     @Test public void testAnsiInnerJoin() throws Exception {

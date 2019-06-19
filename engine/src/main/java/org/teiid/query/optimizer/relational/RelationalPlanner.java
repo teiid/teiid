@@ -1528,9 +1528,6 @@ public class RelationalPlanner {
      * essentially the same tree, but with different objects and details.
      * @param clause Clause to build tree from
      * @param parent Parent node to attach join node structure to
-     * @param sourceMap Map of group to source node, used for connecting children to join plan
-     * @param markJoinsInternal Flag saying whether joins built in this method should be marked
-     * as internal
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      * @throws TeiidProcessingException
@@ -1914,8 +1911,7 @@ public class RelationalPlanner {
      * Attach a grouping node at top of tree.
      * @param plan Existing plan
      * @param aggs
-     * @param parentOrderBy
-     * @param groupBy Group by clause, which may be null
+     * @param parentOrderBys
      * @return Updated plan
      * @throws TeiidComponentException
      * @throws QueryMetadataException

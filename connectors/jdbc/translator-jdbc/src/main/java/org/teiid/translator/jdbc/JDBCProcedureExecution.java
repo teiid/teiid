@@ -36,13 +36,6 @@ import org.teiid.translator.TranslatorException;
  */
 public class JDBCProcedureExecution extends JDBCQueryExecution implements ProcedureExecution {
 
-    /**
-     * @param connection
-     * @param sqlTranslator
-     * @param logger
-     * @param props
-     * @param id
-     */
     public JDBCProcedureExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
     }

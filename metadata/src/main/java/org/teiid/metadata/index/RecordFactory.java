@@ -125,7 +125,6 @@ public class RecordFactory {
      * Return a collection of {@link AbstractMetadataRecord}
      * instances for the result obtained from executing <code>queryEntriesMatching</code>
      * @param queryResult
-     * @param container Container reference to be set on the record
      */
     public List<AbstractMetadataRecord> getMetadataRecord(final IEntryResult[] queryResult) {
         final List records = new ArrayList(queryResult.length);
@@ -141,7 +140,7 @@ public class RecordFactory {
     /**
      * Return the {@link AbstractMetadataRecord}
      * instances for specified IEntryResult.
-     * @param entryResult
+     * @param record
      */
     protected AbstractMetadataRecord getMetadataRecord(final char[] record) {
         parentId = null;

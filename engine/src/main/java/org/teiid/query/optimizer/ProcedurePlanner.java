@@ -60,7 +60,6 @@ public final class ProcedurePlanner implements CommandPlanner {
      * of the CommandTreeNode, the procedure plan construction involves using the child
      * processor plans.</p>
      * @param metadata source of metadata
-     * @param debug whether or not to generate verbose debug output during planning
      * @return ProcessorPlan This processorPlan is a <code>ProcedurePlan</code>
      * @throws QueryPlannerException indicating a problem in planning
      * @throws QueryMetadataException indicating an exception in accessing the metadata
@@ -114,7 +113,6 @@ public final class ProcedurePlanner implements CommandPlanner {
      * add the resulting {@link ProgramInstruction} a new {@link Program} for the block.</p>
      * @param block The <code>Block</code> to be planned
      * @param metadata Metadata used during planning
-     * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
      * @param debug Boolean determining if procedure plan needs to be printed for debug purposes
      * @param analysisRecord
      * @return A Program resulting in the block planning
@@ -175,7 +173,6 @@ public final class ProcedurePlanner implements CommandPlanner {
      * and uses it for constructing the necessary instruction.</p>
      * @param statement The statement to be planned
      * @param metadata Metadata used during planning
-     * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
      * @param debug Boolean determining if procedure plan needs to be printed for debug purposes
      * @param analysisRecord
      * @return An array containing index of the next child to be accessed and the ProgramInstruction resulting

@@ -26,9 +26,6 @@ final class SimpleChannelFactory implements ChannelFactory {
     private final String jgroupsConfigFile;
     private JChannel channel;
 
-    /**
-     * @param embeddedConfiguration
-     */
     SimpleChannelFactory(String jgroupsConfigFile) {
         this.jgroupsConfigFile = jgroupsConfigFile;
     }

@@ -127,7 +127,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     /**
      * Helper to quickly get the groups from obj in the groups collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static void getGroups(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
@@ -157,7 +157,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     /**
      * Helper to quickly get the groups from obj in the groups collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static void getGroupsIgnoreInlineViewsAndEvaluatableSubqueries(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);

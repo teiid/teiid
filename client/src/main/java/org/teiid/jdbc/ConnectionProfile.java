@@ -18,16 +18,15 @@
 
 package org.teiid.jdbc;
 
-import java.sql.SQLException;
 import java.util.Properties;
 
 public interface ConnectionProfile {
 
     /**
      * This method tries to make a connection to the given URL.
-     * @param The URL used to establish a connection.
+     * @param url used to establish a connection.
      * @return Connection object created
-     * @throws SQLException if it is unable to establish a connection
+     * @throws TeiidSQLException if it is unable to establish a connection
      */
     ConnectionImpl connect(String url, Properties info) throws TeiidSQLException;
 

@@ -73,7 +73,6 @@ public abstract class JoinStrategy {
      * Output a combined, projected tuple based on tuple parts from the left and right.
      * @param leftTuple Left tuple part
      * @param rightTuple Right tuple part
-     * @throws TeiidComponentException
      */
     protected List outputTuple(List leftTuple, List rightTuple) {
         List combinedRow = new ArrayList(this.joinNode.getCombinedElementMap().size());

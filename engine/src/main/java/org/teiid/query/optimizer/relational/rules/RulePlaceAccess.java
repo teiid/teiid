@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
-import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -97,7 +96,6 @@ public final class RulePlaceAccess implements
      *
      * @param metadata
      * @param sourceNode
-     * @return true if the source node has an access pattern
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
@@ -363,7 +361,7 @@ public final class RulePlaceAccess implements
      *            source of metadata
      * @throws QueryMetadataException
      *             if there is an exception accessing metadata
-     * @throws QueryResolverException
+     * @throws QueryMetadataException
      *             if the GroupSymbol of an atomic command cannot be resolved
      * @throws TeiidComponentException
      *             indicating some unexpected non-business exception

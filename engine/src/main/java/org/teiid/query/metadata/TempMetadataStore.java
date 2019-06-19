@@ -70,7 +70,6 @@ public class TempMetadataStore implements Serializable {
 
     /**
      * Get all temp group and element metadata
-     * @param data Map of upper case group name to group TempMetadataID object
      */
     public NavigableMap<String, TempMetadataID> getData() {
         return this.tempGroups;
@@ -98,8 +97,6 @@ public class TempMetadataStore implements Serializable {
     /**
      * Add a temp group and all it's elements
      * @param tempGroup Name of temp group
-     * @param tempGroupDefinition optional definition if the tempGroup
-     * param is the aliased name of a group
      * @param tempSymbols List of ElementSymbol in position order
      * @param isVirtual whether or not the group is a virtual group
      * @param isTempTable whether or not the group is a temporary table
@@ -210,7 +207,6 @@ public class TempMetadataStore implements Serializable {
     /**
      * Get temporary element ID based on group and element name parts
      * @param tempGroup Group name
-     * @param tempElement Short element name
      * @return Metadata ID or null if not found
      */
     public List<TempMetadataID> getTempElementElementIDs(String tempGroup) {

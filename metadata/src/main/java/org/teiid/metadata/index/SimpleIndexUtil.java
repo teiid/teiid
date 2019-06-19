@@ -42,11 +42,9 @@ public class SimpleIndexUtil {
      * wildcard '?'.  The prefix may be constructed from any combination of
      * characters excluding the wildcard characters.  The prefix specifies a fixed
      * number of characters that the index record must start with.
-     * @param monitor an optional ProgressMonitor
      * @param indexes the array of MtkIndex instances to query
      * @param pattern
      * @return results
-     * @throws MetamatrixCoreException
      */
     public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws TeiidException {
         final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();

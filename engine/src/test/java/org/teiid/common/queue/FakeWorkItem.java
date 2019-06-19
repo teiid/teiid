@@ -37,9 +37,6 @@ public class FakeWorkItem implements Runnable {
         this.waitTime = waitTime;
     }
 
-    /**
-     * @see com.metamatrix.common.queue.QueueWorker#process(Object)
-     */
     public void run() {
         if(begin == 0) {
             begin = System.currentTimeMillis();

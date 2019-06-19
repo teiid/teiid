@@ -101,7 +101,7 @@ public class MetaDataProcessor {
      * Process a metadata request message - this is typically either a request
      * for metadata for a prepared statement or a request for full metadata from
      * an already processed command.
-     * @param metadataMsg The message from the client
+     * @param preparedSql The sql from the client
      * @return The message for the client
      * @throws TeiidComponentException
      * @throws TeiidProcessingException

@@ -83,7 +83,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     /**
      * Clean the file storage directory on startup
-     * @param dir
      * @since 4.3
      */
     void cleanDirectory(File file) {

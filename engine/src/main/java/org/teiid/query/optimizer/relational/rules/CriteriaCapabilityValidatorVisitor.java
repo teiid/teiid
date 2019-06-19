@@ -102,11 +102,6 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private boolean checkEvaluation = true;
     private boolean pushdown;
 
-    /**
-     * @param iterator
-     * @throws TeiidComponentException
-     * @throws QueryMetadataException
-     */
     public CriteriaCapabilityValidatorVisitor(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, SourceCapabilities caps) throws QueryMetadataException, TeiidComponentException {
         this.modelID = modelID;
         this.metadata = metadata;

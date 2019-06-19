@@ -38,8 +38,7 @@ import org.teiid.query.function.metadata.FunctionCategoryConstants;
 public class OSDQFunctions {
 
     /**
-     * @param a
-     *  The string that need to randomize
+     * @param sourceValue The string that need to randomize
      *   vivek singh' will become 'ihg vkeivh'
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS, determinism=Determinism.COMMAND_DETERMINISTIC)
@@ -48,9 +47,8 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param a
-     * This function will return digit characters of the string
-     * @return
+     * @param sourceValue
+     * @return This function will return digit characters of the string
      *
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
@@ -68,7 +66,7 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param Credit Card number
+     * @param cc Credit Card number
      * @return boolean if matches credit card logic and checksum
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
@@ -105,8 +103,6 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param String a
-     * @param String b
      * @return float distance
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
@@ -119,8 +115,6 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param String a
-     * @param String b
      * @return float distance
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
@@ -133,8 +127,6 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param String a
-     * @param String b
      * @return float distance
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)
@@ -143,8 +135,6 @@ public class OSDQFunctions {
     }
 
     /**
-     * @param String a
-     * @param String b
      * @return float distance
      */
     @TeiidFunction(category=FunctionCategoryConstants.MISCELLANEOUS)

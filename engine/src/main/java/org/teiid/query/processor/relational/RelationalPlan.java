@@ -73,9 +73,7 @@ public class RelationalPlan extends ProcessorPlan {
         this.with = with;
     }
 
-    /**
-     * @see ProcessorPlan#connectDataManager(ProcessorDataManager)
-     */
+    @Override
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         if (this.with != null) {
             context = context.clone();

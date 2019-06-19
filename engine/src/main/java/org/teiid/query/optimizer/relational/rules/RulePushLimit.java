@@ -23,10 +23,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
-import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
@@ -585,11 +583,10 @@ public class RulePushLimit implements OptimizerRule {
     }
 
     /**
-     * @param limitNode
-     * @param child
-     * @throws TeiidComponentException
-     * @throws BlockedException
-     * @throws ExpressionEvaluationException
+     * Construct an Expression that is the min of the two Expressions
+     * @param expr1
+     * @param expr2
+     * @return
      */
     static Expression getMinValue(Expression expr1, Expression expr2) {
         if (expr1 == null) {

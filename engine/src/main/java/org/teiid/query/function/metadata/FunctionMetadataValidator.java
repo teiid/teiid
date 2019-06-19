@@ -55,7 +55,6 @@ public class FunctionMetadataValidator {
      * Validate a collection of {@link FunctionMethod} objects.
      * @param methods Collection of {@link FunctionMethod} objects
      * @param report Report to store validation errors
-     * @param runtimeTypeMap
      */
     public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
         validateFunctionMethods(methods, report, null);

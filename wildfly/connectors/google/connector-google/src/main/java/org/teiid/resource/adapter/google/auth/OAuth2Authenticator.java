@@ -67,7 +67,7 @@ public class OAuth2Authenticator {
      *
      * @param clientSecret
      * @param clientId
-     * @param new immutable instance of OAuth2Tokens
+     * @param at immutable instance of OAuth2Tokens
      * @return
      */
 //    curl --data-urlencode client_id=217138521084.apps.googleusercontent.com \

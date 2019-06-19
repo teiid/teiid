@@ -75,7 +75,7 @@ public class Handshake implements Externalizable {
     }
 
     /**
-     * @param version The version to set.
+     * Sets the version from the {@link ApplicationInfo}
      */
     public void setVersion() {
         this.version = ApplicationInfo.getInstance().getReleaseNumber();

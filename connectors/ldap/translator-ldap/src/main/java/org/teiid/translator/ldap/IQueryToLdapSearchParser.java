@@ -190,7 +190,6 @@ public class IQueryToLdapSearchParser {
     /**
      * get SortKeys from the supplied ORDERBY clause.
      * @param orderBy the OrderBy clause
-     * @param the array of SortKeys
      */
     private SortKey[] getSortKeysFromOrderByClause(OrderBy orderBy) throws TranslatorException {
         SortKey[] sortKeys = null;
@@ -454,7 +453,7 @@ public class IQueryToLdapSearchParser {
      * The goal is to convert infix notation to prefix (Polish) notation.
      * TODO: There's probably a clever way to do this with a Visitor.
      * @param criteria Criteria to evaluate.
-     * @param List list to hold each pre-fix character of the search filter.
+     * @param filterList list to hold each pre-fix character of the search filter.
      * @return list list that can be traversed in order to construct the search filter.
      */
     private List<String> getSearchFilterFromWhereClause(Condition criteria, List<String> filterList) throws TranslatorException {
@@ -633,10 +632,8 @@ public class IQueryToLdapSearchParser {
 
 
     /**
-     * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a
+     * Helper method for getting a {@link Column} from a
      * {@link org.teiid.language.DerivedColumn}.
-     * @param symbol Input ISelectSymbol
-     * @return Element returned metadata runtime Element
      */
     private Column getElementFromSymbol(DerivedColumn symbol) {
         ColumnReference expr = (ColumnReference) symbol.getExpression();

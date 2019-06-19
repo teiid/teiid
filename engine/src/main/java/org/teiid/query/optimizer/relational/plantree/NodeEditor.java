@@ -77,8 +77,8 @@ public final class NodeEditor {
      * Return the first parent node of the given type stopping at the given nodes.
      * The matching will start at the parent of the node passed in.
      * @param root
-     * @param type
-     * @param stopTypes
+     * @param types a bitwise and of type values
+     * @param stopTypes a bitwise and of type values to stop at
      * @return the matching parent, or null one is not found
      */
     public static final PlanNode findParent(PlanNode root,

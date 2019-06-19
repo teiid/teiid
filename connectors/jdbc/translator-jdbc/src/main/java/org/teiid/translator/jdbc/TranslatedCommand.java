@@ -47,10 +47,6 @@ public class TranslatedCommand {
     private JDBCExecutionFactory executionFactory;
     private ExecutionContext context;
 
-    /**
-     * Constructor, takes a SQLConversionVisitor subclass
-     * @param visitor a SQLConversionVisitor subclass
-     */
     public TranslatedCommand(ExecutionContext context, JDBCExecutionFactory executionFactory){
         this.executionFactory = executionFactory;
         this.context = context;

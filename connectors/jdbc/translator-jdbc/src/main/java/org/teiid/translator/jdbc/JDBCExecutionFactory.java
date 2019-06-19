@@ -314,7 +314,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
     /**
      * @deprecated
-     * @see getMetadataProcessor
+     * @see #getMetadataProcessor()
      */
     @Deprecated
     protected JDBCMetadataProcessor createMetadataProcessor() {
@@ -523,7 +523,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
     /**
      * Gets the database calendar.  This will be set to the time zone
-     * specified by the property {@link JDBCPropertyNames#DATABASE_TIME_ZONE}, or
+     * specified by the property {@link #setDatabaseTimeZone(String)}, or
      * the local time zone if none is specified.
      * @return the database calendar
      */
@@ -534,8 +534,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     /**
      * Return a List of translated parts ({@link LanguageObject}s and Objects), or null
      * if to rely on the default translation.  Override with care.
-     * @param command
-     * @param context
      * @return list of translated parts
      */
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
@@ -926,7 +924,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     /**
      * Use PreparedStatements (or CallableStatements) as
      * appropriate for all commands.  Bind values will be
-     * determined by the {@link BindValueVisitor}.  {@link Literal#setBindValue(boolean)}
+     * determined by {@link Literal#setBindEligible(boolean)}
      * can be used to force a literal to be a bind value.
      */
     public boolean usePreparedStatements() {
@@ -1034,8 +1032,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * For registering specific output parameter types we need to translate these into the appropriate
      * java.sql.Types output parameters
      * We will need to match these up with the appropriate standard sql types
-     * @param cstmt
-     * @param parameter
      * @throws SQLException
      */
     protected void registerSpecificTypeOfOutParameter(CallableStatement statement, Class<?> runtimeType, int index) throws SQLException {

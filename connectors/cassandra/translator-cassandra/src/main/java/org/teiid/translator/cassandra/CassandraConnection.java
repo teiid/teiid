@@ -39,7 +39,6 @@ public interface CassandraConnection extends Connection {
 
     /**
      * Returns metadata about Cassandra keyspace (column families, columns metadata etc.)
-     * @throws KeyspaceNotDefinedException
      * */
     public KeyspaceMetadata keyspaceInfo() throws TranslatorException;
 

@@ -109,9 +109,6 @@ public class TempTableStore {
          * Ensure the temp table is ready for use.  If a temp table other than the one
          * passed in is returned it should be used instead.
          * @param tempTable
-         * @param context
-         * @param bufferManager
-         * @param dataMgr
          * @throws TeiidComponentException
          * @throws TeiidProcessingException
          */

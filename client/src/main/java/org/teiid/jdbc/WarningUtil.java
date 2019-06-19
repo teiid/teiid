@@ -37,7 +37,6 @@ class WarningUtil {
     /**
      * Used to wrap warnings/exceptions into SQLWarning.
      * The chain of warnings is translated into a chain of SQLWarnings.
-     * @param reason String object which is the description of the warning.
      * @param ex Throwable object which needs to be wrapped.
      */
     static SQLWarning createWarning(Throwable ex) {

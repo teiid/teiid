@@ -46,9 +46,7 @@ import org.teiid.query.util.CommandContext;
  */
 public final class RuleCleanCriteria implements OptimizerRule {
 
-    /**
-     * @see OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
-     */
+    @Override
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, TeiidComponentException {
 

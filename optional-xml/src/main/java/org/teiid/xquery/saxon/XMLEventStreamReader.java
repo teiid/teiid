@@ -38,7 +38,6 @@ import javax.xml.stream.events.XMLEvent;
  *
  * @author Arjen Poutsma
  * @since 3.0
- * @see StaxUtils#createEventStreamReader(javax.xml.stream.XMLEventReader)
  */
 class XMLEventStreamReader extends AbstractXMLStreamReader {
 

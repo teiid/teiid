@@ -43,8 +43,6 @@ import org.teiid.query.util.CommandContext;
  * Validates that the access pattern(s) of a source are satisfied.  This means that,
  * during planning, exactly the required criteria specified by only one (if any)
  * access pattern has been pushed down to the source (in the atomic query).
- * Currently this rule just checks for a node property that was set elsewhere,
- * in the {@link RuleChooseAccessPattern} rule.
  */
 public final class RuleAccessPatternValidation implements OptimizerRule {
 

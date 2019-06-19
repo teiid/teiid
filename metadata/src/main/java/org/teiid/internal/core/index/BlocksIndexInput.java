@@ -232,9 +232,6 @@ public class BlocksIndexInput extends IndexInput {
         }
     }
 
-    /**
-     * @see IndexInput#query(String)
-     */
     public IQueryResult[] query(String word) throws IOException {
         open();
         int[] fileNums= getMatchingFileNumbers(word.toCharArray());

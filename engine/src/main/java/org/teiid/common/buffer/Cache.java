@@ -62,7 +62,6 @@ public interface Cache<T> extends StorageManager {
 
     /**
      * Must be called after lockForLoad
-     * @param o
      */
     void unlockForLoad(T lock);
 

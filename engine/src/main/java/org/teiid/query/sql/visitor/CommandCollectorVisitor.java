@@ -130,8 +130,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
 
     /**
      * Helper to quickly get the commands from obj
-     * @param obj Language object
-     * @param elements Collection to collect commands in
+     * @param command Language object
      */
     public static final List<Command> getCommands(Command command) {
         return getCommands(command, false);

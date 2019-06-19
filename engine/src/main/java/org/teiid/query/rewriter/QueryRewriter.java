@@ -481,7 +481,7 @@ public class QueryRewriter {
 
     /**
      * @param removeOrderBy
-     * @param assStmt
+     * @param container
      * @throws QueryValidatorException
      */
     private void rewriteSubqueryContainer(SubqueryContainer container, boolean removeOrderBy) throws TeiidComponentException, TeiidProcessingException{
@@ -1013,7 +1013,6 @@ public class QueryRewriter {
     /**
      * Rewrite the criteria by evaluating some trivial cases.
      * @param criteria The criteria to rewrite
-     * @param userCriteria The criteria on user's command, used in rewriting HasCriteria
      * in the procedural language.
      * @return The re-written criteria
      */
@@ -1753,7 +1752,6 @@ public class QueryRewriter {
      *
      * @param crit CompareCriteria
      * @return same Criteria instance (possibly optimized)
-     * @throws QueryValidatorException
      * @since 4.2
      */
     private Criteria simplifyConvertFunction(CompareCriteria crit) {

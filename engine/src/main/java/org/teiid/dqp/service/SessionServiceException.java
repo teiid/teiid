@@ -34,7 +34,7 @@ public class SessionServiceException extends TeiidSecurityException {
     /**
      * Constructs an instance of the exception with the specified detail message. A detail
      * message is a String that describes this particular exception.
-     * @param the detail message
+     * @param message the detail message
      */
     public SessionServiceException(String message) {
         super(message);

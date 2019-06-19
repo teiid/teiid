@@ -1147,7 +1147,6 @@ public class ExecutionFactory<F, C> {
     /**
      * @return true if full dependent join pushdown is supported
      * @since 8.5
-     * @return
      */
     public boolean supportsFullDependentJoins() {
         return false;

@@ -74,6 +74,7 @@ import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.AbstractValidationVisitor;
 import org.teiid.query.validator.ValidationVisitor;
@@ -489,7 +490,7 @@ public class MetadataValidator {
             String name = "ON_"+st.getName()+"_"+event.name()+"_FOR_"+t.getName()+"_FOR_LAZY_SNAPSHOT";
             String plan = "FOR EACH ROW\n"
                     + "BEGIN ATOMIC\n"
-                    + "EXECUTE SYSADMIN.updateStaleCount(schemaName=>'"+t.getParent().getName()+"', viewName=>'"+t.getName()+"');\n"
+                    + "EXECUTE SYSADMIN.updateStaleCount(schemaName=>'"+SQLStringVisitor.escapeSinglePart(t.getParent().getName())+"', viewName=>'"+SQLStringVisitor.escapeSinglePart(t.getName())+"');\n"
                     + "END\n";
             Trigger trigger = new Trigger();
             trigger.setName(name);

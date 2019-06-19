@@ -85,7 +85,6 @@ public class QueryProcessor implements BatchProducer {
      * <b>Should be cloned from the parent to properly scope the tuplebuffer cache</b>
      * @param bufferMgr The buffer manager that provides access to tuple sources
      * @param dataMgr The data manager that provides access to get data
-     * @throws TeiidComponentException
      */
     public QueryProcessor(ProcessorPlan plan, CommandContext context, BufferManager bufferMgr, final ProcessorDataManager dataMgr) {
         this.context = context;

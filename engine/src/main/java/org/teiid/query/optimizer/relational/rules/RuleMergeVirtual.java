@@ -423,7 +423,6 @@ public final class RuleMergeVirtual implements
 
     /**
      * Check to ensure that we are not projecting a subquery or null dependent expressions
-     * @param parentProject2
      */
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,

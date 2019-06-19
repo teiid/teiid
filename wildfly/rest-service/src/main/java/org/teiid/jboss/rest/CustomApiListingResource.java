@@ -43,7 +43,7 @@ import io.swagger.jaxrs.listing.BaseApiListingResource;
 
 /**
  * Workaround for using a Resteasy Filter to make a ServletContext available
- * @see https://github.com/swagger-api/swagger-core/issues/2239
+ * https://github.com/swagger-api/swagger-core/issues/2239
  */
 
 @Path("/swagger.{type:json|yaml}")

@@ -80,10 +80,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
         this.propertyMap.put(propertyName, value);
     }
 
-    /**
-     * @see org.teiid.query.optimizer.capabilities.SourceCapabilities#getSourceProperty(java.lang.String)
-     * @since 4.2
-     */
+    @Override
     public Object getSourceProperty(Capability propertyName) {
         return this.propertyMap.get(propertyName);
     }

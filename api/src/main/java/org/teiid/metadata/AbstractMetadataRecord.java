@@ -185,7 +185,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     /**
      * The preferred setter for extension properties.
      * @param key
-     * @param value, if null the property will be removed
+     * @param value if null the property will be removed
      */
     public String setProperty(String key, String value) {
         if (this.properties == null) {

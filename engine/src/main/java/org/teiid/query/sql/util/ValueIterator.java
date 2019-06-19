@@ -51,7 +51,6 @@ public interface ValueIterator{
      * @throws TeiidComponentException indicating a non business-
      * related Exception such as a service or bean being unavailable, or
      * a communication failure.
-     * @throws NoSuchElementException if iteration has no more elements.
      */
     Object next()
     throws TeiidComponentException;

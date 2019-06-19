@@ -25,7 +25,7 @@ public interface ServerConnectionFactory {
 
     /**
      * Establish a connection to the server.
-     * @param connProps The properties used by the transport to find a connection.  These
+     * @param connectionProperties The properties used by the transport to find a connection.  These
      * properties are typically specific to the transport.
      * @return A connection, never null
      * @throws ConnectionException If an error occurs communicating between client and server

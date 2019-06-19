@@ -73,9 +73,6 @@ public class TransformationRecordImpl extends AbstractMetadataRecord {
         transformationType = string;
     }
 
-    /**
-     * @param collection
-     */
     public void setBindings(List bindings) {
         this.bindings = bindings;
     }

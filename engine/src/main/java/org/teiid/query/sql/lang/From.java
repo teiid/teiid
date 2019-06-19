@@ -68,7 +68,7 @@ public class From implements LanguageObject {
 
     /**
      * Add clauses to the FROM
-     * @param clauses Collection of {@link FromClause}s
+     * @param toAdd Collection of {@link FromClause}s
      */
     public void addClauses(Collection<? extends FromClause> toAdd) {
         this.clauses.addAll(toAdd);

@@ -18,7 +18,7 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -26,8 +26,8 @@ import org.junit.Test;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TranslatorException;
 
 /**
  * Test <code>LOCATEFunctionModifier</code> by invoking its methods with varying
@@ -45,7 +45,6 @@ public class TestLocateFunctionModifier {
      * @param args An array of <code>IExpression</code>'s to use as the
      *             arguments to the LOCATE() function
      * @param expectedStr A string representing the modified expression
-     * @return On success, the modified expression.
      * @throws Exception
      */
     public void helpTestLocate(Expression[] args, String expectedStr) throws Exception {
@@ -61,14 +60,9 @@ public class TestLocateFunctionModifier {
      * compare the resulting expression to <code>expectedStr</code>.
      *
      * @param locateFunctionName the name to use for the function modifier
-     * @param parameterOrder an <code>enum</code> value as defined by
-     *        {@link ParameterOrder} which represents the parameter order to use
-     *        for the modified LOCATE() function
-     * @param stringIndexBase the string index that represents the first character of a string
      * @param args an array of <code>IExpression</code>'s to use as the
      *             arguments to the LOCATE() function
      * @param expectedStr A string representing the modified expression
-     * @return On success, the modified expression.
      * @throws Exception
      */
     public void helpTestLocate(final String locateFunctionName, final boolean parameterOrder, Expression[] args, String expectedStr) throws Exception {
@@ -149,8 +143,6 @@ public class TestLocateFunctionModifier {
      * to LOCATE(search_str, source_str) using constants for both parameters
      * returns INSTR(source_str, search_str).
      * <p>
-     * {@link LocateFunctionModifier} will be constructed specifying a function
-     * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}.
      *
      * @throws Exception
      */
@@ -168,8 +160,6 @@ public class TestLocateFunctionModifier {
      * to LOCATE(search_str, source_str) using constants for both parameters
      * returns locate(search_str, source_str).
      * <p>
-     * {@link LocateFunctionModifier} will be constructed specifying a function
-     * name of locate and a parameter order of {@link ParameterOrder#DEFAULT}.
      *
      * @throws Exception
      */
@@ -187,8 +177,6 @@ public class TestLocateFunctionModifier {
      * to LOCATE(search_str, source_str, 1) using constants for all parameters
      * returns INSTR(source_str, search_str, 1).
      * <p>
-     * {@link LocateFunctionModifier} will be constructed specifying a function
-     * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}.
      *
      * @throws Exception
      */
@@ -267,8 +255,6 @@ public class TestLocateFunctionModifier {
      * to LOCATE(search_str, source_str, e1) using an element for start index
      * parameter returns INSTR(source_str, search_str, CASE WHEN e1 < 1 THEN 1 ELSE e1 END).
      * <p>
-     * {@link LocateFunctionModifier} will be constructed specifying a function
-     * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}.
      *
      * @throws Exception
      */

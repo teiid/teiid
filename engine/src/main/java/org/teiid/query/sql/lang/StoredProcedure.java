@@ -98,7 +98,6 @@ public class StoredProcedure extends ProcedureContainer {
     * Set this stored procedure's name
     *
     * @param procedureName the stored procedure's name
-    * @throws IllegalArgumentExcecption if the procedureName is invalid.
     */
     public void setProcedureName(String procedureName){
         this.procedureName = procedureName;
@@ -134,9 +133,8 @@ public class StoredProcedure extends ProcedureContainer {
     /**
     * Set a stored procedure's parameter
     *
-    * @param index the index of the parameter to set
     * @param parameter <code>StoredProcedureParameter</code> the parameter
-    * @throws IllegalArgumentExcecption if the parameters (index and parameter)
+    * @throws IllegalArgumentException if the parameters (index and parameter)
     *   are invalid.
     */
     public void setParameter(SPParameter parameter){
@@ -345,7 +343,7 @@ public class StoredProcedure extends ProcedureContainer {
     /**
      * Indicate whether parameters should be displayed in traditional
      * indexed manor, or as named parameters
-     * @param namedParameters whether to display parameters as named or not
+     * @param displayNamedParameters whether to display parameters as named or not
      * @since 4.3
      */
     public void setDisplayNamedParameters(boolean displayNamedParameters) {

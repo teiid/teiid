@@ -38,7 +38,6 @@ public interface ClientInstance {
      * Send a message to this particular client using the asynch message key.
      * @param message The message to send
      * @param messageKey The key sent with the asynch query
-     * @throws CommunicationException If an error occurs during the send
      */
     void send(Message message, Serializable messageKey);
 

@@ -69,7 +69,7 @@ public interface EngineStatisticsBean {
     /**
      * Total number of cache reads, includes disk and soft-cache references
      * @return
-     * @see #getStorageReadCount();
+     * @see #getStorageReadCount()
      */
     @Deprecated
     long getCacheReadCount();

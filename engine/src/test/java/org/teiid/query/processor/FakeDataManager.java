@@ -281,7 +281,6 @@ public class FakeDataManager implements ProcessorDataManager {
     /**
      * @param lookupMap
      * @param element
-     * @param integer
      * @param group
      */
     private void mapElementToIndex(Map lookupMap, Expression element, Integer index, GroupSymbol group) {

@@ -376,8 +376,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Constructor which initializes with the connection object on which metadata
      * is sought
-     * @param driver's connection object.
-     * @throws SQLException if the connection is already closed.
+     * @param connection driver's connection object.
      */
     DatabaseMetaDataImpl(ConnectionImpl connection) {
         this.driverConnection = connection;
@@ -401,12 +400,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" AND UCASE(Name)") .append(LIKE_ESCAPE).toString(); //$NON-NLS-1$
     }
 
-    /**
-     * <p>Checks whether the current user has the required security rights to call
-     * all the procedures returned by the method getProcedures.</p>
-     * @return true if the procedures are selectable else return false
-     * @throws SQLException. Should never occur.
-     */
+    @Override
     public boolean allProceduresAreCallable() throws SQLException {
         return true;
     }
@@ -434,14 +428,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Indicates whether or not a visible row delete can be detected by
-     * calling ResultSet.rowDeleted().  If deletesAreDetected()
-     * returns false, then deleted rows are removed from the result set.
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if changes are detected by the resultset type
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean deletesAreDetected(int type) throws SQLException {
         return false;
     }
@@ -456,16 +443,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Gets a description of a table's optimal set of columns that uniquely identifies a row.</p>
-     * @param name of the catalog from which metadata needs
-     * @param catalog name in which the table is present.
-     * @param schema name in which this table is present.
-     * @param table name whose best row identifier info is sought.
-     * @param int indicating the scope of the result.
-     * @param boolean indicating whether the nullable columns can be included.
-     * @return ResultSet object containing the bestrow indetifier info.
-     */
+    @Override
     public ResultSet getBestRowIdentifier(String catalog, String schema, String table, int scope, boolean nullable) throws SQLException {
 
         // here it always returns a empty result set, when this functionality
@@ -555,17 +533,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return "VirtualDatabase"; //$NON-NLS-1$
     }
 
-    /**
-     * <p>Gets a description of the access rights for a column of the given name.
-     * Catalog name should match the virtualdatabasename used to obtain
-     * this driver connection.</p>
-     * @param name of the catalog to which columns belong.
-     * @param name of the schema to which columns belong.
-     * @param name of the table to which columns belong.
-     * @param name pattern to be matched by column names.
-     * @return ResultSet containing column privilege information.
-     * @throws SQLException if there is an error obtaining server results
-     */
+    @Override
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnName) throws SQLException {
 
         List records = new ArrayList (0);
@@ -595,24 +563,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     }
 
-    /**
-     * <p>Get's the metadata information about the columns whose names match the given
-     * columnNamePattern. Catalog names should match the
-     * virtualdatabasename used to obtain this driver connection.</p>
-     * <p> The ResultSet returned by this method contains the following additional
-     * columns that are not specified in the JDBC specification.</p>
-     * <OL>
-     *   <LI><B>Format</B> String => format of the column
-     *   <LI><B>MinRange</B> String => minimum range value of the column
-     *   <LI><B>MaxRange</B> String => maximum range value of the column
-     * <OL>
-     * @param catalog name to which the columns belong.
-     * @param schema name to which the columns belong.
-     * @param pattern name to be matched by table name.
-     * @param pattern name to be matched by column name.
-     * @return ResultSet containing column metadata info.
-     * @throws SQLException if there is an error obtaining server results.
-     */
+    @Override
     public ResultSet getColumns(String catalog, String schema, String tableNamePattern, String columnNamePattern) throws SQLException {
 
         if (catalog == null) {
@@ -704,20 +655,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     }
 
-    /**
-     * <p>Gets the description of the foreign key columns in the table foreignTable.
-     * These foreign key columns reference primary key columns of primaryTable.
-     * Catalog names(primary and foreign) should match the
-     * virtualdatabasename used to obtain this driver connection.
-     * @param name of the catalog containing primary keys.
-     * @param name of the schema containing primary keys.
-     * @param name of the table containing primary keys.
-     * @param name of the catalog containing foreign keys.
-     * @param name of the schema containing foreign keys.
-     * @param name of the table containing foreign keys.
-     * @return ResultSet giving description of foreign key columns.
-     * @throws SQLException if there is an error obtaining server results
-     */
+    @Override
     public ResultSet getCrossReference(String primaryCatalog, String primarySchema,String primaryTable,String foreignCatalog,String foreignSchema, String foreignTable) throws SQLException {
 
         if (primaryCatalog == null) {
@@ -1842,15 +1780,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return driverConnection.getUserName();
     }
 
-    /**
-     * <p>Gets the description of the columns in a table that are automatically updated
-     * when any value in a row is updated. The column descriptions are not ordered.
-     * @param name of the catalog in which the table is present.
-     * @param name of the schema in which the table is present.
-     * @param name of the table which has the version columns.
-     * @return ResultSet object containing version column information.
-     * @throws SQLException, should never occur
-     */
+    @Override
     public ResultSet getVersionColumns(String catalog, String schema, String table) throws SQLException {
 
         // ResultSet returned has the same columns as best row identifier
@@ -1873,13 +1803,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Indicates whether or not a visible row insert can be detected
-     * by calling ResultSet.rowInserted().</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if changes are detected by the resultset type
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean insertsAreDetected(int type) throws SQLException {
         return false;
     }
@@ -1943,70 +1867,32 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return nullSort == NullSort.Low;
     }
 
-    /**
-     * <p>Indicates whether a result set's own updates are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if updates are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean ownUpdatesAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Indicates whether a result set's own deletes are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if deletes are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean ownDeletesAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Indicates whether a result set's own inserts are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if inserts are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean ownInsertsAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Indicates whether updates made by others are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if updates made by others
-     * are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean othersUpdatesAreVisible(int type) throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Indicates whether deletes made by others are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return <code>true</code> if deletes made by others
-     * are visible for the result set type;
-     *        <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean othersDeletesAreVisible(int type) throws SQLException {
         return false;
     }
-    /**
-     * <p>Indicates whether inserts made by others are visible.</p>
-     * @param result set type, i.e. ResultSet.TYPE_XXX
-     * @return true if updates are visible for the result set type <code>true</code>
-     * if inserts made by others are visible for the result set type;
-     * <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
+
+    @Override
     public boolean othersInsertsAreVisible(int type) throws SQLException {
         return false;
     }
@@ -2240,14 +2126,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * Retrieves whether database supports the given result set holdability.
-     * Holdability - one of the following constants:
-     * ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT.
-     * @param intValue holdability
-     * @return boolean true if so; false otherwise
-     * @throws SQLException, should never occur
-     */
+    @Override
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
         return false;
     }
@@ -2354,7 +2233,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>This method is used to produce ResultSets from server's Results objects for
      * getCrossReference, getExportedKeys and getImportedKeys methods.
-     * @param server's Results object.
+     * @param results server's Results object.
      * @return ResultSet object giving the reference key info.
      * @throws SQLException if there is an accesing server results
      */
@@ -2570,7 +2449,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
             prepareQuery.setObject(1, catalog.toUpperCase());
             prepareQuery.setObject(2, schemaPattern.toUpperCase());
             // make a query against runtimemetadata and get results
-            results = (ResultSetImpl) prepareQuery.executeQuery();
+            results = prepareQuery.executeQuery();
 
             while (results.next ()) {
                 // each row will have only one column(Virtual database name)

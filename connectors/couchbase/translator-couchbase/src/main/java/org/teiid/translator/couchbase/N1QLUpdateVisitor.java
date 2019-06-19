@@ -195,7 +195,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
 
     private void appendBulkValues(Map<Integer, Parameter> preparedValues, List<CBColumnData> rowCache, Insert command) {
 
-        BatchedCommand batchCommand = (BatchedCommand)command;
+        BatchedCommand batchCommand = command;
         Iterator<? extends List<?>> vi = batchCommand.getParameterValues();
 
         int maxBulkSize = ef.getMaxBulkInsertSize();
@@ -653,7 +653,7 @@ public class N1QLUpdateVisitor extends N1QLVisitor {
     /**
      * Use to build the update/delete reference of nested JSON Object in an array object.
      * @param prefix
-     * @param columnData
+     * @param column
      * @return
      */
     private String buildNestedAttrRef(String prefix, CBColumn column) {

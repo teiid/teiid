@@ -53,9 +53,7 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
     /**
      * Adds new table to metadata.
      *
-     * @param spreadsheet  Name of the spreadsheet
      * @param worksheet    Name of the worksheet
-     * @throws TranslatorException
      */
     private void addTable(MetadataFactory mf, Worksheet worksheet) {
         if (worksheet.getColumnCount() == 0){
@@ -75,7 +73,6 @@ public class GoogleMetadataProcessor implements MetadataProcessor<GoogleSpreadsh
      *
      * @param table      Teiid table
      * @param worksheet
-     * @throws TranslatorException
      */
     private void addColumnsToTable(MetadataFactory mf, Table table, Worksheet worksheet) {
         boolean updatable = true;

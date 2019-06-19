@@ -583,14 +583,13 @@ public final class RuleCollapseSource implements OptimizerRule {
      *
      * @param groups Bunch of groups
      * @param metadata Metadata implementation
-     * @throws QueryPlannerException
      */
     static ElementSymbol selectOutputElement(Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
 
         // Find a group with selectable elements and pick the first one
         for (GroupSymbol group : groups) {
-            List<ElementSymbol> elements = (List<ElementSymbol>)ResolverUtil.resolveElementsInGroup(group, metadata);
+            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, metadata);
 
             for (ElementSymbol element : elements) {
                 if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
@@ -963,7 +962,6 @@ public final class RuleCollapseSource implements OptimizerRule {
     * Take the query, built straight from the subtree, and rebuild as a simple query
     * if possible.
     * @param query Query built from collapsing the source nodes
-    * @return Same query with simplified from clause if possible
     */
     private void simplifyFromClause(Query query) {
         From from = query.getFrom();
@@ -979,9 +977,10 @@ public final class RuleCollapseSource implements OptimizerRule {
     }
 
     /**
-    * @param rootClause
-    * @param query
-    */
+     * Convert a join tree into a linear join list
+     * @param clause
+     * @param query
+     */
     private void shredJoinTree(FromClause clause, Query query) {
         if(clause instanceof UnaryFromClause || clause instanceof SubqueryFromClause) {
             query.getFrom().addClause(clause);

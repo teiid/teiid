@@ -484,7 +484,6 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
     /**
      * Helper for the toString to get the class name from the full class name.
-     * @param fullClassName Fully qualified class name
      * @return Just the last part which is the class name
      */
     protected String getClassName() {

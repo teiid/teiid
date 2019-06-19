@@ -41,7 +41,7 @@ import org.teiid.query.util.CommandContext;
 
 
 /**
- * Tests {@link RuleChooseAccessPattern}
+ * Tests Access Patterns
  */
 public class TestRuleAccessPatternValidation {
 
@@ -53,8 +53,6 @@ public class TestRuleAccessPatternValidation {
 
     /**
      * @param command the query to be turned into a test query plan
-     * @param expectedChosenPredicates expected criteria predicates that should
-     * be below the access node after the rule is run
      */
     private void helpTestAccessPatternValidation(String command) throws Exception {
         PlanNode node = this.helpPlan(command);
@@ -70,8 +68,6 @@ public class TestRuleAccessPatternValidation {
      * and runs some of the optimizer rules, ending with the
      * RuleChooseAccessPattern.
      * @param command String command to parse, resolve and use for planning
-     * @param rules empty RuleStack
-     * @param groups Collection to add parsed and resolved GroupSymbols to
      * @return the root PlanNode of the query plan
      */
     private PlanNode helpPlan(String command) throws Exception {

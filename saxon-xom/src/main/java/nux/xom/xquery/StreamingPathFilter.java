@@ -91,7 +91,7 @@ import nux.xom.pool.XOMUtil;
  * on very large or infinitely long XML input. The solution uses a strongly
  * simplified location path language (which is modelled after XPath but <i>not</i>
  * XPath compliant), in combination with a {@link nu.xom.NodeFactory} and
- * an optional {@link XQuery}. The solution is not necessarily faster than
+ * an optional XQuery. The solution is not necessarily faster than
  * building the full document tree, but it consumes much less main memory.
  * <p>
  * <h4>Here is how it works</h4>
@@ -115,7 +115,7 @@ import nux.xom.pool.XOMUtil;
  * can be added to the document, instead of the entire book element subtree.
  * <p>
  * Typically, simple <code>StreamingTransforms</code> are formulated in custom
- * Java code, whereas complex ones are formulated as an {@link XQuery}.
+ * Java code, whereas complex ones are formulated as an XQuery.
  * <p>
  * <h4>Streaming Location Path Syntax</h4>
  *

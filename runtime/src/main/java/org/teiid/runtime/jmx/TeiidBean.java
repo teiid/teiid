@@ -55,7 +55,7 @@ public interface TeiidBean {
     /**
      * Terminate the Session
      *
-     * @param identifier  Session Identifier {@link org.teiid.adminapi.Session}.
+     * @param sessionId  Session Identifier {@link org.teiid.adminapi.Session}.
      * No wild cards currently supported, must be explicit
      * @throws AdminException
      */

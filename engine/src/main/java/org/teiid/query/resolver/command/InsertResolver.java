@@ -230,12 +230,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         }
     }
 
-    /**
-     * @throws TeiidComponentException
-     * @throws QueryResolverException
-     * @throws QueryMetadataException
-     * @see org.teiid.query.resolver.CommandResolver#getVariableValues(org.teiid.query.sql.lang.Command, org.teiid.query.metadata.QueryMetadataInterface)
-     */
+    @Override
     public Map<ElementSymbol, Expression> getVariableValues(Command command, boolean changingOnly,
                                  QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 

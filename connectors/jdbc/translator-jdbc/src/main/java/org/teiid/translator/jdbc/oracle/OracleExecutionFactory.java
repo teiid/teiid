@@ -654,7 +654,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     /**
      * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
      *
-     * @see org.teiid.language.visitor.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
      * @since 5.0
      */
     @Override

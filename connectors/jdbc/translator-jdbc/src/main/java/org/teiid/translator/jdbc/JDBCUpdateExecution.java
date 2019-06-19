@@ -55,13 +55,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     private int maxPreparedInsertBatchSize;
     private boolean atomic = true;
 
-    /**
-     * @param connection
-     * @param sqlTranslator
-     * @param logger
-     * @param props
-     * @param id
-     */
     public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
         this.maxPreparedInsertBatchSize = this.executionFactory.getMaxPreparedInsertBatchSize();
@@ -351,7 +344,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     }
 
     /**
-     * @param command
      * @return
      * @throws TranslatorException
      */
@@ -370,7 +362,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * Set autoCommit back to true
      *
      * @param exceptionOccurred
-     * @param command
      * @throws TranslatorException
      */
     private void restoreAutoCommit(boolean exceptionOccurred,

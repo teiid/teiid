@@ -358,64 +358,22 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         this.disableLocalTxn = disableLocalTxn;
     }
 
-    /**
-     * Get the log writer for this data source.
-     * <p>
-     * The log writer is a character output stream to which all logging and tracing
-     * messages for this data source object instance will be printed. This includes
-     * messages printed by the methods of this object, messages printed by methods
-     * of other objects manufactured by this object, and so on. Messages printed
-     * to a data source specific log writer are not printed to the log writer
-     * associated with the {@link java.sql.DriverManager} class. When a DataSource object is
-     * created the log writer is initially null, in other words, logging is disabled.
-     * @return the log writer for this data source, null if disabled
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#getLogWriter()
-     */
+    @Override
     public PrintWriter getLogWriter() throws java.sql.SQLException{
         return this.logWriter;
     }
 
-    /**
-     * Gets the maximum time in seconds that this data source can wait while attempting
-     * to connect to a database. A value of zero means that the timeout is the default
-     * system timeout if there is one; otherwise it means that there is no timeout.
-     * When a DataSource object is created the login timeout is initially zero.
-     * @return the data source login time limit
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#getLoginTimeout()
-     */
+    @Override
     public int getLoginTimeout() {
         return this.loginTimeout;
     }
 
-    /**
-     * Set the log writer for this data source.
-     * <p>
-     * The log writer is a character output stream to which all logging and tracing
-     * messages for this data source object instance will be printed. This includes
-     * messages printed by the methods of this object, messages printed by methods
-     * of other objects manufactured by this object, and so on. Messages printed
-     * to a data source specific log writer are not printed to the log writer
-     * associated with the {@link java.sql.DriverManager} class. When a DataSource object is
-     * created the log writer is initially null, in other words, logging is disabled.
-     * @param writer the log writer for this data source, null if disabled
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#setLogWriter(java.io.PrintWriter)
-     */
+    @Override
     public void setLogWriter( final PrintWriter writer) throws java.sql.SQLException{
         this.logWriter = writer;
     }
 
-    /**
-     * Sets the maximum time in seconds that this data source can wait while attempting
-     * to connect to a database. A value of zero means that the timeout is the default
-     * system timeout if there is one; otherwise it means that there is no timeout.
-     * When a DataSource object is created the login timeout is initially zero.
-     * @param timeOut the data source login time limit
-     * @throws java.sql.SQLException if a database-access error occurs
-     * @see javax.sql.DataSource#setLoginTimeout(int)
-     */
+    @Override
     public void setLoginTimeout( final int timeOut) throws java.sql.SQLException {
         this.loginTimeout = timeOut;
     }
@@ -680,7 +638,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * </p>
      * @param autoWrap a possible value for the auto wrap property.
      * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setTransactionAutoWrap(String)
+     * @see #setAutoCommitTxn(String)
      */
     public static String reasonWhyInvalidTransactionAutoWrap( final String autoWrap ) {
         if ( autoWrap == null || autoWrap.trim().length() == 0 ) {

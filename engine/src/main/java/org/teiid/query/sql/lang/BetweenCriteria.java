@@ -72,7 +72,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
 
     /**
      * Set the lower expression.
-     * @param expression the lower expression
+     * @param lowerExpression the lower expression
      */
     public void setLowerExpression(Expression lowerExpression) {
         this.lowerExpression = lowerExpression;
@@ -88,7 +88,7 @@ public class BetweenCriteria extends PredicateCriteria implements Negatable {
 
     /**
      * Set the upper expression.
-     * @param expression the upper expression
+     * @param upperExpression the upper expression
      */
     public void setUpperExpression(Expression upperExpression) {
         this.upperExpression = upperExpression;

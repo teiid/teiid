@@ -44,8 +44,7 @@ public class WhileStatement extends Statement implements Labeled {
     /**
      * Constructor for IfStatement.
      * @param criteria The criteria determining which block should be executed
-     * @param ifBlock The IF <code>Block</code> object.
-     * @param ifBlock The ELSE <code>Block</code> object.
+     * @param block The block to execute
      */
     public WhileStatement(Criteria criteria, Block block) {
         this.whileBlock = block;

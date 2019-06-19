@@ -308,11 +308,6 @@ public class XAConnectionImpl implements XAConnection, XAResource {
         }
     }
 
-    /**
-     * @param xid
-     * @return
-     * @throws XAException
-     */
     private XidImpl getMMXid(Xid originalXid) {
         return new XidImpl(originalXid);
     }

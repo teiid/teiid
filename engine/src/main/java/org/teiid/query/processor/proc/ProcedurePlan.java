@@ -158,11 +158,9 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         return originalProgram;
     }
 
-    /**
-     * @see ProcessorPlan#initialize(ProcessorDataManager, Object)
-     */
-    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
-        this.bufferMgr = bufferMgr;
+    @Override
+    public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager buffer) {
+        this.bufferMgr = buffer;
         this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
         this.parentContext = context.getVariableContext();
         setContext(context.clone());
@@ -691,7 +689,6 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     /**
      * @param success
      * @throws TeiidComponentException
-     * @throws XATransactionException
      */
     public void pop(boolean success) throws TeiidComponentException {
         this.evaluator.close();
@@ -836,7 +833,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      * represents the columns in a result set
      * @param rsName the ResultSet name (not a temp group)
      * @return List of elements
-     * @throws QueryProcessorException if the list of elements is null
+     * @throws TeiidComponentException
      */
     public List getSchema(String rsName) throws TeiidComponentException {
         CursorState cursorState = getCursorState(rsName);

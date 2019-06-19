@@ -57,9 +57,6 @@ public class WSWSDLProcedureExecution implements ProcedureExecution {
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
 
-    /**
-     * @param env
-     */
     public WSWSDLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
         this.metadata = metadata;
         this.context = context;

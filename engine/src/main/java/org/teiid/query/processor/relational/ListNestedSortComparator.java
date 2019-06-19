@@ -140,8 +140,8 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
      *      <li>+1 if object1 greater than object 2 </li>
      * </ul>
      *
-     * @param o1 The first object being compared
-     * @param o2 The second object being compared
+     * @param list1 The first object being compared
+     * @param list2 The second object being compared
      */
 
     public int compare(java.util.List<T> list1, java.util.List<T> list2) {

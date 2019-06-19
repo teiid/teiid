@@ -17,13 +17,6 @@
  */
 package org.teiid.transport;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.TooLongFrameException;
-import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -41,9 +34,16 @@ import org.teiid.netty.handler.codec.serialization.CompactObjectInputStream;
 import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import org.teiid.runtime.RuntimePlugin;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.TooLongFrameException;
+import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
+
 
 /**
- * A decoder which deserializes the received {@link ChannelBuffer}s into Java
+ * A decoder which deserializes the received values into Java
  * objects.
  * <p>
  * Please note that the serialized form this decoder expects is not
@@ -53,8 +53,7 @@ import org.teiid.runtime.RuntimePlugin;
  * <p>
  * Unless there's a requirement for the interoperability with the standard
  * object streams, it is recommended to use {@link ObjectEncoder} and
- * {@link ObjectDecoder} rather than {@link CompatibleObjectEncoder} and
- * {@link CompatibleObjectDecoder}.
+ * {@link ObjectDecoder} rather than {@link CompatibleObjectEncoder}.
  *
  * @author The Netty Project (netty-dev@lists.jboss.org)
  * @author Trustin Lee (tlee@redhat.com)

@@ -32,7 +32,7 @@ public class GroupsUsedByElementsVisitor {
     /**
      * Helper to quickly get the groups from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect groups in
+     * @param groups Collection to collect groups in
      */
     public static final void getGroups(LanguageObject obj, Collection<GroupSymbol> groups) {
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(obj, true);

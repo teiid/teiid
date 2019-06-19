@@ -53,7 +53,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
     /**
      * Construct a new visitor with the specified collection, which should
      * be non-null.
-     * @param elements Collection to use for elements
+     * @param functions Collection to use for functions
      * @throws IllegalArgumentException If elements is null
      */
     public FunctionCollectorVisitor(Collection<Function> functions) {
@@ -63,7 +63,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
     /**
      * Construct a new visitor with the specified collection, which should
      * be non-null.
-     * @param elements Collection to use for elements
+     * @param functions Collection to use for functions
      * @throws IllegalArgumentException If elements is null
      */
     public FunctionCollectorVisitor(Collection<Function> functions, String functionName) {
@@ -97,7 +97,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
     /**
      * Helper to quickly get the elements from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect elements in
+     * @param functions Collection to collect functions in
      */
     public static final void getFunctions(LanguageObject obj, Collection<Function> functions) {
         getFunctions(obj, functions, false);
@@ -106,7 +106,7 @@ public class FunctionCollectorVisitor extends LanguageVisitor {
     /**
      * Helper to quickly get the elements from obj in the elements collection
      * @param obj Language object
-     * @param elements Collection to collect elements in
+     * @param functions Collection to collect functions in
      */
     public static final void getFunctions(LanguageObject obj, Collection<Function> functions, boolean deep) {
         FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(functions);

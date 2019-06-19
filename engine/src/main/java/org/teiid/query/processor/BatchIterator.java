@@ -31,7 +31,7 @@ import org.teiid.query.processor.BatchCollector.BatchProducer;
 
 /**
  * A BatchIterator provides an iterator interface to a {@link BatchProducer}.
- * By setting {@link #setBuffer(TupleBuffer)},
+ * By setting {@link #setBuffer(TupleBuffer, boolean)},
  * the iterator can copy on read into a {@link TupleBuffer} for repeated reading.
  *
  * Note that the saveOnMark buffering only lasts until the next mark is set.

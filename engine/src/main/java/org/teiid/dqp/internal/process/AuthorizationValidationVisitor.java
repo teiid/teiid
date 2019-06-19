@@ -277,7 +277,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
      *
      * @param symbols The collection of <code>Symbol</code>s affected by these actions.
      * @param actionCode The actions to validate for
-     * @param auditContext The {@link AuthorizationService} to use when resource auditing is done.
+     * @param auditContext The {@link Context} to use when resource auditing is done.
      */
     protected void validateEntitlements(Collection<? extends LanguageObject> symbols, DataPolicy.PermissionType actionCode, Context auditContext) {
         Map<String, LanguageObject> nameToSymbolMap = new LinkedHashMap<String, LanguageObject>();

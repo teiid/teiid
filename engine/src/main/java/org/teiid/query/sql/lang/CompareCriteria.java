@@ -58,8 +58,8 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
      * Constructs an instance of this class for a specific "operand operator
      * operand" clause.
      *
-     * @param identifier The variable being compared
-     * @param value The value the variable is being compared to (literal or variable)
+     * @param leftExpression The variable being compared
+     * @param rightExpression The value the variable is being compared to (literal or variable)
      * @param operator The operator representing how the variable and value are to
      *                 be compared
      */

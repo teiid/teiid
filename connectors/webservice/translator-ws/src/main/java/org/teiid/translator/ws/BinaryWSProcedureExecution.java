@@ -89,9 +89,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     int responseCode = 200;
     private boolean useResponseContext;
 
-    /**
-     * @param env
-     */
     public BinaryWSProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
         this.metadata = metadata;
         this.context = context;

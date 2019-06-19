@@ -22,13 +22,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.TranslatorException;
+
+import junit.framework.TestCase;
 
 /**
  * Test <code>ModFunctionModifier</code> by invoking its methods with varying
@@ -55,7 +55,6 @@ public class TestModFunctionModifier extends TestCase {
      * @param args An array of <code>IExpression</code>'s to use as the
      *             arguments to the MOD() function
      * @param expectedStr A string representing the modified expression
-     * @return On success, the modified expression.
      * @throws Exception
      */
     public void helpTestMod(Expression[] args, String expectedStr) throws Exception {
@@ -73,7 +72,6 @@ public class TestModFunctionModifier extends TestCase {
      * @param args an array of <code>IExpression</code>'s to use as the
      *             arguments to the MOD() function
      * @param expectedStr A string representing the modified expression
-     * @return On success, the modified expression.
      * @throws Exception
      */
     public void helpTestMod(final String modFunctionName, Expression[] args, String expectedStr) throws Exception {

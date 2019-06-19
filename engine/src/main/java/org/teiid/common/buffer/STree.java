@@ -235,7 +235,6 @@ public class STree implements Cloneable {
      * @param n
      * @param places
      * @return
-     * @throws IOException
      * @throws TeiidComponentException
      */
     List find(List n, List<SearchResult> places) throws TeiidComponentException {

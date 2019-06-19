@@ -207,7 +207,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
      /**
       * <p>Get a java object based on the column index for the current row.</p>
-      * @param The index of the column whose value needs to be fetched.
+      * @param column The index of the column whose value needs to be fetched.
       * @return The value of the column as an object.
       * @throws SQLException if a results access error occurs or transform fails.
       */
@@ -694,133 +694,57 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return ResultSet.FETCH_FORWARD;
     }
 
-    /**
-     * This method will return the value in the current row as a float value.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a float value.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public float getFloat(int columnIndex) throws SQLException {
         return DataTypeTransformer.getFloat(getObject(columnIndex));
     }
 
-    /**
-     * Get a float value based on the column name.
-     *
-     * @param name
-     *         of the column in the resultset whose value is to be fetched.
-     * @return value of the column as a float.
-     * @throw a SQLException if a resultSet access error occurs.
-     */
+    @Override
     public float getFloat(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getFloat(findColumn(columnName));
     }
 
-    /**
-     * This method will return the value in the current row as a int value.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a int value.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public int getInt(int columnIndex) throws SQLException {
         return DataTypeTransformer.getInteger(getObject(columnIndex));
     }
 
-    /**
-     * Get an integer based on the column index.
-     *
-     * @param name
-     *         of the column in the resultset whose value is to be fetched.
-     * @return value of the column as an int.
-     * @throw a SQLException if a resultSet access error occurs.
-     */
+    @Override
     public int getInt(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getInt(findColumn(columnName));
     }
 
-    /**
-     * This method will return the value in the current row as a long value.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a long value.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public long getLong(int columnIndex) throws SQLException {
         return DataTypeTransformer.getLong(getObject(columnIndex));
     }
 
-    /**
-     * Get a long based on the column name.
-     *
-     * @param name
-     *         of the column in the resultset whose value is to be fetched.
-     * @return value of the column as a long.
-     * @throw a SQLException if a resultSet access error occurs.
-     */
+    @Override
     public long getLong(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getLong(findColumn(columnName));
     }
 
-    /**
-     * Get a java object based on the column name.
-     *
-     * @param name
-     *         of the column in the resultset whose value is to be fetched.
-     * @return object which gives the column value.
-     * @throw a SQLException if a resultSet access error occurs.
-     */
+    @Override
     public Object getObject(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getObject(findColumn(columnName));
     }
 
-    /**
-     * Get a primitive short based on the column index.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a short value.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public short getShort(int columnIndex) throws SQLException {
         return DataTypeTransformer.getShort(getObject(columnIndex));
     }
 
-    /**
-     * Get a short based on the column name.
-     *
-     * @param String
-     *         representing name of the column.
-     * @return short value of the column.
-     * @throws SQLException
-     *         if a results access error occurs.
-     */
+    @Override
     public short getShort(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getShort(findColumn(columnName));
     }
 
-    /**
-     * Get a String based on the column index.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a string value.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public String getString(int columnIndex) throws SQLException {
         return DataTypeTransformer.getString(getObject(columnIndex));
     }
@@ -839,18 +763,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return getTime(findColumn(columnName));
     }
 
-    /**
-     * This method will return the value in the current row as a Time object.
-     * This will use the timeZone info of the calendar object.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @param Calendar
-     *         object to be used to construct the Time object.
-     * @return The value of the column as a Time object.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public Time getTime(int columnIndex, Calendar cal) throws SQLException {
         Time value = DataTypeTransformer.getTime(getObject(columnIndex));
 
@@ -862,62 +775,24 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return value;
     }
 
-    /**
-     * Get a java.sql.Time based on the column name.
-     *
-     * @param name
-     *         of the column whose value is to be fetched as a timestamp
-     * @param calender
-     *         object to include the timezone info in the object returned
-     * @return value of the column as a Timestamp object
-     * @throws SQLException
-     *         if a results access error occurs.
-     */
+    @Override
     public Time getTime(String columnName, Calendar cal) throws SQLException {
         // find the columnIndex for the given column name.
         return getTime((findColumn(columnName)), cal);
     }
 
-    /**
-     * This method will return the value in the current row as a Timestamp
-     * object. This will assume the default timeZone.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @return The value of the column as a Timestamp object.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
         return getTimestamp(columnIndex, null);
     }
 
-    /**
-     * Get a java.sql.Timestamp based on the column name.
-     *
-     * @param name
-     *         of the column whose value is to be fetched as a timestamp
-     * @return value of the column as a Timestamp object
-     * @throws SQLException
-     *         if a results access error occurs.
-     */
+    @Override
     public Timestamp getTimestamp(String columnName) throws SQLException {
         // find the columnIndex for the given column name.
         return getTimestamp(findColumn(columnName));
     }
 
-    /**
-     * This method will return the value in the current row as a Timestamp
-     * object. This will use the timeZone info of the calendar object.
-     *
-     * @param The
-     *         index of the column whose value needs to be fetched.
-     * @param Calendar
-     *         object to be used to construct the Timestamp object.
-     * @return The value of the column as a Timestamp object.
-     * @throws SQLException
-     *         if a results access error occurs or transform fails.
-     */
+    @Override
     public Timestamp getTimestamp(int columnIndex, Calendar cal)
             throws SQLException {
         Timestamp value = DataTypeTransformer.getTimestamp(getObject(columnIndex));
@@ -930,17 +805,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return value;
     }
 
-    /**
-     * Get a java.sql.Timestamp based on the column name.
-     *
-     * @param name
-     *         of the column whose value is to be fetched as a timestamp
-     * @param calender
-     *         object to include the timezone info in the object returned
-     * @return value of the column as a Timestamp object
-     * @throws SQLException
-     *         if a results access error occurs.
-     */
+    @Override
     public Timestamp getTimestamp(String columnName, Calendar cal)
             throws SQLException {
         // find the columnIndex for the given column name.
@@ -1020,30 +885,12 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return null;
     }
 
-    /**
-     * True if current record is the first in the result set.
-     *
-     * @return True if current row is first
-     * @throws QueryResultsException
-     *         if this result set has an exception
-     * @throws InvalidatedResultsException
-     *         if the results were obtained during a transaction and the
-     *         transaction has been rolled back
-     */
+    @Override
     public boolean isFirst() throws SQLException {
         return this.getAbsoluteRowNumber() == BEFORE_FIRST_ROW + 1 && hasNext();
     }
 
-    /**
-     * True if current record is the last in the result set.
-     *
-     * @return True if current row is last
-     * @throws QueryResultsException
-     *         if this result set has an exception
-     * @throws InvalidatedResultsException
-     *         if the results were obtained during a transaction and the
-     *         transaction has been rolled back
-     */
+    @Override
     public boolean isLast() throws SQLException {
         return !hasNext() && this.getAbsoluteRowNumber() > BEFORE_FIRST_ROW && this.getAbsoluteRowNumber() == getFinalRowNumber();
     }
@@ -1084,18 +931,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         return getAbsoluteRowNumber() == BEFORE_FIRST_ROW && hasNext();
     }
 
-    /**
-     * <p>
-     * Moves the cursor a number of rows relative to the current row in this
-     * ResultSet object. The number of rows may be positive or negative.
-     * </p>
-     *
-     * @param number
-     *         of rows to move relative to the present row.
-     * @return true if the cursor is on a valid row in the resultSet.
-     * @throws SQLException
-     *         if the there is an error accessing results
-     */
+    @Override
     public boolean relative(int rows) throws SQLException {
         if (isBeforeFirst() || isAfterLast() || getFinalRowNumber() == 0) {
             throw new TeiidSQLException(

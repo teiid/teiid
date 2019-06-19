@@ -135,7 +135,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
     /**
      * Constructor used for cloning
      * @param name
-     * @param canonicalName
+     * @param aggregateFunction
      * @since 4.3
      */
     protected AggregateSymbol(String name, Type aggregateFunction, boolean isDistinct, Expression[] args) {

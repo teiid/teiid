@@ -63,7 +63,7 @@ public abstract class AWS4SignerBase {
     /**
      * Create a new AWS V4 signer.
      *
-     * @param endpointUri
+     * @param endpointUrl
      *            The service endpoint, including the path to any resource.
      * @param httpMethod
      *            The HTTP verb for the request, e.g. GET.

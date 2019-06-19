@@ -182,9 +182,6 @@ public class ResultsMessage implements Externalizable {
         return warnings;
     }
 
-    /**
-     * @param exception
-     */
     public void setException(Throwable e) {
         if(e instanceof TeiidException) {
             this.exception = (TeiidException)e;
@@ -242,16 +239,10 @@ public class ResultsMessage implements Externalizable {
         parameters = list;
     }
 
-    /**
-     * @param strings
-     */
     public void setColumnNames(String[] columnNames) {
         this.columnNames = columnNames;
     }
 
-    /**
-     * @param strings
-     */
     public void setDataTypes(String[] dataTypes) {
         this.dataTypes = dataTypes;
     }

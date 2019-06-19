@@ -35,8 +35,6 @@ import org.teiid.query.sql.symbol.Expression;
  * </p>
  *
  * <p>The quantifiers are:
- * <ul><li>{@link #NO_QUANTIFIER}, meaning the subquery has no quantifier and therefore must be
- * a scalar subquery</li>
  * <li>{@link #SOME} and {@link #ANY}, which are synonymous - the criteria is true if there is at
  * least one comparison between the left expression and the values of the subquery.  The criteria
  * is false if the subquery returns no rows.</li>
@@ -95,7 +93,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     /**
      * Get the predicate quantifier - returns one of the following:
-     * <ul><li>{@link #NO_QUANTIFIER}</li>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>
@@ -107,7 +104,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     /**
      * Set the predicate quantifier - use one of the following:
-     * <ul><li>{@link #NO_QUANTIFIER}</li>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>

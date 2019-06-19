@@ -306,7 +306,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             }
         }
         if (this.joinCriteria != null) {
-            for (Criteria crit : (List<Criteria>)Criteria.separateCriteriaByAnd(joinCriteria)) {
+            for (Criteria crit : Criteria.separateCriteriaByAnd(joinCriteria)) {
                 critList.add(crit.toString());
             }
         }
@@ -343,9 +343,6 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         return this.dependentValueSource != null;
     }
 
-    /**
-     * @param isDependent The isDependent to set.
-     */
     public void setDependentValueSource(String dependentValueSource) {
         this.dependentValueSource = dependentValueSource;
     }

@@ -181,7 +181,7 @@ public interface Admin {
     /**
      * Get the VDB
      * @param vdbName
-     * @param vbdVersion
+     * @param vdbVersion
      * @throws AdminException
      * @return
      */
@@ -191,7 +191,7 @@ public interface Admin {
     /**
      * Get the VDB
      * @param vdbName
-     * @param vbdVersion
+     * @param vdbVersion
      * @throws AdminException
      * @return
      */
@@ -200,7 +200,7 @@ public interface Admin {
     /**
      * Restart the VDB. This issues reload of the metadata.
      * @param vdbName
-     * @param vbdVersion
+     * @param vdbVersion
      * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
      * @throws AdminException
      */
@@ -210,7 +210,7 @@ public interface Admin {
     /**
      * Restart the VDB. This issues reload of the metadata.
      * @param vdbName
-     * @param vbdVersion
+     * @param vdbVersion
      * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
      * @throws AdminException
      */
@@ -352,7 +352,7 @@ public interface Admin {
     /**
      * Terminate the Session
      *
-     * @param identifier  Session Identifier {@link org.teiid.adminapi.Session}.
+     * @param sessionId  Session Identifier {@link org.teiid.adminapi.Session}.
      * No wild cards currently supported, must be explicit
      * @throws AdminException
      */
@@ -512,7 +512,7 @@ public interface Admin {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
-     * @param allowedtypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param allowedTypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
     String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;

@@ -82,7 +82,6 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
     /**
      * Helper method to retrieve the LDAP Connector properties.  If any properties are in error,
      * a ConnectorException is thrown.
-     * @param props
      */
     private void checkProperties() throws ResourceException {
         // LDAP URL

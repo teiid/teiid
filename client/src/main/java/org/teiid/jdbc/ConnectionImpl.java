@@ -723,7 +723,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     /**
      * <p> This utility method checks if the jdbc connection is closed and
      * throws an exception if it is closed. </p>
-     * @throws SQLException if the connection object is closed.
+     * @throws TeiidSQLException if the connection object is closed.
      */
     void checkConnection() throws TeiidSQLException{
         //Check to see the connection is closed and proceed if it is not

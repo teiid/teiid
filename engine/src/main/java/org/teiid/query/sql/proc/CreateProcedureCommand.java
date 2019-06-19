@@ -62,7 +62,6 @@ public class CreateProcedureCommand extends Command {
     /**
      * Constructor for CreateUpdateProcedureCommand.
      * @param block The block on this command
-     * @param type The procedure type
      */
     public CreateProcedureCommand(Block block) {
         this.block = block;

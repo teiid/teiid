@@ -58,10 +58,6 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class ExecResolver extends ProcedureContainerResolver {
 
-    /**
-     * @see org.teiid.query.resolver.CommandResolver#findCommandMetadata(org.teiid.query.sql.lang.Command,
-     * org.teiid.query.metadata.QueryMetadataInterface)
-     */
     private void findCommandMetadata(Command command, TempMetadataStore discoveredMetadata, QueryMetadataInterface metadata)
     throws QueryMetadataException, QueryResolverException, TeiidComponentException {
 

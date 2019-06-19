@@ -76,7 +76,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     /**
      * Construct with group, change list, and criteria
      * @param group DataGroupID that represents the group being updated
-     * @param List of changeCriteria that represent Element->value pairings
+     * @param changeList of changeCriteria that represent Element->value pairings
      * @param criteria Criteria that defines what rows get updated
      */
     public Update(GroupSymbol group, SetClauseList changeList, Criteria criteria) {

@@ -447,7 +447,6 @@ public class RulePushAggregates implements
      * @param sourceNode
      * @param metadata
      * @param capFinder
-     * @param context
      * @throws QueryPlannerException
      * @throws QueryMetadataException
      * @throws TeiidComponentException

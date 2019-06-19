@@ -38,7 +38,6 @@ public interface VirtualFileConnection extends Connection {
 
     /**
      * Add a file
-     * @param file
      * @throws TranslatorException
      */
     void add(InputStream in, String path) throws TranslatorException;
@@ -57,7 +56,6 @@ public interface VirtualFileConnection extends Connection {
          * Gets the file or files, if the path is a directory, at the given path.
          * Note the path can only refer to a single directory - directories are not recursively scanned.
          * @param exceptionIfFileNotFound
-         * @param path
          * @return
          */
         public static VirtualFile[] getFiles(String location, VirtualFileConnection fc, boolean exceptionIfFileNotFound) throws TranslatorException {

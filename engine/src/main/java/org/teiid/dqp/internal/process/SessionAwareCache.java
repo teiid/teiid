@@ -272,7 +272,6 @@ public class SessionAwareCache<T> {
 
     /**
      * Clear all the cached plans for all the clientConns
-     * @param clientConn ClientConnection
      */
     public void clearAll(){
         this.localCache.clear();

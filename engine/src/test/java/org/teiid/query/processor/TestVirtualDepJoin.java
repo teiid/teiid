@@ -54,14 +54,6 @@ import org.teiid.query.validator.TestValidator;
 @SuppressWarnings("nls")
 public class TestVirtualDepJoin {
 
-    /**
-     * @param usAcctsElem
-     * @param is
-     * @param is2
-     * @param object
-     * @param object2
-     * @since 4.3
-     */
     private static void setStats(List<Column> elementObjects,
                                  int[] ndvs,
                                  int[] nnvs,

@@ -48,7 +48,6 @@ class GSSUtil {
     /**
      * Populate the supplied {@link Subject} based on the supplied {@link GSSCredential}
      *
-     * @param subject - The Subject to populate.
      * @param delegatedCredential - The GSSCredential to use for population.
      * @param privateCredential The optional {@link GSSCredential} to add to the private credentials of the {@link Subject}.
      * @return A {@link Subject} that was created from the GSSCredential so that we can identify the content to remove later.

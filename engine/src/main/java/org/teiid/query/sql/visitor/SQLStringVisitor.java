@@ -1759,7 +1759,6 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     /**
      * @param obj
-     * @param parts
      */
     private void createAssignment( AssignmentStatement obj ) {
         visitNode(obj.getVariable());

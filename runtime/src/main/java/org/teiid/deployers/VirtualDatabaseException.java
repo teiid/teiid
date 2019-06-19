@@ -67,7 +67,6 @@ public class VirtualDatabaseException extends TeiidProcessingException {
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
-     * @param code A code denoting the exception
      * @param e An exception to nest within this one
      */
     public VirtualDatabaseException( Exception e, String message ) {
@@ -80,7 +79,7 @@ public class VirtualDatabaseException extends TeiidProcessingException {
      *
      * @param e An exception to nest within this one
      * @param message A message describing the exception
-     * @param code A code denoting the exception
+     * @param event A code denoting the exception
      */
     public VirtualDatabaseException(BundleUtil.Event event, Exception e, String message ) {
         super(event, e, message );

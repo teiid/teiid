@@ -193,7 +193,7 @@ public class TeiidURL {
     }
 
     /**
-     * @param url
+     * @param serverURL
      * @throws MalformedURLException
      * @since 4.2
      */

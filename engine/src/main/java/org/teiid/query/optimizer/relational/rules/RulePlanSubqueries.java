@@ -186,9 +186,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
         this.metadata = metadata;
     }
 
-    /**
-     * @see OptimizerRule#execute(PlanNode, QueryMetadataInterface, RuleStack)
-     */
+    @Override
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, TeiidComponentException {
         dependent = false;
@@ -476,7 +474,7 @@ public final class RulePlanSubqueries implements OptimizerRule {
             if (!isProjection) {
                 NodeEditor.removeChildNode(result, current);
             }
-            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), (List<Expression>) plannedResult.leftExpressions, semiJoin, metadata, capFinder, true, context);
+            RuleImplementJoinStrategy.insertSort(semiJoin.getFirstChild(), plannedResult.leftExpressions, semiJoin, metadata, capFinder, true, context);
             if (isProjection) { //this is always a dep join case, and the predicate was already added
                 semiJoin.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
                 semiJoin.setProperty(Info.SORT_RIGHT, SortOption.SORT);

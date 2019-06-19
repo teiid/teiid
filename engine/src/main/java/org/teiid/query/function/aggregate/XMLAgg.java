@@ -42,11 +42,7 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
         result = null;
     }
 
-    /**
-     * @throws TeiidProcessingException
-     * @throws TeiidComponentException
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
         if (concat == null) {
             concat = new XmlConcat(commandContext.getBufferManager());

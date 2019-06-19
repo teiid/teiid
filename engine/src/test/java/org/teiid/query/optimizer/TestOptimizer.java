@@ -360,7 +360,6 @@ public class TestOptimizer {
     /**
      * Method collectCounts.
      * @param relationalNode
-     * @return int[]
      */
     static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
         Class<?> nodeType = relationalNode.getClass();

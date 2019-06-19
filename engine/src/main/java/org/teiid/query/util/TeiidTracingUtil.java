@@ -53,7 +53,7 @@ public class TeiidTracingUtil {
 
     /**
      * Build a {@link Span} from the {@link CommandLogMessage} and incoming span context
-     * @param message
+     * @param msg
      * @param spanContextJson
      * @return
      */

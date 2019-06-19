@@ -125,13 +125,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
     private Iterator<List<Object>> unwrapIterator;
     private int unwrapPos = -1;
 
-    /**
-     * Constructor
-     * @param executionMode the execution mode.
-     * @param ctx the execution context.
-     * @param logger the ConnectorLogger
-     * @param connection the LDAP Context
-     */
     public LDAPQueryExecution(LdapContext ldapContext,LDAPSearchDetails search, SearchControls searchControls, LDAPExecutionFactory factory,ExecutionContext context) {
         this.searchDetails = search;
         this.ldapCtx = ldapContext;
@@ -140,11 +133,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
         this.executionContext = context;
     }
 
-    /**
-     * method to execute the supplied query
-     * @param query the query object.
-     * @param maxBatchSize the max batch size.
-     */
     @Override
     public void execute() throws TranslatorException {
         String ctxName = this.searchDetails.getContextName();
@@ -321,7 +309,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
 
     /**
      * Create a row using the searchResult and add it to the supplied batch.
-     * @param batch the supplied batch
      * @param result the search result
      * @throws InvalidNameException
      */
@@ -378,7 +365,6 @@ public class LDAPQueryExecution implements ResultSetExecution {
      * Add Result to Row
      * @param modelElement the model element
      * @param attrs the attributes
-     * @param row the row
      * @throws InvalidNameException
      */
     // GHH 20080326 - added resultDistinguishedName to method signature.  If

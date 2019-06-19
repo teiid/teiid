@@ -104,8 +104,6 @@ public interface SimpleDBConnection extends Connection {
     /**
      *  Inserts item into given domain.
      * @param domainName
-     * @param itemName
-     * @param columnsMap
      * @return
      */
 
@@ -114,7 +112,6 @@ public interface SimpleDBConnection extends Connection {
     /**
      * Performs select expression. This expression must be in format which is understandable to SimpleDB database
      * @param selectExpression
-     * @param columns
      * @return Iterator of List<String> results
      */
 
@@ -123,7 +120,6 @@ public interface SimpleDBConnection extends Connection {
     /**
      *  Performs update on given domain and items
      * @param domainName
-     * @param items
      */
 
     public int performUpdate(String domainName, Map<String, Object> updateAttributes, String selectExpression) throws TranslatorException;
@@ -131,7 +127,6 @@ public interface SimpleDBConnection extends Connection {
     /**
      * Removes item with given ItemName from domain
      * @param domainName
-     * @param itemName
      */
 
     public int performDelete(String domainName, String selectExpression) throws TranslatorException;

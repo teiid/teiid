@@ -76,10 +76,6 @@ public class FakeRelationalNode extends RelationalNode {
         this.batchSize = batchSize;
     }
 
-    /**
-     * @throws TeiidProcessingException
-     * @see com.metamatrix.query.processor.relational.x.RelationalNode#nextBatch()
-     */
     public TupleBatch nextBatchDirect() throws BlockedException, TeiidComponentException, TeiidProcessingException {
         if(data != null) {
             if(currentRow < data.length) {

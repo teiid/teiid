@@ -353,15 +353,6 @@ public class ResolverUtil {
      * symbol is not of SingleElementSymbol type
      *
      * @param orderBy
-     * @param fromClauseGroups
-     *            groups of the FROM clause of the query (for resolving
-     *            ambiguous unqualified element names), or empty List if a Set
-     *            Query Order By is being resolved
-     * @param knownElements
-     *            resolved elements from SELECT clause, which are only ones
-     *            allowed to be in ORDER BY
-     * @param metadata
-     *            QueryMetadataInterface
      */
     public static void resolveOrderBy(OrderBy orderBy, QueryCommand command, TempMetadataAdapter metadata)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
@@ -492,7 +483,6 @@ public class ResolverUtil {
      * default value is defined
      * @throws QueryMetadataException for error retrieving metadata
      * @throws TeiidComponentException
-     * @throws QueryParserException
      * @since 4.3
      */
     public static Expression getDefault(ElementSymbol symbol, QueryMetadataInterface metadata) throws TeiidComponentException, QueryMetadataException, QueryResolverException {
@@ -543,7 +533,7 @@ public class ResolverUtil {
      * Construct a Constant with proper type, given the String default
      * value for the parameter and the parameter type.  Throw a
      * QueryResolverException if the String can't be transformed.
-     * @param defaultValue, either null or a String
+     * @param defaultValue either null or a String
      * @param parameterType modeled type of parameter (MetaMatrix runtime type)
      * @return Constant with proper type and default value Object of proper Class.  Will
      * be null Constant if defaultValue is null.
@@ -717,7 +707,7 @@ public class ResolverUtil {
      * the result set metadata retrieved for this query will be properly set to something other than
      * the internal NullType.  Added for defect 15437.
      *
-     * @param select The select clause
+     * @param symbols The select clause symbols
      * @since 4.2
      */
     public static void resolveNullLiterals(List symbols) {

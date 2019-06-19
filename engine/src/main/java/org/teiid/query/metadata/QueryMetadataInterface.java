@@ -145,7 +145,7 @@ public interface QueryMetadataInterface {
     /**
      * Get the element type name for an element symbol.  These types are defined in
      * {@link org.teiid.core.types.DataTypeManager.DefaultDataTypes}.
-     * @param symbol The element symbol
+     * @param elementID The element symbol
      * @return The element data type
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
@@ -257,7 +257,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Determine whether a group is virtual or not.
-     * @param symbol Group symbol
+     * @param groupID Group symbol
      * @return True if virtual
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
@@ -267,7 +267,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Determine whether a model is virtual or not.
-     * @param symbol model symbol
+     * @param modelID model symbol
      * @return True if virtual
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
@@ -277,7 +277,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Get virtual plan for a group symbol.
-     * @param symbol Group
+     * @param groupID Group
      * @return Root of tree of QueryNode objects
      */
     QueryNode getVirtualPlan(Object groupID)
@@ -285,7 +285,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Get procedure defining the insert plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     String getInsertPlan(Object groupID)
@@ -293,7 +293,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Get procedure defining the update plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     String getUpdatePlan(Object groupID)
@@ -301,7 +301,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Get procedure defining the delete plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     String getDeletePlan(Object groupID)
@@ -642,7 +642,7 @@ public interface QueryMetadataInterface {
 
     /**
      * Get the runtime type class for the given type name, which may include domains
-     * @param typeName
+     * @param typeOrDomainName
      * @return
      * @throws QueryMetadataException
      */

@@ -311,7 +311,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     /**
      * <p> This utility method checks if the jdbc statement is closed and
      * throws an exception if it is closed. </p>
-     * @throws SQLException if the statement object is closed.
+     * @throws TeiidSQLException if the statement object is closed.
      */
     protected void checkStatement() throws TeiidSQLException {
         //Check to see the connection is closed and proceed if it is not

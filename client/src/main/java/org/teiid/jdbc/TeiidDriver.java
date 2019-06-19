@@ -184,8 +184,8 @@ public class TeiidDriver implements Driver {
     /**
      * This method parses the URL and adds properties to the the properties object.
      * These include required and any optional properties specified in the URL.
-     * @param The URL needed to be parsed.
-     * @param The properties object which is to be updated with properties in the URL.
+     * @param url The URL needed to be parsed.
+     * @param info The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
      */
     protected static void parseURL(String url, Properties info) throws SQLException {

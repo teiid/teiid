@@ -86,11 +86,7 @@ public class TextAgg extends SingleArgumentAggregateFunction {
         this.result = null;
     }
 
-    /**
-     * @throws TeiidProcessingException
-     * @throws TeiidComponentException
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
         try {
             if (this.result == null) {

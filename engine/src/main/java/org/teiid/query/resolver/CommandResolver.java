@@ -36,7 +36,6 @@ public interface CommandResolver {
      * @param command The command to resolve
      * @param metadata Metadata
      * @param resolveNullLiterals true if the resolver should consider replacing null literals with more appropriate types
-     * @return the TempMetadataStore containing the metadata defined by this command
      * @throws QueryMetadataException If there is a metadata problem
      * @throws QueryResolverException If the query cannot be resolved
      * @throws TeiidComponentException If there is an internal error

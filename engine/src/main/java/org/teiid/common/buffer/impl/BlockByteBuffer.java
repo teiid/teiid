@@ -118,7 +118,7 @@ public class BlockByteBuffer {
      * Return a buffer positioned at the given start byte.
      * It is assumed that the caller will handle blocks in
      * a thread safe manner.
-     * @param startIndex
+     * @param block
      * @return
      */
     public ByteBuffer getByteBuffer(int block) {

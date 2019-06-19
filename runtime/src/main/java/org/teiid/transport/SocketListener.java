@@ -69,16 +69,6 @@ public class SocketListener implements ChannelListenerFactory {
         LogManager.logDetail(LogConstants.CTX_TRANSPORT, RuntimePlugin.Util.getString("SocketTransport.1", new Object[] {address.getHostName(), String.valueOf(config.getPortNumber())})); //$NON-NLS-1$
     }
 
-    /**
-     *
-     * @param port
-     * @param inputBufferSize
-     * @param outputBufferSize
-     * @param maxWorkers
-     * @param config
-     * @param csr
-     * @param storageManager
-     */
     public SocketListener(final InetSocketAddress address, final int inputBufferSize,
             final int outputBufferSize, int maxWorkers,
             final SSLConfiguration config, final ClientServiceRegistryImpl csr,

@@ -50,9 +50,9 @@ public class IfStatement extends Statement  {
 
     /**
      * Constructor for IfStatement.
-     * @param criteria The criteria determining which bleck should be executed
+     * @param criteria The criteria determining which block should be executed
      * @param ifBlock The IF <code>Block</code> object.
-     * @param ifBlock The ELSE <code>Block</code> object.
+     * @param elseBlock The ELSE <code>Block</code> object.
      */
     public IfStatement(Criteria criteria, Block ifBlock, Block elseBlock) {
         this.ifBlock = ifBlock;
@@ -62,7 +62,7 @@ public class IfStatement extends Statement  {
 
     /**
      * Constructor for IfStatement.
-     * @param criteria The criteria determining which bleck should be executed
+     * @param criteria The criteria determining which block should be executed
      * @param ifBlock The IF <code>Block</code> object.
      */
     public IfStatement(Criteria criteria, Block ifBlock) {

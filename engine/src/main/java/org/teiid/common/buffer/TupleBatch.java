@@ -152,7 +152,6 @@ public class TupleBatch {
 
     /**
      * Return a String describing this object
-     * @param String representation of this TupleBatch
      */
     public String toString() {
         StringBuffer s = new StringBuffer();

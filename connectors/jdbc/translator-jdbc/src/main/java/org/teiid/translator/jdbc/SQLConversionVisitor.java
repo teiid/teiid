@@ -128,10 +128,10 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         }
         this.replaceWithBinding = replacementMode;
     }
-
     /**
+     * For the given type, append a literal SQL value
      * @param type
-     * @param object
+     * @param obj
      * @param valuesbuffer
      */
     protected void translateSQLType(Class<?> type, Object obj, StringBuilder valuesbuffer) {

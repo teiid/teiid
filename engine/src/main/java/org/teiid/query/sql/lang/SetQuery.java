@@ -169,7 +169,7 @@ public class SetQuery extends QueryCommand {
         }
 
         if(this.getLimit() != null) {
-            copy.setLimit( (Limit) this.getLimit().clone() );
+            copy.setLimit( this.getLimit().clone() );
         }
 
         copy.setWith(LanguageObject.Util.deepClone(this.getWith(), WithQueryCommand.class));
@@ -239,9 +239,6 @@ public class SetQuery extends QueryCommand {
         return Collections.unmodifiableList(Arrays.asList(leftQuery, rightQuery));
     }
 
-    /**
-     * @param projectedSymbols The projectedSymbols to set.
-     */
     public void setProjectedTypes(List<Class<?>> projectedTypes, QueryMetadataInterface metadata) {
         this.projectedTypes = projectedTypes;
         this.metadata = metadata;

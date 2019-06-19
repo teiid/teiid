@@ -69,7 +69,7 @@ public class SPParameter implements Cloneable {
      * know what the parameter is being filled with but no metadata about the parameter.
      *
      * @param index the positional index of this parameter
-     * @param value the Value of this parameter
+     * @param expression the Value of this parameter
      */
     public SPParameter(int index, Expression expression){
         setIndex(index);

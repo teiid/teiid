@@ -46,7 +46,6 @@ public interface CommandPlanner {
      * @param metadata source of metadata
      * @param capFinder Class usable to find the connector capabilities for a particular model
      * @param context
-     * @param debug whether or not to generate verbose debug output during planning
      * @return ProcessorPlan implementation specific to the CommandPlanner
      * @throws QueryPlannerException indicating a problem in planning
      * @throws QueryMetadataException indicating an exception in accessing the metadata

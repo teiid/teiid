@@ -265,8 +265,8 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
         private final LRUCache<List<?>, Pattern> cache = new LRUCache<List<?>, Pattern>(100);
 
         /**
-         * @param newWildCard replacement for %
-         * @param newSingleMatch replacement for _
+         * @param toReplace meta characters to replace
+         * @param replacements the replacements for the meta characters
          * @param reserved sorted array of reserved chars in the new match syntax
          * @param newEscape escape char in the new syntax
          */

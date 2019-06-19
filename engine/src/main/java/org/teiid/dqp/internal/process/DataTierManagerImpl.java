@@ -1437,7 +1437,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
     /**
      * @param command
-     * @param workItem
      * @return
      * @throws TeiidComponentException
      * @throws TeiidProcessingException

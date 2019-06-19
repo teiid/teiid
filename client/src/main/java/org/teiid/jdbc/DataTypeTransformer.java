@@ -55,7 +55,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.math.BigDecimal object.
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a BigDecimal object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -129,7 +129,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a boolean
-     * @param value, the object to be transformed
+     * @param  value the object to be transformed
      * @return a Boolean object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -142,7 +142,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a byte
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Byte object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -163,9 +163,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.sql.Date object.
-     * @param value, the object to be transformed
-     * @param Calendar object to be used to construct the Date object.
-     * @return a Date object
+     * @param value the object to be transformed
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Date getDate(Object value) throws SQLException {
@@ -174,7 +172,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a double
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Double object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -187,7 +185,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a float
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Float object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -200,7 +198,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a integer
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Integer object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -213,7 +211,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a long
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Long object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -226,7 +224,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a short
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a Short object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -239,8 +237,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.sql.Time object.
-     * @param value, the object to be transformed
-     * @param Calendar object to be used to construct the Time object.
+     * @param value the object to be transformed
      * @return a Time object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -250,8 +247,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.sql.Timestamp object.
-     * @param value, the object to be transformed
-     * @param Calendar object to be used to construct the Timestamp object.
+     * @param value the object to be transformed
      * @return a Timestamp object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -265,8 +261,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.sql.Timestamp object.
-     * @param value, the object to be transformed
-     * @param Calendar object to be used to construct the Timestamp object.
+     * @param value the object to be transformed
      * @return a Timestamp object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -276,8 +271,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a java.sql.Timestamp object.
-     * @param value, the object to be transformed
-     * @param Calendar object to be used to construct the Timestamp object.
+     * @param value the object to be transformed
      * @return a Timestamp object
      * @throws SQLException if failed to transform to the desired datatype
      */
@@ -287,7 +281,7 @@ final class DataTypeTransformer {
 
     /**
      * Gets an object value and transforms it into a SQLXML object.
-     * @param value, the object to be transformed
+     * @param value the object to be transformed
      * @return a SQLXML object
      * @throws SQLException if failed to transform to the desired datatype
      */

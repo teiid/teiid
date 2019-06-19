@@ -35,9 +35,7 @@ import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.ObjectTable;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
 
 
 /**
@@ -117,9 +115,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return null;
     }
 
-    /**
-     * @see QueryMetadataInterface#getElementRuntimeTypeName(ElementSymbol)
-     */
+    @Override
     public String getElementRuntimeTypeName(Object elementID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
@@ -220,9 +216,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
         return false;
     }
 
-    /**
-     * @see QueryMetadataInterface#getVirtualPlan(GroupSymbol)
-     */
+    @Override
     public QueryNode getVirtualPlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         return null;
@@ -230,7 +224,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 
     /**
      * Get procedure defining the insert plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     public String getInsertPlan(Object groupID)
@@ -240,7 +234,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 
     /**
      * Get procedure defining the update plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     public String getUpdatePlan(Object groupID)
@@ -250,7 +244,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 
     /**
      * Get procedure defining the delete plan for this group.
-     * @param symbol Group
+     * @param groupID Group
      * @return A string giving the procedure for inserts.
      */
     public String getDeletePlan(Object groupID)
@@ -405,33 +399,6 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     }
 
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
-        return null;
-    }
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledType(Object elementID) throws TeiidComponentException,
-                                                  QueryMetadataException {
-        return null;
-    }
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledBaseType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledBaseType(Object elementID) throws TeiidComponentException,
-                                                      QueryMetadataException {
-        return null;
-    }
-
-    /**
-     * @see org.teiid.query.metadata.QueryMetadataInterface#getModeledPrimitiveType(java.lang.Object)
-     * @since 5.0
-     */
-    public String getModeledPrimitiveType(Object elementID) throws TeiidComponentException,
-                                                      QueryMetadataException {
         return null;
     }
 

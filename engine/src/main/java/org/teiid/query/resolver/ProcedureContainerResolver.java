@@ -68,8 +68,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
      * Expand a command by finding and attaching all subcommands to the command.  If
      * some initial resolution must be done for this to be accomplished, that is ok,
      * but it should be kept to a minimum.
-     * @param command The command to expand
-     * @param useMetadataCommands True if resolver should use metadata commands to completely resolve
+     * @param procCommand The command to expand
      * @param metadata Metadata access
      * @param analysis The analysis record that will be filled in if doing annotation.
      *

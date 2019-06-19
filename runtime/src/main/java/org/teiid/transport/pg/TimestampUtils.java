@@ -21,11 +21,9 @@ public class TimestampUtils {
     public static final long DATE_NEGATIVE_SMALLER_INFINITY = -185543533774800000L;
 
     /**
-     * Returns the SQL Date object matching the given bytes with
-     * {@link Oid#DATE}.
+     * Returns the SQL Date object given the timezone and number of days
      *
      * @param tz The timezone used.
-     * @param bytes The binary encoded date value.
      * @return The parsed date object.
      */
     public static Date toDate(TimeZone tz, int days) {

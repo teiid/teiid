@@ -202,7 +202,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
      * function descriptor
      * @param context
      * @param functionTarget the object to invoke the function on
-     * @param fd Function descriptor describing the name and types of the arguments
      * @return Result of invoking the function
      */
     public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException, BlockedException {

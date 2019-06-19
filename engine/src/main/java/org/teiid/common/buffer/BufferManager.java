@@ -86,8 +86,7 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
     int getMaxProcessingSize();
 
     /**
-     * Creates a new {@link FileStore}.  See {@link FileStore#setCleanupReference(Object)} to
-     * automatically cleanup the underlying resources.
+     * Creates a new {@link FileStore}.
      * @param name
      * @return
      */
@@ -102,7 +101,7 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
     int reserveBuffers(int count, BufferReserveMode mode);
 
     /**
-     * Releases the buffers reserved by a call to {@link BufferManager#reserveBuffers(int, boolean)}
+     * Releases the buffers reserved by a call to {@link BufferManager#reserveBuffers(int, BufferReserveMode)}
      * @param count
      */
     void releaseBuffers(int count);

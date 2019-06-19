@@ -54,9 +54,9 @@ public class SheetsAPI {
 
     /**
      * Insert row into spreadsheet
-     * @param spreadsheetKey  key that identifies spreadsheet
-     * @param pairs  key that identifies worksheet
-     * @param worksheet name - value pair that should be inserted into spreadsheet
+     * @param spreadsheetId spreadsheet identifier
+     * @param pairs name - value pair that should be inserted into spreadsheet
+     * @param worksheet
      * @return 1 if the row is successfully inserted
      */
     public UpdateResult insert(String spreadsheetId, Map<String, Object> pairs, Worksheet worksheet) {

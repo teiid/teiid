@@ -389,8 +389,6 @@ public class DependentCriteriaProcessor {
     /**
      * Replace the dependentSet value iterators with the next set of values from the independent tuple source
      *
-     * @param dependentSets
-     * @param replacementValueIterators
      * @throws TeiidComponentException
      */
     private void replaceDependentValueIterators() throws TeiidComponentException {

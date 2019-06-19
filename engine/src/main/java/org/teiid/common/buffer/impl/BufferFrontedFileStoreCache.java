@@ -897,7 +897,6 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 
     /**
      * Determine if an object should be in the memory buffer.
-     * @param currentTime
      * @param info
      * @return
      */

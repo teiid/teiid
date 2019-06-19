@@ -94,8 +94,6 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
 
     /**
      * Removes item with given ItemName from domain
-     * @param domainName
-     * @param itemName
      */
     @Override
     public int performDelete(String domainName, String selectExpression) throws TranslatorException {
@@ -134,9 +132,6 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
 
     /**
      * Performs select expression. This expression must be in format which is understandable to SimpleDB database
-     * @param selectExpression
-     * @param columns
-     * @return Iterator of List<String> results
      */
     @Override
     public SelectResult performSelect(String selectExpression, String nextToken) throws TranslatorException{
@@ -157,7 +152,7 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
     /**
      *  Performs update on given domain and items
      * @param domainName
-     * @param items
+     * @param updateAttributes
      */
     @Override
     public int performUpdate(String domainName, Map<String, Object> updateAttributes, String selectExpression) throws TranslatorException {
@@ -195,10 +190,6 @@ public class SimpleDBConnectionImpl extends BasicConnection implements SimpleDBC
 
     /**
      *  Inserts item into given domain.
-     * @param domainName
-     * @param itemName
-     * @param columnsMap
-     * @return
      */
     @Override
     public int performInsert(String domainName, List<Column> columns, Iterator<? extends List<?>> valueList) throws TranslatorException {

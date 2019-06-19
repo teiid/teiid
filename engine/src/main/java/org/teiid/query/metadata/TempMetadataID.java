@@ -155,7 +155,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
      * Constructor for group form of metadata ID.
      * @param ID Fully-qualified, upper-case name of ID
      * @param elements List of TempMetadataID representing elements
-     * @param isVirtual whether or not the group is a virtual group
+     * @param type of group
      */
     public TempMetadataID(String ID, List<TempMetadataID> elements, Type type) {
         this.data = new TableData();

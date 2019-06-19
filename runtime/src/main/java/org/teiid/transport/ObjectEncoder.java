@@ -37,7 +37,7 @@ import io.netty.handler.stream.ChunkedStream;
 
 
 /**
- * An encoder which serializes a Java object into a {@link ChannelBuffer}.
+ * An encoder which serializes a Java object into a message.
  * <p>
  * Please note that the serialized form this encoder produces is not
  * compatible with the standard {@link ObjectInputStream}.  Please use

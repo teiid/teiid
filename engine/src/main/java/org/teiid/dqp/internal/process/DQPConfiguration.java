@@ -199,7 +199,6 @@ public class DQPConfiguration{
 
     /**
      * Get the properties used to initialize the engine {@link Options}.  Defaults to the System properties.
-     * @param properties
      */
     public Properties getProperties() {
         return this.properties;

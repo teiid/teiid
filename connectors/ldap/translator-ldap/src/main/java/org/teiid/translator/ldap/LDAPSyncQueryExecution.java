@@ -97,9 +97,6 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 
     /**
      * Constructor
-     * @param executionMode the execution mode.
-     * @param ctx the execution context.
-     * @param logger the ConnectorLogger
      * @param connection the LDAP Context
      */
     public LDAPSyncQueryExecution(Select query, LDAPExecutionFactory factory, ExecutionContext context, LdapContext connection) {
@@ -111,8 +108,6 @@ public class LDAPSyncQueryExecution implements ResultSetExecution {
 
     /**
      * method to execute the supplied query
-     * @param query the query object.
-     * @param maxBatchSize the max batch size.
      */
     @Override
     public void execute() throws TranslatorException {

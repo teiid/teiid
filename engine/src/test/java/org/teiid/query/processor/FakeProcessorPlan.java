@@ -116,11 +116,4 @@ public class FakeProcessorPlan extends ProcessorPlan {
         // nothing
     }
 
-    /**
-     * @see org.teiid.query.processor.ProcessorPlan#getSchema()
-     */
-    public List getSchema() {
-        return this.outputElements;
-    }
-
 }

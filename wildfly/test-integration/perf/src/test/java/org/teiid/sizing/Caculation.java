@@ -22,12 +22,12 @@ package org.teiid.sizing;
  * is used to test and verify the web sizing application, whether the sizing recommendation are base on formula.
  *
  * The {@link #heapCaculation} method use to calculate the JVM heap size base on formula
- * <pre> {@code
+ * <pre>
  * Size = #concurrency * (5mb)  * #source queries + 300mb
  * </pre>
  *
  * The {@link #coreCaculation} method use to calculate the core size base on formula
- * <pre> {@code
+ * <pre>
  *   cpu_time = sum(source_processing) + engine_time + client_processing
  *   wall_time = low(source_latency) + cpu_time + additional_latency
  *   cpu_utilization_per_query = cpu_time/wall_time

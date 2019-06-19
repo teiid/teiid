@@ -38,7 +38,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  *
  * <p>During processing, the Criteria is evaluated and if it evaluates to true,
  * the "if" block is executed else the "else" block if there is one is executed. These
- * programs are placed on the {@link ProgramEnvironment#getProgramStack stack}.</p>
+ * programs are placed on the stack.</p>
  */
 public class IfInstruction extends ProgramInstruction {
 

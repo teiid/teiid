@@ -58,7 +58,6 @@ public class QueryNode {
 
     /**
      * Set the SQL query
-     * @param String query
      */
     public void setQuery(String query) {
         this.query = query;

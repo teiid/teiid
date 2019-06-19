@@ -96,7 +96,7 @@ public class PartialResultsWarning extends SQLWarning {
 
     /**
      * Obtain failure for a particular connector.
-     * @param name Connector name
+     * @param connectorName Connector name
      * @return Exception that occurred for this connector or null if
      * the exception was unknown
      */

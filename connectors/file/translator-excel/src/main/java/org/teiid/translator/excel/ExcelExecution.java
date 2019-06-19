@@ -56,7 +56,6 @@ public class ExcelExecution extends BaseExcelExecution implements ResultSetExecu
 
     /**
      * @param row
-     * @param neededColumns
      */
     List<Object> projectRow(Row row) throws TranslatorException {
         ArrayList<Object> output = new ArrayList<Object>(this.visitor.getProjectedColumns().size());

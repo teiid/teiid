@@ -46,7 +46,7 @@ public class DeclareStatement extends AssignmentStatement {
     /**
      * Constructor for DeclareStatement.
      * @param variable The <code>ElementSymbol</code> object that is the variable
-     * @param valueType The type of this variable
+     * @param varType The type of this variable
      */
     public DeclareStatement(ElementSymbol variable, String varType) {
         super(variable, (Expression)null);
@@ -56,7 +56,7 @@ public class DeclareStatement extends AssignmentStatement {
     /**
      * Constructor for DeclareStatement.
      * @param variable The <code>ElementSymbol</code> object that is the variable
-     * @param valueType The type of this variable
+     * @param varType The type of this variable
      */
     public DeclareStatement(ElementSymbol variable, String varType, Expression value) {
         super(variable, value);

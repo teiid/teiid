@@ -28,13 +28,14 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.util.CommandContext;
 
 
 /**
  * Accumulates (per tuple) and calculates the sum of the values
  * of a column.  The type of the result varies depending on the type
- * of the input {@see AggregateSymbol}
+ * of the input {@link AggregateSymbol}
  */
 public class Sum extends SingleArgumentAggregateFunction {
 
@@ -59,9 +60,7 @@ public class Sum extends SingleArgumentAggregateFunction {
         return this.accumulatorType;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(boolean, String)
-     */
+    @Override
     public void initialize(Class<?> dataType, Class<?> inputType) {
         if(dataType.equals(DataTypeManager.DefaultDataClasses.LONG)) {
 
@@ -85,9 +84,7 @@ public class Sum extends SingleArgumentAggregateFunction {
         isNull = true;
     }
 
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
-     */
+    @Override
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
