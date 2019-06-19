@@ -52,7 +52,7 @@ public class SystemFunctionMethods {
 
     @TeiidFunction(category=FunctionCategoryConstants.SYSTEM, pushdown=PushDown.CANNOT_PUSHDOWN, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
     public static Object generated_key(CommandContext context, String column) {
-        GeneratedKeysImpl keys = context.getGeneratedKeys();
+        GeneratedKeysImpl keys = getLastGeneratedKeys(context);
         if (keys == null || keys.getKeys().isEmpty()) {
             return null;
         }
@@ -65,9 +65,18 @@ public class SystemFunctionMethods {
         return null;
     }
 
+    private static GeneratedKeysImpl getLastGeneratedKeys(
+            CommandContext context) {
+        Object o = context.getSessionVariable(GeneratedKeysImpl.LAST_GENERATED_KEY);
+        if (o instanceof GeneratedKeysImpl) {
+            return (GeneratedKeysImpl)o;
+        }
+        return null;
+    }
+
     @TeiidFunction(category=FunctionCategoryConstants.SYSTEM, pushdown=PushDown.CANNOT_PUSHDOWN, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
     public static Long generated_key(CommandContext context) throws TransformationException {
-        GeneratedKeysImpl keys = context.getGeneratedKeys();
+        GeneratedKeysImpl keys = getLastGeneratedKeys(context);
         if (keys == null || keys.getKeys().isEmpty()) {
             return null;
         }

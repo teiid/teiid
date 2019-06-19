@@ -1000,6 +1000,11 @@ public class TestEmbeddedServer {
         rs = ps.executeQuery();
         assertTrue(rs.next());
         assertEquals(2, rs.getInt(1));
+
+        //make sure the session scope works as well
+        rs = s.executeQuery("select generated_key()");
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
     }
 
     @Test public void testMultiSourceMetadata() throws Exception {

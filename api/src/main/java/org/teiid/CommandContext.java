@@ -190,7 +190,7 @@ public interface CommandContext {
             Class<?>[] columnDataTypes);
 
     /**
-     * Returns the last set of generated keys or null if no keys have been generated.
+     * Returns the last set of generated keys for the current command or null if no keys have been generated.
      */
     GeneratedKeys getGeneratedKeys();
 

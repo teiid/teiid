@@ -1010,7 +1010,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public GeneratedKeysImpl returnGeneratedKeys(String[] columnNames,
             Class<?>[] columnDataTypes) {
         synchronized (this.globalState) {
-            this.globalState.generatedKeys = new GeneratedKeysImpl(columnNames, columnDataTypes);
+            this.globalState.generatedKeys = new GeneratedKeysImpl(columnNames, columnDataTypes, this);
             return this.globalState.generatedKeys;
         }
     }
@@ -1041,6 +1041,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
     @Override
     public Object setSessionVariable(String key, Object value) {
+        if (this.vdbState.session == null) {
+            return null;
+        }
         return this.vdbState.session.getSessionVariables().put(key, value);
     }
 
