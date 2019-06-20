@@ -1049,7 +1049,7 @@ public class TestODataIntegration {
     public void testNextWithProcedure() throws Exception {
         ModelMetaData mmd = new ModelMetaData();
         mmd.setName("vw");
-        mmd.addSourceMetadata("ddl", "create procedure x (i integer) returns table (b integer) as select i union all select i+1;");
+        mmd.addSourceMetadata("ddl", "create procedure x (i integer) returns table (b integer) options (updatecount 0) as select i union all select i+1;");
         mmd.setModelType(Model.Type.VIRTUAL);
         teiid.deployVDB("northwind", mmd);
 
@@ -1071,6 +1071,25 @@ public class TestODataIntegration {
         //xml not supported
         response = http.GET(baseURL + "/northwind/vw/x(i=1)?$format=xml");
         assertEquals(400, response.getStatus());
+    }
+
+    /**
+     * With an update count (above) this is mapped as a function, without as an action
+     * @throws Exception
+     */
+    @Test
+    public void testActionMappingWithoutUpdatecount() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("vw");
+        mmd.addSourceMetadata("ddl", "create procedure x (i integer) returns table (b integer) as select i union all select i+1;");
+        mmd.setModelType(Model.Type.VIRTUAL);
+        teiid.deployVDB("northwind", mmd);
+
+        ContentResponse response = http.newRequest(baseURL + "/northwind/vw/x")
+                .method("POST")
+                .content(new StringContentProvider("{\"i\":1}"), "application/json")
+                .send();
+        assertEquals(200, response.getStatus());
     }
 
     @Test

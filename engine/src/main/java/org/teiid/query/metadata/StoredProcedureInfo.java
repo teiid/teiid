@@ -19,10 +19,11 @@
 package org.teiid.query.metadata;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.teiid.client.metadata.ParameterInfo;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.SPParameter;
 
@@ -53,7 +54,7 @@ public class StoredProcedureInfo implements Serializable {
     private List<SPParameter> parameters = new ArrayList<SPParameter>();
     private String callableName;
     private QueryNode query;
-    private int updateCount = -1;
+    private int updateCount = Procedure.AUTO_UPDATECOUNT;
 
     public String getProcedureCallableName(){
         return this.callableName;

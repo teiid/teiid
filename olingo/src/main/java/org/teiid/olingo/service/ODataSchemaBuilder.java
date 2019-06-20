@@ -474,6 +474,11 @@ public class ODataSchemaBuilder {
     private static boolean isFuntion(Procedure proc) {
         if (doesProcedureReturn(proc) && proc.getUpdateCount() < 1
                 && !isInputParameterLob(proc)) {
+            if (proc.getUpdateCount() == Procedure.AUTO_UPDATECOUNT) {
+                //we need to plan this procedure to determine if the update count is actually 0
+                //that's a significant change for a narrow case, so we'll just return false for now
+                return false;
+            }
             return true;
         }
         return false;

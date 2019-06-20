@@ -48,6 +48,7 @@
   <li><a href="https://issues.jboss.org/browse/TEIID-5759">TEIID-5759</a> GRANT CONDITION syntax behavior did not match with XML VDBs and was updated to match - you must now explicitly use NOT CONSTRAINT to declare that the condition is not a constraint.  If you still want the older behavior set the property org.teiid.conditionConstraintDefault to false.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5759">TEIID-5759</a> The odata4 openapi.json metadata url now returns v2 metadata by default.  Please use /openapi.json?version=3 to get the v3 metadata.</li>
   <li><a href="https://issues.jboss.org/browse/TEIID-5757">TEIID-5757</a> The teiid-security security domain is configured by default to provide the odata role, so that it does not have to be explicitly granted for odata access.  If you wish to keep that requirement, then remove the Identity login module from the teiid-security security domain.</li>
+  <li><a href="https://issues.jboss.org/browse/TEIID-5729">TEIID-5729</a> The mapping of some procedures to OData functions will require explicitly setting the UPDATECOUNT option - CREATE VIRTUAL PROCEDURE ... OPTIONS (UPDATECOUNT 0) AS BEGIN ...</li>
 </ul>
 
 <h4>from 12.0</h4>
