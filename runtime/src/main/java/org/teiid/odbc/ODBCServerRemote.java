@@ -21,11 +21,13 @@ import java.net.SocketAddress;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
+import javax.net.ssl.SSLEngine;
+
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
 
 public interface ODBCServerRemote {
 
-    void initialize(Properties props);
+    void initialize(Properties props, SocketAddress remoteAddress, SSLEngine sslEngine);
 
     void logon(String databaseName, String userid, NullTerminatedStringDataInputStream data, SocketAddress remoteAddress);
 

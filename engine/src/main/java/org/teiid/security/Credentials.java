@@ -24,29 +24,14 @@ public class Credentials implements Serializable {
 
     private static final long serialVersionUID = 7453114713211221240L;
 
-    private String credentials = null;
+    private Object credentials;
 
-    /**
-     * Construct a new PasswordCredentials
-     * @param credentials the password.
-     */
-    public Credentials(char[] credentials) {
-        this.credentials = new String(credentials);
-    }
-
-    public Credentials(String credentials) {
+    public Credentials(Object credentials) {
         this.credentials = credentials;
     }
 
-    public String getCredentials() {
+    public Object getCredentials() {
         return credentials;
-    }
-
-    /**
-     * Get the Credentials as a char[].
-     */
-    public char[] getCredentialsAsCharArray() {
-        return this.credentials==null?null:this.credentials.toCharArray();
     }
 
 }

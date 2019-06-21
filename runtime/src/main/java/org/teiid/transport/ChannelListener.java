@@ -18,6 +18,8 @@
 
 package org.teiid.transport;
 
+import javax.net.ssl.SSLEngine;
+
 import org.teiid.net.CommunicationException;
 import org.teiid.net.socket.ObjectChannel;
 
@@ -34,5 +36,5 @@ public interface ChannelListener {
 
     void disconnected();
 
-    void onConnection() throws CommunicationException;
+    void onConnection(SSLEngine engine) throws CommunicationException;
 }

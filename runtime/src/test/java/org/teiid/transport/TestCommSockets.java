@@ -17,7 +17,11 @@
  */
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -47,10 +51,12 @@ import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.net.TeiidURL;
+import org.teiid.net.socket.AuthenticationType;
 import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.services.SessionServiceImpl;
+import org.teiid.transport.SSLConfiguration.ClientAuth;
 import org.teiid.transport.TestSocketRemoting.FakeService;
 
 
@@ -62,6 +68,7 @@ public class TestCommSockets {
     private InetSocketAddress addr;
     private MemoryStorageManager storageManager;
     private SessionServiceImpl service;
+    private AuthenticationType authType = AuthenticationType.USERPASSWORD;
 
     @Before public void setUp() {
         addr = new InetSocketAddress(0);
@@ -71,6 +78,7 @@ public class TestCommSockets {
         if (listener != null) {
             listener.stop();
         }
+        authType = AuthenticationType.USERPASSWORD;
     }
 
     @Test(expected=CommunicationException.class) public void testFailedConnect() throws Exception {
@@ -145,6 +153,7 @@ public class TestCommSockets {
                 }
             };
             service = new SessionServiceImpl();
+            service.setAuthenticationType(authType);
             server.registerClientService(ILogon.class, new LogonImpl(service, "fakeCluster"), null);
             server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
             storageManager = new MemoryStorageManager();
@@ -270,6 +279,48 @@ public class TestCommSockets {
         p.setProperty("org.teiid.ssl.keyStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
         p.setProperty("org.teiid.ssl.keyStorePassword", "password");
         p.setProperty("org.teiid.ssl.keyPassword", "changeit");
+        helpEstablishConnection(true, config, p);
+    }
+
+    @Test(expected = ConnectionException.class) public void testTwoWayWtihAuthFails() throws Exception {
+        SSLConfiguration config = new SSLConfiguration();
+        config.setMode(SSLConfiguration.ENABLED);
+        config.setAuthenticationMode(ClientAuth.WANT);
+        config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        config.setKeystorePassword("password");
+        config.setKeystoreKeyPassword("changeit");
+        config.setKeystoreKeyAlias("selfsigned");
+        config.setTruststoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        config.setTruststorePassword("password");
+        authType = AuthenticationType.SSL;
+
+        Properties p = new Properties();
+        p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        p.setProperty("org.teiid.ssl.trustStorePassword", "password");
+        //1-way will fail
+        helpEstablishConnection(true, config, p);
+    }
+
+    @Test public void testTwoWayWithAuth() throws Exception {
+        SSLConfiguration config = new SSLConfiguration();
+        config.setMode(SSLConfiguration.ENABLED);
+        config.setAuthenticationMode(ClientAuth.WANT);
+        config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        config.setKeystorePassword("password");
+        config.setKeystoreKeyPassword("changeit");
+        config.setKeystoreKeyAlias("selfsigned");
+        config.setTruststoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        config.setTruststorePassword("password");
+        authType = AuthenticationType.SSL;
+
+        Properties p = new Properties();
+        p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        p.setProperty("org.teiid.ssl.trustStorePassword", "password");
+
+        p.setProperty("org.teiid.ssl.keyStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
+        p.setProperty("org.teiid.ssl.keyStorePassword", "password");
+        p.setProperty("org.teiid.ssl.keyPassword", "changeit");
+
         helpEstablishConnection(true, config, p);
     }
 

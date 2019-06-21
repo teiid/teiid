@@ -18,18 +18,28 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.security.cert.X509Certificate;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+
+import javax.security.auth.Subject;
+import javax.security.auth.login.LoginException;
 
 import org.junit.After;
 import org.junit.Test;
 import org.postgresql.Driver;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.runtime.DoNothingSecurityHelper;
+import org.teiid.security.Credentials;
+import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.TestODBCSocketTransport.FakeOdbcServer;
 import org.teiid.transport.TestODBCSocketTransport.Mode;
 
@@ -115,6 +125,63 @@ public class TestODBCSSL {
         //sslrootcert ??
         p.setProperty("ssl", "true");
         conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+    }
+
+    @Test public void testSSLAuth() throws Exception {
+        odbcServer.start(Mode.SSL_AUTH);
+        Driver d = new Driver();
+        Properties p = new Properties();
+        p.setProperty("user", "testuser");
+        p.setProperty("password", "testpassword");
+        p.setProperty("ssl", "true");
+        p.setProperty("sslfactory", "org.postgresql.ssl.NonValidatingFactory");
+
+        //server / 1-way - should not work
+        try {
+            d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+            fail("should require 2-way ssl");
+        } catch (SQLException e) {
+
+        }
+
+        SessionServiceImpl ss = odbcServer.server.getSessionService();
+        ss.setSecurityHelper(new DoNothingSecurityHelper() {
+            Subject s = new Subject();
+
+            @Override
+            public Subject getSubjectInContext(Object context) {
+                return (Subject)context;
+            }
+
+            @Override
+            public Object getSecurityContext(String securityDomain) {
+                return s;
+            }
+
+            @Override
+            public Object authenticate(String securityDomain,
+                    String baseUserName, Credentials credentials,
+                    String applicationName) throws LoginException {
+                X509Certificate cert = (X509Certificate)credentials.getCredentials();
+                s.getPrincipals().add(cert.getSubjectDN());
+                return s;
+            }
+
+        });
+
+
+        //mutual auth
+        p.setProperty("sslfactory", "org.postgresql.ssl.jdbc4.LibPQFactory");
+        p.setProperty("sslcert", UnitTestUtil.getTestDataPath() + "/selfsigned.crt");
+        p.setProperty("sslkey", UnitTestUtil.getTestDataPath() + "/selfsigned.pk8");
+        //sslrootcert - not needed this is selfsigned
+        p.setProperty("ssl", "true");
+
+        Connection conn = d.connect("jdbc:postgresql://"+odbcServer.addr.getHostName()+":" +odbcServer.odbcTransport.getPort()+"/parts", p);
+        Statement s = conn.createStatement();
+        ResultSet rs = s.executeQuery("select user()");
+        rs.next();
+        assertEquals("CN=Steve Hawkins, OU=org, O=jboss, L=Winston-Salem, ST=North Carolina, C=US@teiid-security", rs.getString(1));
     }
 
 }

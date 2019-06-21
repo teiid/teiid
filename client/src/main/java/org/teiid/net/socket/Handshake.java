@@ -26,6 +26,7 @@ import java.io.ObjectOutput;
 import java.io.OptionalDataException;
 import java.util.List;
 
+import org.teiid.client.security.LogonResult;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
 
@@ -95,6 +96,12 @@ public class Handshake implements Externalizable {
         this.publicKey = key;
     }
 
+    /**
+     * Represents the default auth type for the entire instance.
+     * Per vdb auth types are now supported and provided in the {@link LogonResult}
+     * @return
+     */
+    @Deprecated
     public AuthenticationType getAuthType() {
         return authType;
     }

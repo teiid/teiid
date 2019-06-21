@@ -20,11 +20,14 @@ package org.teiid.transport;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
@@ -80,9 +83,9 @@ public class LogonImpl implements ILogon {
             authType = this.service.getAuthenticationType(vdbName, vdbVersion, user);
         }
 
-        // the presence of the KRB5 token take as GSS based login.
-        if (connProps.get(ILogon.KRB5TOKEN) != null) {
-            if (authType == AuthenticationType.GSS) {
+        switch (authType) {
+        case GSS:
+            if (connProps.get(ILogon.KRB5TOKEN) != null) {
                 Object previous = null;
                 boolean assosiated = false;
                 SecurityHelper securityHelper = service.getSecurityHelper();
@@ -94,16 +97,15 @@ public class LogonImpl implements ILogon {
                     }
                     previous = securityHelper.associateSecurityContext(securityContext);
                     assosiated = true;
-                    return logon(connProps, krb5Token, AuthenticationType.GSS, user);
+                    LogonResult result = logon(connProps, AuthenticationType.GSS, user);
+                    result.addProperty(ILogon.KRB5TOKEN, krb5Token);
+                    return result;
                 } finally {
                     if (assosiated) {
                         securityHelper.associateSecurityContext(previous);
                     }
                 }
-            } else {
-                //shouldn't really get here, but we'll try user name password anyway
             }
-        } else if (authType == AuthenticationType.GSS) {
             Version v = DQPWorkContext.getWorkContext().getClientVersion();
             //send a login result with a GSS challange
             if (v.compareTo(Version.EIGHT_7) >= 0) {
@@ -111,52 +113,64 @@ public class LogonImpl implements ILogon {
                 result.addProperty(ILogon.AUTH_TYPE, authType);
                 return result;
             }
-            //throw an exception
+            //client not compatible, throw an exception
             throw new LogonException(RuntimePlugin.Event.TEIID40149, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40149));
+        case USERPASSWORD:
+        case SSL:
+            return logon(connProps, authType, user);
+        default:
+            throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
         }
-
-        //default to username password
-
-        if (!AuthenticationType.USERPASSWORD.equals(authType)) {
-             throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, authType));
-        }
-        return logon(connProps, null, AuthenticationType.USERPASSWORD, user);
     }
 
-    private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket, AuthenticationType authType, String user) throws LogonException {
-
+    private LogonResult logon(Properties connProps, AuthenticationType authType, String user) throws LogonException {
         String vdbName = connProps.getProperty(BaseDataSource.VDB_NAME);
         String vdbVersion = connProps.getProperty(BaseDataSource.VDB_VERSION);
         String applicationName = connProps.getProperty(TeiidURL.CONNECTION.APP_NAME);
-        String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
-        Credentials credential = null;
-        if (password != null) {
-            credential = new Credentials(password.toCharArray());
+        Object credential = null;
+        DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+        if (authType == AuthenticationType.SSL) {
+            SSLSession session = workContext.getSSLSession();
+            if (session == null) {
+                throw new LogonException(RuntimePlugin.Event.TEIID40170, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40170, authType));
+            }
+            Certificate[] certs;
+            try {
+                certs = session.getPeerCertificates();
+            } catch (SSLPeerUnverifiedException e) {
+                throw new LogonException(RuntimePlugin.Event.TEIID40170, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40170, authType));
+            }
+            if (certs != null && certs.length > 0) {
+                credential = certs[0];
+            } //else not expected, and should fail auth
+        } else {
+            credential = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);
+        }
+
+        //this is just to match the old expectations.
+        //this class does not do much for us...
+        Credentials credentials = null;
+        if (credential != null) {
+            credentials = new Credentials(credential);
         }
 
         try {
-            SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credential, applicationName, connProps);
+            SessionMetadata sessionInfo = service.createSession(vdbName, vdbVersion, authType, user,credentials, applicationName, connProps);
 
             if (connProps.get(GSSCredential.class.getName()) != null) {
                 addCredentials(sessionInfo.getSubject(), (GSSCredential)connProps.get(GSSCredential.class.getName()));
             }
 
             updateDQPContext(sessionInfo);
-            if (DQPWorkContext.getWorkContext().getClientAddress() == null) {
+            if (workContext.getClientAddress() == null) {
                 sessionInfo.setEmbedded(true);
             }
             //if (oldSessionId != null) {
                 //TODO: we should be smarter about disassociating the old sessions from the client.  we'll just rely on
                 //ping based clean up
             //}
-            LogonResult result = new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), clusterName);
-            if (krb5ServiceTicket != null) {
-                result.addProperty(ILogon.KRB5TOKEN, krb5ServiceTicket);
-            }
-            return result;
-        } catch (LoginException e) {
-             throw new LogonException(e);
-        } catch (SessionServiceException e) {
+            return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getVDBName(), clusterName);
+        } catch (LoginException|SessionServiceException e) {
              throw new LogonException(e);
         }
     }

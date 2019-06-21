@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.net.ssl.SSLSession;
 import javax.security.auth.Subject;
 
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -104,6 +105,8 @@ public class LocalServerConnection implements ServerConnection {
 
             workContext.setSecurityHelper(csr.getSecurityHelper());
             workContext.setUseCallingThread(useCallingThread);
+            SSLSession sslSession = (SSLSession)connectionProperties.get(LocalProfile.SSL_SESSION);
+            workContext.setSSLSession(sslSession);
             authenticate();
             passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
         } else {

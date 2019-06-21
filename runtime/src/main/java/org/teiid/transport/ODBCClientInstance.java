@@ -24,6 +24,8 @@ import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.net.ssl.SSLEngine;
+
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -91,7 +93,8 @@ public class ODBCClientInstance implements ChannelListener{
     }
 
     @Override
-    public void onConnection() throws CommunicationException {
+    public void onConnection(SSLEngine engine) throws CommunicationException {
+        //ssl handling is in ODBCServerRemote.initialize
     }
 
     @Override

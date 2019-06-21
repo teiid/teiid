@@ -189,17 +189,17 @@ public class SessionServiceImpl implements SessionService {
                     if (securityContext != null) {
                         subject = this.securityHelper.getSubjectInContext(securityContext);
                     }
-                    if (subject == null) {
-                        if ((!onlyAllowPassthrough || !(trustAllLocal && DQPWorkContext.getWorkContext().isLocal()))) {
-                            throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
-                        }
-                    } else {
-                        userName = getUserName(subject, userName);
+                    if (subject == null && ((!onlyAllowPassthrough || !(trustAllLocal && DQPWorkContext.getWorkContext().isLocal())))) {
+                        throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
                     }
                 } else {
                     securityContext = this.securityHelper.authenticate(securityDomain, userName, credentials, applicationName);
                     subject = this.securityHelper.getSubjectInContext(securityContext);
                     //TODO: it may be appropriate here to obtain the username from the subject as well
+                }
+
+                if (subject != null) {
+                    userName = getUserName(subject, userName);
                 }
             }
             else {
