@@ -57,6 +57,7 @@ import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.TestEmbeddedServer;
 import org.teiid.runtime.TestEmbeddedServer.MockTransactionManager;
+import org.teiid.transport.SSLConfiguration.ClientAuth;
 
 @SuppressWarnings("nls")
 public class TestODBCSocketTransport {
@@ -66,6 +67,7 @@ public class TestODBCSocketTransport {
     enum Mode {
         LEGACY,//how the test was originally written
         ENABLED,
+        WANT,
         LOGIN,
         DISABLED
     }
@@ -78,15 +80,28 @@ public class TestODBCSocketTransport {
         public void start(Mode mode) throws Exception {
             SocketConfiguration config = new SocketConfiguration();
             SSLConfiguration sslConfig = new SSLConfiguration();
-            if (mode == Mode.LOGIN) {
+            switch (mode) {
+            case LOGIN:
                 sslConfig.setMode(SSLConfiguration.LOGIN);
-            } else if (mode == Mode.ENABLED || mode == Mode.LEGACY) {
+                break;
+            case ENABLED:
+            case LEGACY:
                 sslConfig.setMode(SSLConfiguration.ENABLED);
                 sslConfig.setAuthenticationMode(SSLConfiguration.ONEWAY);
                 sslConfig.setKeystoreFilename(UnitTestUtil.getTestDataFile("keystore.jks").getAbsolutePath());
                 sslConfig.setKeystorePassword("password");
-            } else {
+                break;
+            case WANT:
+                sslConfig.setMode(SSLConfiguration.ENABLED);
+                sslConfig.setAuthenticationMode(ClientAuth.WANT);
+                sslConfig.setKeystoreFilename(UnitTestUtil.getTestDataFile("keystore.jks").getAbsolutePath());
+                sslConfig.setKeystorePassword("password");
+                sslConfig.setTruststoreFilename(UnitTestUtil.getTestDataFile("keystore.jks").getAbsolutePath());
+                sslConfig.setTruststorePassword("password");
+                break;
+            default:
                 sslConfig.setMode(SSLConfiguration.DISABLED);
+                break;
             }
             config.setSSLConfiguration(sslConfig);
             addr = new InetSocketAddress(0);

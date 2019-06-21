@@ -20,14 +20,12 @@ package org.teiid.transport;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.teiid.net.socket.SocketUtil;
-import org.teiid.runtime.RuntimePlugin;
 
 
 
@@ -35,7 +33,24 @@ public class SSLConfiguration {
 
     public static final String ONEWAY = "1-way"; //$NON-NLS-1$ - one way is the default
     public static final String TWOWAY = "2-way"; //$NON-NLS-1$
+    @Deprecated
     public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
+
+    public enum ClientAuth {
+        NONE(ONEWAY),
+        WANT("want_client"), //$NON-NLS-1$
+        NEED(TWOWAY);
+
+        private String oldValue;
+
+        private ClientAuth(String oldValue) {
+            this.oldValue = oldValue;
+        }
+
+        public String getOldValue() {
+            return oldValue;
+        }
+    }
 
     public static final String LOGIN = "login"; //$NON-NLS-1$
     public static final String DISABLED = "disabled"; //$NON-NLS-1$
@@ -54,7 +69,7 @@ public class SSLConfiguration {
     private String keyStorePassword = ""; //$NON-NLS-1$
     private String trustStoreFileName;
     private String trustStorePassword = ""; //$NON-NLS-1$
-    private String authenticationMode = ONEWAY;
+    private ClientAuth authenticationMode = ClientAuth.NONE;
     private String[] enabledCipherSuites;
     private String keyAlias;
     private String keyPassword;
@@ -68,36 +83,34 @@ public class SSLConfiguration {
         // Use the SSLContext to create an SSLServerSocketFactory.
         SSLContext context = null;
 
-        if (ANONYMOUS.equals(authenticationMode)) {
-            context = SocketUtil.getAnonSSLContext();
-        } else {
-            context = SocketUtil.getSSLContext(keyStoreFileName,
-                                    keyStorePassword,
-                                    trustStoreFileName,
-                                    trustStorePassword,
-                                    keyManagerFactoryAlgorithm,
-                                    keyStoreType,
-                                    sslProtocol,
-                                    keyAlias,
-                                    keyPassword,
-                                    false,
-                                    truststoreCheckExpired);
-        }
+        context = SocketUtil.getSSLContext(keyStoreFileName,
+                                keyStorePassword,
+                                trustStoreFileName,
+                                trustStorePassword,
+                                keyManagerFactoryAlgorithm,
+                                keyStoreType,
+                                sslProtocol,
+                                keyAlias,
+                                keyPassword,
+                                false,
+                                truststoreCheckExpired);
 
         SSLEngine result = context.createSSLEngine();
         result.setUseClientMode(false);
-        if (ANONYMOUS.equals(authenticationMode)) {
-            if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
-                throw new GeneralSecurityException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40082));
-            }
-            result.setEnabledCipherSuites(new String[] {SocketUtil.ANON_CIPHER_SUITE});
-        } else {
-            if (this.enabledCipherSuites != null) {
-                result.setEnabledCipherSuites(this.enabledCipherSuites);
-            }
+        if (this.enabledCipherSuites != null) {
+            result.setEnabledCipherSuites(this.enabledCipherSuites);
+        }
+        switch (authenticationMode) {
+        case NEED:
+            result.setNeedClientAuth(true);
+            break;
+        case WANT:
+            result.setWantClientAuth(true);
+            break;
+        default:
+            break;
         }
 
-        result.setNeedClientAuth(TWOWAY.equals(authenticationMode));
         return result;
     }
 
@@ -145,8 +158,27 @@ public class SSLConfiguration {
         this.trustStorePassword = value;
     }
 
-    public void setAuthenticationMode(String value) {
+    public void setAuthenticationMode(ClientAuth value) {
         this.authenticationMode = value;
+    }
+
+    public void setAuthenticationMode(String value) {
+        for (ClientAuth auth : ClientAuth.values()) {
+            if (auth.name().equals(value) || auth.oldValue.equals(value)) {
+                this.authenticationMode = auth;
+                return;
+            }
+        }
+        if (value.equals(ANONYMOUS)) {
+            this.authenticationMode = ClientAuth.NONE;
+            this.enabledCipherSuites = new String[] {SocketUtil.ANON_CIPHER_SUITE};
+            return;
+        }
+        throw new IllegalArgumentException("Unknown authentication mode"); //$NON-NLS-1$
+    }
+
+    public ClientAuth getAuthenticationMode() {
+        return authenticationMode;
     }
 
     public void setEnabledCipherSuites(String enabledCipherSuites) {
