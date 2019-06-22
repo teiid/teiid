@@ -571,12 +571,14 @@ public class MetadataValidator {
         }
         LogManager.log(messageLevel, LogConstants.CTX_QUERY_RESOLVER, msg);
     }
-	private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report,
-			QueryMetadataInterface metadata, MetadataFactory mf) {
-		validate(vdb, model, record, report, metadata, mf, this.parser);
-	}
-	public void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report,
-			QueryMetadataInterface metadata, MetadataFactory mf, QueryParser parser) {
+
+    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report,
+            QueryMetadataInterface metadata, MetadataFactory mf) {
+        validate(vdb, model, record, report, metadata, mf, this.parser);
+    }
+
+    public void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report,
+            QueryMetadataInterface metadata, MetadataFactory mf, QueryParser parser) {
         ValidatorReport resolverReport = null;
         try {
             if (record instanceof Procedure) {
