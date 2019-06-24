@@ -754,6 +754,17 @@ public class RulePushAggregates implements
         	}
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
+            //we cannot push staged group symbols that are null dependent across a null dependent join
+            PlanNode joinParent = planNode;
+            if (planNode.getType() != NodeConstants.Types.JOIN) {
+                joinParent = planNode.getParent();
+            }
+            if (joinParent.getType() != NodeConstants.Types.JOIN
+                    || containsNullDependentExpressions(stagedGroupingSymbols,
+                            metadata, joinParent, (JoinType) joinParent.getProperty(NodeConstants.Info.JOIN_TYPE))) {
+                continue;
+            }
+
             //perform a costing check, if there's not a significant reduction, then don't stage
             float cardinality = NewCalculateCostUtil.computeCostForTree(planNode, metadata);
             float ndv = NewCalculateCostUtil.getNDVEstimate(planNode, metadata, cardinality, stagedGroupingSymbols, false);
@@ -918,31 +929,9 @@ public class RulePushAggregates implements
             }
             
             JoinType joinType = (JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE);
-			if (joinType.isOuter() && aggregates != null) {
-            	for (AggregateSymbol as : aggregates) {
-            		if (as.getArgs().length != 1) {
-            			continue;
-            		}
-            		Collection<GroupSymbol> expressionGroups = GroupsUsedByElementsVisitor.getGroups(as.getArg(0));
-            		Collection<GroupSymbol> innerGroups = null;
-            		if (joinType == JoinType.JOIN_LEFT_OUTER) {
-            			innerGroups = FrameUtil.findJoinSourceNode(parentJoin.getLastChild()).getGroups();
-            		} else {
-            			//full outer
-            			innerGroups = parentJoin.getGroups();
-            		}
-            		if (Collections.disjoint(expressionGroups, innerGroups)) {
-            			continue;
-            		}
-            		if (as.getFunctionDescriptor() != null 
-            				&& as.getFunctionDescriptor().isNullDependent()) {
+            if (containsNullDependentExpressions(aggregates, metadata, parentJoin, joinType)) {
             			return null;
             		}
-            		if (as.getArgs().length == 1 && JoinUtil.isNullDependent(metadata, innerGroups, as.getArg(0))) {
-            			return null;
-            		}
-            	}
-            }
             
             //check for sideways correlation
         	PlanNode other = null;
@@ -997,6 +986,41 @@ public class RulePushAggregates implements
         	return null;
         }
         return result;
+    }
+
+    private boolean containsNullDependentExpressions(
+            Collection<? extends Expression> toCheck,
+            QueryMetadataInterface metadata, PlanNode parentJoin,
+            JoinType joinType) {
+        if (!joinType.isOuter() || toCheck == null) {
+            return false;
+        }
+        for (Expression ex : toCheck) {
+            Collection<GroupSymbol> expressionGroups = GroupsUsedByElementsVisitor.getGroups(ex);
+            Collection<GroupSymbol> innerGroups = null;
+            if (joinType == JoinType.JOIN_LEFT_OUTER) {
+                innerGroups = FrameUtil.findJoinSourceNode(parentJoin.getLastChild()).getGroups();
+            } else {
+                //full outer
+                innerGroups = parentJoin.getGroups();
+            }
+            if (Collections.disjoint(expressionGroups, innerGroups)) {
+                continue;
+            }
+            if (ex instanceof AggregateSymbol) {
+                AggregateSymbol as = (AggregateSymbol)ex;
+                if (as.getFunctionDescriptor() != null
+                        && as.getFunctionDescriptor().isNullDependent()) {
+                    return true;
+                }
+                if (as.getArgs().length == 1 && JoinUtil.isNullDependent(metadata, innerGroups, as.getArg(0))) {
+                    return true;
+                }
+            } else if (JoinUtil.isNullDependent(metadata, innerGroups, ex)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 	private boolean findStagedGroupingExpressions(Set<GroupSymbol> groups,

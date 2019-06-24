@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 import org.teiid.UserDefinedAggregate;
@@ -37,9 +38,12 @@ import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
@@ -1556,4 +1560,57 @@ public class TestAggregateProcessing {
         TestProcessor.helpProcess(plan, hdm, new List[] {Arrays.asList(4)});
     }
     
+    @Test public void testNullDependentGroupingExpression() throws Exception {
+        String ddl = "create foreign procedure getFiles (name string) returns table (file blob);"
+                + " create foreign table vRight (schedule_id string, order_id string, weeks string); "
+                + " create view vLeft as\n" +
+                "SELECT\n" +
+                "\"csv_table\".\"created_at\",\n" +
+                "\"csv_table\".\"order_id\",\n" +
+                "\"csv_table\".\"store_id\" \n" +
+                "FROM\n" +
+                "(call getFiles('test1.csv')) f,\n" +
+                "    TEXTTABLE(to_chars(f.file,'UTF-8') \n" +
+                "        COLUMNS \n" +
+                "        \"created_at\" STRING ,\n" +
+                "        \"order_id\" STRING ,\n" +
+                "        \"store_id\" STRING \n" +
+                "        DELIMITER ';' \n" +
+                "        QUOTE '\"' \n" +
+                "        HEADER 1 \n" +
+                "    )\n" +
+                "\"csv_table\"";
+
+        QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+
+        String sql = "select "+
+                "count(distinct a.\"order_id\") anzahl_orders," +
+                "(case when b.\"order_id\" is not null then 'Direct Rebuy' else 'Standard' end) rebuy_check\n" +
+                "FROM vLeft a\n" +
+                "left JOIN vRight b on b.order_id=a.order_id\n" +
+                "group by\n" +
+                "(case when b.\"order_id\" is not null then 'Direct Rebuy' else 'Standard' end) ;"; //$NON-NLS-1$
+
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(TestAggregatePushdown.getAggregateCapabilities());
+
+        ProcessorPlan plan = helpGetPlan(sql, metadata, capFinder);
+
+        List<?>[] expected = new List[] {
+                Arrays.asList(2, "Direct Rebuy"),
+                Arrays.asList(498, "Standard"),
+        };
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("EXEC getFiles('test1.csv')", Arrays.asList(new BlobType(ObjectConverterUtil.convertFileToByteArray(UnitTestUtil.getTestDataFile("5783/test1.csv")))));
+        String[] vals = {"1574053", "1574054","1574054","1574055a","1574056b"};
+
+        List<List<?>> rows = Arrays.asList(vals).stream().map(s->Arrays.asList(s)).collect(Collectors.toList());
+
+        dataManager.addData("SELECT DISTINCT g_0.order_id AS c_0 FROM phy.vRight AS g_0 ORDER BY c_0", rows.toArray(new List<?>[0]));
+        dataManager.addData("SELECT g_0.order_id AS c_0 FROM phy.vRight AS g_0 ORDER BY c_0", rows.toArray(new List<?>[0]));
+        dataManager.addData("SELECT g_0.order_id FROM phy.vRight AS g_0", rows.toArray(new List<?>[0]));
+        helpProcess(plan, TestProcessor.createCommandContext(), dataManager, expected);
+    }
+
 }
+
