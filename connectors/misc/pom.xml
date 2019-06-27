@@ -14,8 +14,8 @@
   
   <modules>
     <module>translator-loopback</module>
-    <module>translator-jpa</module>
-    <module>translator-olap</module>
+    <!--module>translator-jpa</module>
+    <module>translator-olap</module-->
   </modules>
 
 </project>

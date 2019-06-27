@@ -56,24 +56,24 @@
   </dependencies>
   
   <modules>
-    <module>document-api</module>      
+    <!--module>document-api</module-->      
     
-    <module>accumulo</module>
-    <module>cassandra</module>
+    <!--module>accumulo</module>
+    <module>cassandra</module-->
     <module>file</module> 
     <module>google</module>
-    <module>ldap</module>
+    <!--module>ldap</module-->
     <module>jdbc</module>
     <module>mongodb</module>
-    <module>couchbase</module>
-    <module>amazon</module>
+    <!--module>couchbase</module>
+    <module>amazon</module-->
     <module>webservice</module>
     <module>salesforce</module>
-    <module>solr</module>
+    <!--module>solr</module-->
     <module>odata</module>
     <module>swagger</module>
-    <module>infinispan</module>
+    <!--module>infinispan</module-->
     <module>misc</module>
-    <module>sandbox</module>
+    <!--module>sandbox</module-->
   </modules>
 </project>
