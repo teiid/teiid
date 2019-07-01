@@ -22,15 +22,23 @@
             <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
         </properties>
         <modules>
-            <module>document-api</module>             
+            <module>document-api</module>
             <module>accumulo</module>
             <module>cassandra</module>
+            <module>file</module>
+            <module>google</module>
             <module>ldap</module>
+            <module>jdbc</module>
+            <module>mongodb</module>
             <module>couchbase</module>
             <module>amazon</module>
+            <module>webservice</module>
+            <module>salesforce</module>
             <module>solr</module>
+            <module>odata</module>
+            <module>swagger</module>
             <module>infinispan</module>
-
+            <module>misc</module>
             <module>sandbox</module>
         </modules>
     </profile>
@@ -44,22 +52,41 @@
         <skipTests>true</skipTests>
       </properties>
       <modules>
-            <module>document-api</module>             
+            <module>document-api</module>
+
             <module>accumulo</module>
             <module>cassandra</module>
+            <module>file</module>
+            <module>google</module>
             <module>ldap</module>
+            <module>jdbc</module>
+            <module>mongodb</module>
             <module>couchbase</module>
             <module>amazon</module>
+            <module>webservice</module>
+            <module>salesforce</module>
             <module>solr</module>
+            <module>odata</module>
+            <module>swagger</module>
             <module>infinispan</module>
-
+            <module>misc</module>
             <module>sandbox</module>
+
       </modules>
     </profile>      
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
 	<profile>
 		<id>core-release</id>
 		<modules>
+            <module>file</module>
+            <module>google</module>
+            <module>jdbc</module>
+            <module>mongodb</module>
+            <module>webservice</module>
+            <module>salesforce</module>
+            <module>odata</module>
+            <module>swagger</module>
+            <module>misc</module>            
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
@@ -69,31 +96,51 @@
 	<profile>
 		<id>release</id>
 		<modules>
-            <module>document-api</module>             
+            <module>document-api</module>
+
             <module>accumulo</module>
             <module>cassandra</module>
+            <module>file</module>
+            <module>google</module>
             <module>ldap</module>
+            <module>jdbc</module>
+            <module>mongodb</module>
             <module>couchbase</module>
             <module>amazon</module>
+            <module>webservice</module>
+            <module>salesforce</module>
             <module>solr</module>
+            <module>odata</module>
+            <module>swagger</module>
             <module>infinispan</module>
-
+            <module>misc</module>
             <module>sandbox</module>
+
 		</modules>
 	</profile>      
 	<profile>		
 		<id>final-release</id>
 		<modules>
-            <module>document-api</module>             
+            <module>document-api</module>
+
             <module>accumulo</module>
             <module>cassandra</module>
+            <module>file</module>
+            <module>google</module>
             <module>ldap</module>
+            <module>jdbc</module>
+            <module>mongodb</module>
             <module>couchbase</module>
             <module>amazon</module>
+            <module>webservice</module>
+            <module>salesforce</module>
             <module>solr</module>
+            <module>odata</module>
+            <module>swagger</module>
             <module>infinispan</module>
-
+            <module>misc</module>
             <module>sandbox</module>
+
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
@@ -189,19 +236,5 @@
     </dependency>        
 
   </dependencies>
-  
-  <modules>
-      <!-- these are the modules required for core-release and common across the other profiles -->
-        <module>file</module> 
-        <module>google</module>
-        <module>jdbc</module>
-        <module>mongodb</module>
-        <module>webservice</module>
-        <module>salesforce</module>
-        <module>odata</module>
-        <module>swagger</module>
-        <module>misc</module>
-  </modules>
-
   
 </project>
