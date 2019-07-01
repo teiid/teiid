@@ -152,7 +152,7 @@
       <groupId>org.teiid</groupId>
       <artifactId>teiid-api</artifactId>
       <type>test-jar</type>
-      <scope>test</scope>
+      <scope>test</scope>mvn -P arquillian-tests test -B
     </dependency>
     <dependency>
       <groupId>org.teiid</groupId>
