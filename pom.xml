@@ -209,7 +209,7 @@
             <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
         </properties>
         <modules>
-            <module>wildfly</module>
+            <!--module>wildfly</module-->
         </modules>
         </profile>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
@@ -217,7 +217,7 @@
 		<id>release</id>
 		<modules>
 			<module>build</module>
-			<module>wildfly</module>
+			<!--module>wildfly</module-->
 		</modules>
 	</profile>
 
