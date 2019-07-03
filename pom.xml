@@ -560,6 +560,11 @@
                 <version>${version.xerces}</version>
             </dependency>
             <dependency>
+                <groupId>xalan</groupId>
+                <artifactId>xalan</artifactId>
+                <version>2.7.2</version>
+            </dependency>
+            <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-simpledb</artifactId>
                 <version>${version.aws-java-sdk}</version>
