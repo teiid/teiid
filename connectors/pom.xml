@@ -56,7 +56,7 @@
   </dependencies>
   
   <modules>
-    <!--module>document-api</module-->      
+    <module>document-api</module>
     
     <!--module>accumulo</module>
     <module>cassandra</module-->
