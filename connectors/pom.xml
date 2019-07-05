@@ -54,26 +54,42 @@
     </dependency>        
 
   </dependencies>
+
+    <profiles>
+        <profile>
+           <id>core-release</id>
+        </profile>
+        <profile>
+            <id>all-translators</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>accumulo</module>
+                <module>cassandra</module>
+                <module>google</module>
+                <module>couchbase</module>
+                <module>amazon</module>
+                <module>solr</module>
+                <module>swagger</module>
+                <module>infinispan</module>
+                <module>misc</module>
+                <module>sandbox</module>
+            </modules>
+        </profile>
+    </profiles>
   
   <modules>
-    <module>document-api</module>      
-    
-    <module>accumulo</module>
-    <module>cassandra</module>
-    <module>file</module> 
-    <module>google</module>
-    <module>ldap</module>
-    <module>jdbc</module>
-    <module>mongodb</module>
-    <module>couchbase</module>
-    <module>amazon</module>
-    <module>webservice</module>
-    <module>salesforce</module>
-    <module>solr</module>
-    <module>odata</module>
-    <module>swagger</module>
-    <module>infinispan</module>
-    <module>misc</module>
-    <module>sandbox</module>
+    <module>document-api</module>
+     
+     <module>file</module>
+     <module>google</module>
+     <module>jdbc</module>
+     <module>mongodb</module>
+     <module>webservice</module>
+     <module>salesforce</module>
+     <module>odata</module>
+     <module>swagger</module>
+     <module>misc</module>
   </modules>
 </project>
