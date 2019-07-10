@@ -985,7 +985,7 @@ public class TestEmbeddedServer {
 		
 		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
 		Statement s = c.createStatement();
-		s.execute("create temporary table t (x serial, y string, primary key (x))");
+        s.execute("create temporary table t (x serial, y string, z string, primary key (x))");
 		PreparedStatement ps = c.prepareStatement("insert into t (y) values ('a')", Statement.RETURN_GENERATED_KEYS);
 		assertFalse(ps.execute());
 		assertEquals(1, ps.getUpdateCount());
