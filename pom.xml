@@ -79,7 +79,7 @@
         <version.de.flapdoodle.embed.process>2.1.2</version.de.flapdoodle.embed.process>
 
         <version.gdata-core>1.47.1</version.gdata-core>
-        <version.hadoop-common>2.6.4</version.hadoop-common>
+        <version.hadoop-common>3.1.1</version.hadoop-common>
         
         <version.google-api-services-sheets>v4-rev502-1.23.0</version.google-api-services-sheets>
         <version.google-api-client>1.23.0</version.google-api-client>
@@ -523,11 +523,6 @@
             <artifactId>hamcrest-core</artifactId>
             <scope>test</scope>
         </dependency>
-		<dependency>
-            <groupId>com.github.stephenc.jcip</groupId>
-            <artifactId>jcip-annotations</artifactId>
-            <scope>test</scope>
-        </dependency>
    </dependencies>
    <dependencyManagement>
         <dependencies>
@@ -739,7 +734,6 @@
                 <groupId>com.github.stephenc.jcip</groupId>
                 <artifactId>jcip-annotations</artifactId>
                 <version>${version.jcip-annotations}</version>
-                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.google.api-client</groupId>
