@@ -71,7 +71,7 @@
         <version.com.google.guava>27.0.1-jre</version.com.google.guava>
         <version.com.googlecode.json-simple>1.1.1</version.com.googlecode.json-simple>      
         
-        <version.commons-configuration>1.6</version.commons-configuration>
+        <version.commons-configuration>1.7</version.commons-configuration>
         <version.commons-logging>1.2</version.commons-logging>
         <version.commons-net>3.5</version.commons-net>
 
@@ -96,7 +96,7 @@
         
         <version.olap4j>1.1.0</version.olap4j>
 
-        <version.org.apache.ant>1.8.2</version.org.apache.ant>
+        <version.org.apache.ant>1.10.6</version.org.apache.ant>
         <version.org.apache.olingo>4.6.0</version.org.apache.olingo>
         <version.org.apache.phoenix.phoenix-core>4.2.1</version.org.apache.phoenix.phoenix-core>
         <version.org.apache.poi>3.17</version.org.apache.poi>
@@ -792,7 +792,11 @@
                 <artifactId>jts-core</artifactId>
                 <version>${version.jts}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>1.9.3</version>
+            </dependency>
             <dependency>
                 <groupId>commons-configuration</groupId>
                 <artifactId>commons-configuration</artifactId>
