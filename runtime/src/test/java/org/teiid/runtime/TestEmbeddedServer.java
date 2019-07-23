@@ -1007,6 +1007,44 @@ public class TestEmbeddedServer {
         assertEquals(2, rs.getInt(1));
     }
 
+    @Test public void testGeneratedKeyComposite() throws Exception {
+        EmbeddedConfiguration ec = new EmbeddedConfiguration();
+        MockTransactionManager tm = new MockTransactionManager();
+        ec.setTransactionManager(tm);
+        ec.setUseDisk(false);
+        es.start(ec);
+
+        ModelMetaData mmd1 = new ModelMetaData();
+        mmd1.setName("b");
+        mmd1.setModelType(Type.VIRTUAL);
+        mmd1.addSourceMetadata("ddl", "create view v as select 1");
+
+        es.deployVDB("vdb", mmd1);
+
+        Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+        Statement s = c.createStatement();
+        s.execute("create temporary table t (x string, y serial, z string, primary key (x, y))");
+        PreparedStatement ps = c.prepareStatement("insert into t (x, z) values ('a', 'b')", Statement.RETURN_GENERATED_KEYS);
+        assertFalse(ps.execute());
+        assertEquals(1, ps.getUpdateCount());
+        ResultSet rs = ps.getGeneratedKeys();
+        assertTrue(rs.next());
+        assertEquals(1, rs.getInt(1));
+        //should just be the default, rather than an exception
+        assertEquals(11, rs.getMetaData().getColumnDisplaySize(1));
+
+        //test in a procedure without the statement directive
+        ps = c.prepareStatement("begin insert into t (z) values ('b'); select generated_key(); end");
+        rs = ps.executeQuery();
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
+
+        //make sure the session scope works as well
+        rs = s.executeQuery("select generated_key()");
+        assertTrue(rs.next());
+        assertEquals(2, rs.getInt(1));
+    }
+
     @Test public void testMultiSourceMetadata() throws Exception {
         EmbeddedConfiguration ec = new EmbeddedConfiguration();
         MockTransactionManager tm = new MockTransactionManager();

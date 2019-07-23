@@ -21,12 +21,15 @@ package org.teiid.translator;
 import java.io.Serializable;
 import java.sql.Statement;
 import java.util.Collection;
+import java.util.List;
 
 import javax.security.auth.Subject;
 
 import org.teiid.CommandContext;
+import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Session;
 import org.teiid.jdbc.TeiidSQLWarning;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.CacheDirective.Scope;
 
@@ -61,6 +64,7 @@ public interface ExecutionContext {
      * @deprecated see {@link #getRequestId()}
      * @return
      */
+    @Deprecated
     String getRequestID();
 
     /**
@@ -107,6 +111,7 @@ public interface ExecutionContext {
      * @deprecated see {@link #getCommandPayload()}
      * @return
      */
+    @Deprecated
     Serializable getExecutionPayload();
 
     /**
@@ -146,6 +151,7 @@ public interface ExecutionContext {
      * @deprecated see {@link #getConnectionId()}
      * @return
      */
+    @Deprecated
     String getConnectionID();
 
     /**
@@ -234,4 +240,16 @@ public interface ExecutionContext {
      * @param scope
      */
     void setScope(Scope scope);
+
+    /**
+     * Get the expected generated key columns for this execution, or null if there are none.
+     * @return
+     */
+    List<Column> getGeneratedKeyColumns();
+
+    /**
+     * If there are generatedKeyColumns, return the {@link GeneratedKeys} used to supply the values to the engine.
+     * @return
+     */
+    GeneratedKeys returnGeneratedKeys();
 }

@@ -42,6 +42,7 @@ import org.teiid.GeneratedKeys;
 import org.teiid.core.TeiidException;
 import org.teiid.language.Command;
 import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.olingo.common.ODataTypeManager;
@@ -298,32 +299,27 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
     }
 
     private void addAutoGeneretedKeys(Table table, Entity entity) throws TranslatorException {
-        if (table.getPrimaryKey() == null) {
+        List<Column> generated = this.executionContext.getGeneratedKeyColumns();
+        if (generated == null) {
             return;
         }
-        int cols = table.getPrimaryKey().getColumns().size();
-        Class<?>[] columnDataTypes = new Class<?>[cols];
-        String[] columnNames = new String[cols];
+        int cols = generated.size();
         String[] odataTypes = new String[cols];
 
         // this is typically expected to be an int/long, but we'll be general here.
         // we may eventual need the type logic off of the metadata importer
         for (int i = 0; i < cols; i++) {
-            columnDataTypes[i] = table.getPrimaryKey().getColumns().get(i).getJavaType();
-            columnNames[i] = table.getPrimaryKey().getColumns().get(i).getName();
-            odataTypes[i] = ODataMetadataProcessor.getNativeType(table
-                    .getPrimaryKey().getColumns().get(i));
+            odataTypes[i] = ODataMetadataProcessor.getNativeType(generated.get(i));
         }
-        GeneratedKeys generatedKeys = this.executionContext.getCommandContext()
-                .returnGeneratedKeys(columnNames, columnDataTypes);
+        GeneratedKeys generatedKeys = this.executionContext.returnGeneratedKeys();
 
-        List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
-        for (int i = 0; i < columnDataTypes.length; i++) {
-            Property prop = entity.getProperty(columnNames[i]);
+        List<Object> vals = new ArrayList<Object>(cols);
+        for (int i = 0; i < cols; i++) {
+            Property prop = entity.getProperty(generatedKeys.getColumnNames()[i]);
             Object value;
             try {
-                value = ODataTypeManager.convertToTeiidRuntimeType(columnDataTypes[i], prop.getValue(), odataTypes[i],
-                        table.getPrimaryKey().getColumns().get(i).getProperty(BaseColumn.SPATIAL_SRID, false));
+                value = ODataTypeManager.convertToTeiidRuntimeType(generatedKeys.getColumnTypes()[i], prop.getValue(), odataTypes[i],
+                        generated.get(i).getProperty(BaseColumn.SPATIAL_SRID, false));
             } catch (TeiidException e) {
                 throw new TranslatorException(e);
             }

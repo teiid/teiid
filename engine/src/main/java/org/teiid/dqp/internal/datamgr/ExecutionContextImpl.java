@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.security.auth.Subject;
 
+import org.teiid.GeneratedKeys;
 import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
@@ -34,7 +35,12 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.language.Insert;
+import org.teiid.language.NamedTable;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.CacheDirective.Scope;
@@ -66,6 +72,8 @@ public class ExecutionContextImpl implements ExecutionContext {
     private RuntimeMetadata runtimeMetadata;
     private ConnectorWorkItem workItem;
     private Scope scope;
+    private List<Column> generatedKeyColumns;
+    private GeneratedKeys generatedKeys;
 
     public ExecutionContextImpl(String vdbName, Object vdbVersion,  Serializable executionPayload,
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -303,6 +311,56 @@ public class ExecutionContextImpl implements ExecutionContext {
     @Override
     public void setScope(Scope scope) {
         this.scope = scope;
+    }
+
+    @Override
+    public List<Column> getGeneratedKeyColumns() {
+        return this.generatedKeyColumns;
+    }
+
+    public void setGeneratedKeyColumns(List<Column> generatedKeyColumns) {
+        this.generatedKeyColumns = generatedKeyColumns;
+    }
+
+    @Override
+    public GeneratedKeys returnGeneratedKeys() {
+        if (generatedKeys == null && generatedKeyColumns != null) {
+            String[] colNames = new String[generatedKeyColumns.size()];
+            Class<?>[] colTypes = new Class<?>[generatedKeyColumns.size()];
+            for (int i = 0; i < colNames.length; i++) {
+                Column c = generatedKeyColumns.get(i);
+                colNames[i] = c.getName();
+                colTypes[i] = c.getJavaType();
+            }
+            generatedKeys = this.commandContext.returnGeneratedKeys(colNames, colTypes);
+        }
+        return generatedKeys;
+    }
+
+    public void setGeneratedKeyColumns(org.teiid.language.Command translatedCommand) {
+        if (!(translatedCommand instanceof Insert)) {
+            return;
+        }
+        Insert insert = (Insert)translatedCommand;
+        NamedTable nt = insert.getTable();
+        Table t = nt.getMetadataObject();
+        if (t == null) {
+            return;
+        }
+        KeyRecord key = t.getPrimaryKey();
+        if (key == null) {
+            return;
+        }
+        List<Column> generated = null;
+        for (Column c : key.getColumns()) {
+            if (c.isAutoIncremented()) {
+                if (generated == null) {
+                    generated = new ArrayList<>(1);
+                }
+                generated.add(c);
+            }
+        }
+        setGeneratedKeyColumns(generated);
     }
 
 }

@@ -174,6 +174,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         if (connector.isImmutable() && !(translatedCommand instanceof Call || translatedCommand instanceof Select)) {
             throw new TranslatorException(QueryPlugin.Event.TEIID31299, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31299));
         }
+        securityContext.setGeneratedKeyColumns(translatedCommand);
         List<Expression> symbols = this.requestMsg.getCommand().getProjectedSymbols();
         this.schema = new Class[symbols.size()];
         this.convertToDesiredRuntimeType = new boolean[symbols.size()];
@@ -193,6 +194,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             this.copyStreamingLobs = true;
         }
     }
+
 
     public static void initLanguageBridgeFactory(LanguageBridgeFactory factory,
             CommandContext context, SourceCapabilities capabilities) {

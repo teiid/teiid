@@ -306,7 +306,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             if (cols.contains(es.getMetadataID())) {
                 if (!metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)
                         && !metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL)) {
-                    return null;
+                    continue;
                 }
                 if (key == null) {
                     key = new ArrayList<ElementSymbol>();

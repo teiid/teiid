@@ -33,9 +33,9 @@ import org.odata4j.format.FormatWriter;
 import org.odata4j.format.FormatWriterFactory;
 import org.teiid.GeneratedKeys;
 import org.teiid.language.Command;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -148,23 +148,16 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
 
     private void addAutoGeneretedKeys() {
         OEntity entity = this.response.getResultsIter().next().getEntity();
-        Table table = this.visitor.getEnityTable();
-        if (table.getPrimaryKey() == null) {
+        List<Column> generated = this.executionContext.getGeneratedKeyColumns();
+        if (generated == null) {
             return;
         }
-        int cols = table.getPrimaryKey().getColumns().size();
-        Class<?>[] columnDataTypes = new Class<?>[cols];
-        String[] columnNames = new String[cols];
-        //this is typically expected to be an int/long, but we'll be general here.  we may eventual need the type logic off of the metadata importer
+        int cols = generated.size();
+        GeneratedKeys generatedKeys = this.executionContext.returnGeneratedKeys();
+        List<Object> vals = new ArrayList<Object>(cols);
         for (int i = 0; i < cols; i++) {
-            columnDataTypes[i] = table.getPrimaryKey().getColumns().get(i).getJavaType();
-            columnNames[i] = table.getPrimaryKey().getColumns().get(i).getName();
-        }
-        GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
-        List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
-        for (int i = 0; i < columnDataTypes.length; i++) {
-            OProperty<?> prop = entity.getProperty(columnNames[i]);
-            Object value = this.translator.retrieveValue(prop.getValue(), columnDataTypes[i]);
+            OProperty<?> prop = entity.getProperty(generatedKeys.getColumnNames()[i]);
+            Object value = this.translator.retrieveValue(prop.getValue(), generatedKeys.getColumnTypes()[i]);
             vals.add(value);
         }
         generatedKeys.addKey(vals);
