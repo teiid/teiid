@@ -1,0 +1,1 @@
+custom_maven_command: -e -V -B -DskipTests -DfailIfNoTests=false -Dtest=false  clean compile
