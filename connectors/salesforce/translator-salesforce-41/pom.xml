@@ -41,12 +41,13 @@
 			<artifactId>teiid-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.force.api</groupId>
-			<artifactId>force-partner-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.teiid.connectors</groupId>
 			<artifactId>translator-salesforce</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.force.api</groupId>
+			<artifactId>force-partner-api</artifactId>
+            <scope>runtime</scope>
 		</dependency>
 	</dependencies>
 
