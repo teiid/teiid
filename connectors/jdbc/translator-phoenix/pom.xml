@@ -25,6 +25,7 @@
         <dependency>
             <groupId>org.teiid</groupId>
             <artifactId>teiid-admin</artifactId>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
