@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -536,6 +537,7 @@ public class TestConnectorWorkItem {
         AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
         TransactionContext tc = new TransactionContext();
         tc.setTransactionType(Scope.LOCAL);
+        tc.setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
         arm.setTransactionContext(tc);
         arm.setCommand(command);
         final FakeConnector c = new FakeConnector() {
@@ -557,6 +559,39 @@ public class TestConnectorWorkItem {
 
         cwi = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
         assertFalse(cwi.isThreadBound());
+    }
+
+    @Test public void testForkable() throws Exception {
+        Command command = helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT); //$NON-NLS-1$
+        AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+        TransactionContext tc = new TransactionContext();
+        tc.setTransactionType(Scope.LOCAL);
+        tc.setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
+        arm.setTransactionContext(tc);
+        arm.setCommand(command);
+        final FakeConnector c = new FakeConnector() {
+            public boolean supportsMultipleOpenExecutions() {
+                return false;
+            }
+        };
+        ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+            public ExecutionFactory getExecutionFactory() {
+                return c;
+            }
+            public Object getConnectionFactory(){
+                return c;
+            }
+        };
+        cm.start();
+        ConnectorWorkItem cwi = new ConnectorWorkItem(arm, cm);
+        assertTrue(cwi.isForkable());
+
+        //for repeatable read and serializable, we need serial execution
+        //TODO: it's still possible to parallelize in the command/block
+        //transaction scope if this is the only read
+        tc.setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        cwi = new ConnectorWorkItem(arm, cm);
+        assertFalse(cwi.isForkable());
     }
 
 }

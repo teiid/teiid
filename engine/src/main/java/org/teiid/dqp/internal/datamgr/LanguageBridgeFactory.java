@@ -168,6 +168,8 @@ public class LanguageBridgeFactory {
     private boolean supportsNullOrdering;
     private NullOrder sourceNullOrder;
 
+    private boolean readOnly = true;
+
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
             metadataFactory = new RuntimeMetadataImpl(metadata);
@@ -209,14 +211,18 @@ public class LanguageBridgeFactory {
                 setProjected(result);
                 return result;
             } else if (command instanceof Insert) {
+                readOnly = false;
                 return translate((Insert)command);
             } else if (command instanceof Update) {
+                readOnly = false;
                 return translate((Update)command);
             } else if (command instanceof Delete) {
+                readOnly = false;
                 return translate((Delete)command);
             } else if (command instanceof StoredProcedure) {
                 return translate((StoredProcedure)command);
             } else if (command instanceof BatchedUpdateCommand) {
+                readOnly = false;
                 return translate((BatchedUpdateCommand)command);
             }
             throw new AssertionError(command.getClass().getName() + " " + command); //$NON-NLS-1$
@@ -1051,6 +1057,9 @@ public class LanguageBridgeFactory {
                  throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30486, e);
             }
         }
+        if (sp.getUpdateCount() > 1) {
+            readOnly = false;
+        }
         Class<?> returnType = null;
         List<Argument> translatedParameters = new ArrayList<Argument>();
         for (SPParameter param : sp.getParameters()) {
@@ -1212,6 +1221,10 @@ public class LanguageBridgeFactory {
 
     public void setSupportsNullOrdering(boolean supportsNullOrdering) {
         this.supportsNullOrdering = supportsNullOrdering;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
     }
 
 }

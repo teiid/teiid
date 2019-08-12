@@ -21,6 +21,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,7 +54,6 @@ import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.BulkCommand;
 import org.teiid.language.Call;
-import org.teiid.language.Select;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -107,6 +107,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 
     private AtomicBoolean isCancelled = new AtomicBoolean();
     private org.teiid.language.Command translatedCommand;
+    private boolean readOnly;
 
     private DataNotAvailableException dnae;
 
@@ -171,7 +172,8 @@ public class ConnectorWorkItem implements ConnectorWork {
         factory.setConvertIn(!this.connector.supportsInCriteria());
 
         translatedCommand = factory.translate(message.getCommand());
-        if (connector.isImmutable() && !(translatedCommand instanceof Call || translatedCommand instanceof Select)) {
+        readOnly = factory.isReadOnly();
+        if (connector.isImmutable() && !readOnly) {
             throw new TranslatorException(QueryPlugin.Event.TEIID31299, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31299));
         }
         securityContext.setGeneratedKeyColumns(translatedCommand);
@@ -599,12 +601,14 @@ public class ConnectorWorkItem implements ConnectorWork {
     @Override
     public boolean isForkable() {
         return this.connector.isForkable()
-                && (!this.requestMsg.isTransactional() || this.connector.getTransactionSupport() == TransactionSupport.NONE);
+                && (!this.requestMsg.isTransactional()
+                || this.connector.getTransactionSupport() == TransactionSupport.NONE
+                || (readOnly && this.requestMsg.getTransactionContext().getIsolationLevel() <= Connection.TRANSACTION_READ_COMMITTED));
     }
 
     @Override
     public boolean isThreadBound() {
-        return this.connector.isThreadBound() || (this.requestMsg.isTransactional() && !this.connector.supportsMultipleOpenExecutions());
+        return this.connector.isThreadBound() || (!isForkable() && !this.connector.supportsMultipleOpenExecutions());
     }
 
     private List<?> correctTypes(List row) throws TeiidException {
