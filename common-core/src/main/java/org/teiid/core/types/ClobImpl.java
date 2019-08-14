@@ -130,15 +130,13 @@ public class ClobImpl extends BaseLob implements Clob {
 
     public String getSubString(long pos, int length) throws SQLException {
         if (pos < 1) {
-            Object[] params = new Object[] {new Long(pos)};
-            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.2", params)); //$NON-NLS-1$
+            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.2", pos)); //$NON-NLS-1$
         } else if (pos > length()) {
             return null;
         }
         pos = pos - 1;
         if (length < 0) {
-            Object[] params = new Object[] {new Integer( length)};
-            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.1", params)); //$NON-NLS-1$
+            throw new SQLException(CorePlugin.Util.getString("MMClob_MMBlob.1", length)); //$NON-NLS-1$
         } else if ((pos+length) > length()) {
             length = (int)(length()-pos);
         }
@@ -150,7 +148,7 @@ public class ClobImpl extends BaseLob implements Clob {
                     skipped = in.skip(pos);
                     pos -= skipped;
                 }
-                return new String(ObjectConverterUtil.convertToCharArray(in, length));
+                return ObjectConverterUtil.convertToString(in, length);
             } finally {
                 in.close();
             }

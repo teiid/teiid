@@ -798,7 +798,7 @@ public class TempTableDataManager implements ProcessorDataManager {
             String returnElementName, String keyElementName, Object keyValue)
             throws BlockedException, TeiidComponentException,
             TeiidProcessingException {
-        //we are not using a resolved form of a lookup, so we canonicallize with upper case
+        //we are not using a resolved form of a lookup, so we canonicalize with upper case
         codeTableName = codeTableName.toUpperCase();
         keyElementName = keyElementName.toUpperCase();
         returnElementName = returnElementName.toUpperCase();

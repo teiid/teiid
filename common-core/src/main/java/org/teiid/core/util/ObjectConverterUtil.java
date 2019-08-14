@@ -239,21 +239,12 @@ public class ObjectConverterUtil {
     }
 
     /**
-     * Returns the contents of the given file as a char array.
-     * When encoding is null, then the platform default one is used
-     * @throws IOException if a problem occurred reading the file.
-     */
-    public static char[] convertFileToCharArray(File file, String encoding) throws IOException {
-        InputStream stream = new FileInputStream(file);
-        return convertToCharArray(stream, (int) file.length(), encoding);
-    }
-
-    /**
      * Returns the contents of the given file as a string.
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertFileToString(final File file) throws IOException {
-        return new String(convertFileToCharArray(file,"UTF-8")); //$NON-NLS-1$
+        InputStream stream = new FileInputStream(file);
+        return convertToString(stream);
     }
 
 
@@ -262,7 +253,7 @@ public class ObjectConverterUtil {
      * @throws IOException if a problem occurred reading the file.
      */
     public static String convertToString(final InputStream stream) throws IOException {
-        return new String(convertToCharArray(stream, -1, "UTF-8")); //$NON-NLS-1$
+        return convertToString(new InputStreamReader(stream, "UTF-8"), -1); //$NON-NLS-1$
     }
 
     /**
@@ -280,7 +271,7 @@ public class ObjectConverterUtil {
         } else {
             r = new InputStreamReader(stream, encoding);
         }
-        return convertToCharArray(r, length);
+        return convertToString(r, length).toCharArray();
     }
 
     /**
@@ -293,13 +284,13 @@ public class ObjectConverterUtil {
     }
 
     public static String convertToString(Reader reader) throws IOException {
-        return new String(convertToCharArray(reader, Integer.MAX_VALUE));
+        return convertToString(reader, -1);
     }
 
-    public static char[] convertToCharArray(Reader reader, int length) throws IOException {
+    public static String convertToString(Reader reader, int length) throws IOException {
         StringWriter sb = new StringWriter();
         write(sb, reader, length, true);
-        return sb.toString().toCharArray();
+        return sb.toString();
     }
 
 }

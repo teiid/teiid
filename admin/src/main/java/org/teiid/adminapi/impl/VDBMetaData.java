@@ -64,6 +64,13 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
     private Map<String, Boolean> visibilityOverrides = new HashMap<String, Boolean>(2);
     private Map<Status, Timestamp> statusTimestamps = Collections.synchronizedMap(new HashMap<>(2));
 
+    public VDBMetaData() {
+    }
+
+    public VDBMetaData(String name) {
+        setName(name);
+    }
+
     public String getFullName() {
         return getName() + VERSION_DELIM + getVersion();
     }
@@ -129,6 +136,13 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
         for (ModelMetaData obj : models) {
             addModel(obj);
         }
+    }
+
+    public ModelMetaData addModel(String name) {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName(name);
+        addModel(mmd);
+        return mmd;
     }
 
     public ModelMetaData addModel(ModelMetaData m) {
@@ -278,6 +292,14 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
     public List<VDBImportMetadata> getVDBImports() {
         return imports;
+    }
+
+    public VDBImportMetadata addVDBImportMetadata(String name, String version) {
+        VDBImportMetadata vdbImportMetadata = new VDBImportMetadata();
+        vdbImportMetadata.setName(name);
+        vdbImportMetadata.setVersion(version);
+        this.imports.add(vdbImportMetadata);
+        return vdbImportMetadata;
     }
 
     public Set<String> getImportedModels() {
