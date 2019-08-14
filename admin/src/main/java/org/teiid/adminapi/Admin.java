@@ -19,6 +19,7 @@
 package org.teiid.adminapi;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
@@ -549,4 +550,11 @@ public interface Admin {
      * @throws AdminException
      */
     Collection<? extends VDB> getVDBs(boolean singleInstance) throws AdminException;
+
+    /**
+     * Deploy a .vdb or .zip vdb.  The deployment name will be taken from the url file name.
+     *
+     * @throws AdminException
+     */
+    void deployVDBZip(URL url) throws AdminException;
 }

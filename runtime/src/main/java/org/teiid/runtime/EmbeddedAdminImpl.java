@@ -1,8 +1,11 @@
 package org.teiid.runtime;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 
 import javax.xml.transform.OutputKeys;
@@ -28,7 +31,9 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.ExtendedPropertyMetadataList;
 import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.SessionServiceException;
@@ -39,6 +44,7 @@ import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty.PropertyType;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -148,7 +154,7 @@ public class EmbeddedAdminImpl implements Admin {
 
     }
 
-    private VDBMetaData checkVDB(String vdbName) throws AdminProcessingException {
+    private VDBMetaData checkVDB(String vdbName) {
         VDBMetaData vdb = this.embeddedServer.repo.getLiveVDB(vdbName);
         return vdb;
     }
@@ -213,25 +219,25 @@ public class EmbeddedAdminImpl implements Admin {
     }
 
     @Override
+    public void deployVDBZip(URL url) throws AdminProcessingException {
+        try {
+            this.embeddedServer.deployVDBZip(url);
+        } catch (VirtualDatabaseException | ConnectorManagerException
+                | TranslatorException | IOException | URISyntaxException e) {
+            throw new AdminProcessingException(e);
+        }
+    }
+
+    @Override
     public void deploy(String deployName, InputStream content) throws AdminException {
-        if (!deployName.endsWith("-vdb.xml")) { //$NON-NLS-1$
+        if (!deployName.endsWith("-vdb.xml") && !deployName.endsWith("-vdb.ddl")) { //$NON-NLS-1$ //$NON-NLS-2$
             throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40142, deployName));
         }
         try {
-            this.embeddedServer.deployVDB(content);
+            this.embeddedServer.deployVDB(content, deployName.endsWith("-vdb.ddl")); //$NON-NLS-1$
         } catch (Exception e) {
             throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40133, deployName, e), e);
         }
-        //non xml would be inelegant for embedded - we don't want to create an intermediate copy
-        /*File f = null;
-        try {
-            f = File.createTempFile(deployName, "vdb"); //$NON-NLS-1$
-            f.deleteOnExit();
-            ObjectConverterUtil.write(content, f);
-            this.embeddedServer.deployVDBZip(f.toURI().toURL());
-        } catch (Exception e) {
-            throw new AdminProcessingException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40133, deployName, e), e);
-        }*/
     }
 
     @Override
@@ -545,10 +551,9 @@ public class EmbeddedAdminImpl implements Admin {
         if (modelName != null) {
             Schema schema = metadataStore.getSchema(modelName);
             return DDLStringVisitor.getDDLString(schema, allowedTypes, typeNamePattern);
-        } else {
-            Database db = DatabaseUtil.convert(vdb, metadataStore);
-            return DDLStringVisitor.getDDLString(db);
         }
+        Database db = DatabaseUtil.convert(vdb, metadataStore);
+        return DDLStringVisitor.getDDLString(db);
     }
 
     public static String prettyFormat(String input) throws TransformerException {

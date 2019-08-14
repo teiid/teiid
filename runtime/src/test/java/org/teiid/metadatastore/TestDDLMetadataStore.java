@@ -282,7 +282,7 @@ public class TestDDLMetadataStore {
         assertEquals(expected, content);
 
         //make sure the output is valid
-        es.deployVDB(new ByteArrayInputStream(content.getBytes("UTF-8")), true);
+        es.getAdmin().deploy("portfolio-vdb.ddl", new ByteArrayInputStream(content.getBytes("UTF-8")));
     }
 
     @Test

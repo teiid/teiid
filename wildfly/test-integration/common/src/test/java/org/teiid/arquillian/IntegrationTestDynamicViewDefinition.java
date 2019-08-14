@@ -93,11 +93,12 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 
     @Test public void testVdbZipWithDDLAndUDF() throws Exception {
         JavaArchive udfJar = ShrinkWrap.create(JavaArchive.class, "func.jar").addClasses(SampleFunctions.class);
-        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "temp.jar")
+        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "dynamic-ddl.vdb")
                   .addAsManifestResource(UnitTestUtil.getTestDataFile("vdb.xml"))
                   .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"))
                   .addAsResource(new ArchiveAsset(udfJar, ZipExporter.class), "lib/udf.jar");
-        admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
+        jar.as(ZipExporter.class).exportTo(UnitTestUtil.getTestScratchFile("dynamic-ddl.vdb"), true);
+        admin.deployVDBZip(UnitTestUtil.getTestScratchFile("dynamic-ddl.vdb").toURI().toURL());
 
         assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1));
 

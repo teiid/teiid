@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
@@ -901,6 +902,15 @@ public class AdminFactory {
             steps.add(builder.buildRequest());
 
             return composite;
+        }
+
+        @Override
+        public void deployVDBZip(URL url) throws AdminException {
+            try {
+                deploy(url.getFile(), url.openStream());
+            } catch (IOException e) {
+                throw new AdminProcessingException(e);
+            }
         }
 
         @Override

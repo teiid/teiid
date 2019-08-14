@@ -422,7 +422,7 @@ public class TestEmbeddedServer {
         out.write("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL-FILE\">/v1.ddl</metadata></model></vdb>".getBytes("UTF-8"));
         out.close();
 
-        es.deployVDBZip(f.toURI().toURL());
+        es.getAdmin().deployVDBZip(f.toURI().toURL());
         ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
         rs.next();
         assertEquals("HELLO WORLD", rs.getString(1));
@@ -459,7 +459,7 @@ public class TestEmbeddedServer {
                 + "CREATE VIEW x as select 1;"
                 + "ALTER VIEW x RENAME TO y;";
 
-        es.deployVDB(new ByteArrayInputStream(ddl1.getBytes("UTF-8")), true);
+        es.getAdmin().deploy("x-vdb.ddl", new ByteArrayInputStream(ddl1.getBytes("UTF-8")));
 
         ResultSet rs = es.getDriver().connect("jdbc:teiid:x", null).createStatement().executeQuery("select * from y");
         rs.next();

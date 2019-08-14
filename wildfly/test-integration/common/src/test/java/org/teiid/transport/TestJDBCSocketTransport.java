@@ -319,7 +319,7 @@ public class TestJDBCSocketTransport {
         ResultSet rs = s.executeQuery("select to_chars(x, 'UTF-8') from helloworld");
         rs.next();
         //TODO: if we use getString streaming will still fail because the string logic gets the length first
-        assertEquals(100, ObjectConverterUtil.convertToCharArray(rs.getCharacterStream(1), -1).length);
+        assertEquals(100, ObjectConverterUtil.convertToString(rs.getCharacterStream(1), -1).length());
     }
 
     @Test public void testDynamicStatementNoResultset() throws Exception {

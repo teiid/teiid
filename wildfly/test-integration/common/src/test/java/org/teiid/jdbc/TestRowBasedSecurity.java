@@ -96,6 +96,15 @@ public class TestRowBasedSecurity {
                 v.setTableType(Type.View);
                 v.setVirtual(true);
                 v.setSelectTransformation("/*+ cache(scope:session) */ select col, col2 from y");
+
+                Table v_mat = metadataFactory.addTable("v_mat");
+                metadataFactory.addPermission("y", v_mat, null, null, Boolean.TRUE, null, null, null, null, null);
+                col = metadataFactory.addColumn("col", TypeFacility.RUNTIME_NAMES.STRING, v_mat);
+                metadataFactory.addColumn("col2", TypeFacility.RUNTIME_NAMES.STRING, v_mat);
+                v_mat.setTableType(Type.View);
+                v_mat.setVirtual(true);
+                v_mat.setMaterialized(true);
+                v_mat.setSelectTransformation("select col, col2 from x union all select col, col2 from y");
             }
             @Override
             public boolean isSourceRequiredForMetadata() {
@@ -104,6 +113,10 @@ public class TestRowBasedSecurity {
         };
         hcef.addData("SELECT x.col, x.col2 FROM x", Arrays.asList(Arrays.asList("a", "b"), Arrays.asList("c", "d")));
         hcef.addData("SELECT y.col, y.col2 FROM y", Arrays.asList(Arrays.asList("e", "f"), Arrays.asList("h", "g")));
+        hcef.addData("SELECT x.col2, x.col FROM x", Arrays.asList(Arrays.asList("b", "a"), Arrays.asList("d", "c")));
+        hcef.addData("SELECT y.col FROM y", Arrays.asList(Arrays.asList("e"), Arrays.asList("h")));
+        hcef.addData("SELECT x.col FROM x", Arrays.asList(Arrays.asList("a"), Arrays.asList("c")));
+
         es.addTranslator("hc", hcef);
         es.deployVDB(new FileInputStream(UnitTestUtil.getTestDataFile("roles-vdb.xml")));
 
@@ -116,15 +129,27 @@ public class TestRowBasedSecurity {
         assertFalse(rs.next()); //row filter
         rs.close();
 
-        s = c.createStatement();
+/*
         rs = s.executeQuery("select lookup('myschema.x', 'col', 'col2', 'b')");
         rs.next();
-        assertEquals(null, rs.getString(1)); //global scoped
-
+        assertEquals(null, rs.getString(1)); //should still be null for this session
+*/
         s = c.createStatement();
         rs = s.executeQuery("select count(col2) from v where col is not null");
         rs.next();
         assertEquals(1, rs.getInt(1));
+
+        //with or without caching we should get the same answer
+
+        s = c.createStatement();
+        rs = s.executeQuery("select count(*) from v_mat");
+        rs.next();
+        assertEquals(2, rs.getInt(1));
+
+        s = c.createStatement();
+        rs = s.executeQuery("select count(*) from v_mat option nocache");
+        rs.next();
+        assertEquals(2, rs.getInt(1));
 
         //different session with different roles
         v.clear();
@@ -133,6 +158,11 @@ public class TestRowBasedSecurity {
         rs = s.executeQuery("select count(col2) from v where col is not null");
         rs.next();
         assertEquals(2, rs.getInt(1));
+
+        /*s = c.createStatement();
+        rs = s.executeQuery("select count(*) from v_mat");
+        rs.next();
+        assertEquals(3, rs.getInt(1));*/
     }
 
 }
