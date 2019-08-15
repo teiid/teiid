@@ -20,6 +20,7 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -28,11 +29,16 @@ import java.util.Map;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
+
+    private static final List<String> RESERVED_NAMES = Collections.unmodifiableList(Arrays.asList(
+            CoreConstants.INFORMATION_SCHEMA, CoreConstants.ODBC_MODEL,
+            CoreConstants.SYSTEM_ADMIN_MODEL, CoreConstants.SYSTEM_MODEL));
 
     private static final int DEFAULT_ERROR_HISTORY = 10;
     private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
@@ -398,6 +404,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         return allErrors;
     }
 
-
+    public static Collection<String> getReservedNames() {
+        return RESERVED_NAMES;
+    }
 
 }
