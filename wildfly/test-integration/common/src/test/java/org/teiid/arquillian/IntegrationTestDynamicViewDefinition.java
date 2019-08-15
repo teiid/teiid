@@ -97,8 +97,7 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
                   .addAsManifestResource(UnitTestUtil.getTestDataFile("vdb.xml"))
                   .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"))
                   .addAsResource(new ArchiveAsset(udfJar, ZipExporter.class), "lib/udf.jar");
-        jar.as(ZipExporter.class).exportTo(UnitTestUtil.getTestScratchFile("dynamic-ddl.vdb"), true);
-        admin.deployVDBZip(UnitTestUtil.getTestScratchFile("dynamic-ddl.vdb").toURI().toURL());
+        admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
 
         assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1));
 
