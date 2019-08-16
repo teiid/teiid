@@ -77,7 +77,7 @@ public class XOMUtil {
      * Finally, note that this method's whitespace pruning is appropriate for
      * many, but not all XML use cases (round-tripping). For example, the blank
      * between
-     * <code>&lt;p>&lt;strong>Hello&lt;/strong> &lt;em>World!&lt;/em>&lt;/p></code>
+     * <code>&lt;p&gt;&lt;strong&gt;Hello&lt;/strong&gt; &lt;em&gt;World!&lt;/em&gt;&lt;/p&gt;</code>
      * will be removed, which might not be what you want. This is because this
      * method does not look across multiple Text nodes.
      *

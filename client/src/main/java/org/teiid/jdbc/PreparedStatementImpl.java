@@ -63,10 +63,10 @@ import org.teiid.netty.handler.codec.serialization.CompactObjectOutputStream;
  * compiled.  The SQL statement contained in a PreparedStatement object may have
  * one or more IN parameters. An IN parameter is a parameter whose value is not
  * specified when a SQL statement is created. Instead the statement has a placeholder
- * for each IN parameter.</p>
+ * for each IN parameter.
  * <p> The PreparedStatementImpl object wraps the server's PreparedStatement object.
  * The methods in this class are used to set the IN parameters on a server's
- * preparedstatement object.</p>
+ * preparedstatement object.
  */
 
 public class PreparedStatementImpl extends StatementImpl implements TeiidPreparedStatement {

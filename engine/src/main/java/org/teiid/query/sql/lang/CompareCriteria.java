@@ -27,9 +27,9 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * <p>A criteria which represents a simple operator relationship between two expressions.
  * There are 6 operator types.  Each side of the comparison may be an expression, which
- * could be an element, a constant, or a function.  </p>
+ * could be an element, a constant, or a function.
  *
- * <p>Some examples are:</p>
+ * <p>Some examples are:
  * <UL>
  * <LI>ticker = 'IBM'</LI>
  * <li>price &gt;= 50</LI>
@@ -85,7 +85,7 @@ public class CompareCriteria extends AbstractCompareCriteria implements BinaryCo
     }
 
     /**
-     * Sets the operands and operator.  The clause is of the form: <variable> <operator> <value>.
+     * Sets the operands and operator.  The clause is of the form: &lt;variable&gt; &lt;operator&gt; &lt;value&gt;.
      *
      * @param leftExpression The left expression
      * @param operator The operator representing how the expressions are compared

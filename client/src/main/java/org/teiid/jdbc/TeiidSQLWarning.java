@@ -26,7 +26,7 @@ import java.sql.SQLWarning;
  * If the cause was a source SQLWarning, then you may need to consult
  * the warning chain to get all warnings, see the example below.
  *
-<code><pre>
+<pre>
 //warning will be an instanceof TeiidSQLWarning to convey model/source information
 SQLWarning warning = stmt.getWarnings();
 
@@ -42,7 +42,7 @@ while (warning != null) {
   }
   warning = warning.getNextWarning();
 }
-</pre></code>
+</pre>
  *
  */
 public class TeiidSQLWarning extends SQLWarning {

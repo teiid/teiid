@@ -22,13 +22,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.AndOr.Operator;
 import org.teiid.language.Condition;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
 import org.teiid.language.SearchedWhenClause;
-import org.teiid.language.AndOr.Operator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -38,7 +38,7 @@ import org.teiid.translator.jdbc.FunctionModifier;
 /**
  * This Function modifier used to support ANSI concat on Oracle 9i.
  * <code>
- * CONCAT(a, b) ==> CASE WHEN (a is NULL OR b is NULL) THEN NULL ELSE CONCAT(a, b)
+ * CONCAT(a, b) ==&gt; CASE WHEN (a is NULL OR b is NULL) THEN NULL ELSE CONCAT(a, b)
  * </code>
  */
 public class ConcatFunctionModifier extends FunctionModifier {

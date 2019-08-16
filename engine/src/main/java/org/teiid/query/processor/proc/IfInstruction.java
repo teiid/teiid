@@ -34,11 +34,11 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * <p>This instruction an holds an if block and an else block and a criteria that determines
  * which block will be executed. These blocks are {@link Program} objects that could contain
  * nested if-else block.  Therefore, this <code>ProgramInstruction</code>
- * implements an arbitrarily deep if-else if-....else block.</p>
+ * implements an arbitrarily deep if-else if-....else block.
  *
  * <p>During processing, the Criteria is evaluated and if it evaluates to true,
  * the "if" block is executed else the "else" block if there is one is executed. These
- * programs are placed on the stack.</p>
+ * programs are placed on the stack.
  */
 public class IfInstruction extends ProgramInstruction {
 

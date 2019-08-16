@@ -32,12 +32,12 @@ import org.teiid.core.CorePlugin;
  * so strong that assertions should be considered optional as they should never occur.
  * However, these assertions may be violated during development and that is primarily
  * where these assertions are useful.
- * </p><p>
+ * <p>
  * In JDK 1.4, Sun introduces the "assert" keyword and builds assertion support directly
  * into the language.  When MetaMatrix begins using JDK 1.4 across the board, this
  * class should no longer be needed and all usage of assertions should be replaced with
  * use of the built-in JDK assertion facility.
- * </p>
+ *
  */
 public final class Assertion {
     //============================================================================================================================

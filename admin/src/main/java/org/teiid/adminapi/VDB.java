@@ -22,15 +22,15 @@ import java.util.List;
 
 /**
  * Represents a Virtual Database in the Teiid System.
- * <br>A VDB has a name and a version.</br>
+ * <br>A VDB has a name and a version.
  *
- * <p>The identifier pattern for a VDB is <CODE>"name<{@link #DELIMITER_CHAR}>version"</CODE>,
+ * <p>The identifier pattern for a VDB is name.version,
  * where the name of the VDB and its version represent its unique identifier in the Teiid system.
  * There are no spaces allowed in a given VDB name, and VDB name must start with a letter.
  * A version number is automatically assigned to a VDB when it is deployed into
- * a system. A VDB is uniquely identified by <CODE>"name<{@link #DELIMITER_CHAR}>version"</CODE>.
- * For example: <CODE>"Accounts<{@link #DELIMITER_CHAR}>1"</CODE>, <CODE>"UnifiedSales<{@link #DELIMITER_CHAR}>4</CODE>" etc.
- * </p>
+ * a system. A VDB is uniquely identified by name.version".
+ * For example: "Accounts.1", "UnifiedSales.4", etc.
+ *
  *
  * @since 4.3
  */

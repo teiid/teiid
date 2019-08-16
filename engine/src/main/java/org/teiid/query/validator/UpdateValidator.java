@@ -50,7 +50,7 @@ import org.teiid.query.sql.util.SymbolMap;
  * <p> This visitor is used to validate updates through virtual groups. The command defining
  * the virtual group is always a <code>Query</code>. This object visits various parts of
  * this <code>Query</code> and verifies if the virtual group definition will allows it to be
- * updated.</p>
+ * updated.
  */
 public class UpdateValidator {
 
@@ -545,7 +545,7 @@ public class UpdateValidator {
 
     /**
      * <p> This method validates an elements present in the group specified in the
-     * FROM clause of the query but not specified in its SELECT clause</p>
+     * FROM clause of the query but not specified in its SELECT clause
      * @param element The <code>ElementSymbol</code> being validated
      * @throws TeiidComponentException
      * @throws QueryMetadataException

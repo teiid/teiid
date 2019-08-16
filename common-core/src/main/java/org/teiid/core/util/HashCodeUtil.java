@@ -27,9 +27,9 @@ import java.util.RandomAccess;
  * <P>This class provides utility functions for generating good
  * hash codes.  Hash codes generated with these methods should
  * have a reasonably good distribution when placed in a hash
- * structure such as Hashtable, HashSet, or HashMap.</P>
+ * structure such as Hashtable, HashSet, or HashMap.
  *
- * <P>General usage is something like:</P>
+ * <P>General usage is something like:
  * <PRE>
  * public int hashCode() {
  *     int hc = 0;    // or = super.hashCode();

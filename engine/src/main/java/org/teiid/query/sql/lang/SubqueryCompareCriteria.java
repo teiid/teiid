@@ -32,17 +32,18 @@ import org.teiid.query.sql.symbol.Expression;
  * <p>This class implements a quantified comparison predicate.  This is
  * a criteria which represents a simple operator relationship between an expression and
  * either a scalar subquery or a table subquery preceded by one of the possible quantifiers.
- * </p>
+ *
  *
  * <p>The quantifiers are:
+ * <ul>
  * <li>{@link #SOME} and {@link #ANY}, which are synonymous - the criteria is true if there is at
  * least one comparison between the left expression and the values of the subquery.  The criteria
  * is false if the subquery returns no rows.</li>
- * <li>{@link #ALL}</li> - the criteria is true only if all of the comparisons between the left
+ * <li>{@link #ALL} - the criteria is true only if all of the comparisons between the left
  * expression and each value of the subquery is true.  The criteria is also true if the subquery
  * returns no rows.</li></ul>
  *
- * <p>Some examples are:</p>
+ * <p>Some examples are:
  * <UL>
  * <LI>ticker = ANY (Select ... FROM ... WHERE ... )</LI>
  * <li>price &gt;= ALL (Select ... FROM ... WHERE ... )</LI>
@@ -93,6 +94,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     /**
      * Get the predicate quantifier - returns one of the following:
+     * <ul>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>
@@ -104,6 +106,7 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
 
     /**
      * Set the predicate quantifier - use one of the following:
+     * <ul>
      * <li>{@link #ANY}</li>
      * <li>{@link #SOME}</li>
      * <li>{@link #ALL}</li></ul>

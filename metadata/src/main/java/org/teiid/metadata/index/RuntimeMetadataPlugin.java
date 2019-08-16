@@ -19,7 +19,7 @@ import org.teiid.core.BundleUtil;
 /**
  * CommonPlugin
  * <p>Used here in <code>metadata.runtime</code> to have access to the new
- * logging framework for <code>LogManager</code>.</p>
+ * logging framework for <code>LogManager</code>.
  */
 public class RuntimeMetadataPlugin {
 

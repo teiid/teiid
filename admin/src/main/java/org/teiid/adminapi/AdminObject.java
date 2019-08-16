@@ -26,10 +26,10 @@ import java.util.Properties;
  * <p>
  * Unique identifiers are available for all <code>AdminObject</code>s and their forms are specific to each object. See
  * the javadoc on the individual object for its particular identifier pattern required.
- * </p>
+ *
  * <p>
  * This interface need not be used directly by clients except when coding to constants.
- * </p>
+ *
  *
  * @since 4.3
  */
@@ -44,9 +44,9 @@ public interface AdminObject extends Serializable {
     /**
      * The character (as a <code>String</code>) that delimits the atomic components of the identifier.
      *
-     * <p>It is <emph>strongly</emph> advisable to write admin client code using this <code>DELIMITER</code>
+     * <p>It is <b>strongly</b> advisable to write admin client code using this <code>DELIMITER</code>
      * rather than hard-coding a delimiter character in admin code.  Doing this eliminates the possibility
-     * of admin client code breaking if/when the delimiter character must be changed.</p>
+     * of admin client code breaking if/when the delimiter character must be changed.
      */
     public static final String DELIMITER = new String(new char[] {DELIMITER_CHAR});
 
@@ -61,9 +61,9 @@ public interface AdminObject extends Serializable {
      * to indicate <i>"anything"</i> or, more specifically, replace <i>"zero or more"</i>
      * identifier components.
      *
-     * <p>It is <emph>strongly</emph> advisable to write admin client code using this <code>WILDCARD</code>
+     * <p>It is <b>strongly</b> advisable to write admin client code using this <code>WILDCARD</code>
      * rather than hard-coding a wildcard character in admin code.  Doing this eliminates the possibility
-     * of admin client code breaking if/when the wildcard character must be changed.</p>
+     * of admin client code breaking if/when the wildcard character must be changed.
      */
     public static final String WILDCARD = "*"; //$NON-NLS-1$
 

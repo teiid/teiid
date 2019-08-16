@@ -246,13 +246,13 @@ public interface SourceCapabilities {
          */
         QUERY_SUBQUERIES_CORRELATED,
         /**
-         * Support indicates connector can accept queries with non-searched CASE <expression> WHEN <expression> ... END
+         * Support indicates connector can accept queries with non-searched CASE &lt;expression&gt; WHEN &lt;expression&gt; ... END
          *
          * @since 4.0
          */
         QUERY_CASE,
         /**
-         * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
+         * Support indicates connector can accept queries with searched CASE WHEN &lt;criteria&gt; ... END
          *
          * @since 4.0
          */

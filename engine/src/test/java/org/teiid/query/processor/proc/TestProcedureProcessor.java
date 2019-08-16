@@ -1697,11 +1697,11 @@ public class TestProcedureProcessor {
      *
      * <p>The use of a query as the assignment value to a <code>DECLARE</code>
      * statement should execute without error as long as the query
-     * is valid and fully resolvable.</p>
+     * is valid and fully resolvable.
      *
      * <p>This test is related to JBEDSP-818 in which the query in the
      * <code>LOOP</code> statement would fail due to a query being used as the
-     * assigned value in the <code>DECLARE</code> statement.</p>
+     * assigned value in the <code>DECLARE</code> statement.
      * @throws Exception
      */
     @Test public void testDeclareWithQueryAssignment() throws Exception {

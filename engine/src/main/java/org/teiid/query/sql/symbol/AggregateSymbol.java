@@ -35,11 +35,11 @@ import org.teiid.query.sql.lang.OrderBy;
 
 /**
  * <p>An aggregate symbol represents an aggregate function. The * expression
- * is encoded by setting the expression to null.  This may ONLY be used with the COUNT function.</p>
+ * is encoded by setting the expression to null.  This may ONLY be used with the COUNT function.
  *
  * <p>The type of an aggregate symbol depends on the function and the type of the underlying
  * expression.  The type of a COUNT function is ALWAYS integer.  MIN and MAX functions take the
- * type of their contained expression.</p>
+ * type of their contained expression.
  */
 public class AggregateSymbol extends Function implements DerivedExpression {
 

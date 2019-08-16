@@ -22,11 +22,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Comparison;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
 import org.teiid.language.Literal;
-import org.teiid.language.Comparison.Operator;
 import org.teiid.translator.TypeFacility;
 
 
@@ -40,17 +40,21 @@ import org.teiid.translator.TypeFacility;
  * for the function name.
  * <p>
  * If the default implementation is used, the expression will not be modified if:
+ * <ul>
  * <li><code>locate(search_string, source_string)</code> is used</li>
  * <li><code>locate(search_string, source_string, start_index)</code> is used
  * and <code>start_index</code> is a literal integer greater then 0</li>
  * <li>the default function parameter order is used or unspecified</li>
+ * </ul>
  * <p>
  * If the default implementation is used, the expression will be modified if:
+ * <ul>
  * <li><code>locate(search_string, source_string, start_index)</code> is used
  * and <code>start_index</code> is a literal integer less then 1</li>
  * <li><code>locate(search_string, source_string, start_index)</code> is used
  * and <code>start_index</code> is not a literal integer</li>
  * <li>the function parameter order is something other than the default</li>
+ * </ul>
  * <p>
  * If the default implementation is used and the expression is modified, it is
  * modified to ensure that any literal integer value less than 1 is made equal
@@ -59,11 +63,12 @@ import org.teiid.translator.TypeFacility;
  * order matches that of what the data source expects.
  * <p>
  * For example:
- * <li><code>locate('a', 'abcdef')</code> --> <code>LOCATE('a', 'abcdef')</code></li>
- * <li><code>locate('a', 'abcdef', 2)</code> --> <code>LOCATE('a', 'abcdef', 2)</code></li>
- * <li><code>locate('a', 'abcdef', 0)</code> --> <code>LOCATE('a', 'abcdef', 1)</code></li>
- * <li><code>locate('a', 'abcdef', intCol)</code> --> <code>LOCATE('a', 'abcdef', CASE WHEN intCol < 1 THEN 1 ELSE intCol END)</code></li>
- *
+ * <ul>
+ * <li><code>locate('a', 'abcdef')</code> --&gt; <code>LOCATE('a', 'abcdef')</code></li>
+ * <li><code>locate('a', 'abcdef', 2)</code> --&gt; <code>LOCATE('a', 'abcdef', 2)</code></li>
+ * <li><code>locate('a', 'abcdef', 0)</code> --&gt; <code>LOCATE('a', 'abcdef', 1)</code></li>
+ * <li><code>locate('a', 'abcdef', intCol)</code> --&gt; <code>LOCATE('a', 'abcdef', CASE WHEN intCol &lt; 1 THEN 1 ELSE intCol END)</code></li>
+ * </ul>
  * @since 6.2
  */
 public class LocateFunctionModifier extends AliasModifier {
@@ -102,14 +107,12 @@ public class LocateFunctionModifier extends AliasModifier {
      * data source.
      * <p>
      * For example:
-     * <ul>
-     * <code>locate('a', 'abcdefg')  --->  LOCATE('a', 'abcdefg')</code><br />
-     * <code>locate('a', 'abcdefg', 1)  --->  LOCATE('a', 'abcdefg', 1)</code><br />
-     * <code>locate('a', 'abcdefg', 1)  --->  INSTR('abcdefg', 'a', 1)</code><br />
-     * <code>locate('a', 'abcdefg', -5)  --->  INSTR('abcdefg', 'a', 1)</code><br />
-     * <code>locate('a', 'abcdefg', 1)  --->  FINDSTR('a', 'abcdefg', 1)</code><br />
-     * <code>locate('a', 'abcdefg', myCol)  --->  LOCATE('a', 'abcdefg', CASE WHEN myCol < 1 THEN 1 ELSE myCol END)</code>
-     * </ul>
+     * <code>locate('a', 'abcdefg')  ---&gt;  LOCATE('a', 'abcdefg')</code><br>
+     * <code>locate('a', 'abcdefg', 1)  ---&gt;  LOCATE('a', 'abcdefg', 1)</code><br>
+     * <code>locate('a', 'abcdefg', 1)  ---&gt;  INSTR('abcdefg', 'a', 1)</code><br>
+     * <code>locate('a', 'abcdefg', -5)  ---&gt;  INSTR('abcdefg', 'a', 1)</code><br>
+     * <code>locate('a', 'abcdefg', 1)  ---&gt;  FINDSTR('a', 'abcdefg', 1)</code><br>
+     * <code>locate('a', 'abcdefg', myCol)  ---&gt;  LOCATE('a', 'abcdefg', CASE WHEN myCol &lt; 1 THEN 1 ELSE myCol END)</code>
      *
      * @param function the LOCATE function that may need to be modified
      */

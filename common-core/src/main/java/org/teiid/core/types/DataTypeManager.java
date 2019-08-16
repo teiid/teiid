@@ -41,14 +41,14 @@ import org.teiid.core.util.PropertiesUtils;
  * This class manages data type, conversions between data types, and comparators
  * for data types. In the future other data type information may be managed
  * here.
- * </p>
+ *
  *
  * <p>
  * In general, methods are provided to refer to types either by Class, or by
  * Class name. The benefit of the Class name option is that the user does not
  * need to load the Class object, which may not be in the classpath. The
  * advantage of the Class option is speed.
- * </p>
+ *
  *
  * TODO: refactor the string/class/code into an enum
  */

@@ -32,7 +32,7 @@ import org.teiid.query.sql.proc.Statement.Labeled;
  * <p> This class represents a while statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
  * a block and a criteria that
- * determines when to exit the while loop.</p>
+ * determines when to exit the while loop.
  */
 public class WhileStatement extends Statement implements Labeled {
 

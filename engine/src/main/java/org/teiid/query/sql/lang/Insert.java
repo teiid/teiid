@@ -35,7 +35,7 @@ import org.teiid.query.sql.util.SymbolMap;
 
 /**
  * Represents a SQL Insert statement of the form:
- * "INSERT INTO <group> (<variables>) VALUES <values>".
+ * "INSERT INTO &lt;group&gt; (&lt;variables&gt;) VALUES &lt;values&gt;".
  */
 public class Insert extends ProcedureContainer {
 

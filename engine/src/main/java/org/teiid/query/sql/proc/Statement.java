@@ -24,7 +24,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /**
  * <p> This class represents the a statement in the stored procedure language.
  * The subclasses of this class represent specific statements like an
- * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.</p>
+ * <code>IfStatement</code>, <code>AssignmentStatement</code> etc.
  */
 public abstract class Statement implements LanguageObject {
 

@@ -710,7 +710,7 @@ public class TestJoinOptimization {
      * provided that group has join criteria which covers the column(s) in an access
      * pattern, and which joins the group to group(s) in other region(s).  The task, then,
      * is to ensure that an ordering isn't picked which makes such a dependent join
-     * impossible.</p>
+     * impossible.
      *
      * <p>A physical group can have zero or more access patterns; each access pattern can have one
      * or more columns.  So a group could implicitly be dependent on one or more other physical
@@ -724,7 +724,7 @@ public class TestJoinOptimization {
      * Reg3           | Reg4
      * Reg1           | Reg2
      * Reg4           | Reg3
-     * </pre></p>
+     * </pre>
      *
      * This tests now passes with RulePlanJoins
      */

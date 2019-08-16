@@ -36,13 +36,13 @@ import org.teiid.query.sql.symbol.Function;
  * <p>This visitor class will traverse a language object tree and collect all Function
  * references it finds.  It uses a collection to collect the Functions in so
  * different collections will give you different collection properties - for instance,
- * using a Set will remove duplicates.</p>
+ * using a Set will remove duplicates.
  *
- * <p>This visitor can optionally collect functions of only a specific name</p>
+ * <p>This visitor can optionally collect functions of only a specific name
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and return the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class FunctionCollectorVisitor extends LanguageVisitor {
 

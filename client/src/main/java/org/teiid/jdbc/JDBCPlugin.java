@@ -25,7 +25,7 @@ import org.teiid.core.BundleUtil;
 /**
  * JDBCPlugin
  * <p>Used here in <code>jdbc</code> to have access to the new
- * logging framework.</p>
+ * logging framework.
  */
 public class JDBCPlugin { // extends Plugin {
 

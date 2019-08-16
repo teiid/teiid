@@ -306,7 +306,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     /**
      * <p>
      * Close all the statements open on this connection
-     * </p>
+     *
      *
      * @throws SQLException
      *             server statement object could not be closed.
@@ -342,7 +342,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     /**
      * <p>This method makes any changes involved in a transaction permanent and releases
      * any locks held by the connection object.  This is only used when auto-commit
-     * is set to false.</p>
+     * is set to false.
      * @throws SQLException if the transaction had been rolled back or marked to roll back.
      */
     public void commit() throws SQLException {
@@ -439,7 +439,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     /**
-     * <p>This method gets the ServerConnection object wrapped by this object.</p>
+     * <p>This method gets the ServerConnection object wrapped by this object.
      * @return ServerConnection object
      */
     public ServerConnection getServerConnection() throws SQLException {
@@ -515,9 +515,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
     /**
      * <p>This method will return the first warning reported by calls on this connection,
-     * or null if none exist.</p>
+     * or null if none exist.
      * @return A SQLWarning object if there are any warnings.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public SQLWarning getWarnings() throws SQLException {
         //Check to see the connection is open
@@ -526,9 +526,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     }
 
     /**
-     * <p>This method will return whether this connection is closed or not.</p>
+     * <p>This method will return whether this connection is closed or not.
      * @return booleanvalue indicating if the connection is closed
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public boolean isClosed() throws SQLException {
         return closed;
@@ -548,7 +548,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     /**
      * <p>Creates a CallableStatement object that contains sql and that will produce
      * ResultSet objects that are non-scrollable and non-updatable. A SQL stored
-     * procedure call statement is handled by creating a CallableStatement for it.</p>
+     * procedure call statement is handled by creating a CallableStatement for it.
      * @param sql String(escape syntax) for invoking a stored procedure.
      * @return CallableStatement object that can be used to execute the storedProcedure
      * @throws SQLException if there is an error creating the callable statement object
@@ -702,7 +702,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
     /**
      * <p>Teiid does not allow setting a catalog through a connection. This
-     * method silently ignores the request as per the specification.</p>
+     * method silently ignores the request as per the specification.
      * @param catalog
      * @throws SQLException This should never occur.
      */
@@ -722,7 +722,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
     /**
      * <p> This utility method checks if the jdbc connection is closed and
-     * throws an exception if it is closed. </p>
+     * throws an exception if it is closed.
      * @throws TeiidSQLException if the connection object is closed.
      */
     void checkConnection() throws TeiidSQLException{

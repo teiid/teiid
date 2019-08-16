@@ -30,8 +30,8 @@ import org.teiid.translator.jdbc.FunctionModifier;
 
 
 /**
- * Convert left(string, count) --> substr(string, 1, count)
- * or right(string, count) --> substr(string, -1 * count) - we lack a way to express a unary negation
+ * Convert left(string, count) --&gt; substr(string, 1, count)
+ * or right(string, count) --&gt; substr(string, -1 * count) - we lack a way to express a unary negation
  */
 public class LeftOrRightFunctionModifier extends FunctionModifier {
     private LanguageFactory langFactory;

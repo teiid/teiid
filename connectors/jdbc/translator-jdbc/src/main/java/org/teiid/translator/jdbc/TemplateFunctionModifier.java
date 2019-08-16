@@ -30,7 +30,7 @@ import org.teiid.language.Function;
  * E.g.
  *
  * new FunctionModifier() {
- *     public List<?> translate(Function function) {
+ *     public List&lt;?&gt; translate(Function function) {
  *         return Arrays.asList(
  *             "SDO_RELATE(",
  *             function.getParameters().get(0),

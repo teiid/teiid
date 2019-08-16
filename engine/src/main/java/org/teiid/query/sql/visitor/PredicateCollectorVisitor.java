@@ -29,7 +29,7 @@ import org.teiid.query.sql.navigator.PreOrderNavigator;
 
 /**
  * <p>Walk a tree of language objects and collect any predicate criteria that are found.
- * A predicate criteria is of the following types: </p>
+ * A predicate criteria is of the following types:
  *
  * <ul>
  * <li>{@link org.teiid.query.sql.lang.CompareCriteria} CompareCriteria</li>

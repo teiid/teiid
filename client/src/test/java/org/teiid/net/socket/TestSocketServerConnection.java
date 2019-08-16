@@ -122,7 +122,7 @@ public class TestSocketServerConnection {
      * These values are not put into the initial connection object
      * and it is up to <code>SocketServerConnection</code> to place
      * the values into the connection properties object during the
-     * connection process.</p>
+     * connection process.
      * @throws Throwable
      *
      * @since Westport

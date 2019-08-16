@@ -28,7 +28,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
- * <p>This is a subclass of Symbol representing multiple output columns.</p>
+ * <p>This is a subclass of Symbol representing multiple output columns.
  */
 public class MultipleElementSymbol implements Expression {
     private List<ElementSymbol> elementSymbols;

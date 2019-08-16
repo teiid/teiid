@@ -112,9 +112,7 @@ public interface SimpleDBConnection extends Connection {
     /**
      * Performs select expression. This expression must be in format which is understandable to SimpleDB database
      * @param selectExpression
-     * @return Iterator of List<String> results
      */
-
     public com.amazonaws.services.simpledb.model.SelectResult performSelect(String selectExpression, String nextToken) throws TranslatorException;
 
     /**

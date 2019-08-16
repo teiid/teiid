@@ -32,11 +32,11 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 
 /**
  * <p>This visitor class will traverse a language object tree and collect all sub-commands
- * it finds.  It uses a List to collect the sub-commands in the order they're found.</p>
+ * it finds.  It uses a List to collect the sub-commands in the order they're found.
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor, run the visitor, and get the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class CommandCollectorVisitor extends LanguageVisitor {
 

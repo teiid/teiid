@@ -25,7 +25,7 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * <p>The common functionality of a {@link CompareCriteria} and a
  * {@link SubqueryCompareCriteria}.  The comparison operators are defined
- * here.</p>
+ * here.
  */
 public abstract class AbstractCompareCriteria extends PredicateCriteria implements Negatable {
 

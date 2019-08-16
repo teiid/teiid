@@ -47,14 +47,14 @@ import org.teiid.query.QueryPlugin;
  * <li>allows for proper timeout of idle threads</li>
  * <li>allows for queuing</li>
  * </ol>
- * <br/>
+ * <br>
  * A non-fifo (lifo) {@link SynchronousQueue} based {@link ThreadPoolExecutor} satisfies 1 and 2, but not 3.
  * A bounded or unbound queue based {@link ThreadPoolExecutor} allows for 3, but will tend to create
  * up to the maximum number of threads and makes no guarantee on thread scheduling.
- * <br/>
+ * <br>
  * So the approach here is to use a virtual thread pool off of a {@link SynchronousQueue}
  * backed {@link ThreadPoolExecutor}.
- * <br/>
+ * <br>
  * There is also only a single master scheduling thread with actual executions deferred.
  *
  * TODO: there is a race condition between retiring threads and adding work, which may create extra threads.

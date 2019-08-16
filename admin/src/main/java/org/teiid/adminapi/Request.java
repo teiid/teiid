@@ -28,7 +28,7 @@ package org.teiid.adminapi;
  * of original request.
  *
  *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged
- *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
+ *  in the pattern [session]|[request] or [session]|[request]|[source request]
  */
 public interface Request extends RequestBean, AdminObject, DomainAware {
 

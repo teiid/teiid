@@ -61,7 +61,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
     /**
      * Optimizes batched updates by batching all contiguous commands that relate to the same physical model.
      * For example, for the following batch of commands:
-     * <br/>
+     * <br>
      * <ol>
      *      <li>1.  INSERT INTO physicalModel.myPhysical ...</li>
      *      <li>2.  UPDATE physicalModel.myPhysical ... </li>
@@ -76,7 +76,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      *      <li>11. INSERT INTO physicalModel.myPhysical ... </li>
      *      <li>12. INSERT INTO physicalModel.myPhysical ... </li>
      * </ol>
-     * <br/> this implementation will batch as follows: (1,2), (5, 6, 7), (8 thru 12).
+     * <br> this implementation will batch as follows: (1,2), (5, 6, 7), (8 thru 12).
      * The remaining commands/plans will be executed individually.
      * @see org.teiid.query.optimizer.CommandPlanner#optimize(Command, org.teiid.core.id.IDGenerator, org.teiid.query.metadata.QueryMetadataInterface, org.teiid.query.optimizer.capabilities.CapabilitiesFinder, org.teiid.query.analysis.AnalysisRecord, CommandContext)
      * @since 4.2

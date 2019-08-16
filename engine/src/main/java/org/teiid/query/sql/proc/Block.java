@@ -35,7 +35,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a group of <code>Statement</code> objects. The
- * statements are stored on this object in the order in which they are added.</p>
+ * statements are stored on this object in the order in which they are added.
  */
 public class Block extends Statement implements Labeled {
 

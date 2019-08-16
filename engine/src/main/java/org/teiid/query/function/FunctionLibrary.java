@@ -544,8 +544,8 @@ public class FunctionLibrary {
 
     /**
      * Return a list of the most general forms of built-in aggregate functions.
-     * <br/>count(*) - is not included
-     * <br/>textagg - is not included due to its non standard syntax
+     * <br>count(*) - is not included
+     * <br>textagg - is not included due to its non standard syntax
      *
      * @param includeAnalytic - true to include analytic functions that must be windowed
      * @return

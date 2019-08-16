@@ -76,7 +76,7 @@ public class QueryResolverException extends QueryProcessingException {
 
     /**
      * Set the list of unresolved symbols during QueryResolution
-     * @param unresolvedSymbols List of <UnresolvedSymbolDescription> objects
+     * @param unresolvedSymbols List of &lt;UnresolvedSymbolDescription&gt; objects
      */
     public void setUnresolvedSymbols(List<UnresolvedSymbolDescription> unresolvedSymbols) {
         this.problems = unresolvedSymbols;

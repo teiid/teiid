@@ -39,14 +39,14 @@ import org.teiid.query.util.CommandContext;
  * <p>This class represents a processor plan.  It is generic in that it
  * abstracts the interface to the plan by the processor, meaning that the
  * actual implementation of the plan or the types of processing done by the
- * plan is not important to the processor.</p>
+ * plan is not important to the processor.
  * <p>All the implementations of this interface need to implement {@link #clone}
  * method. The plan is only clonable in the pre or post-processing stage, not
  * during the processing state (things like program state, result sets, etc).
  * It's only safe to clone in between query processings.  In other words, it's
  * only safe to call {@link #clone} before the call to {@link #open} or after
  * the call to {@link #close}.
- * </p>
+ *
  */
 public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 

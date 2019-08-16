@@ -25,7 +25,7 @@ import java.util.Iterator;
 
 /**
  * The root node of an XPath tree. (Or equivalently, the tree itself).
- * <p/>
+ * <p>
  * This class is used not only for a document, but also for the root
  * of a document-less tree fragment.
  *
@@ -216,8 +216,8 @@ public class XOMDocumentWrapper extends XOMNodeWrapper implements TreeInfo {
     /**
      * Get the type annotation of this node, if any. The type annotation is represented as
      * SchemaType object.
-     * <p/>
-     * <p>Types derived from a DTD are not reflected in the result of this method.</p>
+     * <p>
+     * <p>Types derived from a DTD are not reflected in the result of this method.
      *
      * @return For element and attribute nodes: the type annotation derived from schema
      *         validation (defaulting to xs:untyped and xs:untypedAtomic in the absence of schema

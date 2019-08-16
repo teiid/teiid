@@ -29,7 +29,7 @@ import org.teiid.query.sql.symbol.Symbol;
 /**
  * <p> This class is used to update LanguageObjects by replacing the virtual elements/
  * groups present in them with their physical counterparts. It is currently used only
- * to visit Insert/Delete/Update objects and parts of those objects.</p>
+ * to visit Insert/Delete/Update objects and parts of those objects.
  */
 public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
 
@@ -37,7 +37,7 @@ public class StaticSymbolMappingVisitor extends AbstractSymbolMappingVisitor {
 
     /**
      * <p> This constructor initialises this object by setting the symbolMap and
-     * passing in the command object that is being visited.</p>
+     * passing in the command object that is being visited.
      * @param symbolMap A map of virtual elements/groups to their physical counterparts
      */
     public StaticSymbolMappingVisitor(Map symbolMap) {

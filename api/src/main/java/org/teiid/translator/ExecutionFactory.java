@@ -48,7 +48,7 @@ import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
 
 
 /**
- * <p>The primary entry point for a Translator.  This class should be extended by the custom translator writer.</p>
+ * <p>The primary entry point for a Translator.  This class should be extended by the custom translator writer.
  *
  * The deployer instantiates this class through reflection. So it is important to have no-arg constructor. Once constructed
  * the "start" method is called. This class represents the basic capabilities of the translator.
@@ -866,7 +866,7 @@ public class ExecutionFactory<F, C> {
 
     /**
      * <p>Support indicates that the connector supports non-column expressions in GROUP BY, such as:
-     *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
+     *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code>
      * @since 5.0
      */
     public boolean supportsFunctionsInGroupBy() {
@@ -1185,9 +1185,9 @@ public class ExecutionFactory<F, C> {
 
     /**
      * Get the {@link CacheDirective} to control command caching.
-     * <p>Use {@link Scope#NONE} to indicate to the engine that no caching should be performed by the engine.</p>
+     * <p>Use {@link Scope#NONE} to indicate to the engine that no caching should be performed by the engine.
      * <p>If cache parameters on the {@link CacheDirective} will be changed by the {@link Execution}, then
-     * a new instance of a {@link CacheDirective} should be set each time.</p>
+     * a new instance of a {@link CacheDirective} should be set each time.
      * @param command
      * @param executionContext
      * @param metadata

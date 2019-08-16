@@ -25,7 +25,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 /**
- * Represents criteria such as:  "<expression> IS NULL".
+ * Represents criteria such as:  "&lt;expression&gt; IS NULL".
  */
 public class IsNullCriteria extends PredicateCriteria implements Negatable {
 

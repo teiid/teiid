@@ -132,7 +132,7 @@ public class TeiidDriver implements Driver {
      *
      * @param url used to establish a connection.
      * @return A boolean value indicating whether the driver understands the subprotocol.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public boolean acceptsURL(String url) throws SQLException {
         return JDBCURL.acceptsUrl(url) != null;

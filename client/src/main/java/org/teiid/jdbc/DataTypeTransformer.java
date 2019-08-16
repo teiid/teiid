@@ -46,7 +46,7 @@ import org.teiid.core.util.ReaderInputStream;
 /**
  * <p>This class is used to transform objects into desired data types. The static
  * method on this class are used by Metadatresults, ResultsWrapper and
- * MMCallableStatement classes.</p>
+ * MMCallableStatement classes.
  */
 final class DataTypeTransformer {
 

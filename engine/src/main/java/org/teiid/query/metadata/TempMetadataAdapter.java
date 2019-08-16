@@ -42,14 +42,14 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * <p>This is an adapter class, it contains another instance of
  * QueryMetadataInterface as well as a TempMetadataStore.  It defers to
- * either one of these when appropriate.</p>
+ * either one of these when appropriate.
  *
  * <p>When a metadataID Object is requested for a group or element name, this
  * will first check the QueryMetadataInterface.  If an ID wasn't found there,
- * it will then check the TempMetadataStore.</p>
+ * it will then check the TempMetadataStore.
  *
  * <p>For methods that take a metadataID arg, this class may check whether it
- * is a TempMetadataID or not and react accordingly.</p>
+ * is a TempMetadataID or not and react accordingly.
  */
 public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
 

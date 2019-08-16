@@ -25,7 +25,7 @@ import org.teiid.core.TeiidException;
  * It stores model name on which the atomic query is based, name of the
  * connector binding for the data source against which the atomic query
  * is executed, and the actual exception thrown when the atomic
- * query is executed.</p>
+ * query is executed.
  */
 
 public class SourceWarning extends TeiidException {
@@ -36,7 +36,7 @@ public class SourceWarning extends TeiidException {
     private boolean partialResults;
 
     /**
-     * <p>Constructor that stores atomic query failure details.</p>
+     * <p>Constructor that stores atomic query failure details.
      * @param model Name of the model for the atomic query
      * @param connectorBinding Name of the connector binding name for the atomic query
      * @param ex Exception thrown when atomic query fails
@@ -54,7 +54,7 @@ public class SourceWarning extends TeiidException {
     }
 
     /**
-     * <p>Get's the model name for the atomic query.</p>
+     * <p>Get's the model name for the atomic query.
      * @return The name of the model
      */
     public String getModelName() {
@@ -62,7 +62,7 @@ public class SourceWarning extends TeiidException {
     }
 
     /**
-     * <p>Get's the connector binding name for the atomic query.</p>
+     * <p>Get's the connector binding name for the atomic query.
      * @return The Connector Binding Name
      */
     public String getConnectorBindingName() {
@@ -74,7 +74,7 @@ public class SourceWarning extends TeiidException {
     }
 
     /**
-     * <p>Gets a message detailing the source against which the atomic query failed.</p>
+     * <p>Gets a message detailing the source against which the atomic query failed.
      * @return Message containing details of the source for which there is a failure.
      */
     public String toString() {

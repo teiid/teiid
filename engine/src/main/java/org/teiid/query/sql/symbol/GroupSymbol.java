@@ -30,12 +30,12 @@ import org.teiid.query.sql.LanguageVisitor;
  * symbol has a name, an optional definition, and a reference to a real
  * metadata ID.  Typically, a GroupSymbol will be created only from a name and
  * possibly a definition if the group has an alias.  The metadata ID is
- * discovered only when resolving the query.</p>
+ * discovered only when resolving the query.
  *
  * <p>For example, if the original string contained a FROM clause such as
  * "FROM Group1 AS G, Group2", there would be two GroupSymbols created.  The
  * first would have name=G, definition=Group1 and the second would have
- * name=Group2, definition=null.</p>
+ * name=Group2, definition=null.
  */
 public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 

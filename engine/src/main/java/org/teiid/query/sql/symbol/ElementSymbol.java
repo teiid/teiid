@@ -25,12 +25,12 @@ import org.teiid.query.sql.LanguageVisitor;
  * <p>This is a subclass of Symbol representing a single element.  An ElementSymbol
  * also is an expression and thus has a type.  Element symbols have a variety of
  * attributes that determine how they are displayed - a flag for displaying fully qualified
- * and an optional vdb name.</p>
+ * and an optional vdb name.
  *
  * <p>The "isExternalReference" property indicates whether the element symbol
  * refers to an element from a group outside the current command.  Typically this
  * is set to false.  Common uses when this is set to true are for variables used
- * within a command, correlated elements within a command, etc. </p>
+ * within a command, correlated elements within a command, etc.
  */
 public class ElementSymbol extends Symbol implements DerivedExpression {
 

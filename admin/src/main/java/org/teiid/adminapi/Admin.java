@@ -501,7 +501,7 @@ public interface Admin {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
-     * @param allowedTypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param allowedTypes {@link EnumSet} Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
     @Deprecated
@@ -513,7 +513,7 @@ public interface Admin {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
-     * @param allowedTypes EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param allowedTypes {@link EnumSet} Type of schema objects to retrieve, null means ALL the schema object types
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.
      */
     String getSchema(String vdbName, String vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;

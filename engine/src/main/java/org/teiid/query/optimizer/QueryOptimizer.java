@@ -50,7 +50,7 @@ import org.teiid.query.util.CommandContext;
 
 /**
  * <p>This Class produces a ProcessorPlan object (a plan for query execution) from a
- * user's command and a source of metadata.</p>
+ * user's command and a source of metadata.
  */
 public class QueryOptimizer {
 

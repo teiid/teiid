@@ -241,7 +241,7 @@ public final class StringUtil {
 
     /**<p>
      * Returns whether the specified text is either empty or null.
-     * </p>
+     *
      * @param text The text to check; may be null;
      * @return True if the specified text is either empty or null.
      * @since 4.0
@@ -317,7 +317,7 @@ public final class StringUtil {
 
     /**<p>
      * Prevents instantiation.
-     * </p>
+     *
      * @since 4.0
      */
     private StringUtil() {

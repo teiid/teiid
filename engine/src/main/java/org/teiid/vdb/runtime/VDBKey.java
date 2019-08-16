@@ -107,11 +107,11 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 
     /**
      * Get the version string - not including the at most designation.
-     * <br/>
+     * <br>
      * Will be the full semantic version if more than 1 part is specified.
-     * <br/>
+     * <br>
      * Will be the first integer part if only it is specified.
-     * <br/>
+     * <br>
      * Will be null if no version is present.
      * @return
      */
@@ -185,7 +185,7 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 
     /**
      * @param key
-     * @return true if the key version >= the current version
+     * @return true if the key version &gt;= the current version
      */
     public boolean acceptsVerion(VDBKey key) {
         if (!key.getName().equalsIgnoreCase(getName())) {

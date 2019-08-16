@@ -178,7 +178,7 @@ public abstract class AWS4SignerBase {
      * <p>
      * The canonicalized query string is formed by first sorting all the query
      * string parameters, then URI encoding both the key and value and then
-     * joining them, in order, separating key value pairs with an '&'.
+     * joining them, in order, separating key value pairs with an '&amp;'.
      *
      * @param parameters
      *            The query string parameters to be canonicalized.

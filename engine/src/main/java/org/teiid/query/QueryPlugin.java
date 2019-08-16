@@ -26,7 +26,7 @@ import org.teiid.core.BundleUtil;
  * QueryPlugin
  * <p>
  * Used here in <code>query</code> to have access to the new logging framework for <code>LogManager</code>.
- * </p>
+ *
  */
 public class QueryPlugin { // extends Plugin {
 

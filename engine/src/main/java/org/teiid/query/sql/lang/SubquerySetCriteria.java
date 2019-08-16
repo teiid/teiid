@@ -31,7 +31,7 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * A criteria which is true is the expression's value is a member in a list
  * of values returned from a subquery.  This criteria can be represented as
- * "<expression> IN (SELECT ...)".
+ * "&lt;expression&gt; IN (SELECT ...)".
  */
 public class SubquerySetCriteria extends AbstractSetCriteria implements SubqueryContainer<QueryCommand>, ContextReference {
 

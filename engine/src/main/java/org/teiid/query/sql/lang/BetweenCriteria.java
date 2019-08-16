@@ -26,7 +26,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 /**
- * Represents criteria such as:  "<expression> [NOT] BETWEEN <lowerExpression> AND <upperExpression>".
+ * Represents criteria such as:  "&lt;expression&gt; [NOT] BETWEEN &lt;lowerExpression&gt; AND &lt;upperExpression&gt;".
  */
 public class BetweenCriteria extends PredicateCriteria implements Negatable {
 

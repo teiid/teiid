@@ -22,13 +22,13 @@ package org.teiid.jdbc;
  * <p> This class provides constants indicating positions of columns in the
  * <code>ResultSets</code> returned by methods on <code>MMDatabaseMetaData</code>
  * object. The inner classes represent the methods while attributes represent the
- * column positions. The name of the constant explains the column content.</p>
+ * column positions. The name of the constant explains the column content.
  * <p> The constants in the inner classes could include column positions for columns
  * that are hardcoded, columns positions of some columns on server's
- * <code>Results</code> object.</p>
+ * <code>Results</code> object.
  * <p> Each of the inner classes have a constant <code>MAX_COLUMNS</code> that
  * represents the number of columns to be read from the server's <code>Results</code>
- * object.</p>
+ * object.
  * <p> All the column positions are one based. </code>
  */
 
@@ -276,7 +276,7 @@ interface JDBCColumnPositions {
      * returned by getIndexInfo method on DatabaseMetaData. The class has constants
      * for columns whose values are to be hardcoded in MMDatabaseMetaData object.
      * <code>MAX_COLUMNS</code> is the number of columns to be read from server's
-     * results from the query against System.KeyElements table.</p>
+     * results from the query against System.KeyElements table.
      */
     interface INDEX_INFO {
 

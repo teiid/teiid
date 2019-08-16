@@ -68,9 +68,9 @@ import org.teiid.query.util.Options;
 
 
 /**
- * <p>Default implementation of BufferManager.</p>
+ * <p>Default implementation of BufferManager.
  * Responsible for creating/tracking TupleBuffers and providing access to the StorageManager.
- * </p>
+ *
  *
  * TODO: add detection of pinned batches to prevent unnecessary purging of non-persistent batches
  *       - this is not necessary for already persistent batches, since we hold a weak reference

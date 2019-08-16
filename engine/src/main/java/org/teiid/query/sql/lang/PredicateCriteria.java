@@ -23,10 +23,10 @@ package org.teiid.query.sql.lang;
 /**
  * <p>This abstract class represents a predicate criteria, which involves some
  * statement involving expressions and can be evaluated in the context of
- * a single row of data to be either true or false.</p>
+ * a single row of data to be either true or false.
  *
  * <p>Predicate criteria can be composed into more sophisticated criteria
- * using "OR" and "AND" logical operators.</P>
+ * using "OR" and "AND" logical operators.
  */
 public abstract class PredicateCriteria extends Criteria {
 

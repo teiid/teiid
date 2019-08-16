@@ -206,6 +206,8 @@
         </activation>
         <properties>
             <basepom.check.skip-dependency-versions-check>false</basepom.check.skip-dependency-versions-check>
+            <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
+            <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
         </properties>
         <modules>
             <module>wildfly</module>

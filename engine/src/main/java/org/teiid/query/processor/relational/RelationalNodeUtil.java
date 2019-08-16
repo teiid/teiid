@@ -38,7 +38,7 @@ public class RelationalNodeUtil {
 
     /**
      * Decides whether a command needs to be executed.
-     * <br/><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
+     * <br><b>NOTE: This method has a side-effect.</b> If the criteria of this command always evaluate to true,
      * and the simplifyCriteria flag is true, then the command criteria are set to null.
      * @param command
      * @param simplifyCriteria whether to simplify the criteria of the command if they always evaluate to true

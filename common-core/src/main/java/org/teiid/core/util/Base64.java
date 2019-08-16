@@ -21,27 +21,27 @@ package org.teiid.core.util;
 import java.nio.charset.Charset;
 
 /**
- * <p>Encodes and decodes to and from Base64 notation.</p>
- * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.</p>
+ * <p>Encodes and decodes to and from Base64 notation.
+ * <p>Homepage: <a href="http://iharder.net/base64">http://iharder.net/base64</a>.
  *
  * <p>The <tt>options</tt> parameter, which appears in a few places, is used to pass
  * several pieces of information to the encoder. In the "higher level" methods such as
  * encodeBytes( bytes, options ) the options parameter can be used to indicate such
  * things as first gzipping the bytes before encoding them, not inserting linefeeds
  * (though that breaks strict Base64 compatibility), and encoding using the URL-safe
- * and Ordered dialects.</p>
+ * and Ordered dialects.
  *
  * <p>The constants defined in Base64 can be OR-ed together to combine options, so you
- * might make a call like this:</p>
+ * might make a call like this:
  *
  * <code>String encoded = Base64.encodeBytes( mybytes, Base64.GZIP | Base64.DONT_BREAK_LINES );</code>
  *
- * <p>to compress the data before encoding it and then making the output have no newline characters.</p>
+ * <p>to compress the data before encoding it and then making the output have no newline characters.
  *
  *
  * <p>
  * Change Log:
- * </p>
+ *
  * <ul>
  *  <li>v2.2.2 - Fixed encodeFileToFile and decodeFileToFile to use the
  *   Base64.InputStream class to encode and decode on the fly which uses
@@ -98,7 +98,7 @@ import java.nio.charset.Charset;
  * plenty of well-wishing instead!
  * Please visit <a href="http://iharder.net/base64">http://iharder.net/base64</a>
  * periodically to check for updates or to contribute improvements.
- * </p>
+ *
  *
  * @author Robert Harder
  * @author rob@iharder.net
@@ -206,9 +206,9 @@ public class Base64
      * the <var>source</var> array or <var>destOffset</var> + 4 for
      * the <var>destination</var> array.
      * The actual number of significant bytes in your array is
-     * given by <var>numSigBytes</var>.</p>
+     * given by <var>numSigBytes</var>.
      * <p>This is the lowest level of the encoding methods with
-     * all possible parameters.</p>
+     * all possible parameters.
      *
      * @param source the array to convert
      * @param srcOffset the index where conversion begins
@@ -339,7 +339,7 @@ public class Base64
      * This method returns the actual number of bytes that
      * were converted from the Base64 encoding.
      * <p>This is the lowest level of the decoding methods with
-     * all possible parameters.</p>
+     * all possible parameters.
      *
      *
      * @param source the array to convert

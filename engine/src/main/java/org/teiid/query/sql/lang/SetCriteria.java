@@ -35,7 +35,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 /**
  * A criteria which is true is the expression's value is a member in a list
- * of values.  This criteria can be represented as "<expression> IN (<expr>, ...)".
+ * of values.  This criteria can be represented as "&lt;expression&gt; IN (&lt;expr&gt;, ...)".
  */
 public class SetCriteria extends AbstractSetCriteria {
 

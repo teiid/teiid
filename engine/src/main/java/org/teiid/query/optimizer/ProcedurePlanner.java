@@ -51,14 +51,14 @@ import org.teiid.query.util.CommandContext;
 /**
  * <p> This prepares an {@link org.teiid.query.processor.proc.ProcedurePlan ProcedurePlan} from
  * a CreateUpdateProcedureCommand {@link org.teiid.query.sql.proc.CreateProcedureCommand CreateUpdateProcedureCommand}.
- * </p>
+ *
  */
 public final class ProcedurePlanner implements CommandPlanner {
 
     /**
      * <p>Produce a ProcessorPlan for the CreateUpdateProcedureCommand on the current node
      * of the CommandTreeNode, the procedure plan construction involves using the child
-     * processor plans.</p>
+     * processor plans.
      * @param metadata source of metadata
      * @return ProcessorPlan This processorPlan is a <code>ProcedurePlan</code>
      * @throws QueryPlannerException indicating a problem in planning
@@ -110,7 +110,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 
     /**
      * <p> Plan a {@link Block} object, recursively plan each statement in the given block and
-     * add the resulting {@link ProgramInstruction} a new {@link Program} for the block.</p>
+     * add the resulting {@link ProgramInstruction} a new {@link Program} for the block.
      * @param block The <code>Block</code> to be planned
      * @param metadata Metadata used during planning
      * @param debug Boolean determining if procedure plan needs to be printed for debug purposes
@@ -170,7 +170,7 @@ public final class ProcedurePlanner implements CommandPlanner {
      * <p> Plan a {@link Statement} object, depending on the type of the statement construct the appropriate
      * {@link ProgramInstruction} return it to added to a {@link Program}. If the statement references a
      * <code>Command</code>, it looks up the child CommandTreeNodes to get appropriate child's ProcessrPlan
-     * and uses it for constructing the necessary instruction.</p>
+     * and uses it for constructing the necessary instruction.
      * @param statement The statement to be planned
      * @param metadata Metadata used during planning
      * @param debug Boolean determining if procedure plan needs to be printed for debug purposes

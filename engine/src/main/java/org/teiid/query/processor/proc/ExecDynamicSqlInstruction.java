@@ -81,7 +81,7 @@ import org.teiid.query.validator.ValidationVisitor;
  * Executing this instruction does not modify the values of any of the
  * variables, hence it's results are not important so they are removed
  * immediately.
- * </p>
+ *
  */
 public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
@@ -126,7 +126,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
      * execution need not be stored for further processing. The results are
      * removed from the buffer manager immediately after execution. The program
      * counter is incremented after execution of the plan.
-     * </p>
+     *
      *
      * @throws BlockedException
      *             if this processing the plan throws a currentVarContext

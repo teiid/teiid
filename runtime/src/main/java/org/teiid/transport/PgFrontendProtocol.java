@@ -44,7 +44,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
 /**
- * Represents the messages going from PG ODBC Client --> back end Server
+ * Represents the messages going from PG ODBC Client --&gt; back end Server
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")

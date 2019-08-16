@@ -55,7 +55,7 @@ import org.teiid.query.util.CommandContext;
  * <p>Converts a SQL-string to an object version of a query.  This
  * QueryParser can be reused but is NOT thread-safe as the parser uses an
  * input stream.  Putting multiple queries into the same stream will result
- * in unpredictable and most likely incorrect behavior.</p>
+ * in unpredictable and most likely incorrect behavior.
  */
 public class QueryParser implements Parser {
 

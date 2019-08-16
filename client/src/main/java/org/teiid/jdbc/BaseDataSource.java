@@ -40,7 +40,7 @@ import org.teiid.net.TeiidURL;
  * and set using setter methods, and where the getter and setter methods follow the JavaBean
  * naming convention (e.g., <code>get</code><i>PropertyName</i><code>() : </code><i>PropertyType</i>
  * and <code>set</code><i>PropertyName</i><code>(</code><i>PropertyType</i><code>) : void</code>).
- * </p>
+ *
  * The {@link javax.sql.XADataSource} interface is almost identical to the {@link javax.sql.DataSource}
  * interface, but rather than returning {@link java.sql.Connection} instances, there are methods that
  * return {@link javax.sql.XAConnection} instances that can be used with distributed transactions.
@@ -119,7 +119,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     /** Support partial results mode or not.*/
     private String partialResultsMode;
 
-    /** Default fetch size, <= 0 indicates not set. */
+    /** Default fetch size, &lt;= 0 indicates not set. */
     private int fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
 
     /** Whether to use result set cache if it available **/
@@ -439,7 +439,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
 
     /**
-<     * Sets the name of the application.  Supplying this property may allow an administrator of a
+     * Sets the name of the application.  Supplying this property may allow an administrator of a
      * Teiid Server to better identify individual connections and usage patterns.
      * This property is <i>optional</i>.
      * @param applicationName The applicationName to set
@@ -572,7 +572,6 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * This is the default mode.
      * The {@link #TXN_WRAP_AUTO} constant value is provided for convenience.</li>
      * </ul>
-     * </p>
      * @param transactionAutoWrap The transactionAutoWrap to set
      */
     public void setAutoCommitTxn(String transactionAutoWrap) {
@@ -635,7 +634,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * if it is considered valid.
      * <p>
      * This method checks to see that the value is one of the allowable values.
-     * </p>
+     *
      * @param autoWrap a possible value for the auto wrap property.
      * @return the reason why the property is invalid, or null if it is considered valid
      * @see #setAutoCommitTxn(String)

@@ -27,10 +27,10 @@ import org.teiid.query.validator.UpdateValidator.UpdateInfo;
  * be nested to indicate data queries built from other virtual or temporary groups.  The
  * root node of a tree of QueryNode objects should be defining a virtual group.  Leaves
  * should be other physical or virtual groups.  Internal nodes of the tree are temporary
- * groups.</p>
+ * groups.
  *
  * <p>A QueryNode must have a group name and a query.  It may have a command (just used
- * for convenient storage during conversion - this is not persisted).</p>
+ * for convenient storage during conversion - this is not persisted).
  */
 public class QueryNode {
 

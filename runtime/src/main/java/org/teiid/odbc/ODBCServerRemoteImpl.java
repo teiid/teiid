@@ -78,8 +78,6 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
 import org.teiid.transport.pg.TimestampUtils;
 
 /**
- * While executing the multiple prepared statements I see this bug currently
- * http://pgfoundry.org/tracker/?func=detail&atid=538&aid=1007690&group_id=1000125
  */
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 

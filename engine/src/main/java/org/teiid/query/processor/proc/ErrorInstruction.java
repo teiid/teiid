@@ -33,7 +33,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
  * <p> This instruction updates the current variable context with the Variable defined using
- * the declare statement that is used in constructing this instruction.</p>
+ * the declare statement that is used in constructing this instruction.
  */
 public class ErrorInstruction extends ProgramInstruction {
 

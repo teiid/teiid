@@ -38,11 +38,11 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  * <p>This visitor class will traverse a language object tree and collect all group
  * symbol references it finds.  It uses a collection to collect the groups in so
  * different collections will give you different collection properties - for instance,
- * using a Set will remove duplicates.</p>
+ * using a Set will remove duplicates.
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and get the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class GroupCollectorVisitor extends LanguageVisitor {
 

@@ -38,7 +38,7 @@ import org.teiid.query.sql.symbol.Symbol;
 /**
  * <p> This class is used to update LanguageObjects by replacing one set of symbols with
  * another.  There is one abstract method which must be overridden to define how the
- * mapping lookup occurs.</p>
+ * mapping lookup occurs.
  */
 public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisitor {
 
@@ -61,7 +61,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
     /**
      * <p> This method updates the <code>Insert</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Insert object to be updated with physical groups/elements
      */
     public void visit(Insert obj) {
@@ -87,7 +87,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
     /**
      * <p> This method updates the <code>Delete</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Delete object to be updated with physical groups
      */
     public void visit(Delete obj) {
@@ -100,7 +100,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
     /**
      * <p> This method updates the <code>Update</code> object it receives as an
      * argument by replacing the virtual groups/elements with their physical
-     * counterparts.</p>
+     * counterparts.
      * @param obj The Update object to be updated with physical groups
      */
     public void visit(Update obj) {
@@ -181,7 +181,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
 
     /**
      * <p> This method looks up the symbol map for a physical <code>ElementSymbol</code>
-     * given a virtual <code>ElementSymbol</code> object.</p>
+     * given a virtual <code>ElementSymbol</code> object.
      * @param obj The virtual <code>ElementSymbol</code> object whose physical counterpart is returned
      * @return The physical <code>ElementSymbol</code> object or null if the object could not be mapped
      */
@@ -198,7 +198,7 @@ public abstract class AbstractSymbolMappingVisitor extends ExpressionMappingVisi
 
     /**
      * <p> This method looks up the symbol map for a physical <code>GroupSymbol</code>
-     * given a virtual <code>GroupSymbol</code> object.</p>
+     * given a virtual <code>GroupSymbol</code> object.
      * @param obj The virtual <code>GroupSymbol</code> object whose physical counterpart is returned
      * @return The physical <code>GroupSymbol</code> object or null if the object could not be mapped
      */

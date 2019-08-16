@@ -34,7 +34,7 @@ import org.teiid.translator.TypeFacility;
  * Base class for handling the convert function.
  * <p>Convert is by far the most complicated pushdown function since it actually
  * represents a matrix of possible functions. Additionally not every source supports
- * the same semantics as our conversions.</p>
+ * the same semantics as our conversions.
  * <p>Each instance of this class makes a best effort at handling converts for for a
  * given source - compensating for differing string representation, the lack a time type
  * etc.

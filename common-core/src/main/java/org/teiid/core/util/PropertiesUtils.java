@@ -83,7 +83,7 @@ public final class PropertiesUtils {
      * method of <code>Properties</code> inherited from <code>java.util.Hashtable</code>.
      * The problem with that method is that, since it is inherited from
      * <code>Hashtable</code>, <i>default</i> properties are lost.
-     * </p>
+     *
      * <p>For example, the following code
      * <pre><code>
      * Properties a;

@@ -27,7 +27,7 @@ import org.teiid.query.sql.symbol.*;
  * and perform some action on some or all of the language objects that are visited.
  * The LanguageVisitor is extended to create a concrete visitor and some or all of
  * the public visit methods should be overridden to provide the visitor functionality.
- * These public visit methods SHOULD NOT be called directly.</p>
+ * These public visit methods SHOULD NOT be called directly.
  */
 @SuppressWarnings("unused")
 public abstract class LanguageVisitor {

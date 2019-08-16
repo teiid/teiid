@@ -21,7 +21,7 @@ package org.teiid.jdbc;
 /* <p> This class contains constants indicating names of the columns in the
  *  result sets returned by methods on DatabaseMetaData. Each inner class represents
  *  a particular method and the class attributes give the names of the columns on
- *  methods ResultSet.</p>
+ *  methods ResultSet.
  */
 
 interface JDBCColumnNames {

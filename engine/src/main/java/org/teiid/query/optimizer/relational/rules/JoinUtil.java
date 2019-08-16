@@ -43,10 +43,10 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 /**
  * <p>
  * Utility methods for query planning related to joins.
- * </p><p>
+ * <p>
  * In some cases, a query plan can be made more optimal via a few possible
  * criteria/join optimizations.
- * </p>
+ *
  */
 public class JoinUtil {
 

@@ -26,7 +26,7 @@ import org.teiid.query.sql.symbol.Expression;
 /**
  * <p> This class represents a error assignment statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a <code>Block</code>.  This
- * this object holds and error message.</p>
+ * this object holds and error message.
  */
 public class RaiseStatement extends Statement implements ExpressionStatement {
 

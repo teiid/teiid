@@ -44,7 +44,6 @@ public class Credentials implements Serializable {
 
     /**
      * Get the Credentials as a char[].
-     * @returns The Credentials in a char[].
      */
     public char[] getCredentialsAsCharArray() {
         return this.credentials==null?null:this.credentials.toCharArray();

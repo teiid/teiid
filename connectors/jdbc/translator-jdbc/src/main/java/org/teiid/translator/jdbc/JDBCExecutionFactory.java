@@ -1432,7 +1432,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * Provides a hook to call source specific logic when
      * a connection is obtained.
      *
-     * defect request 13979 & 13978
+     * defect request 13979 &amp; 13978
      */
     public void obtainedConnection(Connection connection) {
         if (initialConnection.compareAndSet(true, false)) {

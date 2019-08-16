@@ -40,7 +40,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  * <p> This instruction updates the current variable context with a value for the Variable
  * defined using a DeclareInstruction, the variable value is obtained by either processing
  * a expression or a command(stored as a processplan). The Processing of the command is
- * expected to result in 1 column, 1 row tuple.</p>
+ * expected to result in 1 column, 1 row tuple.
  */
 public class AssignmentInstruction extends ProgramInstruction {
 
@@ -57,7 +57,7 @@ public class AssignmentInstruction extends ProgramInstruction {
      * defined using a DeclareInstruction, the variable value is obtained by either processing
      * a expression or a command(stored as a processplan). The Processing of the command is
      * expected to result in 1 column, 1 row tuple, if more than a row is returned an exception
-     * is thrown. Also updates the program counter.</p>
+     * is thrown. Also updates the program counter.
      * @throws BlockedException
      * @throws TeiidComponentException if error processing command or expression on this instruction
      */

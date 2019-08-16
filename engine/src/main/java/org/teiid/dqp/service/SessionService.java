@@ -41,7 +41,7 @@ import org.teiid.vdb.runtime.VDBKey;
  * state. Note that this service does <i>not</i> deal with authentication explicitly,
  * but may use a membership service provider to authenticate some
  * requests.
- * </p>
+ *
  */
 public interface SessionService {
     public static String NAME = "SessionService"; //$NON-NLS-1$

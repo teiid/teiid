@@ -24,7 +24,7 @@ import org.teiid.core.BundleUtil;
 /**
  * An <code>AdminProcessingException</code> indicates that an error occured during processing as a result
  * of user input.  This exception is the result of handling an invalid user
- * request, not the result of an internal error.</p>
+ * request, not the result of an internal error.
  *
  * <p>This exception class is capable of containing multiple exceptions.  See
  * {@link AdminException} for details.

@@ -899,7 +899,7 @@ public class ResolverVisitor extends LanguageVisitor {
     /**
      * Resolves criteria "a BETWEEN b AND c". If type conversions are necessary,
      * this method attempts the following implicit conversions:
-     * <br/>
+     * <br>
      * <ol type="1" start="1">
      *   <li>convert the lower and upper expressions to the criteria expression's type, or</li>
      *   <li>convert the criteria and upper expressions to the lower expression's type, or</li>

@@ -64,7 +64,7 @@ import org.teiid.translator.SourceSystemFunctions;
 /**
  * <p>
  * The SQLStringVisitor will visit a set of language objects and return the corresponding SQL string representation.
- * </p>
+ *
  */
 public class SQLStringVisitor extends LanguageVisitor {
 

@@ -35,7 +35,7 @@ import org.teiid.query.sql.proc.Statement.Labeled;
  * to cursor through a result set.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
  * a block, a select statement and a cursor.
- * determines which block should be executed..</p>
+ * determines which block should be executed..
  */
 public class LoopStatement extends Statement implements SubqueryContainer, Labeled {
     private String cursorName;

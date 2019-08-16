@@ -254,7 +254,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
     }
 
     /**
-     * <p>Utility to convert the pattern into a different match syntax</p>
+     * <p>Utility to convert the pattern into a different match syntax
      */
     public static class PatternTranslator {
         private char[] reserved;

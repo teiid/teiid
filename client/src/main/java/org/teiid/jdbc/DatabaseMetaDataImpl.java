@@ -411,7 +411,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Checks whether a DDL statement within a transaction forces the transaction
-     * to commit.</p>
+     * to commit.
      * @return if so return true else return false.
      * @throws SQLException Should never occur.
      */
@@ -420,9 +420,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Checks whether a DDL statement within a transaction is ignored.</p>
+     * <p>Checks whether a DDL statement within a transaction is ignored.
      * @return if so return true, else false
-     * @throw SQLException Should never occur.
+     * @throws SQLException Should never occur.
      */
     public boolean dataDefinitionIgnoredInTransactions() throws SQLException {
         return false;
@@ -435,9 +435,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Did getMaxRowSize() include LONGVARCHAR and LONGVARBINARY
-     * blobs?</p>
+     * blobs?
      * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public boolean doesMaxRowSizeIncludeBlobs() throws SQLException {
         return false;
@@ -523,7 +523,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the String object used to separate a catalog name and a table name
      * @return String delimiter
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public String getCatalogSeparator() throws SQLException {
         return "."; //$NON-NLS-1$
@@ -785,7 +785,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Get the name of this JDBC driver
      * @return String representing the driver's name
-     * @throws SQLException, if the connection is already closed.
+     * @throws SQLException if the connection is already closed.
      */
     public String getDriverName() throws SQLException {
         return TeiidDriver.getInstance().getDriverName();
@@ -795,7 +795,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>This method gets the version of this JDBC driver. It combines the major
      * and minor version numbers
      * @return String representing the driver's version
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public String getDriverVersion() throws SQLException {
         return getDriverMajorVersion()+"."+getDriverMinorVersion (); //$NON-NLS-1$
@@ -844,7 +844,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>Gets the extra characters that can be used in unquoted identifier names
      * (those beyond a-z, 0-9, and _)
      * @return String representing extra charachters that can be used in identifier names.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public String getExtraNameCharacters() throws SQLException {
         return EXTRA_CHARS;// ".@" is use in fully qualified identifier names
@@ -854,7 +854,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>Get's the string used to quote SQL identifiers. This returns a " " if identifier
      * quoting is not supported.
      * @return string used to quote SQL identifiers.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public String getIdentifierQuoteString() throws SQLException {
         return DOUBLE_QUOTE;
@@ -974,7 +974,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>Gets the maximum number of hexadecimal characters allowed in an inline
      * binary literal
      * @return int value giving maximum length of a binary literal
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxBinaryLiteralLength() throws SQLException {
         return NO_LIMIT;
@@ -983,7 +983,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a catalog name
      * @return int value giving maximum length of a catalog name
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxCatalogNameLength() throws SQLException {
         return MAX_CATALOG_NAME_LENGTH;
@@ -992,7 +992,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a character literal
      * @return int value giving maximum length of a charachter literal
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxCharLiteralLength() throws SQLException {
         return NO_LIMIT;
@@ -1001,7 +1001,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a column name
      * @return int value giving maximum length of the column name
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxColumnNameLength() throws SQLException {
         return MAX_COLUMN_NAME_LENGTH;
@@ -1010,7 +1010,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of columns allowed in a GROUP BY clause
      * @return int values giving max columns in GROUP BY
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxColumnsInGroupBy() throws SQLException {
         return NO_LIMIT;
@@ -1019,7 +1019,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of columns allowed in an index
      * @return int gives maximum columns in an index.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxColumnsInIndex() throws SQLException {
         return NO_LIMIT;
@@ -1028,7 +1028,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of columns allowed in a ORDER BY clause
      * @return int gives maximum columns in an order by.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxColumnsInOrderBy() throws SQLException {
         return NO_LIMIT;
@@ -1037,7 +1037,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of columns allowed in a SELECT clause
      * @return int gives maximum columns in a select.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxColumnsInSelect() throws SQLException {
         return NO_LIMIT;
@@ -1062,7 +1062,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a procedure name
      * @return int gives maximum length of procedure name.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxProcedureNameLength() throws SQLException {
         return MAX_PROCEDURE_NAME_LENGTH;
@@ -1071,7 +1071,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of bytes allowed in a single row
      * @return int max row size in the result set.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxRowSize() throws SQLException {
         return NO_LIMIT;
@@ -1080,7 +1080,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a schema name
      * @return int maximum length of a schema.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxSchemaNameLength() throws SQLException {
         return NO_LIMIT;
@@ -1089,7 +1089,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in an SQL statement
      * @return maximum length of a statement
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxStatementLength() throws SQLException {
         return NO_LIMIT;
@@ -1099,7 +1099,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>Gets the maximum number of active statements that may be open on one
      * connection at any time
      * @return max number of open statements on a connection.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxStatements() throws SQLException {
         return NO_LIMIT;
@@ -1108,7 +1108,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a table name
      * @return max length of table name.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxTableNameLength() throws SQLException {
         return MAX_TABLE_NAME_LENGTH;
@@ -1117,7 +1117,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of tables allowed in a SELECT clause
      * @return max tables in a select.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxTablesInSelect() throws SQLException {
         return NO_LIMIT;
@@ -1126,7 +1126,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the maximum number of characters allowed in a user name
      * @return max length of user name.
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public int getMaxUserNameLength() throws SQLException {
         return MAX_USER_NAME_LENGTH;
@@ -1360,7 +1360,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * <p>Gets the string that can be used to escape "_" or "%" wildcards in the
      * string search pattern used for search parameters
      * @return String that is used for escaping wildcards
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public String getSearchStringEscape() throws SQLException {
         return ESCAPE_SEARCH_STRING;
@@ -1795,9 +1795,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Checks whether a catalog name appears at the start of a fully qualified table
-     * name. If it is not at the beginning, it appears at the end.</p>
+     * name. If it is not at the beginning, it appears at the end.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean isCatalogAtStart() throws SQLException {
         return false;
@@ -1813,9 +1813,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Indicates whether updates made to a LOB are made on a copy or directly to the LOB. </p>
+     * <p>Indicates whether updates made to a LOB are made on a copy or directly to the LOB.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean locatorsUpdateCopy() throws SQLException {
         return false;
@@ -1823,45 +1823,45 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Checks whether the concatenation of a NULL value and a non-NULL value results
-     * in a NULL value.</p>
+     * in a NULL value.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean nullPlusNonNullIsNull() throws SQLException {
         return true;
     }
 
     /**
-     * <p>Checks whether NULL values are sorted at the end regardless of sort order.</p>
+     * <p>Checks whether NULL values are sorted at the end regardless of sort order.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean nullsAreSortedAtEnd() throws SQLException {
         return nullSort == NullSort.AtEnd;
     }
 
     /**
-     * <p>Checks whether NULL values are sorted at the start regardless of sort order.</p>
+     * <p>Checks whether NULL values are sorted at the start regardless of sort order.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean nullsAreSortedAtStart() throws SQLException {
         return nullSort == NullSort.AtStart;
     }
 
     /**
-     * <p>Checks whether NULL values are sorted high.</p>
+     * <p>Checks whether NULL values are sorted high.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean nullsAreSortedHigh() throws SQLException {
         return nullSort == NullSort.High;
     }
 
     /**
-     * <p>Checks whether NULL values are sorted low.</p>
+     * <p>Checks whether NULL values are sorted low.
      * @return if so return true, else false.
-     * @throws SQLException, should never occur.
+     * @throws SQLException should never occur.
      */
     public boolean nullsAreSortedLow() throws SQLException {
         return nullSort == NullSort.Low;
@@ -1942,9 +1942,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Indicates whether the driver supports batch updates.</p>
+     * <p>Indicates whether the driver supports batch updates.
      * @return true if the driver supports batch updates; false otherwise
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      */
     public boolean supportsBatchUpdates() throws SQLException {
         return true;
@@ -2132,10 +2132,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     /**
-     * <p>Does the database support the given result set type?</p>
+     * <p>Does the database support the given result set type?
      * @param type defined in <code>java.sql.ResultSet</code>
      * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
+     * @throws SQLException should never occur
      * @see Connection
      */
     public boolean supportsResultSetType(int type) throws SQLException {

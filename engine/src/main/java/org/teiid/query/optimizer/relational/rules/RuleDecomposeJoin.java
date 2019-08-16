@@ -59,7 +59,7 @@ import org.teiid.query.util.CommandContext;
  *                  source
  * inner join         union all
  *   source             inner join
- *     union all  =>      source
+ *     union all  =&gt;      source
  *       a                  a
  *       b                source
  *   source                 c

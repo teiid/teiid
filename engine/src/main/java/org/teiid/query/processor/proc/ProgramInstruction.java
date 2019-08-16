@@ -25,14 +25,14 @@ import org.teiid.jdbc.TeiidSQLException;
 
 
 /**
- * <p>Abstract superclass of all program instructions.</p>
+ * <p>Abstract superclass of all program instructions.
  *
  * <p>All processor
  * instructions need to be cloneable, but it most cases the default
  * Object.clone operation will suffice, since in most cases the processing
  * instructions will be stateless, or the state will be immutable.
  * The exception to this are instructions that have sub programs in them -
- * those sub programs need to be cloned.</p>
+ * those sub programs need to be cloned.
  */
 public abstract class ProgramInstruction implements Cloneable {
 

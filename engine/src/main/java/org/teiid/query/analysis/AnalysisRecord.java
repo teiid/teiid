@@ -43,7 +43,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
  * <p>The AnalysisRecord holds all debug/analysis information for
- * a particular query as it is executed.  This includes:</p>
+ * a particular query as it is executed.  This includes:
  * <UL>
  * <LI>Flags indicating what should be recorded</LI>
  * <LI>Query plan, if requested</LI>

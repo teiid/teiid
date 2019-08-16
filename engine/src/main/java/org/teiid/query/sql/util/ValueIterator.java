@@ -24,12 +24,12 @@ import org.teiid.core.TeiidComponentException;
  * <p>Interface for interating through Expressions or values.  It may return
  * instances of Expression (which then have to be evaluated) or it may
  * return some Object constant value - this should be checked for after
- * calling {@link #next next}</p>
+ * calling {@link #next next}
  *
  * <p>This interface is meant to abstract the details of how the values are
  * stored and retrieved, if they are even stored in memory or not, etc. etc.
  * An implementation instance may or may not be resettable and therefore
- * reusable - see {@link #reset reset}.</p>
+ * reusable - see {@link #reset reset}.
  */
 public interface ValueIterator{
 

@@ -29,7 +29,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * This class represents a SQL Delete statement of the form:
- * "DELETE FROM <group> [WHERE <criteria>]".
+ * "DELETE FROM &lt;group&gt; [WHERE &lt;criteria&gt;]".
  * Implements Command interface.
  */
 public class Delete extends ProcedureContainer implements FilteredCommand {

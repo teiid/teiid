@@ -34,7 +34,7 @@ import org.teiid.query.util.CommandContext;
  * <p>The common interface of all planners which take a user's command
  * object and produce a
  * {@link org.teiid.query.processor.ProcessorPlan ProcessorPlan}
- * object, which is a plan for executing the query.</p>
+ * object, which is a plan for executing the query.
  */
 public interface CommandPlanner {
 

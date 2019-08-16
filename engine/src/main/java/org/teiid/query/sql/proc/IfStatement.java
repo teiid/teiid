@@ -28,7 +28,7 @@ import org.teiid.query.sql.lang.Criteria;
  * <p> This class represents an if-else statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
  * an IF block and an optional ELSE block, it also holds reference to the criteria that
- * determines which block should be executed..</p>
+ * determines which block should be executed..
  */
 public class IfStatement extends Statement  {
 

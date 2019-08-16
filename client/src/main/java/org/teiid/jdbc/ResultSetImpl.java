@@ -206,7 +206,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      }
 
      /**
-      * <p>Get a java object based on the column index for the current row.</p>
+      * <p>Get a java object based on the column index for the current row.
       * @param column The index of the column whose value needs to be fetched.
       * @return The value of the column as an object.
       * @throws SQLException if a results access error occurs or transform fails.
@@ -844,7 +844,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * <p>
      * This method returns the meta data of the result set, such as the number,
      * types and properties of this resultSets columns.
-     * </p>
+     *
      *
      * @return ResultSerMetaData object for these results.
      * @throws SQLException
@@ -870,7 +870,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * Retrieves the Statement object that produced this ResultSet object.
      *
      * @return a Statement object.
-     *     </p>
+     *
      * @throws SQLException
      *         if the there is an error accesing results
      */
@@ -900,7 +900,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * Determines whether the cursor is after the last row in this ResultSet
      * object. This method should be called only if the result set is
      * scrollable.
-     * </p>
+     *
      *
      * @return true if the cursor is after the last row in the resultSet.
      * @throws SQLException
@@ -919,7 +919,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * Determines whether the cursor is before the first row in this ResultSet
      * object. This method should be called only if the result set is
      * scrollable.
-     * </p>
+     *
      *
      * @return true if the cursor is before the last row in the resultSet;false
      *     if the cursor is at any other position or the result set contains no
@@ -948,7 +948,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * <p>
      * Moves the cursor to the last row in the in this ResultSet object. This
      * method should be called only if the result set is scrollable.
-     * </p>
+     *
      *
      * @return true if the cursor is on a validRow, false otherwise or if no
      *     rows exist.
@@ -973,7 +973,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * <p>
      * Moves the cursor to the end of the result set, just after the last row.
      * Has no effect if the result set contains no rows.
-     * </p>
+     *
      *
      * @throws SQLException
      *         if a results access error occurs or the result set type is
@@ -989,7 +989,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
      * <p>
      * Moves the cursor to the front of the result set, just before the first
      * row. Has no effect if the result set contains no rows.
-     * </p>
+     *
      *
      * @exception SQLException
      *         if a results can not be accessed or the result set type is
@@ -1004,7 +1004,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     /**
      * <p>
      * Moves the cursor to the first row in this ResultSet object.
-     * </p>
+     *
      *
      * @return true if the cursor is on valid row, false if there are no rows in
      *     the resultset.

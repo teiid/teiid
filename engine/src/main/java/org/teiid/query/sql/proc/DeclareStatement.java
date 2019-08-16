@@ -29,7 +29,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * <p> This class represents a statement used to declare variables in the
- * storedprocedure language.</p>
+ * storedprocedure language.
  */
 public class DeclareStatement extends AssignmentStatement {
 

@@ -51,7 +51,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
 
 /**
  * <p>This visitor class will traverse a language object tree, and determine
- * if the current expression can be evaluated</p>
+ * if the current expression can be evaluated
  */
 public class EvaluatableVisitor extends LanguageVisitor {
 

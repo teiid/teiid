@@ -332,7 +332,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      * call stack of the ProcessorEnvironment each time, and not
      * cache things in local variables.  If the current Program's
      * current instruction is null, then it's time to pop that
-     * Program off the stack.</p>
+     * Program off the stack.
      *
      * @return List a single tuple containing one Integer: the update
      * count resulting from the procedure execution.
@@ -577,7 +577,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
      * <p> Get the current <code>VariavleContext</code> on this environment.
      * The VariableContext is updated with variables and their values by
      * {@link ProgramInstruction}s that are part of the ProcedurePlan that use
-     * this environment.</p>
+     * this environment.
      * @return The current <code>VariariableContext</code>.
      */
     public VariableContext getCurrentVariableContext() {

@@ -49,7 +49,7 @@ import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.AutoCleanupUtil.Removable;
 
 /**
- * <p/>
+ * <p>
  * This implementation is backed by a zip file.  The provided file must be owned by this instance; otherwise, if the
  * file disappears unexpectedly, the filesystem will malfunction.
  *

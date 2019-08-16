@@ -40,7 +40,7 @@ import org.teiid.core.util.ObjectInputStreamWithClassloader;
 
 
 /**
- * <p>Public methods in this class throw only <code>CryptoException</code>s. </p>
+ * <p>Public methods in this class throw only <code>CryptoException</code>s.
  */
 public class BasicCryptor implements Cryptor {
 

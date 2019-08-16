@@ -264,7 +264,7 @@ public class CodeByteStream {
      * Writes the given value using Gamma coding, in which positive integer x
      * is represented by coding floor(log2(x) in unary followed by the value
      * of x - 2**floor(log2(x)) in binary.
-     * The value must be >= 1.
+     * The value must be &gt;= 1.
      */
     public void writeGamma(int value) {
         if (value < 1)
@@ -314,7 +314,7 @@ public class CodeByteStream {
         }
     }
     /**
-     * Write the given value in unary.  The value must be >= 1.
+     * Write the given value in unary.  The value must be &gt;= 1.
      */
     public void writeUnary(int value) {
         if (value < 1)

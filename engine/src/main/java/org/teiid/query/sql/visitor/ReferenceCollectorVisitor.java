@@ -29,11 +29,11 @@ import org.teiid.query.sql.symbol.Reference;
 
 /**
  * <p>This visitor class will traverse a language object tree and collect all
- * references it finds.  </p>
+ * references it finds.
  *
  * <p>The easiest way to use this visitor is to call the static methods which create
  * the visitor (and possibly the collection), run the visitor, and return the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class ReferenceCollectorVisitor extends LanguageVisitor {
 

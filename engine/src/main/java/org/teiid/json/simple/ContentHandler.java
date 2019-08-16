@@ -10,7 +10,7 @@ import java.io.IOException;
  * @see org.xml.sax.ContentHandler
  * @see JSONParser#parse(java.io.Reader, ContentHandler, boolean)
  *
- * @author FangYidong<fangyidong@yahoo.com.cn>
+ * @author FangYidong fangyidong@yahoo.com.cn
  */
 public interface ContentHandler {
     /**

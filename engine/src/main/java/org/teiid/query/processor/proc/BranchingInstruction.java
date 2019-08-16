@@ -26,7 +26,7 @@ import org.teiid.query.sql.proc.BranchingStatement;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 
 /**
- * <p>This {@link ProgramInstruction} continue with the next loop when processed</p>.
+ * <p>This {@link ProgramInstruction} continue with the next loop when processed.
  */
 public class BranchingInstruction extends ProgramInstruction {
 

@@ -36,7 +36,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 /**
  * <p> This class represents a update procedure in the storedprocedure language.
  * It extends the <code>Command</code> and represents the command for Insert , Update
- * and Delete procedures.</p>
+ * and Delete procedures.
  */
 public class CreateProcedureCommand extends Command {
 

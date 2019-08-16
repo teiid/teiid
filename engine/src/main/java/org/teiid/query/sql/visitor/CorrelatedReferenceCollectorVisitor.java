@@ -43,11 +43,11 @@ import org.teiid.query.sql.symbol.Reference;
 
 /**
  * <p>This visitor class will traverse a language object tree and collect references that
- * correspond to correlated subquery references.</p>
+ * correspond to correlated subquery references.
  *
  * <p>The easiest way to use this visitor is to call the static method which creates the
  * the visitor by passing it the Language Object and the variable context to be looked up.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 
@@ -103,7 +103,7 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
     }
 
     /**
-     * <p>Helper to use this visitor.</p>
+     * <p>Helper to use this visitor.
      * @param obj The Language object that is to be visited
      * @param groupSymbols Collection of GroupSymbols to restrict collection to - these are the groups
      * that the client (outer query) is interested in references to from the correlated subquery

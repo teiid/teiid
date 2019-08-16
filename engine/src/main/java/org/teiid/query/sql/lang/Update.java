@@ -31,7 +31,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 /**
  * Represents a SQL Update statement of the form:
- * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
+ * "UPDATE &lt;group&gt; SET &lt;element&gt; = &lt;expression&gt;, ... [WHERE &lt;criteria&gt;]".
  */
 public class Update extends ProcedureContainer implements FilteredCommand {
 
@@ -66,7 +66,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     /**
      * Construct with group and change list
      * @param group Group to by updated
-     * @param changeList List of CompareCriteria that represent Element->expression updates
+     * @param changeList List of CompareCriteria that represent Element and expression updates
      */
     public Update(GroupSymbol group, SetClauseList changeList) {
         this.group = group;
@@ -76,7 +76,7 @@ public class Update extends ProcedureContainer implements FilteredCommand {
     /**
      * Construct with group, change list, and criteria
      * @param group DataGroupID that represents the group being updated
-     * @param changeList of changeCriteria that represent Element->value pairings
+     * @param changeList of changeCriteria that represent Element and value pairings
      * @param criteria Criteria that defines what rows get updated
      */
     public Update(GroupSymbol group, SetClauseList changeList, Criteria criteria) {

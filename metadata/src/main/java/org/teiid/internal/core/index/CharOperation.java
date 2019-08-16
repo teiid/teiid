@@ -164,14 +164,14 @@ public final class CharOperation {
      *    prefix = { 'a' , 'B' }
      *    name = { 'a' , 'b', 'b', 'a', 'b', 'a' }
      *    isCaseSensitive = false
-     *    result => true
+     *    result =&gt; true
      * </pre>
      * </li>
      * <li><pre>
      *    prefix = { 'a' , 'B' }
      *    name = { 'a' , 'b', 'b', 'a', 'b', 'a' }
      *    isCaseSensitive = true
-     *    result => false
+     *    result =&gt; false
      * </pre>
      * </li>
      * </ol>

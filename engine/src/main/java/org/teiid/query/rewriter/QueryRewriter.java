@@ -781,8 +781,6 @@ public class QueryRewriter {
      * Unrelated order by expressions will cause the creation of nested inline views.
      *
      * @param queryCommand
-     * @throws TeiidComponentException, MetaMatrixProcessingException
-     * @throws TeiidProcessingException
      */
     public QueryCommand rewriteOrderBy(QueryCommand queryCommand) throws TeiidComponentException, TeiidProcessingException {
         final OrderBy orderBy = queryCommand.getOrderBy();

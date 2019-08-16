@@ -128,8 +128,8 @@ public class WordEntry implements Comparable<WordEntry> {
      * Changes the references of the wordEntry to match the mapping. For example,<br>
      * if the current references are [1 3 4]<br>
      * and mapping is [1 2 3 4 5]<br>
-     * in references 1 becomes mapping[1] = 2, 3->4, and 4->5<br>
-     * => references = [2 4 5].<br>
+     * in references 1 becomes mapping[1] = 2, 3-&gt;4, and 4-&gt;5<br>
+     * =&gt; references = [2 4 5].<br>
      */
     public void mapRefs(int[] mappings) {
         int position= 0;

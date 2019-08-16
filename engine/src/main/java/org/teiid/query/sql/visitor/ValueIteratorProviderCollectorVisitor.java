@@ -39,11 +39,11 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
  * <p>This visitor class will traverse a language object tree and collect all language
  * objects that implement {@link SubqueryContainer}.
  * By default it uses a java.util.ArrayList to collect the objects in the order
- * they're found.</p>
+ * they're found.
  *
  * <p>The easiest way to use this visitor is to call one of the static methods which create
  * the visitor, run the visitor, and get the collection.
- * The public visit() methods should NOT be called directly.</p>
+ * The public visit() methods should NOT be called directly.
  */
 public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
 

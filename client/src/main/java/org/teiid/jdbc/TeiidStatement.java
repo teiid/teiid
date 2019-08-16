@@ -89,7 +89,7 @@ public interface TeiidStatement extends java.sql.Statement {
      * will have access to it.
      *
      * <p>To remove an existing payload from a statement, call this method
-     * with a <code>null</code> argument.</p>
+     * with a <code>null</code> argument.
      *
      * @param payload The payload that is to accompany requests executed
      * from this statement.

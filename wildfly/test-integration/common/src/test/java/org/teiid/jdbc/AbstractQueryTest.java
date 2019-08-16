@@ -191,7 +191,7 @@ public abstract class AbstractQueryTest {
      *               statement.setExecutionProperty(ExecutionProperties.PROP_FETCH_SIZE, this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE));
      *      }
      *</code>
-     *</p>
+     *
      * @param stmt
      *
      * @since

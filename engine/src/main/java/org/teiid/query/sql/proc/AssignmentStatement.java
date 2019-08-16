@@ -33,7 +33,7 @@ import org.teiid.query.sql.symbol.ScalarSubquery;
  * <p> This class represents an assignment statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a <code>Block</code>.  This
  * statement holds references to the variable and it's value which could be an
- * <code>Expression</code> or a <code>Command</code>.</p>
+ * <code>Expression</code> or a <code>Command</code>.
  */
 public class AssignmentStatement extends Statement implements ExpressionStatement {
 
@@ -105,7 +105,7 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
 
     /**
      * Set the variable that is assigned to the value
-     * @param<code>ElementSymbol</code> that is being assigned
+     * @param variable <code>ElementSymbol</code> that is being assigned
      */
     public void setVariable(ElementSymbol variable) {
         this.variable = variable;

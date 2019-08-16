@@ -23,7 +23,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 /**
- * <p> This class represents a return statement</p>
+ * <p> This class represents a return statement
  */
 public class ReturnStatement extends AssignmentStatement {
 

@@ -27,7 +27,7 @@ import org.teiid.query.sql.lang.SubqueryContainer;
 /**
  * <p> This class represents a variable assignment statement in the storedprocedure language.
  * It extends the <code>Statement</code> that could part of a block.  This statement has
- * a command that should be executed as part of the procedure.</p>
+ * a command that should be executed as part of the procedure.
  */
 public class CommandStatement extends Statement implements SubqueryContainer {
 

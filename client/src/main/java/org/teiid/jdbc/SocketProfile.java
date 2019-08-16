@@ -32,7 +32,7 @@ import org.teiid.net.socket.SocketServerConnectionFactory;
  * The TeiidDriver class has a static initializer, which
  * is used to instantiate and register itself with java.sql.DriverManager. The
  * DriverManager's <code>getConnection</code> method calls <code>connect</code>
- * method on available registered drivers. </p>
+ * method on available registered drivers.
  */
 
 final class SocketProfile implements ConnectionProfile {

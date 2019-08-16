@@ -80,7 +80,7 @@ import org.teiid.query.util.CommandContext;
  * plan.  The output elements define the columns that are returned from every node.
  * This is generally done by figuring out top-down all the elements required to
  * execute the operation at each node and making sure those elements are selected
- * from the children nodes.  </p>
+ * from the children nodes.
  */
 public final class RuleAssignOutputElements implements OptimizerRule {
 
@@ -120,18 +120,18 @@ public final class RuleAssignOutputElements implements OptimizerRule {
     /**
      * <p>Assign the output elements at a particular node and recurse the tree.  The
      * outputElements needed from above the node have been collected in
-     * outputElements.</p>
+     * outputElements.
      *
      * <p>SOURCE nodes:  If we find a SOURCE node, this must define the top
      * of a virtual group.  Physical groups can be identified by ACCESS nodes
      * at this point in the planning stage.  So, we filter the virtual elements
-     * in the virtual source based on the required output elements.</p>
+     * in the virtual source based on the required output elements.
      *
      * <p>SET_OP nodes:  If we hit a SET_OP node, this must be a union.  Unions
      * require a lot of special care.  Unions have many branches and the projected
      * elements in each branch are "equivalent" in terms of nodes above the union.
      * This means that any filtering must occur in an identical way in all branches
-     * of a union.</p>
+     * of a union.
      *
      * @param root Node to assign
      * @param outputElements Output elements needed for this node
@@ -476,11 +476,11 @@ public final class RuleAssignOutputElements implements OptimizerRule {
      * virtual elements defined by the group down into just the output elements needed
      * by that source node.  This means, for instance, that the PROJECT node at the top
      * of the virtual group might need to have some elements removed from the project as
-     * those elements are no longer needed.  </p>
+     * those elements are no longer needed.
      *
      * <p>One special case that is handled here is when a virtual group is defined by
      * a UNION ALL.  In this case, the various branches of the union have elements defined
-     * and filtering must occur identically in all branches of the union.  </p>
+     * and filtering must occur identically in all branches of the union.
      *
      * @param sourceNode Node to filter
      * @param metadata Metadata implementation

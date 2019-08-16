@@ -72,7 +72,7 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.ssl.SslHandler;
 /**
- * Represents the messages going from Server --> PG ODBC Client
+ * Represents the messages going from Server --&gt; PG ODBC Client
  * Some parts of this code is taken from H2's implementation of ODBC
  */
 @SuppressWarnings("nls")

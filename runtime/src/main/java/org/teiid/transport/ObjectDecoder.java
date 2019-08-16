@@ -60,8 +60,6 @@ import io.netty.handler.codec.serialization.CompatibleObjectEncoder;
  *
  * @version $Rev: 381 $, $Date: 2008-10-01 20:06:18 +0900 (Wed, 01 Oct 2008) $
  *
- * @apiviz.landmark
- *
  * Note this has been customized to utilize even more idomatic serialization
  * and to support out of message streaming
  *

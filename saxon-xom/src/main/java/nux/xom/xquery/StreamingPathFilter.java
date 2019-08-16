@@ -57,7 +57,7 @@ import nux.xom.pool.XOMUtil;
  * Streaming path filter node factory for continuous queries and/or transformations
  * over very large or infinitely long XML input.
  * <p>
- * <h4>Background</h4>
+ * <b>Background</b><br>
  *
  * The W3C XQuery and XPath languages often require the <i>entire</i> input
  * document to be buffered in memory for a query to be executed in its full
@@ -94,7 +94,7 @@ import nux.xom.pool.XOMUtil;
  * an optional XQuery. The solution is not necessarily faster than
  * building the full document tree, but it consumes much less main memory.
  * <p>
- * <h4>Here is how it works</h4>
+ * <b>Here is how it works</b>
  *
  * You specify a simple "location path" such as <code>/books/book</code> or
  * <code>/weblogs/_2004/_05/entry</code>. The path may contain wildcards and
@@ -117,7 +117,7 @@ import nux.xom.pool.XOMUtil;
  * Typically, simple <code>StreamingTransforms</code> are formulated in custom
  * Java code, whereas complex ones are formulated as an XQuery.
  * <p>
- * <h4>Streaming Location Path Syntax</h4>
+ * <b>Streaming Location Path Syntax</b>
  *
  * <pre>
  * locationPath := {'/'step}...
@@ -149,7 +149,7 @@ import nux.xom.pool.XOMUtil;
  * though, because a full XQuery can still be used on each element (subtree) matching the
  * location path, as follows:
  *
- * <h4>Example Usage</h4>
+ * <b>Example Usage</b>
  *
  * The following is complete and efficient code for parsing and iterating through millions of
  * "person" records in a database-like XML document, printing all residents of "San Francisco",
@@ -158,7 +158,7 @@ import nux.xom.pool.XOMUtil;
  * StreamingTransform myTransform = new StreamingTransform() {
  *     public Nodes transform(Element person) {
  *         Nodes results = XQueryUtil.xquery(person, "name[../address/city = 'San Francisco']");
- *         if (results.size() > 0) {
+ *         if (results.size() &gt; 0) {
  *             System.out.println("name = " + results.get(0).getValue());
  *         }
  *         return new Nodes(); // mark current element as subject to garbage collection
@@ -185,9 +185,9 @@ import nux.xom.pool.XOMUtil;
  *     // execute XQuery against each element matching location path
  *     public Nodes transform(Element subtree) {
  *         Nodes results = XQueryUtil.xquery(subtree,
- *            "title[matches(., 'Monterey') and matches(., 'Aquarium') and count(../author) > 3]");
+ *            "title[matches(., 'Monterey') and matches(., 'Aquarium') and count(../author) &gt; 3]");
  *
- *         for (int i=0; i < results.size(); i++) {
+ *         for (int i=0; i &lt; results.size(); i++) {
  *             // do something useful with query results; here we just print them
  *             System.out.println(XOMUtil.toPrettyXML(results.get(i)));
  *         }
@@ -228,7 +228,7 @@ import nux.xom.pool.XOMUtil;
  * System.out.println("doc.size()=" + doc.getRootElement().getChildElements().size());
  * </pre>
  *
- * <h4>Applicability</h4>
+ * <b>Applicability</b>
  *
  * This class is well suited for a P2P XML content messaging router, network
  * transducer, transcoder, proxy or message queue that continuously

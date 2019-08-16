@@ -29,12 +29,12 @@ import org.teiid.core.TeiidComponentException;
  * <p>Factory for BufferManager instances.  One method will get
  * a server buffer manager, as it should be instantiated in a running
  * MetaMatrix server.  That BufferManager is configured mostly by the
- * passed in properties.</p>
+ * passed in properties.
  *
  * <p>The other method returns a stand-alone, in-memory buffer manager.  This
  * is typically used for either in-memory testing or any time the
  * query processor component is not expected to run out of memory, such as
- * within the modeler.</p>
+ * within the modeler.
  */
 public class BufferManagerFactory {
 

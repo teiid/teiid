@@ -25,9 +25,11 @@ import org.teiid.core.BundleUtil;
  * This exception is thrown when an attempt to log in to obtain a session has failed.
  * Possible reasons include but are not limited to:
  * <p>
- * <li>The limit on the number of sessions for the user has been reached, and a new session for the user could not be established;</li>
+ * <ul>
+ * <li>The limit on the number of sessions for the user has been reached, and a new session for the user could not be established;
  * <li>An account for the user does not exist, has been frozen or has been removed; and</li>
  * <li>The credentials that were supplied did not authenticate the user.</li>
+ * </ul>
  */
 public class LogonException extends TeiidSecurityException {
 

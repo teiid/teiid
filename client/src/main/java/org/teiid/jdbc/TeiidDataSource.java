@@ -38,20 +38,19 @@ import org.teiid.net.TeiidURL;
  * and set using setter methods, and where the getter and setter methods follow the JavaBean
  * naming convention (e.g., <code>get</code><i>PropertyName</i><code>() : </code><i>PropertyType</i>
  * and <code>set</code><i>PropertyName</i><code>(</code><i>PropertyType</i><code>) : void</code>).
- * </p>
+ *
  * The {@link javax.sql.XADataSource} interface is almost identical to the {@link javax.sql.DataSource}
  * interface, but rather than returning {@link java.sql.Connection} instances, there are methods that
  * return {@link javax.sql.XAConnection} instances that can be used with distributed transactions.
  * <p>
  * The following are the properties for this DataSource:
- * <table cellspacing="0" cellpadding="0" border="1" width="100%">
+ * <table summary="properties">
  *   <tr><td><b>Property Name</b></td><td><b>Type</b></td><td><b>Description</b></td></tr>
  *   <tr><td>portNumber       </td><td><code>int   </code></td><td>The port number where a Teiid Server is listening
  *                                                                 for requests.</td></tr>
  *   <tr><td>serverName       </td><td><code>String</code></td><td>The hostname or IP address of the Teiid Server.</td></tr>
- * <table>
+ * </table>
  * If "serverName" property is not set then data source will try to create a embedded connection to the Teiid server.
- * </p>
  */
 public class TeiidDataSource extends BaseDataSource {
 

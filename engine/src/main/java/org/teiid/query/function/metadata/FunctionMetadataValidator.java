@@ -151,7 +151,7 @@ public class FunctionMetadataValidator {
      * Determine whether a function or parameter name is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that name is not null</LI>
-     * <LI>Validate that name has length <= MAX_LENGTH</LI>
+     * <LI>Validate that name has length &lt;= MAX_LENGTH</LI>
      * <LI>Validate that name starts with alphabetic character</LI>
      * <LI>Validate that name contains only valid characters: letters, numbers, and _</LI>
      * </UL>
@@ -166,7 +166,7 @@ public class FunctionMetadataValidator {
     /**
      * Determine whether a description is valid.  The following items are validated:
      * <UL>
-     * <LI>Validate that description (if not null) has length <= 4000</LI>
+     * <LI>Validate that description (if not null) has length &lt;= 4000</LI>
      * </UL>
      * @param description Description to validate
      * @throws FunctionMetadataException Thrown if description is not valid in some way
@@ -181,7 +181,7 @@ public class FunctionMetadataValidator {
      * Determine whether a category is valid.  The following items are validated:
      * <UL>
      * <LI>Validate that category is not null</LI>
-     * <LI>Validate that category has length <= MAX_LENGTH</LI>
+     * <LI>Validate that category has length &lt;= MAX_LENGTH</LI>
      * </UL>
      * @param category Category to validate
      * @throws FunctionMetadataException Thrown if category is not valid in some way

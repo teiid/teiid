@@ -26,7 +26,7 @@ import org.teiid.query.sql.LanguageVisitor;
 
 /**
  * <p> This class represents a break statement in the storedprocedure language.
- * It extends the <code>Statement</code> that could part of a block.</p>
+ * It extends the <code>Statement</code> that could part of a block.
  */
 public class BranchingStatement extends Statement {
 

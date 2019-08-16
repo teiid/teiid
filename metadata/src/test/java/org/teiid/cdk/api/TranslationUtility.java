@@ -37,11 +37,11 @@ import org.teiid.query.metadata.SystemMetadata;
  * <p>This translation utility can be used to translate sql strings into
  * Connector API language interfaces for testing purposes.  The utility
  * requires a metadata .vdb file in order to resolve references in
- * the SQL.</p>
+ * the SQL.
  *
  * <p>This utility class can also be used to obtain a RuntimeMetadata
  * implementation based on the VDB file, which is sometimes handy when writing
- * unit tests.</p>
+ * unit tests.
  */
 public class TranslationUtility {
 

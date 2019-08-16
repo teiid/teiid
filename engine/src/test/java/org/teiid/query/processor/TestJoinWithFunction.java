@@ -33,22 +33,22 @@ import junit.framework.TestCase;
 
 /**
  * <p><code>TestCase</code> to cover processing of JOINs which use a scalar
- * function as a symbol or as part of the JOIN criteria.</p>
+ * function as a symbol or as part of the JOIN criteria.
  *
  * <p>All tests should verify and validate that the scalar function's result
  * is being used appropriately from the pre-JOIN and post-JOIN aspect.  Most
  * specifically, the results returned from the JOIN should match the expected
- * results defined in each test method.</p>
+ * results defined in each test method.
  * @since 6.0
  */
 public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>Test the use of a non-deterministic function on a user command that
-     * performs a JOIN of two sources.</p>
+     * performs a JOIN of two sources.
      *
      * <p>The function should be executed on the result returned from the JOIN and
-     * is expected to be executed for each row of the final result set.</p>
+     * is expected to be executed for each row of the final result set.
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      */
@@ -108,7 +108,7 @@ public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>Test the use of a non-deterministic function on a source command of a JOIN
-     * defined by a user command that performs a JOIN of two sources.</p>
+     * defined by a user command that performs a JOIN of two sources.
      *
      * <p>The function should be executed on the result that will be used for one side
      * of the JOIN.  The function should only be executed for each row of the the result
@@ -118,7 +118,7 @@ public class TestJoinWithFunction extends TestCase {
      * query will return three rows which match the JOIN criteria for the one row on the
      * left-side then the expected result should be that the function be executed once to
      * represent the one row from the left-side and the function's return value will be
-     * repeated for each of the three post-JOINed results.</p>
+     * repeated for each of the three post-JOINed results.
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      */
@@ -179,9 +179,9 @@ public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>Test the use of a non-deterministic function on the sub-command of a user
-     * command and the user command itself, which performs a JOIN of two sources.</p>
+     * command and the user command itself, which performs a JOIN of two sources.
      *
-     * <p>This test combines the PostJoin and PreJoin test cases.</p>
+     * <p>This test combines the PostJoin and PreJoin test cases.
      * @see #testNonDeterministicPostJoin
      * @see #testNonDeterministicPreJoin
      * @throws TeiidComponentException
@@ -244,10 +244,10 @@ public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>Test the use of a deterministic function on the user command which
-     * performs a JOIN of two sources.</p>
+     * performs a JOIN of two sources.
      *
      * <p>The function should be executed prior to the JOIN being executed and should
-     * result in the projected symbol becoming a constant.</p>
+     * result in the projected symbol becoming a constant.
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      */
@@ -306,14 +306,14 @@ public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>The function should be executed prior to the JOIN being executed and should
-     * result in the projected symbol becoming a constant.</p>
+     * result in the projected symbol becoming a constant.
 
      * <p>Test the use of a deterministic function on the source command of a JOIN
-     * defined by a user command which performs a JOIN of two sources.</p>
+     * defined by a user command which performs a JOIN of two sources.
      *
      * <p>The function should be executed prior to the commands from either side of the
      * JOIN being executed and merged into user command prior to the JOIN actually being
-     * executed.</p>
+     * executed.
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      */
@@ -371,9 +371,9 @@ public class TestJoinWithFunction extends TestCase {
 
     /**
      * <p>Test the use of a deterministic function on the sub-command of a user
-     * command and the user command itself, which performs a JOIN of two sources.</p>
+     * command and the user command itself, which performs a JOIN of two sources.
      *
-     * <p>This test combines the PostJoin and PreJoin test cases.</p>
+     * <p>This test combines the PostJoin and PreJoin test cases.
      * @throws TeiidComponentException
      * @throws QueryMetadataException
      * @see #testDeterministicPostJoin

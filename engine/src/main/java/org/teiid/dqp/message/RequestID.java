@@ -35,14 +35,14 @@ import org.teiid.core.util.HashCodeUtil;
  * for the name parts.  The connectionID specifies a particular connection that
  * is making requests.  Each connection generates a unique executionID for each
  * request execution, so the executionID is only unique in the context of a
- * connectionID.  </p>
+ * connectionID.
  *
  * <p>When this class is used between client and server, the connectionID is implied
  * and thus only the executionID part will be used.  The server will qualify the
- * executionID with a connectionID when it reaches the server.  </p>
+ * executionID with a connectionID when it reaches the server.
  *
  * <p>RequestIDs are immutable so no setters exist.  This allows hashcodes to be
- * pre-computed for faster comparison in equals.</p>
+ * pre-computed for faster comparison in equals.
  */
 public class RequestID implements Externalizable {
 

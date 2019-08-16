@@ -27,14 +27,15 @@ import org.teiid.core.TeiidException;
 
 
 /**
- * <code>AdminException</code> is the base exception for the admin package.  Many *Admin methods throw this
- * exception.  Instances will be one of the concrete subtypes:
- * {@link AdminComponentException} or {@link AdminProcessingException}</p>
+ * <code>AdminException</code> is the base exception for the admin package.
+ * Many *Admin methods throw this exception.
+ * Instances will be one of the concrete subtypes:
+ * {@link AdminComponentException} or {@link AdminProcessingException}
  *
  * <p><code>AdminException</code>s may contain multiple child exceptions. An example
  * of this could be when performing an admin action results in multiple failures. Admin
  * clients should be aware of this and use the {@link #hasMultiple()} method to
- * determine if they need to check the child exceptions.</p>
+ * determine if they need to check the child exceptions.
  */
 public abstract class AdminException extends TeiidException {
 
@@ -102,7 +103,7 @@ public abstract class AdminException extends TeiidException {
      * Returns a non-null list of failures (<code>AdminException</code>s), one for each
      * component that failed.
      *
-     * <p>The list will have members when {@link #hasMultiple()} returns <code>true</code>.</p>
+     * <p>The list will have members when {@link #hasMultiple()} returns <code>true</code>.
      * @return The non-null list of failures.
      * @since 4.3
      */

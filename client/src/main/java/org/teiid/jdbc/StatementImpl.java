@@ -310,7 +310,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 
     /**
      * <p> This utility method checks if the jdbc statement is closed and
-     * throws an exception if it is closed. </p>
+     * throws an exception if it is closed.
      * @throws TeiidSQLException if the statement object is closed.
      */
     protected void checkStatement() throws TeiidSQLException {

@@ -103,8 +103,8 @@ public class SolrSQLHierarchyVistor extends HierarchyVisitor {
     }
 
     /**
-     * Note: Solr does not support <,> exclusively. It is always
-     * <=, >=
+     * Note: Solr does not support &lt;,&gt; exclusively. It is always
+     * &lt;=, &gt;=
      */
     @Override
     public void visit(Comparison obj) {

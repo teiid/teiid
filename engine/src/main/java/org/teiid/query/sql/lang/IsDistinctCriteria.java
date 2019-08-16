@@ -26,7 +26,7 @@ import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 
 
 /**
- * Represents criteria such as:  "<expression> IS DISTINCT FROM <expression>".
+ * Represents criteria such as:  "&lt;expression&gt; IS DISTINCT FROM &lt;expression&gt;".
  * However due to a lack of direct support for new/old groups as row values,
  * we reference group symbols here instead.
  */

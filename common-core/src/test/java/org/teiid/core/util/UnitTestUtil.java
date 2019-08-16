@@ -100,17 +100,17 @@ public class UnitTestUtil {
     /**
      * <p>
      * This method attempts to check all of the requirements relating to equivalence.
-     * </p>
+     *
      * <p>
      * If <code>obj1</code> is not null, then the following tests are performed:
      * <li><code>obj1.equals(obj1) == true</code></li>
      * <li><code>obj1.equals(null) == false</code></li>
-     * </p>
+     *
      * <p>
      * If <code>obj2</code> is not null, then the following tests are performed:
      * <li><code>obj2.equals(obj2) == true</code></li>
      * <li><code>obj2.equals(null) == false</code></li>
-     * </p>
+     *
      * <p>
      * If both <code>obj1</code> and <code>obj2</code> are not null, then the following tests are performed:
      * <li><code>obj1.equals(obj2) == obj2.equals(obj1)</code></li>
@@ -119,7 +119,7 @@ public class UnitTestUtil {
      * <li><code>obj2.equals(obj1) == true</code> if <code>correctCompareToResult==0</code> or <code>obj2.equals(obj1) == false</code>
      * if <code>correctCompareToResult!=0</code></li>
      * <li><code>obj1.hashCode() == obj2.hashCode()</code> if <code>correctCompareToResult==0</code></li>
-     * </p>
+     *
      * <p>
      * Finally, if either <code>obj1</code> and <code>obj2</code> are instances of {@link Comparable}, then the following
      * tests are performed:
@@ -130,7 +130,7 @@ public class UnitTestUtil {
      *       if <code>obj2</code> is null</li></li>
      *   <li><code>obj1.compareTo(obj1) == 0</code> if <code>obj1 != null</code></li>
      *   <li><code>obj2.compareTo(obj2) == 0</code> if <code>obj2 != null</code></li>
-     * </p>
+     *
      * @param correctCompareToResult 0 if the two comparable objects should be
      * equivalent; &lt0 if <code>obj1<code> is to be considered less-than <code>obj2</code>;
      * >0 if <code>obj2<code> is to be considered less-than <code>obj1</code>.  If <code>obj1</code>
@@ -331,12 +331,12 @@ public class UnitTestUtil {
      * This method attempts to check that, if the expected result is that the objects are equal, the hashCode values of two
      * objects are also equal. Note that this method does not rely upon the 'equals' method to properly determine whether the two
      * objects are equal; rather, the first argument specifies whether the objects are expected to be equal.
-     * </p>
+     *
      * <p>
      * The hashCode of two objects should be the same if the two objects are considered equal using the
      * {@link java.lang.Object#equals(java.lang.Object) equals}method. If the objects are not equal, then it cannot be concluded
      * whether the two hash codes must be equivalent or different.
-     * </p>
+     *
      *
      * @param shouldBeEqual
      *            true if the two comparable objects should be equivalent; or false otherwise

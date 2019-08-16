@@ -61,7 +61,7 @@ public class BlockByteBuffer {
 
     /**
      * Creates a new {@link BlockByteBuffer} where each buffer segment will be
-     * 1 << segmentAddressBits (max of 30), and a total size of (1 << blockAddressBits)*blockCount.
+     * 1 &lt;&lt; segmentAddressBits (max of 30), and a total size of (1 &lt;&lt; blockAddressBits)&#42;blockCount.
      * @param segmentAddressBits
      * @param blockCount
      * @param blockAddressBits
