@@ -60,4 +60,14 @@ public class TestIsDistinctProcessing {
         TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("a", 1), Arrays.asList(null, 2)});
     }
 
+    @Test public void testJoinRewrite() throws Exception {
+        //adding the extra reference to g1 causes an alias to be added, which the expression mapping was missing for is distinct
+        String sql = "begin select e1 from pm1.g1 without return; select pm1.g1.e1, pm2.g1.e2 from pm1.g1, pm2.g1 where pm1.g1.e1 is not distinct from pm2.g1.e1; end";
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT pm2.g1.e1, pm2.g1.e2 FROM pm2.g1", Arrays.asList("a", 1), Arrays.asList(null, 2), Arrays.asList("b", null));
+        dataManager.addData("SELECT pm1.g1.e1 FROM pm1.g1", Arrays.asList("a"), Collections.singletonList(null));
+        TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList("a", 1), Arrays.asList(null, 2)});
+    }
+
 }
