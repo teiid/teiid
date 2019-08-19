@@ -484,4 +484,14 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     	}
     }
     
+    @Override
+    public void visit(IsDistinctCriteria isDistinctCriteria) {
+        if (isDistinctCriteria.getLeftRowValue() instanceof Expression) {
+            isDistinctCriteria.setLeftRowValue(replaceExpression((Expression)isDistinctCriteria.getLeftRowValue()));
+        }
+        if (isDistinctCriteria.getRightRowValue() instanceof Expression) {
+            isDistinctCriteria.setRightRowValue(replaceExpression((Expression)isDistinctCriteria.getRightRowValue()));
+        }
+    }
+
 }
