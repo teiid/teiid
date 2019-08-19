@@ -723,7 +723,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
         addColumn("table_name", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
         addColumn("check_option", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
         addColumn("is_updatable", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-        t.setSelectTransformation("select vdbname, schemaName, name, 'NONE', case when SupportsUpdates then 'YES' else 'NO' end from sys.tables where IsPhysical"); //$NON-NLS-1$
+        t.setSelectTransformation("select vdbname, schemaName, name, 'NONE', case when SupportsUpdates then 'YES' else 'NO' end from sys.tables where NOT IsPhysical"); //$NON-NLS-1$
         return t;
     }
 
