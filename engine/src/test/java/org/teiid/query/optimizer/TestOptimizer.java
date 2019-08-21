@@ -6693,6 +6693,27 @@ public class TestOptimizer {
         TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT timestampadd(sql_tsi_second, g_0.IntKey, g_0.TimestampValue) FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
 
+    @Test public void testUnionAliasingWithNullNestedProjections() throws Exception {
+        String sql = "select x, y FROM (select x, y, null as z from inner_view union select intkey, stringkey, null from smallb) v LIMIT 99999";
+
+        String expected = "SELECT v_0.c_0, v_0.c_1 FROM (SELECT null AS c_0, null AS c_1, null AS c_2 FROM x.smalla AS g_1 UNION SELECT convert(g_0.intkey, string) AS c_0, g_0.stringkey AS c_1, null AS c_2 FROM x.smallb AS g_0) AS v_0 LIMIT 99999"; //$NON-NLS-1$
+
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_UNION, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        bsc.setFunctionSupport("convert", true);
+        bsc.setFunctionSupport("concat", true);
+
+        TestOptimizer.helpPlan(sql,
+        RealMetadataFactory.fromDDL(
+          "create foreign table smalla (intkey integer, stringkey string); "
+          + "create foreign table smallb (intkey integer, stringkey string); "
+          + "create view inner_view as (select null as x, null as y from smalla);", "x", "x"),
+        new String[] {expected},
+        new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    }
+
     public static final boolean DEBUG = false;
 
 }

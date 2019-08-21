@@ -129,7 +129,7 @@ public class TestInherintlyUpdatableViews {
                 "UPDATE pm1.g2 SET e1 = X.s_0 WHERE pm1.g2.e2 = X.s_1;\n" +
                 "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" +
                 "END\n" +
-                "SELECT VARIABLES.ROWS_UPDATED;\n" +
+                "SELECT VARIABLES.ROWS_UPDATED AS ROWS_UPDATED;\n" +
                 "END",
                 dm);
     }
@@ -150,7 +150,7 @@ public class TestInherintlyUpdatableViews {
                 "DELETE FROM pm1.g2 WHERE pm1.g2.e2 = X.s_0;\n" +
                 "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" +
                 "END\n" +
-                "SELECT VARIABLES.ROWS_UPDATED;\n" +
+                "SELECT VARIABLES.ROWS_UPDATED AS ROWS_UPDATED;\n" +
                 "END",
                 dm);
     }
