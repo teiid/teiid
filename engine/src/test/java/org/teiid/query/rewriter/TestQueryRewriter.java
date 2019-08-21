@@ -1306,7 +1306,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteCorrelatedSubqueryInHaving() throws Exception {
         String sql = "select pm1.g1.e1 from pm1.g1 group by pm1.g1.e1 having pm1.g1.e1 in (select pm1.g1.e1 from pm1.g2)"; //$NON-NLS-1$
-        String expected = "SELECT pm1.g1.e1 FROM pm1.g1 GROUP BY pm1.g1.e1 HAVING pm1.g1.e1 IN (SELECT pm1.g1.e1 FROM pm1.g2)"; //$NON-NLS-1$
+        String expected = "SELECT pm1.g1.e1 FROM pm1.g1 GROUP BY pm1.g1.e1 HAVING pm1.g1.e1 IN (SELECT pm1.g1.e1 AS e1 FROM pm1.g2)"; //$NON-NLS-1$
                 
         Query query = (Query)helpTestRewriteCommand(sql, expected);
         
@@ -1773,7 +1773,7 @@ public class TestQueryRewriter {
     	        "END\n" + 
     	        "VARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\n" + 
     	        "END\n" + 
-    	        "SELECT VARIABLES.ROWS_UPDATED;\n" + 
+                "SELECT VARIABLES.ROWS_UPDATED AS ROWS_UPDATED;\n" +
     	        "END", metadata);
     }
     

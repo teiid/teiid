@@ -42,6 +42,7 @@ import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -230,7 +231,11 @@ public class AliasGenerator extends PreOrderNavigator {
                     needsAlias &= needsAlias(newAlias, (ElementSymbol)newSymbol);
                 }
             }
-                        
+            //need a proper alias symbol
+            if (symbol instanceof ExpressionSymbol) {
+                ExpressionSymbol es = (ExpressionSymbol)symbol;
+                symbol = new AliasSymbol(es.getName(), es.getExpression());
+            }
             symbols.put(symbol, newAlias);
             if (visitor.namingContext.aliasColumns && needsAlias) {
                 newSymbol = new AliasSymbol(Symbol.getShortName(symbol), newSymbol);
@@ -300,6 +305,11 @@ public class AliasGenerator extends PreOrderNavigator {
         Map<String, String> viewGroup = new HashMap<String, String>();
         int i = 0;
         //now map to the new names
+
+        if (names.size() != visitor.namingContext.currentSymbols.size()) {
+            throw new AssertionError("the inline view projected symbols do not line up"); //$NON-NLS-1$
+        }
+
         for (Entry<Expression, String> entry : visitor.namingContext.currentSymbols.entrySet()) {
         	viewGroup.put(names.get(i++), entry.getValue());
         }
@@ -406,8 +416,14 @@ public class AliasGenerator extends PreOrderNavigator {
             }
             String name = null;
             if (visitor.namingContext.currentSymbols != null) {
+                if (element instanceof ExpressionSymbol) {
+                    //use a proper alias symbol instead
+                    ExpressionSymbol es = (ExpressionSymbol)element;
+                    name = visitor.namingContext.currentSymbols.get(new AliasSymbol(es.getName(), es.getExpression()));
+                } else {
         		name = visitor.namingContext.currentSymbols.get(element);
         	}
+            }
             if (name == null) {
             	//this is a bit messy, because we have cloned to do the aliasing, there
             	//is a chance that a subquery is throwing off the above get
