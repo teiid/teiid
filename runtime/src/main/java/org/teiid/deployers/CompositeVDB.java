@@ -152,8 +152,8 @@ public class CompositeVDB {
             mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
         }
         newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
-        ClassLoader[] toSearch = new ClassLoader[vdb.getVDBImports().size()+1];
-        toSearch[0] = this.vdb.getAttachment(ClassLoader.class);
+        LinkedHashSet<ClassLoader> toSearch = new LinkedHashSet<>(vdb.getVDBImports().size()+1);
+        toSearch.add(this.vdb.getAttachment(ClassLoader.class));
         this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
         newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
         LinkedHashSet<VDBImport> seen = new LinkedHashSet<>(vdb.getVDBImports());
@@ -188,7 +188,7 @@ public class CompositeVDB {
                 continue;
             }
             newMergedVDB.getVisibilityOverrides().putAll(childVDB.getVisibilityOverrides());
-            toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
+            toSearch.add(childVDB.getAttachment(ClassLoader.class));
             this.children.put(importedVDB.getVDBKey(), importedVDB);
 
             if (vdbImport.isImportDataPolicies()) {
@@ -227,8 +227,8 @@ public class CompositeVDB {
                 }
             }
         }
-        if (toSearch[0] != null) {
-            CombinedClassLoader ccl = new CombinedClassLoader(toSearch[0].getParent(), toSearch);
+        if (toSearch.iterator().next() != null) {
+            CombinedClassLoader ccl = new CombinedClassLoader(toSearch.iterator().next().getParent(), toSearch.toArray(new ClassLoader[toSearch.size()]));
             this.mergedVDB.addAttchment(ClassLoader.class, ccl);
         }
         this.mergedVDB = newMergedVDB;

@@ -534,6 +534,40 @@ public class TestEmbeddedServer {
         assertEquals("1", rs.getString(1));
     }
 
+    @Test public void testDDLVDBImportTransitiveFanout() throws Exception {
+        es.start(new EmbeddedConfiguration());
+
+        String base1 = "CREATE DATABASE x VERSION '1';"
+                + "USE DATABASE x VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test1;"
+                + "SET SCHEMA test1;"
+                + "CREATE VIEW x as select 1;";
+
+        String base2 = "CREATE DATABASE y VERSION '1';"
+                + "USE DATABASE y VERSION '1';"
+                + "CREATE VIRTUAL SCHEMA test2;"
+                + "SET SCHEMA test2;"
+                + "CREATE VIEW y as select 1;";
+
+        String intermediate = "CREATE DATABASE test VERSION '1';"
+                + "USE DATABASE test VERSION '1';"
+                + "IMPORT DATABASE x VERSION '1';"
+                + "IMPORT DATABASE y VERSION '1';";
+
+        String top = "CREATE DATABASE test2 VERSION '1';"
+                + "USE DATABASE test2 VERSION '1';"
+                + "IMPORT DATABASE test VERSION '1';";
+
+        es.deployVDB(new ByteArrayInputStream(base1.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(base2.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(intermediate.getBytes("UTF-8")), true);
+        es.deployVDB(new ByteArrayInputStream(top.getBytes("UTF-8")), true);
+
+        ResultSet rs = es.getDriver().connect("jdbc:teiid:test2", null).createStatement().executeQuery("select * from x");
+        rs.next();
+        assertEquals("1", rs.getString(1));
+    }
+
     @Test(expected=MetadataException.class) public void testAlterImported() throws Exception {
         es.start(new EmbeddedConfiguration());
 
