@@ -19,8 +19,6 @@ package org.teiid.query.optimizer;
 
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -28,10 +26,12 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.util.SymbolMap;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -389,7 +389,7 @@ public class TestJoinWithFunction extends TestCase {
 		Constant expectedConst = new Constant(new Double(10.0));
 		assertEquals("Did not get expected constant value for SqrtLeft in root node of plan: ",  //$NON-NLS-1$
 				expectedConst, 
-				((ExpressionSymbol)elem.get(8)).getExpression()  // should be a AliasSymbol containing an expression 
+                ((AliasSymbol)elem.get(8)).getSymbol()  // should be a AliasSymbol containing an expression
 			); 
 	}
 
