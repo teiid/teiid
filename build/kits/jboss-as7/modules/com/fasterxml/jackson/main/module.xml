@@ -8,4 +8,9 @@
         <resource-root path="jackson-databind-${version.com.fasterxml.jackson.core}.jar" />
         <resource-root path="jackson-annotations-${version.com.fasterxml.jackson.core}.jar" />
     </resources>
+
+    <dependencies>
+        <module
+                name="javax.api"/>
+    </dependencies>
 </module>
