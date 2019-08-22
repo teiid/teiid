@@ -569,7 +569,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
         else if (value instanceof BasicDBList) {
             BasicDBList arrayValues = (BasicDBList)value;
             //array
-            if (expectedClass.isArray() && !(arrayValues.get(0) instanceof BasicDBObject)) {
+            if (expectedClass.isArray()) {
                 Class<?> arrayType = expectedClass.getComponentType();
                 Object array = Array.newInstance(arrayType, arrayValues.size());
                 for (int i = 0; i < arrayValues.size(); i++) {
