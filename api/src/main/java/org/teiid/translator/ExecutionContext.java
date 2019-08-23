@@ -19,6 +19,7 @@
 package org.teiid.translator;
 
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
@@ -252,4 +253,11 @@ public interface ExecutionContext {
      * @return
      */
     GeneratedKeys returnGeneratedKeys();
+
+    /**
+     * Get the transaction isolation level set by the user request.
+     * See the constants on {@link Connection}
+     * @return
+     */
+    int getTransactionIsolation();
 }

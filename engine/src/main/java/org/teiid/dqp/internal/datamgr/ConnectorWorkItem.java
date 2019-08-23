@@ -21,7 +21,6 @@ package org.teiid.dqp.internal.datamgr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -173,7 +172,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 
         translatedCommand = factory.translate(message.getCommand());
         readOnly = factory.isReadOnly();
-        if (connector.isImmutable() && !readOnly) {
+        if (!readOnly) {
+            message.getCommandContext().setReadOnly(false);
+        }
+        if (connector.isImmutable()) {
             throw new TranslatorException(QueryPlugin.Event.TEIID31299, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31299));
         }
         securityContext.setGeneratedKeyColumns(translatedCommand);
@@ -603,7 +605,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         return this.connector.isForkable()
                 && (!this.requestMsg.isTransactional()
                 || this.connector.getTransactionSupport() == TransactionSupport.NONE
-                || (readOnly && this.requestMsg.getTransactionContext().getIsolationLevel() <= Connection.TRANSACTION_READ_COMMITTED));
+                || (this.requestMsg.getCommandContext().isReadOnly() && this.requestMsg.getTransactionContext().getTransactionType() == org.teiid.dqp.service.TransactionContext.Scope.REQUEST));
     }
 
     @Override

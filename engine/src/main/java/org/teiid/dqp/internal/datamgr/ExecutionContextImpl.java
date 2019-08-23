@@ -35,6 +35,8 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.language.Insert;
 import org.teiid.language.NamedTable;
 import org.teiid.metadata.Column;
@@ -361,6 +363,15 @@ public class ExecutionContextImpl implements ExecutionContext {
             }
         }
         setGeneratedKeyColumns(generated);
+    }
+
+    @Override
+    public int getTransactionIsolation() {
+        TransactionContext tc = this.commandContext.getTransactionContext();
+        if (tc != null) {
+            return tc.getIsolationLevel();
+        }
+        return ConnectionImpl.DEFAULT_ISOLATION;
     }
 
 }

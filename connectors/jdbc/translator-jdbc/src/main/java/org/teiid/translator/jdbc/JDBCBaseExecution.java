@@ -67,7 +67,13 @@ public abstract class JDBCBaseExecution implements Execution  {
     protected JDBCBaseExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory jef) {
         this.connection = connection;
         this.context = context;
-
+        try {
+            if (this.connection.getTransactionIsolation() != context.getTransactionIsolation()) {
+                this.connection.setTransactionIsolation(context.getTransactionIsolation());
+            }
+        } catch (Exception e) {
+            LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not set transaction isolation level"); //$NON-NLS-1$
+        }
         this.executionFactory = jef;
 
         trimString = jef.isTrimStrings();

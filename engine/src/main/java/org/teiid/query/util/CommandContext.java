@@ -207,6 +207,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         public boolean parallel;
 
         private long timestamp = System.currentTimeMillis();
+
+        private boolean readOnly = true;
     }
 
     private GlobalState globalState = new GlobalState();
@@ -1245,6 +1247,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
     public void setAccessed(Collection<TempMetadataID> accessed) {
         this.accessed = accessed;
+    }
+
+    public boolean isReadOnly() {
+        return this.globalState.readOnly;
+    }
+
+    public void setReadOnly(boolean b) {
+        this.globalState.readOnly = b;
     }
 
 }

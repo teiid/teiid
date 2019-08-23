@@ -565,7 +565,7 @@ public class TestConnectorWorkItem {
         Command command = helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT); //$NON-NLS-1$
         AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
         TransactionContext tc = new TransactionContext();
-        tc.setTransactionType(Scope.LOCAL);
+        tc.setTransactionType(Scope.REQUEST);
         tc.setIsolationLevel(Connection.TRANSACTION_READ_COMMITTED);
         arm.setTransactionContext(tc);
         arm.setCommand(command);
@@ -586,10 +586,7 @@ public class TestConnectorWorkItem {
         ConnectorWorkItem cwi = new ConnectorWorkItem(arm, cm);
         assertTrue(cwi.isForkable());
 
-        //for repeatable read and serializable, we need serial execution
-        //TODO: it's still possible to parallelize in the command/block
-        //transaction scope if this is the only read
-        tc.setIsolationLevel(Connection.TRANSACTION_REPEATABLE_READ);
+        arm.getCommandContext().setReadOnly(false);
         cwi = new ConnectorWorkItem(arm, cm);
         assertFalse(cwi.isForkable());
     }
