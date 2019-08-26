@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.mongodb;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1223,7 +1225,7 @@ public class TestMongoDBQueryExecution {
 
 
     @Test
-    public void testArrtyType() throws Exception {
+    public void testArrayType() throws Exception {
         String query = "SELECT * FROM ArrayTest";
 
         DBCollection dbCollection = helpExecute(query, new String[]{"ArrayTest"}, 1);
@@ -1235,6 +1237,9 @@ public class TestMongoDBQueryExecution {
         List<DBObject> pipeline = buildArray(
                 new BasicDBObject("$project", result));
         Mockito.verify(dbCollection).aggregate(Mockito.eq(pipeline), Mockito.any(AggregationOptions.class));
+        
+      //empty list should map to an empty array
+        assertArrayEquals(new String[0], (String[])this.translator.retrieveValue(new BasicDBList(), String[].class, Mockito.mock(DB.class), "fqn", "col"));
     }
 
     @Test
