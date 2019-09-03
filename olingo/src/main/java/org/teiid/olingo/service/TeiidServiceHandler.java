@@ -35,6 +35,7 @@ import org.apache.olingo.commons.api.data.Entity;
 import org.apache.olingo.commons.api.data.EntityCollection;
 import org.apache.olingo.commons.api.data.Link;
 import org.apache.olingo.commons.api.data.Property;
+import org.apache.olingo.commons.api.edm.EdmEntitySet;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmParameter;
@@ -54,6 +55,7 @@ import org.apache.olingo.server.api.serializer.SerializerException;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriInfoResource;
 import org.apache.olingo.server.api.uri.UriParameter;
+import org.apache.olingo.server.api.uri.UriResourceNavigation;
 import org.apache.olingo.server.core.ServiceHandler;
 import org.apache.olingo.server.core.ServiceRequest;
 import org.apache.olingo.server.core.requests.ActionRequest;
@@ -428,7 +430,15 @@ public class TeiidServiceHandler implements ServiceHandler {
             EntityResponse response) throws ODataLibraryException,
             ODataApplicationException {
 
-        EdmEntityType entityType = request.getEntitySet().getEntityType();
+        EdmEntitySet edmEntitySet = request.getEntitySet();
+
+        if (!request.getNavigations().isEmpty()) {
+            //if this is a create to a navigation, it's a different entity type
+            UriResourceNavigation lastNavigation = request.getNavigations().getLast();
+            edmEntitySet = (EdmEntitySet)edmEntitySet.getRelatedBindingTarget(lastNavigation.getProperty().getName());
+        }
+
+        EdmEntityType entityType = edmEntitySet.getEntityType();
 
         String txn;
         try {
@@ -469,9 +479,28 @@ public class TeiidServiceHandler implements ServiceHandler {
                             entity,
                             request.getEntitySet().getName(),
                             entityType);
-                    entity.setId(new URI(location));
+                    URI id = new URI(location);
+                    entity.setId(id);
+
+                    //handle adding the navigation
+                    if (!request.getNavigations().isEmpty()) {
+                        String refRequest = request.getODataRequest().getRawRequestUri() + "/$ref"; //$NON-NLS-1$
+
+                        DataRequest bindingRequest;
+                        try {
+                            bindingRequest = request.parseLink(new URI(refRequest));
+                        } catch (URISyntaxException e) {
+                            throw new ODataApplicationException(e.getMessage(),
+                                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                                    Locale.getDefault(), e);
+                        }
+
+                        //TODO: consider wiring this in directly - it could be part of the insert as well
+                        manageReferenceInternal(bindingRequest, request.getODataRequest().getRawBaseUri(), id, false);
+                    }
                 }
-                response.writeCreatedEntity(request.getEntitySet(), entity);
+
+                response.writeCreatedEntity(edmEntitySet, entity);
             }
             else {
                 response.writeNotModified();
@@ -803,10 +832,23 @@ public class TeiidServiceHandler implements ServiceHandler {
 
     private void manageReference(DataRequest request, URI referenceId,
             NoContentResponse response, boolean delete) throws ODataApplicationException {
+        UpdateResponse updateResponse = manageReferenceInternal(request, request.getODataRequest().getRawBaseUri(),
+                referenceId, delete);
+
+        if (updateResponse != null && updateResponse.getUpdateCount() > 0) {
+            response.writeNoContent();
+        }
+        else {
+            response.writeNotModified();
+        }
+    }
+
+    private UpdateResponse manageReferenceInternal(DataRequest request, String baseUri,
+            URI referenceId, boolean delete) throws ODataApplicationException {
         UpdateResponse updateResponse = null;
         try {
             ReferenceUpdateSQLBuilder visitor = new ReferenceUpdateSQLBuilder(getClient().getMetadataStore(),
-                    request.getODataRequest().getRawBaseUri(), this.serviceMetadata, this.odata);
+                    baseUri, this.serviceMetadata, this.odata);
             visitor.visit(request.getUriInfo());
 
             Update update = visitor.updateReference(referenceId, this.prepared, delete);
@@ -816,13 +858,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                     HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
                     Locale.getDefault(), e);
         }
-
-        if (updateResponse != null && updateResponse.getUpdateCount() > 0) {
-            response.writeNoContent();
-        }
-        else {
-            response.writeNotModified();
-        }
+        return updateResponse;
     }
 
     @Override

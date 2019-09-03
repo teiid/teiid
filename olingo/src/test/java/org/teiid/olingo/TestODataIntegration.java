@@ -1534,6 +1534,42 @@ public class TestODataIntegration {
         assertEquals(204, response.getStatus());
     }
 
+    @Ignore("Can be added after olingo 4.7")
+    @Test
+    public void testCreateViaNavigation() throws Exception {
+        HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
+        hc.addUpdate("INSERT INTO y (a) VALUES ('val')", new int[] {1});
+        hc.addData("SELECT y.a, y.b FROM y WHERE y.a = 'val'", Arrays.asList(Arrays.asList("val", null)));
+        hc.addUpdate("UPDATE y SET b = 'a' WHERE y.a = 'val'", new int[] {1});
+        teiid.addTranslator("x4", hc);
+
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("m");
+        mmd.addSourceMetadata("ddl", "create foreign table x ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a)"
+                + ") options (updatable true);"
+                + "create foreign table y ("
+                + " a string, "
+                + " b string, "
+                + " primary key (a),"
+                + " CONSTRAINT FKX FOREIGN KEY (b) REFERENCES x(a)"
+                + ") options (updatable true);");
+        mmd.addSourceMapping("x4", "x4", null);
+        teiid.deployVDB("northwind", mmd);
+
+        // update to collection based reference
+        String payload = "{\n" +
+                "\"a\": \"val\"\n" +
+                "}";
+        ContentResponse response = http.newRequest(baseURL + "/northwind/m/x('a')/y_FKX")
+                .method("POST")
+                .content(new StringContentProvider(payload), ContentType.APPLICATION_JSON.toString())
+                .send();
+        assertEquals(201, response.getStatus());
+    }
+
     @Test
     public void testRelatedEntities() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
