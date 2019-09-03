@@ -678,7 +678,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         if ((command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
             return true;
         }
-        if (transactionalReads || RelationalNodeUtil.isUpdate(command) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() != 0)) {
+        if (transactionalReads || RelationalNodeUtil.isUpdate(command) || (command instanceof StoredProcedure && !((StoredProcedure)command).isReadOnly())) {
             if ((multiSource && connectorBindingExpression == null)) {
                 return true;
             }

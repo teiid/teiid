@@ -1057,7 +1057,7 @@ public class LanguageBridgeFactory {
                  throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30486, e);
             }
         }
-        if (sp.getUpdateCount() > 1) {
+        if (!sp.isReadOnly()) {
             readOnly = false;
         }
         Class<?> returnType = null;

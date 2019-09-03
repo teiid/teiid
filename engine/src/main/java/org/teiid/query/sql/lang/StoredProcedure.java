@@ -403,6 +403,11 @@ public class StoredProcedure extends ProcedureContainer {
         this.pushedInQuery = pushedInQuery;
     }
 
+    public boolean isReadOnly() {
+        //by default (-1) stored procedures are considered not read-only
+        return this.getUpdateCount() == 0;
+    }
+
 }
 
 
