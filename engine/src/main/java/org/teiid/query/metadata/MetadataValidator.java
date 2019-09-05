@@ -22,6 +22,7 @@ import static org.teiid.query.metadata.MaterializationMetadataRepository.*;
 import java.util.*;
 
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -82,6 +83,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
+import org.teiid.util.FullyQualifiedName;
 
 public class MetadataValidator {
 
@@ -133,7 +135,7 @@ public class MetadataValidator {
 
                 for (Table t:schema.getTables().values()) {
                     if (t.getColumns() == null || t.getColumns().size() == 0) {
-                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, t.getFullName()));
+                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, t.getFullName()), t);
                     }
                     Set<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
                     validateConstraintNames(metadataValidator, report, model, t.getAllKeys(), names);
@@ -158,7 +160,7 @@ public class MetadataValidator {
                     continue;
                 }
                 if (!names.add(record.getName())) {
-                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31152, record.getFullName()));
+                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31152, record.getFullName()), record.getParent());
                 }
             }
         }
@@ -175,7 +177,7 @@ public class MetadataValidator {
                 ModelMetaData model = vdb.getModel(schema.getName());
                 for (Table t:schema.getTables().values()) {
                     if (t.isPhysical() && !model.isSource()) {
-                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31075, t.getFullName(), model.getName()));
+                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31075, t.getFullName(), model.getName()), t);
                     }
                 }
 
@@ -273,7 +275,7 @@ public class MetadataValidator {
                         }
                         if (t.isVirtual()) {
                             if (t.getSelectTransformation() == null) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getFullName(), model.getName()));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getFullName(), model.getName()), t);
                             }
                             else {
                                 metadataValidator.validate(vdb, model, t, report, metadata, mf);
@@ -289,7 +291,7 @@ public class MetadataValidator {
                                 try {
                                     metadataValidator.validateUpdatePlan(model, report, metadata, t, tr.getPlan(), commandType);
                                 } catch (TeiidException e) {
-                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()));
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()), t);
                                 }
                             }
                         }
@@ -297,7 +299,7 @@ public class MetadataValidator {
                         Procedure p = (Procedure)record;
                         if (p.isVirtual()) {
                             if (p.getQueryPlan() == null) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getFullName(), model.getName()));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getFullName(), model.getName()), p);
                             }
                             else {
                                 metadataValidator.validate(vdb, model, p, report, metadata, mf);
@@ -339,7 +341,7 @@ public class MetadataValidator {
                         String beforeScript = t.getProperty(MATVIEW_BEFORE_LOAD_SCRIPT, false);
                         String afterScript = t.getProperty(MATVIEW_AFTER_LOAD_SCRIPT, false);
                         if (beforeScript == null || afterScript == null) {
-                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31155, t.getFullName()));
+                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31155, t.getFullName()), t);
                         }
 
                         String matViewLoadNumberColumn = t.getProperty(MATVIEW_LOADNUMBER_COLUMN, false);
@@ -350,10 +352,10 @@ public class MetadataValidator {
                         if (matViewLoadNumberColumn != null) {
                             Column column = matTable.getColumnByName(matViewLoadNumberColumn);
                             if (column == null) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31218, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31218, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn), t);
                                 continue;
                             } else if (!column.getRuntimeType().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.LONG)) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31215, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn, column.getRuntimeType()));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31215, t.getFullName(), matTable.getFullName(), matViewLoadNumberColumn, column.getRuntimeType()), t);
                                 continue;
                             }
                         }
@@ -365,7 +367,7 @@ public class MetadataValidator {
                             if (status == null) {
                                 status = vdb.getPropertyValue(MATVIEW_STATUS_TABLE);
                                 if (status == null) {
-                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154, t.getFullName()));
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31154, t.getFullName()), t);
                                     continue;
                                 }
                             }
@@ -373,14 +375,14 @@ public class MetadataValidator {
                         }
 
                         if (matViewLoadNumberColumn == null && stageTable == null && loadScript == null) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31216, t.getFullName()));
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31216, t.getFullName()), t);
                             continue;
                         }
 
                         String scope = t.getProperty(MATVIEW_SHARE_SCOPE, false);
                         if (scope != null && !scope.equalsIgnoreCase(Scope.IMPORTED.name())
                                 && !scope.equalsIgnoreCase(Scope.FULL.name())) {
-                            metadataValidator.log(report, model, Severity.WARNING,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31253, t.getFullName(), scope));
+                            metadataValidator.log(report, model, Severity.WARNING,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31253, t.getFullName(), scope), t);
                             t.setProperty(MATVIEW_SHARE_SCOPE, Scope.IMPORTED.name());
                         }
 
@@ -402,7 +404,7 @@ public class MetadataValidator {
 
                         Table statusTable = findTableByName(store, status);
                         if (statusTable == null) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31197, t.getFullName(), status));
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31197, t.getFullName(), status), t);
                             continue;
                         }
 
@@ -431,12 +433,12 @@ public class MetadataValidator {
                             Class<?> type = statusColumns.get(i).getJavaType();
 
                             if(type != expectedType) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31195, t.getName(), statusTable.getFullName(), name, type, expectedType));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31195, t.getName(), statusTable.getFullName(), name, type, expectedType), t);
                             }
                         }
 
                         if (!statusTypeMap.isEmpty()) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31196, t.getName(), statusTable.getFullName(), statusTypeMap.keySet()));
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31196, t.getName(), statusTable.getFullName(), statusTypeMap.keySet()), t);
                         }
 
                         // validate the load scripts
@@ -457,7 +459,7 @@ public class MetadataValidator {
 
                         String updatable = t.getProperty(MATVIEW_UPDATABLE, false);
                         if (updatable == null || !Boolean.parseBoolean(updatable)) {
-                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31217, t.getFullName()));
+                            metadataValidator.log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31217, t.getFullName()), t);
                         }
                     }
                 }
@@ -518,7 +520,7 @@ public class MetadataValidator {
                 ValidatorReport subReport = Validator.validate(command, metadata, visitor);
                 metadataValidator.processReport(model, matView, report, subReport);
             } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
-                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getFullName(), option, script, e));
+                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31198, matView.getFullName(), option, script, e), matView);
             }
         }
 
@@ -538,7 +540,7 @@ public class MetadataValidator {
                     throw new QueryResolverException("Expected 1 timestampe result column"); //$NON-NLS-1$
                 }
             } catch (QueryParserException | QueryResolverException | TeiidComponentException e) {
-                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31269, matView.getFullName(), option, query, e));
+                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31269, matView.getFullName(), option, query, e), matView);
             }
         }
 
@@ -549,20 +551,29 @@ public class MetadataValidator {
                 Column column = columns.get(i);
                 Column matViewColumn = matView.getColumnByName(column.getName());
                 if (matViewColumn == null) {
-                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, column.getName(), matView.getFullName(), view.getFullName()));
+                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31193, column.getName(), matView.getFullName(), view.getFullName()), matView);
                 } else if(!column.getDatatypeUUID().equals(matViewColumn.getDatatypeUUID())){
-                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, matViewColumn.getName(), matView.getFullName(), column.getName(), view.getFullName()));
+                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31194, matViewColumn.getName(), matView.getFullName(), column.getName(), view.getFullName()), matView);
                 }
             }
         }
     }
 
     public void log(ValidatorReport report, ModelMetaData model, String msg) {
-        log(report, model, Severity.ERROR, msg);
+        log(report, model, Severity.ERROR, msg, null);
     }
 
-    public void log(ValidatorReport report, ModelMetaData model, Severity severity, String msg) {
-        model.addRuntimeMessage(severity, msg);
+    public void log(ValidatorReport report, ModelMetaData model, String msg, AbstractMetadataRecord object) {
+        log(report, model, Severity.ERROR, msg, object);
+    }
+
+    public void log(ValidatorReport report, ModelMetaData model, Severity severity, String msg, AbstractMetadataRecord object) {
+        Message message = model.addRuntimeMessage(severity, msg);
+        if (object != null && object.getParent() instanceof Schema) {
+            FullyQualifiedName fqn = new FullyQualifiedName();
+            fqn.append(Schema.getChildType(object.getClass()), object.getIdentifier());
+            message.setPath(fqn.toString());
+        }
         int messageLevel = MessageLevel.WARNING;
         if (severity == Severity.ERROR) {
             report.handleValidationError(msg);
@@ -584,7 +595,7 @@ public class MetadataValidator {
             if (record instanceof Procedure) {
                 Procedure p = (Procedure)record;
                 Command command = parser.parseProcedure(p.getQueryPlan(), false);
-                validateNoReferences(command, report, model);
+                validateNoReferences(command, report, model, p);
                 QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
                 resolverReport =  Validator.validate(command, metadata);
                 determineDependencies(p, command);
@@ -597,7 +608,7 @@ public class MetadataValidator {
                 QueryNode node = null;
                 if (t.isVirtual()) {
                     QueryCommand command = (QueryCommand)parser.parseCommand(selectTransformation);
-                    validateNoReferences(command, report, model);
+                    validateNoReferences(command, report, model, t);
                     QueryResolver.resolveCommand(command, metadata);
                     resolverReport =  Validator.validate(command, metadata);
                     if (!resolverReport.hasItems()) {
@@ -607,7 +618,7 @@ public class MetadataValidator {
                                 try {
                                     addColumn(column, t, mf, metadata);
                                 } catch (TranslatorException e) {
-                                    log(report, model, e.getMessage());
+                                    log(report, model, e.getMessage(), t);
                                 }
                             }
 
@@ -622,7 +633,7 @@ public class MetadataValidator {
                                     Column c = columns.get(i);
                                     Column column = t.getColumnByName(c.getName());
                                     if (column == null) {
-                                        log(report, model, QueryPlugin.Util.gs(DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, t.getFullName(), c.getName())));
+                                        log(report, model, QueryPlugin.Util.gs(DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, t.getFullName(), c.getName())), t);
                                     }
                                     newColumns.add(column);
                                 }
@@ -671,18 +682,18 @@ public class MetadataValidator {
                                 String exprString = c.getNameInSource();
                                 try {
                                     Expression ex = parser.parseExpression(exprString);
-                                    validateNoReferences(ex, report, model);
+                                    validateNoReferences(ex, report, model, t);
                                     ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
                                     if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
-                                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()));
+                                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()), t);
                                     }
                                     EvaluatableVisitor ev = new EvaluatableVisitor();
                                     PreOrPostOrderNavigator.doVisit(ex, ev, PreOrPostOrderNavigator.PRE_ORDER);
                                     if (ev.getDeterminismLevel().compareTo(Determinism.VDB_DETERMINISTIC) < 0) {
-                                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31115, exprString, fbi.getFullName()));
+                                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31115, exprString, fbi.getFullName()), t);
                                     }
                                 } catch (QueryResolverException e) {
-                                    log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, exprString, fbi.getFullName(), e.getMessage()));
+                                    log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, exprString, fbi.getFullName(), e.getMessage()), t);
                                 }
                             }
                         }
@@ -696,7 +707,7 @@ public class MetadataValidator {
                     CacheHint cacheHint = node.getCommand().getCacheHint();
                     if (cacheHint != null && cacheHint.getScope() != null
                             && cacheHint.getScope() != org.teiid.translator.CacheDirective.Scope.VDB) {
-                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, t.getFullName()));
+                        log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, t.getFullName()), t);
                     }
                 }
 
@@ -715,7 +726,7 @@ public class MetadataValidator {
                             t.setProperty(MaterializationMetadataRepository.MATVIEW_PREFER_MEMORY, String.valueOf(cacheHint.getPrefersMemory()));
                         }
                         if (cacheHint.getScope() != null && t.getProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false) == null) {
-                            log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31252, t.getName(), cacheHint.getScope().name()));
+                            log(report, model, Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31252, t.getName(), cacheHint.getScope().name()), t);
                             t.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, MaterializationMetadataRepository.Scope.IMPORTED.name());
                         }
                     }
@@ -723,7 +734,7 @@ public class MetadataValidator {
             }
             processReport(model, record, report, resolverReport);
         } catch (TeiidException e) {
-            log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()));
+            log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()), record);
         }
     }
 
@@ -830,7 +841,7 @@ public class MetadataValidator {
             Table t, String plan, int type) throws QueryParserException, QueryResolverException,
             TeiidComponentException {
         Command command = parser.parseProcedure(plan, true);
-        validateNoReferences(command, report, model);
+        validateNoReferences(command, report, model, t);
         QueryResolver.resolveCommand(command, new GroupSymbol(t.getFullName()), type, metadata, false);
 
         //determineDependencies(t, command); -- these should be tracked against triggers
@@ -838,9 +849,9 @@ public class MetadataValidator {
         processReport(model, t, report, resolverReport);
     }
 
-    private void validateNoReferences(LanguageObject lo, ValidatorReport report, ModelMetaData model) {
+    private void validateNoReferences(LanguageObject lo, ValidatorReport report, ModelMetaData model, AbstractMetadataRecord object) {
         if (!ReferenceCollectorVisitor.getReferences(lo).isEmpty()) {
-            log(report, model, Severity.ERROR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491) + ": " + lo); //$NON-NLS-1$
+            log(report, model, Severity.ERROR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30491) + ": " + lo, object); //$NON-NLS-1$
         }
     }
 
@@ -849,7 +860,7 @@ public class MetadataValidator {
             ValidatorReport resolverReport) {
         if(resolverReport != null && resolverReport.hasItems()) {
             for (ValidatorFailure v:resolverReport.getItems()) {
-                log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), v.getMessage()));
+                log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), v.getMessage()), record);
             }
         }
     }
@@ -931,18 +942,18 @@ public class MetadataValidator {
                             String matTableName = t.getMaterializedTable().getFullName();
                             int index = matTableName.indexOf(Table.NAME_DELIM_CHAR);
                             if (index == -1) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31088, matTableName, t.getFullName()));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31088, matTableName, t.getFullName()), t);
                             }
                             else {
                                 String schemaName = matTableName.substring(0, index);
                                 Schema matSchema = store.getSchema(schemaName);
                                 if (matSchema == null) {
-                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31089, schemaName, matTableName, t.getFullName()));
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31089, schemaName, matTableName, t.getFullName()), t);
                                 }
                                 else {
                                     Table matTable = matSchema.getTable(matTableName.substring(index+1));
                                     if (matTable == null) {
-                                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31090, matTableName.substring(index+1), schemaName, t.getFullName()));
+                                        metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31090, matTableName.substring(index+1), schemaName, t.getFullName()), t);
                                     }
                                     else {
                                         t.setMaterializedTable(matTable);
@@ -954,7 +965,7 @@ public class MetadataValidator {
                             if(stageTable != null){
                                 Table materializedStageTable = findTableByName(store, stageTable);
                                 if(materializedStageTable == null) {
-                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31192, t.getFullName(), MATVIEW_STAGE_TABLE, stageTable));
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31192, t.getFullName(), MATVIEW_STAGE_TABLE, stageTable), t);
                                 } else {
                                     t.setMaterializedStageTable(materializedStageTable);
                                 }
@@ -964,7 +975,7 @@ public class MetadataValidator {
 
                     for (KeyRecord record : t.getAllKeys()) {
                         if (record.getColumns() == null || record.getColumns().isEmpty()) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31149, t.getFullName(), record.getName()));
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31149, t.getFullName(), record.getName()), t);
                         }
                     }
 
@@ -979,7 +990,7 @@ public class MetadataValidator {
                         Table referenceTable = null;
                         if (fk.getReferenceKey() == null) {
                             if (referenceTableName == null){
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getFullName()));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getFullName()), t);
                                 continue;
                             }
                             //TODO there is an ambiguity here because we don't properly track the name parts
@@ -996,13 +1007,13 @@ public class MetadataValidator {
                                 referenceSchemaName = referenceTableName.substring(0, index);
                                 Schema referenceSchema = store.getSchema(referenceSchemaName);
                                 if (referenceSchema == null) {
-                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31093, referenceSchemaName, t.getFullName()));
+                                    metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31093, referenceSchemaName, t.getFullName()), t);
                                     continue;
                                 }
                                 referenceTable = referenceSchema.getTable(referenceTableName.substring(index+1));
                             }
                             if (referenceTable == null) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31092, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31092, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName), t);
                                 continue;
                             }
                         }
@@ -1019,7 +1030,7 @@ public class MetadataValidator {
                         }
                         if (referenceColumns == null || referenceColumns.isEmpty()) {
                             if (referenceTable.getPrimaryKey() == null) {
-                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31094, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName));
+                                metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31094, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName), t);
                             }
                             else {
                                 uniqueKey = referenceTable.getPrimaryKey();
@@ -1059,7 +1070,7 @@ public class MetadataValidator {
                             }
                         }
                         if (uniqueKey == null) {
-                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName, referenceColumns));
+                            metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName, referenceColumns), t);
                         }
                         else {
                             fk.setReferenceKey(uniqueKey);

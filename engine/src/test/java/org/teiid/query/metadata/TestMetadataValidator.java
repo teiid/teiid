@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
@@ -305,6 +306,9 @@ public class TestMetadataValidator {
         ValidatorReport report = new ValidatorReport();
         report = new MetadataValidator().validate(this.vdb, this.store);
         assertTrue(printError(report), report.hasItems());
+
+        List<Message> messages = this.vdb.getModel("pm1").getMessages();
+        assertEquals("table=G1", messages.get(0).getPath());
     }
 
     @Test
@@ -359,6 +363,9 @@ public class TestMetadataValidator {
         ValidatorReport report = new ValidatorReport();
         report = new MetadataValidator().validate(this.vdb, this.store);
         assertTrue(printError(report), report.hasItems());
+
+        List<Message> messages = this.vdb.getModel("pm2").getMessages();
+        assertEquals("table=G2", messages.get(0).getPath());
     }
 
 
@@ -604,6 +611,9 @@ public class TestMetadataValidator {
 
         ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
         assertTrue(printError(report), report.hasItems());
+
+        List<Message> messages = this.vdb.getModel("phy1").getMessages();
+        assertEquals("procedure=f1", messages.get(0).getPath());
     }
 
     @Test public void testAfterTrigger() throws Exception {

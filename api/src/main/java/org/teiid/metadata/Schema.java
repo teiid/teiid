@@ -29,6 +29,13 @@ import org.teiid.connector.DataPlugin;
 
 public class Schema extends AbstractMetadataRecord {
 
+    private enum ChildType {
+        server,
+        function,
+        procedure,
+        table;
+    }
+
     private static final long serialVersionUID = -5113742472848113008L;
 
     private boolean physical = true;
@@ -204,5 +211,52 @@ public class Schema extends AbstractMetadataRecord {
 
     public void setVisible(boolean visible) {
         setProperty("VISIBLE", String.valueOf(visible)); //$NON-NLS-1$
+    }
+
+    /**
+     * Return the object type name for a given child type class, or null if the class
+     * is not a child of a Schema
+     * @param child
+     * @return
+     */
+    public static String getChildType(Class<? extends AbstractMetadataRecord> child) {
+        if (child == null) {
+            return null;
+        }
+        if (child == FunctionMethod.class) {
+            return ChildType.function.name();
+        }
+        try {
+            return ChildType.valueOf(child.getSimpleName().toLowerCase()).name();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * @return the literal value schema
+     */
+    public static String getTypeName() {
+        return "schema"; //$NON-NLS-1$
+    }
+
+    /**
+     * Get the child of the given type
+     * @param type
+     * @param id can be either the name or the uid depending on type
+     * @return
+     */
+    public AbstractMetadataRecord getChild(String type, String id) {
+        switch (ChildType.valueOf(type)) {
+        case function:
+            return getFunction(id);
+        case procedure:
+            return getProcedure(id);
+        case server:
+            return getServer(id);
+        case table:
+            return getTable(id);
+        }
+        return null;
     }
 }

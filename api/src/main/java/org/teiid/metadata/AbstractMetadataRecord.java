@@ -268,4 +268,12 @@ public abstract class AbstractMetadataRecord implements Serializable {
         return this.uuid != null && this.uuid.length() > 0 && !Character.isDigit(this.uuid.charAt(0));
     }
 
+    /**
+     * Get a context unique identifier for this object.  Typically it's just the name.
+     * @return
+     */
+    public String getIdentifier() {
+        return this.getName();
+    }
+
 }

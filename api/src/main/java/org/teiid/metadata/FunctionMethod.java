@@ -522,4 +522,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
         this.method = method;
     }
 
+    @Override
+    public String getIdentifier() {
+        return this.getUUID();
+    }
+
 }

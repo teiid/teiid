@@ -131,6 +131,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
      * @return
      * @deprecated
      */
+    @Deprecated
     public List<String> getSchemaPaths() {
         return schemaPaths;
     }
