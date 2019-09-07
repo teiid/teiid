@@ -171,6 +171,11 @@ public class RuntimePlugin {
         TEIID40166,
         TEIID40167,
         TEIID40168,
-        TEIID40169
+        TEIID40169,
+
+        TEIID50029, // dynamic metadata loaded
+        TEIID50030,
+        TEIID50104,
+        TEIID50036,
     }
 }

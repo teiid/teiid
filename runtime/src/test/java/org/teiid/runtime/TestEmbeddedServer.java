@@ -39,13 +39,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.transaction.*;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.Synchronization;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.infinispan.transaction.tm.DummyTransactionManager;
 import org.junit.After;
@@ -70,6 +80,8 @@ import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.SQLStates;
 import org.teiid.jdbc.TeiidDriver;
@@ -277,7 +289,7 @@ public class TestEmbeddedServer {
         public int getStatus() throws SystemException {
             Transaction t = txns.get();
             if (t == null) {
-                return Status.STATUS_NO_TRANSACTION;
+                return javax.transaction.Status.STATUS_NO_TRANSACTION;
             }
             return t.getStatus();
         }
@@ -1431,6 +1443,24 @@ public class TestEmbeddedServer {
         assertTrue(c.isValid(10));
         es.undeployVDB("test");
         assertTrue(!c.isValid(10));
+    }
+
+    @Test public void testAsyncDeploy() throws Exception {
+        es.start(new EmbeddedConfiguration());
+        CompletableFuture<org.teiid.adminapi.VDB.Status> future = new CompletableFuture<>();
+        Thread t = Thread.currentThread();
+        es.getVDBRepository().addListener(new VDBLifeCycleListener() {
+            @Override
+            public void finishedDeployment(String name, CompositeVDB vdb) {
+                if (Thread.currentThread() == t) {
+                    future.completeExceptionally(new AssertionError("Same thread"));
+                } else {
+                    future.complete(vdb.getVDB().getStatus());
+                }
+            }
+        });
+        es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><property name=\"async-load\" value=\"true\"></property><model type=\"VIRTUAL\" name=\"test\"><metadata type=\"DDL\"><![CDATA[CREATE view x as select 1;]]> </metadata></model></vdb>".getBytes()));
+        assertEquals(org.teiid.adminapi.VDB.Status.ACTIVE, future.get(5, TimeUnit.SECONDS));
     }
 
     @Test public void testQueryTimeout() throws Exception {

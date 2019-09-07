@@ -19,10 +19,12 @@
 package org.teiid.runtime;
 
 import java.io.StringReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -34,6 +36,7 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
@@ -233,15 +236,113 @@ public abstract class AbstractVDBDeployer {
 
     protected abstract VDBRepository getVDBRepository();
 
-    protected abstract void loadMetadata(VDBMetaData vdb, ModelMetaData model,
-            ConnectorManagerRepository cmr,
-            MetadataRepository metadataRepository, MetadataStore store,
-            AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException;
+    @SuppressWarnings({"rawtypes","unchecked"})
+    private void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount, final VDBResources vdbResources) throws TranslatorException {
 
-    protected void metadataLoaded(final VDBMetaData vdb,
+        String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date()));
+        model.setMetadataStatus(Model.MetadataStatus.LOADING);
+        model.addRuntimeMessage(Severity.INFO, msg);
+        LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+
+        final Runnable job = new Runnable() {
+
+            @Override
+            public void run() {
+                boolean cached = false;
+                Exception ex = null;
+                TranslatorException te = null;
+
+                // if this is not the first time trying to load metadata
+                if (model.getMetadataStatus() != Model.MetadataStatus.LOADING) {
+                    model.setMetadataStatus(Model.MetadataStatus.RETRYING);
+                }
+
+                // designer based models define data types based on their built in data types, which are system vdb data types
+                Map<String, Datatype> datatypes = vdbMetadataStore.getDatatypes();
+                MetadataFactory factory = getCachedMetadataFactory(vdb, model);
+                if (factory != null) {
+                    factory.correctDatatypes(datatypes);
+                    cached = true;
+                    LogManager.logDetail(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                } else {
+                    factory = createMetadataFactory(vdb, vdbMetadataStore, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+                    ExecutionFactory ef = null;
+                    Object cf = null;
+
+                    for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+                        if (ex != null) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, ex, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+                            ex = null;
+                            te = null;
+                        }
+                        try {
+                            if (cm != null) {
+                                ef = cm.getExecutionFactory();
+                                cf = cm.getConnectionFactory();
+                            }
+                        } catch (TranslatorException e) {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+                            te = e;
+                        }
+                        ClassLoader originalCL = Thread.currentThread().getContextClassLoader();
+                        try {
+                            LogManager.logDetail(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50104,vdb.getName(), vdb.getVersion(), model.getName(), cm != null?cm.getTranslatorName():null, cm != null?cm.getConnectionName():null));
+                            Thread.currentThread().setContextClassLoader(metadataRepo.getClass().getClassLoader());
+                            metadataRepo.loadMetadata(factory, ef, cf);
+                            LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
+                            break;
+                        } catch (Exception e) {
+                            factory = createMetadataFactory(vdb, vdbMetadataStore, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+                            ex = e;
+                        } finally {
+                            Thread.currentThread().setContextClassLoader(originalCL);
+                        }
+                    }
+                }
+
+                synchronized (vdb) {
+                    if (ex == null) {
+                        if (!cached) {
+                            // cache the schema to disk
+                            cacheMetadataFactory(vdb, model, factory);
+                        }
+
+                        metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true, cmr, vdbResources);
+                    } else {
+                        String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
+                        if (te != null) {
+                            errorMsg += ": " + te.getMessage(); //$NON-NLS-1$
+                        }
+                        model.addAttchment(Exception.class, ex);
+                        model.addRuntimeError(errorMsg);
+                        model.setMetadataStatus(Model.MetadataStatus.FAILED);
+                        LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
+                        if (ex instanceof RuntimeException) {
+                            metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false, cmr, vdbResources);
+                        } else {
+                            retryLoad(vdb, model, this);
+                        }
+                    }
+                }
+            }
+        };
+
+        runMetadataJob(vdb, model, job);
+    }
+
+    protected abstract void runMetadataJob(VDBMetaData vdb, ModelMetaData model, Runnable job) throws TranslatorException;
+
+    protected abstract void retryLoad(VDBMetaData vdb, final ModelMetaData model, Runnable job);
+
+    protected abstract MetadataFactory getCachedMetadataFactory(final VDBMetaData vdb, final ModelMetaData model);
+
+    protected abstract void cacheMetadataFactory(VDBMetaData vdb, final ModelMetaData model, MetadataFactory schema);
+
+    private void metadataLoaded(final VDBMetaData vdb,
             final ModelMetaData model,
             final MetadataStore vdbMetadataStore,
             final AtomicInteger loadCount, MetadataFactory factory, boolean success, ConnectorManagerRepository cmr, VDBResources vdbResources) {
+        boolean failed = false;
         if (success) {
             // merge into VDB metadata
             factory.mergeInto(vdbMetadataStore);
@@ -251,11 +352,14 @@ public abstract class AbstractVDBDeployer {
             model.setMetadataStatus(Model.MetadataStatus.LOADED);
         } else {
             model.setMetadataStatus(Model.MetadataStatus.FAILED);
-            vdb.setStatus(Status.FAILED);
+            synchronized (vdb) {
+                failed = vdb.getStatus() != Status.FAILED;
+                vdb.setStatus(Status.FAILED);
+            }
             //TODO: abort the other loads
         }
 
-        if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
+        if ((loadCount.decrementAndGet() == 0 && vdb.getStatus() != Status.FAILED) || failed) {
             if (vdb.getStatus() != Status.FAILED) {
                 processVDBDDL(vdb, vdbMetadataStore, cmr, vdbResources);
             }

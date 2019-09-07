@@ -56,10 +56,7 @@ public class IntegrationPlugin {
         TEIID50024, // failed metadata load
         TEIID50025, // VDB deployed
         TEIID50026, // VDB undeployed
-        TEIID50029, // dynamic metadata loaded
-        TEIID50030,
         TEIID50035, // translator not found
-        TEIID50036,
         TEIID50037, // odbc enabled
         TEIID50038, // embedded enabled
         TEIID50039, // socket_disabled
@@ -96,7 +93,6 @@ public class IntegrationPlugin {
         TEIID50101,
         TEIID50102,
         TEIID50103,
-        TEIID50104,
         TEIID50105,
         TEIID50106,
         TEIID50107,
