@@ -36,7 +36,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import javax.transaction.TransactionManager;
@@ -134,6 +133,8 @@ import org.xml.sax.SAXException;
  */
 @SuppressWarnings("serial")
 public class EmbeddedServer extends AbstractVDBDeployer implements EventDistributorFactory, ExecutionFactoryProvider {
+
+    private static final String ASYNC_LOAD = "async-load"; //$NON-NLS-1$
 
     static {
         LogManager.setLogListener(new JBossLogger());
@@ -867,56 +868,43 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         return super.getMetadataRepository(repoType);
     }
 
-    /**
-     * TODO: consolidate this logic more into the abstract deployer
-     */
     @Override
-    protected void loadMetadata(VDBMetaData vdb, ModelMetaData model,
-            ConnectorManagerRepository cmr,
-            MetadataRepository metadataRepository, MetadataStore store,
-            AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
-        MetadataFactory factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+    protected void cacheMetadataFactory(VDBMetaData vdb, ModelMetaData model,
+            MetadataFactory schema) {
+        //not supported by embedded
+    }
 
-        ExecutionFactory ef = null;
-        Object cf = null;
+    @Override
+    protected MetadataFactory getCachedMetadataFactory(VDBMetaData vdb,
+            ModelMetaData model) {
+        //not supported by embedded
+        return null;
+    }
 
-        Exception te = null;
-        for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+    @Override
+    protected void retryLoad(VDBMetaData vdb, ModelMetaData model,
+            Runnable job) {
+        //not supported by embedded
+    }
+
+    @Override
+    protected void runMetadataJob(VDBMetaData vdb, ModelMetaData model, Runnable job) throws TranslatorException {
+        if (Boolean.valueOf(vdb.getPropertyValue(ASYNC_LOAD))) {
+            this.scheduler.execute(job);
+        } else {
+            //blocking load, directly throw any associated exception
+            job.run();
+            Exception te = model.getAttachment(Exception.class);
             if (te != null) {
-                LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
-                te = null;
-            }
-            try {
-                if (cm != null) {
-                    ef = cm.getExecutionFactory();
-                    cf = cm.getConnectionFactory();
+                if (te instanceof TranslatorException) {
+                    throw (TranslatorException)te;
                 }
-            } catch (TranslatorException e) {
-                LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
-            }
-
-            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
-                LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-
-            try {
-                metadataRepository.loadMetadata(factory, ef, cf);
-                break;
-            } catch (Exception e) {
-                te = e;
-                factory = createMetadataFactory(vdb, store, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
+                if (te instanceof RuntimeException) {
+                    throw (RuntimeException)te;
+                }
+                throw new TranslatorException(te);
             }
         }
-        if (te != null) {
-            if (te instanceof TranslatorException) {
-                throw (TranslatorException)te;
-            }
-            if (te instanceof RuntimeException) {
-                throw (RuntimeException)te;
-            }
-            throw new TranslatorException(te);
-        }
-        metadataLoaded(vdb, model, store, loadCount, factory, true, cmr, vdbResources);
     }
 
     public void undeployVDB(String vdbName) {
