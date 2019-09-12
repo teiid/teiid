@@ -67,13 +67,11 @@
             <modules>
                 <module>accumulo</module>
                 <module>cassandra</module>
-                <module>google</module>
                 <module>couchbase</module>
                 <module>amazon</module>
                 <module>solr</module>
-                <module>swagger</module>
+                <module>ldap</module>
                 <module>infinispan</module>
-                <module>misc</module>
                 <module>sandbox</module>
             </modules>
         </profile>
