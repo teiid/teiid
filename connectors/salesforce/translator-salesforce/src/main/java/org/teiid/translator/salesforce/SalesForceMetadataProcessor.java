@@ -65,6 +65,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     private Pattern excludeTables;
     private Pattern includeTables;
     private boolean importStatistics;
+    private boolean includeExtensionMetadata = true;
 
     // Audit Fields
     public static final String AUDIT_FIELD_CREATED_BY_ID = "CreatedById"; //$NON-NLS-1$
@@ -101,6 +102,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     @ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
     static final String COLUMN_PICKLIST_VALUES = MetadataFactory.SF_URI+"Picklist Values"; //$NON-NLS-1$
 
+    @Override
     public void process(MetadataFactory mf, SalesforceConnection connection) throws TranslatorException {
         this.connection = connection;
         this.metadataFactory = mf;
@@ -165,7 +167,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         for (Table table:this.metadataFactory.getSchema().getTables().values()) {
             if (importStatistics) {
                 try {
-                    Long val = this.connection.getCardinality(table.getNameInSource());
+                    Long val = this.connection.getCardinality(table.getSourceName());
                     if (val != null) {
                         table.setCardinality(val);
                     }
@@ -225,7 +227,7 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                 columns = child.getColumns();
                 for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
                     Column column = colIter.next();
-                    if(column.getNameInSource().equals(relationship.getField())) {
+                    if(column.getSourceName().equals(relationship.getField())) {
                         col = column;
                     }
                 }
@@ -268,17 +270,19 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         Table table = metadataFactory.addTable(name);
         FullyQualifiedName fqn = new FullyQualifiedName("sobject", objectMetadata.getName()); //$NON-NLS-1$
         table.setProperty(FQN, fqn.toString());
-        table.setNameInSource(objectMetadata.getName());
         tableMap.put(objectMetadata.getName(), table);
 
         table.setProperty(TABLE_CUSTOM, String.valueOf(objectMetadata.isCustom()));
-        table.setProperty(TABLE_SUPPORTS_CREATE, String.valueOf(objectMetadata.isCreateable()));
-        table.setProperty(TABLE_SUPPORTS_DELETE, String.valueOf(objectMetadata.isDeletable()));
-        table.setProperty(TABLE_SUPPORTS_MERGE, String.valueOf(objectMetadata.isMergeable()));
-        table.setProperty(TABLE_SUPPORTS_QUERY, String.valueOf(objectMetadata.isQueryable()));
-        table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
-        table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
-        table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
+        if (isIncludeExtensionMetadata()) {
+            table.setNameInSource(objectMetadata.getName());
+            table.setProperty(TABLE_SUPPORTS_CREATE, String.valueOf(objectMetadata.isCreateable()));
+            table.setProperty(TABLE_SUPPORTS_DELETE, String.valueOf(objectMetadata.isDeletable()));
+            table.setProperty(TABLE_SUPPORTS_MERGE, String.valueOf(objectMetadata.isMergeable()));
+            table.setProperty(TABLE_SUPPORTS_QUERY, String.valueOf(objectMetadata.isQueryable()));
+            table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
+            table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
+            table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
+        }
     }
 
     boolean allowedToAdd(String name) {
@@ -404,15 +408,21 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
                 continue;
             }
 
-            column.setNameInSource(field.getName());
+            if (!column.getName().equals(field.getName())) {
+                column.setNameInSource(field.getName());
+            }
+
             column.setLength(field.getLength());
             if(field.isUpdateable() || field.isCreateable()) {
                 column.setUpdatable(true);
                 hasUpdateableColumn  = true;
             }
-            column.setProperty(COLUMN_CALCULATED, String.valueOf(field.isCalculated()));
-            column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
-            column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
+            if (this.isIncludeExtensionMetadata()) {
+                column.setNameInSource(field.getName());
+                column.setProperty(COLUMN_CALCULATED, String.valueOf(field.isCalculated()));
+                column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
+                column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
+            }
             if (field.isDefaultedOnCreate()) {
                 column.setDefaultValue("sf default"); //$NON-NLS-1$
             }
@@ -494,5 +504,14 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 
     public void setImportStatistics(boolean importStatistics) {
         this.importStatistics = importStatistics;
+    }
+
+    @TranslatorProperty(display="Add Extension Metadata", category=PropertyType.IMPORT, description="Set to true to add additional extension metadata during the import")
+    public boolean isIncludeExtensionMetadata() {
+        return this.includeExtensionMetadata;
+    }
+
+    public void setIncludeExtensionMetadata(boolean flag) {
+        this.includeExtensionMetadata = flag;
     }
 }
