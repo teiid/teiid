@@ -84,7 +84,7 @@ public class IQueryToLdapSearchParser {
      *  SQL: select cn, managerName from people_table where managerName LIKE "John%" and cn!="Mar()"
      *  Context name: [people_table's NameInSource, e.g. (ou=people,dc=company,dc=com)]
      *  LDAP attributes: (cn, String), (managerName, String)
-     *  LDAP search filter: (&(managerName="John*")(!(cn="Mar\(\)")))
+     *  LDAP search filter: (&amp;(managerName="John*")(!(cn="Mar\(\)")))
      *
      *  @param query the query
      *  @return the LDAPSearchDetails object
