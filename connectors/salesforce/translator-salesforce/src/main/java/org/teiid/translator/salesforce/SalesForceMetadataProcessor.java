@@ -86,11 +86,11 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Merge")
     static final String TABLE_SUPPORTS_MERGE = MetadataFactory.SF_URI+"Supports Merge"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Query")
-    static final String TABLE_SUPPORTS_QUERY = MetadataFactory.SF_URI+"Supports Query"; //$NON-NLS-1$
+    public static final String TABLE_SUPPORTS_QUERY = MetadataFactory.SF_URI+"Supports Query"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Replicate")
     static final String TABLE_SUPPORTS_REPLICATE = MetadataFactory.SF_URI+"Supports Replicate"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Retrieve")
-    static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
+    public static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
     static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_URI+"Supports Search"; //$NON-NLS-1$
 
@@ -276,13 +276,14 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
         tableMap.put(objectMetadata.getName(), table);
 
         table.setProperty(TABLE_CUSTOM, String.valueOf(objectMetadata.isCustom()));
+        table.setProperty(TABLE_SUPPORTS_QUERY, String.valueOf(objectMetadata.isQueryable()));
+        table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
+
         if (isIncludeExtensionMetadata()) {
             table.setNameInSource(objectMetadata.getName());
             table.setProperty(TABLE_SUPPORTS_CREATE, String.valueOf(objectMetadata.isCreateable()));
             table.setProperty(TABLE_SUPPORTS_DELETE, String.valueOf(objectMetadata.isDeletable()));
             table.setProperty(TABLE_SUPPORTS_MERGE, String.valueOf(objectMetadata.isMergeable()));
-            table.setProperty(TABLE_SUPPORTS_QUERY, String.valueOf(objectMetadata.isQueryable()));
-            table.setProperty(TABLE_SUPPORTS_REPLICATE, String.valueOf(objectMetadata.isReplicateable()));
             table.setProperty(TABLE_SUPPORTS_RETRIEVE, String.valueOf(objectMetadata.isRetrieveable()));
             table.setProperty(TABLE_SUPPORTS_SEARCH, String.valueOf(objectMetadata.isSearchable()));
         }

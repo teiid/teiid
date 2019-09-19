@@ -33,7 +33,7 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Constants;
+import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.Util;
 
@@ -90,6 +90,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         }
     }
 
+    @Override
     public void visit(IsNull obj) {
         visit(new Comparison(obj.getExpression(), new Literal(null, obj.getExpression().getType()), obj.isNegated()?Comparison.Operator.NE:Comparison.Operator.EQ));
     }
@@ -362,7 +363,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
 
     protected void loadColumnMetadata( NamedTable group ) throws TranslatorException {
         table = group.getMetadataObject();
-        String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
+        String supportsQuery = table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
         if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
             throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
         }
@@ -402,6 +403,7 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         return result;
     }
 
+    @Override
     public boolean hasCriteria() {
         return hasCriteria;
     }
@@ -420,10 +422,12 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         this.hasCriteria = hasCriteria;
     }
 
+    @Override
     public boolean hasOnlyIDCriteria() {
         return this.onlyIDCriteria;
     }
 
+    @Override
     public String getTableName() {
         return table.getSourceName();
     }

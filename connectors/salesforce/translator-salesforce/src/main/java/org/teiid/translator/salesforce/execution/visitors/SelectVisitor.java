@@ -29,7 +29,7 @@ import org.teiid.language.AndOr.Operator;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Constants;
+import org.teiid.translator.salesforce.SalesForceMetadataProcessor;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 
 
@@ -119,8 +119,8 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
     public void visit(NamedTable obj) {
         try {
             table = obj.getMetadataObject();
-            String supportsQuery = table.getProperty(Constants.SUPPORTS_QUERY, true);
-            objectSupportsRetrieve = Boolean.valueOf(table.getProperty(Constants.SUPPORTS_RETRIEVE, true));
+            String supportsQuery = table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_QUERY, true);
+            objectSupportsRetrieve = Boolean.valueOf(table.getProperty(SalesForceMetadataProcessor.TABLE_SUPPORTS_RETRIEVE, true));
             if (supportsQuery != null && !Boolean.valueOf(supportsQuery)) {
                 throw new TranslatorException(table.getSourceName() + " " + SalesForcePlugin.Util.getString("CriteriaVisitor.query.not.supported")); //$NON-NLS-1$ //$NON-NLS-2$
             }
@@ -142,6 +142,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
      * LIMIT ?
      */
 
+    @Override
     public String getQuery() throws TranslatorException {
         if (!exceptions.isEmpty()) {
             throw exceptions.get(0);
