@@ -5,6 +5,7 @@ jdk:
     - openjdk11
 stages:
   - name: script
+    if: $TRAVIS_EVENT_TYPE != cron
 before_install:
 - cp settings.xml $HOME/.m2/settings.xml
 install: mvn -P release install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
@@ -18,6 +19,7 @@ deploy:
   skip_cleanup: true
   on:
     branch: master
+    condition: $TRAVIS_EVENT_TYPE = cron
     jdk: openjdk8
 notifications:
   webhooks:
