@@ -175,6 +175,22 @@ public class TestDDLStringVisitor {
     }
 
     @Test
+    public void testFilteredReferenceTableFK() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE \"G1\"(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+                "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
+                "FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
+        String expected = "CREATE FOREIGN TABLE G1 (\n" +
+                "\tg1e1 integer,\n" +
+                "\tg1e2 string,\n" +
+                "\tPRIMARY KEY(g1e1, g1e2)\n" +
+                ");";
+
+        Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
+        String metadataDDL = DDLStringVisitor.getDDLString(s, null, "G1");
+        assertEquals(expected, metadataDDL);
+    }
+
+    @Test
     public void testFKWithOptions() throws Exception {
         String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
                 "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
@@ -192,6 +208,7 @@ public class TestDDLStringVisitor {
                 ");";
         helpTest(ddl, expected);
     }
+
 
     @Test
     public void testMultipleCommands() throws Exception {
