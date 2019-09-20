@@ -399,7 +399,7 @@ public class DDLStringVisitor {
                     continue;
                 }
             }
-            if (this.filter != null && !filter.matcher(record.getName()).matches()) {
+            if (!shouldInclude(record)) {
                 continue;
             }
             if (first) {
@@ -417,6 +417,10 @@ public class DDLStringVisitor {
                 visit((FunctionMethod)record);
             }
         }
+    }
+
+    private boolean shouldInclude(AbstractMetadataRecord record) {
+        return this.filter == null || filter.matcher(record.getName()).matches();
     }
 
     private void visit(Table table) {
@@ -570,6 +574,9 @@ public class DDLStringVisitor {
 
         for (int i = 0; i < table.getForeignKeys().size(); i++) {
             ForeignKey key = table.getForeignKeys().get(i);
+            if (key.getReferenceKey() != null && !shouldInclude(key.getReferenceKey().getParent())) {
+                continue;
+            }
             addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
             append(SPACE).append(REFERENCES);
             if (key.getReferenceKey() != null) {
