@@ -38,6 +38,7 @@ import org.teiid.metadata.Grant.Permission.Privilege;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.DatabaseStore;
 import org.teiid.query.metadata.DatabaseStore.Mode;
 import org.teiid.query.metadata.DatabaseUtil;
@@ -1906,5 +1907,46 @@ public class TestDDLParser {
         // schema test
         Schema schema = db.getSchema("S1");
         assertTrue(schema.isVisible());
+    }
+
+    @Test
+    public void testTimestampPrecisionScale() throws Exception {
+
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                        "e1 timestamp,\n" +
+                        "e2 timestamp(10),\n" +
+                        "e3 timestamp(0),\n" +
+                        "e4 timestamp(1));";
+
+        Schema s = helpParse(ddl, "model").getSchema();
+        Map<String, Table> tableMap = s.getTables();
+
+        assertTrue("Table not found", tableMap.containsKey("G1"));
+        Table table = tableMap.get("G1");
+
+        assertEquals(4, table.getColumns().size());
+
+        List<Column> columns = table.getColumns();
+        Column e1 = columns.get(0);
+        Column e2 = columns.get(1);
+        Column e3 = columns.get(2);
+        Column e4 = columns.get(3);
+
+        assertTrue(e1.isDefaultPrecisionScale());
+
+        assertTrue(e2.isDefaultPrecisionScale());
+
+        assertEquals(19, e3.getPrecision());
+        assertEquals(0, e3.getScale());
+
+        assertEquals(21, e4.getPrecision());
+        assertEquals(1, e4.getScale());
+
+        assertEquals("CREATE FOREIGN TABLE G1 (\n" +
+                "\te1 timestamp,\n" +
+                "\te2 timestamp,\n" +
+                "\te3 timestamp(0),\n" +
+                "\te4 timestamp(1)\n" +
+                ");", DDLStringVisitor.getDDLString(s, null, null));
     }
 }
