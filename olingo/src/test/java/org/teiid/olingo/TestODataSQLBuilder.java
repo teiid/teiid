@@ -37,6 +37,7 @@ import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.olingo.commons.api.edm.provider.CsdlProperty;
 import org.apache.olingo.commons.api.edm.provider.CsdlSchema;
 import org.apache.olingo.commons.api.edmx.EdmxReference;
 import org.apache.olingo.commons.core.Encoder;
@@ -1116,5 +1117,24 @@ public class TestODataSQLBuilder {
                 "SELECT g0.id, g0.location, g0.line, g0.polygon FROM PM1.geo AS g0 WHERE st_intersects(g0.location, g0.polygon) ORDER BY g0.id");
     }
 
+    @Test
+    public void testTimestampPrecision() throws Exception {
+        String ddl = "CREATE FOREIGN TABLE G1(\n" +
+                "e1 timestamp primary key,\n" +
+                "e3 timestamp(0),\n" +
+                "e4 timestamp(1));";
+
+        TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "vdb", "PM1");
+        MetadataStore store = metadata.getMetadataStore();
+        org.teiid.metadata.Schema teiidSchema = store.getSchema("PM1");
+        CsdlSchema schema = ODataSchemaBuilder.buildMetadata("vdb", teiidSchema);
+        CsdlProperty property = schema.getEntityType("G1").getProperty("e1");
+        assertNull(property.getPrecision());
+        property = schema.getEntityType("G1").getProperty("e3");
+        assertEquals(0, property.getPrecision().intValue());
+        property = schema.getEntityType("G1").getProperty("e4");
+        assertEquals(1, property.getPrecision().intValue());
+    }
 
 }
+

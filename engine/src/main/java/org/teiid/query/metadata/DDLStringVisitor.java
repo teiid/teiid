@@ -716,6 +716,11 @@ public class DDLStringVisitor {
                         append(COMMA).append(column.getScale());
                     }
                     append(RPAREN);
+                } else if (runtimeTypeName.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
+                        && !column.isDefaultPrecisionScale()) {
+                    append(LPAREN);
+                    append(column.getScale());
+                    append(RPAREN);
                 }
             }
             if (datatype != null) {

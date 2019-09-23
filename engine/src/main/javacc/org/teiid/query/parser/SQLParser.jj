@@ -5011,7 +5011,15 @@ ParsedDataType parseDataTypePrimary() :
 		(typeToken = <DECIMAL> [<LPAREN>length=intVal()[<COMMA>scale=intVal()]<RPAREN>])| 
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
-		typeToken = <TIMESTAMP> |
+		(typeToken = <TIMESTAMP> [<LPAREN>scale=intVal()<RPAREN> {
+		      if (scale >= 9) {
+		        scale = null; //default
+		      } else if (scale == 0) {
+		        length = 19;
+		      } else {
+                length = scale + 20;
+              }
+		    } ] )|
 		(typeToken = <OBJECT> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
