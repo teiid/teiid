@@ -20,6 +20,8 @@ package org.teiid.olingo.common;
 
 import static org.junit.Assert.*;
 
+import java.sql.Timestamp;
+
 import org.apache.olingo.commons.core.edm.primitivetype.EdmGeographyPoint;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmGeometryPoint;
 import org.junit.Test;
@@ -51,6 +53,19 @@ public class TestODataTypeManager {
         assertEquals("GeographyPolygon", ODataTypeManager.odataType(c).name());
         
         assertEquals("geography", ODataTypeManager.teiidType(EdmGeographyPoint.getInstance(), false));
+    }
+    
+    @Test public void testTimestampPrecision() {
+        Timestamp value = new Timestamp(1234);
+        value.setNanos(56789);
+        Timestamp corrected = (Timestamp)ODataTypeManager.rationalizePrecision(0, null, value);
+        assertEquals(0, corrected.getNanos());
+
+        corrected = (Timestamp)ODataTypeManager.rationalizePrecision(5, null, value);
+        assertEquals(50000, corrected.getNanos());
+
+        corrected = (Timestamp)ODataTypeManager.rationalizePrecision(8, null, value);
+        assertEquals(56780, corrected.getNanos());
     }
     
 }

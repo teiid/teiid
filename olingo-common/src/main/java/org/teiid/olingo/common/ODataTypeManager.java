@@ -376,24 +376,39 @@ public class ODataTypeManager {
     }    
     
     public static Object rationalizePrecision(Integer precision, Integer scale, Object value) {
-        if (precision == null || !(value instanceof BigDecimal)) {
+        if (precision == null) {
             return value;
         }
-        BigDecimal bigDecimalValue = (BigDecimal)value;
-        //if precision is set, then try to set an appropriate scale to pass the facet check
-        final int digits = bigDecimalValue.scale() >= 0
-                  ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
-                      : bigDecimalValue.precision() - bigDecimalValue.scale();
-        
-        if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
-            BigDecimal newBigDecimal = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
-            //only allow for trimming trailing zeros
-            if (newBigDecimal.compareTo(bigDecimalValue) == 0) {
-                bigDecimalValue = newBigDecimal;
+        if (value instanceof BigDecimal) {
+            BigDecimal bigDecimalValue = (BigDecimal)value;
+            //if precision is set, then try to set an appropriate scale to pass the facet check
+            final int digits = bigDecimalValue.scale() >= 0
+                      ? Math.max(bigDecimalValue.precision(), bigDecimalValue.scale())
+                          : bigDecimalValue.precision() - bigDecimalValue.scale();
+
+            if (bigDecimalValue.scale() > (scale == null ? 0 : scale) || (digits > precision)) {
+                BigDecimal newBigDecimal = bigDecimalValue.setScale(Math.min(digits > precision ? bigDecimalValue.scale() - digits + precision : bigDecimalValue.scale(), scale == null ? 0 : scale), RoundingMode.HALF_UP);
+                //only allow for trimming trailing zeros
+                if (newBigDecimal.compareTo(bigDecimalValue) == 0) {
+                    bigDecimalValue = newBigDecimal;
+                }
+            }
+            return bigDecimalValue;
+        } else if (value instanceof Timestamp) {
+            if (precision < 9) {
+                Timestamp timestamp = (Timestamp)value;
+                int nanos = timestamp.getNanos();
+                long mask = (long)Math.pow(10, 9-precision);
+                long adjusted = (nanos / mask) * mask;
+                if (adjusted != nanos) {
+                    Timestamp result = new Timestamp(timestamp.getTime());
+                    result.setNanos((int)adjusted);
+                    return result;
+                }
+
             }
         }
-
-        return bigDecimalValue;
+        return value;
     }
     
     public static Geospatial convertToODataValue(InputStream wkb, boolean includesSrid) 

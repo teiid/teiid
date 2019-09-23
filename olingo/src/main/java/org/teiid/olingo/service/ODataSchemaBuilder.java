@@ -190,9 +190,13 @@ public class ODataSchemaBuilder {
                 property.setPrecision(c.getPrecision());
             }
             property.setScale(Math.max(0, c.getScale()));
-        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)
-                || runtimeType.equals(DataTypeManager.DefaultDataTypes.TIME)) {
-            property.setPrecision(c.getPrecision() == 0?new Integer(4):c.getPrecision());
+        } else if (runtimeType.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) {
+            int precision = c.getScale();
+            //timestamp scale is odata precision
+            //set it if there's a non default value
+            if (precision != 0 || c.getPrecision() != 0) {
+                property.setPrecision(precision);
+            }
         }
         if (c.getDefaultValue() != null) {
             property.setDefaultValue(c.getDefaultValue());
