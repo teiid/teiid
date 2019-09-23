@@ -3,7 +3,7 @@
     <parent>
         <artifactId>webservice</artifactId>
         <groupId>org.teiid.wildfly.connectors</groupId>
-        <version>12.1.2-SNAPSHOT</version>
+        <version>12.1.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-ws</artifactId>
