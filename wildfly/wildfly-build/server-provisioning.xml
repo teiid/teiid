@@ -7,7 +7,7 @@
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-jdbc" version="${project.version}" />
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-file" version="${project.version}" />
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-ws" version="${project.version}" />
-        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-swagger" version="${project.version}" />
+        <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-openapi" version="${project.version}" />
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-solr" version="${project.version}" />
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-amazon" version="${project.version}" />
         <feature-pack groupId="org.teiid.wildfly.connectors" artifactId="feature-pack-accumulo" version="${project.version}" />

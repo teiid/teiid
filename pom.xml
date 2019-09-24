@@ -1405,7 +1405,7 @@
             </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
-                <artifactId>translator-swagger</artifactId>
+                <artifactId>translator-openapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

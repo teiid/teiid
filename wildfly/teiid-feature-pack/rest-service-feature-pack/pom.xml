@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
-            <artifactId>feature-pack-swagger</artifactId>
+            <artifactId>feature-pack-openapi</artifactId>
             <version>${project.version}</version>
             <type>zip</type>
         </dependency>                          

@@ -95,7 +95,7 @@
     <module>salesforce</module>
     <module>solr</module>
     <module>odata</module>
-    <module>swagger</module>
+    <module>openapi</module>
     <module>infinispan</module>
     <module>misc</module>
   </modules>

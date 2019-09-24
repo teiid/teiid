@@ -87,7 +87,7 @@
      <module>webservice</module>
      <module>salesforce</module>
      <module>odata</module>
-     <module>swagger</module>
+     <module>openapi</module>
      <module>misc</module>
   </modules>
 </project>

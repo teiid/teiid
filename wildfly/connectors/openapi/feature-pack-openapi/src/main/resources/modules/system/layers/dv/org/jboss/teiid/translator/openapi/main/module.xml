@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.swagger">
+<module xmlns="urn:jboss:module:1.3" name="org.jboss.teiid.translator.openapi">
     <properties>
         <property name="jboss.api" value="private"/>
     </properties>
     
     <resources>
-        <artifact name="${org.teiid.connectors:translator-swagger}"/>
+        <artifact name="${org.teiid.connectors:translator-openapi}"/>
         <!-- Insert resources here -->
     </resources>
 

@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
       <groupId>org.teiid.wildfly.connectors</groupId>  
-      <artifactId>swagger</artifactId>
+      <artifactId>openapi</artifactId>
       <version>13.0.0-SNAPSHOT</version>
     </parent>
-    <artifactId>feature-pack-swagger</artifactId>
-    <name>Teiid Connector Swagger Feature Pack</name>
+    <artifactId>feature-pack-openapi</artifactId>
+    <name>Teiid Connector OpenAPI/Swagger Feature Pack</name>
     <packaging>pom</packaging>
 
     <dependencies>
@@ -36,7 +36,7 @@
         </dependency>        
         <dependency>
             <groupId>org.teiid.connectors</groupId>
-            <artifactId>translator-swagger</artifactId>
+            <artifactId>translator-openapi</artifactId>
         </dependency>
     </dependencies>
 

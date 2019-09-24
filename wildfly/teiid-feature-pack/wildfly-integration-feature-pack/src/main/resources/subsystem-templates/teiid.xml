@@ -73,8 +73,8 @@
         <translator name="osisoft-pi" module="org.jboss.teiid.translator.jdbc"/>
         <translator name="odata4" module="org.jboss.teiid.translator.odata4"/>
         <translator name="redshift" module="org.jboss.teiid.translator.jdbc"/>
-        <translator name="swagger" module="org.jboss.teiid.translator.swagger"/>
-        <translator name="openapi" module="org.jboss.teiid.translator.swagger"/>
+        <translator name="swagger" module="org.jboss.teiid.translator.openapi"/>
+        <translator name="openapi" module="org.jboss.teiid.translator.openapi"/>
         <translator name="delegator" module="org.jboss.teiid.api"/>
         <translator name="infinispan-hotrod" module="org.jboss.teiid.translator.infinispan.hotrod"/>
         <translator name="amazon-s3" module="org.jboss.teiid.translator.amazon.s3"/>
