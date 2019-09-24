@@ -49,7 +49,6 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-couchbase</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
@@ -59,7 +58,6 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>couchbase-api</artifactId>
-            <version>${project.version}</version>
         </dependency> 
         <dependency>
           <groupId>com.couchbase.client</groupId>

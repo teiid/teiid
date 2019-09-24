@@ -49,7 +49,6 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-mongodb</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
@@ -59,7 +58,6 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>mongodb-api</artifactId>
-            <version>${project.version}</version>
         </dependency>        
     </dependencies>
 

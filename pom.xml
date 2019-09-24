@@ -208,16 +208,12 @@
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
             <basepom.check.fail-javadoc>true</basepom.check.fail-javadoc>
         </properties>
-        <modules>
-            <module>wildfly</module>
-        </modules>
         </profile>
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
 	<profile>
 		<id>release</id>
 		<modules>
 			<module>build</module>
-			<module>wildfly</module>
 		</modules>
 	</profile>
 
@@ -225,7 +221,6 @@
 		<id>final-release</id>
 		<modules>
 			<module>build</module>
-			<module>wildfly</module>
 		</modules>
 		<properties>
             <basepom.check.skip-javadoc>false</basepom.check.skip-javadoc>
@@ -259,8 +254,7 @@
 		</build>
 	</profile>
 	<profile>
-		<!-- This is for building the core teiid, without wildfly. Also, don't 
-			do gpg signing. -->
+		<!-- This is for building the core teiid. Also, don't do gpg signing. -->
 		<id>core-release</id>
 		<modules>
 			<module>build</module>
@@ -281,7 +275,6 @@
 		</properties>
 		<modules>
 			<module>build</module>
-			<module>wildfly</module>
 		</modules>
 	</profile>   
 	</profiles>
@@ -305,13 +298,6 @@
                 <version>1.8</version>
             </plugin>
                 
-            <plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<!-- until the builds are separate, needs to match wildfly -->
-				<version>1.6.8</version>
-		    </plugin>       
-		    
 		    <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -1406,11 +1392,80 @@
                 <artifactId>teiid-data-quality</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
-
+            
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-olap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-swagger</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-odata4</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-simpledb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-amazon-s3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-couchbase</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-mongodb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-prestodb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-hive</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-phoenix</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.teiid.connectors</groupId>
                 <artifactId>translator-odata</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-google</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-excel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.teiid.connectors</groupId>
+                <artifactId>translator-ldap</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

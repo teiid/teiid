@@ -51,17 +51,14 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-loopback</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jpa</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-olap</artifactId>
-            <version>${project.version}</version>
         </dependency>
     </dependencies>
 

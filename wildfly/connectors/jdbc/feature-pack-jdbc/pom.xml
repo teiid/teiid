@@ -31,22 +31,18 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-jdbc</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-prestodb</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-hive</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-phoenix</artifactId>
-            <version>${project.version}</version>
         </dependency>                        
     </dependencies>
 

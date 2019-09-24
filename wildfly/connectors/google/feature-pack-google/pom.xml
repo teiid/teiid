@@ -37,12 +37,10 @@
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>google-api</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.connectors</groupId>
             <artifactId>translator-google</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.teiid.wildfly.connectors</groupId>
