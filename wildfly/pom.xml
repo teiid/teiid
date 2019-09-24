@@ -99,9 +99,6 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <skipTests>true</skipTests>
       </properties>
-      <modules>
-        <module>wildfly-build</module>
-      </modules>
     </profile>   
 	</profiles>
   
@@ -501,6 +498,7 @@
         <module>resource-spi</module>
         <module>rest-service</module>
         <module>connectors</module>
+        <module>wildfly-build</module>
         <module>test-integration</module>
   </modules>
 </project>

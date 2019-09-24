@@ -34,18 +34,6 @@ cron based build to be configured as well for deploying snapshots.  The snapshot
 variables SONATYPE_USERNAME and SONATYPE_PASSWORD that should set to the user access token values of an
 authorized sonatype account.
 
-## To start Teiid
-
-Once built you can start up the Wildfly server with Teiid by extracting "build/target/teiid-<version>-wildfly-server.zip" and running:
-
-	{server-dir}/bin/standalone.sh -c=standalone-teiid.xml
-
-In order to be able to access the Wildfly console you need to setup a user by running "./bin/add-user.sh" or "bin/add-user.bat" from the server directory.
-
-You should be able to access the Wildfly console at http://localhost:9990 and the Teiid console at http://localhost:9990/console/App.html#teiid.
-
-For more info see [Installation Guide](http://teiid.github.io/teiid-documents/master/content/admin/Installation_Guide.html).
-
 Licenses
 -------
 
