@@ -14,6 +14,4 @@ if [ "$1" = "full" ]; then
   cd target/checkout
   mvn -P final-release -pl '!build,!wildfly/wildfly-build' javadoc:aggregate
   rsync --recursive --protocol=29 --exclude='.*' target/site/apidocs teiid@filemgmt.jboss.org:/docs_htdocs/teiid/$version
-  unzip -d target wildfly/wildfly-build/target/teiid-wildfly-$version-dist.zip docs/teiid/teiid-releasenotes.html
-  scp target/docs/teiid/teiid-releasenotes.html teiid@filemgmt.jboss.org:docs_htdocs/teiid/$version
 fi
