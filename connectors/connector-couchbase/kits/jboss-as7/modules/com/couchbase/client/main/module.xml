@@ -8,6 +8,7 @@
 		<resource-root path="java-client-${version.com.couchbase.client}.jar"/>
 		<resource-root path="core-io-${version.com.couchbase.core.io}.jar"/>
 		<resource-root path="rxjava-${version.io.reactivex}.jar"/>
+        <resource-root path="opentracing-api-${version.io.opentracing-api}.jar "/>
     </resources>
 
     <dependencies>

@@ -39,6 +39,7 @@
                  <include>com.couchbase.client:java-client</include>
                  <include>com.couchbase.client:core-io</include>
                  <include>io.reactivex:rxjava</include>
+                 <include>io.opentracing:opentracing-api</include>
             </includes>
         </dependencySet>   
    </dependencySets>
