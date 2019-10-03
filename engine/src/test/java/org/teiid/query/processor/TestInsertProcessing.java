@@ -753,4 +753,19 @@ public class TestInsertProcessing {
         helpProcess(plan, dataManager, expected);
     }
 
+    @Test public void testInsertSourceFunction() throws Exception {
+        String sql = "insert into t (col) values (foo('1'))"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(
+                "create foreign table t (col object) options (updatable true); " +
+                "create foreign function foo (param string) returns object;", "x", "y");
+
+        ProcessorPlan plan = helpGetPlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO t (col) VALUES (foo('1'))", new List<?>[] {Arrays.asList(1)});
+        CommandContext context = createCommandContext();
+        context.setMetadata(tm);
+        helpProcess(plan, context, dataManager, new List<?>[] {Arrays.asList(1)});
+    }
+
 }
