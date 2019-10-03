@@ -86,6 +86,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             // Get nested non-relational plan if there is one
             ProcessorPlan nonRelationalPlan = FrameUtil.getNestedPlan(accessNode);
             Command command = FrameUtil.getNonQueryCommand(accessNode);
+            Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
@@ -104,7 +105,6 @@ public final class RuleCollapseSource implements OptimizerRule {
                 if (toCheck != null) {
                     modifyToCheckMatViewStatus(metadata, queryCommand, toCheck);
                 }
-                Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 
                 if (queryCommand instanceof Query
                         && CapabilitiesUtil.supports(Capability.PARTIAL_FILTERS, modelId, metadata, capFinder)) {
@@ -143,38 +143,6 @@ public final class RuleCollapseSource implements OptimizerRule {
                     }
                 }
 
-                //find all pushdown functions in evaluatable locations and mark them to be evaluated by the source
-                LanguageVisitor lv = new LanguageVisitor() {
-                    @Override
-                    public void visit(Function f) {
-                        FunctionDescriptor fd = f.getFunctionDescriptor();
-                        if (f.isEval()) {
-                            try {
-                                if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN
-                                            && fd.getMethod() != null
-                                            && CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
-                                    f.setEval(false);
-                                } else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
-                                        && CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
-                                    f.setEval(false);
-                                }
-                            } catch (QueryMetadataException e) {
-                                throw new TeiidRuntimeException(e);
-                            } catch (TeiidComponentException e) {
-                                throw new TeiidRuntimeException(e);
-                            }
-                        }
-                    }
-                    @Override
-                    public void visit(SubqueryFromClause obj) {
-                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
-                    }
-                    @Override
-                    public void visit(WithQueryCommand obj) {
-                        PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
-                    }
-                };
-                PreOrPostOrderNavigator.doVisit(queryCommand, lv, true);
                 plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand, capFinder);
                 command = queryCommand;
                 queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
@@ -190,12 +158,56 @@ public final class RuleCollapseSource implements OptimizerRule {
                 }
             }
             if (command != null) {
+                setEvalFlag(metadata, capFinder, command, modelId);
                 accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
             }
             accessNode.removeAllChildren();
         }
 
         return plan;
+    }
+
+    /**
+     * find all pushdown functions in evaluatable locations and mark them to be evaluated by the source
+     * @param metadata
+     * @param capFinder
+     * @param command
+     * @param modelId
+     */
+    private void setEvalFlag(QueryMetadataInterface metadata,
+            CapabilitiesFinder capFinder, Command command,
+            Object modelId) {
+        LanguageVisitor lv = new LanguageVisitor() {
+            @Override
+            public void visit(Function f) {
+                FunctionDescriptor fd = f.getFunctionDescriptor();
+                if (f.isEval()) {
+                    try {
+                        if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN
+                                    && fd.getMethod() != null
+                                    && CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
+                            f.setEval(false);
+                        } else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
+                                && CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
+                            f.setEval(false);
+                        }
+                    } catch (QueryMetadataException e) {
+                        throw new TeiidRuntimeException(e);
+                    } catch (TeiidComponentException e) {
+                        throw new TeiidRuntimeException(e);
+                    }
+                }
+            }
+            @Override
+            public void visit(SubqueryFromClause obj) {
+                PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
+            }
+            @Override
+            public void visit(WithQueryCommand obj) {
+                PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
+            }
+        };
+        PreOrPostOrderNavigator.doVisit(command, lv, true);
     }
 
     private void modifyToCheckMatViewStatus(QueryMetadataInterface metadata, QueryCommand queryCommand,
