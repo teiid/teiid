@@ -566,4 +566,12 @@ public class TestSQLConversionVisitor {
             output, TRANSLATOR);
     }
 
+    @Test public void testProcedureWithExpressionParameters() throws Exception {
+        String expected = "{call proc(foo('1'),?)}"; //$NON-NLS-1$
+        TranslationHelper.helpTestVisitor("create foreign procedure proc (param object, param2 integer); "
+                + "create foreign function foo (param string) returns object;",
+                "call proc(foo('1'), 1)",
+                expected, TRANSLATOR);
+    }
+
 }

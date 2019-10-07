@@ -96,7 +96,7 @@ public abstract class JDBCBaseExecution implements Execution  {
                 paramType = litParam.getType();
             } else if (paramValue instanceof Argument) {
                 Argument arg = (Argument)paramValue;
-                value = ((Literal)arg.getExpression()).getValue();
+                value = arg.getArgumentValue().getValue();
                 paramType = arg.getType();
             } else {
                 Parameter param = (Parameter)paramValue;

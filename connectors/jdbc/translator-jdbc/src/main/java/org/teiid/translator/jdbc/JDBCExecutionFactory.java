@@ -1858,4 +1858,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return defaultTimeZone;
     }
 
+    @Override
+    public boolean supportsProcedureParameterExpression() {
+        return true;
+    }
+
 }

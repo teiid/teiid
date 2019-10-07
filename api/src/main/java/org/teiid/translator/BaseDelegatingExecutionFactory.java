@@ -1658,4 +1658,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
             boolean supportsGeographyType) {
         this.supportsGeographyType = supportsGeographyType;
     }
+
+    Boolean supportsProcedureParameterExpression;
+    @Override
+    public boolean supportsProcedureParameterExpression() {
+        if (supportsProcedureParameterExpression != null) {
+            return supportsProcedureParameterExpression;
+        }
+        return delegate.supportsGeographyType();
+    }
+
+    public void setSupportsProcedureParameterExpression(
+            Boolean supportsProcedureParameterExpression) {
+        this.supportsProcedureParameterExpression = supportsProcedureParameterExpression;
+    }
 }

@@ -231,11 +231,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
             return;
         }
         this.prepared = true;
-        /*
-         * preparedValues is now a list of procedure params instead of just values
-         */
-        this.preparedValues = obj.getArguments();
-        buffer.append(generateSqlForStoredProcedure(obj));
+        generateSqlForStoredProcedure(obj);
     }
 
     public void visit(Function obj) {
@@ -261,7 +257,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
     /**
      * Add a bind ? value to the sql string and to the binding value list
-     * @param value should be an {@link Argument}, {@link Parameter}, or {@link Argument}
+     * @param value should be an {@link Literal}, {@link Parameter}, or {@link Argument}
      */
     protected void addBinding(LanguageObject value) {
         this.prepared = true;
@@ -350,12 +346,10 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
      * This is a generic implementation. Subclass should override this method
      * if necessary.
      * @param exec The command for the stored procedure.
-     * @return String to be executed by CallableStatement.
      */
-    protected String generateSqlForStoredProcedure(Call exec) {
-        StringBuffer prepareCallBuffer = new StringBuffer();
-        prepareCallBuffer.append(getSourceComment(exec));
-        prepareCallBuffer.append("{"); //$NON-NLS-1$
+    protected void generateSqlForStoredProcedure(Call exec) {
+        buffer.append(getSourceComment(exec));
+        buffer.append("{"); //$NON-NLS-1$
 
         List<Argument> params = exec.getArguments();
 
@@ -363,26 +357,28 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
         boolean needQuestionMark = exec.getReturnType() != null;
 
         if(needQuestionMark){
-            prepareCallBuffer.append("?= "); //$NON-NLS-1$
+            buffer.append("?= "); //$NON-NLS-1$
         }
 
-        prepareCallBuffer.append("call ");//$NON-NLS-1$
-        prepareCallBuffer.append(exec.getMetadataObject() != null ? getName(exec.getMetadataObject()) : exec.getProcedureName());
-        prepareCallBuffer.append("("); //$NON-NLS-1$
-
+        buffer.append("call ");//$NON-NLS-1$
+        buffer.append(exec.getMetadataObject() != null ? getName(exec.getMetadataObject()) : exec.getProcedureName());
+        buffer.append("("); //$NON-NLS-1$
         int numberOfParameters = 0;
         for (Argument param : params) {
             if(param.getDirection() == Direction.IN || param.getDirection() == Direction.OUT || param.getDirection() == Direction.INOUT){
                 if(numberOfParameters > 0){
-                    prepareCallBuffer.append(","); //$NON-NLS-1$
+                    buffer.append(","); //$NON-NLS-1$
                 }
-                prepareCallBuffer.append("?"); //$NON-NLS-1$
                 numberOfParameters++;
+                if (param.getDirection() != Direction.IN || param.getExpression() instanceof Literal) {
+                    addBinding(param);
+                } else {
+                    append(param.getExpression());
+                }
             }
         }
-        prepareCallBuffer.append(")"); //$NON-NLS-1$
-        prepareCallBuffer.append("}"); //$NON-NLS-1$
-        return prepareCallBuffer.toString();
+        buffer.append(")"); //$NON-NLS-1$
+        buffer.append("}"); //$NON-NLS-1$
     }
 
     /**

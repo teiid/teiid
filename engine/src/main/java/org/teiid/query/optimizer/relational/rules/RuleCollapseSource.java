@@ -206,6 +206,17 @@ public final class RuleCollapseSource implements OptimizerRule {
             public void visit(WithQueryCommand obj) {
                 PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
             }
+
+            @Override
+            public void visit(StoredProcedure obj) {
+                try {
+                    boolean supports = modelId != null
+                            && CapabilitiesUtil.supports(Capability.PROCEDURE_PARAMETER_EXPRESSION, modelId, metadata, capFinder);
+                    obj.setSupportsExpressionParameters(supports);
+                } catch (TeiidComponentException e) {
+                    throw new TeiidRuntimeException(e);
+                }
+            }
         };
         PreOrPostOrderNavigator.doVisit(command, lv, true);
     }

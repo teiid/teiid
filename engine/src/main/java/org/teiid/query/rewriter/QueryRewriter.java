@@ -2880,7 +2880,7 @@ public class QueryRewriter {
         storedProcedure.setDisplayNamedParameters(false);
 
         for (SPParameter param : storedProcedure.getInputParameters()) {
-            if (!processing || storedProcedure.isPushedInQuery()) {
+            if (!processing || storedProcedure.isPushedInQuery() || storedProcedure.isSupportsExpressionParameters()) {
                 param.setExpression(rewriteExpressionDirect(param.getExpression()));
             } else if (!(param.getExpression() instanceof Constant)) {
                 boolean isBindEligible = !isConstantConvert(param.getExpression());

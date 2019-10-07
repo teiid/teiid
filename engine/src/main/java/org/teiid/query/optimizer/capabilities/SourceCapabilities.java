@@ -369,7 +369,8 @@ public interface SourceCapabilities {
         WINDOW_FUNCTION_FRAME_CLAUSE,
         QUERY_AGGREGATES_LIST,
         QUERY_AGGREGATES_COUNT_BIG,
-        GEOGRAPHY_TYPE;
+        GEOGRAPHY_TYPE,
+        PROCEDURE_PARAMETER_EXPRESSION;
 
         private final String toString;
 

@@ -68,6 +68,7 @@ public class StoredProcedure extends ProcedureContainer {
     private boolean isProcedureRelational;
 
     private boolean pushedInQuery;
+    private boolean supportsExpressionParameters;
 
     /**
      * Constructs a default instance of this class.
@@ -219,6 +220,7 @@ public class StoredProcedure extends ProcedureContainer {
         copy.isCallableStatement = isCallableStatement;
         copy.isProcedureRelational = isProcedureRelational;
         copy.pushedInQuery = pushedInQuery;
+        copy.supportsExpressionParameters = supportsExpressionParameters;
         return copy;
     }
 
@@ -406,6 +408,15 @@ public class StoredProcedure extends ProcedureContainer {
     public boolean isReadOnly() {
         //by default (-1) stored procedures are considered not read-only
         return this.getUpdateCount() == 0;
+    }
+
+    public void setSupportsExpressionParameters(
+            boolean supportsExpressionParameters) {
+        this.supportsExpressionParameters = supportsExpressionParameters;
+    }
+
+    public boolean isSupportsExpressionParameters() {
+        return supportsExpressionParameters;
     }
 
 }

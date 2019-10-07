@@ -1510,4 +1510,13 @@ public class ExecutionFactory<F, C> {
     public boolean supportsGeographyType() {
         return false;
     }
+
+    /**
+     * Return true if the translator supports expressions as procedure paramters.
+     * @since 13.0
+     * @return
+     */
+    public boolean supportsProcedureParameterExpression() {
+        return false;
+    }
 }

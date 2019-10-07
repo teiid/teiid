@@ -18,14 +18,25 @@
 
 package org.teiid.query.optimizer;
 
+import static org.teiid.query.processor.TestProcessor.*;
+
+import java.util.List;
+
 import org.junit.Ignore;
 import org.junit.Test;
+import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
-
+@SuppressWarnings("nls")
 public class TestStoredProcedurePlanning {
 
     /**
@@ -417,6 +428,35 @@ public class TestStoredProcedurePlanning {
             0,      // Sort
             1       // UnionAll
         });
+    }
+
+    @Test(expected=ExpressionEvaluationException.class) public void testProcedureParamSourceFunction() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+
+        helpTestProcedureParameterExpression(bsc);
+    }
+
+    @Test public void testProcedureParamSourceFunctionPasses() throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.PROCEDURE_PARAMETER_EXPRESSION, true);
+
+        helpTestProcedureParameterExpression(bsc);
+    }
+
+    private void helpTestProcedureParameterExpression(
+            BasicSourceCapabilities bsc) throws Exception {
+        String sql = "exec proc(foo('1'))"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL(
+                "create foreign procedure proc (param object); " +
+                "create foreign function foo (param string) returns object;", "x", "y");
+
+        ProcessorPlan plan = helpGetPlan(sql, tm, new DefaultCapabilitiesFinder(bsc));
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("EXEC proc(foo('1'))", new List<?>[] {});
+        CommandContext context = createCommandContext();
+        context.setMetadata(tm);
+        helpProcess(plan, context, dataManager, new List<?>[] {});
     }
 
 }
