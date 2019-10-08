@@ -103,7 +103,7 @@ public class OperationResponseImpl implements OperationResponse {
     }
 
     @Override
-    public Object getResult() {
+    public Property getResult() {
         if (this.procedureReturn.hasResultSet()) {
             String type = this.procedureReturn.getReturnType().getType().getFullQualifiedName().getFullQualifiedNameAsString();
             return createComplexCollection("result", type, this.complexValues);
@@ -134,7 +134,7 @@ public class OperationResponseImpl implements OperationResponse {
             TeiidODataJsonSerializer serializer, ServiceMetadata metadata,
             ContextURL contextURL, URI next) throws SerializerException {
         response.setContent(serializer.complexCollection(metadata, (EdmComplexType)this.procedureReturn.getReturnType().getType(),
-                (Property)getResult(), contextURL, next)
+                getResult(), contextURL, next)
                 .getContent());
     }
 }

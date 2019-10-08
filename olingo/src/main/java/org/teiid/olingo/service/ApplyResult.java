@@ -32,13 +32,13 @@ import org.teiid.odata.api.ComplexResponse;
 import org.teiid.olingo.ComplexReturnType;
 import org.teiid.olingo.TeiidODataJsonSerializer;
 
-public class CrossJoinResult implements ComplexResponse {
+public class ApplyResult implements ComplexResponse {
     private String nextToken;
-    private CrossJoinNode documentNode;
+    private ApplyDocumentNode documentNode;
     private List<List<ComplexReturnType>> out = new ArrayList<List<ComplexReturnType>>();
     private String baseURL;
 
-    public CrossJoinResult(String baseURL, CrossJoinNode context) {
+    public ApplyResult(String baseURL, ApplyDocumentNode context) {
         this.baseURL = baseURL;
         this.documentNode = context;
     }
@@ -48,26 +48,29 @@ public class CrossJoinResult implements ComplexResponse {
 
         ArrayList<ComplexReturnType> row = new ArrayList<ComplexReturnType>();
 
+
         Entity entity = EntityCollectionResponse.createEntity(rs,
                 this.documentNode, this.baseURL, null);
 
-        row.add(new ComplexReturnType(this.documentNode.getName(),
-                this.documentNode.getEdmStructuredType(), entity, this.documentNode
-                        .hasExpand()));
+        DocumentNode base = this.documentNode.getBaseContext();
 
-        for (DocumentNode node : this.documentNode.getSiblings()) {
-            Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
-                    this.baseURL, null);
+        if (base instanceof CrossJoinNode) {
+            row.add(new ComplexReturnType(base.getName(),
+                    documentNode.getEdmStructuredType(), entity, ((CrossJoinNode)base).hasExpand()));
 
-            row.add(new ComplexReturnType(node.getName(),
-                    node.getEdmStructuredType(), sibiling,
-                    ((CrossJoinNode) node).hasExpand()));
+            for (DocumentNode node : base.getSiblings()) {
+                Entity sibiling = EntityCollectionResponse.createEntity(rs, node,
+                        this.baseURL, null);
+
+                row.add(new ComplexReturnType(node.getName(),
+                        node.getEdmStructuredType(), sibiling,
+                        ((CrossJoinNode) node).hasExpand()));
+            }
+        } else {
+            row.add(new ComplexReturnType(base.getName(),
+                    documentNode.getEdmStructuredType(), entity, false));
         }
         this.out.add(row);
-    }
-
-    public CrossJoinNode getResource() {
-        return this.documentNode;
     }
 
     public List<List<ComplexReturnType>> getResults(){
@@ -100,5 +103,9 @@ public class CrossJoinResult implements ComplexResponse {
         response.setContent(serializer.complexCollection(metadata,
                 getResults(), contextURL, next)
                 .getContent());
+    }
+
+    public ApplyDocumentNode getDocumentNode() {
+        return documentNode;
     }
 }

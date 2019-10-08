@@ -47,13 +47,13 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.Assertion;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataExpressionVisitor;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.ProjectedColumn;
 import org.teiid.olingo.common.ODataTypeManager;
+import org.teiid.olingo.service.DocumentNode.ContextColumn;
 import org.teiid.olingo.service.ODataSQLBuilder.URLParseService;
 import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
@@ -71,7 +71,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
     private DocumentNode ctxLambda;
     private UniqueNameGenerator nameGenerator;
     private URLParseService parseService;
-    private Column lastProperty;
+    private ContextColumn lastProperty;
     private OData odata;
     private boolean root;
 
@@ -131,7 +131,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             else {
                 String type = "Edm.String";
                 if (this.lastProperty != null) {
-                    EdmPrimitiveTypeKind kind = ODataTypeManager.odataType(this.lastProperty);
+                    EdmPrimitiveTypeKind kind = this.lastProperty.getEdmPrimitiveTypeKind();
                     type = kind.getFullQualifiedName().getFullQualifiedNameAsString();
                     this.lastProperty = null;
                 }
@@ -481,7 +481,7 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             this.stack.add(new ElementSymbol(info.getProperty().getName(), this.ctxExpression.getGroupSymbol()));
         }
         // hack to resolve the property type.
-        Column c = this.ctxExpression.getColumnByName(info.getProperty().getName());
+        ContextColumn c = this.ctxExpression.getColumnByName(info.getProperty().getName());
         this.lastProperty = c;
         //revert back to the query context
         this.ctxExpression = this.ctxQuery;
@@ -668,12 +668,12 @@ public class ODataExpressionToSQLVisitor extends RequestURLHierarchyVisitor impl
             }
         }
         else {
-            if (this.ctxQuery.getEdmEntityType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
+            if (this.ctxQuery.getEdmStructuredType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
                 this.ctxExpression = this.ctxQuery;
             }
             else {
-                for (DocumentNode er: this.ctxQuery.getSibilings()) {
-                    if (er.getEdmEntityType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
+                for (DocumentNode er: this.ctxQuery.getSiblings()) {
+                    if (er.getEdmStructuredType().getFullQualifiedName().equals(edmEntityType.getFullQualifiedName())) {
                         this.ctxExpression = er;
                         break;
                     }

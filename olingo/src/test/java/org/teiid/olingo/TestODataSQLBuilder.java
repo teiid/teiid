@@ -1118,6 +1118,12 @@ public class TestODataSQLBuilder {
     }
 
     @Test
+    public void testFilteredAggregateSum() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$apply=filter(e2%20gt%200)/aggregate(e3%20with%20sum%20as%20Total)",
+                "SELECT * FROM (SELECT SUM(g0.e3) AS Total FROM PM1.G1 AS g0 WHERE g0.e2 > 0) AS g1");
+    }
+    
+    @Test
     public void testTimestampPrecision() throws Exception {
         String ddl = "CREATE FOREIGN TABLE G1(\n" +
                 "e1 timestamp primary key,\n" +
@@ -1136,5 +1142,27 @@ public class TestODataSQLBuilder {
         assertEquals(1, property.getPrecision().intValue());
     }
 
-}
+    @Test
+    public void testSumAggregateFiltered() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$apply=aggregate(e3%20with%20sum%20as%20Total)/filter(Total%20gt%200)",
+                "SELECT * FROM (SELECT SUM(g0.e3) AS Total FROM PM1.G1 AS g0) AS g1 WHERE g1.Total > 0");
+    }
 
+    @Test
+    public void testGroupBy() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$apply=groupby((e1))",
+                "SELECT * FROM (SELECT g0.e1 AS e1 FROM PM1.G1 AS g0 GROUP BY g0.e1) AS g1");
+    }
+
+    @Test
+    public void testGroupBySumAggregate() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$apply=groupby((e1),aggregate(e3%20with%20sum%20as%20Total))",
+                "SELECT * FROM (SELECT g0.e1 AS e1, SUM(g0.e3) AS Total FROM PM1.G1 AS g0 GROUP BY g0.e1) AS g1");
+    }
+
+    @Test
+    public void testGroupBySelect() throws Exception {
+        helpTest("/odata4/vdb/PM1/G1?$apply=groupby((e1,e2))&$select=e1",
+                "SELECT g1.e1 FROM (SELECT g0.e1 AS e1, g0.e2 AS e2 FROM PM1.G1 AS g0 GROUP BY g0.e1, g0.e2) AS g1");
+    }
+}

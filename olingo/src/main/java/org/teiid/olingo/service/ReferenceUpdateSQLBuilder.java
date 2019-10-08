@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.edm.EdmStructuredType;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.uri.UriInfo;
@@ -65,7 +66,7 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
 
         public ScopedTable (Table table, EdmEntityType type, List<UriParameter> keys) {
             setTable(table);
-            setEdmEntityType(type);
+            setEdmStructuredType(type);
             setGroupSymbol(new GroupSymbol(table.getFullName()));
             setKeyPredicates(keys);
         }
@@ -147,8 +148,8 @@ public class ReferenceUpdateSQLBuilder  extends RequestURLHierarchyVisitor {
                 String columnName = columnNames.get(i);
                 ElementSymbol symbol = new ElementSymbol(columnName, this.updateTable.getGroupSymbol());
 
-                EdmEntityType entityType = this.updateTable.getEdmEntityType();
-                EdmProperty edmProperty = (EdmProperty)entityType.getProperty(columnName);
+                EdmStructuredType entityType = this.updateTable.getEdmStructuredType();
+                EdmProperty edmProperty = entityType.getStructuralProperty(columnName);
 
                 // reference table keys will be null for delete scenario
                 Object value = null;

@@ -46,6 +46,7 @@ import org.apache.olingo.commons.api.data.ValueType;
 import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveType;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeException;
+import org.apache.olingo.commons.api.edm.EdmStructuredType;
 import org.apache.olingo.commons.core.edm.primitivetype.AbstractGeospatialType;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmBinary;
 import org.apache.olingo.commons.core.edm.primitivetype.EdmDate;
@@ -56,6 +57,7 @@ import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.core.responses.EntityResponse;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
@@ -150,7 +152,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
             throws SQLException {
 
         List<ProjectedColumn> projected = node.getAllProjectedColumns();
-        EdmEntityType entityType = node.getEdmEntityType();
+        EdmStructuredType entityType = node.getEdmStructuredType();
 
         LinkedHashMap<String, Link> streamProperties = new LinkedHashMap<String, Link>();
 
@@ -170,7 +172,7 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
                 allNulls = false;
             }
             try {
-                SingletonPrimitiveType type = (SingletonPrimitiveType) column.getEdmType();
+                SingletonPrimitiveType type = column.getEdmType();
                 if (type instanceof EdmStream) {
                     buildStreamLink(streamProperties, value, propertyName);
                     if (response != null) {
@@ -194,7 +196,14 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
 
         // Build the navigation and Stream Links
         try {
-            String id = EntityResponse.buildLocation(baseURL, entity, entityType.getName(), entityType);
+            if (!(entityType instanceof EdmEntityType)) {
+                if (!streamProperties.isEmpty()) {
+                    //won't work without an id
+                    throw new TeiidRuntimeException();
+                }
+                return entity;
+            }
+            String id = EntityResponse.buildLocation(baseURL, entity, entityType.getName(), (EdmEntityType)entityType);
             entity.setId(new URI(id));
 
             // build stream properties

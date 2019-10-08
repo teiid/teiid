@@ -29,6 +29,7 @@ import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Entity;
@@ -245,7 +246,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                         response.writeNotFound(true);
                     }
                 } else {
-                    response.writeReadEntity(visitor.getContext().getEdmEntityType(),
+                    response.writeReadEntity((EdmEntityType)visitor.getContext().getEdmStructuredType(),
                         entitySet.getEntities().get(0));
                 }
             }
@@ -277,7 +278,7 @@ public class TeiidServiceHandler implements ServiceHandler {
                 throw new ODataApplicationException(e.getMessage(), 500, Locale.getDefault(), e);
             }
         }
-        response.writeReadEntitySet(visitor.getContext().getEdmEntityType(), result);
+        response.writeReadEntitySet((EdmEntityType)visitor.getContext().getEdmStructuredType(), result);
     }
 
     String buildNextToken(final String queryPath, String nextToken) {
@@ -330,27 +331,31 @@ public class TeiidServiceHandler implements ServiceHandler {
         if (countRequest) {
             return getClient().executeCount(query, visitor.getParameters());
         }
-        else {
-            int pageSize = getPageSize(request);
+        int pageSize = getPageSize(request);
 
-            QueryResponse result = new EntityCollectionResponse(request
-                    .getODataRequest().getRawBaseUri(),
-                    visitor.getContext());
+        QueryResponse result = null;
 
-            if (visitor.getContext() instanceof CrossJoinNode) {
-                result = new CrossJoinResult(request.getODataRequest().getRawBaseUri(),
-                        (CrossJoinNode) visitor.getContext());
-            } else if (visitor.getContext() instanceof ComplexDocumentNode) {
-                ComplexDocumentNode cdn = (ComplexDocumentNode)visitor.getContext();
-                result = new OperationResponseImpl(cdn.getProcedureReturn());
-            }
-
-            getClient().executeSQL(query, visitor.getParameters(),
-                    visitor.includeTotalSize(), visitor.getSkip(),
-                    visitor.getTop(), visitor.getNextToken(), pageSize, result);
-
-            return result;
+        if (visitor.getContext() instanceof CrossJoinNode) {
+            result = new CrossJoinResult(request.getODataRequest().getRawBaseUri(),
+                    (CrossJoinNode) visitor.getContext());
+        } else if (visitor.getContext() instanceof ComplexDocumentNode) {
+            ComplexDocumentNode cdn = (ComplexDocumentNode)visitor.getContext();
+            result = new OperationResponseImpl(cdn.getProcedureReturn());
+        } else if (visitor.getContext() instanceof ApplyDocumentNode) {
+            ApplyDocumentNode adn = (ApplyDocumentNode)visitor.getContext();
+            result = new ApplyResult(request.getODataRequest().getRawBaseUri(),
+                adn);
+        } else {
+            result = new EntityCollectionResponse(request
+                .getODataRequest().getRawBaseUri(),
+                visitor.getContext());
         }
+
+        getClient().executeSQL(query, visitor.getParameters(),
+                visitor.includeTotalSize(), visitor.getSkip(),
+                visitor.getTop(), visitor.getNextToken(), pageSize, result);
+
+        return result;
     }
 
     private int getPageSize(final ServiceRequest request) {
@@ -778,7 +783,7 @@ public class TeiidServiceHandler implements ServiceHandler {
             @Override
             public void visit(PropertyResponse response)
                     throws ODataLibraryException, ODataApplicationException {
-                Property property = (Property)operationResult.getResult();
+                Property property = operationResult.getResult();
                 Object value = property.getValue();
                 if (value instanceof SQLXML || value instanceof Blob || value instanceof Clob) {
                     try {
@@ -917,6 +922,43 @@ public class TeiidServiceHandler implements ServiceHandler {
             ContextURL.Builder builder = new ContextURL.Builder()
                 .asCollection()
                 .entitySetOrSingletonOrType("Edm.ComplexType");
+
+            EdmComplexResponse complexResponse = EdmComplexResponse.getInstance(
+                    request, builder.build(), false, response);
+            sendResults(request, queryResponse, complexResponse);
+        } catch (ODataApplicationException e) {
+            throw e;
+        } catch (ODataLibraryException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ODataApplicationException(e.getMessage(),
+                    HttpStatusCode.INTERNAL_SERVER_ERROR.getStatusCode(),
+                    Locale.getDefault(), e);
+        }
+    }
+
+    public void apply(DataRequest request, ODataResponse response)
+            throws ODataLibraryException, ODataApplicationException {
+        final ODataSQLBuilder visitor = new ODataSQLBuilder(this.odata,
+                getClient().getMetadataStore(), this.prepared, true, request
+                .getODataRequest().getRawBaseUri(), this.serviceMetadata);
+        visitor.visit(request.getUriInfo());
+
+        try {
+            Query query = visitor.selectQuery();
+            ApplyResult queryResponse = (ApplyResult)executeQuery(request, request.isCountRequest(), visitor, query);
+            ApplyDocumentNode adn = queryResponse.getDocumentNode();
+            DocumentNode dn = adn.getBaseContext();
+            ContextURL.Builder builder = new ContextURL.Builder();
+            if (dn instanceof CrossJoinNode) {
+                builder = builder.asCollection()
+                        .entitySetOrSingletonOrType("Edm.ComplexType"); //$NON-NLS-1$
+            } else {
+                String columns = adn.getAllProjectedColumns().stream()
+                        .map(p -> p.getName())
+                        .collect(Collectors.joining(",")); //$NON-NLS-1$
+                builder = builder.entitySetOrSingletonOrType(dn.getEdmStructuredType().getName()+"(" + columns + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+            }
 
             EdmComplexResponse complexResponse = EdmComplexResponse.getInstance(
                     request, builder.build(), false, response);
