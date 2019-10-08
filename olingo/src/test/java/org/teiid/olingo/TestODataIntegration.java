@@ -51,7 +51,9 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.GeneratedKeys;
@@ -204,7 +206,6 @@ public class TestODataIntegration {
     }
 
     private void createContext(String contextPath, Map<String, String> properties) throws Exception {
-        http.stop();
         server.stop();
 
         ServerConnector connector = new ServerConnector(server);
@@ -228,13 +229,22 @@ public class TestODataIntegration {
         server.setHandler(context);
         server.start();
         port = connector.getLocalPort();
-        http.start();
         baseURL = "http://localhost:"+port+contextPath;
+    }
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        http.setStopTimeout(5000);
+        http.start();
+    }
+
+    @AfterClass
+    public static void afterClass() throws Exception {
+        http.stop();
     }
 
     @After
     public void after() throws Exception {
-        http.stop();
         TimestampWithTimezone.resetCalendar(null);
         server.stop();
         teiid.stop();
@@ -2237,7 +2247,6 @@ public class TestODataIntegration {
 
     @Test
     public void testInvalidResource() throws Exception {
-        http.stop();
         server.stop();
         Map<String, String> props = new HashMap<String, String>();
         props.put("vdb-name", "loopy");
