@@ -1527,7 +1527,6 @@ public class TestODataIntegration {
         assertEquals(204, response.getStatus());
     }
 
-    @Ignore("Can be added after olingo 4.7")
     @Test
     public void testCreateViaNavigation() throws Exception {
         HardCodedExecutionFactory hc = buildHardCodedExecutionFactory();
