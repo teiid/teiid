@@ -27,6 +27,8 @@ import org.apache.olingo.commons.api.data.ComplexValue;
 import org.apache.olingo.commons.api.data.ContextURL;
 import org.apache.olingo.commons.api.data.Property;
 import org.apache.olingo.commons.api.edm.EdmComplexType;
+import org.apache.olingo.commons.api.edm.EdmEntityType;
+import org.apache.olingo.commons.api.edm.EdmProperty;
 import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.serializer.SerializerException;
@@ -65,14 +67,34 @@ public class TeiidODataJsonSerializer extends ODataJsonSerializer {
             json.writeFieldName(Constants.VALUE);
             json.writeStartArray();
             for (List<ComplexReturnType> ct:result) {
+                boolean isCross = ct.size() > 1;
                 json.writeStartObject();
                 for (final ComplexReturnType type : ct) {
-                  if (!type.isExpand()) {
+                  if (!type.isExpand() && type.getEntity().getId() != null) {
                     json.writeStringField(type.getName()+Constants.JSON_NAVIGATION_LINK, type.getEntity().getId().toASCIIString());
                   }
                   else {
-                    json.writeFieldName(type.getName());
-                    writeEntity(metadata, type.getEdmEntityType(), type.getEntity(), null, null, null, null, false, null, type.getName(), json);
+                    if (isCross) {
+                        json.writeFieldName(type.getName());
+                    }
+                    if (type.getEdmStructuredType() instanceof EdmEntityType) {
+                        writeEntity(metadata, (EdmEntityType)type.getEdmStructuredType(), type.getEntity(), null, null, null, null, false, null, type.getName(), json);
+                    } else {
+                        //emit properties based upon what is on the entity, rather than what is on the type
+                        //as the dynamic type still defers to the base type
+                        if (isCross) {
+                            json.writeStartObject();
+                        }
+                        //no id for aggregate entities
+                        json.writeStringField("@odata.id", "null"); //$NON-NLS-1$ //$NON-NLS-2$
+                        for (Property property : type.getEntity().getProperties()) {
+                            EdmProperty edmProperty = type.getEdmStructuredType().getStructuralProperty(property.getName());
+                            writeProperty(metadata, edmProperty, property, null, json, null, type.getEntity(), null);
+                        }
+                        if (isCross) {
+                            json.writeEndObject();
+                        }
+                    }
                   }
                 }
                 json.writeEndObject();

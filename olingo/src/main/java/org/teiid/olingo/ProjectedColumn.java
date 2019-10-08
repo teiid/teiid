@@ -17,18 +17,21 @@
  */
 package org.teiid.olingo;
 
+import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.EdmProperty;
-import org.apache.olingo.commons.api.edm.EdmType;
+import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.olingo.service.DocumentNode.ContextColumn;
 import org.teiid.query.sql.symbol.Expression;
 
-public class ProjectedColumn {
+public class ProjectedColumn implements ContextColumn {
     private Expression expr;
-    private EdmType edmType;
+    private SingletonPrimitiveType edmType;
     private boolean collection;
     private int ordinal;
     private EdmProperty property;
 
-    public ProjectedColumn(Expression expr, EdmType edmType, EdmProperty property, boolean collection) {
+    public ProjectedColumn(Expression expr, SingletonPrimitiveType edmType, EdmProperty property, boolean collection) {
         this.expr = expr;
         this.edmType = edmType;
         this.collection = collection;
@@ -39,7 +42,7 @@ public class ProjectedColumn {
         return this.expr;
     }
 
-    public EdmType getEdmType() {
+    public SingletonPrimitiveType getEdmType() {
         return this.edmType;
     }
 
@@ -71,6 +74,25 @@ public class ProjectedColumn {
             return null;
         }
         return property.getScale();
+    }
+
+    @Override
+    public String getName() {
+        if (property == null) {
+            return null;
+        }
+        return property.getName();
+    }
+
+    @Override
+    public String getRuntimeType() {
+        //TODO: works only if resolved
+        return DataTypeManager.getDataTypeName(expr.getType());
+    }
+
+    @Override
+    public EdmPrimitiveTypeKind getEdmPrimitiveTypeKind() {
+        return EdmPrimitiveTypeKind.getByName(edmType.getName());
     }
 
 }

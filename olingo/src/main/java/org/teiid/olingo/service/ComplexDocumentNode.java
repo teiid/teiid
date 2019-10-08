@@ -110,10 +110,10 @@ public class ComplexDocumentNode extends DocumentNode {
         return procedure.getName();
     }
 
-    public Column getColumnByName(String name) {
+    public ContextColumn getColumnByName(String name) {
         for (final Column column : procedure.getResultSet().getColumns()) {
             if (column.getName().equals(name)) {
-                return column;
+                return new TableContextColumn(column);
             }
         }
         return null;

@@ -19,9 +19,11 @@ package org.teiid.odata.api;
 
 import java.sql.SQLException;
 
-public interface OperationResponse extends QueryResponse, ComplexResponse {
+import org.apache.olingo.commons.api.data.Property;
 
-    Object getResult();
+public interface OperationResponse extends ComplexResponse {
+
+    Property getResult();
 
     void setReturnValue(Object value) throws SQLException;
 }

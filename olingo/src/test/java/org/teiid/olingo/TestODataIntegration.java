@@ -96,6 +96,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.WireProtocol;
@@ -193,16 +194,8 @@ public class TestODataIntegration {
         sc.setProtocol(WireProtocol.teiid);
         config.addTransport(sc);
         teiid.start(config);
-        ef = new LoopbackExecutionFactory() {
-            @Override
-            public boolean supportsRowOffset() {
-                return false;
-            }
-            @Override
-            public boolean supportsRowLimit() {
-                return false;
-            }
-        };
+        ef = new LoopbackExecutionFactory();
+        ef.setDelegate(new JDBCExecutionFactory());
         teiid.addTranslator("loopback", ef);
 
         createContext("/odata4", null);
@@ -3241,9 +3234,44 @@ public class TestODataIntegration {
                 response.getContentAsString());
     }
 
-    @Test public void testAggregationFails() throws Exception {
+    @Test public void testSumAggregate() throws Exception {
+        ef.setRowCount(2);
+        ef.setIncrementRows(true);
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$apply=aggregate(e3%20with%20sum%20as%20Total)");
-        assertEquals(501, response.getStatus());
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1%28Total%29\",\"value\":[{\"@odata.id\":\"null\",\"Total\":0.1}]}",  response.getContentAsString());
+    }
+
+    @Test public void testFilteredSumAggregate() throws Exception {
+        ef.setSupportsCompareCriteriaEquals(false);
+        ef.setRowCount(2);
+        ef.setIncrementRows(true);
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$apply=filter(e2%20gt%200)/aggregate(e3%20with%20sum%20as%20Total)");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1%28Total%29\",\"value\":[{\"@odata.id\":\"null\",\"Total\":0.1}]}",  response.getContentAsString());
+    }
+
+    @Test public void testSumAggregateFiltered() throws Exception {
+        ef.setSupportsCompareCriteriaEquals(false);
+        ef.setRowCount(2);
+        ef.setIncrementRows(true);
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$apply=aggregate(e3%20with%20sum%20as%20Total)/filter(Total%20gt%200)");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1%28Total%29\",\"value\":[{\"@odata.id\":\"null\",\"Total\":0.1}]}",  response.getContentAsString());
+    }
+
+    @Test public void testCountDistinctAggregate() throws Exception {
+        ef.setRowCount(2);
+        ef.setIncrementRows(true);
+        ContentResponse response = http.GET(baseURL + "/loopy/vm1/G1?$apply=aggregate(e3%20with%20countdistinct%20as%20Total)");
+        assertEquals(200, response.getStatus());
+        assertEquals("{\"@odata.context\":\"$metadata#G1%28Total%29\",\"value\":[{\"@odata.id\":\"null\",\"Total\":2}]}",  response.getContentAsString());
+        ef.setRowCount(2);
+        ef.setIncrementRows(false);
+        response = http.GET(baseURL + "/loopy/vm1/G1?$apply=aggregate(e3%20with%20countdistinct%20as%20Total)");
+        assertEquals(200, response.getStatus());
+        //same value, so should just be 1 distinct
+        assertEquals("{\"@odata.context\":\"$metadata#G1%28Total%29\",\"value\":[{\"@odata.id\":\"null\",\"Total\":1}]}",  response.getContentAsString());
     }
 
     @Test public void testJson() throws Exception {

@@ -30,9 +30,11 @@ import org.apache.olingo.commons.api.edm.EdmEntityType;
 import org.apache.olingo.commons.api.edm.EdmNavigationProperty;
 import org.apache.olingo.commons.api.edm.EdmPrimitiveTypeKind;
 import org.apache.olingo.commons.api.edm.EdmProperty;
+import org.apache.olingo.commons.api.edm.EdmStructuredType;
 import org.apache.olingo.commons.api.edm.EdmType;
 import org.apache.olingo.commons.api.edm.FullQualifiedName;
 import org.apache.olingo.commons.core.edm.EdmPropertyImpl;
+import org.apache.olingo.commons.core.edm.primitivetype.SingletonPrimitiveType;
 import org.apache.olingo.server.api.OData;
 import org.apache.olingo.server.api.uri.UriInfo;
 import org.apache.olingo.server.api.uri.UriParameter;
@@ -55,14 +57,60 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
 public class DocumentNode {
+
+    public interface ContextColumn {
+
+        int getOrdinal();
+
+        String getName();
+
+        String getRuntimeType();
+
+        EdmPrimitiveTypeKind getEdmPrimitiveTypeKind();
+
+    }
+
+    public static class TableContextColumn implements ContextColumn {
+
+        private Column column;
+
+        public TableContextColumn(Column c) {
+            this.column = c;
+        }
+
+        @Override
+        public int getOrdinal() {
+            return column.getPosition();
+        }
+
+        @Override
+        public String getName() {
+            return column.getName();
+        }
+
+        @Override
+        public String getRuntimeType() {
+            return column.getRuntimeType();
+        }
+
+        @Override
+        public EdmPrimitiveTypeKind getEdmPrimitiveTypeKind() {
+            return ODataTypeManager.odataType(column);
+        }
+
+
+
+    }
+
     private Table table;
     private GroupSymbol groupSymbol;
-    private EdmEntityType edmEntityType;
+    private EdmStructuredType edmStructuredType;
     private List<UriParameter> keyPredicates;
     private FromClause fromClause;
     private Criteria criteria;
-    private LinkedHashMap<Expression, ProjectedColumn> projectedColumns = new LinkedHashMap<Expression, ProjectedColumn>();
-    private List<DocumentNode> sibilings = new ArrayList<DocumentNode>();
+    protected LinkedHashMap<Expression, ProjectedColumn> projectedColumns = new LinkedHashMap<Expression, ProjectedColumn>();
+    protected LinkedHashMap<String, ProjectedColumn> projectedColumnsByName = new LinkedHashMap<String, ProjectedColumn>();
+    private List<DocumentNode> siblings = new ArrayList<DocumentNode>();
     private List<ExpandDocumentNode> expands = new ArrayList<ExpandDocumentNode>();
     private DocumentNode iterator;
 
@@ -93,7 +141,7 @@ public class DocumentNode {
 
         resource.setTable(table);
         resource.setGroupSymbol(gs);
-        resource.setEdmEntityType(type);
+        resource.setEdmStructuredType(type);
         resource.setKeyPredicates(keyPredicates);
         resource.setFromClause(new UnaryFromClause(gs));
 
@@ -178,7 +226,7 @@ public class DocumentNode {
     public DocumentNode(Table table, GroupSymbol gs, EdmEntityType type) {
         this.table = table;
         this.groupSymbol = gs;
-        this.edmEntityType = type;
+        this.edmStructuredType = type;
     }
 
     private Table getTable() {
@@ -189,8 +237,12 @@ public class DocumentNode {
         return table.getName();
     }
 
-    public Column getColumnByName(String name) {
-        return this.table.getColumnByName(name);
+    public ContextColumn getColumnByName(String name) {
+        Column c = this.table.getColumnByName(name);
+        if (c != null) {
+            return new TableContextColumn(c);
+        }
+        return null;
     }
 
     public String getFullName() {
@@ -201,8 +253,8 @@ public class DocumentNode {
         return groupSymbol;
     }
 
-    public EdmEntityType getEdmEntityType() {
-        return edmEntityType;
+    public EdmStructuredType getEdmStructuredType() {
+        return edmStructuredType;
     }
 
     public FromClause getFromClause() {
@@ -229,8 +281,8 @@ public class DocumentNode {
         this.groupSymbol = groupSymbol;
     }
 
-    public void setEdmEntityType(EdmEntityType edmEntityType) {
-        this.edmEntityType = edmEntityType;
+    public void setEdmStructuredType(EdmStructuredType edmStructuredType) {
+        this.edmStructuredType = edmStructuredType;
     }
 
     protected void addAllColumns(boolean onlyPK) {
@@ -253,8 +305,8 @@ public class DocumentNode {
 
     protected void addProjectedColumn(final String columnName,
             Expression expr) {
-        EdmPropertyImpl edmProperty = (EdmPropertyImpl) this.edmEntityType.getProperty(columnName);
-        Column c = getColumnByName(columnName);
+        EdmPropertyImpl edmProperty = (EdmPropertyImpl) this.edmStructuredType.getProperty(columnName);
+        ContextColumn c = getColumnByName(columnName);
         /* currently not needed, but if we need to associate the column's srid or if we can rely on
          * the value for a variable srid, then we need to produce ewkb instead
           if (c.getDatatype().getName().equalsIgnoreCase(DataTypeManager.DefaultDataTypes.GEOMETRY)) {
@@ -266,7 +318,7 @@ public class DocumentNode {
             expr = new AliasSymbol(columnName, expr);
         }*/
         ProjectedColumn pc = addProjectedColumn(expr, edmProperty.getType(), edmProperty, edmProperty.isCollection());
-        pc.setOrdinal(c.getPosition());
+        pc.setOrdinal(c.getOrdinal());
     }
 
     protected ProjectedColumn addProjectedColumn(final Expression expr, final EdmType type,
@@ -275,9 +327,12 @@ public class DocumentNode {
         if (pc != null) {
             return pc;
         }
-        pc = new ProjectedColumn(expr, type, property, collection);
+        pc = new ProjectedColumn(expr, (SingletonPrimitiveType) type, property, collection);
         pc.setOrdinal(Integer.MAX_VALUE);
         this.projectedColumns.put(expr, pc);
+        if (property != null) {
+            this.projectedColumnsByName.put(property.getName(), pc);
+        }
         return pc;
     }
 
@@ -305,7 +360,7 @@ public class DocumentNode {
     public List<ProjectedColumn> getAllProjectedColumns() {
         ArrayList<ProjectedColumn> columns = new ArrayList<ProjectedColumn>();
         columns.addAll(this.projectedColumns.values());
-        for (DocumentNode er:this.sibilings) {
+        for (DocumentNode er:this.siblings) {
             columns.addAll(er.getAllProjectedColumns());
         }
         if (this.iterator != null) {
@@ -319,19 +374,22 @@ public class DocumentNode {
     }
 
     public List<String> getKeyColumnNames(){
-        return this.edmEntityType.getKeyPredicateNames();
+        if (this.edmStructuredType instanceof EdmEntityType) {
+            return ((EdmEntityType)this.edmStructuredType).getKeyPredicateNames();
+        }
+        return Collections.emptyList();
     }
 
     public void setKeyPredicates(List<UriParameter> keyPredicates) {
         this.keyPredicates = keyPredicates;
     }
 
-    public void addSibiling(DocumentNode resource) {
-        this.sibilings.add(resource);
+    public void addSibling(DocumentNode resource) {
+        this.siblings.add(resource);
     }
 
-    public List<DocumentNode> getSibilings(){
-        return this.sibilings;
+    public List<DocumentNode> getSiblings(){
+        return this.siblings;
     }
 
     public void addExpand(ExpandDocumentNode resource) {
@@ -346,20 +404,20 @@ public class DocumentNode {
 
         Select select = new Select();
         AtomicInteger ordinal = new AtomicInteger(1);
-        addProjectedColumns(select, ordinal, sortColumns(getProjectedColumns().values()));
-        for (DocumentNode sibiling:this.sibilings) {
-            addProjectedColumns(select, ordinal, sortColumns(sibiling.getProjectedColumns().values()));
+        addColumns(select, ordinal, sortColumns(getProjectedColumns().values()));
+        for (DocumentNode sibiling:this.siblings) {
+            addColumns(select, ordinal, sortColumns(sibiling.getProjectedColumns().values()));
         }
 
         Query query = new Query();
         From from = new From();
 
         from.addClause(this.fromClause);
-        for (DocumentNode sibiling:this.sibilings) {
+        for (DocumentNode sibiling:this.siblings) {
             from.addClause(sibiling.getFromClause());
         }
         if (this.iterator != null) {
-            addProjectedColumns(select, ordinal, sortColumns(this.iterator.getProjectedColumns().values()));
+            addColumns(select, ordinal, sortColumns(this.iterator.getProjectedColumns().values()));
             from.addClause(this.iterator.getFromClause());
             GroupBy groupBy = new GroupBy();
             for (String keyCol : this.getKeyColumnNames()) {
@@ -375,7 +433,7 @@ public class DocumentNode {
         return query;
     }
 
-    private List<ProjectedColumn> sortColumns(Collection<ProjectedColumn> toSort) {
+    protected List<ProjectedColumn> sortColumns(Collection<ProjectedColumn> toSort) {
         //provide a stable sort of the columns regardless of visitation order.
         ArrayList<ProjectedColumn> list = new ArrayList<ProjectedColumn>(toSort);
         Collections.sort(list, new Comparator<ProjectedColumn>() {
@@ -387,7 +445,7 @@ public class DocumentNode {
         return list;
     }
 
-    private void addProjectedColumns(Select select, AtomicInteger ordinal,
+    protected void addColumns(Select select, AtomicInteger ordinal,
             List<ProjectedColumn> projected) {
         for (ProjectedColumn column:projected) {
             select.addSymbol(column.getExpression());

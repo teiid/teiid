@@ -45,7 +45,14 @@ import org.apache.olingo.server.api.ServiceMetadata;
 import org.apache.olingo.server.api.uri.*;
 import org.apache.olingo.server.api.uri.queryoption.*;
 import org.apache.olingo.server.api.uri.queryoption.OrderByItem;
+import org.apache.olingo.server.api.uri.queryoption.apply.Aggregate;
+import org.apache.olingo.server.api.uri.queryoption.apply.AggregateExpression;
+import org.apache.olingo.server.api.uri.queryoption.apply.AggregateExpression.StandardMethod;
+import org.apache.olingo.server.api.uri.queryoption.apply.Filter;
+import org.apache.olingo.server.api.uri.queryoption.apply.GroupBy;
+import org.apache.olingo.server.api.uri.queryoption.apply.GroupByItem;
 import org.apache.olingo.server.core.RequestURLHierarchyVisitor;
+import org.apache.olingo.server.core.uri.UriInfoImpl;
 import org.apache.olingo.server.core.uri.UriResourceEntitySetImpl;
 import org.apache.olingo.server.core.uri.parser.Parser;
 import org.apache.olingo.server.core.uri.parser.UriParserException;
@@ -71,6 +78,7 @@ import org.teiid.metadata.Table;
 import org.teiid.odata.api.SQLParameter;
 import org.teiid.olingo.ODataPlugin;
 import org.teiid.olingo.common.ODataTypeManager;
+import org.teiid.olingo.service.DocumentNode.ContextColumn;
 import org.teiid.olingo.service.ProcedureSQLBuilder.ProcedureReturn;
 import org.teiid.olingo.service.TeiidServiceHandler.ExpandNode;
 import org.teiid.olingo.service.TeiidServiceHandler.OperationParameterValueProvider;
@@ -78,15 +86,7 @@ import org.teiid.olingo.service.TeiidServiceHandler.UniqueNameGenerator;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.Option.MakeDep;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Array;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
@@ -302,8 +302,8 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                 processExpandOption(ei.getExpandOption(), expandResource, query, expandLevel + 1, null);
             } else if (levels != null) {
                 //self reference check
-                if (!property.getType().getFullQualifiedName().equals(node.getEdmEntityType().getFullQualifiedName())) {
-                    throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmEntityType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
+                if (!property.getType().getFullQualifiedName().equals(node.getEdmStructuredType().getFullQualifiedName())) {
+                    throw new TeiidProcessingException(ODataPlugin.Event.TEIID16060, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16060, node.getEdmStructuredType().getFullQualifiedName(), property.getType().getFullQualifiedName()));
                 }
 
                 if (levels > 1) {
@@ -319,7 +319,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
 
         if (starLevels > 0) {
             List<ExpandNode> starExpand = new ArrayList<TeiidServiceHandler.ExpandNode>();
-            EdmEntityType edmEntityType = node.getEdmEntityType();
+            EdmEntityType edmEntityType = (EdmEntityType)node.getEdmStructuredType();
             buildExpandGraph(seen, starExpand, edmEntityType, starLevels - 1);
             if (!starExpand.isEmpty()) {
                 processExpand(starExpand, node, outerQuery, expandLevel);
@@ -738,7 +738,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         int i = 0;
         for (Property property : entity.getProperties()) {
             EdmProperty edmProperty = (EdmProperty)entityType.getProperty(property.getName());
-            Column column = this.context.getColumnByName(edmProperty.getName());
+            ContextColumn column = this.context.getColumnByName(edmProperty.getName());
             ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
             boolean add = true;
             for (String c : this.context.getKeyColumnNames()) {
@@ -766,7 +766,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
-        Column column = this.context.getColumnByName(edmProperty.getName());
+        ContextColumn column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
 
         if (prepared) {
@@ -785,7 +785,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
         Update update = new Update();
         update.setGroup(this.context.getGroupSymbol());
 
-        Column column = this.context.getColumnByName(edmProperty.getName());
+        ContextColumn column = this.context.getColumnByName(edmProperty.getName());
         ElementSymbol symbol = new ElementSymbol(column.getName(), this.context.getGroupSymbol());
 
         update.addChange(symbol, new Reference(0));
@@ -847,7 +847,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
             CrossJoinNode resource = null;
             try {
                 boolean hasExpand = hasExpand(entitySet.getName(), info.getExpandOption());
-                resource = CrossJoinNode.buildCrossJoin(entityType, null,
+                resource = CrossJoinNode.buildCrossJoin(entityType,
                         this.metadata, this.odata, this.nameGenerator, this.aliasedGroups,
                         getUriInfo(), this.parseService, hasExpand);
                 resource.addAllColumns(!hasExpand);
@@ -857,7 +857,7 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
                     this.orderBy = this.context.addDefaultOrderBy();
                 }
                 else {
-                    this.context.addSibiling(resource);
+                    this.context.addSibling(resource);
                     OrderBy orderby = resource.addDefaultOrderBy();
                     int index = orderby.getVariableCount();
                     for (int i = 0; i < index; i++) {
@@ -902,16 +902,160 @@ public class ODataSQLBuilder extends RequestURLHierarchyVisitor {
     }
 
     @Override
-    public void visit(UriInfoResource info) {
-        super.visit(info);
-        ApplyOption apply = info.getApplyOption();
-        if (apply != null) {
-            visit(apply);
+    public void visit(ApplyOption apply) {
+        visit(apply, null);
+    }
+
+    public void visit(ApplyOption apply, ApplyDocumentNode currentContext) {
+        for (ApplyItem item : apply.getApplyItems()) {
+            switch (item.getKind()) {
+            case AGGREGATE:
+                applyAggregate(apply, (Aggregate)item, currentContext);
+                currentContext = null;
+                break;
+            case FILTER:
+                if (currentContext != null) {
+                    this.context = currentContext;
+                    currentContext = null;
+                }
+                Filter filter = (Filter)item;
+                FilterOption filterOption = filter.getFilterOption();
+                visit(filterOption);
+                break;
+            case GROUP_BY:
+                if (currentContext != null) {
+                    this.context = currentContext;
+                    currentContext = null;
+                }
+                applyGroupBy(apply, (GroupBy)item);
+                break;
+            case IDENTITY:
+                //just a reference to the current input set, should be supportable
+            case CUSTOM_FUNCTION:
+            case BOTTOM_TOP:
+            case COMPUTE:
+            case CONCAT:
+            case EXPAND:
+            case SEARCH:
+            default:
+                this.exceptions.add(new TeiidNotImplementedException(item.getKind().toString()));
+                return;
+            }
+        }
+        if (!this.exceptions.isEmpty()) {
+            return;
         }
     }
 
-    public void visit(ApplyOption apply) {
-        this.exceptions.add(new TeiidNotImplementedException("Apply Not Implemented"));
+    private void applyGroupBy(ApplyOption apply, GroupBy groupBy)
+            throws AssertionError {
+        List<GroupByItem> groupByItems = groupBy.getGroupByItems();
+        org.teiid.query.sql.lang.GroupBy grouping = new org.teiid.query.sql.lang.GroupBy();
+        for (int i = 0; i < groupByItems.size(); i++) {
+            GroupByItem gbi = groupByItems.get(i);
+            if (!gbi.getRollup().isEmpty() || gbi.isRollupAll()) {
+                this.exceptions.add(new TeiidNotImplementedException("rollup")); //$NON-NLS-1$
+                return;
+            }
+            List<UriResource> path = gbi.getPath();
+            if (path.isEmpty()) {
+                this.exceptions.add(new TeiidNotImplementedException("empty path")); //$NON-NLS-1$
+                return;
+            }
+
+            //convert from path to expression
+            UriInfoImpl impl = new UriInfoImpl();
+            for (UriResource resource : path) {
+                impl.addResourcePart(resource);
+            }
+
+            ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
+                    this.context, false,
+                    getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
+                    this.parseService);
+            Expression ex;
+            try {
+                ex = visitor.getExpression(impl);
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+                return;
+            }
+            //TODO: anything other than an elementsymbol won't be properly named
+            String alias = Symbol.getShortName(ex);
+            AliasSymbol as = new AliasSymbol(alias, ex);
+            EdmProperty property = apply.getEdmStructuredType().getStructuralProperty(alias);
+            this.context.addProjectedColumn(as, property.getType(), property, property.isCollection());
+            grouping.addSymbol(ex);
+        }
+        ApplyDocumentNode adn = ApplyDocumentNode.buildApplyDocumentNode(this.context, nameGenerator, apply.getEdmStructuredType());
+        adn.setGroupBy(grouping);
+
+        if (groupBy.getApplyOption() != null) {
+            ApplyOption applyOption = groupBy.getApplyOption();
+            //should just work recursively...
+            //need to pass the current context as it will take an additional option to close it
+            visit(applyOption, adn);
+        } else {
+            this.context = adn;
+        }
+    }
+
+    private void applyAggregate(ApplyOption apply, Aggregate aggregate, ApplyDocumentNode currentContext) {
+        List<AggregateExpression> expressions = aggregate.getExpressions();
+        for (int i = 0; i < expressions.size(); i++) {
+            AggregateExpression ae = expressions.get(i);
+            if (ae.getCustomMethod() != null || !ae.getPath().isEmpty()) {
+                this.exceptions.add(new TeiidNotImplementedException("custom aggregate method")); //$NON-NLS-1$
+                return;
+            }
+            if (!ae.getFrom().isEmpty()) {
+                this.exceptions.add(new TeiidNotImplementedException("aggregate from")); //$NON-NLS-1$
+                return;
+            }
+            if (ae.getInlineAggregateExpression() != null) {
+                this.exceptions.add(new TeiidNotImplementedException("inline aggregate")); //$NON-NLS-1$
+                return;
+            }
+            StandardMethod sm = ae.getStandardMethod();
+            String alias = ae.getAlias();
+            boolean distinct = false;
+            String agg = null;
+            switch (sm) {
+            case COUNT_DISTINCT:
+                distinct = true;
+                agg = "COUNT"; //$NON-NLS-1$
+                break;
+            case AVERAGE:
+            case MAX:
+            case MIN:
+            case SUM:
+                agg = sm.name();
+                break;
+            default:
+                this.exceptions.add(new TeiidNotImplementedException("unknown aggregate"));  //$NON-NLS-1$
+                return;
+            }
+            ODataExpressionToSQLVisitor visitor = new ODataExpressionToSQLVisitor(
+                    currentContext!=null?currentContext.getNestedContext():this.context, false,
+                    getUriInfo(), this.metadata, this.odata, this.nameGenerator, this.params,
+                    this.parseService);
+            Expression ex;
+            try {
+                ex = visitor.getExpression(ae.getExpression());
+            } catch (TeiidException e) {
+                this.exceptions.add(e);
+                return;
+            }
+            AliasSymbol as = new AliasSymbol(alias, new AggregateSymbol(agg, distinct, ex));
+            EdmProperty property = apply.getEdmStructuredType().getStructuralProperty(alias);
+            this.context.addProjectedColumn(as, property.getType(), property, property.isCollection());
+        }
+        //wrap with a new context as we've changed the projection
+        if (currentContext == null) {
+            this.context = ApplyDocumentNode.buildApplyDocumentNode(this.context, nameGenerator, apply.getEdmStructuredType());
+        } else {
+            this.context = currentContext;
+        }
     }
 
     @Override

@@ -83,6 +83,25 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
         </repository>
       </repositories> 
     </profile>    
+    <profile>
+      <id>apache-snapshot-repository</id>
+      <repositories>
+        <repository>
+          <id>apache-snapshot-repository-group</id>
+          <name>Apache Snapshot Maven Repository Group</name>
+          <url>https://repository.apache.org/content/groups/snapshots/</url>
+          <layout>default</layout>
+          <releases>
+            <enabled>false</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </snapshots>
+        </repository>
+      </repositories> 
+    </profile>
     <!-- 
     <profile>
       <id>jboss-techpreview</id>
@@ -145,6 +164,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
 
   <activeProfiles>
     <activeProfile>jboss-public-repository</activeProfile>
+    <activeProfile>apache-snapshot-repository</activeProfile>
     <activeProfile>jboss-developer-repository</activeProfile>
     <activeProfile>thirdparty-uploads</activeProfile>
     <!-- 
