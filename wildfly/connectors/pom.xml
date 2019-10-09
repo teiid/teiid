@@ -96,7 +96,7 @@
     <module>solr</module>
     <module>odata</module>
     <module>swagger</module>
-    <module>infinispan</module>
+    <!--module>infinispan</module-->
     <module>misc</module>
   </modules>
 </project>
