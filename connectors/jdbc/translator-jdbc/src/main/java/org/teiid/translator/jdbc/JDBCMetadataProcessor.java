@@ -150,6 +150,10 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11028));
         }
 
+        if (this.schemaPattern == null && this.schemaName == null) {
+            LogManager.logWarning(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
+        }
+
         DatabaseMetaData metadata = conn.getMetaData();
 
         this.startQuoteString = getDefaultQuoteStr(metadata, startQuoteString);
@@ -210,8 +214,6 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
                     throw new TranslatorException(JDBCPlugin.Event.TEIID11029, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
                 }
             }
-        } else if (this.schemaPattern == null && this.schemaName == null) {
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
         }
 
         if (importKeys) {
