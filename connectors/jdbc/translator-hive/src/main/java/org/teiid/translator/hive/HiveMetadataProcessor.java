@@ -56,7 +56,7 @@ public class HiveMetadataProcessor extends JDBCMetadataProcessor implements Meta
 
     @Override
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-            throws SQLException {
+            throws SQLException, TranslatorException {
         if (useDatabaseMetaData) {
             super.getConnectorMetadata(conn, metadataFactory);
             return;

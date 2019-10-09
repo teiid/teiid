@@ -31,6 +31,7 @@ import org.teiid.core.types.AbstractGeospatialType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.GeographyType;
 import org.teiid.core.types.GeometryType;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -50,6 +51,8 @@ import org.teiid.util.FullyQualifiedName;
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
  */
 public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
+
+    private static boolean USE_FULL_SCHEMA_NAME_DEFAULT = PropertiesUtils.getHierarchicalProperty("org.teiid.translator.jdbc.useFullSchemaNameDefault", Boolean.FALSE, Boolean.class); //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {FunctionMethod.class}, datatype=String.class, display="Sequence Used By This Function")
     static final String SEQUENCE = AbstractMetadataRecord.RELATIONAL_URI+"sequence"; //$NON-NLS-1$
@@ -82,7 +85,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private boolean importSequences;
     private String procedureNamePattern;
     private String sequenceNamePattern;
-    protected boolean useFullSchemaName = true;
+    protected boolean useFullSchemaName = USE_FULL_SCHEMA_NAME_DEFAULT;
     private boolean useFullSchemaNameSet;
     private String[] tableTypes;
     private String tableNamePattern;
@@ -141,9 +144,9 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     }
 
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-            throws SQLException {
+            throws SQLException, TranslatorException {
 
-        if (this.useFullSchemaName && !useFullSchemaNameSet) {
+        if (this.useFullSchemaName && useFullSchemaNameSet) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11028));
         }
 
@@ -195,11 +198,18 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
         Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata, conn);
         HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
 
+        //TODO: this should be expanded to procedures and the other import constructs
         if (tables.stream().map((t) -> {
             return Arrays.asList(t.catalog, t.schema);
         }).distinct().count() > 1) {
-            LogManager.logWarning(LogConstants.CTX_CONNECTOR,
-                    JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
+            if (!useFullSchemaName) {
+                if (USE_FULL_SCHEMA_NAME_DEFAULT) {
+                    LogManager.logWarning(LogConstants.CTX_CONNECTOR,
+                        JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
+                } else {
+                    throw new TranslatorException(JDBCPlugin.Event.TEIID11029, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11029));
+                }
+            }
         } else if (this.schemaPattern == null && this.schemaName == null) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11027));
         }
