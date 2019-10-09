@@ -25,6 +25,7 @@ import org.teiid.metadata.ExtensionMetadataProperty;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetadataProcessor;
 
@@ -49,7 +50,7 @@ public class PIMetadataProcessor extends JDBCMetadataProcessor {
     }
 
     public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-            throws SQLException {
+            throws SQLException, TranslatorException {
         super.getConnectorMetadata(conn, metadataFactory);
         for (String name:metadataFactory.getSchema().getTables().keySet()) {
             if (name.startsWith("ft_")) {
