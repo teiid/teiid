@@ -71,7 +71,7 @@
                 <module>amazon</module>
                 <module>solr</module>
                 <module>ldap</module>
-                <module>infinispan</module>
+                <!--module>infinispan</module-->
                 <module>sandbox</module>
             </modules>
         </profile>
