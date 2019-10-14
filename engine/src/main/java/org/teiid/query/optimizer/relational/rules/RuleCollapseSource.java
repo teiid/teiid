@@ -63,10 +63,12 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SubqueryContainer.Evaluatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -91,6 +93,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             // Get nested non-relational plan if there is one
             ProcessorPlan nonRelationalPlan = FrameUtil.getNestedPlan(accessNode);
     		Command command = FrameUtil.getNonQueryCommand(accessNode);
+    		Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
 
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
@@ -107,7 +110,6 @@ public final class RuleCollapseSource implements OptimizerRule {
             		plan = removeUnnecessaryInlineView(plan, commandRoot);
             	}
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
-                Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
                 
                 if (queryCommand instanceof Query 
                 		&& CapabilitiesUtil.supports(Capability.PARTIAL_FILTERS, modelId, metadata, capFinder)) {
@@ -146,20 +148,6 @@ public final class RuleCollapseSource implements OptimizerRule {
                 	}
                 }
                 
-                //find all pushdown functions and mark them to be evaluated by the source
-                for (Function f : FunctionCollectorVisitor.getFunctions(queryCommand, false)) {
-                	FunctionDescriptor fd = f.getFunctionDescriptor();
-    				if (f.isEval()) {
-    					if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN 
-    								&& fd.getMethod() != null 
-    								&& CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
-    						f.setEval(false);
-    					} else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
-    							&& CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
-    						f.setEval(false);
-    					}
-    				}
-                }
             	plan = addDistinct(metadata, capFinder, accessNode, plan, queryCommand, capFinder);
                 command = queryCommand;
                 queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
@@ -175,6 +163,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 }
             }
             if (command != null) {
+            	setEvalFlag(metadata, capFinder, command, modelId);
             	accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
             }
     		accessNode.removeAllChildren();
@@ -182,6 +171,49 @@ public final class RuleCollapseSource implements OptimizerRule {
        				
 		return plan;
 	}
+	
+    /**
+     * find all pushdown functions in evaluatable locations and mark them to be evaluated by the source
+     * @param metadata
+     * @param capFinder
+     * @param command
+     * @param modelId
+     */
+    private void setEvalFlag(final QueryMetadataInterface metadata,
+            final CapabilitiesFinder capFinder, final Command command,
+            final Object modelId) {
+        LanguageVisitor lv = new LanguageVisitor() {
+            @Override
+            public void visit(Function f) {
+                FunctionDescriptor fd = f.getFunctionDescriptor();
+                if (f.isEval()) {
+                    try {
+                        if (modelId != null && fd.getPushdown() == PushDown.MUST_PUSHDOWN
+                                    && fd.getMethod() != null
+                                    && CapabilitiesUtil.isSameConnector(modelId, fd.getMethod().getParent(), metadata, capFinder)) {
+                            f.setEval(false);
+                        } else if (fd.getDeterministic() == Determinism.NONDETERMINISTIC
+                                && CapabilitiesUtil.supportsScalarFunction(modelId, f, metadata, capFinder)) {
+                            f.setEval(false);
+                        }
+                    } catch (QueryMetadataException e) {
+                        throw new TeiidRuntimeException(e);
+                    } catch (TeiidComponentException e) {
+                        throw new TeiidRuntimeException(e);
+                    }
+                }
+            }
+            @Override
+            public void visit(SubqueryFromClause obj) {
+                PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
+            }
+            @Override
+            public void visit(WithQueryCommand obj) {
+                PreOrPostOrderNavigator.doVisit(obj.getCommand(), this, true);
+            }
+        };
+        PreOrPostOrderNavigator.doVisit(command, lv, true);
+    }
 
 	/**
 	 * This functions as "RulePushDistinct", however we do not bother
