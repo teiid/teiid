@@ -199,6 +199,25 @@
 	</developers>
 	<profiles>
         <profile>
+            <id>wildfly</id>
+            <modules>
+                <module>wildfly</module>
+            </modules>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.sonatype.plugins</groupId>
+                            <artifactId>nexus-staging-maven-plugin</artifactId>
+                            <!-- until the builds are separate, needs to match wildfly -->
+                            <version>1.6.8</version>
+                        </plugin>
+                    </plugins>
+                 </pluginManagement>
+             </build>
+        </profile>
+        
+        <profile>
         <id>default</id>
         <activation>
             <activeByDefault>true</activeByDefault>
