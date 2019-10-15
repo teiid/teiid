@@ -46,10 +46,6 @@
 			<artifactId>infinispan-tasks-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.squareup</groupId>
-			<artifactId>protoparser</artifactId>
-		</dependency>
-		<dependency>
             <groupId>org.infinispan.protostream</groupId>
             <artifactId>protostream</artifactId>
         </dependency>

@@ -17,7 +17,7 @@
  */
 package org.teiid.infinispan.api;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.infinispan.commons.api.BasicCache;
 import org.junit.After;
@@ -34,7 +34,9 @@ public class TestHotrodServer {
 
     @After
     public void tearDown() {
-        this.server.stop();
+        if (this.server != null) {
+            this.server.stop();
+        }
     }
 
     @Test
