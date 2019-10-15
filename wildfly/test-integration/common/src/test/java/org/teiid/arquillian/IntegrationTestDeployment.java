@@ -499,6 +499,15 @@ public class IntegrationTestDeployment {
 		assertTrue(rar_props.contains("resourceadapter-class"));
 		assertTrue(rar_props.contains("managedconnectionfactory-class"));
 		assertTrue(rar_props.contains("max-pool-size"));
+
+        Collection<? extends PropertyDefinition> xa_pds = admin.getTemplatePropertyDefinitions("h2-xa");
+        HashSet<String> xa_props = new HashSet<String>();
+        for(PropertyDefinition pd:xa_pds) {
+            xa_props.add(pd.getName());
+        }
+        assertTrue(xa_props.contains("xa-resource-timeout"));
+        assertTrue(xa_props.contains("max-pool-size"));
+        assertTrue(xa_props.contains("transaction-isolation"));
 	}
 	
 	@Test
@@ -642,6 +651,22 @@ public class IntegrationTestDeployment {
         
         assertTrue(admin.getDataSourceNames().contains(deployedName));
         
+        Properties fullProps = admin.getDataSource(deployedName);
+
+        assertEquals("127.0.0.1", fullProps.getProperty("ServerName"));
+        assertEquals("31000", fullProps.getProperty("PortNumber"));
+
+        /*
+         pad-xid=false, wrap-xa-resource=true,
+         set-tx-query-timeout=false, spy=false,
+         interleaving=false, tracking=false,
+         driver-name=teiid, jndi-name=java:/fooXA,
+         mcp=org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreConcurrentLinkedDequeManagedConnectionPool,
+         no-tx-separate-pool=false, enlistment-trace=false,
+         use-fast-fail=false, statistics-enabled=false, connectable=false,
+         share-prepared-statements=false, track-statements=NOWARN,
+         recovery-elytron-enabled=false, elytron-enabled=false, allow-multiple-users=false
+         */
         
         //admin.deleteDataSource(deployedName);
     }	

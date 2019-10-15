@@ -203,6 +203,11 @@ public class AdminFactory {
     };
 	
     public class AdminImpl implements Admin{
+        private static final String CONNECTION_PROPERTIES = "connection-properties";
+        private static final String CONNECTION_URL = "connection-url";
+        private static final String SERVER_NAME = "ServerName";
+        private static final String PORT_NUMBER = "PortNumber";
+        private static final String DATABASE_NAME = "DatabaseName";
         private static final long CACHE_TIME = 5*1000;
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
@@ -495,8 +500,8 @@ public class AdminFactory {
         	ArrayList<String> parameters = new ArrayList<String>();
             if (properties != null) {
                 if (!isXA(templateName)) {
-                	parameters.add("connection-url");
-                	parameters.add(properties.getProperty("connection-url"));
+                    parameters.add(CONNECTION_URL);
+                    parameters.add(properties.getProperty(CONNECTION_URL));
                 }
 
 	            for (PropertyDefinition prop : dsProperties) {
@@ -528,22 +533,22 @@ public class AdminFactory {
                             buildRequest("add", new String[] { "subsystem", "datasources","xa-data-source", deploymentName },
                             parameters.toArray(new String[parameters.size()])), null));
                     
-                    if (properties.getProperty("connection-url") != null) {
+                    if (properties.getProperty(CONNECTION_URL) != null) {
 						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
-								"connection-url", properties.getProperty("connection-url")), null));
+                                CONNECTION_URL, properties.getProperty(CONNECTION_URL)), null));
                     } else {
 						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
-								"DatabaseName", properties.getProperty("DatabaseName")), null));
-                        if (properties.getProperty("PortNumber") != null) {
+                                DATABASE_NAME, properties.getProperty(DATABASE_NAME)), null));
+                        if (properties.getProperty(PORT_NUMBER) != null) {
 							batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
-									"PortNumber", properties.getProperty("PortNumber")), null));
+                                    PORT_NUMBER, properties.getProperty(PORT_NUMBER)), null));
                         }
 						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
-								"ServerName", properties.getProperty("ServerName")), null));
+                                SERVER_NAME, properties.getProperty(SERVER_NAME)), null));
                     }
                     
                     // add connection properties that are specific to driver
-                    String cp = properties.getProperty("connection-properties");
+                    String cp = properties.getProperty(CONNECTION_PROPERTIES);
                     if (cp != null) {
                         StringTokenizer st = new StringTokenizer(cp, ",");
                         while(st.hasMoreTokens()) {
@@ -562,7 +567,7 @@ public class AdminFactory {
 									parameters.toArray(new String[parameters.size()])),
 							null));
                     // add connection properties that are specific to driver
-                    String cp = properties.getProperty("connection-properties");
+                    String cp = properties.getProperty(CONNECTION_PROPERTIES);
                     if (cp != null) {
                     	StringTokenizer st = new StringTokenizer(cp, ",");
                     	while(st.hasMoreTokens()) {
@@ -593,7 +598,7 @@ public class AdminFactory {
 			}
 			return buildRequest("add", new String[] { "subsystem", "datasources",
 					"data-source", deploymentName,
-					"connection-properties", key },
+                    CONNECTION_PROPERTIES, key },
 					new String[] {"value", value });
 		}
 
@@ -648,6 +653,29 @@ public class AdminFactory {
 				cliCall("read-resource",
 						new String[] {"subsystem", "datasources", "xa-data-source", deployedName}, null,
 						new DataSourceProperties(dsProperties));
+
+                if (!dsProperties.isEmpty()) {
+                    for (String prop : getCustomDatasourceProperties()) {
+                        cliCall("read-resource",
+                                new String[] {"subsystem", "datasources", "xa-data-source", deployedName, "xa-datasource-properties", prop}, null,
+                                new ResultCallback() {
+                                    @Override
+                                    void onSuccess(ModelNode outcome,
+                                            ModelNode result)
+                                            throws AdminException {
+                                        ModelNode node = outcome.get("result").get("value");
+                                        if (node.isDefined()) {
+                                            dsProperties.setProperty(prop, node.asString());
+                                        }
+                                    }
+
+                                    @Override
+                                    void onFailure(String msg)
+                                            throws AdminProcessingException {
+                                    }
+                                });
+                    }
+                }
 			}
 
 			// check connection factories
@@ -1256,11 +1284,11 @@ public class AdminFactory {
 		
 		private Set<String> getCustomDatasourceProperties(){
 		    Set<String> props = new HashSet<String>();
-		    props.add("connection-properties");
-		    props.add("DatabaseName");
-		    props.add("PortNumber");
-		    props.add("ServerName");
-		    props.add("connection-url");
+            props.add(CONNECTION_PROPERTIES);
+            props.add(DATABASE_NAME);
+            props.add(PORT_NUMBER);
+            props.add(SERVER_NAME);
+            props.add(CONNECTION_URL);
 		    return props;
 		}
 		
@@ -1286,7 +1314,7 @@ public class AdminFactory {
 
         	// get JDBC properties
         	if (isXA(templateName)) {
-                cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", 
+                cliCall("read-resource-description", new String[] {"subsystem", "datasources", "xa-data-source",
                         stripXA(templateName)}, null, builder);
                 addXAProperties(props);
         	} else {
@@ -1310,25 +1338,25 @@ public class AdminFactory {
 		}
 		
 		private void addXAProperties(ArrayList<PropertyDefinition> props) {
-            addProperty("connection-properties", "Addtional XA Datasource Properties", 
+            addProperty(CONNECTION_PROPERTIES, "Addtional XA Datasource Properties",
                     "The connection-properties element allows you to pass in arbitrary connection "
                     + "properties to the Data Source setters methods. "
                     + "Supply comma separated name-value pairs. ex:p1=v1,p2=v2",
                     false, true, props);
             
-            addProperty("DatabaseName", "Database Name", "Name of the Database", 
+            addProperty(DATABASE_NAME, "Database Name", "Name of the Database",
                     true, false, props);
-            addProperty("ServerName", "Server Name", "Server host name where database exists", 
+            addProperty(SERVER_NAME, "Server Name", "Server host name where database exists",
                     true, false, props);        
-            addProperty("PortNumber", "Port Number", "Port number of the database server", 
+            addProperty(PORT_NUMBER, "Port Number", "Port number of the database server",
                     false, false, props);
-            addProperty("connection-url", "Connection URL", "Connection URL to the data source", 
+            addProperty(CONNECTION_URL, "Connection URL", "Connection URL to the data source",
                     false, false, props);                                
 		}
 
         private void addDriverproperties(ArrayList<PropertyDefinition> props) {
             // add driver specific properties
-            addProperty("connection-properties", "Addtional Driver Properties", 
+            addProperty(CONNECTION_PROPERTIES, "Addtional Driver Properties",
                     "The connection-properties element allows you to pass in arbitrary connection "
                     + "properties to the Driver.connect(url, props) method. "
                     + "Supply comma separated name-value pairs. ex:p1=v1,p2=v2",
