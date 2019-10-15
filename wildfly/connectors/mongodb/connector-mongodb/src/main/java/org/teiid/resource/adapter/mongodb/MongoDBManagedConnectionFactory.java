@@ -34,6 +34,9 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 
 public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFactory{
+    private static final String STANDARD_PREFIX = "mongodb://"; //$NON-NLS-1$
+    private static final String SEEDLIST_PREFIX = "mongodb+srv://"; //$NON-NLS-1$
+
     private static final long serialVersionUID = -4945630936957298180L;
 
     public static final BundleUtil UTIL = BundleUtil.getBundleUtil(MongoDBManagedConnectionFactory.class);
@@ -185,25 +188,22 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
     }
 
     protected MongoClientURI getConnectionURI() {
-        String serverlist = getRemoteServerList();
-        if (serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
-            return new MongoClientURI(getRemoteServerList());
-        }
-        return null;
+        return new MongoClientURI(getRemoteServerList());
     }
 
-    protected List<ServerAddress> getServers() throws ResourceException {
+    protected List<ServerAddress> getServers() {
         String serverlist = getRemoteServerList();
-        if (!serverlist.startsWith("mongodb://")) { //$NON-NLS-1$
+        if (!serverlist.startsWith(STANDARD_PREFIX) && !serverlist.startsWith(SEEDLIST_PREFIX)) {
             List<ServerAddress> addresses = new ArrayList<ServerAddress>();
             StringTokenizer st = new StringTokenizer(serverlist, ";"); //$NON-NLS-1$
             while (st.hasMoreTokens()) {
                 String token = st.nextToken();
                 int idx = token.indexOf(':');
                 if (idx < 0) {
-                    throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+                    addresses.add(new ServerAddress(token));
+                } else {
+                    addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
                 }
-                addresses.add(new ServerAddress(token.substring(0, idx), Integer.valueOf(token.substring(idx+1))));
             }
             return addresses;
         }
