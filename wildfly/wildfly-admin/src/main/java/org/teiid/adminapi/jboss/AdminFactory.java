@@ -27,6 +27,7 @@ import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -47,6 +48,7 @@ import org.jboss.as.cli.operation.impl.DefaultOperationRequestBuilder;
 import org.jboss.as.controller.client.ModelControllerClient;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
+import org.jboss.dmr.Property;
 import org.teiid.adminapi.*;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
@@ -205,6 +207,7 @@ public class AdminFactory {
     public class AdminImpl implements Admin{
         private static final String CONNECTION_PROPERTIES = "connection-properties";
         private static final String CONNECTION_URL = "connection-url";
+        private static final String URL = "URL";
         private static final String SERVER_NAME = "ServerName";
         private static final String PORT_NUMBER = "PortNumber";
         private static final String DATABASE_NAME = "DatabaseName";
@@ -505,7 +508,7 @@ public class AdminFactory {
                 }
 
 	            for (PropertyDefinition prop : dsProperties) {
-	            	if (getCustomDatasourceProperties().contains(prop.getName())) {
+                    if (getCustomDatasourceProperties(isXA(templateName)).contains(prop.getName())) {
 	            		continue;
 	            	}
 	            	String value = properties.getProperty(prop.getName());
@@ -533,9 +536,9 @@ public class AdminFactory {
                             buildRequest("add", new String[] { "subsystem", "datasources","xa-data-source", deploymentName },
                             parameters.toArray(new String[parameters.size()])), null));
                     
-                    if (properties.getProperty(CONNECTION_URL) != null) {
+                    if (properties.getProperty(URL) != null) {
 						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
-                                CONNECTION_URL, properties.getProperty(CONNECTION_URL)), null));
+                                URL, properties.getProperty(URL)), null));
                     } else {
 						batch.add(new DefaultBatchedCommand(cmdContext, "add", addXADatasourceProperty(deploymentName,
                                 DATABASE_NAME, properties.getProperty(DATABASE_NAME)), null));
@@ -646,36 +649,13 @@ public class AdminFactory {
 			// check regular data-source
 			cliCall("read-resource",
 					new String[] { "subsystem", "datasources", "data-source", deployedName}, null,
-					new DataSourceProperties(dsProperties));
+                    new DataSourceProperties(deployedName, dsProperties));
 
 			// check xa connections
 			if (dsProperties.isEmpty()) {
 				cliCall("read-resource",
 						new String[] {"subsystem", "datasources", "xa-data-source", deployedName}, null,
-						new DataSourceProperties(dsProperties));
-
-                if (!dsProperties.isEmpty()) {
-                    for (String prop : getCustomDatasourceProperties()) {
-                        cliCall("read-resource",
-                                new String[] {"subsystem", "datasources", "xa-data-source", deployedName, "xa-datasource-properties", prop}, null,
-                                new ResultCallback() {
-                                    @Override
-                                    void onSuccess(ModelNode outcome,
-                                            ModelNode result)
-                                            throws AdminException {
-                                        ModelNode node = outcome.get("result").get("value");
-                                        if (node.isDefined()) {
-                                            dsProperties.setProperty(prop, node.asString());
-                                        }
-                                    }
-
-                                    @Override
-                                    void onFailure(String msg)
-                                            throws AdminProcessingException {
-                                    }
-                                });
-                    }
-                }
+                        new DataSourceProperties(deployedName, dsProperties));
 			}
 
 			// check connection factories
@@ -705,26 +685,68 @@ public class AdminFactory {
 
 		private class DataSourceProperties extends ResultCallback {
 			private Properties dsProperties;
-			DataSourceProperties(Properties props){
+            private String deployedName;
+            DataSourceProperties(String deployedName, Properties props){
+                this.deployedName = deployedName;
 				this.dsProperties = props;
 			}
 			@Override
 			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
 	    		List<ModelNode> props = outcome.get("result").asList();
         		for (ModelNode prop:props) {
-        			if (prop.getType().equals(ModelType.PROPERTY)) {
+                    if (!prop.getType().equals(ModelType.PROPERTY)) {
+                        continue;
+                    }
         				org.jboss.dmr.Property p = prop.asProperty();
         				ModelType type = p.getValue().getType();
-        				if (p.getValue().isDefined() && !type.equals(ModelType.LIST) && !type.equals(ModelType.OBJECT)) {
-							if (p.getName().equals("driver-name")
+                    if (!p.getValue().isDefined() || type.equals(ModelType.LIST)) {
+                        continue;
+                    }
+                    if (type.equals(ModelType.OBJECT)) {
+                        if (p.getName().equals("xa-datasource-properties")) {
+                            Map<String, String> connectionProperties = new HashMap<>();
+                            for (Property xaProp : p.getValue().asPropertyList()) {
+                                try {
+                                    cliCall("read-resource",
+                                            new String[] {"subsystem", "datasources", "xa-data-source", deployedName, "xa-datasource-properties", xaProp.getName()}, null,
+                                            new ResultCallback() {
+                                                @Override
+                                                void onSuccess(ModelNode outcome,
+                                                        ModelNode result)
+                                                        throws AdminException {
+                                                    ModelNode node = outcome.get("result").get("value");
+                                                    if (node.isDefined()) {
+                                                        if (getCustomDatasourceProperties(true).contains(xaProp.getName())) {
+                                                            dsProperties.setProperty(xaProp.getName(), node.asString());
+                                                        } else {
+                                                            connectionProperties.put(xaProp.getName(), node.asString());
+                                                        }
+                                                    }
+                                                }
+
+                                                @Override
+                                                void onFailure(String msg)
+                                                        throws AdminProcessingException {
+                                                }
+                                            });
+                                } catch (AdminException e) {
+                                }
+                            }
+                            if (!connectionProperties.isEmpty()) {
+                                String value = connectionProperties.entrySet().stream().map(
+                                        e -> e.getKey() + "=" + e.getValue())
+                                        .collect(Collectors.joining(","));
+
+                                this.dsProperties.put(CONNECTION_PROPERTIES, value);
+                            }
+                        }
+                    } else if (p.getName().equals("driver-name")
 									|| p.getName().equals("jndi-name")
 									|| !excludeProperty(p.getName())) {
         						this.dsProperties.setProperty(p.getName(), p.getValue().asString());
         					}
         				}
         			}
-        		}
-			}
 			@Override
 			public void onFailure(String msg) throws AdminProcessingException {
 			}
@@ -1282,13 +1304,17 @@ public class AdminFactory {
 		    return templateName;
 		}
 		
-		private Set<String> getCustomDatasourceProperties(){
+        private Set<String> getCustomDatasourceProperties(boolean xa){
 		    Set<String> props = new HashSet<String>();
             props.add(CONNECTION_PROPERTIES);
             props.add(DATABASE_NAME);
             props.add(PORT_NUMBER);
             props.add(SERVER_NAME);
+            if (xa) {
+                props.add(URL);
+            } else {
             props.add(CONNECTION_URL);
+            }
 		    return props;
 		}
 		
@@ -1350,7 +1376,7 @@ public class AdminFactory {
                     true, false, props);        
             addProperty(PORT_NUMBER, "Port Number", "Port number of the database server",
                     false, false, props);
-            addProperty(CONNECTION_URL, "Connection URL", "Connection URL to the data source",
+            addProperty(URL, "Connection URL", "Connection URL to the data source",
                     false, false, props);                                
 		}
 
