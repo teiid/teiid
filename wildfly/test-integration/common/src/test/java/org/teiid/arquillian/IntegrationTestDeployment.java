@@ -646,6 +646,7 @@ public class IntegrationTestDeployment {
 
         p.setProperty("ServerName", "127.0.0.1");
         p.setProperty("PortNumber", "31000");
+        p.setProperty("connection-properties", "x=something,y=foo");
 
         admin.createDataSource(deployedName, "teiid-xa", p);
 
@@ -655,20 +656,19 @@ public class IntegrationTestDeployment {
 
         assertEquals("127.0.0.1", fullProps.getProperty("ServerName"));
         assertEquals("31000", fullProps.getProperty("PortNumber"));
+        assertEquals("x=something,y=foo", fullProps.getProperty("connection-properties"));
 
-        /*
-         pad-xid=false, wrap-xa-resource=true,
-         set-tx-query-timeout=false, spy=false,
-         interleaving=false, tracking=false,
-         driver-name=teiid, jndi-name=java:/fooXA,
-         mcp=org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreConcurrentLinkedDequeManagedConnectionPool,
-         no-tx-separate-pool=false, enlistment-trace=false,
-         use-fast-fail=false, statistics-enabled=false, connectable=false,
-         share-prepared-statements=false, track-statements=NOWARN,
-         recovery-elytron-enabled=false, elytron-enabled=false, allow-multiple-users=false
-         */
+        admin.deleteDataSource(deployedName);
 
-        //admin.deleteDataSource(deployedName);
+        p.clear();
+
+        p.put("URL", "...");
+
+        admin.createDataSource(deployedName, "teiid-xa", p);
+
+        fullProps = admin.getDataSource(deployedName);
+
+        assertEquals("...", fullProps.getProperty("URL"));
     }
 
     @Test
