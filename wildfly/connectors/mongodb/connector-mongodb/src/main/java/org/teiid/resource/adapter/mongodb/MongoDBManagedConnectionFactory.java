@@ -56,12 +56,11 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
         if (this.remoteServerList == null) {
             throw new InvalidPropertyException(UTIL.getString("no_server")); //$NON-NLS-1$
         }
-        if (this.database == null) {
-            throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
-        }
-
         final List<ServerAddress> servers = getServers();
         if (servers != null) {
+            if (this.database == null) {
+                throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+            }
             return new BasicConnectionFactory<MongoDBConnectionImpl>() {
                 @Override
                 public MongoDBConnectionImpl getConnection() throws ResourceException {
@@ -72,11 +71,16 @@ public class MongoDBManagedConnectionFactory extends BasicManagedConnectionFacto
             };
         }
 
+        MongoClientURI connectionURI = getConnectionURI();
+        if (connectionURI.getDatabase() == null) {
+            throw new InvalidPropertyException(UTIL.getString("no_database")); //$NON-NLS-1$
+        }
+
         // Make connection using the URI format
         return new BasicConnectionFactory<MongoDBConnectionImpl>() {
             @Override
             public MongoDBConnectionImpl getConnection() throws ResourceException {
-                return new MongoDBConnectionImpl(MongoDBManagedConnectionFactory.this.database, getConnectionURI());
+                return new MongoDBConnectionImpl(connectionURI);
             }
         };
 
