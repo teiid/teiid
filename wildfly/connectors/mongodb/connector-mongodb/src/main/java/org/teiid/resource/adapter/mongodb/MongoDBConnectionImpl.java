@@ -54,11 +54,8 @@ public class MongoDBConnectionImpl extends BasicConnection implements MongoDBCon
         this.database = database;
     }
 
-    public MongoDBConnectionImpl(String database, MongoClientURI uri) {
-        this.database = database;
-        if (uri.getDatabase() != null) {
-            this.database = database;
-        }
+    public MongoDBConnectionImpl(MongoClientURI uri) {
+        this.database = uri.getDatabase();
         this.client = new MongoClient(uri);
     }
 
