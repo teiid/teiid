@@ -42,7 +42,9 @@ import org.apache.olingo.commons.api.format.ContentType;
 import org.apache.olingo.commons.core.Encoder;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
+import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.BytesContentProvider;
+import org.eclipse.jetty.client.util.FutureResponseListener;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
@@ -269,7 +271,7 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$metadata");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
-                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")).replace("${baseurl}", baseURL),
+                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")),
                 response.getContentAsString());
     }
 
@@ -3295,4 +3297,42 @@ public class TestODataIntegration {
         assertEquals(200, response.getStatus());
     }
 
+    @Test
+    public void testLargeOpenApi() throws Exception {
+        ModelMetaData mmd = new ModelMetaData();
+        mmd.setName("x");
+        mmd.setModelType(Type.VIRTUAL);
+        StringBuilder sb = new StringBuilder();
+        int tables = 100;
+        int cols = 100;
+        for (int i = 0; i < tables; i++) {
+            sb.append("create view v" + i +" (col1 integer primary key ");
+            for (int j = 2; j <= cols; j++) {
+                sb.append(", col").append(j).append(" integer");
+            }
+            for (int k = 1; k <= 10; k++) {
+                sb.append(", foreign key (col"+k+") references v"+ ((i + k)%tables)+"(col1)");
+            }
+            sb.append(") as SELECT 1");
+            for (int j = 2; j <= cols; j++) {
+                sb.append(", null");
+            }
+            sb.append(";\n");
+        }
+        String ddl = sb.toString();
+        System.out.println(ddl);
+        mmd.addSourceMetadata("ddl", ddl);
+        teiid.deployVDB("northwind", mmd);
+
+        Request request = http.newRequest(baseURL + "/northwind/x/openapi.json");
+        FutureResponseListener listener = new FutureResponseListener(request, 20000000);
+        request.send(listener);
+        ContentResponse response = listener.get();
+        assertEquals(200, response.getStatus());
+        System.out.println(response.getContentAsString().length());
+
+        response = http.GET(baseURL + "/northwind/x/$metadata");
+        assertEquals(200, response.getStatus());
+        System.out.println(response.getContentAsString().length());
+    }
 }
