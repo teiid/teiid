@@ -161,11 +161,6 @@ public class EntityCollectionResponse extends EntityCollection implements QueryR
         boolean allNulls = true;
         for (ProjectedColumn column: projected) {
 
-            /*
-            if (!column.isVisible()) {
-                continue;
-            }*/
-
             String propertyName = Symbol.getShortName(column.getExpression());
             Object value = row.getObject(column.getOrdinal());
             if (value != null) {

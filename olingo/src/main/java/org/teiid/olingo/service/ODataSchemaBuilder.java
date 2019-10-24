@@ -41,6 +41,8 @@ import org.teiid.olingo.common.ODataTypeManager;
 
 public class ODataSchemaBuilder {
 
+    public static final String VISIBLE = MetadataFactory.ODATA_URI + "visible"; //$NON-NLS-1$
+
     //not validating length - odata specifies up to 128 chars though
     static Pattern NAME_PATTERN = Pattern.compile("[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}\\p{Cf}]{0,}"); //$NON-NLS-1$
 
@@ -105,6 +107,10 @@ public class ODataSchemaBuilder {
                 continue;
             }
 
+            if (!isObjectVisible(table)) {
+                continue;
+            }
+
             String entityTypeName = table.getName();
 
             CsdlEntityType entityType = new CsdlEntityType().setName(entityTypeName);
@@ -151,6 +157,11 @@ public class ODataSchemaBuilder {
         // build entity schema
         csdlSchema.setEntityTypes(new ArrayList<CsdlEntityType>(entityTypes.values()))
                 .setEntityContainer(entityContainer);
+    }
+
+    private static boolean isObjectVisible(AbstractMetadataRecord record) {
+        String visible = record.getProperty(VISIBLE, false);
+        return visible == null || Boolean.valueOf(visible);
     }
 
     private static boolean hasStream(List<CsdlProperty> properties) {
@@ -396,6 +407,10 @@ public class ODataSchemaBuilder {
             if (!allowedProcedure(proc)){
                 LogManager.logDetail(LogConstants.CTX_ODATA,
                         ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16032, proc.getFullName()));
+                continue;
+            }
+
+            if (!isObjectVisible(proc)) {
                 continue;
             }
 

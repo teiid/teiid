@@ -1122,7 +1122,7 @@ public class TestODataSQLBuilder {
         helpTest("/odata4/vdb/PM1/G1?$apply=filter(e2%20gt%200)/aggregate(e3%20with%20sum%20as%20Total)",
                 "SELECT * FROM (SELECT SUM(g0.e3) AS Total FROM PM1.G1 AS g0 WHERE g0.e2 > 0) AS g1");
     }
-    
+
     @Test
     public void testTimestampPrecision() throws Exception {
         String ddl = "CREATE FOREIGN TABLE G1(\n" +
