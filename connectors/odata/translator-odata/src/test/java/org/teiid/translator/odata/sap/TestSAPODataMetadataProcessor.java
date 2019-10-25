@@ -89,5 +89,8 @@ public class TestSAPODataMetadataProcessor {
         //check required-in-filter
         assertEquals(1, t.getAccessPatterns().size());
         assertEquals(2, t.getAccessPatterns().get(0).getColumns().size());
+
+        assertEquals(255, t.getColumnByName("select").getLength());
+        assertEquals(9, t.getColumnByName("updated").getScale());
     }
 }

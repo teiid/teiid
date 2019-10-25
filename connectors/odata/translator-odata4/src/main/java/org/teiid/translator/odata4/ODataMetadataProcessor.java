@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.commons.api.edm.geo.SRID;
 import org.apache.olingo.commons.api.edm.provider.*;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
@@ -82,6 +83,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         this.ef = ef;
     }
 
+    @Override
     public void process(MetadataFactory mf, WSConnection conn)
             throws TranslatorException {
         XMLMetadata serviceMetadata = getSchema(conn);
@@ -610,12 +612,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (property.getMaxLength() != null) {
             c.setLength(property.getMaxLength());
         }
-        if (property.getPrecision() != null) {
-            c.setPrecision(property.getPrecision());
-        }
-        if (property.getScale() != null) {
-            c.setScale(property.getScale());
-        }
         if (property.getDefaultValue() != null) {
             c.setDefaultValue(property.getDefaultValue());
         }
@@ -634,6 +630,21 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (property.getType().equals("Edm.String") && property.isCollection()) {
             c.setNativeType("Collection("+property.getType()+")");
         }
+
+        // mismatch with timestamp type and odata
+        if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) {
+            if (property.getPrecision() != null){
+                c.setScale(property.getPrecision());
+            }
+        } else {
+            if (property.getPrecision() != null) {
+                c.setPrecision(property.getPrecision());
+            }
+            if (property.getScale() != null) {
+                c.setScale(property.getScale());
+            }
+        }
+
         return c;
     }
 
@@ -745,7 +756,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                         ODataTypeManager.teiidType(property.getType(), property.isCollection()), procedure);
             }
             else if (isComplexType(metadata, property.getType())) {
-                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
+                CsdlComplexType childType = getComplexType(metadata, property.getType());
                 addProcedureTableReturn(mf, metadata, procedure, childType, property.getName());
             }
             else {
@@ -863,7 +874,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (tableName.indexOf('.') == -1) {
                     tableName = fk.getReferenceKey().getParent().getFullName();
                 }
-                return (Table)metadata.getTable(tableName);
+                return metadata.getTable(tableName);
             }
         }
         return table;

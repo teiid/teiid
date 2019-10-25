@@ -23,6 +23,7 @@ import org.odata4j.core.NamespacedAnnotation;
 import org.odata4j.core.PrefixedNamespace;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmProperty;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.KeyRecord;
