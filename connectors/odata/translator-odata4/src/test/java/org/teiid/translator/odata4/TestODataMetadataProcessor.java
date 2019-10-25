@@ -82,7 +82,8 @@ public class TestODataMetadataProcessor {
     private static MetadataFactory createMetadata(final String file, final String schema,
             final String schemaNamespace) throws TranslatorException {
         ODataMetadataProcessor processor = new ODataMetadataProcessor() {
-            protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
+            @Override
+			protected XMLMetadata getSchema(WSConnection conn) throws TranslatorException {
                 try {
                     ClientODataDeserializerImpl deserializer = new ClientODataDeserializerImpl(
                             false, ContentType.APPLICATION_XML);
@@ -215,8 +216,8 @@ public class TestODataMetadataProcessor {
 
         ArrayList<CsdlProperty> properties = new ArrayList<CsdlProperty>();
         properties.add(createProperty("name", EdmPrimitiveTypeKind.String).setMaxLength(25).setNullable(false));
-        properties.add(createProperty("dob", EdmPrimitiveTypeKind.DateTimeOffset).setNullable(true));
-        properties.add(createProperty("ssn", EdmPrimitiveTypeKind.Int64).setNullable(false));
+        properties.add(createProperty("dob", EdmPrimitiveTypeKind.DateTimeOffset).setNullable(true).setPrecision(9));
+        properties.add(createProperty("ssn", EdmPrimitiveTypeKind.Int64).setNullable(false).setPrecision(2).setScale(3));
 
         CsdlEntityType entityType = new CsdlEntityType();
         entityType.setName("Person");
@@ -249,6 +250,10 @@ public class TestODataMetadataProcessor {
         assertTrue(name.getNullType() == NullType.No_Nulls);
         assertTrue(dob.getNullType() == NullType.Nullable);
         assertTrue(ssn.getNullType() == NullType.No_Nulls);
+
+        assertEquals(3, ssn.getScale());
+        assertEquals(2, ssn.getPrecision());
+        assertEquals(9, dob.getScale());
 
         assertEquals(25, name.getLength());
 
