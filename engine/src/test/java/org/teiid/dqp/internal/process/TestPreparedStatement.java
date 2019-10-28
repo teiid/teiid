@@ -52,6 +52,7 @@ import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestPreparedStatement {
@@ -586,6 +587,27 @@ public class TestPreparedStatement {
         dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 < 'c' AND g_0.e2 IN (1, 2, 3, 4)", new List<?>[] {Arrays.asList("a")});
         dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e1 < 'c' AND g_0.e2 IN (5, 6, 7, 8)", new List<?>[] {Arrays.asList("b")});
         helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+
+    @Test public void testDependentRewrite() throws Exception {
+        // Create query
+        String preparedSql = "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 left outer join /*+ makedep */ pm2.g1 on pm1.g1.e1 = pm2.g1.e1 and pm1.g1.e2 in (?, ?) where pm2.g1.e1 in (?, ?)"; //$NON-NLS-1$
+
+        // Create expected results
+        List<?>[] expected = new List<?>[] {
+            Arrays.asList("b", Boolean.FALSE), //$NON-NLS-1$
+            Arrays.asList("b", Boolean.FALSE), //$NON-NLS-1$
+        };
+
+        List<?> values = Arrays.asList(1, 2, "a", "b");
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
+
+        helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), RealMetadataFactory.example1Cached(), null, false, false, false, RealMetadataFactory.example1VDB());
     }
 
 }

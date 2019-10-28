@@ -235,6 +235,7 @@ public class DependentCriteriaProcessor {
                     state.existingSet = sc;
                     int index = queryCriteria.indexOf(sc);
                     queryCriteria.set(index, QueryRewriter.TRUE_CRITERIA);
+                    setStates.remove(index);
                 }
                 state.valueExpression = dsc.getValueExpression();
                 if (dsc.hasMultipleAttributes()) {
