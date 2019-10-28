@@ -32,7 +32,9 @@
   
     <!-- copied from the teiid-parent when things separate-->
     <profiles>
+
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
+	
 	<profile>
 		<id>release</id>
 		<modules>
@@ -99,6 +101,9 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <skipTests>true</skipTests>
       </properties>
+      <modules>
+        <module>wildfly-build</module>
+      </modules>
     </profile>   
 	</profiles>
   
@@ -498,7 +503,6 @@
         <module>resource-spi</module>
         <module>rest-service</module>
         <module>connectors</module>
-        <module>wildfly-build</module>
         <module>test-integration</module>
   </modules>
 </project>
