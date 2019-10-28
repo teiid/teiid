@@ -7,7 +7,7 @@
                 </Key>
                 <Property Name="ID" Type="Edm.String" Nullable="false" MaxLength="32" sap:creatable="false" sap:updatable="false" sap:filterable="false" />
                 <Property Name="user" Type="Edm.String" MaxLength="12" m:FC_TargetPath="SyndicationAuthorName" m:FC_KeepInContent="false" sap:label="User Name" sap:creatable="false" sap:filterable="false" />
-                <Property Name="updated" Type="Edm.DateTime" m:FC_TargetPath="SyndicationUpdated" m:FC_KeepInContent="false" sap:label="Time Stamp" sap:creatable="false" sap:filterable="false" />
+                <Property Name="updated" Type="Edm.DateTime" Precision="9" m:FC_TargetPath="SyndicationUpdated" m:FC_KeepInContent="false" sap:label="Time Stamp" sap:creatable="false" sap:filterable="false" />
                 <Property Name="title" Type="Edm.String" MaxLength="255" m:FC_TargetPath="SyndicationTitle" m:FC_KeepInContent="false" sap:filterable="false" />
                 <Property Name="deliveryAddress" Type="Edm.String" sap:filterable="false" />
                 <Property Name="persistNotifications" Type="Edm.Boolean" sap:label="Persist Notification" sap:filterable="false" />

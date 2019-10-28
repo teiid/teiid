@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response.Status;
 import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -94,6 +95,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
     }
 
+    @Override
     public void process(MetadataFactory mf, WSConnection conn) throws TranslatorException {
         EdmDataServices eds = getEds(conn);
         getMetadata(mf, eds);
@@ -366,11 +368,26 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (ep.getFixedLength() != null) {
             c.setFixedLength(ep.getFixedLength());
         }
-        c.setNullType(ep.isNullable()?NullType.Nullable:NullType.No_Nulls);
-        if (ep.getMaxLength() != null) {
+        if (ep.getMaxLength() != null){
             c.setLength(ep.getMaxLength());
         }
-
+        c.setNullType(ep.isNullable()?NullType.Nullable:NullType.No_Nulls);
+        if (ep.getDefaultValue() != null){
+            c.setDefaultValue(ep.getDefaultValue());
+        }
+        // mismatch with timestamp type and odata
+        if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) {
+            if (ep.getPrecision() != null){
+                c.setScale(ep.getPrecision());
+            }
+        } else {
+            if (ep.getPrecision() != null){
+                c.setPrecision(ep.getPrecision());
+            }
+            if (ep.getScale() != null){
+                c.setScale(ep.getScale());
+            }
+        }
         return c;
     }
 
