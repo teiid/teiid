@@ -41,7 +41,7 @@ import org.teiid.olingo.common.ODataTypeManager;
 
 public class ODataSchemaBuilder {
 
-    public static final String VISIBLE = MetadataFactory.ODATA_URI + "visible"; //$NON-NLS-1$
+    public static final String VISIBLE = MetadataFactory.ODATA_PREFIX + "visible"; //$NON-NLS-1$
 
     //not validating length - odata specifies up to 128 chars though
     static Pattern NAME_PATTERN = Pattern.compile("[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}\\p{Nd}\\p{Mn}\\p{Mc}\\p{Pc}\\p{Cf}]{0,}"); //$NON-NLS-1$
@@ -819,20 +819,6 @@ public class ODataSchemaBuilder {
     }
 
     private static String normalizeTermName(String name) {
-        if (name.startsWith("{")) {
-            int end = name.indexOf("}");
-            if (end != -1) {
-                String modified = null;
-                String namespace = name.substring(1, end);
-                for (Map.Entry<String, String> entry:MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
-                    if (entry.getValue().equals(namespace)) {
-                        modified = entry.getKey();
-                        break;
-                    }
-                }
-                return modified + ":" + name.substring(end+1);
-            }
-        }
         return name;
     }
 }

@@ -61,7 +61,7 @@ import org.teiid.query.util.CommandContext;
 public final class RulePlaceAccess implements
                                   OptimizerRule {
 
-    public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_URI + "conformed-sources"; //$NON-NLS-1$
+    public static final String CONFORMED_SOURCES = AbstractMetadataRecord.RELATIONAL_PREFIX + "conformed-sources"; //$NON-NLS-1$
     public static final String RECONTEXT_STRING = "__"; //$NON-NLS-1$
 
     public PlanNode execute(PlanNode plan,

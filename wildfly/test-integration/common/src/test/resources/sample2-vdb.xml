@@ -15,8 +15,7 @@
     </model>
     <model name="View" type ="VIRTUAL">
          <metadata type="DDL"><![CDATA[
-            SET NAMESPACE 'http://teiid.org/rest' AS REST;
-            CREATE VIRTUAL PROCEDURE g1Table(IN p1 integer, IN p2 string) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "REST:METHOD" 'GET', "REST:URI" 'g1/{p1}')
+            CREATE VIRTUAL PROCEDURE g1Table(IN p1 integer, IN p2 string) RETURNS TABLE (xml_out xml) OPTIONS (UPDATECOUNT 0, "teiid_rest:METHOD" 'GET', "teiid_rest:URI" 'g1/{p1}')
             AS
             BEGIN
                 SELECT XMLELEMENT(NAME "rows", XMLATTRIBUTES (g1Table.p1 as p1, g1Table.p2 as p2), XMLAGG(XMLELEMENT(NAME "row", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1;

@@ -634,10 +634,6 @@ public abstract class DatabaseStore {
         setUUID(getCurrentDatabase().getUUID(), dt);
     }
 
-    public Map<String, String> getNameSpaces() {
-        return getCurrentDatabase().getNamespaces();
-    }
-
     public void addOrSetOption(String recordName, Database.ResourceType type, String key, String value, boolean reload) {
         if (!assertInEditMode(Mode.SCHEMA)) {
             return;
@@ -888,10 +884,6 @@ public abstract class DatabaseStore {
     public static MetadataFactory createMF(DatabaseStore events, Schema schema, boolean useSchema, Properties modelProperties) {
         MetadataFactory mf = new MetadataFactory(events.getCurrentDatabase().getName(), events.getCurrentDatabase().getVersion(),
                 schema==null?"undefined":schema.getName(), events.getCurrentDatabase().getMetadataStore().getDatatypes(), modelProperties, null); //$NON-NLS-1$
-        Map<String, String> nss = events.getNameSpaces();
-        for (String key:nss.keySet()) {
-            mf.addNamespace(key, nss.get(key));
-        }
         if (useSchema && schema != null) {
             mf.setSchema(schema);
         }

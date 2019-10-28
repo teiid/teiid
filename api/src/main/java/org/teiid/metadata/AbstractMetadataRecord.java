@@ -43,7 +43,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     }
 
     public interface DataModifiable {
-        public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_URI + "data-ttl"; //$NON-NLS-1$
+        public static final String DATA_TTL = AbstractMetadataRecord.RELATIONAL_PREFIX + "data-ttl"; //$NON-NLS-1$
 
         long getLastDataModification();
     }
@@ -64,7 +64,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
 
     private transient Collection<AbstractMetadataRecord> incomingObjects;
 
-    public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
+    public static final String RELATIONAL_PREFIX = NamespaceContainer.RELATIONAL_PREFIX;
 
     public String getUUID() {
         if (uuid == null) {
@@ -170,6 +170,17 @@ public abstract class AbstractMetadataRecord implements Serializable {
         return properties;
     }
 
+    public String getProperty(String key) {
+        return getProperty(key, false);
+    }
+
+    /**
+     * @see AbstractMetadataRecord#getProperty(String)
+     * @param key
+     * @param checkUnqualified
+     * @return
+     */
+    @Deprecated()
     public String getProperty(String key, boolean checkUnqualified) {
         String value = getProperties().get(key);
         if (value != null || !checkUnqualified) {
@@ -178,6 +189,11 @@ public abstract class AbstractMetadataRecord implements Serializable {
         int index = key.indexOf('}');
         if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
             key = key.substring(index + 1, key.length());
+        } else {
+            index = key.indexOf(':');
+            if (index > 0 && index < key.length()) {
+                key = key.substring(index + 1, key.length());
+            }
         }
         return getProperties().get(key);
     }

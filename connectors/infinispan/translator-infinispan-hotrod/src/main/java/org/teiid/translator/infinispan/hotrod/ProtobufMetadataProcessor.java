@@ -64,43 +64,43 @@ public class ProtobufMetadataProcessor implements MetadataProcessor<InfinispanCo
             datatype=String.class,
             display="Merge Into Table",
             description="Declare the name of parent table that this table needs to be merged into.")
-    public static final String MERGE = MetadataFactory.INFINISPAN_URI+"MERGE"; //$NON-NLS-1$
+    public static final String MERGE = MetadataFactory.INFINISPAN_PREFIX+"MERGE"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Table.class,
             datatype=String.class,
             display="Cache Name",
             description="Cache name to store the contents into")
-    public static final String CACHE = MetadataFactory.INFINISPAN_URI+"CACHE"; //$NON-NLS-1$
+    public static final String CACHE = MetadataFactory.INFINISPAN_PREFIX+"CACHE"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {Table.class,Column.class},
             datatype=String.class,
             display="Message Name",
             description="Message name this table or column represents")
-    public static final String MESSAGE_NAME = MetadataFactory.INFINISPAN_URI+"MESSAGE_NAME"; //$NON-NLS-1$
+    public static final String MESSAGE_NAME = MetadataFactory.INFINISPAN_PREFIX+"MESSAGE_NAME"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= Column.class,
             datatype=String.class,
             display="Protobuf Tag Number",
             description="Protobuf field tag number")
-    public static final String TAG = MetadataFactory.INFINISPAN_URI+"TAG"; //$NON-NLS-1$
+    public static final String TAG = MetadataFactory.INFINISPAN_PREFIX+"TAG"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable = {Table.class, Column.class},
             datatype=String.class,
             display="Protobuf Parent Tag Number",
             description="Protobuf field parent tag number in the case of complex document")
-    public static final String PARENT_TAG = MetadataFactory.INFINISPAN_URI+"PARENT_TAG"; //$NON-NLS-1$
+    public static final String PARENT_TAG = MetadataFactory.INFINISPAN_PREFIX+"PARENT_TAG"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {Table.class, Column.class},
             datatype=String.class,
             display="column's parent column name",
             description="Protobuf field parent column name in the case of complex document")
-    public static final String PARENT_COLUMN_NAME = MetadataFactory.INFINISPAN_URI+"PARENT_COLUMN_NAME"; //$NON-NLS-1$
+    public static final String PARENT_COLUMN_NAME = MetadataFactory.INFINISPAN_PREFIX+"PARENT_COLUMN_NAME"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class,
             datatype=String.class,
             display="Pseudo Column",
             description="Pseudo column for join purposes")
-    public static final String PSEUDO = MetadataFactory.INFINISPAN_URI+"PSEUDO"; //$NON-NLS-1$
+    public static final String PSEUDO = MetadataFactory.INFINISPAN_PREFIX+"PSEUDO"; //$NON-NLS-1$
 
     private String protoFilePath;
     private ProtobufResource protoResource;

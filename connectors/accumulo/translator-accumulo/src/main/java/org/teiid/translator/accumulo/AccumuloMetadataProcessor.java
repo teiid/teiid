@@ -36,13 +36,13 @@ import org.teiid.translator.TypeFacility;
 
 public class AccumuloMetadataProcessor implements MetadataProcessor<AccumuloConnection> {
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Column Family", description="Column Familiy from the Key", required=true)
-    public static final String CF = MetadataFactory.ACCUMULO_URI+"CF"; //$NON-NLS-1$
+    public static final String CF = MetadataFactory.ACCUMULO_PREFIX+"CF"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Column Qualifier", description="If Column Qualifier from key makes the key value unique, then this is required")
-    public static final String CQ = MetadataFactory.ACCUMULO_URI+"CQ"; //$NON-NLS-1$
+    public static final String CQ = MetadataFactory.ACCUMULO_PREFIX+"CQ"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Value In", description="The value of key exists in Column Qualifier or Value slot; Default is VALUE, if value is in CQ then this property is required", allowed= "CQ,VALUE")
-    public static final String VALUE_IN = MetadataFactory.ACCUMULO_URI+"VALUE-IN"; //$NON-NLS-1$
+    public static final String VALUE_IN = MetadataFactory.ACCUMULO_PREFIX+"VALUE-IN"; //$NON-NLS-1$
 
     // allowed patterns {CF}, {CQ}, {VALUE}, {ROWID}
     public static final String DEFAULT_COLUMN_NAME_PATTERN = "{CF}_{CQ}"; //$NON-NLS-1$

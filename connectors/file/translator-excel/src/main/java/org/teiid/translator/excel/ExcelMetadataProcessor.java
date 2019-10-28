@@ -47,13 +47,13 @@ import org.teiid.translator.TypeFacility;
 public class ExcelMetadataProcessor implements MetadataProcessor<VirtualFileConnection> {
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Excel File Name", description="Excel File name, use file name pattern if one than one file in the parent directory", required=true)
-    public static final String FILE = MetadataFactory.EXCEL_URI+"FILE"; //$NON-NLS-1$
+    public static final String FILE = MetadataFactory.EXCEL_PREFIX+"FILE"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=Integer.class, display="Cell Number", description="Cell number, where the column information is defined. If column name is ROW_ID, define it as -1", required=true)
-    public static final String CELL_NUMBER = MetadataFactory.EXCEL_URI+"CELL_NUMBER"; //$NON-NLS-1$
+    public static final String CELL_NUMBER = MetadataFactory.EXCEL_PREFIX+"CELL_NUMBER"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=Integer.class, display="First Data Number", description="First Row Number, where data rows start")
-    public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_URI+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
+    public static final String FIRST_DATA_ROW_NUMBER = MetadataFactory.EXCEL_PREFIX+"FIRST_DATA_ROW_NUMBER"; //$NON-NLS-1$
 
     public static final String ROW_ID = "ROW_ID"; //$NON-NLS-1$
 

@@ -76,31 +76,31 @@ public class SalesForceMetadataProcessor implements MetadataProcessor<Salesforce
 
     // Model Extensions
     @ExtensionMetadataProperty(applicable= {Table.class}, datatype=Boolean.class, display="Supports Create")
-    static final String TABLE_SUPPORTS_CREATE = MetadataFactory.SF_URI+"Supports Create"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_CREATE = MetadataFactory.SF_PREFIX+"Supports Create"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Delete")
-    static final String TABLE_SUPPORTS_DELETE = MetadataFactory.SF_URI+"Supports Delete"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_DELETE = MetadataFactory.SF_PREFIX+"Supports Delete"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class, Column.class}, datatype=Boolean.class, display="Custom")
-    public static final String TABLE_CUSTOM = MetadataFactory.SF_URI+"Custom"; //$NON-NLS-1$
+    public static final String TABLE_CUSTOM = MetadataFactory.SF_PREFIX+"Custom"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports ID Lookup")
-    static final String TABLE_SUPPORTS_LOOKUP = MetadataFactory.SF_URI+"Supports ID Lookup"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_LOOKUP = MetadataFactory.SF_PREFIX+"Supports ID Lookup"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Merge")
-    static final String TABLE_SUPPORTS_MERGE = MetadataFactory.SF_URI+"Supports Merge"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_MERGE = MetadataFactory.SF_PREFIX+"Supports Merge"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Query")
-    public static final String TABLE_SUPPORTS_QUERY = MetadataFactory.SF_URI+"Supports Query"; //$NON-NLS-1$
+    public static final String TABLE_SUPPORTS_QUERY = MetadataFactory.SF_PREFIX+"Supports Query"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Replicate")
-    static final String TABLE_SUPPORTS_REPLICATE = MetadataFactory.SF_URI+"Supports Replicate"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_REPLICATE = MetadataFactory.SF_PREFIX+"Supports Replicate"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Retrieve")
-    public static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_URI+"Supports Retrieve"; //$NON-NLS-1$
+    public static final String TABLE_SUPPORTS_RETRIEVE = MetadataFactory.SF_PREFIX+"Supports Retrieve"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Table.class}, datatype=Boolean.class, display="Supports Search")
-    static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_URI+"Supports Search"; //$NON-NLS-1$
+    static final String TABLE_SUPPORTS_SEARCH = MetadataFactory.SF_PREFIX+"Supports Search"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Defaulted on Create")
-    static final String COLUMN_DEFAULTED = MetadataFactory.SF_URI+"Defaulted on Create"; //$NON-NLS-1$
+    static final String COLUMN_DEFAULTED = MetadataFactory.SF_PREFIX+"Defaulted on Create"; //$NON-NLS-1$
     static final String COLUMN_CUSTOM = TABLE_CUSTOM;
     @ExtensionMetadataProperty(applicable={Column.class}, datatype=Boolean.class, display="Calculated")
-    static final String COLUMN_CALCULATED = MetadataFactory.SF_URI+"Calculated"; //$NON-NLS-1$
+    static final String COLUMN_CALCULATED = MetadataFactory.SF_PREFIX+"Calculated"; //$NON-NLS-1$
     @ExtensionMetadataProperty(applicable={Column.class}, datatype=String.class, display="Picklist Values")
-    static final String COLUMN_PICKLIST_VALUES = MetadataFactory.SF_URI+"Picklist Values"; //$NON-NLS-1$
+    static final String COLUMN_PICKLIST_VALUES = MetadataFactory.SF_PREFIX+"Picklist Values"; //$NON-NLS-1$
 
     @Override
     public void process(MetadataFactory mf, SalesforceConnection connection) throws TranslatorException {

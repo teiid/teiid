@@ -1,5 +1,3 @@
-SET NAMESPACE 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf;
-
 CREATE FOREIGN TABLE Account (
     Id string(18) NOT NULL AUTO_INCREMENT OPTIONS (NAMEINSOURCE 'Id', UPDATABLE FALSE, NATIVE_TYPE 'id', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),
     IsDeleted boolean OPTIONS (NAMEINSOURCE 'IsDeleted', UPDATABLE FALSE, NATIVE_TYPE 'boolean', "teiid_sf:calculated" 'false', "teiid_sf:Custom" 'false', "teiid_sf:Defaulted on Create" 'true'),

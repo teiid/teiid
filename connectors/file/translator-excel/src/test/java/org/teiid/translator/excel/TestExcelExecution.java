@@ -129,8 +129,7 @@ public class TestExcelExecution {
      */
     @Test
     public void testExecutionHeaderWithEmptyCell() throws Exception {
-        String ddl = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String ddl = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +

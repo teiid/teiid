@@ -48,7 +48,7 @@ import org.teiid.metadata.Table;
  * are not reusable, and are not thread-safe.
  */
 public class SQLStringVisitor extends AbstractLanguageVisitor {
-    public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
+    public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_PREFIX + "native-query"; //$NON-NLS-1$
 
     private static final Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
             "&", "|", "^", "#", "&&"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$

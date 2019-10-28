@@ -47,9 +47,9 @@ import org.teiid.translator.UpdateExecution;
 @Translator(name="ldap", description="A translator for LDAP directory")
 public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, LdapContext> {
 
-    public static final String DN_PREFIX = MetadataFactory.LDAP_URI + "dn_prefix"; //$NON-NLS-1$
-    public static final String RDN_TYPE = MetadataFactory.LDAP_URI + "rdn_type"; //$NON-NLS-1$
-    public static final String UNWRAP = MetadataFactory.LDAP_URI + "unwrap"; //$NON-NLS-1$
+    public static final String DN_PREFIX = MetadataFactory.LDAP_PREFIX + "dn_prefix"; //$NON-NLS-1$
+    public static final String RDN_TYPE = MetadataFactory.LDAP_PREFIX + "rdn_type"; //$NON-NLS-1$
+    public static final String UNWRAP = MetadataFactory.LDAP_PREFIX + "unwrap"; //$NON-NLS-1$
 
     public enum SearchDefaultScope {
         SUBTREE_SCOPE,

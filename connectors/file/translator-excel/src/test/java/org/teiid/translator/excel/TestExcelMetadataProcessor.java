@@ -69,8 +69,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
                 "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
@@ -88,8 +87,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -109,8 +107,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
@@ -133,8 +130,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -159,8 +155,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -185,8 +180,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -203,8 +197,7 @@ public class TestExcelMetadataProcessor {
         props.setProperty("importer.headerRowNumber", "1");
 
         String ddl = getDDL(props);
-        String expectedDDL ="SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL ="CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -224,8 +217,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
                 "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
@@ -244,8 +236,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	column1 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	column2 string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -266,8 +257,7 @@ public class TestExcelMetadataProcessor {
 
         String ddl = getDDL(props);
 
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '7'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '8'),\n" +
@@ -285,8 +275,7 @@ public class TestExcelMetadataProcessor {
         props.setProperty("importer.headerRowNumber", "1");
         props.setProperty("importer.dataRowNumber", "3");
         String ddl = getDDL(props);
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "	ROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "	FirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "	LastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -305,8 +294,7 @@ public class TestExcelMetadataProcessor {
         props.setProperty("importer.headerRowNumber", "0");
         props.setProperty("importer.dataRowNumber", "2");
         String ddl = getDDL(props);
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "\tROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "\tFirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
@@ -324,9 +312,7 @@ public class TestExcelMetadataProcessor {
         props.setProperty("importer.headerRowNumber", "1");
         props.setProperty("importer.dataRowNumber", "2");
         String ddl = getDDL(props);
-        String expectedDDL = "SET NAMESPACE 'http://www.teiid.org/translator/excel/2014' AS teiid_excel;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE Sheet1 (\n" +
+        String expectedDDL = "CREATE FOREIGN TABLE Sheet1 (\n" +
                 "\tROW_ID integer OPTIONS (SEARCHABLE 'All_Except_Like', \"teiid_excel:CELL_NUMBER\" 'ROW_ID'),\n" +
                 "\tFirstName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '1'),\n" +
                 "\tLastName string OPTIONS (SEARCHABLE 'Unsearchable', \"teiid_excel:CELL_NUMBER\" '2'),\n" +
