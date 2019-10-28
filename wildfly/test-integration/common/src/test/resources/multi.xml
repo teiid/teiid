@@ -5,6 +5,7 @@
 <!-- <property name="importer.useQualifiedName" value="false" /> -->
 <property name="multisource.columnName" value="target" />
 <property name="multisource.addColumn" value="true" />
+<property name="importer.useFullSchemaName" value="true" />
  
 <source name="teiid1" translator-name="teiid"
 connection-jndi-name="teiid1" />

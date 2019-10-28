@@ -101,6 +101,7 @@ public class TestDynamicImportedMetaData {
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.importKeys", "true");
         importProperties.setProperty("importer.schemaPattern", "x");
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         MetadataFactory mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("VDB.X.A");
         List<ForeignKey> fks = t.getForeignKeys();
@@ -114,6 +115,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.importProcedures", Boolean.TRUE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         MetadataFactory mf = getMetadata(importProperties, conn);
         Procedure p = mf.asMetadataStore().getSchemas().get("TEST").getProcedures().get("VDB.SYS.GETXMLSCHEMAS");
         assertEquals(1, p.getResultSet().getColumns().size());
@@ -150,6 +152,8 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
 
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
+
         mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("TEST.X.DUP");
         assertEquals("\"test\".\"x\".\"dup\"", t.getNameInSource());
@@ -177,6 +181,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.useCatalogName", Boolean.FALSE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("X.DUP");
         assertEquals("\"x\".\"dup\"", t.getNameInSource());
@@ -216,6 +221,7 @@ public class TestDynamicImportedMetaData {
         final Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
 
         Properties importProperties = new Properties();
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         Connection conn1 = (Connection) SimpleMock.createSimpleMock(new Object[] {new ConnectionProxy(conn), conn}, new Class<?>[] {Connection.class});
         mf = getMetadata(importProperties, conn1);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test:X.DUP");
@@ -237,6 +243,7 @@ public class TestDynamicImportedMetaData {
         //neither the name nor name in source should be qualified
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
 
         mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("DUP");
@@ -263,6 +270,7 @@ public class TestDynamicImportedMetaData {
         Connection conn =  server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
         Properties props = new Properties();
         props.setProperty("importer.importProcedures", Boolean.TRUE.toString());
+        props.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         MetadataStore store = getMetadata(props, conn).asMetadataStore();
 
         Procedure p = store.getSchema("test").getProcedure("test.MarketData.getTextFiles");
@@ -297,6 +305,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty(NativeMetadataRepository.IMPORT_PUSHDOWN_FUNCTIONS, Boolean.TRUE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
 
         mf = createMetadataFactory("test", importProperties);
         NativeMetadataRepository nmr = new NativeMetadataRepository();
@@ -333,6 +342,7 @@ public class TestDynamicImportedMetaData {
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.importKeys", Boolean.TRUE.toString());
         importProperties.setProperty("importer.importIndexes", Boolean.TRUE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("test.X.X");
         assertNotNull(t.getPrimaryKey());
@@ -352,6 +362,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.importKeys", "true");
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         //only import z and not the referenced table x
         importProperties.setProperty("importer.tableNamePattern", "z");
         MetadataFactory mf = getMetadata(importProperties, conn);
@@ -372,6 +383,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.importKeys", "true");
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
         MetadataFactory mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("test").getTables().get("vdb.foo.z");
         List<ForeignKey> fks = t.getForeignKeys();
@@ -383,6 +395,7 @@ public class TestDynamicImportedMetaData {
         mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
         mmd.setName("foo");
         mmd.addSourceMapping("x", "x", "x");
+        mmd.addProperty("importer.useFullSchemaName", "true");
         server.addTranslator("x", new ExecutionFactory());
         server.deployVDB("vdb", mmd);
         TeiidExecutionFactory tef = new TeiidExecutionFactory() {
@@ -424,6 +437,7 @@ public class TestDynamicImportedMetaData {
         mmd.addSourceMetadata("ddl", "create foreign table x (y integer primary key);");
         mmd.setName("foo");
         mmd.addSourceMapping("x", "x", "x");
+        mmd.addProperty("importer.useFullSchemaName", "true");
         server.addTranslator("x", new ExecutionFactory());
         server.deployVDB("vdb", mmd);
         TeiidExecutionFactory tef = new TeiidExecutionFactory() {
@@ -466,6 +480,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
 
         mf = getMetadata(importProperties, conn);
         Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("x");
@@ -499,6 +514,7 @@ public class TestDynamicImportedMetaData {
 
         Properties importProperties = new Properties();
         importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+        importProperties.setProperty("importer.useFullSchemaName", Boolean.TRUE.toString());
 
         DatabaseMetaData dbmd = (DatabaseMetaData) SimpleMock.createSimpleMock(new Object[] {new TypeMixin(), conn.getMetaData()}, new Class[] {DatabaseMetaData.class});
         Connection c = Mockito.mock(Connection.class);
