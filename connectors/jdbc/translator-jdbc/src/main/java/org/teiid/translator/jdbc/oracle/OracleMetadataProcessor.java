@@ -112,8 +112,8 @@ public class OracleMetadataProcessor extends
             ps.setString(3, columnName);
             rs = ps.executeQuery();
             if (rs.next()) {
-                c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
-                c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_PREFIX + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_PREFIX + "srid", rs.getString(2)); //$NON-NLS-1$
             }
         } catch (SQLException e) {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$

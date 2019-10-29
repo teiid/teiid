@@ -56,9 +56,7 @@ public class TestJPAMetadataImport {
         //no ordering is implied for the entities and can change, so we pull the ddl individually
 
         String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, ".*Marketdata");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE Marketdata (\n" +
+        assertEquals("CREATE FOREIGN TABLE Marketdata (\n" +
                 "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" +
                 "\texchange_name string OPTIONS (NAMEINSOURCE 'name', \"teiid_jpa:assosiated_with_table\" 'market.Exchange', \"teiid_jpa:relation_key\" 'name', \"teiid_jpa:relation_property\" 'exchange'),\n" +
                 "\tprice bigdecimal OPTIONS (NAMEINSOURCE 'price'),\n" +
@@ -69,9 +67,7 @@ public class TestJPAMetadataImport {
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Marketdata');", ddl);
 
         ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, "Stock");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE Stock (\n" +
+        assertEquals("CREATE FOREIGN TABLE Stock (\n" +
                 "\tid string OPTIONS (NAMEINSOURCE 'id'),\n" +
                 "\tcompanyName string OPTIONS (NAMEINSOURCE 'companyName'),\n" +
                 "\tsymbol string OPTIONS (NAMEINSOURCE 'symbol'),\n" +
@@ -79,9 +75,7 @@ public class TestJPAMetadataImport {
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Stock');", ddl);
 
         ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, "Exchange");
-        assertEquals("SET NAMESPACE 'http://www.teiid.org/translator/jpa/2014' AS teiid_jpa;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE Exchange (\n" +
+        assertEquals("CREATE FOREIGN TABLE Exchange (\n" +
                 "\tname string OPTIONS (NAMEINSOURCE 'name'),\n" +
                 "\tCONSTRAINT PK_Exchange PRIMARY KEY(name)\n" +
                 ") OPTIONS (UPDATABLE TRUE, \"teiid_jpa:entity_class\" 'org.teiid.translator.jpa.model.Exchange');", ddl);

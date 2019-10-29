@@ -55,7 +55,7 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
     private static boolean USE_FULL_SCHEMA_NAME_DEFAULT = PropertiesUtils.getHierarchicalProperty("org.teiid.translator.jdbc.useFullSchemaNameDefault", Boolean.FALSE, Boolean.class); //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {FunctionMethod.class}, datatype=String.class, display="Sequence Used By This Function")
-    static final String SEQUENCE = AbstractMetadataRecord.RELATIONAL_URI+"sequence"; //$NON-NLS-1$
+    static final String SEQUENCE = AbstractMetadataRecord.RELATIONAL_PREFIX+"sequence"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="type of object")
     static final String TYPE = SOURCE_PREFIX+"type"; //$NON-NLS-1$
@@ -1354,9 +1354,9 @@ public class JDBCMetadataProcessor implements MetadataProcessor<Connection>{
             ps.setString(4, columnName);
             rs = ps.executeQuery();
             if (rs.next()) {
-                c.setProperty(MetadataFactory.SPATIAL_URI + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
-                c.setProperty(MetadataFactory.SPATIAL_URI + "srid", rs.getString(2)); //$NON-NLS-1$
-                c.setProperty(MetadataFactory.SPATIAL_URI + "type", rs.getString(3)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_PREFIX + "coord_dimension", rs.getString(1)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_PREFIX + "srid", rs.getString(2)); //$NON-NLS-1$
+                c.setProperty(MetadataFactory.SPATIAL_PREFIX + "type", rs.getString(3)); //$NON-NLS-1$
             }
         } catch (SQLException e) {
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not get geometry metadata for column", tableSchema, tableName, columnName); //$NON-NLS-1$

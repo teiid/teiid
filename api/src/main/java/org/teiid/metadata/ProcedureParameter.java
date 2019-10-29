@@ -82,7 +82,7 @@ public class ProcedureParameter extends BaseColumn {
         if (nativeType != null) {
             return nativeType;
         }
-        nativeType = getProperty(AbstractMetadataRecord.RELATIONAL_URI + "native_type" , false); //$NON-NLS-1$
+        nativeType = getProperty(AbstractMetadataRecord.RELATIONAL_PREFIX + "native_type" , false); //$NON-NLS-1$
         if (nativeType != null) {
             this.setNativeType(nativeType);
         }

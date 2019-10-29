@@ -24,16 +24,13 @@ import static org.teiid.query.metadata.DDLConstants.*;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
@@ -61,16 +58,6 @@ public class DDLStringVisitor {
     private boolean includeProcedures = true;
     private boolean includeFunctions = true;
     private Pattern filter;
-    private Map<String, String> prefixMap;
-    protected boolean usePrefixes = true;
-    private boolean namespaceAdded = false;
-
-    private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
-    static {
-        for (Map.Entry<String, String> entry : MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
-            BUILTIN_PREFIXES.put(entry.getValue(), entry.getKey());
-        }
-    }
 
     public static String getDDLString(Schema schema, EnumSet<SchemaObjectType> types, String regexPattern) {
         DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
@@ -114,11 +101,6 @@ public class DDLStringVisitor {
         append(VERSION).append(SPACE).append(new Constant(database.getVersion()));
         append(SEMICOLON);
         append(NEWLINE);
-
-        if (!this.namespaceAdded) {
-            append("${NAMESPACE}");
-            this.namespaceAdded = true;
-        }
 
         boolean outputDt = false;
         for (Datatype dt : database.getMetadataStore().getDatatypes().values()) {
@@ -376,10 +358,6 @@ public class DDLStringVisitor {
 
     protected void visit(Schema schema) {
         boolean first = true;
-        if (!this.namespaceAdded) {
-            append("${NAMESPACE}");
-            this.namespaceAdded = true;
-        }
         for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
             String generated = record.getProperty(GENERATED, false);
             if (generated != null && Boolean.valueOf(generated)) {
@@ -849,32 +827,6 @@ public class DDLStringVisitor {
         } else {
             value = Constant.NULL_CONSTANT;
         }
-        if (key != null && key.length() > 2 && key.charAt(0) == '{') {
-            String origKey = key;
-            int index = key.indexOf('}');
-            if (index > 1) {
-                String uri = key.substring(1, index);
-                key = key.substring(index + 1, key.length());
-                String prefix = BUILTIN_PREFIXES.get(uri);
-                if (usePrefixes) {
-                    if (prefixMap == null) {
-                        prefixMap = new LinkedHashMap<String, String>();
-                    }
-                    if (prefix == null) {
-                        prefix = this.prefixMap.get(uri);
-                        if (prefix == null) {
-                            prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
-                        }
-                    }
-                    this.prefixMap.put(uri, prefix);
-                }
-                if (prefix != null) {
-                    key = prefix + ":" + key; //$NON-NLS-1$
-                } else {
-                    key = origKey;
-                }
-            }
-        }
         sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
     }
 
@@ -1056,19 +1008,7 @@ public class DDLStringVisitor {
 
     @Override
     public String toString() {
-        return StringUtil.replace(buffer.toString(), "${NAMESPACE}", getNamespaces());
-    }
-
-    private String getNamespaces() {
-        if (this.prefixMap != null) {
-            StringBuilder sb = new StringBuilder();
-            for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
-                sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                .append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
-            }
-            return sb.append("\n").toString(); //$NON-NLS-1$
-        }
-        return "";
+        return buffer.toString();
     }
 
     public static String getDomainDDLString(Database database) {

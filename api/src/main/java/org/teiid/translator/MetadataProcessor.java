@@ -28,12 +28,12 @@ import org.teiid.metadata.Table;
  */
 public interface MetadataProcessor<C> {
 
-    static final String SOURCE_PREFIX = AbstractMetadataRecord.RELATIONAL_URI+"source_"; //$NON-NLS-1$
+    static final String SOURCE_PREFIX = AbstractMetadataRecord.RELATIONAL_PREFIX+"source_"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class,
             display="Fully qualified name of the source object.  The format is / separated name value pairs that represent the object path in the metadata tree."
                     + " Each name and value are separated by = and are both URL encoded.  Each name will be lower case and is source dependent. e.g. schema=s/table=t")
-    static final String FQN = AbstractMetadataRecord.RELATIONAL_URI+"fqn"; //$NON-NLS-1$
+    static final String FQN = AbstractMetadataRecord.RELATIONAL_PREFIX+"fqn"; //$NON-NLS-1$
 
     public void process(MetadataFactory metadataFactory, C connection) throws TranslatorException;
 }

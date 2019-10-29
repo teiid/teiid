@@ -72,7 +72,6 @@ public class SQLStringVisitor extends LanguageVisitor {
 
         private DDLVisitor() {
             super(null, null);
-            this.usePrefixes = false;
         }
 
         @Override

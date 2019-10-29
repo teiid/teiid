@@ -1,5 +1,3 @@
-SET NAMESPACE 'http://www.teiid.org/translator/infinispan/2017' AS teiid_ispn;
-
 CREATE FOREIGN TABLE G1 (
 	e1 integer NOT NULL OPTIONS (ANNOTATION '@Id\u000A@IndexedField(index=true, store=false)', SEARCHABLE 'Searchable', NATIVE_TYPE 'int32', "teiid_ispn:TAG" '1'),
 	e2 string NOT NULL OPTIONS (ANNOTATION '@IndexedField', SEARCHABLE 'Searchable', NATIVE_TYPE 'string', "teiid_ispn:TAG" '2'),

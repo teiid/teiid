@@ -52,10 +52,10 @@ import com.mongodb.MongoException;
 public class MongoDBMetadataProcessor implements MetadataProcessor<MongoDBConnection> {
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Merge Into Table", description="Declare the name of table that this table needs to be merged into. No separate copy maintained")
-    public static final String MERGE = MetadataFactory.MONGO_URI+"MERGE"; //$NON-NLS-1$
+    public static final String MERGE = MetadataFactory.MONGO_PREFIX+"MERGE"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Embedded Into Table", description="Declare the name of table that this table needs to be embedded into. A separate copy is also maintained")
-    public static final String EMBEDDABLE = MetadataFactory.MONGO_URI+"EMBEDDABLE"; //$NON-NLS-1$
+    public static final String EMBEDDABLE = MetadataFactory.MONGO_PREFIX+"EMBEDDABLE"; //$NON-NLS-1$
 
     static final String ID = "_id"; //$NON-NLS-1$
     private static final String TOP_LEVEL_DOC = "TOP_LEVEL_DOC"; //$NON-NLS-1$

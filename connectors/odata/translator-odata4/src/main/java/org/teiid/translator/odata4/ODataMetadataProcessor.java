@@ -60,7 +60,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             display = "Name in OData Schema",
             description = "Name in OData Schema",
             required = true)
-    public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_URI+"NameInSchema"; //$NON-NLS-1$
+    public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_PREFIX+"NameInSchema"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class },
             datatype = String.class,
@@ -68,13 +68,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             description = "Type of OData Schema Item",
             allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITY_COLLECTION, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
             required=true)
-    public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
+    public static final String ODATA_TYPE = MetadataFactory.ODATA_PREFIX+"Type"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class,
             datatype=String.class,
             display="Pseudo Column",
             description="Pseudo column for join purposes")
-    public static final String PSEUDO = MetadataFactory.ODATA_URI+"PSEUDO"; //$NON-NLS-1$
+    public static final String PSEUDO = MetadataFactory.ODATA_PREFIX+"PSEUDO"; //$NON-NLS-1$
 
     private String schemaNamespace;
     private ODataExecutionFactory ef;

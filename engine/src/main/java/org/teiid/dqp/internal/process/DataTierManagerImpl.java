@@ -23,20 +23,14 @@ import java.sql.Clob;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request;
@@ -646,7 +640,17 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
             @Override
             protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent, CommandContext cc) {
-                return parent.getProperties().entrySet();
+                Map<String, String> props = parent.getProperties();
+                        return props.entrySet().stream().flatMap((e) -> {
+                            String key = e.getKey();
+                            String legacyKey = NamespaceContainer.getLegacyKey(key);
+                            if (legacyKey != null && !props.containsKey(legacyKey)) {
+                                return Stream.of(e,
+                                        new AbstractMap.SimpleEntry<String, String>(
+                                                legacyKey, e.getValue()));
+                            }
+                            return Stream.of(e);
+                        }).collect(Collectors.toList());
             }
         });
         name = SystemAdminTables.TRIGGERS.name();
@@ -1241,11 +1245,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
                         mid = tid.getOriginalMetadataID();
                     }
                 }
-                String specificProp = metadata.getExtensionProperty(mid, AbstractMetadataRecord.RELATIONAL_URI + DDLConstants.DETERMINISM, false);
+                String specificProp = metadata.getExtensionProperty(mid, AbstractMetadataRecord.RELATIONAL_PREFIX + DDLConstants.DETERMINISM, false);
                 if (specificProp == null) {
                     if (!usedModel) {
                         Object modelId = metadata.getModelID(mid);
-                        String prop = metadata.getExtensionProperty(modelId, AbstractMetadataRecord.RELATIONAL_URI + DDLConstants.DETERMINISM, false);
+                        String prop = metadata.getExtensionProperty(modelId, AbstractMetadataRecord.RELATIONAL_PREFIX + DDLConstants.DETERMINISM, false);
 
                         if (prop != null) {
                             usedModel = true;

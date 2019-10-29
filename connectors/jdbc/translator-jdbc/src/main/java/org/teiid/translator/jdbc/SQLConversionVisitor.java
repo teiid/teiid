@@ -56,7 +56,7 @@ import org.teiid.translator.TypeFacility;
  * to produce a SQL String.  This class is expected to be subclassed.
  */
 public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringVisitor.Substitutor {
-    public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
+    public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_PREFIX + "non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT =
         new DecimalFormat("#############################0.0#############################", DecimalFormatSymbols.getInstance(Locale.US)); //$NON-NLS-1$

@@ -33,7 +33,7 @@ public class ForeignKey extends KeyRecord {
     private String referenceTableName;
     private List<String> referenceColumns;
 
-    public static final String ALLOW_JOIN = AbstractMetadataRecord.RELATIONAL_URI + "allow-join"; //$NON-NLS-1$
+    public static final String ALLOW_JOIN = AbstractMetadataRecord.RELATIONAL_PREFIX + "allow-join"; //$NON-NLS-1$
 
     public ForeignKey() {
         super(Type.Foreign);

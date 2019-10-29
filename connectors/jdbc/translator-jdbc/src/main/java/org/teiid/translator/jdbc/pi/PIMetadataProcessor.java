@@ -35,7 +35,7 @@ public class PIMetadataProcessor extends JDBCMetadataProcessor {
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class},
             datatype=String.class, display="Is Table Value Function",
             description="Marks the table as Table Value Function")
-    public static final String TVF = MetadataFactory.PI_URI+"TVF"; //$NON-NLS-1$
+    public static final String TVF = MetadataFactory.PI_PREFIX+"TVF"; //$NON-NLS-1$
 
     public PIMetadataProcessor() {
         setStartQuoteString("[");

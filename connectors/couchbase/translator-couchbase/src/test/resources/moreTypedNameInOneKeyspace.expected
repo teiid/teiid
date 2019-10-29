@@ -1,5 +1,3 @@
-SET NAMESPACE 'http://www.teiid.org/translator/couchbase/2017' AS teiid_couchbase;
-
 CREATE FOREIGN TABLE ExampleA (
 	documentID string OPTIONS (UPDATABLE FALSE),
 	name string OPTIONS (NAMEINSOURCE '`test`.`name`'),

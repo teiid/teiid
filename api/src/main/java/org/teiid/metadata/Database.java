@@ -20,7 +20,6 @@ package org.teiid.metadata;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
@@ -275,10 +274,6 @@ public class Database extends AbstractMetadataRecord {
 
     public void addNamespace(String prefix, String uri) {
         this.namespaceContainer.addNamespace(prefix, uri);
-    }
-
-    public Map<String, String> getNamespaces() {
-        return this.namespaceContainer.getNamespaces();
     }
 
     public NamespaceContainer getNamespaceContainer() {
