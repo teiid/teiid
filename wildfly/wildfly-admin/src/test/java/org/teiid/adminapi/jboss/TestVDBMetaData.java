@@ -38,7 +38,7 @@ import org.teiid.core.util.UnitTestUtil;
 public class TestVDBMetaData {
 
     @Test
-    public void testMarshellUnmarshellDirectParsing() throws Exception {
+    public void testMarshellUnmarshallDirectParsing() throws Exception {
 
         VDBMetaData vdb = TestVDBUtility.buildVDB();
 
@@ -47,8 +47,8 @@ public class TestVDBMetaData {
 
         //System.out.println(new String(out.toByteArray()));
 
-        // UnMarshell
-        vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(out.toByteArray()));
+        // Unmarshall
+        vdb = VDBMetadataParser.unmarshall(new ByteArrayInputStream(out.toByteArray()));
 
         TestVDBUtility.validateVDB(vdb);
     }

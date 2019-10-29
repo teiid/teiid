@@ -571,7 +571,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                 }
                 GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, dqp.getBufferManager(), replicator);
 
-                vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+                vdb.getVDB().addAttachment(GlobalTableStore.class, gts);
             }
 
             @Override
@@ -756,7 +756,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                 throw new VirtualDatabaseException(e);
             }
             try {
-                metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+                metadata = VDBMetadataParser.unmarshall(new ByteArrayInputStream(bytes));
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }
@@ -787,7 +787,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             }
             InputStream is = vdbMetadata.openStream();
             try {
-                metadata = VDBMetadataParser.unmarshell(is);
+                metadata = VDBMetadataParser.unmarshall(is);
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }
@@ -796,7 +796,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             DeploymentBasedDatabaseStore store = new DeploymentBasedDatabaseStore(getVDBRepository());
             metadata = store.getVDBMetadata(ObjectConverterUtil.convertToString(vdbMetadata.openStream()));
         }
-        metadata.addAttchment(VirtualFile.class, root); //for auto cleanup of zip fs
+        metadata.addAttachment(VirtualFile.class, root); //for auto cleanup of zip fs
         VDBResources resources = new VDBResources(root);
         deployVDB(metadata, resources);
     }
@@ -813,7 +813,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
         }
 
-        vdb.addAttchment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
+        vdb.addAttachment(ClassLoader.class, Thread.currentThread().getContextClassLoader());
         try {
             createPreParser(vdb);
         } catch (TeiidException e1) {
@@ -1090,7 +1090,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
         if (preparserClass != null) {
             ClassLoader vdbClassLoader = deployment.getAttachment(ClassLoader.class);
             PreParser preParser = (PreParser) ReflectionHelper.create(preparserClass, Collections.emptyList(), vdbClassLoader);
-            deployment.addAttchment(PreParser.class, preParser);
+            deployment.addAttachment(PreParser.class, preParser);
         }
     }
 

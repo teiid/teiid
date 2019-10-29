@@ -131,7 +131,7 @@ public class ConvertVDB {
             byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
             VDBMetaData metadata = null;
             try {
-                metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+                metadata = VDBMetadataParser.unmarshall(new ByteArrayInputStream(bytes));
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }

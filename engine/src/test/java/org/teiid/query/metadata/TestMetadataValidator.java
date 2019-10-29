@@ -58,8 +58,8 @@ public class TestMetadataValidator {
 
     private TransformationMetadata buildTransformationMetadata() {
         TransformationMetadata metadata =  new TransformationMetadata(this.vdb, new CompositeMetadataStore(this.store), null, SFM.getSystemFunctions(), null);
-        this.vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        this.vdb.addAttchment(TransformationMetadata.class, metadata);
+        this.vdb.addAttachment(QueryMetadataInterface.class, metadata);
+        this.vdb.addAttachment(TransformationMetadata.class, metadata);
         return metadata;
     }
 
@@ -75,7 +75,7 @@ public class TestMetadataValidator {
         mf.getSchema().setPhysical(physical);
         repo.loadMetadata(mf, null, null, ddl);
         mf.mergeInto(store);
-        model.addAttchment(MetadataFactory.class, mf);
+        model.addAttachment(MetadataFactory.class, mf);
         return model;
     }
 

@@ -112,11 +112,11 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
             PropertyResolver propertyResolver = deploymentUnit.getAttachment(org.jboss.as.ee.metadata.property.Attachments.FINAL_PROPERTY_RESOLVER);
             PropertyReplacer replacer = PropertyReplacers.resolvingReplacer(propertyResolver);
             String vdbContents = replacer.replaceProperties(ObjectConverterUtil.convertToString(file.openStream()));
-            VDBMetaData vdb = VDBMetadataParser.unmarshell(new ByteArrayInputStream(vdbContents.getBytes("UTF-8"))); //$NON-NLS-1$
+            VDBMetaData vdb = VDBMetadataParser.unmarshall(new ByteArrayInputStream(vdbContents.getBytes("UTF-8"))); //$NON-NLS-1$
             ServiceController<?> sc = phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
             ObjectSerializer serializer = ObjectSerializer.class.cast(sc.getValue());
             if (serializer.buildVdbXml(vdb).exists()) {
-                vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
+                vdb = VDBMetadataParser.unmarshall(new FileInputStream(serializer.buildVdbXml(vdb)));
             }
             vdb.setStatus(Status.LOADING);
             if (xmlDeployment) {
@@ -156,7 +156,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 
             // if there is persisted one, let that be XML version for now.
             if (serializer.buildVdbXml(vdb).exists()) {
-                vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
+                vdb = VDBMetadataParser.unmarshall(new FileInputStream(serializer.buildVdbXml(vdb)));
             }
 
             vdb.setStatus(Status.LOADING);

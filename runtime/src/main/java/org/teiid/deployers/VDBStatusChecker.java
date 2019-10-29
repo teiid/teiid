@@ -213,7 +213,7 @@ public abstract class VDBStatusChecker {
             } else {
                 //mark the model to indicate that it should be reloaded if it
                 //is currently failing a load
-                model.addAttchment(VDBStatusChecker.class, this);
+                model.addAttachment(VDBStatusChecker.class, this);
             }
         }
     }

@@ -54,7 +54,11 @@ public class VDBMetadataParser {
 
     private boolean writePropertyElements;
 
+    @Deprecated
     public static VDBMetaData unmarshell(InputStream content) throws XMLStreamException {
+        return unmarshall(content);
+    }
+    public static VDBMetaData unmarshall(InputStream content) throws XMLStreamException {
          XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
          XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
          try {

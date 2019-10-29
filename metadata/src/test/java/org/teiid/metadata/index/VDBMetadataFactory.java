@@ -70,7 +70,7 @@ public class VDBMetadataFactory {
             Resource r = imf.resources.getEntriesPlusVisibilities().get("/META-INF/vdb.xml");
             VDBMetaData vdb = null;
             if (r != null) {
-                vdb = VDBMetadataParser.unmarshell(r.openStream());
+                vdb = VDBMetadataParser.unmarshall(r.openStream());
             }
             Collection<FunctionTree> trees = new ArrayList<>();
             for (Schema schema:imf.store.getSchemas().values()) {

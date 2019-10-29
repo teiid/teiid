@@ -82,7 +82,7 @@ public class CompositeVDB {
         this.originalVDB = vdb;
         this.vdbKey = new VDBKey(originalVDB.getName(), originalVDB.getVersion());
         buildCompositeState(vdbRepository);
-        this.mergedVDB.addAttchment(VDBKey.class, this.vdbKey);
+        this.mergedVDB.addAttachment(VDBKey.class, this.vdbKey);
     }
 
     private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb,
@@ -141,7 +141,7 @@ public class CompositeVDB {
 
     private void buildCompositeState(VDBRepository vdbRepository) throws VirtualDatabaseException {
         if (vdb.getVDBImports().isEmpty()) {
-            this.vdb.addAttchment(ConnectorManagerRepository.class, this.cmr);
+            this.vdb.addAttachment(ConnectorManagerRepository.class, this.cmr);
             return;
         }
 
@@ -151,7 +151,7 @@ public class CompositeVDB {
             mergedRepo = new ConnectorManagerRepository();
             mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
         }
-        newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
+        newMergedVDB.addAttachment(ConnectorManagerRepository.class, mergedRepo);
         LinkedHashSet<ClassLoader> toSearch = new LinkedHashSet<>(vdb.getVDBImports().size()+1);
         toSearch.add(this.vdb.getAttachment(ClassLoader.class));
         this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
@@ -229,7 +229,7 @@ public class CompositeVDB {
         }
         if (toSearch.iterator().next() != null) {
             CombinedClassLoader ccl = new CombinedClassLoader(toSearch.iterator().next().getParent(), toSearch.toArray(new ClassLoader[toSearch.size()]));
-            this.mergedVDB.addAttchment(ClassLoader.class, ccl);
+            this.mergedVDB.addAttachment(ClassLoader.class, ccl);
         }
         this.mergedVDB = newMergedVDB;
     }
@@ -328,9 +328,9 @@ public class CompositeVDB {
         if(multiSourceModels != null && !multiSourceModels.isEmpty()) {
             qmi = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
         }
-        mergedVDB.addAttchment(QueryMetadataInterface.class, qmi);
-        mergedVDB.addAttchment(TransformationMetadata.class, metadata);
-        mergedVDB.addAttchment(MetadataStore.class, mergedStore);
+        mergedVDB.addAttachment(QueryMetadataInterface.class, qmi);
+        mergedVDB.addAttachment(TransformationMetadata.class, metadata);
+        mergedVDB.addAttachment(MetadataStore.class, mergedStore);
     }
 
     LinkedHashMap<VDBKey, CompositeVDB> getChildren() {

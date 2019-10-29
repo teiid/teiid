@@ -217,7 +217,7 @@ public class TestAuthorizationValidationVisitor {
     private DataRolePolicyDecider createPolicyDecider(
             QueryMetadataInterface metadata, VDBMetaData vdb,
             DataPolicyMetadata... roles) {
-        vdb.addAttchment(QueryMetadataInterface.class, metadata);
+        vdb.addAttachment(QueryMetadataInterface.class, metadata);
 
         HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
         for (DataPolicyMetadata dataPolicyMetadata : roles) {

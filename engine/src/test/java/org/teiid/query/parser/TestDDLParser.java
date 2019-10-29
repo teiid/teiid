@@ -365,7 +365,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -397,7 +397,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -420,7 +420,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ModelMetaData modelTwo = new ModelMetaData();
         modelTwo.setName("model2"); //$NON-NLS-1$
@@ -1771,7 +1771,7 @@ public class TestDDLParser {
         assertNull(primaryKey.getColumns().get(0).getParent());
 
         TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
-        vdb.addAttchment(QueryMetadataInterface.class, tm);
+        vdb.addAttachment(QueryMetadataInterface.class, tm);
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -1804,7 +1804,7 @@ public class TestDDLParser {
         assertNull(primaryKey.getColumns().get(0).getParent());
 
         TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
-        vdb.addAttchment(QueryMetadataInterface.class, tm);
+        vdb.addAttachment(QueryMetadataInterface.class, tm);
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
