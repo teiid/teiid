@@ -36,7 +36,7 @@ public class TestVDBMetadataParser {
         FileInputStream in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
         VDBMetadataParser.validate(in);
         in = new FileInputStream(UnitTestUtil.getTestDataPath() + "/parser-test-vdb.xml");
-        VDBMetaData vdb = VDBMetadataParser.unmarshell(in);
+        VDBMetaData vdb = VDBMetadataParser.unmarshall(in);
         TestVDBUtility.validateVDB(vdb);
     }
 
@@ -47,7 +47,7 @@ public class TestVDBMetadataParser {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         VDBMetadataParser.marshell(metadata, baos);
         baos.close();
-        VDBMetaData parsed = VDBMetadataParser.unmarshell(new ByteArrayInputStream(baos.toByteArray()));
+        VDBMetaData parsed = VDBMetadataParser.unmarshall(new ByteArrayInputStream(baos.toByteArray()));
         assertNull(parsed.getModel("model-one"));
     }
 

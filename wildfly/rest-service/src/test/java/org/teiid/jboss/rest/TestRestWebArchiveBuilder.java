@@ -74,7 +74,7 @@ public class TestRestWebArchiveBuilder {
     }
 
     private VDBMetaData getTestVDBMetaData() throws FileNotFoundException, XMLStreamException {
-        VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        VDBMetaData vdb = VDBMetadataParser.unmarshall(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
         MetadataStore ms = new MetadataStore();
         for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
             MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());

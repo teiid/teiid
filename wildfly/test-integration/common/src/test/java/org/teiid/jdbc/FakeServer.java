@@ -169,7 +169,7 @@ public class FakeServer extends EmbeddedServer {
             if (parameterObject.vdbResources != null && parameterObject.useVdbXml) {
                 VDBResource resource = parameterObject.vdbResources.get("/META-INF/vdb.xml");
                 if (resource !=null) {
-                    vdbMetaData = VDBMetadataParser.unmarshell(resource.openStream());
+                    vdbMetaData = VDBMetadataParser.unmarshall(resource.openStream());
                 }
             }
             if (vdbMetaData == null) {

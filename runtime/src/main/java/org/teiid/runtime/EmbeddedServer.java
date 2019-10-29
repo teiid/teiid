@@ -756,7 +756,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
                 throw new VirtualDatabaseException(e);
             }
             try {
-                metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+                metadata = VDBMetadataParser.unmarshall(new ByteArrayInputStream(bytes));
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }
@@ -787,7 +787,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
             }
             InputStream is = vdbMetadata.openStream();
             try {
-                metadata = VDBMetadataParser.unmarshell(is);
+                metadata = VDBMetadataParser.unmarshall(is);
             } catch (XMLStreamException e) {
                 throw new VirtualDatabaseException(e);
             }
