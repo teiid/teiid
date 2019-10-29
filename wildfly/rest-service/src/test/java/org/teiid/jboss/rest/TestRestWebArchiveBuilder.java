@@ -82,9 +82,9 @@ public class TestRestWebArchiveBuilder {
         }
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
-        vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        vdb.addAttchment(TransformationMetadata.class, metadata);
-        vdb.addAttchment(MetadataStore.class, ms);
+        vdb.addAttachment(QueryMetadataInterface.class, metadata);
+        vdb.addAttachment(TransformationMetadata.class, metadata);
+        vdb.addAttachment(MetadataStore.class, ms);
         return vdb;
     }
 

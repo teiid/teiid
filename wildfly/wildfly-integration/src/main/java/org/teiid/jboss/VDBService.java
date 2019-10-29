@@ -93,7 +93,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         ConnectorManagerRepository cmr = new ConnectorManagerRepository();
         TranslatorRepository repo = new TranslatorRepository();
 
-        this.vdb.addAttchment(TranslatorRepository.class, repo);
+        this.vdb.addAttachment(TranslatorRepository.class, repo);
 
         // check if this is a VDB with index files, if there are then build the TransformationMetadata
         UDFMetaData udf = this.vdb.getAttachment(UDFMetaData.class);
@@ -105,7 +105,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
             String type = data.getType();
             VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
             data.setModuleName(parent.getModuleName());
-            data.addAttchment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
+            data.addAttachment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
             data.setParent(parent);
             repo.addTranslatorMetadata(data.getName(), data);
         }
@@ -396,7 +396,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
             getExecutor().execute(wrap(job));
         } else {
             //defer the load to the status checker if/when a source is available/redeployed
-            model.addAttchment(Runnable.class, wrap(job));
+            model.addAttachment(Runnable.class, wrap(job));
         }
     }
 }

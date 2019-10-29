@@ -127,7 +127,7 @@ public abstract class AbstractVDBDeployer {
                 repos.add(new MultiSourceMetadataRepository(columnName==null?MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME:columnName));
                 repo = new ChainingMetadataRepository(repos);
             }
-            model.addAttchment(MetadataRepository.class, repo);
+            model.addAttachment(MetadataRepository.class, repo);
         }
     }
 
@@ -313,7 +313,7 @@ public abstract class AbstractVDBDeployer {
                         if (te != null) {
                             errorMsg += ": " + te.getMessage(); //$NON-NLS-1$
                         }
-                        model.addAttchment(Exception.class, ex);
+                        model.addAttachment(Exception.class, ex);
                         model.addRuntimeError(errorMsg);
                         model.setMetadataStatus(Model.MetadataStatus.FAILED);
                         LogManager.logWarning(LogConstants.CTX_RUNTIME, ex, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));

@@ -144,8 +144,8 @@ public class EvaluatorIterator extends WrappingIterator {
             vdbMetaData.addModel(createModel(schema.getName(), schema.isPhysical()));
         }
         TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
-        vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
-        vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
+        vdbMetaData.addAttachment(TransformationMetadata.class, metadata);
+        vdbMetaData.addAttachment(QueryMetadataInterface.class, metadata);
         return metadata;
     }
 

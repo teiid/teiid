@@ -293,7 +293,7 @@ public class TranslatorUtil {
             // ignore
         }
 
-        metadata.addAttchment(ExtendedPropertyMetadataList.class, propertyDefns);
+        metadata.addAttachment(ExtendedPropertyMetadataList.class, propertyDefns);
         return metadata;
     }
 

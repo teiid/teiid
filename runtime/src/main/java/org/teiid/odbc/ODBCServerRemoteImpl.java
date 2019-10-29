@@ -315,7 +315,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
             this.connection =  driver.connect(url, info);
             //Propagate so that we can use in pg methods
             SessionMetadata sm = ((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession();
-            sm.addAttchment(ODBCServerRemoteImpl.class, this);
+            sm.addAttachment(ODBCServerRemoteImpl.class, this);
             setConnectionProperties(this.connection);
             Enumeration<?> keys = this.props.propertyNames();
             while (keys.hasMoreElements()) {

@@ -58,7 +58,7 @@ public class TestCompositeVDB {
 
     public static CompositeVDB createCompositeVDB(MetadataStore metadataStore,    String vdbName) throws VirtualDatabaseException {
         VDBMetaData vdbMetaData = createVDBMetadata(metadataStore, vdbName);
-        vdbMetaData.addAttchment(Foo.class, new Foo());
+        vdbMetaData.addAttachment(Foo.class, new Foo());
         ConnectorManagerRepository cmr = new ConnectorManagerRepository();
         cmr.addConnectorManager("source", getConnectorManager("FakeTranslator", "FakeConnection", getFuncsOne()));
         cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));

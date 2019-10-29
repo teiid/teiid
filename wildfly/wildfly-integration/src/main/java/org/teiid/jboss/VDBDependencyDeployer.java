@@ -60,7 +60,7 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 
         final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
         ServiceModuleLoader sml = deploymentUnit.getAttachment(Attachments.SERVICE_MODULE_LOADER);
-        deployment.addAttchment(ServiceModuleLoader.class, sml);
+        deployment.addAttachment(ServiceModuleLoader.class, sml);
         ArrayList<ModuleDependency> localDependencies = new ArrayList<ModuleDependency>();
         ArrayList<ModuleDependency> userDependencies = new ArrayList<ModuleDependency>();
         String moduleNames = deployment.getPropertyValue("lib"); //$NON-NLS-1$

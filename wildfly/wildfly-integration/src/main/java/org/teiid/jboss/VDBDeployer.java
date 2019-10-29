@@ -134,8 +134,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 
         // add VDB module's classloader as an attachment
         ModuleClassLoader classLoader = deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader();
-        deployment.addAttchment(ClassLoader.class, classLoader);
-        deployment.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
+        deployment.addAttachment(ClassLoader.class, classLoader);
+        deployment.addAttachment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
 
         try {
             EmbeddedServer.createPreParser(deployment);
@@ -145,7 +145,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 
         UDFMetaData udf = new UDFMetaData();
         udf.setFunctionClassLoader(classLoader);
-        deployment.addAttchment(UDFMetaData.class, udf);
+        deployment.addAttachment(UDFMetaData.class, udf);
 
         VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
         VDBResources resources;

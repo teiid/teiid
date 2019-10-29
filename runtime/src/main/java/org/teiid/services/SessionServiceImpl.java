@@ -268,7 +268,7 @@ public class SessionServiceImpl implements SessionService {
                     LogManager.logDetail(LogConstants.CTX_SECURITY, "Value for max sessions is invalid on", vdb); //$NON-NLS-1$
                 }
             }
-            vdb.addAttchment(MaxSessions.class, max);
+            vdb.addAttachment(MaxSessions.class, max);
         }
         if (max.val == null || max.val < 0) {
             return;
