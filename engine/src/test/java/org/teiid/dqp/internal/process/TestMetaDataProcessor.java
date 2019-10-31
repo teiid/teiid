@@ -293,4 +293,13 @@ public class TestMetaDataProcessor {
 
         return vdb;
     }
+
+    @Test public void testExplain() throws Exception {
+        Map[] metadata = helpGetMetadata("explain SELECT pm1.g1.e1 FROM pm1.g1", RealMetadataFactory.example1Cached(), RealMetadataFactory.example1VDB()); //$NON-NLS-1$
+        assertNotNull(metadata);
+        assertEquals(1, metadata.length);
+        assertEquals("QUERY PLAN", metadata[0].get(ResultsMetadataConstants.ELEMENT_NAME)); //$NON-NLS-1$
+        assertEquals("QUERY PLAN", metadata[0].get(ResultsMetadataConstants.ELEMENT_LABEL)); //$NON-NLS-1$
+        assertEquals("clob", metadata[0].get(ResultsMetadataConstants.DATA_TYPE)); //$NON-NLS-1$
+    }
 }

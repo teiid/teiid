@@ -183,6 +183,13 @@ public class SQLConstants {
         static final String LISTAGG = "LISTAGG"; //$NON-NLS-1$
 
         static final String OBJECT = "OBJECT"; //$NON-NLS-1$
+
+        //explain
+        static final String EXPLAIN = "EXPLAIN"; //$NON-NLS-1$
+        static final String FORMAT = "FORMAT"; //$NON-NLS-1$
+        static final String YAML = "YAML"; //$NON-NLS-1$
+        static final String ANALYZE = "ANALYZE"; //$NON-NLS-1$
+        static final String TEXT = "TEXT"; //$NON-NLS-1$
     }
 
     public interface Reserved {

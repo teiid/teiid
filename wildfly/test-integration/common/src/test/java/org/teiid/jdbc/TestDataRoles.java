@@ -125,6 +125,18 @@ public class TestDataRoles {
         } catch (TeiidSQLException e) {
 
         }
+
+
+        //nested explain analyze should not pass either
+        try {
+            s.execute("explain analyze begin execute immediate 'begin execute immediate ''select * from vw''; end'; end");
+            fail();
+        } catch (TeiidSQLException e) {
+
+        }
+
+        //just an explain is fine as it doesn't show anything in the plan related to vw
+        s.execute("explain begin execute immediate 'begin execute immediate ''select * from vw''; end'; end");
     }
 
     @Test public void testMetadataWithSecurity() throws Exception {

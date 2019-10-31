@@ -119,8 +119,8 @@ public class PreparedStatementRequest extends Request {
             super.generatePlan(true);
             prepPlan.setCommand(this.userCommand);
 
-            //there's no need to cache the plan if it's a stored procedure, since we already do that in the optimizer
-            boolean cache = !(this.userCommand instanceof StoredProcedure);
+            //there's no need to cache the plan if it's explain or a stored procedure, since we already do that in the optimizer
+            boolean cache = !(this.userCommand instanceof StoredProcedure && explainCommand == null);
 
             // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
             prepPlan.setPlan(cache?processPlan.clone():processPlan, this.context);

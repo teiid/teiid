@@ -2732,4 +2732,26 @@ public class SQLStringVisitor extends LanguageVisitor {
         return SQLConstants.isReservedWord(string);
     }
 
+    @Override
+    public void visit(ExplainCommand explainCommand) {
+       parts.append(NonReserved.EXPLAIN).append(SPACE);
+       if (explainCommand.getAnalyze() != null || explainCommand.getFormat() != null) {
+           parts.append(Tokens.LPAREN);
+           boolean needsComma = false;
+           if (explainCommand.getAnalyze() != null) {
+               parts.append(NonReserved.ANALYZE).append(SPACE).append(explainCommand.getAnalyze().toString());
+               needsComma = true;
+           }
+           if (explainCommand.getFormat() != null) {
+               if (needsComma) {
+                   parts.append(Tokens.COMMA).append(SPACE);
+               }
+               parts.append(NonReserved.FORMAT).append(SPACE).append(explainCommand.getFormat().name());
+               needsComma = true;
+           }
+           parts.append(Tokens.RPAREN).append(SPACE);
+       }
+       visitNode(explainCommand.getCommand());
+    }
+
 }

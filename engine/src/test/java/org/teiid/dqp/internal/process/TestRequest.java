@@ -115,7 +115,7 @@ public class TestRequest {
         assertNotNull(request.context.getTransactionContext());
     }
 
-    private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws TeiidComponentException,
+    static Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws TeiidComponentException,
                                                            TeiidProcessingException {
         Request request = null;
         if (cache != null) {

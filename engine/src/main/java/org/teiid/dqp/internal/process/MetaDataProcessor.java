@@ -291,7 +291,10 @@ public class MetaDataProcessor {
             command = plan.getCommand();
         } else {
             command = QueryParser.getQueryParser().parseCommand(sql, info);
-            QueryResolver.resolveCommand(command, this.metadata);
+            //no need to resolve explain - the metadata comes from format
+            if (command.getType() != Command.TYPE_EXPLAIN) {
+                QueryResolver.resolveCommand(command, this.metadata);
+            }
         }
         return getMetadataForCommand(command);
     }

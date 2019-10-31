@@ -48,6 +48,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.ExplainCommand;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
@@ -89,6 +90,17 @@ public class QueryResolver {
         public void resolveCommand(Command command, TempMetadataAdapter metadata,
                 boolean resolveNullLiterals) throws QueryMetadataException,
                 QueryResolverException, TeiidComponentException {
+        }
+    };
+    private static final CommandResolver EXPLAIN_RESOLVER = new CommandResolver() {
+
+        @Override
+        public void resolveCommand(Command command, TempMetadataAdapter metadata,
+                boolean resolveNullLiterals) throws QueryMetadataException,
+                QueryResolverException, TeiidComponentException {
+            Command actual = ((ExplainCommand)command).getCommand();
+            CommandResolver resolver = chooseResolver(actual, metadata);
+            resolver.resolveCommand(actual, metadata, resolveNullLiterals);
         }
     };
 
@@ -192,6 +204,8 @@ public class QueryResolver {
     private static CommandResolver chooseResolver(Command command, QueryMetadataInterface metadata) {
 
         switch(command.getType()) {
+            case Command.TYPE_EXPLAIN:
+                return EXPLAIN_RESOLVER;
             case Command.TYPE_QUERY:
                 if(command instanceof Query) {
                     return SIMPLE_QUERY_RESOLVER;
