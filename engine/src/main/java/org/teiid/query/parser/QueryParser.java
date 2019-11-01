@@ -49,7 +49,6 @@ import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.util.CommandContext;
 
 /**
  * <p>Converts a SQL-string to an object version of a query.  This
@@ -167,30 +166,13 @@ public class QueryParser implements Parser {
      * @throws IllegalArgumentException if sql is null
      */
     public Command parseCommand(String sql, ParseInfo parseInfo) throws QueryParserException {
-        return parseCommand(sql, parseInfo, false);
-    }
-
-    public Command parseDesignerCommand(String sql) throws QueryParserException {
-        return parseCommand(sql, new ParseInfo(), true);
-    }
-
-    public Command parseCommand(String sql, ParseInfo parseInfo, boolean designerCommands) throws QueryParserException {
-        return parseCommand(sql, parseInfo, designerCommands, null, null, null, null);
-    }
-
-    public Command parseCommand(final String sql, ParseInfo parseInfo, boolean designerCommands, String vdbName,
-            String vdbVersion, String schemaName, CommandContext commandContext) throws QueryParserException {
         if(sql == null || sql.length() == 0) {
              throw new QueryParserException(QueryPlugin.Event.TEIID30377, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30377));
         }
 
         Command result = null;
         try{
-            if (designerCommands) {
-                result = getSqlParser(sql).designerCommand(parseInfo);
-            } else {
-                result = getSqlParser(sql).command(parseInfo);
-            }
+            result = getSqlParser(sql).command(parseInfo);
             result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
         } catch(ParseException pe) {
             if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {

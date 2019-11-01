@@ -99,6 +99,8 @@ public abstract class Command implements LanguageObject {
 
     public static final int TYPE_ALTER_TRIGGER = 16;
 
+    public static final int TYPE_EXPLAIN = 17;
+
     public static final int TYPE_SOURCE_EVENT = -1;
 
     private static List<Expression> updateCommandSymbol;
@@ -158,7 +160,7 @@ public abstract class Command implements LanguageObject {
         if (root == null) {
             this.externalGroups = null;
         } else {
-            this.externalGroups = (GroupContext)root.clone();
+            this.externalGroups = root.clone();
         }
     }
 
@@ -357,6 +359,14 @@ public abstract class Command implements LanguageObject {
             return "Up"; //$NON-NLS-1$
         }
         return "?"; //$NON-NLS-1$
+    }
+
+    /**
+     * For a statement such as explain, obtain the actual command
+     * @return
+     */
+    public Command getActualCommand() {
+        return this;
     }
 
 }

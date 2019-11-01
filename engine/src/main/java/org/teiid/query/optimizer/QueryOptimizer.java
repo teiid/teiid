@@ -97,6 +97,8 @@ public class QueryOptimizer {
             analysisRecord.println("OPTIMIZE: \n" + command); //$NON-NLS-1$
         }
 
+        command = command.getActualCommand();
+
         if (command instanceof Insert) {
             Insert insert = (Insert)command;
             if (insert.isUpsert()) {

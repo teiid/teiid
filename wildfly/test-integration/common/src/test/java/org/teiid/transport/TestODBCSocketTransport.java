@@ -927,4 +927,13 @@ public class TestODBCSocketTransport {
         assertEquals(value, current.getApplicationName());
     }
 
+    @Test public void testExplain() throws Exception {
+        Statement s = conn.createStatement();
+        s.execute("explain SELECT pg_get_constraintdef((select oid from pg_constraint where contype = 'f' and conrelid = (select oid from pg_class where relname = 'Functions')), true)");
+        ResultSet rs = s.getResultSet();
+        rs.next();
+        assertTrue(rs.getString(1).contains("Select Columns Subplan"));
+        assertFalse(rs.next());
+    }
+
 }

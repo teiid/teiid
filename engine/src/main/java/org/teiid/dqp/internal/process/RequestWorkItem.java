@@ -864,6 +864,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
     /**
      * Send results if they have been requested.  This should only be called from the processing thread.
+     * @return true if the batch should be buffered
      */
     protected boolean sendResultsIfNeeded(TupleBatch batch) throws TeiidComponentException, TeiidProcessingException {
         ResultsMessage response = null;
@@ -1121,11 +1122,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         if(analysisRecord != null) {
             if (requestMsg.getShowPlan() != ShowPlan.OFF) {
                 if (processor != null) {
-                    PlanNode node = processor.getProcessorPlan().getDescriptionProperties();
-                    node.addProperty(AnalysisRecord.PROP_DATA_BYTES_SENT, String.valueOf(dataBytes.get()));
-                    if (planningEnd != 0) {
-                        node.addProperty(AnalysisRecord.PROP_PLANNING_TIME, String.valueOf(planningEnd - planningStart));
-                    }
+                    PlanNode node = getQueryPlan();
                     response.setPlanDescription(node);
                 }
                 if (analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
@@ -1138,6 +1135,15 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
                 analysisRecord.stopDebugLog();
             }
         }
+    }
+
+    public PlanNode getQueryPlan() {
+        PlanNode node = processor.getProcessorPlan().getDescriptionProperties();
+        node.addProperty(AnalysisRecord.PROP_DATA_BYTES_SENT, String.valueOf(dataBytes.get()));
+        if (planningEnd != 0) {
+            node.addProperty(AnalysisRecord.PROP_PLANNING_TIME, String.valueOf(planningEnd - planningStart));
+        }
+        return node;
     }
 
     private void sendError() {

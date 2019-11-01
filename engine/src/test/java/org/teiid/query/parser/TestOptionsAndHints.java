@@ -1154,7 +1154,7 @@ public class TestOptionsAndHints {
         assertEquals("WITH x AS (SELECT /*+sh:'x' */ 1) SELECT /*+sh:'foo' bar:'leading' */ e1 FROM pm1.g1 ORDER BY e1 LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
 
         sql = "create virtual procedure begin loop on (select /*+ sh:'y' */ 1) as x begin end end"; //$NON-NLS-1$
-        assertEquals("BEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
+        assertEquals("BEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseCommand(sql).toString());
     }
 
     @Test public void testNoInline() throws QueryParserException {

@@ -71,6 +71,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.ExplainCommand;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Limit;
 import org.teiid.query.sql.lang.QueryCommand;
@@ -127,6 +128,7 @@ public class Request {
     protected ConnectorManagerRepository connectorManagerRepo;
 
     protected Command userCommand;
+    protected ExplainCommand explainCommand;
     protected boolean returnsUpdateCount;
     private GlobalTableStore globalTables;
     private SessionAwareCache<PreparedPlan> planCache;
@@ -346,8 +348,25 @@ public class Request {
         if (this.userCommand instanceof CreateProcedureCommand && this.processPlan instanceof ProcedurePlan) {
             ((ProcedurePlan)this.processPlan).setValidateAccess(true);
         }
+        ProcessorPlan plan = this.processPlan;
+        if (this.explainCommand != null) {
+            //this is the meat of how explain works
+            //we set our existing flags, and create a proxy plan
+            //that keeps knowledge of explain out of the other layers
+            if (requestMsg.getShowPlan() != ShowPlan.DEBUG) {
+                requestMsg.setShowPlan(ShowPlan.ON);
+                if (!this.explainCommand.isNoExec()) {
+                    //the context was already initialized, so this still needs set
+                    this.context.setCollectNodeStatistics(true);
+                }
+            }
+            if (this.requestMsg.getRequestOptions().isContinuous()) {
+                //exception
+            }
+            plan = new ExplainProcessPlan(this.processPlan, this.explainCommand);
+        }
         this.context.setTransactionContext(getTransactionContext(true));
-        this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
+        this.processor = new QueryProcessor(plan, context, bufferManager, processorDataManager);
     }
 
     TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {
@@ -365,7 +384,7 @@ public class Request {
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
         // If local or global transaction is not started.
-        if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec()) {
+        if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec() && (explainCommand == null || !explainCommand.isNoExec())) {
             if (!startAutoWrap) {
                 return null;
             }
@@ -410,6 +429,12 @@ public class Request {
     protected void generatePlan(boolean prepared) throws TeiidComponentException, TeiidProcessingException {
         createCommandContext();
         Command command = parseCommand();
+        if (command.getType() == Command.TYPE_EXPLAIN) {
+            this.explainCommand = (ExplainCommand)command;
+            command = command.getActualCommand();
+            //no need to hold the reference
+            this.explainCommand.setCommand(null);
+        }
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
 
@@ -490,7 +515,7 @@ public class Request {
 
     protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
         boolean returnsResultSet = command.returnsResultSet();
-        this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
+        this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet && explainCommand == null;
         if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet)
                 || (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
             throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
