@@ -361,7 +361,7 @@ public class Request {
                 }
             }
             if (this.requestMsg.getRequestOptions().isContinuous()) {
-                //exception
+                throw new IllegalStateException("Explain cannot be continuous."); //$NON-NLS-1$
             }
             plan = new ExplainProcessPlan(this.processPlan, this.explainCommand);
         }
