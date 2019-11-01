@@ -532,6 +532,11 @@ TOKEN : /* NonReserved words */
 |   <POSITION: "position">
 |   <LISTAGG: "listagg">
 |   <OBJECT: "object">
+|   <EXPLAIN: "explain">
+|   <ANALYZE: "analyze">
+|   <TEXT: "text">
+|   <FORMAT: "format">
+|   <YAML: "yaml">
 }
 /*
 name=all in group identifier
@@ -642,7 +647,7 @@ Token nonReserved() :
      |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSON>|<JSONARRAY_AGG>|<JSONOBJECT>|<PRESERVE>|<UPSERT>|<AFTER>
      |<TYPE>|<TRANSLATOR>|<JAAS>|<CONDITION>|<MASK>|<ACCESS>|<CONTROL>|<NONE>|<DATA>|<DATABASE>|<PRIVILEGES>|<ROLE>|<SCHEMA>|<USE>|<REPOSITORY>|<RENAME>
      |<DOMAIN>|<USAGE>|<GEOMETRY>|<DEFAULT_KEYWORD>|<POSITION>|<CURRENT>|<UNBOUNDED>|<PRECEDING>|<FOLLOWING>|<LISTAGG>|<GEOGRAPHY>
-     |<OBJECT>)
+     |<OBJECT>|<EXPLAIN>|<ANALYZE>|<TEXT>|<FORMAT>|<YAML>)
     {
     	return getToken(0);
     }	
@@ -700,26 +705,8 @@ Command command(ParseInfo info) :
 {
 	 (LOOKAHEAD(2) command = createProcedure(info) |
 	  command = userCommand(info) |
-	  command = callableStatement(info)
-	)
-	[<SEMICOLON>]
-	<EOF>
-	{
-		return command;
-	}
-}
-
-/*
-unused=true
-*/
-Command designerCommand(ParseInfo info) :
-{
-	Command command = null;
-}
-{
-	(LOOKAHEAD (2) command = createProcedure(info) |
-	 command = forEachRowTriggerAction(info) |
-	 command = userCommand(info)	  
+	  command = callableStatement(info) |
+	  command = explainCommand(info)
 	)
 	[<SEMICOLON>]
 	<EOF>
@@ -860,6 +847,61 @@ TriggerAction forEachRowTriggerAction(ParseInfo info) :
 	{
 		return new TriggerAction(b);
 	}
+}
+
+/*
+name=explain
+description=Returns the query plan for the statement
+example=EXPLAIN select 1
+index=true
+*/
+Command explainCommand(ParseInfo info) :
+{
+    Command command = null;
+    ExplainCommand explain = new ExplainCommand();
+    Token comment = null;
+}
+{
+    <EXPLAIN> 
+    [LOOKAHEAD(2) <LPAREN> 
+      explainOption(info, explain) (<COMMA> explainOption(info, explain))*
+    <RPAREN>] 
+    {
+      comment = getToken(1).specialToken;
+    }
+    command = userCommand(info)
+    {
+        if (comment != null) {
+          command.setCacheHint(getQueryCacheOption(comment.image));
+        }
+        explain.setCommand(command);
+        return explain;
+    }
+}
+
+/*
+name=explain option
+description=Option for the explain statement
+example=FORMAT YAML
+*/
+void explainOption(ParseInfo info, ExplainCommand explain) :
+{
+  boolean val = true;
+  ExplainCommand.Format format = null;
+}
+{
+      (<ANALYZE> 
+        [ <TRUE>|(<FALSE> {val=false;}) ] 
+        {explain.setAnalyze(val);}
+      )
+     |(<FORMAT> 
+        [  
+           (<XML> {format=ExplainCommand.Format.XML;})
+          |(<TEXT> {format=ExplainCommand.Format.TEXT;})
+          |(<YAML> {format=ExplainCommand.Format.YAML;}) 
+        ] 
+        {explain.setFormat(format);}
+      )   
 }
 
 /*

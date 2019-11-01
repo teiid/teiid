@@ -156,4 +156,6 @@ public abstract class LanguageVisitor {
     public void visit(IsDistinctCriteria isDistinctCriteria) {}
 
     public void visit(JsonTable jsonTable) {}
+
+    public void visit(ExplainCommand explainCommand) {}
 }
