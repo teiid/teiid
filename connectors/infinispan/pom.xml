@@ -22,6 +22,14 @@
 				<scope>import</scope>
 			</dependency>
 			
+			<dependency>
+                <groupId>org.infinispan.protostream</groupId>
+                <artifactId>parent</artifactId>
+                <version>${version.protostream}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+			
 			<!-- override the runtime dependencies -->
 			
 			<dependency>
@@ -42,17 +50,6 @@
 	            <version>${version.org.infinispan}</version>
             </dependency>
 					
-			<dependency>
-				<groupId>com.squareup</groupId>
-				<artifactId>protoparser</artifactId>
-				<version>${version.com.squareup}</version>
-			</dependency>
-			<dependency>
-             	<groupId>org.apache.lucene</groupId>
-             	<artifactId>lucene-core</artifactId>
-             	<version>${version.org.apache.lucene}</version>
-         	</dependency> 
-
 			<dependency>
 				<groupId>org.teiid.connectors</groupId>
 				<artifactId>infinispan-api</artifactId>

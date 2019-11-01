@@ -105,6 +105,10 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
         return this.properties.remove(key);
     }
 
+    @Deprecated
+    public <T> T addAttchment(Class<T> type, T attachment) {
+        return addAttachment(type, attachment);
+    }
    /**
     * Add attachment
     *
@@ -115,7 +119,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
     * @throws IllegalArgumentException for a null name, attachment or type
     * @throws UnsupportedOperationException when not supported by the implementation
     */
-    public <T> T addAttchment(Class<T> type, T attachment) {
+    public <T> T addAttachment(Class<T> type, T attachment) {
         if (type == null)
               throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
           Object result = this.attachments.put(type, attachment);

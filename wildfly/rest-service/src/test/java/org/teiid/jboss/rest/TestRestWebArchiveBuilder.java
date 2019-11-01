@@ -74,7 +74,7 @@ public class TestRestWebArchiveBuilder {
     }
 
     private VDBMetaData getTestVDBMetaData() throws FileNotFoundException, XMLStreamException {
-        VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+        VDBMetaData vdb = VDBMetadataParser.unmarshall(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
         MetadataStore ms = new MetadataStore();
         for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
             MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
@@ -82,9 +82,9 @@ public class TestRestWebArchiveBuilder {
         }
 
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "Rest");
-        vdb.addAttchment(QueryMetadataInterface.class, metadata);
-        vdb.addAttchment(TransformationMetadata.class, metadata);
-        vdb.addAttchment(MetadataStore.class, ms);
+        vdb.addAttachment(QueryMetadataInterface.class, metadata);
+        vdb.addAttachment(TransformationMetadata.class, metadata);
+        vdb.addAttachment(MetadataStore.class, ms);
         return vdb;
     }
 

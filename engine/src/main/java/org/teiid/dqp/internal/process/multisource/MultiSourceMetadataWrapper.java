@@ -46,7 +46,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 
     public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
-    public static final String MULTISOURCE_PARTITIONED_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "multisource.partitioned"; //$NON-NLS-1$
+    public static final String MULTISOURCE_PARTITIONED_PROPERTY = AbstractMetadataRecord.RELATIONAL_PREFIX + "multisource.partitioned"; //$NON-NLS-1$
 
     private static class MultiSourceGroup {
         Object multiSourceElement;

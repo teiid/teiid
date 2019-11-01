@@ -269,7 +269,7 @@ public class TestODataIntegration {
         ContentResponse response = http.GET(baseURL + "/loopy/vm1/$metadata");
         assertEquals(200, response.getStatus());
         assertEquals(ObjectConverterUtil.convertFileToString(
-                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")).replace("${baseurl}", baseURL),
+                UnitTestUtil.getTestDataFile("loopy-edmx-metadata.xml")),
                 response.getContentAsString());
     }
 

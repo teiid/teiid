@@ -1,6 +1,3 @@
-SET NAMESPACE 'http://www.jboss.org/teiiddesigner/ext/odata/2012' AS teiid_odata;
-SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;
-
 CREATE FOREIGN TABLE A (
 	a_id integer NOT NULL OPTIONS (NATIVE_TYPE 'Edm.Int32'),
 	a_value string,

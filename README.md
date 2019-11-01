@@ -34,6 +34,14 @@ cron based build to be configured as well for deploying snapshots.  The snapshot
 variables SONATYPE_USERNAME and SONATYPE_PASSWORD that should set to the user access token values of an
 authorized sonatype account.
 
+## Teiid for WildFly
+
+Teiid for WildFly may be built by including the wildfly profile with the relevant build command.  For example:
+
+    $ mvn clean install -P dev,wildfly -s settings.xml
+    
+The Teiid WildFly kits will then be located under wildfly/wildfly-build/target
+
 Licenses
 -------
 

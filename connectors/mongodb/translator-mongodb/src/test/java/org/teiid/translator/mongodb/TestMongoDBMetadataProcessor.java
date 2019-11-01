@@ -50,10 +50,7 @@ public class TestMongoDBMetadataProcessor {
         MetadataFactory mf = processExampleMetadata(mp);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" +
-                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE \"table\" (\n" +
+        String expected = "CREATE FOREIGN TABLE \"table\" (\n" +
                 "    \"_id\" integer,\n" +
                 "    col2 double,\n" +
                 "    col3 long,\n" +
@@ -71,7 +68,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"teiid_mongo:MERGE\" 'table');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE embedded (\n" +
                 "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
@@ -79,7 +76,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"teiid_mongo:EMBEDDABLE\" 'true');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE emptyFirst (\n" +
                 "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" +
@@ -98,10 +95,7 @@ public class TestMongoDBMetadataProcessor {
         MetadataFactory mf = processExampleMetadata(mp);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" +
-                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE \"table\" (\n" +
+        String expected = "CREATE FOREIGN TABLE \"table\" (\n" +
                 "    \"_id\" integer,\n" +
                 "    col2 double,\n" +
                 "    col3 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
@@ -120,7 +114,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"teiid_mongo:MERGE\" 'table');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE embedded (\n" +
                 "    col1 string OPTIONS (SEARCHABLE 'Unsearchable'),\n" +
@@ -128,7 +122,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"teiid_mongo:EMBEDDABLE\" 'true');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:EMBEDDABLE\" 'true', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE emptyFirst (\n" +
                 "    \"_id\" string AUTO_INCREMENT OPTIONS (NATIVE_TYPE 'org.bson.types.ObjectId'),\n" +
@@ -304,10 +298,7 @@ public class TestMongoDBMetadataProcessor {
         mp.process(mf, conn);
 
         String metadataDDL = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" +
-                "SET NAMESPACE 'http://www.teiid.org/translator/mongodb/2013' AS teiid_mongo;\n" +
-                "\n" +
-                "CREATE FOREIGN TABLE \"table\" (\n" +
+        String expected = "CREATE FOREIGN TABLE \"table\" (\n" +
                 "    \"_id\" integer,\n" +
                 "    col2 double,\n" +
                 "    col3 long,\n" +
@@ -325,7 +316,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=child', \"teiid_mongo:MERGE\" 'table');\n" +
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=child');\n" +
                 "\n" +
                 "CREATE FOREIGN TABLE embedded (\n" +
                 "    col1 string,\n" +
@@ -333,7 +324,7 @@ public class TestMongoDBMetadataProcessor {
                 "    \"_id\" integer OPTIONS (UPDATABLE FALSE),\n" +
                 "    CONSTRAINT PK0 PRIMARY KEY(\"_id\"),\n" +
                 "    FOREIGN KEY(\"_id\") REFERENCES \"table\" \n" +
-                ") OPTIONS (UPDATABLE TRUE, \"teiid_rel:fqn\" 'collection=table/embedded=embedded', \"teiid_mongo:MERGE\" 'table');";
+                ") OPTIONS (UPDATABLE TRUE, \"teiid_mongo:MERGE\" 'table', \"teiid_rel:fqn\" 'collection=table/embedded=embedded');";
         assertEquals(expected, metadataDDL.replace("\t", "    "));
     }
 }

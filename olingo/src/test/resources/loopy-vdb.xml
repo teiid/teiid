@@ -3,6 +3,7 @@
     <model name="PM1">
         <source name="text-connector2" translator-name="loopback" />
          <metadata type="DDL"><![CDATA[
+                CREATE FOREIGN TABLE HIDDEN (e1 string, e2 integer PRIMARY KEY, e3 double) OPTIONS("teiid_odata:visible" false);
                 CREATE FOREIGN TABLE G1 (e1 string, e2 integer PRIMARY KEY, e3 double) OPTIONS(UPDATABLE true);
                 CREATE FOREIGN TABLE G2 (e1 string, e2 integer PRIMARY KEY, CONSTRAINT FK0 FOREIGN KEY (e2) REFERENCES G1 (e2)) OPTIONS (UPDATABLE 'true');
                 CREATE FOREIGN TABLE NoPKTable (e1 string, e2 integer, e3 double);

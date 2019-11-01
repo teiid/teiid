@@ -25,6 +25,45 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
 public class ProxyHttpServletRequest extends HttpServletRequestWrapper {
+
+    public static HttpServletRequest handleProxiedRequest(
+            HttpServletRequest httpRequest) {
+        /*
+        Forwarded for=192.168.42.1;host=hostname:80;proto=http;proto-version=
+        X-Forwarded-Proto http
+        X-Forwarded-Host hostname
+        X-Forwarded-Port 80
+        */
+        String host = httpRequest.getHeader("X-Forwarded-Host"); //$NON-NLS-1$
+        String protocol = httpRequest.getHeader("X-Forwarded-Proto"); //$NON-NLS-1$
+        String port = httpRequest.getHeader("X-Forwarded-Port"); //$NON-NLS-1$
+        if (host == null) {
+            String forwarded = httpRequest.getHeader("Forwarded"); //$NON-NLS-1$
+            if (forwarded != null) {
+                String[] parts = forwarded.split(";"); //$NON-NLS-1$
+                for (String part : parts) {
+                    String[] keyValue = part.split("=", 2); //$NON-NLS-1$
+                    if (keyValue.length != 2) {
+                        continue;
+                    }
+                    if (keyValue[0].equals("host")) { //$NON-NLS-1$
+                        host = keyValue[1];
+                        port = null;
+                    } else if (keyValue[0].equals("proto")) { //$NON-NLS-1$
+                        protocol = keyValue[1];
+                    }
+                }
+            }
+        }
+        if (host != null) {
+            if (protocol == null) {
+                protocol = "http"; //$NON-NLS-1$
+            }
+            httpRequest = new ProxyHttpServletRequest(httpRequest, protocol + "://" + host + (port != null?(":"+port):"")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
+        return httpRequest;
+    }
+
     private URI encodedURI;
     private URL encodedURL;
 

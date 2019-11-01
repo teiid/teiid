@@ -178,6 +178,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         String proxyURI = this.proxyBaseURI;
         if (proxyURI != null) {
             httpRequest = new ProxyHttpServletRequest(httpRequest, proxyURI);
+        } else {
+            httpRequest = ProxyHttpServletRequest.handleProxiedRequest(httpRequest);
         }
 
         VDBKey key = null;
@@ -192,7 +194,8 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
             return;
         }
 
-        String contextPath = httpRequest.getContextPath();
+        String contextPathOriginal = httpRequest.getContextPath();
+        String contextPath = contextPathOriginal;
         String baseURI = fullURL.substring(0, fullURL.indexOf(contextPath));
 
         int endIdx = uri.indexOf('/', contextPath.length() + 1);
@@ -271,7 +274,7 @@ public class ODataFilter implements Filter, VDBLifeCycleListener {
         try {
             Connection connection = client.open();
             registerVDBListener(client, connection);
-            HandlerInfo handlerInfo = context.getHandlers(baseURI, client, modelName);
+            HandlerInfo handlerInfo = context.getHandlers(contextPathOriginal, client, modelName);
             ODataHandler handler = handlerInfo.oDataHttpHandler;
 
             if (openApiHandler.processOpenApiMetadata(httpRequest, key, uri, modelName,

@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response.Status;
 import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -50,22 +51,22 @@ import org.teiid.translator.ws.WSConnection;
 public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
 
     @ExtensionMetadataProperty(applicable=Table.class, datatype=String.class, display="Link Tables", description="Used to define navigation relationship in many to many case")
-    public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
+    public static final String LINK_TABLES = MetadataFactory.ODATA_PREFIX+"LinkTables"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Procedure.class, datatype=String.class, display="Http Method", description="Http method used for procedure invocation", required=true)
-    public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
+    public static final String HTTP_METHOD = MetadataFactory.ODATA_PREFIX+"HttpMethod"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=Boolean.class, display="Join Column", description="On Link tables this property defines the join column")
-    public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
+    public static final String JOIN_COLUMN = MetadataFactory.ODATA_PREFIX+"JoinColumn"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable= {Table.class, Procedure.class}, datatype=String.class, display="Entity Type Name", description="Name of the Entity Type in EDM", required=true)
-    public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
+    public static final String ENTITY_TYPE = MetadataFactory.ODATA_PREFIX+"EntityType"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Complex Type Name", description="Name of the Complex Type in EDM")
-    public static final String COMPLEX_TYPE = MetadataFactory.ODATA_URI+"ComplexType"; //$NON-NLS-1$
+    public static final String COMPLEX_TYPE = MetadataFactory.ODATA_PREFIX+"ComplexType"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class, datatype=String.class, display="Column Group", description="Name of the Column Group")
-    public static final String COLUMN_GROUP = MetadataFactory.ODATA_URI+"ColumnGroup"; //$NON-NLS-1$
+    public static final String COLUMN_GROUP = MetadataFactory.ODATA_PREFIX+"ColumnGroup"; //$NON-NLS-1$
 
     private String entityContainer;
     private String schemaNamespace;
@@ -94,6 +95,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         }
     }
 
+    @Override
     public void process(MetadataFactory mf, WSConnection conn) throws TranslatorException {
         EdmDataServices eds = getEds(conn);
         getMetadata(mf, eds);
@@ -366,11 +368,26 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (ep.getFixedLength() != null) {
             c.setFixedLength(ep.getFixedLength());
         }
-        c.setNullType(ep.isNullable()?NullType.Nullable:NullType.No_Nulls);
-        if (ep.getMaxLength() != null) {
+        if (ep.getMaxLength() != null){
             c.setLength(ep.getMaxLength());
         }
-
+        c.setNullType(ep.isNullable()?NullType.Nullable:NullType.No_Nulls);
+        if (ep.getDefaultValue() != null){
+            c.setDefaultValue(ep.getDefaultValue());
+        }
+        // mismatch with timestamp type and odata
+        if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) {
+            if (ep.getPrecision() != null){
+                c.setScale(ep.getPrecision());
+            }
+        } else {
+            if (ep.getPrecision() != null){
+                c.setPrecision(ep.getPrecision());
+            }
+            if (ep.getScale() != null){
+                c.setScale(ep.getScale());
+            }
+        }
         return c;
     }
 

@@ -228,7 +228,7 @@ public class TestSessionServiceImpl {
         vdb.setVersion(1);
         vdb.setStatus(Status.ACTIVE);
         vdb.addProperty(SessionServiceImpl.MAX_SESSIONS_PER_USER, "1");
-        vdb.addAttchment(VDBKey.class, new VDBKey("x", 1));
+        vdb.addAttachment(VDBKey.class, new VDBKey("x", 1));
 
         Mockito.stub(repo.getLiveVDB("name", "1")).toReturn(vdb);
 

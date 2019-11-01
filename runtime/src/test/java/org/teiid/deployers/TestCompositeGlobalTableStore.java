@@ -47,7 +47,7 @@ public class TestCompositeGlobalTableStore {
         ms.addSchema(s);
         CompositeVDB imported = TestCompositeVDB.createCompositeVDB(ms, "foo");
         GlobalTableStore gts1 = Mockito.mock(GlobalTableStore.class);
-        imported.getVDB().addAttchment(GlobalTableStore.class, gts1);
+        imported.getVDB().addAttachment(GlobalTableStore.class, gts1);
         vdb.getChildren().put(new VDBKey("foo1", 1), imported);
 
         CompositeGlobalTableStore cgts = (CompositeGlobalTableStore)CompositeGlobalTableStore.createInstance(vdb, BufferManagerFactory.getStandaloneBufferManager(), null);

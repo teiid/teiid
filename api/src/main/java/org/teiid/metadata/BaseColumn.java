@@ -26,13 +26,13 @@ import org.teiid.translator.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
 
-    public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_URI + "default_handling"; //$NON-NLS-1$
+    public static final String DEFAULT_HANDLING = AbstractMetadataRecord.RELATIONAL_PREFIX + "default_handling"; //$NON-NLS-1$
     public static final String EXPRESSION_DEFAULT = "expression"; //$NON-NLS-1$
     public static final String OMIT_DEFAULT = "omit"; //$NON-NLS-1$
 
-    public static final String SPATIAL_SRID = MetadataFactory.SPATIAL_URI + "srid"; //$NON-NLS-1$
-    public static final String SPATIAL_TYPE = MetadataFactory.SPATIAL_URI + "type"; //$NON-NLS-1$
-    public static final String SPATIAL_COORD_DIMENSION = MetadataFactory.SPATIAL_URI + "coord_dimension"; //$NON-NLS-1$
+    public static final String SPATIAL_SRID = MetadataFactory.SPATIAL_PREFIX + "srid"; //$NON-NLS-1$
+    public static final String SPATIAL_TYPE = MetadataFactory.SPATIAL_PREFIX + "type"; //$NON-NLS-1$
+    public static final String SPATIAL_COORD_DIMENSION = MetadataFactory.SPATIAL_PREFIX + "coord_dimension"; //$NON-NLS-1$
 
     //the defaults are safe for odbc/jdbc metadata
     public static final int DEFAULT_PRECISION = Short.MAX_VALUE;

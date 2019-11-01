@@ -25,17 +25,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DataWrapper;
-import org.teiid.metadata.Database;
 import org.teiid.metadata.Database.ResourceType;
-import org.teiid.metadata.Grant;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Role;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Server;
-import org.teiid.metadata.Table;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.sql.symbol.Expression;
@@ -48,7 +40,7 @@ public class TestDDLStringVisitor {
     @Test
     public void testForeignTable() throws Exception {
 
-        String ddl = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n\nCREATE FOREIGN TABLE G1 (\n" +
+        String ddl = "CREATE FOREIGN TABLE G1 (\n" +
                 "	e1 integer,\n" +
                 "	e2 string(10),\n" +
                 "	e3 date NOT NULL DEFAULT current_date() OPTIONS (\"teiid_rel:default_handling\" 'expression'),\n" +
@@ -340,65 +332,9 @@ public class TestDDLStringVisitor {
         helpTest(ddl, expected);
     }
 
-    @Test public void testNamespaces() throws Exception {
+    @Test(expected = ParseException.class) public void testNamespaces() throws Exception {
         String ddl = "set namespace 'some long thing' as x; CREATE View G1(a integer, b varchar) options (\"teiid_rel:x\" false, \"x:z\" 'stringval') AS select e1, e2 from foo.bar";
-        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\nSET NAMESPACE 'some long thing' AS n1;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n1:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
-        helpTest(ddl, expected);
-    }
-
-    @Test
-    public void testNamespaces3() throws Exception {
-        String ddl = "set namespace 'some long thing' as x; CREATE View G1( e1 integer, e2 varchar) OPTIONS (\"x:z\" 'stringval') AS select e1, e2 from foo.bar";
-        Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
-
-        Database db = new Database("foo", "2");
-        db.addSchema(s);
-
-        String expected = "\n/*\n" +
-                "###########################################\n" +
-                "# START DATABASE foo\n" +
-                "###########################################\n" +
-                "*/\n" +
-                "CREATE DATABASE foo VERSION '2';\n" +
-                "USE DATABASE foo VERSION '2';\n" +
-                "SET NAMESPACE 'some long thing' AS n0;\n" +
-                "\n" +
-                "\n" +
-                "--############ Schemas ############\n" +
-                "CREATE SCHEMA model;\n" +
-                "\n" +
-                "\n" +
-                "--############ Schema:model ############\n" +
-                "SET SCHEMA model;\n" +
-                "\n" +
-                "CREATE VIEW G1 (\n" +
-                "	e1 integer,\n" +
-                "	e2 string\n" +
-                ") OPTIONS (\"n0:z\" 'stringval')\n" +
-                "AS\n" +
-                "SELECT e1, e2 FROM foo.bar;\n" +
-                "/*\n" +
-                "###########################################\n" +
-                "# END DATABASE foo\n" +
-                "###########################################\n" +
-                "*/\n\n";
-        String metadataDDL = DDLStringVisitor.getDDLString(db);
-        assertEquals(expected, metadataDDL);
-
-    }
-
-    @Test public void testNamespaces1() throws Exception {
-        String ddl = "CREATE View G1(a integer, b varchar) options (\"teiid_rel:x\" false, \"teiid_sf:z\" 'stringval') AS select e1, e2 from foo.bar";
-        String expected = "SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;\n" +
-                "SET NAMESPACE 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf;\n" +
-                "\n" +
-                "CREATE VIEW G1 (\n" +
-                "\ta integer,\n" +
-                "\tb string\n" +
-                ") OPTIONS (\"teiid_rel:x\" 'false', \"teiid_sf:z\" 'stringval')\n" +
-                "AS\n" +
-                "SELECT e1, e2 FROM foo.bar;";
-        helpTest(ddl, expected);
+        helpTest(ddl, null);
     }
 
     @Test public void testGlobalTemporaryTable() throws Exception {

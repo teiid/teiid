@@ -1,6 +1,4 @@
-SET NAMESPACE 'http://www.teiid.org/ext/relational/2012' AS teiid_rel;
-
-CREATE FOREIGN PROCEDURE listPets(IN "limit" integer NOT NULL OPTIONS (ANNOTATION 'How many items to return at one time (max 100)', "teiid_rest:COLLECION_FORMAT" 'form', "teiid_rest:PARAMETER_TYPE" 'query', "teiid_rel:default_handling" 'omit')) RETURNS TABLE (code integer, message string)
+CREATE FOREIGN PROCEDURE listPets(IN "limit" integer NOT NULL OPTIONS (ANNOTATION 'How many items to return at one time (max 100)', "teiid_rel:default_handling" 'omit', "teiid_rest:COLLECION_FORMAT" 'form', "teiid_rest:PARAMETER_TYPE" 'query')) RETURNS TABLE (code integer, message string)
 OPTIONS (ANNOTATION 'List all pets', "teiid_rest:METHOD" 'GET', "teiid_rest:PRODUCES" 'application/json', "teiid_rest:URI" 'http://petstore.swagger.io/v1/pets');
 
 CREATE FOREIGN PROCEDURE createPets() RETURNS TABLE (code integer, message string)

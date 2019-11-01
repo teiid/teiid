@@ -169,7 +169,7 @@ public class FakeServer extends EmbeddedServer {
             if (parameterObject.vdbResources != null && parameterObject.useVdbXml) {
                 VDBResource resource = parameterObject.vdbResources.get("/META-INF/vdb.xml");
                 if (resource !=null) {
-                    vdbMetaData = VDBMetadataParser.unmarshell(resource.openStream());
+                    vdbMetaData = VDBMetadataParser.unmarshall(resource.openStream());
                 }
             }
             if (vdbMetaData == null) {
@@ -179,7 +179,7 @@ public class FakeServer extends EmbeddedServer {
                 for (Schema schema : metadata.getSchemas().values()) {
                     ModelMetaData model = addModel(vdbMetaData, schema);
                     if (parameterObject.metadataRepo != null) {
-                        model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
+                        model.addAttachment(MetadataRepository.class, parameterObject.metadataRepo);
                         //fakeserver does not load through the repository framework, so call load after the fact here.
                         MetadataFactory mf = createMetadataFactory(vdbMetaData, metadata, model, parameterObject.vdbResources);
                         mf.setSchema(schema);

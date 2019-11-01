@@ -54,10 +54,10 @@ import com.couchbase.client.java.query.N1qlQueryRow;
 public class CouchbaseMetadataProcessor implements MetadataProcessor<CouchbaseConnection> {
 
     @ExtensionMetadataProperty(applicable = Table.class, datatype = Boolean.class, display = "Is Array Table", description = "Declare whether the table is array table")
-    public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_URI + "ISARRAYTABLE"; //$NON-NLS-1$
+    public static final String IS_ARRAY_TABLE = MetadataFactory.COUCHBASE_PREFIX + "ISARRAYTABLE"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable = Table.class, datatype = String.class, display = "Named Type Pair", description = "Declare the name of typed key/value pair")
-    public static final String NAMED_TYPE_PAIR = MetadataFactory.COUCHBASE_URI + "NAMEDTYPEPAIR"; //$NON-NLS-1$
+    public static final String NAMED_TYPE_PAIR = MetadataFactory.COUCHBASE_PREFIX + "NAMEDTYPEPAIR"; //$NON-NLS-1$
 
     private Integer sampleSize;
 

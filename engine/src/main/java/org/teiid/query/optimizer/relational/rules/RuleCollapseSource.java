@@ -76,7 +76,7 @@ import org.teiid.query.util.CommandContext;
 
 public final class RuleCollapseSource implements OptimizerRule {
 
-    static final String PARTIAL_PROPERTY = AbstractMetadataRecord.RELATIONAL_URI + "partial_filter"; //$NON-NLS-1$
+    static final String PARTIAL_PROPERTY = AbstractMetadataRecord.RELATIONAL_PREFIX + "partial_filter"; //$NON-NLS-1$
 
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {

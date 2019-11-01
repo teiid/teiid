@@ -499,6 +499,15 @@ public class IntegrationTestDeployment {
         assertTrue(rar_props.contains("resourceadapter-class"));
         assertTrue(rar_props.contains("managedconnectionfactory-class"));
         assertTrue(rar_props.contains("max-pool-size"));
+
+        Collection<? extends PropertyDefinition> xa_pds = admin.getTemplatePropertyDefinitions("h2-xa");
+        HashSet<String> xa_props = new HashSet<String>();
+        for(PropertyDefinition pd:xa_pds) {
+            xa_props.add(pd.getName());
+        }
+        assertTrue(xa_props.contains("xa-resource-timeout"));
+        assertTrue(xa_props.contains("max-pool-size"));
+        assertTrue(xa_props.contains("transaction-isolation"));
     }
 
     @Test
@@ -628,22 +637,38 @@ public class IntegrationTestDeployment {
         Properties p = new Properties();
         p.setProperty("DatabaseName", "test");
         try {
-         admin.createDataSource(deployedName, "teiid-xa", p);
-         fail("should have fail not find portNumber");
-        } catch(AdminException e) {
+            admin.createDataSource(deployedName, "teiid-xa", p);
+            fail("should have fail not find portNumber");
+        } catch (AdminException e) {
         }
 
         assertFalse(admin.getDataSourceNames().contains(deployedName));
 
         p.setProperty("ServerName", "127.0.0.1");
         p.setProperty("PortNumber", "31000");
+        p.setProperty("connection-properties", "x=something,y=foo");
 
         admin.createDataSource(deployedName, "teiid-xa", p);
 
         assertTrue(admin.getDataSourceNames().contains(deployedName));
 
+        Properties fullProps = admin.getDataSource(deployedName);
 
-        //admin.deleteDataSource(deployedName);
+        assertEquals("127.0.0.1", fullProps.getProperty("ServerName"));
+        assertEquals("31000", fullProps.getProperty("PortNumber"));
+        assertEquals("x=something,y=foo", fullProps.getProperty("connection-properties"));
+
+        admin.deleteDataSource(deployedName);
+
+        p.clear();
+
+        p.put("URL", "...");
+
+        admin.createDataSource(deployedName, "teiid-xa", p);
+
+        fullProps = admin.getDataSource(deployedName);
+
+        assertEquals("...", fullProps.getProperty("URL"));
     }
 
     @Test

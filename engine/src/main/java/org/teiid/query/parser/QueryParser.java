@@ -532,10 +532,6 @@ public class QueryParser implements Parser {
         store.setStrict(true);
         try {
             parseDDL(store, ddl);
-            Map<String, String> colNs = store.getNameSpaces();
-            for (String key:colNs.keySet()) {
-                factory.addNamespace(key, colNs.get(key));
-            }
         } finally {
             store.stopEditing();
         }

@@ -354,10 +354,10 @@ public class VDBRepository implements Serializable{
 
                 // for  replication of events, temp tables and mat views
                 GlobalTableStore gts = CompositeGlobalTableStore.createInstance(v, this.bufferManager, this.objectReplictor);
-                metadataAwareVDB.addAttchment(GlobalTableStore.class, gts);
+                metadataAwareVDB.addAttachment(GlobalTableStore.class, gts);
 
                 if (this.databaseStore != null) {
-                    metadataAwareVDB.addAttchment(DatabaseStore.class, this.databaseStore);
+                    metadataAwareVDB.addAttachment(DatabaseStore.class, this.databaseStore);
                 }
 
                 notifyFinished(name, version, v);

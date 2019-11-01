@@ -124,7 +124,7 @@ public class TestRequest {
             request = new Request();
         }
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
-        workContext.getVDB().addAttchment(ConnectorManagerRepository.class, repo);
+        workContext.getVDB().addAttachment(ConnectorManagerRepository.class, repo);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
 
         request.initialize(message, Mockito.mock(BufferManager.class),

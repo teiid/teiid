@@ -365,7 +365,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -397,7 +397,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -420,7 +420,7 @@ public class TestDDLParser {
         ModelMetaData modelOne = new ModelMetaData();
         modelOne.setName("model"); //$NON-NLS-1$
         vdb.addModel(modelOne);
-        vdb.addAttchment(QueryMetadataInterface.class, new BasicQueryMetadata());
+        vdb.addAttachment(QueryMetadataInterface.class, new BasicQueryMetadata());
 
         ModelMetaData modelTwo = new ModelMetaData();
         modelTwo.setName("model2"); //$NON-NLS-1$
@@ -792,70 +792,28 @@ public class TestDDLParser {
         assertEquals("any", proc.getProperties().get("RANDOM"));
     }
 
-    @Test
+    @Test(expected=org.teiid.metadata.ParseException.class)
     public void testNamespace() throws Exception {
         QueryParser parser = new QueryParser();
-        String ddl =     "set namespace 'http://teiid.org' AS teiid";
-
-        MetadataStore mds = new MetadataStore();
+        String ddl =     "set namespace 'http://teiid.org' AS xyz";
         MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null);
         parser.parseDDL(mf, ddl);
-        mf.mergeInto(mds);
-
-        assertTrue(mf.getNamespaces().keySet().contains("teiid"));
-        assertEquals("http://teiid.org", mf.getNamespaces().get("teiid"));
     }
 
     @Test
     public void testReservedNamespace1() throws Exception {
         QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_sf";
-        MetadataStore mds = new MetadataStore();
         MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null);
         parser.parseDDL(mf, ddl);
-        mf.mergeInto(mds);
-
-        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
-        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
     }
 
     @Test(expected=MetadataException.class)
     public void testReservedNamespaceURIWrong() throws Exception {
         QueryParser parser = new QueryParser();
         String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2013' AS teiid_sf";
-        MetadataStore mds = new MetadataStore();
         MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null);
         parser.parseDDL(mf, ddl);
-        mf.mergeInto(mds);
-
-        assertTrue(mf.getNamespaces().keySet().contains("teiid_sf"));
-        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_sf"));
-    }
-
-    @Test(expected=MetadataException.class)
-    public void testReservedNamespacePrefixMismatch() throws Exception {
-        QueryParser parser = new QueryParser();
-        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS teiid_foo";
-        MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null);
-        parser.parseDDL(mf, ddl);
-        mf.mergeInto(mds);
-
-        assertTrue(mf.getNamespaces().keySet().contains("teiid_foo"));
-        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("teiid_foo"));
-    }
-
-    @Test
-    public void testReservedURIDifferentNS() throws Exception {
-        QueryParser parser = new QueryParser();
-        String ddl = "set namespace 'http://www.teiid.org/translator/salesforce/2012' AS ns";
-        MetadataStore mds = new MetadataStore();
-        MetadataFactory mf = new MetadataFactory("x", 1, "model", getDataTypes(), new Properties(), null);
-        parser.parseDDL(mf, ddl);
-        mf.mergeInto(mds);
-
-        assertTrue(mf.getNamespaces().keySet().contains("ns"));
-        assertEquals("http://www.teiid.org/translator/salesforce/2012", mf.getNamespaces().get("ns"));
     }
 
     public static MetadataFactory helpParse(String ddl, String model) {
@@ -898,13 +856,6 @@ public class TestDDLParser {
 
     public static Map<String, Datatype> getDataTypes() {
         return SystemMetadata.getInstance().getRuntimeTypeMap();
-    }
-
-    @Test public void testKeyResolve() {
-        MetadataFactory mf = new MetadataFactory("x", 1, "foo", getDataTypes(), new Properties(), null);
-        mf.addNamespace("x", "http://x");
-        assertEquals("{http://x}z", MetadataFactory.resolvePropertyKey(mf, "x:z"));
-        assertEquals("y:z", MetadataFactory.resolvePropertyKey(mf, "y:z"));
     }
 
     @Test public void testCreateError() {
@@ -1794,7 +1745,7 @@ public class TestDDLParser {
                 + "CREATE VIEW X (y varchar) as select 'a';";
 
         Database db = helpParse(ddl);
-        assertEquals("true", db.getProperty("{http://teiid.org/rest}auto-generate", false));
+        assertEquals("true", db.getProperty("teiid_rest:auto-generate", false));
     }
 
     @Test
@@ -1820,7 +1771,7 @@ public class TestDDLParser {
         assertNull(primaryKey.getColumns().get(0).getParent());
 
         TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
-        vdb.addAttchment(QueryMetadataInterface.class, tm);
+        vdb.addAttachment(QueryMetadataInterface.class, tm);
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 
@@ -1853,7 +1804,7 @@ public class TestDDLParser {
         assertNull(primaryKey.getColumns().get(0).getParent());
 
         TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mds, "myVDB");
-        vdb.addAttchment(QueryMetadataInterface.class, tm);
+        vdb.addAttachment(QueryMetadataInterface.class, tm);
 
         ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 

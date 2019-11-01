@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.olingo.client.api.edm.xml.XMLMetadata;
 import org.apache.olingo.commons.api.edm.geo.SRID;
 import org.apache.olingo.commons.api.edm.provider.*;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
@@ -59,7 +60,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             display = "Name in OData Schema",
             description = "Name in OData Schema",
             required = true)
-    public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_URI+"NameInSchema"; //$NON-NLS-1$
+    public static final String NAME_IN_SCHEMA = MetadataFactory.ODATA_PREFIX+"NameInSchema"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable = { Table.class, Procedure.class },
             datatype = String.class,
@@ -67,13 +68,13 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
             description = "Type of OData Schema Item",
             allowed = "COMPLEX, NAVIGATION, ENTITY, ENTITY_COLLECTION, ACTION, FUNCTION, COMPLEX_COLLECTION, NAVIGATION_COLLECTION",
             required=true)
-    public static final String ODATA_TYPE = MetadataFactory.ODATA_URI+"Type"; //$NON-NLS-1$
+    public static final String ODATA_TYPE = MetadataFactory.ODATA_PREFIX+"Type"; //$NON-NLS-1$
 
     @ExtensionMetadataProperty(applicable=Column.class,
             datatype=String.class,
             display="Pseudo Column",
             description="Pseudo column for join purposes")
-    public static final String PSEUDO = MetadataFactory.ODATA_URI+"PSEUDO"; //$NON-NLS-1$
+    public static final String PSEUDO = MetadataFactory.ODATA_PREFIX+"PSEUDO"; //$NON-NLS-1$
 
     private String schemaNamespace;
     private ODataExecutionFactory ef;
@@ -82,6 +83,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         this.ef = ef;
     }
 
+    @Override
     public void process(MetadataFactory mf, WSConnection conn)
             throws TranslatorException {
         XMLMetadata serviceMetadata = getSchema(conn);
@@ -610,12 +612,6 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (property.getMaxLength() != null) {
             c.setLength(property.getMaxLength());
         }
-        if (property.getPrecision() != null) {
-            c.setPrecision(property.getPrecision());
-        }
-        if (property.getScale() != null) {
-            c.setScale(property.getScale());
-        }
         if (property.getDefaultValue() != null) {
             c.setDefaultValue(property.getDefaultValue());
         }
@@ -634,6 +630,21 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
         if (property.getType().equals("Edm.String") && property.isCollection()) {
             c.setNativeType("Collection("+property.getType()+")");
         }
+
+        // mismatch with timestamp type and odata
+        if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) {
+            if (property.getPrecision() != null){
+                c.setScale(property.getPrecision());
+            }
+        } else {
+            if (property.getPrecision() != null) {
+                c.setPrecision(property.getPrecision());
+            }
+            if (property.getScale() != null) {
+                c.setScale(property.getScale());
+            }
+        }
+
         return c;
     }
 
@@ -745,7 +756,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                         ODataTypeManager.teiidType(property.getType(), property.isCollection()), procedure);
             }
             else if (isComplexType(metadata, property.getType())) {
-                CsdlComplexType childType = (CsdlComplexType)getComplexType(metadata, property.getType());
+                CsdlComplexType childType = getComplexType(metadata, property.getType());
                 addProcedureTableReturn(mf, metadata, procedure, childType, property.getName());
             }
             else {
@@ -863,7 +874,7 @@ public class ODataMetadataProcessor implements MetadataProcessor<WSConnection> {
                 if (tableName.indexOf('.') == -1) {
                     tableName = fk.getReferenceKey().getParent().getFullName();
                 }
-                return (Table)metadata.getTable(tableName);
+                return metadata.getTable(tableName);
             }
         }
         return table;

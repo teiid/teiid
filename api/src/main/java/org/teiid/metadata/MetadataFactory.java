@@ -740,18 +740,6 @@ public class MetadataFactory extends NamespaceContainer {
     }
 
     /**
-     * Get the namespace map.  Will be an unmodifiable empty map if {@link #addNamespace(String, String)}
-     * has not been called successfully.
-     * @return
-     */
-    public Map<String, String> getNamespaces() {
-        if (this.namespaces == null) {
-            return Collections.emptyMap();
-        }
-        return this.namespaces;
-    }
-
-    /**
      * Parses, but does not close, the given {@link Reader} into this {@link MetadataFactory}
      * @param ddl
      * @throws MetadataException

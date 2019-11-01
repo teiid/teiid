@@ -101,8 +101,8 @@ public class TestODataMetadataProcessor {
 
         ArrayList<EdmProperty.Builder> props = new ArrayList<EdmProperty.Builder>();
         props.add(EdmProperty.newBuilder("name").setType(EdmSimpleType.STRING).setMaxLength(25));
-        props.add(EdmProperty.newBuilder("dob").setType(EdmSimpleType.DATETIME).setNullable(true));
-        props.add(EdmProperty.newBuilder("ssn").setType(EdmSimpleType.INT64).setNullable(false));
+        props.add(EdmProperty.newBuilder("dob").setType(EdmSimpleType.DATETIME).setNullable(true).setPrecision(9));
+        props.add(EdmProperty.newBuilder("ssn").setType(EdmSimpleType.INT64).setNullable(false).setPrecision(2).setScale(3));
 
         EdmEntityType.Builder entity = EdmEntityType.newBuilder().addProperties(props).addKeys("ssn");
         EdmEntitySet es = EdmEntitySet.newBuilder().setName("Person").setEntityType(entity).build();
@@ -132,10 +132,13 @@ public class TestODataMetadataProcessor {
         assertEquals(25, name.getLength());
 
         assertNotNull(person.getPrimaryKey());
+        assertEquals(2, ssn.getPrecision());
+        assertEquals(3, ssn.getScale());
+
+        assertEquals(9, dob.getScale());
 
         assertEquals(1, person.getPrimaryKey().getColumns().size());
         assertEquals("ssn", person.getPrimaryKey().getColumns().get(0).getName());
-
         assertTrue(person.getForeignKeys().isEmpty());
     }
 

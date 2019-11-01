@@ -129,7 +129,7 @@ public class TestDataTierManager {
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
-        vdb.addAttchment(ConnectorManagerRepository.class, repo);
+        vdb.addAttachment(ConnectorManagerRepository.class, repo);
 
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
     }

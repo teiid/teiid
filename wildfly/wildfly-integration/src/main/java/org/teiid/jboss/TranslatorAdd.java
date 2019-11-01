@@ -97,7 +97,7 @@ class TranslatorAdd extends AbstractAddStepHandler {
                     throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50008, translatorName));
                 }
 
-                metadata.addAttchment(ClassLoader.class, translatorLoader);
+                metadata.addAttachment(ClassLoader.class, translatorLoader);
                 if (translatorName.equalsIgnoreCase(metadata.getName())) {
                     LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
 

@@ -24,7 +24,7 @@
         <version.org.apache.cxf>3.3.2</version.org.apache.cxf>
         
         <version.teiid.console>3.1.3</version.teiid.console>
-        <version.org.teiid>13.0.0-SNAPSHOT</version.org.teiid>
+        <version.org.teiid>${project.version}</version.org.teiid>
         
         <version.org.springframework>3.2.12.RELEASE</version.org.springframework>
         <version.org.springframework.asm>3.1.4.RELEASE</version.org.springframework.asm>
@@ -32,7 +32,9 @@
   
     <!-- copied from the teiid-parent when things separate-->
     <profiles>
+
 	<!-- This profile is activated manually, as in "mvn ... -P release ..." -->
+	
 	<profile>
 		<id>release</id>
 		<modules>
@@ -99,6 +101,9 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <skipTests>true</skipTests>
       </properties>
+      <modules>
+        <module>wildfly-build</module>
+      </modules>
     </profile>   
 	</profiles>
   
@@ -498,7 +503,6 @@
         <module>resource-spi</module>
         <module>rest-service</module>
         <module>connectors</module>
-        <module>wildfly-build</module>
         <module>test-integration</module>
   </modules>
 </project>

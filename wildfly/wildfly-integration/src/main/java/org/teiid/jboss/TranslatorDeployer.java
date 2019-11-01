@@ -67,7 +67,7 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
                 }
                 deploymentUnit.putAttachment(TeiidAttachments.TRANSLATOR_METADATA, metadata);
                 metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, moduleName);
-                metadata.addAttchment(ClassLoader.class, translatorLoader);
+                metadata.addAttachment(ClassLoader.class, translatorLoader);
 
                 LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
 

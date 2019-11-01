@@ -365,8 +365,8 @@ public class RealMetadataFactory {
             }
         }
         TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
-        vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
-        vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
+        vdbMetaData.addAttachment(TransformationMetadata.class, metadata);
+        vdbMetaData.addAttachment(QueryMetadataInterface.class, metadata);
         return metadata;
     }
 
@@ -1883,9 +1883,9 @@ public class RealMetadataFactory {
         session.setSessionId(String.valueOf(1));
         session.setUserName("foo"); //$NON-NLS-1$
         session.setVdb(vdb);
-        workContext.getVDB().addAttchment(QueryMetadataInterface.class, metadata);
+        workContext.getVDB().addAttachment(QueryMetadataInterface.class, metadata);
         if (metadata instanceof TransformationMetadata) {
-            workContext.getVDB().addAttchment(TransformationMetadata.class, (TransformationMetadata)metadata);
+            workContext.getVDB().addAttachment(TransformationMetadata.class, (TransformationMetadata)metadata);
         }
         DQPWorkContext.setWorkContext(workContext);
         return workContext;
