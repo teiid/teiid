@@ -54,6 +54,7 @@ import org.teiid.deployers.RestWarGenerator;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.NamespaceContainer;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -86,8 +87,8 @@ public class RestASMBasedWebArchiveBuilder implements RestWarGenerator {
             }
             Collection<Procedure> procedures = schema.getProcedures().values();
             for (Procedure procedure:procedures) {
-                String uri = procedure.getProperty(REST_NAMESPACE+"URI", false); //$NON-NLS-1$
-                String method = procedure.getProperty(REST_NAMESPACE+"METHOD", false); //$NON-NLS-1$
+                String uri = procedure.getProperty(NamespaceContainer.REST_PREFIX+"URI", false); //$NON-NLS-1$
+                String method = procedure.getProperty(NamespaceContainer.REST_PREFIX+"METHOD", false); //$NON-NLS-1$
                 if (uri != null && method != null) {
                     return true;
                 }

@@ -106,13 +106,13 @@ public class NamespaceContainer implements Serializable {
     }
 
 
-    public static String resolvePropertyKey(NamespaceContainer baseSchema, String key) {
+    public static String resolvePropertyKey(String key) {
         int index = key.indexOf('}');
         if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {
             String uri_prefix = key.substring(0, index + 1);
             String prefix = BUILTIN.get(uri_prefix);
             if (prefix != null) {
-                key = prefix;
+                key = prefix + key.substring(index+1, key.length());
             }
         }
 

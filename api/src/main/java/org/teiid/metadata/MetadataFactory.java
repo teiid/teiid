@@ -112,7 +112,7 @@ public class MetadataFactory extends NamespaceContainer {
         if (modelProperties != null) {
             for (Map.Entry<Object, Object> entry : modelProperties.entrySet()) {
                 if (entry.getKey() instanceof String && entry.getValue() instanceof String) {
-                    this.schema.setProperty(resolvePropertyKey(this, (String) entry.getKey()), (String) entry.getValue());
+                    this.schema.setProperty(resolvePropertyKey((String) entry.getKey()), (String) entry.getValue());
                 }
             }
             PropertiesUtils.setBeanProperties(this, modelProperties, "importer"); //$NON-NLS-1$

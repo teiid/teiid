@@ -157,4 +157,8 @@ public class TestMetadataFactory {
         assertEquals("x_a%b.c_y", p.getName());
     }
 
+    @Test public void testPropertyKey() {
+        assertEquals("teiid_rest:key", NamespaceContainer.resolvePropertyKey("{http://teiid.org/rest}key"));
+    }
+
 }

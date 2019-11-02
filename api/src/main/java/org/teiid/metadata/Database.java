@@ -140,7 +140,7 @@ public class Database extends AbstractMetadataRecord {
     }
 
     public String resolveNamespaceInPropertyKey(String key) {
-        return NamespaceContainer.resolvePropertyKey(namespaceContainer, key);
+        return NamespaceContainer.resolvePropertyKey(key);
     }
 
     @Override

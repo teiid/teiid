@@ -6505,10 +6505,7 @@ void optionPair(AbstractMetadataRecord record, NamespaceContainer namespaceConta
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	if (namespaceContainer != null){
-            key = MetadataFactory.resolvePropertyKey(namespaceContainer, key);
-	 	}
-	 	String val = null;
+	 	String val = MetadataFactory.resolvePropertyKey(key);
 	 	if (!value.isNull()) {
 	 		val = value.getValue().toString();
 	 	}

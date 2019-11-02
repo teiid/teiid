@@ -170,6 +170,14 @@ public abstract class AbstractMetadataRecord implements Serializable {
         return properties;
     }
 
+    /**
+     * Get the property value for the given key.
+     * <br>
+     * If the key is in the form of a legacy uri fqn, the prefix version will also be checked.
+     * This behavior will be removed in a later release.
+     * @param key
+     * @return
+     */
     public String getProperty(String key) {
         return getProperty(key, false);
     }
@@ -183,8 +191,18 @@ public abstract class AbstractMetadataRecord implements Serializable {
     @Deprecated()
     public String getProperty(String key, boolean checkUnqualified) {
         String value = getProperties().get(key);
-        if (value != null || !checkUnqualified) {
+        if (value != null) {
             return value;
+        }
+        if (!checkUnqualified) {
+            String newKey = NamespaceContainer.resolvePropertyKey(key);
+            if (newKey.equals(key)) {
+                return null;
+            }
+            value = getProperties().get(newKey);
+            if (value != null) {
+                return value;
+            }
         }
         int index = key.indexOf('}');
         if (index > 0 && index < key.length() &&  key.charAt(0) == '{') {

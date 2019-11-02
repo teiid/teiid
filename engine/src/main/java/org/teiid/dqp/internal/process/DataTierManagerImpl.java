@@ -1524,7 +1524,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
                     String uuid = (String)((Constant)proc.getParameter(2).getExpression()).getValue();
                     String key = (String)((Constant)proc.getParameter(3).getExpression()).getValue();
                     Clob value = (Clob)((Constant)proc.getParameter(4).getExpression()).getValue();
-                    key = MetadataFactory.resolvePropertyKey(null, key);
+                    key = MetadataFactory.resolvePropertyKey(key);
                     String strVal = null;
                     String result = null;
                     if (value != null) {
