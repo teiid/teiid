@@ -133,7 +133,8 @@ public class InfinispanUpdateVisitor extends IckleConversionVisitor {
                 }
                 updateDocument(targetDocument, column, value);
 
-                if (column.equals(pkColumn) || pkColumn.equals(normalizePseudoColumn(column, this.metadata))) {
+                if (column.getName().equalsIgnoreCase(pkColumn.getName()) || pkColumn.getName()
+                        .equalsIgnoreCase(normalizePseudoColumn(column, this.metadata).getName())) {
                     targetDocument.setIdentifier(value);
                 }
             }

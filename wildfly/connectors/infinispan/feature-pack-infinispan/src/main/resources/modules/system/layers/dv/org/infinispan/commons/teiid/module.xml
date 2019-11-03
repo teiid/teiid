@@ -6,14 +6,14 @@
 
     <resources>
         <artifact name="${org.infinispan:infinispan-commons}" />
+        <artifact name="${org.infinispan.protostream:protostream}"/>
+        <artifact name="${com.github.ben-manes.caffeine:caffeine}"/>
     </resources>
 
     <dependencies>
         <module name="javax.api"/>
         <module name="javax.transaction.api"/>
         <module name="org.jboss.logging"/>
-        <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>
         <module name="sun.jdk"/>
     </dependencies>
 </module>
